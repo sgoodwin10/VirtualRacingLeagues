@@ -2,6 +2,11 @@
 
 This document provides exact commands for working with the Laravel Docker environment. All commands are to be executed from the project root directory: `/Users/samuelgoodwin/Sites/VirtualRacingLeagues`
 
+## Important ##
+- Only use if working outside the container. Confirm working location.
+- if outside, use the commands below.
+- if inside, use the commands but without the docker references.
+
 ## Container Overview
 
 | Service | Container Name | Internal Port | External Port | Image |
@@ -383,8 +388,8 @@ docker exec -it virtualracingleagues-app tail -f /var/www/storage/logs/laravel.l
 
 #### View Laravel Log from Host Machine
 ```bash
-tail -f /Users/samuelgoodwin/Sites/GenericTemplate/storage/logs/laravel.log
-tail -n 100 /Users/samuelgoodwin/Sites/GenericTemplate/storage/logs/laravel.log
+tail -f /Users/samuelgoodwin/Sites/VirtualRacingLeagues/storage/logs/laravel.log
+tail -n 100 /Users/samuelgoodwin/Sites/VirtualRacingLeagues/storage/logs/laravel.log
 ```
 
 #### Clear Laravel Log
@@ -570,9 +575,9 @@ docker volume ls
 
 ### Inspect Volume
 ```bash
-docker volume inspect generictemplate_mariadb_data
-docker volume inspect generictemplate_redis_data
-docker volume inspect generictemplate_elasticsearch_data
+docker volume inspect virtualracingleagues_mariadb_data
+docker volume inspect virtualracingleagues_redis_data
+docker volume inspect virtualracingleagues_elasticsearch_data
 ```
 
 ### Remove All Volumes (WARNING: DATA LOSS)
@@ -747,7 +752,7 @@ docker exec -it virtualracingleagues-app php artisan config:clear
 docker-compose restart virtualracingleagues-mailpit
 
 # Verify container is on the same network
-docker network inspect generictemplate_laravel | grep mailpit
+docker network inspect virtualracingleagues_laravel | grep mailpit
 ```
 
 ## Network Inspection
@@ -759,7 +764,7 @@ docker network ls
 
 ### Inspect Laravel Network
 ```bash
-docker network inspect generictemplate_laravel
+docker network inspect virtualracingleagues_laravel
 ```
 
 ### Check Container IP Addresses

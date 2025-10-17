@@ -1,7 +1,7 @@
 # User Dashboard Development Guide
 
 **Last Updated**: January 2025
-**Application**: User Dashboard (`app.generictemplate.localhost`)
+**Application**: User Dashboard (`app.virtualracingleagues.localhost`)
 **Path**: `resources/user/`
 
 ## Table of Contents
@@ -25,7 +25,7 @@
 
 ## Overview
 
-The **User Dashboard** is an **authenticated-only** Single Page Application (SPA) that runs on the `app.generictemplate.localhost` subdomain. It serves as the primary interface for authenticated users after they log in through the public site.
+The **User Dashboard** is an **authenticated-only** Single Page Application (SPA) that runs on the `app.virtualracingleagues.localhost` subdomain. It serves as the primary interface for authenticated users after they log in through the public site.
 
 **Key Characteristics:**
 - Completely separate from public and admin applications
@@ -33,7 +33,7 @@ The **User Dashboard** is an **authenticated-only** Single Page Application (SPA
 - Shares session cookies with public site via subdomain configuration
 - Users who are not authenticated are automatically redirected to the public site login page
 
-**Access URL**: `http://app.generictemplate.localhost:8000`
+**Access URL**: `http://app.virtualracingleagues.localhost:8000`
 
 ---
 
@@ -243,9 +243,9 @@ await userStore.updateProfile({
 ### How Authentication Works
 
 1. **Login Flow** (happens on public site):
-   - User logs in on `generictemplate.localhost`
-   - Backend sets session cookie with domain `.generictemplate.localhost`
-   - User is redirected to `app.generictemplate.localhost`
+   - User logs in on `virtualracingleagues.localhost`
+   - Backend sets session cookie with domain `.virtualracingleagues.localhost`
+   - User is redirected to `app.virtualracingleagues.localhost`
    - Cookie is automatically shared across subdomains
 
 2. **Auth Check Flow** (user dashboard):
@@ -266,7 +266,7 @@ await userStore.updateProfile({
 
 **Environment Variables** (`.env`):
 ```env
-SESSION_DOMAIN=.generictemplate.localhost  # Leading dot enables subdomain sharing
+SESSION_DOMAIN=.virtualracingleagues.localhost  # Leading dot enables subdomain sharing
 SESSION_DRIVER=database
 SESSION_SAME_SITE=lax
 ```
@@ -274,7 +274,7 @@ SESSION_SAME_SITE=lax
 **Sanctum Domains** (`config/sanctum.php`):
 ```php
 'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS',
-    'generictemplate.localhost:8000,app.generictemplate.localhost:8000'
+    'virtualracingleagues.localhost:8000,app.virtualracingleagues.localhost:8000'
 ))
 ```
 
@@ -996,7 +996,7 @@ Create tests for:
 # Start dev server
 npm run dev
 
-# Navigate to http://app.generictemplate.localhost:8000
+# Navigate to http://app.virtualracingleagues.localhost:8000
 # Test the new feature
 ```
 

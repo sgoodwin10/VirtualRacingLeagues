@@ -56,8 +56,22 @@
             <transition name="submenu">
               <ul v-if="isMenuExpanded(item.name) && !isCollapsed" class="mt-1 ml-6 space-y-1">
                 <li v-for="subItem in item.items" :key="subItem.name">
+                  <!-- External link -->
+                  <a
+                    v-if="subItem.href"
+                    :href="subItem.href"
+                    :target="subItem.target"
+                    :rel="subItem.target === '_blank' ? 'noopener noreferrer' : undefined"
+                    class="sidebar-item sidebar-subitem"
+                  >
+                    <i :class="['sidebar-icon text-sm', subItem.icon]"></i>
+                    <span class="sidebar-label">
+                      {{ subItem.label }}
+                    </span>
+                  </a>
+                  <!-- Internal router link -->
                   <router-link
-                    v-if="subItem.to"
+                    v-else-if="subItem.to"
                     :to="subItem.to"
                     class="sidebar-item sidebar-subitem"
                     :class="{
@@ -147,6 +161,8 @@ interface MenuItem {
   label: string;
   icon: string;
   to?: string;
+  href?: string;
+  target?: string;
   badge?: string | null;
   items?: MenuItem[];
 }
@@ -198,6 +214,17 @@ const menuItems = computed<MenuItem[]>(() => {
         label: 'Site Configuration',
         icon: 'pi pi-sliders-h',
         to: '/site-config',
+      });
+    }
+
+    // Telescope - only for Super Admins
+    if (adminStore.adminRole === 'super_admin') {
+      settingsItems.push({
+        name: 'telescope',
+        label: 'Telescope',
+        icon: 'ph ph-binoculars',
+        href: `${import.meta.env.VITE_APP_URL}/telescope`,
+        target: '_blank',
       });
     }
 
