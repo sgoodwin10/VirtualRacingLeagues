@@ -169,4 +169,15 @@ class AdminEloquent extends Authenticatable
     {
         return Admin::class;
     }
+
+    /**
+     * Create a new factory instance for the model.
+     * This tells Laravel to use the AdminFactory from the proxy class.
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory<static>
+     */
+    protected static function newFactory(): \Illuminate\Database\Eloquent\Factories\Factory
+    {
+        return \Database\Factories\AdminFactory::new();
+    }
 }

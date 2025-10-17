@@ -15,7 +15,7 @@ class ApiService {
 
   constructor() {
     this.client = axios.create({
-      // Admin dashboard is served from admin.generictemplate.localhost subdomain
+      // Admin dashboard is served from admin.virtualracingleagues.localhost subdomain
       // API routes are at /api/* on the admin subdomain (see routes/subdomain.php line 24)
       baseURL: '/api',
       headers: {
@@ -64,7 +64,9 @@ class ApiService {
           if (!window.location.pathname.includes('/login')) {
             // Ensure we're on the admin subdomain
             if (!window.location.hostname.includes('admin.')) {
-              window.location.href = 'http://admin.generictemplate.localhost/login';
+              // Construct admin URL from APP_URL
+              const adminUrl = import.meta.env.VITE_APP_URL.replace('//', '//admin.');
+              window.location.href = `${adminUrl}/login`;
             } else {
               window.location.href = '/login';
             }

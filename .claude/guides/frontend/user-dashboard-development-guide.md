@@ -695,6 +695,8 @@ npm run test:coverage
 - `primevueStubs.ts` - PrimeVue component stubs for testing
 
 ### Writing Tests
+- Tests should focus on basic functionality and confirmation that the component works.
+- Minimum amount of tests. Just the critical parts of components.
 
 #### Component Test Example
 

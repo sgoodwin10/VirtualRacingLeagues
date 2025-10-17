@@ -4,9 +4,9 @@
 
 The application now uses **subdomain-based routing** with three distinct subdomains:
 
-1. **generictemplate.localhost:8000** - Public site (authentication, registration)
-2. **app.generictemplate.localhost:8000** - User dashboard (authenticated users only)
-3. **admin.generictemplate.localhost:8000** - Admin dashboard (authenticated admins only)
+1. **virtualracingleagues.localhost:8000** - Public site (authentication, registration)
+2. **app.virtualracingleagues.localhost:8000** - User dashboard (authenticated users only)
+3. **admin.virtualracingleagues.localhost:8000** - Admin dashboard (authenticated admins only)
 
 ## Changes Made
 
@@ -19,22 +19,22 @@ The application now uses **subdomain-based routing** with three distinct subdoma
 
 **Structure**:
 ```php
-// Admin subdomain (admin.generictemplate.localhost)
-Route::domain('admin.generictemplate.localhost')->group(function () {
+// Admin subdomain (admin.virtualracingleagues.localhost)
+Route::domain('admin.virtualracingleagues.localhost')->group(function () {
     // Admin API routes: /admin/api/*
     // Admin SPA: /admin/{any?}
 });
 
-// App subdomain (app.generictemplate.localhost)
+// App subdomain (app.virtualracingleagues.localhost)
 // AUTHENTICATED USERS ONLY
-Route::domain('app.generictemplate.localhost')->group(function () {
+Route::domain('app.virtualracingleagues.localhost')->group(function () {
     // User API routes: /api/*
     // User SPA: /{any?}
 });
 
-// Main domain (generictemplate.localhost)
+// Main domain (virtualracingleagues.localhost)
 // PUBLIC ACCESS - Authentication routes
-Route::domain('generictemplate.localhost')->group(function () {
+Route::domain('virtualracingleagues.localhost')->group(function () {
     // Public API routes: /api/* (register, login, forgot-password, etc.)
     // Public SPA: /{any?}
 });
@@ -100,24 +100,24 @@ $middleware->alias([
 **Critical Change**: Set `SESSION_DOMAIN` with leading dot for cross-subdomain session sharing:
 
 ```env
-SESSION_DOMAIN=.generictemplate.localhost
+SESSION_DOMAIN=.virtualracingleagues.localhost
 ```
 
 The **leading dot** is crucial - it allows the session cookie to be shared across all subdomains:
-- `generictemplate.localhost` (main)
-- `app.generictemplate.localhost` (user app)
-- `admin.generictemplate.localhost` (admin)
+- `virtualracingleagues.localhost` (main)
+- `app.virtualracingleagues.localhost` (user app)
+- `admin.virtualracingleagues.localhost` (admin)
 
 **Also Updated**:
 ```env
-SANCTUM_STATEFUL_DOMAINS=generictemplate.localhost:8000,app.generictemplate.localhost:8000,admin.generictemplate.localhost:8000,localhost:5173
+SANCTUM_STATEFUL_DOMAINS=virtualracingleagues.localhost:8000,app.virtualracingleagues.localhost:8000,admin.virtualracingleagues.localhost:8000,localhost:5173
 ```
 
 #### `/var/www/config/session.php`
 Already correctly configured with:
 
 ```php
-'domain' => env('SESSION_DOMAIN', '.generictemplate.localhost'),
+'domain' => env('SESSION_DOMAIN', '.virtualracingleagues.localhost'),
 'same_site' => env('SESSION_SAME_SITE', 'lax'),
 ```
 
@@ -131,9 +131,9 @@ Updated to handle all subdomain API paths:
 
 'allowed_origins' => [
     'http://localhost:5173',
-    'http://generictemplate.localhost:8000',
-    'http://admin.generictemplate.localhost:8000',
-    'http://app.generictemplate.localhost:8000',
+    'http://virtualracingleagues.localhost:8000',
+    'http://admin.virtualracingleagues.localhost:8000',
+    'http://app.virtualracingleagues.localhost:8000',
     'http://localhost:8000',
 ],
 
@@ -148,7 +148,7 @@ Already correctly configured with all subdomains:
 ```php
 'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
     '%s%s',
-    'localhost,localhost:3000,localhost:5173,127.0.0.1,127.0.0.1:8000,::1,generictemplate.localhost,admin.generictemplate.localhost,app.generictemplate.localhost',
+    'localhost,localhost:3000,localhost:5173,127.0.0.1,127.0.0.1:8000,::1,virtualracingleagues.localhost,admin.virtualracingleagues.localhost,app.virtualracingleagues.localhost',
     Sanctum::currentApplicationUrlWithPort(),
 ))),
 
@@ -171,7 +171,7 @@ Already correctly configured with all subdomains:
 
 ## Routing Architecture
 
-### Public Domain (generictemplate.localhost:8000)
+### Public Domain (virtualracingleagues.localhost:8000)
 
 **Purpose**: Public-facing site with authentication
 
@@ -186,9 +186,9 @@ Already correctly configured with all subdomains:
 
 **Authentication**: NO authentication required (public access)
 
-**After Login**: Users should be redirected to `app.generictemplate.localhost:8000`
+**After Login**: Users should be redirected to `app.virtualracingleagues.localhost:8000`
 
-### App Subdomain (app.generictemplate.localhost:8000)
+### App Subdomain (app.virtualracingleagues.localhost:8000)
 
 **Purpose**: User dashboard for authenticated users
 
@@ -204,10 +204,10 @@ Already correctly configured with all subdomains:
 **Authentication**: Most API routes require `auth:web` + `user.authenticate` middleware
 
 **Session Handling**:
-- Session shared with main domain via `.generictemplate.localhost` cookie domain
+- Session shared with main domain via `.virtualracingleagues.localhost` cookie domain
 - Frontend should check authentication and redirect to main domain if not authenticated
 
-### Admin Subdomain (admin.generictemplate.localhost:8000)
+### Admin Subdomain (admin.virtualracingleagues.localhost:8000)
 
 **Purpose**: Admin dashboard for authenticated administrators
 
@@ -233,22 +233,22 @@ Already correctly configured with all subdomains:
 
 ### User Authentication Flow
 
-1. **User visits app subdomain**: `app.generictemplate.localhost:8000`
+1. **User visits app subdomain**: `app.virtualracingleagues.localhost:8000`
 2. **Frontend checks authentication**: Calls `GET /api/me`
 3. **If not authenticated**:
-   - Frontend redirects to `generictemplate.localhost:8000/login`
-4. **User logs in on main domain**: `POST generictemplate.localhost:8000/api/login`
-5. **Session cookie set**: Cookie domain is `.generictemplate.localhost` (shared across subdomains)
-6. **Redirect to app subdomain**: `app.generictemplate.localhost:8000`
+   - Frontend redirects to `virtualracingleagues.localhost:8000/login`
+4. **User logs in on main domain**: `POST virtualracingleagues.localhost:8000/api/login`
+5. **Session cookie set**: Cookie domain is `.virtualracingleagues.localhost` (shared across subdomains)
+6. **Redirect to app subdomain**: `app.virtualracingleagues.localhost:8000`
 7. **User now authenticated**: Can access all app subdomain routes
 
 ### Admin Authentication Flow
 
-1. **Admin visits admin subdomain**: `admin.generictemplate.localhost:8000/admin`
+1. **Admin visits admin subdomain**: `admin.virtualracingleagues.localhost:8000/admin`
 2. **Frontend checks authentication**: Calls `GET /admin/api/auth/check`
 3. **If not authenticated**:
    - Frontend shows admin login form
-4. **Admin logs in**: `POST admin.generictemplate.localhost:8000/admin/api/login`
+4. **Admin logs in**: `POST admin.virtualracingleagues.localhost:8000/admin/api/login`
 5. **Session cookie set**: Admin guard session
 6. **Admin now authenticated**: Can access all protected admin routes
 
@@ -259,18 +259,18 @@ Already correctly configured with all subdomains:
 **Session Cookie Configuration**:
 ```php
 // config/session.php
-'domain' => '.generictemplate.localhost', // Leading dot is crucial!
+'domain' => '.virtualracingleagues.localhost', // Leading dot is crucial!
 'same_site' => 'lax',                      // Allows cross-subdomain requests
 ```
 
 **Key Points**:
-1. **Leading dot** (`.generictemplate.localhost`) makes the cookie available to:
-   - `generictemplate.localhost`
-   - `app.generictemplate.localhost`
-   - `admin.generictemplate.localhost`
-   - Any other `*.generictemplate.localhost` subdomain
+1. **Leading dot** (`.virtualracingleagues.localhost`) makes the cookie available to:
+   - `virtualracingleagues.localhost`
+   - `app.virtualracingleagues.localhost`
+   - `admin.virtualracingleagues.localhost`
+   - Any other `*.virtualracingleagues.localhost` subdomain
 
-2. **Without leading dot** (`generictemplate.localhost`), cookie would only be available to the exact domain
+2. **Without leading dot** (`virtualracingleagues.localhost`), cookie would only be available to the exact domain
 
 3. **SameSite=lax** allows cookies to be sent with cross-subdomain navigation while providing CSRF protection
 
@@ -279,13 +279,13 @@ Already correctly configured with all subdomains:
 The application uses **two separate authentication guards**:
 
 1. **`web` guard**: For regular users
-   - Session cookie: `generictemplate-user-session`
-   - Shared between `generictemplate.localhost` and `app.generictemplate.localhost`
+   - Session cookie: `virtualracingleagues-user-session`
+   - Shared between `virtualracingleagues.localhost` and `app.virtualracingleagues.localhost`
    - Model: `App\Models\User`
 
 2. **`admin` guard**: For administrators
    - Session managed by `AdminSessionMiddleware`
-   - Used on `admin.generictemplate.localhost`
+   - Used on `admin.virtualracingleagues.localhost`
    - Model: `App\Infrastructure\Persistence\Eloquent\Models\Admin`
 
 **Important**: These are **separate sessions**. A user authenticated on the `web` guard is NOT automatically authenticated on the `admin` guard, and vice versa.
@@ -296,7 +296,7 @@ The application uses **two separate authentication guards**:
 
 1. **CSRF Cookie Route**: Each subdomain has a `/api/csrf-cookie` or `/admin/api/csrf-cookie` route
 2. **Frontend must call this first**: Before any POST/PUT/DELETE requests
-3. **Sanctum sets XSRF-TOKEN cookie**: This cookie is also set with domain `.generictemplate.localhost`
+3. **Sanctum sets XSRF-TOKEN cookie**: This cookie is also set with domain `.virtualracingleagues.localhost`
 4. **Frontend reads and sends**: Sanctum's middleware automatically validates
 
 **Example Frontend Flow**:
@@ -337,7 +337,7 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
 ```
 
 **Why both?**
-- Users may register on the main domain (`generictemplate.localhost`)
+- Users may register on the main domain (`virtualracingleagues.localhost`)
 - Email links should work regardless of which subdomain the user is on
 - After verification, redirect to appropriate subdomain (app or main)
 
@@ -346,13 +346,13 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
 ### 1. Test Route Resolution
 
 ```bash
-php artisan route:list | grep "generictemplate"
+php artisan route:list | grep "virtualracingleagues"
 ```
 
 Should show routes grouped by subdomain:
-- `admin.generictemplate.localhost/admin/api/*`
-- `app.generictemplate.localhost/api/*`
-- `generictemplate.localhost/api/*`
+- `admin.virtualracingleagues.localhost/admin/api/*`
+- `app.virtualracingleagues.localhost/api/*`
+- `virtualracingleagues.localhost/api/*`
 
 ### 2. Test Session Cookie
 
@@ -361,15 +361,15 @@ Should show routes grouped by subdomain:
 php artisan serve --host=0.0.0.0 --port=8000
 
 # In browser DevTools:
-# 1. Visit http://generictemplate.localhost:8000
+# 1. Visit http://virtualracingleagues.localhost:8000
 # 2. Check Application > Cookies
-# 3. Cookie domain should be ".generictemplate.localhost"
+# 3. Cookie domain should be ".virtualracingleagues.localhost"
 ```
 
 ### 3. Test CSRF Cookie
 
 ```bash
-curl -X GET http://generictemplate.localhost:8000/api/csrf-cookie \
+curl -X GET http://virtualracingleagues.localhost:8000/api/csrf-cookie \
   -H "Accept: application/json" \
   -v
 ```
@@ -379,13 +379,13 @@ Should return:
 {"message":"CSRF cookie set"}
 ```
 
-And set `XSRF-TOKEN` cookie with domain `.generictemplate.localhost`
+And set `XSRF-TOKEN` cookie with domain `.virtualracingleagues.localhost`
 
 ### 4. Test Cross-Subdomain Authentication
 
 1. **Login on main domain**:
 ```bash
-curl -X POST http://generictemplate.localhost:8000/api/login \
+curl -X POST http://virtualracingleagues.localhost:8000/api/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password"}' \
   -c cookies.txt
@@ -393,7 +393,7 @@ curl -X POST http://generictemplate.localhost:8000/api/login \
 
 2. **Check authentication on app subdomain**:
 ```bash
-curl -X GET http://app.generictemplate.localhost:8000/api/me \
+curl -X GET http://app.virtualracingleagues.localhost:8000/api/me \
   -H "Accept: application/json" \
   -b cookies.txt
 ```
@@ -406,7 +406,7 @@ Should return user data (session shared across subdomains)
 
 **Critical**: The `.env` file **MUST** have:
 ```env
-SESSION_DOMAIN=.generictemplate.localhost
+SESSION_DOMAIN=.virtualracingleagues.localhost
 ```
 
 **Leading dot is required** for cross-subdomain session sharing.
@@ -415,7 +415,7 @@ SESSION_DOMAIN=.generictemplate.localhost
 
 **Critical**: The `.env` file **MUST** include all subdomains:
 ```env
-SANCTUM_STATEFUL_DOMAINS=generictemplate.localhost:8000,app.generictemplate.localhost:8000,admin.generictemplate.localhost:8000,localhost:5173
+SANCTUM_STATEFUL_DOMAINS=virtualracingleagues.localhost:8000,app.virtualracingleagues.localhost:8000,admin.virtualracingleagues.localhost:8000,localhost:5173
 ```
 
 ### 3. CORS Configuration
@@ -434,16 +434,16 @@ Routes are matched in this order:
 ### 5. SPA Routing
 
 Each subdomain has a catch-all route that renders the appropriate Vue SPA:
-- `admin.generictemplate.localhost/admin/{any?}` → `resources/views/admin.blade.php`
-- `app.generictemplate.localhost/{any?}` → `resources/views/app.blade.php`
-- `generictemplate.localhost/{any?}` → `resources/views/public.blade.php`
+- `admin.virtualracingleagues.localhost/admin/{any?}` → `resources/views/admin.blade.php`
+- `app.virtualracingleagues.localhost/{any?}` → `resources/views/app.blade.php`
+- `virtualracingleagues.localhost/{any?}` → `resources/views/public.blade.php`
 
 **Frontend Vue Router** handles all client-side routing within each SPA
 
 ### 6. Email Configuration
 
 For email verification links to work correctly:
-- `APP_URL` should be set to the **main domain**: `http://generictemplate.localhost:8000`
+- `APP_URL` should be set to the **main domain**: `http://virtualracingleagues.localhost:8000`
 - Laravel will generate signed URLs using this domain
 - Both main and app subdomains have the verification route, so links work on either
 
@@ -469,8 +469,8 @@ And update:
 ### Issue: Session not shared between subdomains
 
 **Check**:
-1. `.env` has `SESSION_DOMAIN=.generictemplate.localhost` (with leading dot)
-2. Browser DevTools shows cookie domain as `.generictemplate.localhost`
+1. `.env` has `SESSION_DOMAIN=.virtualracingleagues.localhost` (with leading dot)
+2. Browser DevTools shows cookie domain as `.virtualracingleagues.localhost`
 3. Clear cache: `php artisan config:clear && php artisan cache:clear`
 
 ### Issue: CSRF token mismatch
@@ -485,7 +485,7 @@ And update:
 
 **Check**:
 1. User is authenticated on main domain first (session cookie exists)
-2. Session cookie domain is `.generictemplate.localhost` (shared)
+2. Session cookie domain is `.virtualracingleagues.localhost` (shared)
 3. Frontend is sending cookies with requests (`withCredentials: true` in axios)
 4. `UserAuthenticate` middleware is properly registered in `bootstrap/app.php`
 
@@ -493,7 +493,7 @@ And update:
 
 **Check**:
 1. Clear route cache: `php artisan route:clear`
-2. Verify subdomain in browser matches exactly (e.g., `app.generictemplate.localhost:8000`)
+2. Verify subdomain in browser matches exactly (e.g., `app.virtualracingleagues.localhost:8000`)
 3. Check `/etc/hosts` or DNS for subdomain resolution
 4. Verify `routes/subdomain.php` is loaded first in `bootstrap/app.php`
 
@@ -512,8 +512,8 @@ And update:
    - Admin: Check admin authentication on mount, show login if not authenticated
 
 3. **Update Redirect Logic**:
-   - After login on main domain → redirect to `http://app.generictemplate.localhost:8000`
-   - After logout on app subdomain → redirect to `http://generictemplate.localhost:8000`
+   - After login on main domain → redirect to `http://app.virtualracingleagues.localhost:8000`
+   - After logout on app subdomain → redirect to `http://virtualracingleagues.localhost:8000`
 
 ### Backend Enhancements
 

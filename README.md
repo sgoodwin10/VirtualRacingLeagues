@@ -1,9 +1,9 @@
 # Laravel + Vue 3 Multi-Application Template
 
 A Laravel 12 application with **three separate Vue.js SPAs** across different subdomains:
-- **Public Site** (`generictemplate.localhost`) - Marketing, auth (login/register)
-- **User Dashboard** (`app.generictemplate.localhost`) - Authenticated user dashboard
-- **Admin Dashboard** (`admin.generictemplate.localhost`) - Admin management interface
+- **Public Site** (`virtualracingleagues.localhost`) - Marketing, auth (login/register)
+- **User Dashboard** (`app.virtualracingleagues.localhost`) - Authenticated user dashboard
+- **Admin Dashboard** (`admin.virtualracingleagues.localhost`) - Admin management interface
 
 Each application is completely independent with its own routing, state management, components, and tests.
 
@@ -12,13 +12,13 @@ Each application is completely independent with its own routing, state managemen
 **Multi-Subdomain Architecture:**
 ```
 resources/
-├── public/      # Public Site (generictemplate.localhost)
+├── public/      # Public Site (virtualracingleagues.localhost)
 │   ├── js/      # Auth flows, marketing
 │   └── css/
-├── user/        # User Dashboard (app.generictemplate.localhost)
+├── user/        # User Dashboard (app.virtualracingleagues.localhost)
 │   ├── js/      # User features (authenticated only)
 │   └── css/
-└── admin/       # Admin Dashboard (admin.generictemplate.localhost)
+└── admin/       # Admin Dashboard (admin.virtualracingleagues.localhost)
     ├── js/      # Admin features
     └── css/
 ```
@@ -48,18 +48,18 @@ app/
 cp .env.example .env
 
 # Update .env with your settings (or use defaults):
-# - APP_NAME=GenericTemplate
-# - APP_URL=http://generictemplate.localhost:8000
-# - SESSION_DOMAIN=.generictemplate.localhost
+# - APP_NAME=VirtualRacingLeagues
+# - APP_URL=http://virtualracingleagues.localhost:8000
+# - SESSION_DOMAIN=.virtualracingleagues.localhost
 ```
 
 ### 2. Hosts File
 
 Add to `/etc/hosts`:
 ```
-127.0.0.1 generictemplate.localhost
-127.0.0.1 app.generictemplate.localhost
-127.0.0.1 admin.generictemplate.localhost
+127.0.0.1 virtualracingleagues.localhost
+127.0.0.1 app.virtualracingleagues.localhost
+127.0.0.1 admin.virtualracingleagues.localhost
 ```
 
 ### 3. Docker Setup
@@ -90,9 +90,9 @@ npm run dev
 ```
 
 Then visit:
-- **Public Site**: http://generictemplate.localhost:8000
-- **User Dashboard**: http://app.generictemplate.localhost:8000
-- **Admin Dashboard**: http://admin.generictemplate.localhost:8000/admin
+- **Public Site**: http://virtualracingleagues.localhost:8000
+- **User Dashboard**: http://app.virtualracingleagues.localhost:8000
+- **Admin Dashboard**: http://admin.virtualracingleagues.localhost:8000/admin
 
 **Default Admin Login** (if seeded):
 - Email: `admin@example.com`
@@ -166,7 +166,7 @@ app/
 
 **Authentication:**
 - Public site handles login/register/password reset
-- Session shared across subdomains via `SESSION_DOMAIN=.generictemplate.localhost`
+- Session shared across subdomains via `SESSION_DOMAIN=.virtualracingleagues.localhost`
 - Separate guards: `web` (users), `admin` (admins)
 - User dashboard is authenticated-only
 
@@ -245,7 +245,7 @@ See [DDD Overview](./.claude/guides/backend/ddd-overview.md)
 ## Important Notes
 
 - All routes defined in `routes/subdomain.php` (NOT `routes/web.php`)
-- Session sharing requires `SESSION_DOMAIN=.generictemplate.localhost` (leading dot)
+- Session sharing requires `SESSION_DOMAIN=.virtualracingleagues.localhost` (leading dot)
 - Each dashboard is independent - no shared components
 - Controllers must be thin (3-5 lines) - logic goes in application services
 - Domain layer is pure PHP (no Laravel dependencies)

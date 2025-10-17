@@ -389,11 +389,9 @@ const handleLoginAsUser = async (): Promise<void> => {
   try {
     const { token } = await userService.loginAsUser(props.user.id);
 
-    // Get app URL from environment or construct it
-    const appDomain = import.meta.env.VITE_APP_DOMAIN || 'app.generictemplate.localhost:8000';
+    // Get app domain from environment
     const protocol = window.location.protocol;
-    const loginUrl = `${protocol}//${appDomain}/login-as?token=${token}`;
-    console.log(loginUrl);
+    const loginUrl = `${protocol}//${import.meta.env.VITE_APP_DOMAIN}/login-as?token=${token}`;
 
     // Open in new tab
     window.open(loginUrl, '_blank');

@@ -21,9 +21,9 @@ return [
 
     'allowed_origins' => [
         'http://localhost:5173',
-        'http://generictemplate.localhost:8000',
-        'http://admin.generictemplate.localhost:8000',
-        'http://app.generictemplate.localhost:8000',
+        'http://virtualracingleagues.localhost:8000',
+        'http://admin.virtualracingleagues.localhost:8000',
+        'http://app.virtualracingleagues.localhost:8000',
         'http://localhost:8000',
     ],
 

@@ -63,10 +63,10 @@
       <template #body="{ data }">
         <div v-if="data.causer" class="flex items-center gap-2">
           <div class="min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">
+            <p class="truncate">
               {{ getCauserName(data.causer) }}
             </p>
-            <p class="text-xs text-gray-500 truncate">
+            <p class="text-md text-gray-500 truncate">
               {{ getCauserTypeLabel(data.causer_type) }} ID: {{ data.causer.id }}
             </p>
           </div>
@@ -79,8 +79,8 @@
     <Column v-if="showSubject" header="Target" style="min-width: 150px">
       <template #body="{ data }">
         <div v-if="data.subject_type && data.subject_id">
-          <p class="text-sm text-gray-900">{{ formatSubjectType(data.subject_type) }}</p>
-          <p class="text-xs text-gray-500 font-mono">ID: {{ data.subject_id }}</p>
+          <p class="">{{ formatSubjectType(data.subject_type) }}</p>
+          <p class="text-md text-gray-500 font-mono">ID: {{ data.subject_id }}</p>
         </div>
         <span v-else class="text-gray-400 text-sm">-</span>
       </template>
@@ -89,7 +89,7 @@
     <!-- Date Column -->
     <Column field="created_at" header="Date" :sortable="true" style="min-width: 180px">
       <template #body="{ data }">
-        <span class="text-gray-700 text-sm">
+        <span class="text-gray-700 text-md">
           {{ formatDate(data.created_at) }}
         </span>
       </template>

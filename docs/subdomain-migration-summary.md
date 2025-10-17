@@ -14,7 +14,7 @@ This document summarizes the major architectural migration from a single-domain 
 ### Before Migration
 
 ```
-generictemplate.localhost:8000/
+virtualracingleagues.localhost:8000/
 ├── /                    → User dashboard (with auth UI)
 ├── /login              → Login view
 ├── /register           → Register view
@@ -24,18 +24,18 @@ generictemplate.localhost:8000/
 ### After Migration
 
 ```
-generictemplate.localhost:8000/
+virtualracingleagues.localhost:8000/
 ├── /                    → Public site (marketing, auth)
 ├── /login              → Login view
 ├── /register           → Register view
 ├── /forgot-password    → Password reset request
 └── /reset-password     → Password reset form
 
-app.generictemplate.localhost:8000/
+app.virtualracingleagues.localhost:8000/
 ├── /                    → User dashboard (authenticated only)
 └── /profile            → User profile
 
-admin.generictemplate.localhost:8000/admin/*
+admin.virtualracingleagues.localhost:8000/admin/*
 └── /*                  → Admin dashboard (authenticated admins only)
 ```
 
@@ -78,14 +78,14 @@ admin.generictemplate.localhost:8000/admin/*
 
 **Critical Changes**:
 ```env
-SESSION_DOMAIN=.generictemplate.localhost  # Leading dot is essential
+SESSION_DOMAIN=.virtualracingleagues.localhost  # Leading dot is essential
 SESSION_SAME_SITE=lax                      # Allows cross-subdomain navigation
 ```
 
 **How It Works**:
-- User logs in on `generictemplate.localhost`
-- Cookie set with domain `.generictemplate.localhost`
-- Cookie automatically sent to `app.generictemplate.localhost`
+- User logs in on `virtualracingleagues.localhost`
+- Cookie set with domain `.virtualracingleagues.localhost`
+- Cookie automatically sent to `app.virtualracingleagues.localhost`
 - No need to re-authenticate on user dashboard
 
 ### 4. Frontend Path Aliases
@@ -144,7 +144,7 @@ input: [
 - Router with auth guards
 
 **New Functionality**:
-- After successful login → redirects to `app.generictemplate.localhost`
+- After successful login → redirects to `app.virtualracingleagues.localhost`
 - After successful register → shows email verification prompt
 - Header component shows auth status
 - PrimeVue Toast notifications
@@ -181,24 +181,24 @@ input: [
 
 ### Frontend Tests
 
-#### Public Site (`generictemplate.localhost:8000`)
+#### Public Site (`virtualracingleagues.localhost:8000`)
 - [ ] Home page loads
 - [ ] Login form submits correctly
 - [ ] Register form submits correctly
 - [ ] Forgot password flow works
 - [ ] Reset password flow works
-- [ ] After login, redirects to `app.generictemplate.localhost:8000`
+- [ ] After login, redirects to `app.virtualracingleagues.localhost:8000`
 - [ ] Header shows login/register buttons when not authenticated
 - [ ] Header shows user info when authenticated
 
-#### User Dashboard (`app.generictemplate.localhost:8000`)
+#### User Dashboard (`app.virtualracingleagues.localhost:8000`)
 - [ ] Redirects to public site if not authenticated
 - [ ] Loads dashboard when authenticated
 - [ ] Profile page works
 - [ ] Logout redirects to public site
 - [ ] Home view shows personalized content
 
-#### Admin Dashboard (`admin.generictemplate.localhost:8000`)
+#### Admin Dashboard (`admin.virtualracingleagues.localhost:8000`)
 - [ ] No changes, should work as before
 
 ## Rollback Plan

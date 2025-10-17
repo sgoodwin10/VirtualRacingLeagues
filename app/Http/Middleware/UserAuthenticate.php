@@ -33,7 +33,8 @@ class UserAuthenticate
             $host = $request->getHost();
             if (str_contains($host, 'app.')) {
                 // Already on app subdomain, redirect to login on main domain
-                return redirect('http://generictemplate.localhost/login');
+                $publicUrl = str_replace('//app.', '//', config('app.url'));
+                return redirect($publicUrl . '/login');
             } else {
                 // On main domain, redirect to login
                 return redirect()->route('login');
@@ -52,7 +53,8 @@ class UserAuthenticate
                 ], 403);
             }
 
-            return redirect('http://generictemplate.localhost/login')
+            $publicUrl = str_replace('//app.', '//', config('app.url'));
+            return redirect($publicUrl . '/login')
                 ->with('error', 'Your account has been deactivated. Please contact support.');
         }
 

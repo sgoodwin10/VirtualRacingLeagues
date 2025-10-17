@@ -48,7 +48,7 @@ class ApiService {
           if (!window.location.pathname.includes('/login')) {
             // If on app subdomain, redirect to main domain login
             if (window.location.hostname.includes('app.')) {
-              window.location.href = 'http://generictemplate.localhost/login';
+              window.location.href = `${import.meta.env.VITE_APP_URL}/login`;
             } else {
               window.location.href = '/login';
             }

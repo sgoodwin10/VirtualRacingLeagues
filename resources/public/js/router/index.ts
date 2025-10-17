@@ -76,8 +76,8 @@ const router = createRouter({
 
 // Helper to get app subdomain URL
 const getAppSubdomainUrl = (): string => {
-  const domain = import.meta.env.VITE_APP_DOMAIN || 'generictemplate.localhost:8000';
-  return `http://app.${domain}`;
+  // VITE_APP_DOMAIN already includes 'app.' prefix
+  return `http://${import.meta.env.VITE_APP_DOMAIN}`;
 };
 
 // Navigation guard

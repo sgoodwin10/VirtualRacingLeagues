@@ -25,9 +25,8 @@ export const useUserStore = defineStore(
 
     // Helper function to get public site domain
     const getPublicDomain = (): string => {
-      const appUrl = import.meta.env.VITE_APP_URL || 'http://generictemplate.localhost:8000';
       // Extract domain without 'app.' subdomain
-      return appUrl.replace('//app.', '//');
+      return import.meta.env.VITE_APP_URL.replace('//app.', '//');
     };
 
     // Actions

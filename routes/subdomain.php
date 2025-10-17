@@ -18,8 +18,8 @@ use App\Http\Middleware\AdminSessionMiddleware;
 use App\Http\Middleware\SuperAdminOnly;
 use Illuminate\Support\Facades\Route;
 
-// Admin subdomain routes (admin.generictemplate.localhost)
-Route::domain('admin.generictemplate.localhost')->middleware('web')->group(function () {
+// Admin subdomain routes (admin.virtualracingleagues.localhost)
+Route::domain('admin.virtualracingleagues.localhost')->middleware('web')->group(function () {
     // Admin API routes
     Route::prefix('api')->name('admin.api.')->middleware([AdminSessionMiddleware::class])->group(function () {
         // CSRF cookie route
@@ -93,9 +93,9 @@ Route::domain('admin.generictemplate.localhost')->middleware('web')->group(funct
     })->where('any', '.*');
 });
 
-// App subdomain routes (app.generictemplate.localhost)
+// App subdomain routes (app.virtualracingleagues.localhost)
 // IMPORTANT: This subdomain is for AUTHENTICATED USERS ONLY
-Route::domain('app.generictemplate.localhost')->middleware('web')->group(function () {
+Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(function () {
     // User impersonation (GET route for server-side redirect)
     // Must come BEFORE API routes to avoid route conflicts
     Route::get('/login-as', [UserImpersonationController::class, 'impersonateViaGet'])
@@ -140,8 +140,8 @@ Route::domain('app.generictemplate.localhost')->middleware('web')->group(functio
     })->where('any', '.*');
 });
 
-// Main domain routes (generictemplate.localhost)
-Route::domain('generictemplate.localhost')->middleware('web')->group(function () {
+// Main domain routes (virtualracingleagues.localhost)
+Route::domain('virtualracingleagues.localhost')->middleware('web')->group(function () {
     // User impersonation (GET route for server-side redirect)
     // Must come BEFORE API routes to avoid route conflicts
     Route::get('/login-as', [UserImpersonationController::class, 'impersonateViaGet'])

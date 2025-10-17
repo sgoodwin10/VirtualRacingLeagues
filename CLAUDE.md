@@ -31,11 +31,11 @@ composer dev                   # Runs all services: Laravel server, queue, logs,
 ```
 
 After starting, access:
-- Public Site: `http://generictemplate.localhost:8000` (renders `resources/views/public.blade.php`)
-- User Dashboard: `http://app.generictemplate.localhost:8000` (renders `resources/views/app.blade.php`)
-- Admin Dashboard: `http://admin.generictemplate.localhost:8000/admin` (renders `resources/views/admin.blade.php`)
+- Public Site: `http://virtualracingleagues.localhost:8000` (renders `resources/views/public.blade.php`)
+- User Dashboard: `http://app.virtualracingleagues.localhost:8000` (renders `resources/views/app.blade.php`)
+- Admin Dashboard: `http://admin.virtualracingleagues.localhost:8000/admin` (renders `resources/views/admin.blade.php`)
 
-**Note**: The domain `generictemplate.localhost` is configured in `.env` and `routes/subdomain.php`. For production, update both locations with your actual domain.
+**Note**: The domain `virtualracingleagues.localhost` is configured in `.env` and `routes/subdomain.php`. For production, update both locations with your actual domain.
 
 ## Critical Architecture Concepts
 
@@ -47,7 +47,7 @@ This is the most important architectural pattern in this codebase:
 
 ```
 resources/
-├── public/                  # Public Site (generictemplate.localhost)
+├── public/                  # Public Site (virtualracingleagues.localhost)
 │   ├── css/app.css
 │   └── js/
 │       ├── app.ts          # Entry point
@@ -56,7 +56,7 @@ resources/
 │       ├── components/     # Public components
 │       ├── stores/         # Pinia stores for auth
 │       └── types/          # TypeScript types
-├── user/                    # User Dashboard (app.generictemplate.localhost)
+├── user/                    # User Dashboard (app.virtualracingleagues.localhost)
 │   ├── css/app.css
 │   └── js/
 │       ├── app.ts          # Entry point
@@ -65,7 +65,7 @@ resources/
 │       ├── components/     # User components
 │       ├── stores/         # Pinia stores for user
 │       └── tests/          # User tests
-└── admin/                   # Admin Dashboard (admin.generictemplate.localhost)
+└── admin/                   # Admin Dashboard (admin.virtualracingleagues.localhost)
     ├── css/app.css
     └── js/
         ├── app.ts          # Entry point
@@ -87,9 +87,9 @@ resources/
 - Use agent `dev-fe-admin` for the admin dashboard
 
 **Authentication Flow:**
-- Users register/login on the **public site** (`generictemplate.localhost`)
-- After successful authentication, they are redirected to the **user dashboard** (`app.generictemplate.localhost`)
-- Session cookies are shared across subdomains (via `SESSION_DOMAIN=.generictemplate.localhost`)
+- Users register/login on the **public site** (`virtualracingleagues.localhost`)
+- After successful authentication, they are redirected to the **user dashboard** (`app.virtualracingleagues.localhost`)
+- Session cookies are shared across subdomains (via `SESSION_DOMAIN=.virtualracingleagues.localhost`)
 - The user dashboard is **authenticated-only** - unauthenticated users are redirected back to public site
 
 **📖 For admin dashboard development guidelines, see**: [Admin Dashboard Development Guide](./.claude/guides/frontend/admin-dashboard-development-guide.md)
@@ -187,8 +187,8 @@ app/
 All routing is defined in `routes/subdomain.php`:
 
 ```php
-// Public Site (generictemplate.localhost)
-Route::domain('generictemplate.localhost')->group(function () {
+// Public Site (virtualracingleagues.localhost)
+Route::domain('virtualracingleagues.localhost')->group(function () {
     Route::prefix('api')->group(function () {
         Route::post('/register', [RegisterController::class, 'register']);
         Route::post('/login', [LoginController::class, 'login']);
@@ -198,8 +198,8 @@ Route::domain('generictemplate.localhost')->group(function () {
     Route::get('/{any?}', fn() => view('public'));
 });
 
-// User Dashboard (app.generictemplate.localhost) - Authenticated Only
-Route::domain('app.generictemplate.localhost')->group(function () {
+// User Dashboard (app.virtualracingleagues.localhost) - Authenticated Only
+Route::domain('app.virtualracingleagues.localhost')->group(function () {
     Route::prefix('api')->middleware(['auth:web', 'user.authenticate'])->group(function () {
         Route::post('/logout', [LoginController::class, 'logout']);
         Route::put('/profile', [ProfileController::class, 'update']);
@@ -207,8 +207,8 @@ Route::domain('app.generictemplate.localhost')->group(function () {
     Route::get('/{any?}', fn() => view('app'));
 });
 
-// Admin Dashboard (admin.generictemplate.localhost)
-Route::domain('admin.generictemplate.localhost')->group(function () {
+// Admin Dashboard (admin.virtualracingleagues.localhost)
+Route::domain('admin.virtualracingleagues.localhost')->group(function () {
     Route::prefix('admin/api')->middleware(['auth:admin', 'admin.authenticate'])->group(function () {
         // Admin routes here
     });
@@ -222,8 +222,8 @@ Route::domain('admin.generictemplate.localhost')->group(function () {
 - Admin routes: `resources/admin/js/router/index.ts` (handles `/admin`, `/admin/users`, `/admin/settings`, etc.)
 
 **Session Sharing:**
-- `SESSION_DOMAIN=.generictemplate.localhost` (note the leading dot)
-- This allows cookies to be shared across `generictemplate.localhost`, `app.generictemplate.localhost`, and `admin.generictemplate.localhost`
+- `SESSION_DOMAIN=.virtualracingleagues.localhost` (note the leading dot)
+- This allows cookies to be shared across `virtualracingleagues.localhost`, `app.virtualracingleagues.localhost`, and `admin.virtualracingleagues.localhost`
 - Users login on public site, session is available on app subdomain automatically
 
 ### Vite Configuration
@@ -414,17 +414,17 @@ redis-cli
 Key environment variables in `.env`:
 ```env
 APP_NAME=YOUR_APP_NAME
-APP_URL=http://generictemplate.localhost:8000
+APP_URL=http://virtualracingleagues.localhost:8000
 
 # Session configuration (critical for subdomain auth)
-SESSION_DOMAIN=.generictemplate.localhost  # Leading dot enables cross-subdomain sharing
+SESSION_DOMAIN=.virtualracingleagues.localhost  # Leading dot enables cross-subdomain sharing
 SESSION_DRIVER=database
 SESSION_SAME_SITE=lax
 
 # Vite configuration
 VITE_APP_NAME="${APP_NAME}"
 VITE_APP_URL="${APP_URL}"
-VITE_APP_DOMAIN=generictemplate.localhost:8000
+VITE_APP_DOMAIN=app.virtualracingleagues.localhost:8000
 
 # Database
 DB_CONNECTION=mysql
@@ -447,10 +447,10 @@ MAIL_HOST=mailpit
 MAIL_PORT=1025
 
 # Sanctum (for API authentication)
-SANCTUM_STATEFUL_DOMAINS=generictemplate.localhost:8000,app.generictemplate.localhost:8000,admin.generictemplate.localhost:8000
+SANCTUM_STATEFUL_DOMAINS=virtualracingleagues.localhost:8000,app.virtualracingleagues.localhost:8000,admin.virtualracingleagues.localhost:8000
 ```
 
-**Important**: The `SESSION_DOMAIN` must have a leading dot (`.generictemplate.localhost`) to enable session sharing across all subdomains.
+**Important**: The `SESSION_DOMAIN` must have a leading dot (`.virtualracingleagues.localhost`) to enable session sharing across all subdomains.
 
 ## Adding New Features
 
@@ -493,9 +493,9 @@ SANCTUM_STATEFUL_DOMAINS=generictemplate.localhost:8000,app.generictemplate.loca
 3. **Infrastructure Layer**: Update Eloquent model, repository implementation
 4. **Interface Layer**: Create thin controller (3-5 lines per method)
 5. Add route in `routes/subdomain.php` in the appropriate subdomain section:
-   - **Public API**: `Route::domain('generictemplate.localhost')` - No auth required
-   - **User API**: `Route::domain('app.generictemplate.localhost')` - Use `['auth:web', 'user.authenticate']`
-   - **Admin API**: `Route::domain('admin.generictemplate.localhost')` - Use `['auth:admin', 'admin.authenticate']`
+   - **Public API**: `Route::domain('virtualracingleagues.localhost')` - No auth required
+   - **User API**: `Route::domain('app.virtualracingleagues.localhost')` - Use `['auth:web', 'user.authenticate']`
+   - **Admin API**: `Route::domain('admin.virtualracingleagues.localhost')` - Use `['auth:admin', 'admin.authenticate']`
 6. Add tests: Unit tests for entities, feature tests for endpoints
 
 **Example controller pattern (thin)**:

@@ -58,16 +58,9 @@ final class UserImpersonationController extends Controller
             // Regenerate session for security
             $request->session()->regenerate();
 
-            // Determine redirect URL based on current domain
-            $host = $request->getHost();
-            if (str_contains($host, 'app.')) {
-                // Already on app subdomain - redirect to root
-                return redirect('/')->with('success', 'Successfully logged in as ' . $eloquentUser->email);
-            } else {
-                // On main domain - redirect to app subdomain
-                $appUrl = str_replace('generictemplate.localhost', 'app.generictemplate.localhost', config('app.url'));
-                return redirect($appUrl)->with('success', 'Successfully logged in as ' . $eloquentUser->email);
-            }
+            // Always redirect to app subdomain root
+            $appUrl = str_replace('//', '//app.', config('app.url'));
+            return redirect($appUrl)->with('success', 'Successfully logged in as ' . $eloquentUser->email);
         } catch (UserNotFoundException $e) {
             // Redirect to public login with error
             return redirect(config('app.url') . '/login')

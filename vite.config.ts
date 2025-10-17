@@ -30,6 +30,7 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
+  base: '/build/',
   resolve: {
     alias: {
       vue: 'vue/dist/vue.esm-bundler.js',

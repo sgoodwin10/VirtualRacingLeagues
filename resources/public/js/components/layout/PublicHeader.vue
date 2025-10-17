@@ -89,8 +89,8 @@ const appName = computed(() => {
 });
 
 const appSubdomainUrl = computed(() => {
-  const domain = import.meta.env.VITE_APP_DOMAIN || 'generictemplate.localhost:8000';
-  return `http://app.${domain}`;
+  // VITE_APP_DOMAIN already includes 'app.' prefix
+  return `http://${import.meta.env.VITE_APP_DOMAIN}`;
 });
 
 const handleLogout = async (): Promise<void> => {

@@ -181,6 +181,17 @@ class UserEloquent extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Create a new factory instance for the model.
+     * This tells Laravel to use the UserFactory from the proxy class.
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory<static>
+     */
+    protected static function newFactory(): \Illuminate\Database\Eloquent\Factories\Factory
+    {
+        return \Database\Factories\UserFactory::new();
+    }
+
+    /**
      * Send the email verification notification.
      */
     public function sendEmailVerificationNotification(): void

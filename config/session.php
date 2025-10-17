@@ -156,7 +156,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN', '.generictemplate.localhost'),
+    'domain' => env('SESSION_DOMAIN', '.virtualracingleagues.localhost'),
 
     /*
     |--------------------------------------------------------------------------

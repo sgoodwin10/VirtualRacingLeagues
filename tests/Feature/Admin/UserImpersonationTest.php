@@ -187,7 +187,7 @@ class UserImpersonationTest extends TestCase
         $token = $tokenResponse->json('data.token');
 
         // Consume token on app subdomain
-        $response = $this->postJson('http://app.generictemplate.localhost/api/impersonate', [
+        $response = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
             'token' => $token,
         ]);
 
@@ -220,13 +220,13 @@ class UserImpersonationTest extends TestCase
         $token = $tokenResponse->json('data.token');
 
         // Consume token first time
-        $response1 = $this->postJson('http://app.generictemplate.localhost/api/impersonate', [
+        $response1 = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
             'token' => $token,
         ]);
         $response1->assertStatus(200);
 
         // Try to consume token again
-        $response2 = $this->postJson('http://app.generictemplate.localhost/api/impersonate', [
+        $response2 = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
             'token' => $token,
         ]);
         $response2->assertStatus(400);
@@ -241,7 +241,7 @@ class UserImpersonationTest extends TestCase
 
     public function test_cannot_consume_invalid_token(): void
     {
-        $response = $this->postJson('http://app.generictemplate.localhost/api/impersonate', [
+        $response = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
             'token' => '00000000-0000-0000-0000-000000000000',
         ]);
 
@@ -253,7 +253,7 @@ class UserImpersonationTest extends TestCase
 
     public function test_cannot_consume_token_with_invalid_format(): void
     {
-        $response = $this->postJson('http://app.generictemplate.localhost/api/impersonate', [
+        $response = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
             'token' => 'not-a-uuid',
         ]);
 
@@ -263,7 +263,7 @@ class UserImpersonationTest extends TestCase
 
     public function test_token_consumption_requires_token_parameter(): void
     {
-        $response = $this->postJson('http://app.generictemplate.localhost/api/impersonate', []);
+        $response = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', []);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['token']);
@@ -278,7 +278,7 @@ class UserImpersonationTest extends TestCase
         $token = $tokenResponse->json('data.token');
 
         // Consume token
-        $this->postJson('http://app.generictemplate.localhost/api/impersonate', [
+        $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
             'token' => $token,
         ]);
 
@@ -301,7 +301,7 @@ class UserImpersonationTest extends TestCase
         $token = $tokenResponse->json('data.token');
 
         // Consume token
-        $response = $this->postJson('http://app.generictemplate.localhost/api/impersonate', [
+        $response = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
             'token' => $token,
         ]);
 
@@ -319,7 +319,7 @@ class UserImpersonationTest extends TestCase
         $token = $tokenResponse->json('data.token');
 
         // Consume token on main domain (should fail for POST)
-        $response = $this->postJson('http://generictemplate.localhost/api/impersonate', [
+        $response = $this->postJson('http://virtualracingleagues.localhost/api/impersonate', [
             'token' => $token,
         ]);
 
@@ -337,7 +337,7 @@ class UserImpersonationTest extends TestCase
         $token = $tokenResponse->json('data.token');
 
         // Consume token via GET on app subdomain
-        $response = $this->get("http://app.generictemplate.localhost/login-as?token={$token}");
+        $response = $this->get("http://app.virtualracingleagues.localhost/login-as?token={$token}");
 
         // Should redirect to app root
         $response->assertRedirect('/');
@@ -356,10 +356,10 @@ class UserImpersonationTest extends TestCase
         $token = $tokenResponse->json('data.token');
 
         // Consume token via GET on main domain
-        $response = $this->get("http://generictemplate.localhost/login-as?token={$token}");
+        $response = $this->get("http://virtualracingleagues.localhost/login-as?token={$token}");
 
         // Should redirect to app subdomain
-        $response->assertRedirect('http://app.generictemplate.localhost:8000');
+        $response->assertRedirect('http://app.virtualracingleagues.localhost:8000');
         $response->assertSessionHas('success');
 
         // Verify user is now authenticated
@@ -369,10 +369,10 @@ class UserImpersonationTest extends TestCase
     public function test_get_route_with_invalid_token_redirects_to_login(): void
     {
         // Try to consume invalid token via GET
-        $response = $this->get('http://app.generictemplate.localhost/login-as?token=00000000-0000-0000-0000-000000000000');
+        $response = $this->get('http://app.virtualracingleagues.localhost/login-as?token=00000000-0000-0000-0000-000000000000');
 
         // Should redirect to public login with error
-        $response->assertRedirect('http://generictemplate.localhost:8000/login');
+        $response->assertRedirect('http://virtualracingleagues.localhost:8000/login');
         $response->assertSessionHas('error', 'Invalid or expired impersonation token');
     }
 
@@ -388,17 +388,17 @@ class UserImpersonationTest extends TestCase
         Redis::del('user_impersonation:' . $token);
 
         // Try to consume expired token via GET
-        $response = $this->get("http://app.generictemplate.localhost/login-as?token={$token}");
+        $response = $this->get("http://app.virtualracingleagues.localhost/login-as?token={$token}");
 
         // Should redirect to public login with error
-        $response->assertRedirect('http://generictemplate.localhost:8000/login');
+        $response->assertRedirect('http://virtualracingleagues.localhost:8000/login');
         $response->assertSessionHas('error', 'Invalid or expired impersonation token');
     }
 
     public function test_get_route_without_token_parameter_fails_validation(): void
     {
         // Try to access GET route without token parameter
-        $response = $this->get('http://app.generictemplate.localhost/login-as');
+        $response = $this->get('http://app.virtualracingleagues.localhost/login-as');
 
         // Should return validation error (422 or redirect with errors)
         $this->assertTrue(
@@ -409,7 +409,7 @@ class UserImpersonationTest extends TestCase
     public function test_get_route_with_invalid_token_format_fails_validation(): void
     {
         // Try to access GET route with invalid token format
-        $response = $this->get('http://app.generictemplate.localhost/login-as?token=not-a-uuid');
+        $response = $this->get('http://app.virtualracingleagues.localhost/login-as?token=not-a-uuid');
 
         // Should return validation error (422 or redirect with errors)
         $this->assertTrue(
@@ -429,10 +429,10 @@ class UserImpersonationTest extends TestCase
         $this->user->delete();
 
         // Try to consume token via GET
-        $response = $this->get("http://app.generictemplate.localhost/login-as?token={$token}");
+        $response = $this->get("http://app.virtualracingleagues.localhost/login-as?token={$token}");
 
         // Should redirect to public login with error
-        $response->assertRedirect('http://generictemplate.localhost:8000/login');
+        $response->assertRedirect('http://virtualracingleagues.localhost:8000/login');
         $response->assertSessionHas('error', 'Cannot impersonate deleted users');
     }
 
@@ -448,7 +448,7 @@ class UserImpersonationTest extends TestCase
         $this->user->delete();
 
         // Try to consume token
-        $response = $this->postJson('http://app.generictemplate.localhost/api/impersonate', [
+        $response = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
             'token' => $token,
         ]);
 

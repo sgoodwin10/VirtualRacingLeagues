@@ -4,13 +4,13 @@
 
 | Subdomain | URL | Purpose | Auth Required |
 |-----------|-----|---------|---------------|
-| **Main** | `http://generictemplate.localhost:8000` | Public site, authentication | No |
-| **App** | `http://app.generictemplate.localhost:8000` | User dashboard | Yes (web guard) |
-| **Admin** | `http://admin.generictemplate.localhost:8000` | Admin dashboard | Yes (admin guard) |
+| **Main** | `http://virtualracingleagues.localhost:8000` | Public site, authentication | No |
+| **App** | `http://app.virtualracingleagues.localhost:8000` | User dashboard | Yes (web guard) |
+| **Admin** | `http://admin.virtualracingleagues.localhost:8000` | Admin dashboard | Yes (admin guard) |
 
 ## API Endpoints by Subdomain
 
-### Main Domain (generictemplate.localhost:8000)
+### Main Domain (virtualracingleagues.localhost:8000)
 
 **Public Routes** (No Auth):
 - `GET /api/csrf-cookie` - Get CSRF token
@@ -28,7 +28,7 @@
 **Special Routes**:
 - `GET /email/verify/{id}/{hash}` - Email verification (signed)
 
-### App Subdomain (app.generictemplate.localhost:8000)
+### App Subdomain (app.virtualracingleagues.localhost:8000)
 
 **Public Routes**:
 - `GET /api/csrf-cookie` - Get CSRF token
@@ -42,7 +42,7 @@
 **Special Routes**:
 - `GET /email/verify/{id}/{hash}` - Email verification (signed)
 
-### Admin Subdomain (admin.generictemplate.localhost:8000)
+### Admin Subdomain (admin.virtualracingleagues.localhost:8000)
 
 **Public Routes**:
 - `GET /admin/api/csrf-cookie` - Get CSRF token
@@ -78,7 +78,7 @@
 **Main Domain** (`resources/public/js/services/api.ts`):
 ```typescript
 const api = axios.create({
-  baseURL: '/api', // Relative to generictemplate.localhost:8000
+  baseURL: '/api', // Relative to virtualracingleagues.localhost:8000
   withCredentials: true, // Send cookies
   headers: {
     'Accept': 'application/json',
@@ -93,7 +93,7 @@ await axios.get('/api/csrf-cookie');
 **App Subdomain** (`resources/user/js/services/api.ts`):
 ```typescript
 const api = axios.create({
-  baseURL: '/api', // Relative to app.generictemplate.localhost:8000
+  baseURL: '/api', // Relative to app.virtualracingleagues.localhost:8000
   withCredentials: true, // Send cookies
   headers: {
     'Accept': 'application/json',
@@ -108,7 +108,7 @@ await axios.get('/api/csrf-cookie');
 **Admin Subdomain** (`resources/admin/js/services/api.ts`):
 ```typescript
 const api = axios.create({
-  baseURL: '/admin/api', // Relative to admin.generictemplate.localhost:8000
+  baseURL: '/admin/api', // Relative to admin.virtualracingleagues.localhost:8000
   withCredentials: true, // Send cookies
   headers: {
     'Accept': 'application/json',
@@ -124,7 +124,7 @@ await axios.get('/admin/api/csrf-cookie');
 
 **User Login Flow**:
 ```typescript
-// 1. User on main domain (generictemplate.localhost:8000)
+// 1. User on main domain (virtualracingleagues.localhost:8000)
 // 2. Get CSRF token
 await axios.get('/api/csrf-cookie');
 
@@ -135,12 +135,12 @@ const response = await axios.post('/api/login', {
 });
 
 // 4. Redirect to app subdomain
-window.location.href = 'http://app.generictemplate.localhost:8000';
+window.location.href = 'http://app.virtualracingleagues.localhost:8000';
 ```
 
 **Admin Login Flow**:
 ```typescript
-// 1. Admin on admin subdomain (admin.generictemplate.localhost:8000/admin)
+// 1. Admin on admin subdomain (admin.virtualracingleagues.localhost:8000/admin)
 // 2. Get CSRF token
 await axios.get('/admin/api/csrf-cookie');
 
@@ -164,7 +164,7 @@ try {
   // User is authenticated, proceed
 } catch (error) {
   // User not authenticated, redirect to main domain
-  window.location.href = 'http://generictemplate.localhost:8000/login';
+  window.location.href = 'http://virtualracingleagues.localhost:8000/login';
 }
 ```
 
@@ -184,9 +184,9 @@ try {
 
 **Required in `.env`**:
 ```env
-APP_URL=http://generictemplate.localhost:8000
-SESSION_DOMAIN=.generictemplate.localhost
-SANCTUM_STATEFUL_DOMAINS=generictemplate.localhost:8000,app.generictemplate.localhost:8000,admin.generictemplate.localhost:8000,localhost:5173
+APP_URL=http://virtualracingleagues.localhost:8000
+SESSION_DOMAIN=.virtualracingleagues.localhost
+SANCTUM_STATEFUL_DOMAINS=virtualracingleagues.localhost:8000,app.virtualracingleagues.localhost:8000,admin.virtualracingleagues.localhost:8000,localhost:5173
 ```
 
 ## Common Commands
@@ -199,9 +199,9 @@ php artisan config:clear && php artisan cache:clear && php artisan route:clear
 php artisan route:list
 
 # Count routes by subdomain
-php artisan route:list | grep "admin.generictemplate" | wc -l
-php artisan route:list | grep "app.generictemplate" | wc -l
-php artisan route:list | grep "generictemplate.localhost" | grep -v "admin\|app" | wc -l
+php artisan route:list | grep "admin.virtualracingleagues" | wc -l
+php artisan route:list | grep "app.virtualracingleagues" | wc -l
+php artisan route:list | grep "virtualracingleagues.localhost" | grep -v "admin\|app" | wc -l
 
 # Check session configuration
 php artisan config:show session | grep -E "(driver|domain|same_site|cookie)"
@@ -210,9 +210,9 @@ php artisan config:show session | grep -E "(driver|domain|same_site|cookie)"
 ## Troubleshooting Checklist
 
 **Session not shared?**
-- [ ] `.env` has `SESSION_DOMAIN=.generictemplate.localhost` (with leading dot)
+- [ ] `.env` has `SESSION_DOMAIN=.virtualracingleagues.localhost` (with leading dot)
 - [ ] Run `php artisan config:clear`
-- [ ] Check browser cookie domain is `.generictemplate.localhost`
+- [ ] Check browser cookie domain is `.virtualracingleagues.localhost`
 
 **CSRF token mismatch?**
 - [ ] Frontend calls `/api/csrf-cookie` before authenticated requests

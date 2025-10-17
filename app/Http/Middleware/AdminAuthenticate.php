@@ -30,7 +30,8 @@ class AdminAuthenticate
             }
 
             // Redirect to admin subdomain login
-            return redirect('http://admin.generictemplate.localhost/admin/login');
+            $adminUrl = str_replace('//', '//admin.', config('app.url'));
+            return redirect($adminUrl . '/admin/login');
         }
 
         // Check if admin account is active
@@ -45,7 +46,8 @@ class AdminAuthenticate
                 ], 403);
             }
 
-            return redirect('http://admin.generictemplate.localhost/admin/login')
+            $adminUrl = str_replace('//', '//admin.', config('app.url'));
+            return redirect($adminUrl . '/admin/login')
                 ->with('error', 'Your account has been deactivated. Please contact support.');
         }
 

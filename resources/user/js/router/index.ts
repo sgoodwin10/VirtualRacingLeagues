@@ -29,10 +29,9 @@ const router = createRouter({
 
 // Get public site domain from environment
 const getPublicDomain = (): string => {
-  const appUrl = import.meta.env.VITE_APP_URL || 'http://generictemplate.localhost:8000';
   // Extract domain without 'app.' subdomain
-  // e.g., http://app.generictemplate.localhost:8000 -> http://generictemplate.localhost:8000
-  return appUrl.replace('//app.', '//');
+  // e.g., http://app.virtualracingleagues.localhost:8000 -> http://virtualracingleagues.localhost:8000
+  return import.meta.env.VITE_APP_URL.replace('//app.', '//');
 };
 
 // Navigation guard - ALL routes require authentication

@@ -22,9 +22,9 @@ Route::fallback(function () {
     return response()->json([
         'error' => 'Route not found. Please ensure you are accessing the correct subdomain.',
         'domains' => [
-            'public' => 'generictemplate.localhost:8000',
-            'app' => 'app.generictemplate.localhost:8000',
-            'admin' => 'admin.generictemplate.localhost:8000',
+            'public' => 'virtualracingleagues.localhost:8000',
+            'app' => 'app.virtualracingleagues.localhost:8000',
+            'admin' => 'admin.virtualracingleagues.localhost:8000',
         ],
     ], 404);
 });
