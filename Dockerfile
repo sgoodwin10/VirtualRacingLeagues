@@ -1,0 +1,64 @@
+# Base stage - Production-ready PHP without Node.js
+FROM php:8.2-fpm AS base
+
+# Set working directory
+WORKDIR /var/www
+
+# Install system dependencies (without Node.js)
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    procps \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Install Redis extension
+RUN pecl install redis && docker-php-ext-enable redis
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Create system user to run Composer and Artisan Commands
+RUN useradd -G www-data,root -u 1000 -d /home/laravel laravel
+RUN mkdir -p /home/laravel/.composer && \
+    chown -R laravel:laravel /home/laravel
+
+# Set user
+USER laravel
+
+# Expose port 9000 and start php-fpm server
+EXPOSE 9000
+CMD ["php-fpm"]
+
+
+# Development stage - Extends base with Node.js for local development
+FROM base AS development
+
+# Switch to root to install Node.js
+USER root
+
+# Install Node.js 22.x from NodeSource
+RUN apt-get update && \
+    apt-get install -y ca-certificates gnupg && \
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Configure npm to use user-writable directory for global packages
+RUN mkdir -p /home/laravel/.npm-global && \
+    chown -R laravel:laravel /home/laravel/.npm-global
+
+# Switch back to laravel user
+USER laravel
+
+# Set npm global directory to user-writable location
+ENV NPM_CONFIG_PREFIX=/home/laravel/.npm-global
+ENV PATH=/home/laravel/.npm-global/bin:$PATH

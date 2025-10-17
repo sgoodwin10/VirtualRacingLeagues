@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(docker-compose ps:*)",
+      "Bash(php artisan tinker:*)",
+      "Bash(php artisan:*)",
+      "Bash(mysql:*)",
+      "Bash(docker-compose exec:*)",
+      "Bash(composer show)",
+      "Bash(composer test)",
+      "Bash(composer test:*)",
+      "Bash(composer phpstan:*)",
+      "Bash(composer:*)",
+      "Bash(./vendor/bin/phpstan:*)",
+      "Bash(./vendor/bin/phpcs:*)",
+      "WebFetch(domain:)",
+      "Bash(./vendor/bin/phpunit:*)",
+      "Bash(npm run test:admin:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(php:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx vite build:*)",
+      "Bash(npx vue-tsc:*)",
+      "WebFetch(domain:primevue.org)",
+      "Bash(npm install:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm run format:admin:*)",
+      "Bash(npm run lint:*)",
+      "Bash(cat:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,17 @@
+/* Google Fonts - Zalando Sans */
+@import url('https://fonts.googleapis.com/css2?family=Zalando+Sans:wght@400;500;600;700&display=swap');
+
+@import 'tailwindcss';
+@plugin 'tailwindcss-primeui';
+
+/* User Dashboard Specific Styles */
+
+body {
+  font-family: 'Zalando Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--font-size-base);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Add your user dashboard custom styles here */
