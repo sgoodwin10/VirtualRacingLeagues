@@ -52,7 +52,6 @@ export function createTestRouter(routes: any[] = []) {
   });
 }
 
-
 /**
  * Mounts a Vue component with PrimeVue stubs and common testing setup
  *
@@ -90,11 +89,7 @@ export function mountWithStubs<T extends ComponentPublicInstance>(
   const customPlugins = options.global?.plugins || [];
 
   // Extract PrimeVue plugins from defaults (PrimeVue, ToastService, ConfirmationService)
-  const primevuePlugins = [
-    PrimeVue,
-    ToastService,
-    ConfirmationService,
-  ];
+  const primevuePlugins = [PrimeVue, ToastService, ConfirmationService];
 
   // Check if custom plugins include Pinia or Router
   // Pinia and Router both have 'install' method and specific properties

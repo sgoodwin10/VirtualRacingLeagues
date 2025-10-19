@@ -15,7 +15,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const labelClasses = computed(() => {
-  const baseClasses = 'block text-sm font-medium text-gray-700 mb-2';
+  const baseClasses = 'block text-xs font-medium text-gray-700 mb-2';
   return props.class ? `${baseClasses} ${props.class}` : baseClasses;
 });
 </script>

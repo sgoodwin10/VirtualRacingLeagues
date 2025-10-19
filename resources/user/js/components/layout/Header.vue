@@ -10,6 +10,10 @@ const router = useRouter();
 const userStore = useUserStore();
 const userMenu = ref();
 
+const siteName = computed(() => {
+  return import.meta.env.VITE_APP_NAME || 'Your App';
+});
+
 const menuItems = computed<MenuItem[]>(() => [
   {
     label: 'Profile',
@@ -38,15 +42,24 @@ async function handleLogout() {
 
 <template>
   <header class="bg-white shadow-sm">
-    <div class="container mx-auto px-4">
+    <div class="container w-full xl:mx-auto px-4">
       <div class="flex items-center justify-between h-16">
         <!-- Logo -->
         <router-link to="/" class="flex items-center">
-          <span class="text-xl font-bold text-blue-600">User Dashboard</span>
+          <span class="text-xl font-bold text-blue-600">{{ siteName }} Dashboard</span>
         </router-link>
 
         <!-- Navigation -->
         <nav class="flex items-center gap-4">
+          <!-- Leagues Link -->
+          <router-link
+            to="/leagues"
+            class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            active-class="text-blue-600 bg-blue-50"
+          >
+            Leagues
+          </router-link>
+
           <!-- User Menu (always visible on authenticated dashboard) -->
           <Button
             type="button"

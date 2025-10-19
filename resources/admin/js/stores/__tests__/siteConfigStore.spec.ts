@@ -62,7 +62,13 @@ describe('useSiteConfigStore', () => {
 
     const configWithLogo = createMockSiteConfig({
       files: {
-        logo: { id: 1, url: 'http://example.com/logo.png', file_name: 'logo.png', mime_type: 'image/png', file_size: 1024 },
+        logo: {
+          id: 1,
+          url: 'http://example.com/logo.png',
+          file_name: 'logo.png',
+          mime_type: 'image/png',
+          file_size: 1024,
+        },
         favicon: null,
         og_image: null,
       },

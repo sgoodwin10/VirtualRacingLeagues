@@ -123,11 +123,22 @@ export function mountWithStubs<T extends ComponentPublicInstance>(
   // Merge plugins
   const plugins = [...customPlugins, ...defaultDataPlugins, ...primevuePlugins];
 
+  // Add directives stubs
+  const directives = {
+    tooltip: {
+      mounted: () => {},
+      updated: () => {},
+      unmounted: () => {},
+    },
+    ...(options.global?.directives || {}),
+  };
+
   // Merge all global options
   const globalOptions = {
     ...options.global,
     plugins,
     stubs,
+    directives,
   };
 
   // Mount component with merged options

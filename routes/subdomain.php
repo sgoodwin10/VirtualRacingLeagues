@@ -13,6 +13,11 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UserImpersonationController;
+use App\Http\Controllers\User\DriverController;
+use App\Http\Controllers\User\LeagueController;
+use App\Http\Controllers\User\PlatformController;
+use App\Http\Controllers\User\SiteConfigController as UserSiteConfigController;
+use App\Http\Controllers\User\TimezoneController;
 use App\Http\Middleware\AdminOrSuperAdminOnly;
 use App\Http\Middleware\AdminSessionMiddleware;
 use App\Http\Middleware\SuperAdminOnly;
@@ -129,7 +134,31 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             // Profile
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-            // Add future authenticated user API routes here
+            // Site Configuration (read-only)
+            Route::get('/site-config', [UserSiteConfigController::class, 'show'])->name('site-config.show');
+
+            // Platforms (read-only)
+            Route::get('/platforms', [PlatformController::class, 'index'])->name('platforms.index');
+
+            // Timezones (read-only)
+            Route::get('/timezones', [TimezoneController::class, 'index'])->name('timezones.index');
+
+            // Leagues
+            Route::get('/leagues', [LeagueController::class, 'index'])->name('leagues.index');
+            Route::post('/leagues', [LeagueController::class, 'store'])->name('leagues.store');
+            Route::get('/leagues/{id}', [LeagueController::class, 'show'])->name('leagues.show');
+            Route::put('/leagues/{id}', [LeagueController::class, 'update'])->name('leagues.update');
+            Route::delete('/leagues/{id}', [LeagueController::class, 'destroy'])->name('leagues.destroy');
+            Route::post('/leagues/check-slug', [LeagueController::class, 'checkSlug'])->name('leagues.check-slug');
+            Route::get('/leagues/{id}/platforms', [LeagueController::class, 'platforms'])->name('leagues.platforms');
+
+            // League Drivers
+            Route::get('/leagues/{league}/drivers', [DriverController::class, 'index'])->name('leagues.drivers.index');
+            Route::post('/leagues/{league}/drivers', [DriverController::class, 'store'])->name('leagues.drivers.store');
+            Route::get('/leagues/{league}/drivers/{driver}', [DriverController::class, 'show'])->name('leagues.drivers.show');
+            Route::put('/leagues/{league}/drivers/{driver}', [DriverController::class, 'update'])->name('leagues.drivers.update');
+            Route::delete('/leagues/{league}/drivers/{driver}', [DriverController::class, 'destroy'])->name('leagues.drivers.destroy');
+            Route::post('/leagues/{league}/drivers/import-csv', [DriverController::class, 'importCsv'])->name('leagues.drivers.import-csv');
         });
     });
 

@@ -47,7 +47,12 @@ export default defineConfig({
     },
     host: true, // true needed for the Docker Container port mapping to work
     strictPort: true,
-    hmr: { host: 'localhost', protocol: 'ws', clientPort: 5173 },
+    cors: true, // Enable CORS for all subdomains
+    hmr: {
+      host: 'localhost',
+      protocol: 'ws',
+      clientPort: 5173,
+    },
     // https: true,
     port: 5173, // replace this port with any number you want
   },

@@ -7,6 +7,9 @@ PrimeVue is configured for both User and Admin dashboards with the **Aura theme 
 - **primevue** (v4.4.1) - UI component library with 90+ components
 - **primeicons** (v7.0.0) - 250+ icons designed for PrimeVue
 
+## Important ##
+Always use context7 when I need code generation, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
+
 ## Configuration
 
 PrimeVue is configured in both dashboard entry points:

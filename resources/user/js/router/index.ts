@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useUserStore } from '@user/stores/userStore';
 import HomeView from '@user/views/HomeView.vue';
 import ProfileView from '@user/views/ProfileView.vue';
+import LeagueList from '@user/views/LeagueList.vue';
+import LeagueDetail from '@user/views/LeagueDetail.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -21,6 +23,24 @@ const router = createRouter({
       component: ProfileView,
       meta: {
         title: 'Profile',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/leagues',
+      name: 'leagues',
+      component: LeagueList,
+      meta: {
+        title: 'My Leagues',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/leagues/:id',
+      name: 'league-detail',
+      component: LeagueDetail,
+      meta: {
+        title: 'League Details',
         requiresAuth: true,
       },
     },

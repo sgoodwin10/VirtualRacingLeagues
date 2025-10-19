@@ -17,7 +17,7 @@ import { defineComponent, type PropType } from 'vue';
  * Supports: label, icon, severity, loading, click events
  */
 export const PrimeButtonStub = defineComponent({
-  name: 'PrimeButton',
+  name: 'Button',
   props: {
     label: {
       type: String,
@@ -425,6 +425,397 @@ export const ConfirmDialogStub = defineComponent({
 });
 
 /**
+ * Editor Component Stub
+ * Rich text editor component
+ */
+export const EditorStub = defineComponent({
+  name: 'Editor',
+  props: {
+    modelValue: {
+      type: String,
+      default: '',
+    },
+    editorStyle: {
+      type: String,
+      default: undefined,
+    },
+    placeholder: {
+      type: String,
+      default: undefined,
+    },
+    readonly: Boolean,
+    disabled: Boolean,
+  },
+  emits: ['update:modelValue', 'text-change', 'selection-change'],
+  methods: {
+    handleInput(event: Event): void {
+      const target = event.target as HTMLTextAreaElement;
+      this.$emit('update:modelValue', target.value);
+    },
+  },
+  template: `
+    <div class="p-editor-container" :class="{ 'p-invalid': $attrs.class && $attrs.class.includes('p-invalid') }">
+      <div class="p-editor-toolbar">
+        <slot name="toolbar"></slot>
+      </div>
+      <div class="p-editor-content">
+        <textarea
+          :value="modelValue"
+          :placeholder="placeholder"
+          :readonly="readonly"
+          :disabled="disabled"
+          @input="handleInput"
+        ></textarea>
+      </div>
+    </div>
+  `,
+});
+
+/**
+ * FileUpload Component Stub
+ * File upload component
+ */
+export const FileUploadStub = defineComponent({
+  name: 'FileUpload',
+  props: {
+    mode: {
+      type: String as PropType<'basic' | 'advanced'>,
+      default: 'advanced',
+    },
+    name: {
+      type: String,
+      default: undefined,
+    },
+    url: {
+      type: String,
+      default: undefined,
+    },
+    multiple: Boolean,
+    accept: {
+      type: String,
+      default: undefined,
+    },
+    maxFileSize: {
+      type: Number,
+      default: undefined,
+    },
+    disabled: Boolean,
+    auto: Boolean,
+    chooseLabel: {
+      type: String,
+      default: 'Choose',
+    },
+  },
+  emits: ['select', 'upload', 'before-upload', 'progress', 'error', 'clear'],
+  methods: {
+    clear(): void {
+      this.$emit('clear');
+    },
+  },
+  template: `
+    <div class="p-fileupload" :class="$attrs.class">
+      <div class="p-fileupload-buttonbar">
+        <label class="p-button p-fileupload-choose">
+          {{ chooseLabel }}
+          <input type="file" :accept="accept" :disabled="disabled" @change="$emit('select', { files: $event.target.files })" />
+        </label>
+      </div>
+    </div>
+  `,
+});
+
+/**
+ * Select Component Stub (replaces deprecated Dropdown)
+ * Select dropdown component
+ */
+export const SelectStub = defineComponent({
+  name: 'Select',
+  props: {
+    modelValue: {
+      type: [String, Number, Boolean, Object, null] as PropType<any>,
+      default: null,
+    },
+    options: {
+      type: Array as PropType<any[]>,
+      default: () => [],
+    },
+    optionLabel: {
+      type: [String, Function] as PropType<string | ((option: any) => string)>,
+      default: undefined,
+    },
+    optionValue: {
+      type: [String, Function] as PropType<string | ((option: any) => any)>,
+      default: undefined,
+    },
+    placeholder: {
+      type: String,
+      default: undefined,
+    },
+    disabled: Boolean,
+    filter: Boolean,
+    showClear: Boolean,
+  },
+  emits: ['update:modelValue', 'change'],
+  template: `
+    <div class="p-select" :class="$attrs.class">
+      <select
+        :value="modelValue"
+        :disabled="disabled"
+        @change="$emit('update:modelValue', $event.target.value)"
+      >
+        <option v-if="placeholder" value="">{{ placeholder }}</option>
+        <option v-for="(option, index) in options" :key="index" :value="optionValue ? option[optionValue] : option">
+          {{ optionLabel ? (typeof optionLabel === 'function' ? optionLabel(option) : option[optionLabel]) : option }}
+        </option>
+      </select>
+    </div>
+  `,
+});
+
+/**
+ * Dropdown Component Stub (deprecated, use Select instead)
+ * @deprecated Use SelectStub instead
+ */
+export const DropdownStub = SelectStub;
+
+/**
+ * MultiSelect Component Stub
+ * Multi-select dropdown component
+ */
+export const MultiSelectStub = defineComponent({
+  name: 'MultiSelect',
+  props: {
+    modelValue: {
+      type: Array as PropType<any[]>,
+      default: () => [],
+    },
+    options: {
+      type: Array as PropType<any[]>,
+      default: () => [],
+    },
+    optionLabel: {
+      type: [String, Function] as PropType<string | ((option: any) => string)>,
+      default: undefined,
+    },
+    optionValue: {
+      type: [String, Function] as PropType<string | ((option: any) => any)>,
+      default: undefined,
+    },
+    placeholder: {
+      type: String,
+      default: undefined,
+    },
+    disabled: Boolean,
+    filter: Boolean,
+    maxSelectedLabels: {
+      type: Number,
+      default: undefined,
+    },
+    display: {
+      type: String as PropType<'comma' | 'chip'>,
+      default: 'comma',
+    },
+  },
+  emits: ['update:modelValue', 'change'],
+  template: `
+    <div class="p-multiselect" :class="$attrs.class">
+      <div class="p-multiselect-label-container">
+        <div class="p-multiselect-trigger">
+          <span class="p-multiselect-trigger-icon"></span>
+        </div>
+      </div>
+    </div>
+  `,
+});
+
+/**
+ * DataView Component Stub
+ * Data display component
+ */
+export const DataViewStub = defineComponent({
+  name: 'DataView',
+  props: {
+    value: {
+      type: Array as PropType<any[]>,
+      default: () => [],
+    },
+    layout: {
+      type: String as PropType<'list' | 'grid'>,
+      default: 'list',
+    },
+    dataKey: {
+      type: String,
+      default: undefined,
+    },
+    loading: Boolean,
+  },
+  template: `
+    <div class="p-dataview">
+      <div v-if="loading" class="p-dataview-loading">Loading...</div>
+      <div v-else-if="!value || value.length === 0" class="p-dataview-empty">
+        <slot name="empty">No records found</slot>
+      </div>
+      <div v-else class="p-dataview-content">
+        <slot name="list" :items="value">
+          <div v-for="(item, index) in value" :key="dataKey ? item[dataKey] : index">
+            {{ item }}
+          </div>
+        </slot>
+      </div>
+    </div>
+  `,
+});
+
+/**
+ * Tag Component Stub
+ * Tag/badge component
+ */
+export const TagStub = defineComponent({
+  name: 'Tag',
+  props: {
+    value: {
+      type: [String, Number],
+      default: undefined,
+    },
+    severity: {
+      type: String as PropType<
+        'success' | 'info' | 'warn' | 'warning' | 'danger' | 'secondary' | 'contrast'
+      >,
+      default: undefined,
+    },
+    rounded: Boolean,
+    icon: {
+      type: String,
+      default: undefined,
+    },
+  },
+  template: `
+    <span :class="['p-tag', severity && 'p-tag-' + severity, rounded && 'p-tag-rounded']">
+      <span v-if="icon" :class="['p-tag-icon', icon]"></span>
+      <span class="p-tag-value">
+        <slot>{{ value }}</slot>
+      </span>
+    </span>
+  `,
+});
+
+/**
+ * Stepper Component Stub
+ * Stepper container component
+ */
+export const StepperStub = defineComponent({
+  name: 'Stepper',
+  props: {
+    value: {
+      type: Number,
+      default: 0,
+    },
+    linear: Boolean,
+  },
+  emits: ['update:value'],
+  template: `
+    <div class="p-stepper">
+      <slot></slot>
+    </div>
+  `,
+});
+
+/**
+ * StepList Component Stub
+ */
+export const StepListStub = defineComponent({
+  name: 'StepList',
+  template: `
+    <div class="p-steplist">
+      <slot></slot>
+    </div>
+  `,
+});
+
+/**
+ * Step Component Stub
+ */
+export const StepStub = defineComponent({
+  name: 'Step',
+  props: {
+    value: {
+      type: [String, Number],
+      default: undefined,
+    },
+  },
+  template: `
+    <div class="p-step">
+      <slot></slot>
+    </div>
+  `,
+});
+
+/**
+ * StepPanels Component Stub
+ */
+export const StepPanelsStub = defineComponent({
+  name: 'StepPanels',
+  template: `
+    <div class="p-steppanels">
+      <slot></slot>
+    </div>
+  `,
+});
+
+/**
+ * StepPanel Component Stub
+ */
+export const StepPanelStub = defineComponent({
+  name: 'StepPanel',
+  props: {
+    value: {
+      type: [String, Number],
+      default: undefined,
+    },
+  },
+  template: `
+    <div class="p-steppanel">
+      <slot></slot>
+    </div>
+  `,
+});
+
+/**
+ * Drawer Component Stub
+ * Side panel/drawer component
+ */
+export const DrawerStub = defineComponent({
+  name: 'Drawer',
+  props: {
+    visible: Boolean,
+    position: {
+      type: String as PropType<'left' | 'right' | 'top' | 'bottom'>,
+      default: 'left',
+    },
+    modal: {
+      type: Boolean,
+      default: true,
+    },
+    showCloseIcon: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  emits: ['update:visible', 'show', 'hide'],
+  template: `
+    <div v-if="visible" :class="['p-drawer', 'p-drawer-' + position, $attrs.class]">
+      <div class="p-drawer-header">
+        <slot name="header"></slot>
+        <button v-if="showCloseIcon" class="p-drawer-close" @click="$emit('update:visible', false)">×</button>
+      </div>
+      <div class="p-drawer-content">
+        <slot></slot>
+      </div>
+    </div>
+  `,
+});
+
+/**
  * Complete stub mappings for all PrimeVue components
  */
 export const primevueStubs = {
@@ -438,4 +829,17 @@ export const primevueStubs = {
   Message: MessageStub,
   Menu: MenuStub,
   ConfirmDialog: ConfirmDialogStub,
+  Editor: EditorStub,
+  FileUpload: FileUploadStub,
+  Select: SelectStub,
+  Dropdown: DropdownStub, // Deprecated: for backwards compatibility
+  MultiSelect: MultiSelectStub,
+  DataView: DataViewStub,
+  Tag: TagStub,
+  Stepper: StepperStub,
+  StepList: StepListStub,
+  Step: StepStub,
+  StepPanels: StepPanelsStub,
+  StepPanel: StepPanelStub,
+  Drawer: DrawerStub,
 };

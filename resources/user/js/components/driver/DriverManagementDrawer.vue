@@ -1,0 +1,389 @@
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue';
+import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
+import Drawer from 'primevue/drawer';
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Select from 'primevue/select';
+import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
+import DriverStatsCard from './DriverStatsCard.vue';
+import DriverTable from './DriverTable.vue';
+import DriverFormDialog from './DriverFormDialog.vue';
+import ViewDriverModal from './ViewDriverModal.vue';
+import CSVImportDialog from './CSVImportDialog.vue';
+import { useDriverStore } from '@user/stores/driverStore';
+import type { LeagueDriver, CreateDriverRequest } from '@user/types/driver';
+import type { Platform } from '@user/types/league';
+
+interface Props {
+  visible: boolean;
+  leagueId: number;
+  leagueName: string;
+  leaguePlatforms?: Platform[];
+}
+
+interface Emits {
+  (e: 'update:visible', value: boolean): void;
+  (e: 'close'): void;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  leaguePlatforms: () => [],
+});
+const _emit = defineEmits<Emits>();
+
+const toast = useToast();
+const confirm = useConfirm();
+const driverStore = useDriverStore();
+
+// Dialog states
+const showDriverForm = ref(false);
+const showViewModal = ref(false);
+const showCSVImport = ref(false);
+const formMode = ref<'create' | 'edit'>('create');
+const selectedDriver = ref<LeagueDriver | null>(null);
+
+// Search and filter
+const searchInput = ref('');
+const statusFilterOptions = [
+  { label: 'All Drivers', value: 'all' },
+  { label: 'Active Only', value: 'active' },
+  { label: 'Inactive Only', value: 'inactive' },
+  { label: 'Banned Only', value: 'banned' },
+];
+
+// Computed
+const drawerTitle = computed(() => `${props.leagueName} - Drivers`);
+
+// Watch for visibility changes
+watch(
+  () => props.visible,
+  async (visible) => {
+    if (visible) {
+      await loadDrivers();
+    } else {
+      // Reset store when drawer closes
+      driverStore.resetFilters();
+    }
+  }
+);
+
+// Watch for search input changes (debounced)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+watch(searchInput, (newValue) => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+  searchTimeout = setTimeout(() => {
+    driverStore.setSearchQuery(newValue);
+    loadDrivers();
+  }, 300);
+});
+
+// Watch for status filter changes
+watch(
+  () => driverStore.statusFilter,
+  () => {
+    loadDrivers();
+  }
+);
+
+// Watch for page changes
+watch(
+  () => driverStore.currentPage,
+  () => {
+    loadDrivers();
+  }
+);
+
+/**
+ * Load drivers for the league
+ */
+const loadDrivers = async (): Promise<void> => {
+  try {
+    await driverStore.fetchLeagueDrivers(props.leagueId);
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load drivers',
+      life: 3000,
+    });
+  }
+};
+
+/**
+ * Handle add driver button click
+ */
+const handleAddDriver = (): void => {
+  formMode.value = 'create';
+  selectedDriver.value = null;
+  showDriverForm.value = true;
+};
+
+/**
+ * Handle view driver button click
+ */
+const handleViewDriver = (driver: LeagueDriver): void => {
+  selectedDriver.value = driver;
+  showViewModal.value = true;
+};
+
+/**
+ * Handle edit driver button click
+ */
+const handleEditDriver = (driver: LeagueDriver): void => {
+  formMode.value = 'edit';
+  selectedDriver.value = driver;
+  showDriverForm.value = true;
+};
+
+/**
+ * Handle edit from view modal
+ */
+const handleEditFromView = (): void => {
+  showViewModal.value = false;
+  if (selectedDriver.value) {
+    handleEditDriver(selectedDriver.value);
+  }
+};
+
+/**
+ * Handle driver form save
+ */
+const handleSaveDriver = async (data: CreateDriverRequest): Promise<void> => {
+  try {
+    if (formMode.value === 'create') {
+      await driverStore.createNewDriver(props.leagueId, data);
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Driver added successfully',
+        life: 3000,
+      });
+    } else if (selectedDriver.value) {
+      // In edit mode, update both driver fields and league-specific settings
+      // Use driver_id (the actual driver ID), not id (the league_driver pivot ID)
+      await driverStore.updateDriver(props.leagueId, selectedDriver.value.driver_id, {
+        // Global driver fields
+        first_name: data.first_name,
+        last_name: data.last_name,
+        nickname: data.nickname,
+        email: data.email,
+        phone: data.phone,
+        psn_id: data.psn_id,
+        gt7_id: data.gt7_id,
+        iracing_id: data.iracing_id,
+        iracing_customer_id: data.iracing_customer_id,
+        // League-specific fields
+        driver_number: data.driver_number,
+        status: data.status,
+        league_notes: data.league_notes,
+      });
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Driver updated successfully',
+        life: 3000,
+      });
+    }
+    showDriverForm.value = false;
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error instanceof Error ? error.message : 'Failed to save driver',
+      life: 5000,
+    });
+  }
+};
+
+/**
+ * Handle remove driver button click
+ */
+const handleRemoveDriver = (driver: LeagueDriver): void => {
+  confirm.require({
+    message: `Are you sure you want to remove ${getDriverName(driver)} from this league?`,
+    header: 'Confirm Removal',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Remove',
+    rejectLabel: 'Cancel',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        // Use driver_id (the actual driver ID), not id (the league_driver pivot ID)
+        await driverStore.removeDriver(props.leagueId, driver.driver_id);
+        toast.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Driver removed from league',
+          life: 3000,
+        });
+      } catch {
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to remove driver',
+          life: 3000,
+        });
+      }
+    },
+  });
+};
+
+/**
+ * Handle import CSV button click
+ */
+const handleImportCSV = (): void => {
+  showCSVImport.value = true;
+};
+
+/**
+ * Handle CSV import
+ */
+const handleCSVImport = async (csvData: string) => {
+  const result = await driverStore.importCSV(props.leagueId, csvData);
+
+  if (result.errors.length === 0) {
+    toast.add({
+      severity: 'success',
+      summary: 'Import Successful',
+      detail: result.message,
+      life: 3000,
+    });
+  } else if (result.success_count > 0) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Partial Import',
+      detail: result.message,
+      life: 5000,
+    });
+  }
+
+  return result;
+};
+
+/**
+ * Get driver's display name
+ */
+const getDriverName = (leagueDriver: LeagueDriver): string => {
+  return leagueDriver.driver?.display_name || 'Unknown';
+};
+
+// Load drivers on mount if visible
+onMounted(() => {
+  if (props.visible) {
+    loadDrivers();
+  }
+});
+</script>
+
+<template>
+  <div>
+    <Drawer
+      :visible="visible"
+      position="bottom"
+      :header="drawerTitle"
+      class="driver-management-drawer h-[80vh]"
+      @update:visible="$emit('update:visible', $event)"
+    >
+      <div class="h-full flex flex-col">
+        <!-- Stats Card -->
+        <DriverStatsCard
+          :total-count="driverStore.driverStats.total"
+          :active-count="driverStore.driverStats.active"
+          :inactive-count="driverStore.driverStats.inactive"
+          :banned-count="driverStore.driverStats.banned"
+        />
+
+        <!-- Toolbar -->
+        <div class="flex flex-wrap gap-4 items-center justify-between mb-4">
+          <!-- Search and Filter -->
+          <div class="flex gap-2 flex-1">
+            <span class="p-input-icon-left flex-1 max-w-md">
+              <i class="pi pi-search" />
+              <InputText v-model="searchInput" placeholder="Search drivers..." class="w-full" />
+            </span>
+            <Select
+              v-model="driverStore.statusFilter"
+              :options="statusFilterOptions"
+              option-label="label"
+              option-value="value"
+              placeholder="Filter by status"
+              class="w-48"
+            />
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-2">
+            <Button
+              label="Import CSV"
+              icon="pi pi-upload"
+              severity="secondary"
+              @click="handleImportCSV"
+            />
+            <Button label="Add Driver" icon="pi pi-plus" @click="handleAddDriver" />
+          </div>
+        </div>
+
+        <!-- Driver Table -->
+        <div class="flex-1 overflow-auto">
+          <DriverTable
+            :drivers="driverStore.drivers"
+            :loading="driverStore.loading"
+            :league-platforms="leaguePlatforms"
+            @view="handleViewDriver"
+            @edit="handleEditDriver"
+            @remove="handleRemoveDriver"
+          />
+        </div>
+      </div>
+    </Drawer>
+
+    <!-- View Driver Modal -->
+    <ViewDriverModal
+      v-model:visible="showViewModal"
+      :driver="selectedDriver"
+      @close="showViewModal = false"
+      @edit="handleEditFromView"
+    />
+
+    <!-- Driver Form Dialog -->
+    <DriverFormDialog
+      v-model:visible="showDriverForm"
+      :mode="formMode"
+      :driver="selectedDriver"
+      :league-platforms="leaguePlatforms"
+      @save="handleSaveDriver"
+      @cancel="showDriverForm = false"
+    />
+
+    <!-- CSV Import Dialog -->
+    <CSVImportDialog
+      v-model:visible="showCSVImport"
+      :league-id="leagueId"
+      @import="handleCSVImport"
+      @close="showCSVImport = false"
+    />
+
+    <!-- Toast for notifications -->
+    <Toast />
+
+    <!-- Confirm Dialog -->
+    <ConfirmDialog />
+  </div>
+</template>
+
+<style scoped>
+.driver-management-drawer :deep(.p-drawer-content) {
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.driver-management-drawer :deep(.p-drawer-header) {
+  flex-shrink: 0;
+}
+</style>

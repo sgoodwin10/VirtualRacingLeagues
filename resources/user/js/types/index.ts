@@ -5,6 +5,9 @@
  * - User types: @user/types/user
  * - Auth types: @user/types/auth
  * - Error types: @user/types/errors
+ * - Site Config types: @user/types/siteConfig
+ * - League types: @user/types/league
+ * - Driver types: @user/types/driver
  */
 
 // This file is intentionally minimal. Import specific types from their domain files.

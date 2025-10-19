@@ -27,7 +27,5 @@ const displayClasses = computed(() => {
 </script>
 
 <template>
-  <small :class="displayClasses">
-    {{ props.current }}/{{ props.max }} characters
-  </small>
+  <small :class="displayClasses"> {{ props.current }}/{{ props.max }} characters </small>
 </template>

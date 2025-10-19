@@ -344,9 +344,12 @@ docker-compose exec redis redis-cli                            # Access Redis CL
 - **Formatting**: Prettier for JS/TS/Vue, PHP_CodeSniffer/Pint for PHP
 - **Backend Architecture**: Follow DDD principles (see backend guides above)
 
-## PrimeVue Components
+## Important ##
+Always use context7 when I need code generation, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
 
-PrimeVue is pre-configured in both dashboards with the **Aura theme preset**. See `.claude/guides/primevue-usage.md` for detailed usage examples.
+## PrimeVue Components
+Always use the latest version - Version 4. Use Context7.
+See `.claude/guides/primevue-usage.md` for detailed usage examples.
 
 **Common components:**
 - Forms: `InputText`, `Dropdown`, `Calendar`, `Checkbox`, `InputSwitch`
