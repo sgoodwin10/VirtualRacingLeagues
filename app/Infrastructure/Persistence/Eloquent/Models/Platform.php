@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Platform extends Model
 {
@@ -48,5 +49,15 @@ class Platform extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
+    }
+
+    /**
+     * Get the tracks for this platform.
+     *
+     * @return HasMany<PlatformTrack>
+     */
+    public function tracks(): HasMany
+    {
+        return $this->hasMany(PlatformTrack::class);
     }
 }

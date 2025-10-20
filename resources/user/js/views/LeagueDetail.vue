@@ -138,7 +138,7 @@ function goBack(): void {
               v-if="headerImage.url.value && !headerImage.hasError.value"
               :src="headerImage.displayUrl.value"
               :alt="league.name"
-              class="w-full h-64 object-cover"
+              class="w-full h-48 object-cover"
               @load="headerImage.handleLoad"
               @error="headerImage.handleError"
             />
@@ -152,32 +152,33 @@ function goBack(): void {
               @load="logo.handleLoad"
               @error="logo.handleError"
             />
+
+            <div class="absolute top-0 right-0 flex flex-col items-center gap-3 p-3">
+              <Chip
+                :label="league.visibility"
+                :class="{
+                  'bg-green-100 text-green-800': league.visibility === 'public',
+                  'bg-yellow-100 text-yellow-800': league.visibility === 'private',
+                  'bg-blue-100 text-blue-800': league.visibility === 'unlisted',
+                }"
+              />
+              <Chip
+                :label="league.status"
+                :class="{
+                  'bg-emerald-100 text-emerald-800': league.status === 'active',
+                  'bg-gray-100 text-gray-800': league.status === 'archived',
+                }"
+              />
+            </div>
           </div>
         </template>
 
         <template #content>
-          <div class="mt-16 space-y-6">
+          <div class="space-y-6">
             <!-- Title and Visibility -->
-            <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="flex flex-wrap items-start justify-between gap-4 bg-gray-100 border-b border-gray-200 p-3">
               <div>
-                <h1 class="text-4xl font-bold mb-2">{{ league.name }}</h1>
-                <div class="flex items-center gap-3">
-                  <Chip
-                    :label="league.visibility"
-                    :class="{
-                      'bg-green-100 text-green-800': league.visibility === 'public',
-                      'bg-yellow-100 text-yellow-800': league.visibility === 'private',
-                      'bg-blue-100 text-blue-800': league.visibility === 'unlisted',
-                    }"
-                  />
-                  <Chip
-                    :label="league.status"
-                    :class="{
-                      'bg-emerald-100 text-emerald-800': league.status === 'active',
-                      'bg-gray-100 text-gray-800': league.status === 'archived',
-                    }"
-                  />
-                </div>
+                <h1 class="text-4xl font-bold pl-32">{{ league.name }}</h1>
               </div>
 
               <!-- Action Buttons -->
@@ -186,37 +187,43 @@ function goBack(): void {
                   label="Create Competitions"
                   icon="pi pi-trophy"
                   severity="success"
+                  size="small"
+                  class="bg-white"
+                  outlined
                   @click="handleCreateCompetitions"
                 />
                 <Button
                   label="Create Drivers"
                   icon="pi pi-users"
                   severity="info"
+                  size="small"
                   @click="handleCreateDrivers"
                 />
                 <Button
                   label="Edit League"
                   icon="pi pi-pencil"
                   severity="secondary"
+                  class="bg-white"
                   outlined
+                  size="small"
                   @click="handleEditLeague"
                 />
               </div>
             </div>
 
             <!-- Tagline -->
-            <p v-if="league.tagline" class="text-xl text-gray-600 italic">
+            <p v-if="league.tagline" class="text-xl text-gray-600 italic p-0">
               {{ league.tagline }}
             </p>
 
             <!-- Description -->
-            <div v-if="league.description" class="prose max-w-none">
+            <div v-if="league.description" class="prose max-w-none p-4">
               <h2 class="text-2xl font-semibold mb-3">About</h2>
               <div class="text-gray-700" v-html="league.description"></div>
             </div>
 
             <!-- Details Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t p-4">
               <!-- Platforms -->
               <div>
                 <h3 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">

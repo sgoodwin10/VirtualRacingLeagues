@@ -41,4 +41,9 @@ body {
   overflow-x: hidden;
 }
 
+
+
 /* Add your user dashboard custom styles here */
+.p-card-body {
+  padding: 0;
+}

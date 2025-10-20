@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Infrastructure\Persistence\Eloquent\Repositories;
+namespace Tests\Integration\Persistence\Eloquent\Repositories;
 
 use App\Domain\League\Entities\League;
 use App\Domain\League\Exceptions\LeagueNotFoundException;

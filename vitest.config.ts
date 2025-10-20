@@ -6,15 +6,59 @@ export default defineConfig({
   plugins: [vue()],
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'happy-dom',
+
+    // Test file patterns
+    include: ['**/*.{test,spec}.{js,ts,jsx,tsx}'],
     exclude: [
       'tests/Browser/**',
       'node_modules/**',
+      'dist/**',
+      '.{idea,git,cache,output,temp}/**',
+      '{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
     ],
+
+    // Setup files for global test configuration
+    setupFiles: ['./tests/setup.ts'],
+
+    // Mock handling
+    clearMocks: true,
+    mockReset: true,
+    restoreMocks: true,
+
+    // CSS and asset handling
+    css: true,
+
+    // Timeouts
+    testTimeout: 10000,
+    hookTimeout: 10000,
+
+    // Watch mode configuration
+    watch: false,
+
+    // Coverage configuration
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['resources/public/js/**', 'resources/user/js/**', 'resources/admin/js/**'],
+      reporter: ['text', 'json', 'html', 'lcov'],
+      include: [
+        'resources/public/js/**/*.{js,ts,vue}',
+        'resources/user/js/**/*.{js,ts,vue}',
+        'resources/admin/js/**/*.{js,ts,vue}',
+      ],
+      exclude: [
+        '**/*.{test,spec}.{js,ts}',
+        '**/*.d.ts',
+        '**/types/**',
+        '**/app.ts',
+        '**/router/**',
+        'resources/**/js/bootstrap.ts',
+      ],
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 70,
+        statements: 70,
+      },
     },
   },
   resolve: {

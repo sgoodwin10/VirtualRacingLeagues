@@ -21,15 +21,21 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
+    /* Compatibility & consistency */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
     /* Path aliases */
     "baseUrl": ".",
     "paths": {
       "@user/*": ["./resources/user/js/*"],
-      "@admin/*": ["./resources/admin/js/*"]
+      "@admin/*": ["./resources/admin/js/*"],
+      "@public/*": ["./resources/public/js/*"]
     },
 
     /* Vue specific */
-    "types": ["vite/client", "node"]
+    "types": ["vite/client"]
   },
   "include": [
     "resources/user/**/*.ts",
@@ -38,6 +44,9 @@
     "resources/admin/**/*.ts",
     "resources/admin/**/*.tsx",
     "resources/admin/**/*.vue",
+    "resources/public/**/*.ts",
+    "resources/public/**/*.tsx",
+    "resources/public/**/*.vue",
     "vite.config.ts",
     "vitest.config.ts"
   ],

@@ -15,6 +15,8 @@ class PlatformSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::table('platforms')->truncate();
+
         $platforms = [
             ['name' => 'Gran Turismo 7', 'sort_order' => 1],
             ['name' => 'iRacing', 'sort_order' => 2],

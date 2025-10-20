@@ -58,6 +58,26 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "test:domain": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --testsuite=Domain"
+        ],
+        "test:unit": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --testsuite=Unit"
+        ],
+        "test:integration": [
+            "@php artisan config:clear --ansi",
+            "DB_CONNECTION=testing @php artisan test --testsuite=Integration"
+        ],
+        "test:feature": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --testsuite=Feature"
+        ],
+        "test:coverage": [
+            "@php artisan config:clear --ansi",
+            "XDEBUG_MODE=coverage @php artisan test --coverage --min=70"
+        ],
         "phpstan": "vendor/bin/phpstan analyse",
         "phpcs": "vendor/bin/phpcs",
         "phpcbf": "vendor/bin/phpcbf",
