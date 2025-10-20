@@ -12,12 +12,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use Tests\TestCase;
 
-/**
- * @covers \App\Http\Controllers\User\LeagueController::update
- */
-class LeagueControllerUpdateTest extends TestCase
+#[CoversMethod(\App\Http\Controllers\User\LeagueController::class, 'update')]
+class LeagueControllerUpdateTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 
@@ -139,6 +138,10 @@ class LeagueControllerUpdateTest extends TestCase
 
     public function test_can_update_logo(): void
     {
+        if (!function_exists('imagejpeg')) {
+            $this->markTestSkipped('GD extension not available');
+        }
+
         $newLogo = UploadedFile::fake()->image('new-logo.png', 500, 500);
 
         $response = $this->actingAs($this->user, 'web')
@@ -156,6 +159,10 @@ class LeagueControllerUpdateTest extends TestCase
 
     public function test_can_update_header_image(): void
     {
+        if (!function_exists('imagejpeg')) {
+            $this->markTestSkipped('GD extension not available');
+        }
+
         $newHeader = UploadedFile::fake()->image('new-header.jpg', 1920, 1080);
 
         $response = $this->actingAs($this->user, 'web')
@@ -369,6 +376,10 @@ class LeagueControllerUpdateTest extends TestCase
 
     public function test_can_update_all_fields_at_once(): void
     {
+        if (!function_exists('imagejpeg')) {
+            $this->markTestSkipped('GD extension not available');
+        }
+
         $newPlatform = Platform::create([
             'name' => 'RaceRoom',
             'slug' => 'raceroom',

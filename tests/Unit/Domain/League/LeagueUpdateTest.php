@@ -11,18 +11,17 @@ use App\Domain\League\ValueObjects\LeagueSlug;
 use App\Domain\League\ValueObjects\LeagueVisibility;
 use App\Domain\League\ValueObjects\Tagline;
 use App\Domain\Shared\ValueObjects\EmailAddress;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \App\Domain\League\Entities\League::updateDetails
- * @covers \App\Domain\League\Entities\League::changeVisibility
- * @covers \App\Domain\League\Entities\League::updateContactInfo
- * @covers \App\Domain\League\Entities\League::updateSocialMedia
- * @covers \App\Domain\League\Entities\League::updatePlatforms
- * @covers \App\Domain\League\Entities\League::updateTimezone
- * @covers \App\Domain\League\Entities\League::updateLogo
- * @covers \App\Domain\League\Entities\League::updateHeaderImage
- */
+#[CoversMethod(League::class, 'updateDetails')]
+#[CoversMethod(League::class, 'changeVisibility')]
+#[CoversMethod(League::class, 'updateContactInfo')]
+#[CoversMethod(League::class, 'updateSocialMedia')]
+#[CoversMethod(League::class, 'updatePlatforms')]
+#[CoversMethod(League::class, 'updateTimezone')]
+#[CoversMethod(League::class, 'updateLogo')]
+#[CoversMethod(League::class, 'updateHeaderImage')]
 class LeagueUpdateTest extends TestCase
 {
     private League $league;

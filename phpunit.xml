@@ -1,88 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
-         colors="true"
-         failOnRisky="true"
-         failOnWarning="true"
-         stopOnError="false"
-         stopOnFailure="false"
-         executionOrder="random"
-         cacheDirectory=".phpunit.cache"
-         beStrictAboutOutputDuringTests="true"
-         beStrictAboutTodoAnnotatedTests="true"
->
-    <testsuites>
-        <!-- Domain Layer Tests: Pure business logic, no database, no Laravel dependencies -->
-        <testsuite name="Domain">
-            <directory>tests/Unit/Domain</directory>
-        </testsuite>
-
-        <!-- Unit Tests: Laravel-specific units (policies, rules, helpers) without database -->
-        <testsuite name="Unit">
-            <directory>tests/Unit</directory>
-            <exclude>tests/Unit/Domain</exclude>
-        </testsuite>
-
-        <!-- Integration Tests: Infrastructure layer (repositories, Eloquent) with database -->
-        <testsuite name="Integration">
-            <directory>tests/Integration</directory>
-        </testsuite>
-
-        <!-- Feature Tests: HTTP/API endpoints, full application stack -->
-        <testsuite name="Feature">
-            <directory>tests/Feature</directory>
-        </testsuite>
-    </testsuites>
-
-    <source>
-        <include>
-            <directory>app</directory>
-        </include>
-        <exclude>
-            <directory>app/Console</directory>
-            <directory>app/Exceptions</directory>
-            <directory>app/Providers</directory>
-        </exclude>
-    </source>
-
-    <coverage>
-        <report>
-            <html outputDirectory="coverage/html"/>
-            <text outputFile="coverage/coverage.txt" showUncoveredFiles="false"/>
-            <clover outputFile="coverage/clover.xml"/>
-        </report>
-    </coverage>
-
-    <php>
-        <!-- Application Environment -->
-        <env name="APP_ENV" value="testing"/>
-        <env name="APP_URL" value="http://app.virtualracingleagues.localhost"/>
-        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
-
-        <!-- Performance Optimizations -->
-        <env name="BCRYPT_ROUNDS" value="4"/>
-        <env name="CACHE_STORE" value="array"/>
-        <env name="MAIL_MAILER" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
-
-        <!-- Database: SQLite in-memory for Unit/Domain tests (fast) -->
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
-
-        <!-- For Integration tests, use DB_CONNECTION=testing to test against MariaDB.
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true" failOnRisky="true" failOnWarning="true" stopOnError="false" stopOnFailure="false" executionOrder="random" cacheDirectory=".phpunit.cache" beStrictAboutOutputDuringTests="true">
+  <testsuites>
+    <!-- Domain Layer Tests: Pure business logic, no database, no Laravel dependencies -->
+    <testsuite name="Domain">
+      <directory>tests/Unit/Domain</directory>
+    </testsuite>
+    <!-- Unit Tests: Laravel-specific units (policies, rules, helpers) without database -->
+    <testsuite name="Unit">
+      <directory>tests/Unit</directory>
+      <exclude>tests/Unit/Domain</exclude>
+    </testsuite>
+    <!-- Integration Tests: Infrastructure layer (repositories, Eloquent) with database -->
+    <testsuite name="Integration">
+      <directory>tests/Integration</directory>
+    </testsuite>
+    <!-- Feature Tests: HTTP/API endpoints, full application stack -->
+    <testsuite name="Feature">
+      <directory>tests/Feature</directory>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory>app</directory>
+    </include>
+    <exclude>
+      <directory>app/Console</directory>
+      <directory>app/Exceptions</directory>
+      <directory>app/Providers</directory>
+    </exclude>
+  </source>
+  <coverage>
+    <report>
+      <html outputDirectory="coverage/html"/>
+      <text outputFile="coverage/coverage.txt" showUncoveredFiles="false"/>
+      <clover outputFile="coverage/clover.xml"/>
+    </report>
+  </coverage>
+  <php>
+    <!-- Application Environment -->
+    <env name="APP_ENV" value="testing"/>
+    <env name="APP_URL" value="http://virtualracingleagues.localhost"/>
+    <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+    <!-- Performance Optimizations -->
+    <env name="BCRYPT_ROUNDS" value="4"/>
+    <env name="CACHE_STORE" value="array"/>
+    <env name="MAIL_MAILER" value="array"/>
+    <env name="QUEUE_CONNECTION" value="sync"/>
+    <env name="SESSION_DRIVER" value="array"/>
+    <!-- Database: SQLite in-memory for Unit/Domain tests (fast) -->
+    <env name="DB_CONNECTION" value="sqlite"/>
+    <env name="DB_DATABASE" value=":memory:"/>
+    <!-- For Integration tests, use DB_CONNECTION=testing to test against MariaDB.
              Set via: phpunit testsuite=Integration -->
-
-        <!-- Disable Unnecessary Services -->
-        <env name="PULSE_ENABLED" value="false"/>
-        <env name="TELESCOPE_ENABLED" value="false"/>
-        <env name="NIGHTWATCH_ENABLED" value="false"/>
-
-        <!-- Elasticsearch (disable for tests unless needed) -->
-        <env name="SCOUT_DRIVER" value="null"/>
-
-        <!-- Redis (use array for cache, not Redis) -->
-        <env name="REDIS_CLIENT" value="phpredis"/>
-    </php>
+    <!-- Disable Unnecessary Services -->
+    <env name="PULSE_ENABLED" value="false"/>
+    <env name="TELESCOPE_ENABLED" value="false"/>
+    <env name="NIGHTWATCH_ENABLED" value="false"/>
+    <!-- Elasticsearch (disable for tests unless needed) -->
+    <env name="SCOUT_DRIVER" value="null"/>
+    <!-- Redis (use array for cache, not Redis) -->
+    <env name="REDIS_CLIENT" value="phpredis"/>
+  </php>
 </phpunit>

@@ -42,5 +42,40 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Handle all domain NotFoundExceptions with 404 responses
+        $exceptions->render(function (\App\Domain\League\Exceptions\LeagueNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 404);
+        });
+
+        $exceptions->render(function (\App\Domain\Driver\Exceptions\DriverNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 404);
+        });
+
+        $exceptions->render(function (\App\Domain\User\Exceptions\UserNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 404);
+        });
+
+        $exceptions->render(function (\App\Domain\Admin\Exceptions\AdminNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 404);
+        });
+
+        // Handle UnauthorizedException with 403 responses
+        $exceptions->render(function (\App\Domain\Shared\Exceptions\UnauthorizedException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        });
     })->create();

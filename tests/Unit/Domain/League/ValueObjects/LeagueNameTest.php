@@ -6,13 +6,12 @@ namespace Tests\Unit\Domain\League\ValueObjects;
 
 use App\Domain\League\Exceptions\InvalidLeagueNameException;
 use App\Domain\League\ValueObjects\LeagueName;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class LeagueNameTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_valid_league_name(): void
     {
         $name = LeagueName::from('F1 Racing League');
@@ -22,9 +21,7 @@ class LeagueNameTest extends TestCase
         $this->assertEquals('F1 Racing League', (string) $name);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_accepts_minimum_length_name(): void
     {
         $name = LeagueName::from('ABC');
@@ -32,9 +29,7 @@ class LeagueNameTest extends TestCase
         $this->assertEquals('ABC', $name->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_accepts_maximum_length_name(): void
     {
         $longName = str_repeat('a', 100);
@@ -44,9 +39,7 @@ class LeagueNameTest extends TestCase
         $this->assertEquals(100, mb_strlen($name->value()));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_empty_name(): void
     {
         $this->expectException(InvalidLeagueNameException::class);
@@ -55,9 +48,7 @@ class LeagueNameTest extends TestCase
         LeagueName::from('');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_whitespace_only_name(): void
     {
         $this->expectException(InvalidLeagueNameException::class);
@@ -66,9 +57,7 @@ class LeagueNameTest extends TestCase
         LeagueName::from('   ');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_too_short_name(): void
     {
         $this->expectException(InvalidLeagueNameException::class);
@@ -77,9 +66,7 @@ class LeagueNameTest extends TestCase
         LeagueName::from('AB');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_too_long_name(): void
     {
         $longName = str_repeat('a', 101);
@@ -90,9 +77,7 @@ class LeagueNameTest extends TestCase
         LeagueName::from($longName);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_preserves_whitespace_in_valid_names(): void
     {
         $name = LeagueName::from('F1 Racing League');
@@ -100,9 +85,7 @@ class LeagueNameTest extends TestCase
         $this->assertEquals('F1 Racing League', $name->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_allows_special_characters(): void
     {
         $name = LeagueName::from('F1 Racing League - 2025!');
@@ -110,9 +93,7 @@ class LeagueNameTest extends TestCase
         $this->assertEquals('F1 Racing League - 2025!', $name->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_checks_equality_correctly(): void
     {
         $name1 = LeagueName::from('F1 Racing League');
@@ -123,9 +104,7 @@ class LeagueNameTest extends TestCase
         $this->assertFalse($name1->equals($name3));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_handles_unicode_characters(): void
     {
         $name = LeagueName::from('Formule 1 Français');
@@ -133,9 +112,7 @@ class LeagueNameTest extends TestCase
         $this->assertEquals('Formule 1 Français', $name->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_validates_length_using_multibyte_string_functions(): void
     {
         // 100 unicode characters

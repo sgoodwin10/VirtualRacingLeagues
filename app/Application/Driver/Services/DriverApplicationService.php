@@ -33,7 +33,8 @@ final class DriverApplicationService
     public function __construct(
         private readonly DriverRepositoryInterface $driverRepository,
         private readonly LeagueRepositoryInterface $leagueRepository
-    ) {}
+    ) {
+    }
 
     /**
      * Create a driver and add them to a league.
@@ -419,11 +420,11 @@ final class DriverApplicationService
                 $this->createDriverForLeague($createData, $leagueId);
                 $successCount++;
             } catch (InvalidArgumentException $e) {
-                $errors[$rowNumber] = "Row {$rowNumber}: ".$e->getMessage();
+                $errors[$rowNumber] = "Row {$rowNumber}: " . $e->getMessage();
             } catch (DriverAlreadyInLeagueException $e) {
-                $errors[$rowNumber] = "Row {$rowNumber}: ".$e->getMessage();
+                $errors[$rowNumber] = "Row {$rowNumber}: " . $e->getMessage();
             } catch (\Exception $e) {
-                $errors[$rowNumber] = "Row {$rowNumber}: Unexpected error - ".$e->getMessage();
+                $errors[$rowNumber] = "Row {$rowNumber}: Unexpected error - " . $e->getMessage();
             }
         }
 

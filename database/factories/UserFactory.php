@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<UserEloquent>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<User>
  */
 class UserFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
-     * @var class-string<UserEloquent>
+     * @var class-string<User>
      */
-    protected $model = UserEloquent::class;
+    protected $model = User::class;
 
     /**
      * The current password being used by the factory.
@@ -42,7 +42,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'alias' => fake()->optional(0.7)->userName(),
             'uuid' => fake()->optional(0.8)->uuid(),
-            'status' => fake()->randomElement(['active', 'inactive']),
+            'status' => 'active', // Default to active for tests
         ];
     }
 

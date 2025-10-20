@@ -15,6 +15,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\League as LeagueEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentLeagueRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class EloquentLeagueRepositoryTest extends TestCase
@@ -34,9 +35,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->otherUser = UserEloquent::factory()->create();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_saves_new_league(): void
     {
         $league = League::create(
@@ -88,9 +87,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_saves_league_with_null_optional_fields(): void
     {
         $league = League::create(
@@ -120,9 +117,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_updates_existing_league(): void
     {
         $league = League::create(
@@ -157,9 +152,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_finds_league_by_id(): void
     {
         $eloquentLeague = LeagueEloquent::create([
@@ -182,9 +175,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertEquals('test-league', $league->slug()->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_when_league_not_found_by_id(): void
     {
         $this->expectException(LeagueNotFoundException::class);
@@ -193,9 +184,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->repository->findById(999);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_null_when_league_not_found_by_id_or_null(): void
     {
         $league = $this->repository->findByIdOrNull(999);
@@ -203,9 +192,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertNull($league);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_finds_league_by_slug(): void
     {
         $eloquentLeague = LeagueEloquent::create([
@@ -227,9 +214,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertEquals('test-league', $league->slug()->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_when_league_not_found_by_slug(): void
     {
         $this->expectException(LeagueNotFoundException::class);
@@ -238,9 +223,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->repository->findBySlug('non-existent');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_null_when_league_not_found_by_slug_or_null(): void
     {
         $league = $this->repository->findBySlugOrNull('non-existent');
@@ -248,9 +231,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertNull($league);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_checks_if_slug_is_available(): void
     {
         $this->assertTrue($this->repository->isSlugAvailable('new-league'));
@@ -270,9 +251,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertFalse($this->repository->isSlugAvailable('existing-league'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_checks_slug_availability_including_soft_deleted_leagues(): void
     {
         $eloquentLeague = LeagueEloquent::create([
@@ -293,9 +272,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertFalse($this->repository->isSlugAvailable('deleted-league'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_finds_leagues_by_user_id(): void
     {
         $leagueA = LeagueEloquent::create([
@@ -346,9 +323,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertEquals('User 1 League A', $leagues[1]->name()->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_counts_leagues_by_user_id(): void
     {
         LeagueEloquent::create([
@@ -392,9 +367,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertEquals(2, $count);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_count_excludes_soft_deleted_leagues(): void
     {
         $league1 = LeagueEloquent::create([
@@ -428,9 +401,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertEquals(1, $count);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_soft_deletes_league(): void
     {
         $league = League::create(
@@ -455,9 +426,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertInstanceOf(League::class, $foundLeague);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_restores_soft_deleted_league(): void
     {
         $league = League::create(
@@ -480,9 +449,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertDatabaseHas('leagues', ['id' => $leagueId, 'deleted_at' => null]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_force_deletes_league(): void
     {
         $league = League::create(
@@ -503,9 +470,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertDatabaseMissing('leagues', ['id' => $leagueId]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_maps_entity_to_eloquent_model_correctly(): void
     {
         $league = League::create(
@@ -554,9 +519,7 @@ class EloquentLeagueRepositoryTest extends TestCase
         $this->assertEquals('active', $eloquentLeague->status);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_maps_eloquent_model_to_entity_correctly(): void
     {
         $eloquentLeague = LeagueEloquent::create([

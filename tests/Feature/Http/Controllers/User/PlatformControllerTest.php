@@ -7,9 +7,10 @@ namespace Tests\Feature\Http\Controllers\User;
 use App\Infrastructure\Persistence\Eloquent\Models\Platform;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class PlatformControllerTest extends TestCase
+class PlatformControllerTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 
@@ -22,9 +23,7 @@ class PlatformControllerTest extends TestCase
         $this->user = UserEloquent::factory()->create();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_active_platforms(): void
     {
         // Create active platforms
@@ -65,9 +64,7 @@ class PlatformControllerTest extends TestCase
             ->assertJsonPath('data.1.name', 'Assetto Corsa Competizione');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_platforms_ordered_by_sort_order(): void
     {
         Platform::create([
@@ -100,9 +97,7 @@ class PlatformControllerTest extends TestCase
             ->assertJsonPath('data.2.name', 'Platform C');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_only_id_name_and_slug_fields(): void
     {
         Platform::create([
@@ -132,9 +127,7 @@ class PlatformControllerTest extends TestCase
         $this->assertArrayNotHasKey('sort_order', $data);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_empty_array_when_no_active_platforms_exist(): void
     {
         Platform::create([

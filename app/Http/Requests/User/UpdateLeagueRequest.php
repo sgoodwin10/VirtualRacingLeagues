@@ -17,24 +17,19 @@ class UpdateLeagueRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     *
+     * Note: We bypass authorization check here and let it be handled in the controller.
+     * This is because Laravel's FormRequest authorization happens BEFORE the controller,
+     * and if we return false here, it will return 403 instead of 404 for non-existent resources.
+     * The actual authorization check happens in the application service.
      */
     public function authorize(): bool
     {
-        $league = League::find($this->route('id'));
-
-        if ($league === null) {
-            return false;
-        }
-
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
-        $user = Auth::guard('web')->user();
-
-        if ($user === null) {
-            return false;
-        }
-
-        // Only the league owner can update the league
-        return $league->owner_user_id === $user->id;
+        // Always return true - authorization is handled in the application service
+        // The application service will check:
+        // 1. If the league exists (throws LeagueNotFoundException -> 404)
+        // 2. If the user is the owner (throws exception -> 403)
+        return true;
     }
 
     /**

@@ -6,9 +6,10 @@ namespace Tests\Feature\Http\Controllers\User;
 
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class SiteConfigControllerTest extends TestCase
+class SiteConfigControllerTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 
@@ -23,9 +24,7 @@ class SiteConfigControllerTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_site_configuration(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -44,9 +43,7 @@ class SiteConfigControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_correct_config_values(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -64,9 +61,7 @@ class SiteConfigControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_google_analytics_id_when_configured(): void
     {
         config(['services.google_analytics.tracking_id' => 'G-XXXXXXXXXX']);
@@ -78,9 +73,7 @@ class SiteConfigControllerTest extends TestCase
             ->assertJsonPath('data.google_analytics_id', 'G-XXXXXXXXXX');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_null_for_google_analytics_id_when_not_configured(): void
     {
         config(['services.google_analytics.tracking_id' => null]);
@@ -92,9 +85,7 @@ class SiteConfigControllerTest extends TestCase
             ->assertJsonPath('data.google_analytics_id', null);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_requires_authentication(): void
     {
         $response = $this->getJson('/api/site-config');

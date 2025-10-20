@@ -10,9 +10,10 @@ use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class LeagueControllerTest extends TestCase
+class LeagueControllerTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 
@@ -81,11 +82,13 @@ class LeagueControllerTest extends TestCase
         return parent::putJson($url, $data, $headers, $options);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_league_successfully(): void
     {
+        if (!function_exists('imagejpeg')) {
+            $this->markTestSkipped('GD extension not available');
+        }
+
         $data = [
             'name' => 'F1 Racing League',
             'tagline' => 'The Premier F1 League',
@@ -169,9 +172,7 @@ class LeagueControllerTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_league_with_only_required_fields(): void
     {
         $data = [
@@ -194,11 +195,13 @@ class LeagueControllerTest extends TestCase
             ->assertJsonPath('data.header_image_url', null);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_enforces_free_tier_limit_of_one_league(): void
     {
+        if (!function_exists('imagejpeg')) {
+            $this->markTestSkipped('GD extension not available');
+        }
+
         // Create first league
         League::create([
             'name' => 'First League',
@@ -220,12 +223,13 @@ class LeagueControllerTest extends TestCase
             'contact_email' => 'contact@second.com',
             'organizer_name' => 'Jane Doe',
             'visibility' => 'public',
+            'platform_ids' => [1, 2], // Include required platform_ids
         ];
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson('/api/leagues', $data);
 
-        $response->assertUnprocessableEntity()
+        $response->assertStatus(422)
             ->assertJson([
                 'success' => false,
             ])
@@ -234,15 +238,13 @@ class LeagueControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_validates_required_fields(): void
     {
         $response = $this->actingAs($this->user, 'web')
             ->postJson('/api/leagues', []);
 
-        $response->assertUnprocessableEntity()
+        $response->assertStatus(422)
             ->assertJsonValidationErrors([
                 'name',
                 'logo',
@@ -254,9 +256,7 @@ class LeagueControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_validates_logo_file_type(): void
     {
         $data = [
@@ -272,13 +272,11 @@ class LeagueControllerTest extends TestCase
         $response = $this->actingAs($this->user, 'web')
             ->postJson('/api/leagues', $data);
 
-        $response->assertUnprocessableEntity()
+        $response->assertStatus(422)
             ->assertJsonValidationErrors(['logo']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_validates_logo_file_size(): void
     {
         $data = [
@@ -294,13 +292,11 @@ class LeagueControllerTest extends TestCase
         $response = $this->actingAs($this->user, 'web')
             ->postJson('/api/leagues', $data);
 
-        $response->assertUnprocessableEntity()
+        $response->assertStatus(422)
             ->assertJsonValidationErrors(['logo']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_validates_header_image_file_type(): void
     {
         $data = [
@@ -317,13 +313,11 @@ class LeagueControllerTest extends TestCase
         $response = $this->actingAs($this->user, 'web')
             ->postJson('/api/leagues', $data);
 
-        $response->assertUnprocessableEntity()
+        $response->assertStatus(422)
             ->assertJsonValidationErrors(['header_image']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_validates_platform_ids_exist(): void
     {
         $data = [
@@ -339,13 +333,11 @@ class LeagueControllerTest extends TestCase
         $response = $this->actingAs($this->user, 'web')
             ->postJson('/api/leagues', $data);
 
-        $response->assertUnprocessableEntity()
+        $response->assertStatus(422)
             ->assertJsonValidationErrors(['platform_ids.0', 'platform_ids.1']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_validates_email_format(): void
     {
         $data = [
@@ -361,13 +353,11 @@ class LeagueControllerTest extends TestCase
         $response = $this->actingAs($this->user, 'web')
             ->postJson('/api/leagues', $data);
 
-        $response->assertUnprocessableEntity()
+        $response->assertStatus(422)
             ->assertJsonValidationErrors(['contact_email']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_generates_unique_slugs_for_duplicate_names(): void
     {
         // Create first league
@@ -408,13 +398,11 @@ class LeagueControllerTest extends TestCase
             ->assertJsonPath('data.slug', 'f1-racing-league-01');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_user_leagues(): void
     {
         // Create leagues for this user
-        League::create([
+        $league1 = League::create([
             'name' => 'User League 1',
             'slug' => 'user-league-1',
             'logo_path' => 'leagues/logos/logo1.png',
@@ -426,7 +414,10 @@ class LeagueControllerTest extends TestCase
             'status' => 'active',
         ]);
 
-        League::create([
+        // Ensure second league is created after first (explicit timestamp)
+        $this->travel(1)->seconds();
+
+        $league2 = League::create([
             'name' => 'User League 2',
             'slug' => 'user-league-2',
             'logo_path' => 'leagues/logos/logo2.png',
@@ -460,9 +451,7 @@ class LeagueControllerTest extends TestCase
             ->assertJsonPath('data.1.name', 'User League 1');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_specific_league_by_id(): void
     {
         $league = League::create([
@@ -495,9 +484,7 @@ class LeagueControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_404_for_non_existent_league(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -510,9 +497,7 @@ class LeagueControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_deletes_league_successfully(): void
     {
         $league = League::create([
@@ -539,9 +524,7 @@ class LeagueControllerTest extends TestCase
         $this->assertSoftDeleted('leagues', ['id' => $league->id]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_prevents_deleting_another_users_league(): void
     {
         $league = League::create([
@@ -559,14 +542,12 @@ class LeagueControllerTest extends TestCase
         $response = $this->actingAs($this->user, 'web')
             ->deleteJson("/api/leagues/{$league->id}");
 
-        $response->assertStatus(500); // Runtime exception
+        $response->assertStatus(403); // Forbidden - unauthorized access
 
         $this->assertDatabaseHas('leagues', ['id' => $league->id, 'deleted_at' => null]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_checks_slug_availability(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -583,9 +564,7 @@ class LeagueControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_suggests_alternative_slug_when_taken(): void
     {
         // Create league with slug
@@ -617,9 +596,7 @@ class LeagueControllerTest extends TestCase
         $this->assertStringStartsWith('f1-racing-league-', $response->json('data.suggestion'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_requires_name_for_slug_check(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -632,9 +609,7 @@ class LeagueControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_requires_authentication_for_all_endpoints(): void
     {
         $endpoints = [

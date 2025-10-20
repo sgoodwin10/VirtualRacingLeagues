@@ -12,13 +12,12 @@ use App\Domain\League\ValueObjects\LeagueSlug;
 use App\Domain\League\ValueObjects\LeagueVisibility;
 use App\Domain\League\ValueObjects\Tagline;
 use App\Domain\Shared\ValueObjects\EmailAddress;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class LeagueTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_new_league_with_required_fields(): void
     {
         $league = League::create(
@@ -55,9 +54,7 @@ class LeagueTest extends TestCase
         $this->assertFalse($league->isArchived());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_new_league_with_all_optional_fields(): void
     {
         $league = League::create(
@@ -94,9 +91,7 @@ class LeagueTest extends TestCase
         $this->assertEquals(LeagueVisibility::PRIVATE, $league->visibility());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_defaults_to_public_visibility_when_not_specified(): void
     {
         $league = League::create(
@@ -113,9 +108,7 @@ class LeagueTest extends TestCase
         $this->assertTrue($league->visibility()->isPublic());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_defaults_to_active_status(): void
     {
         $league = League::create(
@@ -133,9 +126,7 @@ class LeagueTest extends TestCase
         $this->assertFalse($league->isArchived());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_records_creation_event_after_id_is_set(): void
     {
         $league = League::create(
@@ -161,9 +152,7 @@ class LeagueTest extends TestCase
         $this->assertInstanceOf(LeagueCreated::class, $events[0]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_when_recording_creation_event_without_id(): void
     {
         $league = League::create(
@@ -182,9 +171,7 @@ class LeagueTest extends TestCase
         $league->recordCreationEvent();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_updates_league_details(): void
     {
         $league = $this->createLeague();
@@ -200,9 +187,7 @@ class LeagueTest extends TestCase
         $this->assertEquals('Updated description', $league->description());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_records_updated_event_when_updating_details(): void
     {
         $league = $this->createLeague();
@@ -220,9 +205,7 @@ class LeagueTest extends TestCase
         $this->assertInstanceOf(LeagueUpdated::class, $events[0]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_changes_visibility(): void
     {
         $league = $this->createLeague();
@@ -235,9 +218,7 @@ class LeagueTest extends TestCase
         $this->assertTrue($league->visibility()->isPrivate());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_records_updated_event_when_changing_visibility(): void
     {
         $league = $this->createLeague();
@@ -251,9 +232,7 @@ class LeagueTest extends TestCase
         $this->assertInstanceOf(LeagueUpdated::class, $events[0]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_archives_league(): void
     {
         $league = $this->createLeague();
@@ -267,9 +246,7 @@ class LeagueTest extends TestCase
         $this->assertTrue($league->isArchived());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_records_updated_event_when_archiving(): void
     {
         $league = $this->createLeague();
@@ -283,9 +260,7 @@ class LeagueTest extends TestCase
         $this->assertInstanceOf(LeagueUpdated::class, $events[0]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_activates_archived_league(): void
     {
         $league = $this->createLeague();
@@ -300,9 +275,7 @@ class LeagueTest extends TestCase
         $this->assertFalse($league->isArchived());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_records_updated_event_when_activating(): void
     {
         $league = $this->createLeague();
@@ -318,9 +291,7 @@ class LeagueTest extends TestCase
         $this->assertInstanceOf(LeagueUpdated::class, $events[0]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_releases_and_clears_events(): void
     {
         $league = $this->createLeague();
@@ -340,9 +311,7 @@ class LeagueTest extends TestCase
         $this->assertEmpty($league->releaseEvents());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_reconstitutes_league_from_persistence(): void
     {
         $league = League::reconstitute(
@@ -390,9 +359,7 @@ class LeagueTest extends TestCase
         $this->assertEquals('active', $league->status());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_sets_id_on_newly_created_entity(): void
     {
         $league = League::create(

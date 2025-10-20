@@ -2,6 +2,8 @@
 
 This guide covers end-to-end (E2E) testing with Playwright for the three-subdomain Vue.js + Laravel application.
 
+> **📌 IMPORTANT**: Always use the test utilities from `tests/Browser/utils/test-config.ts` (see [Test Utilities](#test-utilities) section). Never hardcode URLs, credentials, or timeouts in your tests. This ensures maintainability and environment portability.
+
 ## What is E2E Testing?
 
 End-to-end tests validate complete user workflows across the entire application stack:
@@ -78,7 +80,7 @@ npm run test:e2e:report
 
 Key settings:
 - **Test directory**: `./tests/Browser/`
-- **Base URL**: `http://virtualracingleagues.localhost:8000`
+- **Base URL**: Configured via environment variables (see below)
 - **Parallel execution**: Enabled (faster)
 - **Retries**: 0 locally, 2 on CI (for flaky test detection)
 - **Workers**: Auto-detected locally, 1 on CI
@@ -88,23 +90,107 @@ Key settings:
 
 **Web Server**:
 - Automatically starts Laravel server before tests
-- Command: `php artisan serve --host=virtualracingleagues.localhost --port=8000`
+- Command: Dynamically built from environment variables
 - Reuses existing server locally (faster)
 - 120-second startup timeout
+
+### Environment Variables
+
+You can customize the test environment using these environment variables:
+
+```bash
+# Domain and port configuration
+TEST_DOMAIN=virtualracingleagues.localhost
+TEST_PORT=8000
+```
+
+These can be set in several ways:
+
+**Option 1: Command line (temporary)**
+```bash
+TEST_DOMAIN=myapp.localhost TEST_PORT=3000 npm run test:e2e
+```
+
+**Option 2: .env file (permanent)**
+Add to your `.env` file:
+```env
+TEST_DOMAIN=virtualracingleagues.localhost
+TEST_PORT=8000
+```
+
+**Option 3: .env.testing file**
+Create a `.env.testing` file specifically for tests:
+```env
+TEST_DOMAIN=virtualracingleagues.localhost
+TEST_PORT=8000
+```
+
+Then load it before running tests:
+```bash
+export $(cat .env.testing | xargs) && npm run test:e2e
+```
+
+### Test Utilities
+
+**File**: `tests/Browser/utils/test-config.ts`
+
+This file provides centralized configuration for all E2E tests:
+
+- **TEST_URLS**: Pre-configured URLs for all subdomains (public, user, admin)
+- **TEST_CREDENTIALS**: Test user credentials (admin, superAdmin, moderator)
+- **TEST_TIMEOUTS**: Common timeout values for different operations
+
+**Benefits**:
+1. **No hardcoded URLs**: Easy to update domain/port in one place
+2. **Environment-specific testing**: Different configs for local/staging/CI
+3. **Maintainability**: Update URLs and credentials centrally
+4. **Reusability**: Share test utilities across all test files
+5. **Type safety**: TypeScript ensures correct usage
+
+**Available URLs**:
+```typescript
+TEST_URLS.public.home           // Public site home
+TEST_URLS.public.login          // Public login
+TEST_URLS.public.register       // Public registration
+TEST_URLS.user.dashboard        // User dashboard
+TEST_URLS.user.profile          // User profile
+TEST_URLS.admin.login           // Admin login
+TEST_URLS.admin.dashboard       // Admin dashboard
+TEST_URLS.admin.users           // Admin users page
+// ... and more
+```
+
+**Available Credentials**:
+```typescript
+TEST_CREDENTIALS.admin          // Regular admin user
+TEST_CREDENTIALS.superAdmin     // Super admin user
+TEST_CREDENTIALS.moderator      // Moderator user
+TEST_CREDENTIALS.invalidUser    // Invalid credentials for testing
+```
+
+**Available Timeouts**:
+```typescript
+TEST_TIMEOUTS.vueAppMount       // 10000ms - Wait for Vue app to mount
+TEST_TIMEOUTS.navigation        // 10000ms - Wait for navigation
+TEST_TIMEOUTS.apiResponse       // 5000ms - Wait for API response
+```
 
 ## Basic Test Structure
 
 ### Example Test
 
+**IMPORTANT**: Always use the test utilities from `tests/Browser/utils/test-config.ts` instead of hardcoding URLs, credentials, or timeouts.
+
 ```typescript
 import { test, expect } from '@playwright/test';
+import { TEST_URLS, TEST_CREDENTIALS, TEST_TIMEOUTS } from './utils/test-config';
 
 test.describe('User Login', () => {
   test('user can login with valid credentials', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('/login');
+    // Navigate to login page using configured URL
+    await page.goto(TEST_URLS.public.login);
 
-    // Fill form
+    // Fill form with test credentials
     await page.getByLabel('Email').fill('user@example.com');
     await page.getByLabel('Password').fill('password');
 
@@ -112,21 +198,22 @@ test.describe('User Login', () => {
     await page.getByRole('button', { name: /login/i }).click();
 
     // Assert: Redirected to user dashboard
-    await expect(page).toHaveURL('http://app.virtualracingleagues.localhost:8000/');
+    await expect(page).toHaveURL(TEST_URLS.user.dashboard);
 
     // Assert: User is logged in
     await expect(page.getByText(/welcome back/i)).toBeVisible();
   });
 
   test('shows error for invalid credentials', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto(TEST_URLS.public.login);
 
-    await page.getByLabel('Email').fill('wrong@example.com');
-    await page.getByLabel('Password').fill('wrongpassword');
+    // Use test credentials for invalid user
+    await page.getByLabel('Email').fill(TEST_CREDENTIALS.invalidUser.email);
+    await page.getByLabel('Password').fill(TEST_CREDENTIALS.invalidUser.password);
     await page.getByRole('button', { name: /login/i }).click();
 
     // Should stay on login page
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(TEST_URLS.public.login);
 
     // Should show error message
     await expect(page.getByText(/invalid credentials/i)).toBeVisible();
@@ -202,9 +289,12 @@ await page.locator('#login-form button[type="submit"]').click();
 ### User Registration Flow
 
 ```typescript
+import { test, expect } from '@playwright/test';
+import { TEST_URLS, TEST_TIMEOUTS } from './utils/test-config';
+
 test('complete user registration', async ({ page }) => {
   // Navigate to registration page
-  await page.goto('/register');
+  await page.goto(TEST_URLS.public.register);
 
   // Fill registration form
   await page.getByLabel('Name').fill('John Doe');
@@ -217,7 +307,7 @@ test('complete user registration', async ({ page }) => {
   await page.getByRole('button', { name: /register/i }).click();
 
   // Wait for redirect to user dashboard
-  await page.waitForURL('http://app.virtualracingleagues.localhost:8000/');
+  await page.waitForURL(TEST_URLS.user.dashboard, { timeout: TEST_TIMEOUTS.navigation });
 
   // Verify user is logged in
   await expect(page.getByText(/welcome, john doe/i)).toBeVisible();
@@ -227,21 +317,24 @@ test('complete user registration', async ({ page }) => {
 ### Login and Navigation Flow
 
 ```typescript
+import { test, expect } from '@playwright/test';
+import { TEST_URLS, TEST_TIMEOUTS } from './utils/test-config';
+
 test('user can login and navigate to profile', async ({ page }) => {
   // Login
-  await page.goto('/login');
+  await page.goto(TEST_URLS.public.login);
   await page.getByLabel('Email').fill('user@example.com');
   await page.getByLabel('Password').fill('password');
   await page.getByRole('button', { name: /login/i }).click();
 
   // Wait for dashboard to load
-  await page.waitForURL('http://app.virtualracingleagues.localhost:8000/');
+  await page.waitForURL(TEST_URLS.user.dashboard, { timeout: TEST_TIMEOUTS.navigation });
 
   // Navigate to profile
   await page.getByRole('link', { name: /profile/i }).click();
 
   // Verify profile page
-  await expect(page).toHaveURL(/\/profile/);
+  await expect(page).toHaveURL(TEST_URLS.user.profile);
   await expect(page.getByRole('heading', { name: /my profile/i })).toBeVisible();
 });
 ```
@@ -444,7 +537,8 @@ Create reusable authenticated context:
 
 ```typescript
 // tests/Browser/fixtures/auth.ts
-import { test as base } from '@playwright/test';
+import { test as base, Page } from '@playwright/test';
+import { TEST_URLS, TEST_TIMEOUTS } from '../utils/test-config';
 
 type AuthFixtures = {
   authenticatedPage: Page;
@@ -452,14 +546,14 @@ type AuthFixtures = {
 
 export const test = base.extend<AuthFixtures>({
   authenticatedPage: async ({ page }, use) => {
-    // Login
-    await page.goto('/login');
+    // Login using configured URLs
+    await page.goto(TEST_URLS.public.login);
     await page.getByLabel('Email').fill('user@example.com');
     await page.getByLabel('Password').fill('password');
     await page.getByRole('button', { name: /login/i }).click();
 
-    // Wait for redirect
-    await page.waitForURL('http://app.virtualracingleagues.localhost:8000/');
+    // Wait for redirect to user dashboard
+    await page.waitForURL(TEST_URLS.user.dashboard, { timeout: TEST_TIMEOUTS.navigation });
 
     // Provide authenticated page to test
     await use(page);
@@ -473,10 +567,11 @@ export { expect } from '@playwright/test';
 
 ```typescript
 import { test, expect } from './fixtures/auth';
+import { TEST_URLS } from './utils/test-config';
 
 test('authenticated user can view profile', async ({ authenticatedPage }) => {
   // Already logged in!
-  await authenticatedPage.goto('/profile');
+  await authenticatedPage.goto(TEST_URLS.user.profile);
 
   await expect(authenticatedPage.getByText('My Profile')).toBeVisible();
 });
@@ -489,14 +584,15 @@ Save authentication state once, reuse across tests:
 ```typescript
 // tests/Browser/setup/auth.setup.ts
 import { test as setup } from '@playwright/test';
+import { TEST_URLS, TEST_TIMEOUTS } from '../utils/test-config';
 
 setup('authenticate', async ({ page }) => {
-  await page.goto('/login');
+  await page.goto(TEST_URLS.public.login);
   await page.getByLabel('Email').fill('user@example.com');
   await page.getByLabel('Password').fill('password');
   await page.getByRole('button', { name: /login/i }).click();
 
-  await page.waitForURL('http://app.virtualracingleagues.localhost:8000/');
+  await page.waitForURL(TEST_URLS.user.dashboard, { timeout: TEST_TIMEOUTS.navigation });
 
   // Save authentication state
   await page.context().storageState({ path: 'tests/Browser/.auth/user.json' });
@@ -529,9 +625,12 @@ export default defineConfig({
 ### Cross-Subdomain Authentication Flow
 
 ```typescript
+import { test, expect } from '@playwright/test';
+import { TEST_URLS, TEST_TIMEOUTS } from './utils/test-config';
+
 test('login on public site redirects to user dashboard', async ({ page }) => {
   // Start on public site
-  await page.goto('http://virtualracingleagues.localhost:8000/login');
+  await page.goto(TEST_URLS.public.login);
 
   // Login
   await page.getByLabel('Email').fill('user@example.com');
@@ -539,7 +638,8 @@ test('login on public site redirects to user dashboard', async ({ page }) => {
   await page.getByRole('button', { name: /login/i }).click();
 
   // Should redirect to user dashboard subdomain
-  await expect(page).toHaveURL('http://app.virtualracingleagues.localhost:8000/');
+  await page.waitForURL(TEST_URLS.user.dashboard, { timeout: TEST_TIMEOUTS.navigation });
+  await expect(page).toHaveURL(TEST_URLS.user.dashboard);
 
   // Session should persist across subdomains
   await expect(page.getByText(/welcome back/i)).toBeVisible();
@@ -549,32 +649,35 @@ test('login on public site redirects to user dashboard', async ({ page }) => {
 ### Admin vs User Access
 
 ```typescript
+import { test, expect } from '@playwright/test';
+import { TEST_URLS, TEST_CREDENTIALS, TEST_TIMEOUTS } from './utils/test-config';
+
 test('regular user cannot access admin dashboard', async ({ page }) => {
   // Login as regular user
-  await page.goto('/login');
+  await page.goto(TEST_URLS.public.login);
   await page.getByLabel('Email').fill('user@example.com');
   await page.getByLabel('Password').fill('password');
   await page.getByRole('button', { name: /login/i }).click();
 
   // Try to access admin dashboard
-  await page.goto('http://admin.virtualracingleagues.localhost:8000/admin');
+  await page.goto(TEST_URLS.admin.dashboard);
 
   // Should be redirected or see access denied
   await expect(page.getByText(/access denied/i)).toBeVisible();
 });
 
 test('admin user can access admin dashboard', async ({ page }) => {
-  // Login as admin
-  await page.goto('/login');
-  await page.getByLabel('Email').fill('admin@example.com');
-  await page.getByLabel('Password').fill('adminpassword');
-  await page.getByRole('button', { name: /login/i }).click();
+  // Login as admin using test credentials
+  await page.goto(TEST_URLS.admin.login);
+  await page.getByLabel('Email Address').fill(TEST_CREDENTIALS.admin.email);
+  await page.getByLabel('Password').fill(TEST_CREDENTIALS.admin.password);
+  await page.getByRole('button', { name: /sign in/i }).click();
 
-  // Navigate to admin dashboard
-  await page.goto('http://admin.virtualracingleagues.localhost:8000/admin');
+  // Wait for navigation to admin dashboard
+  await page.waitForURL(TEST_URLS.admin.dashboard, { timeout: TEST_TIMEOUTS.navigation });
 
   // Should see admin interface
-  await expect(page.getByRole('heading', { name: /admin dashboard/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible();
 });
 ```
 
@@ -895,15 +998,87 @@ test('loads more items on scroll', async ({ page }) => {
 });
 ```
 
+## Extending Test Configuration
+
+### Adding New URLs
+
+To add new test URLs, edit `tests/Browser/utils/test-config.ts`:
+
+```typescript
+export const TEST_URLS = {
+    admin: {
+        // ... existing URLs
+        myNewPage: buildUrl('admin', '/admin/my-new-page'),
+        reports: buildUrl('admin', '/admin/reports'),
+    },
+    user: {
+        // ... existing URLs
+        settings: buildUrl('app', '/settings'),
+    },
+} as const;
+```
+
+### Adding New Credentials
+
+To add new test credentials, edit `tests/Browser/utils/test-config.ts`:
+
+```typescript
+export const TEST_CREDENTIALS = {
+    // ... existing credentials
+    customUser: {
+        email: 'custom@example.com',
+        password: 'password',
+    },
+    inactiveAdmin: {
+        email: 'inactive@example.com',
+        password: 'password',
+    },
+} as const;
+```
+
+### Adding New Timeouts
+
+To add new timeout values, edit `tests/Browser/utils/test-config.ts`:
+
+```typescript
+export const TEST_TIMEOUTS = {
+    // ... existing timeouts
+    slowOperation: 30000,      // 30 seconds for slow operations
+    fileUpload: 15000,         // 15 seconds for file uploads
+} as const;
+```
+
+### Using Custom Environment Variables
+
+For environment-specific configuration (staging, production, CI):
+
+**Create `.env.testing`**:
+```env
+TEST_DOMAIN=staging.myapp.com
+TEST_PORT=443
+```
+
+**Run tests with custom environment**:
+```bash
+export $(cat .env.testing | xargs) && npm run test:e2e
+```
+
+**Or use command line**:
+```bash
+TEST_DOMAIN=production.myapp.com npm run test:e2e
+```
+
 ---
 
 **Key Takeaways**:
 - E2E tests validate **complete user workflows** across the full stack
 - Test **critical journeys** (login, registration, core features)
+- Use **test utilities** (`TEST_URLS`, `TEST_CREDENTIALS`, `TEST_TIMEOUTS`) - never hardcode
 - Use **role-based locators** (accessible, maintainable)
 - Test **cross-subdomain flows** (public → user dashboard)
 - Keep tests **independent** and **isolated**
 - Avoid **flaky tests** with proper waiting strategies
 - Use **authentication fixtures** for authenticated tests
 - Test **error scenarios** and **edge cases**
+- Configure tests with **environment variables** for different environments
 - Run tests in **CI/CD** for continuous validation

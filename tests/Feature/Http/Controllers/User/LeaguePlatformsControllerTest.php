@@ -8,9 +8,10 @@ use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\Platform;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class LeaguePlatformsControllerTest extends TestCase
+class LeaguePlatformsControllerTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 
@@ -63,9 +64,7 @@ class LeaguePlatformsControllerTest extends TestCase
         return parent::getJson($url, $headers, $options);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_platforms_for_a_league(): void
     {
         $league = League::factory()->create([
@@ -92,9 +91,7 @@ class LeaguePlatformsControllerTest extends TestCase
             ->assertJsonPath('data.1.slug', 'iracing');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_empty_array_when_league_has_no_platforms(): void
     {
         $league = League::factory()->create([
@@ -112,9 +109,7 @@ class LeaguePlatformsControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_only_active_platforms(): void
     {
         // Create inactive platform
@@ -138,9 +133,7 @@ class LeaguePlatformsControllerTest extends TestCase
             ->assertJsonPath('data.0.id', $this->platform1->id);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_platforms_in_correct_order(): void
     {
         $league = League::factory()->create([
@@ -158,9 +151,7 @@ class LeaguePlatformsControllerTest extends TestCase
             ->assertJsonPath('data.2.id', $this->platform3->id); // sort_order 3
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_404_when_league_not_found(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -173,9 +164,7 @@ class LeaguePlatformsControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_requires_authentication(): void
     {
         $league = League::factory()->create([

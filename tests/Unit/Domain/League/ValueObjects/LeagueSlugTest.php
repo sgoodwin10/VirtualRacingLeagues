@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\League\ValueObjects;
 
 use App\Domain\League\ValueObjects\LeagueSlug;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class LeagueSlugTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_valid_slug_from_string(): void
     {
         $slug = LeagueSlug::from('f1-racing-league');
@@ -21,9 +20,7 @@ class LeagueSlugTest extends TestCase
         $this->assertEquals('f1-racing-league', (string) $slug);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_generates_slug_from_name(): void
     {
         $slug = LeagueSlug::fromName('F1 Racing League');
@@ -31,9 +28,7 @@ class LeagueSlugTest extends TestCase
         $this->assertEquals('f1-racing-league', $slug->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_converts_uppercase_to_lowercase(): void
     {
         $slug = LeagueSlug::fromName('GT3 RACING LEAGUE');
@@ -41,9 +36,7 @@ class LeagueSlugTest extends TestCase
         $this->assertEquals('gt3-racing-league', $slug->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_replaces_spaces_with_hyphens(): void
     {
         $slug = LeagueSlug::fromName('Super Formula League');
@@ -51,9 +44,7 @@ class LeagueSlugTest extends TestCase
         $this->assertEquals('super-formula-league', $slug->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_removes_special_characters(): void
     {
         $slug = LeagueSlug::fromName('F1 Racing League - 2025!');
@@ -61,9 +52,7 @@ class LeagueSlugTest extends TestCase
         $this->assertEquals('f1-racing-league-2025', $slug->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_collapses_multiple_spaces_to_single_hyphen(): void
     {
         $slug = LeagueSlug::fromName('F1    Racing    League');
@@ -71,9 +60,7 @@ class LeagueSlugTest extends TestCase
         $this->assertEquals('f1-racing-league', $slug->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_collapses_multiple_hyphens_to_single_hyphen(): void
     {
         $slug = LeagueSlug::fromName('F1---Racing---League');
@@ -81,9 +68,7 @@ class LeagueSlugTest extends TestCase
         $this->assertEquals('f1-racing-league', $slug->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_trims_leading_and_trailing_hyphens(): void
     {
         $slug = LeagueSlug::fromName('-F1 Racing League-');
@@ -91,9 +76,7 @@ class LeagueSlugTest extends TestCase
         $this->assertEquals('f1-racing-league', $slug->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_handles_numbers_correctly(): void
     {
         $slug = LeagueSlug::fromName('Formula 1 2025');
@@ -101,9 +84,7 @@ class LeagueSlugTest extends TestCase
         $this->assertEquals('formula-1-2025', $slug->value());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_empty_slug(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -112,9 +93,7 @@ class LeagueSlugTest extends TestCase
         LeagueSlug::from('');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_whitespace_only_slug(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -123,9 +102,7 @@ class LeagueSlugTest extends TestCase
         LeagueSlug::from('   ');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_too_long_slug(): void
     {
         $longSlug = str_repeat('a', 151);
@@ -136,9 +113,7 @@ class LeagueSlugTest extends TestCase
         LeagueSlug::from($longSlug);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_invalid_characters_in_slug(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -147,9 +122,7 @@ class LeagueSlugTest extends TestCase
         LeagueSlug::from('f1_racing_league');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_uppercase_letters_in_slug(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -158,9 +131,7 @@ class LeagueSlugTest extends TestCase
         LeagueSlug::from('F1-Racing-League');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_consecutive_hyphens(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -169,9 +140,7 @@ class LeagueSlugTest extends TestCase
         LeagueSlug::from('f1--racing--league');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_leading_hyphen(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -180,9 +149,7 @@ class LeagueSlugTest extends TestCase
         LeagueSlug::from('-f1-racing-league');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_trailing_hyphen(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -191,9 +158,7 @@ class LeagueSlugTest extends TestCase
         LeagueSlug::from('f1-racing-league-');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_checks_equality_correctly(): void
     {
         $slug1 = LeagueSlug::from('f1-racing-league');
@@ -204,9 +169,7 @@ class LeagueSlugTest extends TestCase
         $this->assertFalse($slug1->equals($slug3));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_generates_url_safe_slugs(): void
     {
         $testCases = [
@@ -223,9 +186,7 @@ class LeagueSlugTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_when_generating_slug_exceeds_maximum_length(): void
     {
         $longName = str_repeat('a', 200);

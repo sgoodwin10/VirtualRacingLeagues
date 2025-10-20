@@ -24,7 +24,8 @@ final class DriverController extends Controller
 {
     public function __construct(
         private readonly DriverApplicationService $driverService
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of drivers in a league.

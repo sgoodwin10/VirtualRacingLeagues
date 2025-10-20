@@ -340,7 +340,7 @@ class UserImpersonationTest extends TestCase
         $response = $this->get("http://app.virtualracingleagues.localhost/login-as?token={$token}");
 
         // Should redirect to app root
-        $response->assertRedirect('/');
+        $response->assertRedirect('http://app.virtualracingleagues.localhost');
         $response->assertSessionHas('success');
 
         // Verify user is now authenticated
@@ -359,7 +359,7 @@ class UserImpersonationTest extends TestCase
         $response = $this->get("http://virtualracingleagues.localhost/login-as?token={$token}");
 
         // Should redirect to app subdomain
-        $response->assertRedirect('http://app.virtualracingleagues.localhost:8000');
+        $response->assertRedirect('http://app.virtualracingleagues.localhost');
         $response->assertSessionHas('success');
 
         // Verify user is now authenticated
@@ -372,7 +372,7 @@ class UserImpersonationTest extends TestCase
         $response = $this->get('http://app.virtualracingleagues.localhost/login-as?token=00000000-0000-0000-0000-000000000000');
 
         // Should redirect to public login with error
-        $response->assertRedirect('http://virtualracingleagues.localhost:8000/login');
+        $response->assertRedirect('http://virtualracingleagues.localhost/login');
         $response->assertSessionHas('error', 'Invalid or expired impersonation token');
     }
 
@@ -391,7 +391,7 @@ class UserImpersonationTest extends TestCase
         $response = $this->get("http://app.virtualracingleagues.localhost/login-as?token={$token}");
 
         // Should redirect to public login with error
-        $response->assertRedirect('http://virtualracingleagues.localhost:8000/login');
+        $response->assertRedirect('http://virtualracingleagues.localhost/login');
         $response->assertSessionHas('error', 'Invalid or expired impersonation token');
     }
 
@@ -432,7 +432,7 @@ class UserImpersonationTest extends TestCase
         $response = $this->get("http://app.virtualracingleagues.localhost/login-as?token={$token}");
 
         // Should redirect to public login with error
-        $response->assertRedirect('http://virtualracingleagues.localhost:8000/login');
+        $response->assertRedirect('http://virtualracingleagues.localhost/login');
         $response->assertSessionHas('error', 'Cannot impersonate deleted users');
     }
 

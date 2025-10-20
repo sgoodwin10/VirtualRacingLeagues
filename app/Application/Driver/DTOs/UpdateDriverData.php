@@ -27,7 +27,8 @@ final class UpdateDriverData extends Data
         public readonly ?int $driver_number,
         public readonly string $status,
         public readonly ?string $league_notes
-    ) {}
+    ) {
+    }
 
     /**
      * Validation rules for updating driver and league settings.

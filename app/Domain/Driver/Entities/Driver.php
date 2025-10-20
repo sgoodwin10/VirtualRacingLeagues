@@ -22,7 +22,8 @@ final class Driver
         private ?DateTimeImmutable $createdAt,
         private ?DateTimeImmutable $updatedAt,
         private ?DateTimeImmutable $deletedAt
-    ) {}
+    ) {
+    }
 
     /**
      * Create a new driver (for new instances).
@@ -39,8 +40,8 @@ final class Driver
             platformIds: $platformIds,
             email: $email,
             phone: $phone,
-            createdAt: new DateTimeImmutable,
-            updatedAt: new DateTimeImmutable,
+            createdAt: new DateTimeImmutable(),
+            updatedAt: new DateTimeImmutable(),
             deletedAt: null
         );
     }
@@ -128,37 +129,37 @@ final class Driver
         $this->platformIds = $platformIds;
         $this->email = $email;
         $this->phone = $phone;
-        $this->updatedAt = new DateTimeImmutable;
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function updateName(DriverName $name): void
     {
         $this->name = $name;
-        $this->updatedAt = new DateTimeImmutable;
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function updatePlatformIds(PlatformIdentifiers $platformIds): void
     {
         $this->platformIds = $platformIds;
-        $this->updatedAt = new DateTimeImmutable;
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function updateEmail(?string $email): void
     {
         $this->email = $email;
-        $this->updatedAt = new DateTimeImmutable;
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function updatePhone(?string $phone): void
     {
         $this->phone = $phone;
-        $this->updatedAt = new DateTimeImmutable;
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function delete(): void
     {
-        $this->deletedAt = new DateTimeImmutable;
-        $this->updatedAt = new DateTimeImmutable;
+        $this->deletedAt = new DateTimeImmutable();
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function isDeleted(): bool

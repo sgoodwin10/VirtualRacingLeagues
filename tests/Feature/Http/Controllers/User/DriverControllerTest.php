@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
-final class DriverControllerTest extends TestCase
+final class DriverControllerTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 

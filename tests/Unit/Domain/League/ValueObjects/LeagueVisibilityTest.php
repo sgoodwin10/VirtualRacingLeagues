@@ -6,13 +6,12 @@ namespace Tests\Unit\Domain\League\ValueObjects;
 
 use App\Domain\League\Exceptions\InvalidVisibilityException;
 use App\Domain\League\ValueObjects\LeagueVisibility;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class LeagueVisibilityTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_public_visibility(): void
     {
         $visibility = LeagueVisibility::PUBLIC;
@@ -23,9 +22,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertFalse($visibility->isUnlisted());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_private_visibility(): void
     {
         $visibility = LeagueVisibility::PRIVATE;
@@ -36,9 +33,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertFalse($visibility->isUnlisted());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_unlisted_visibility(): void
     {
         $visibility = LeagueVisibility::UNLISTED;
@@ -49,9 +44,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertTrue($visibility->isUnlisted());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_public_visibility_using_static_method(): void
     {
         $visibility = LeagueVisibility::public();
@@ -60,9 +53,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertTrue($visibility->isPublic());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_private_visibility_using_static_method(): void
     {
         $visibility = LeagueVisibility::private();
@@ -71,9 +62,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertTrue($visibility->isPrivate());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_unlisted_visibility_using_static_method(): void
     {
         $visibility = LeagueVisibility::unlisted();
@@ -82,9 +71,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertTrue($visibility->isUnlisted());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_from_string_public(): void
     {
         $visibility = LeagueVisibility::fromString('public');
@@ -93,9 +80,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertTrue($visibility->isPublic());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_from_string_private(): void
     {
         $visibility = LeagueVisibility::fromString('private');
@@ -104,9 +89,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertTrue($visibility->isPrivate());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_from_string_unlisted(): void
     {
         $visibility = LeagueVisibility::fromString('unlisted');
@@ -115,9 +98,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertTrue($visibility->isUnlisted());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_creates_from_string_case_insensitive(): void
     {
         $testCases = [
@@ -135,9 +116,7 @@ class LeagueVisibilityTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_invalid_string(): void
     {
         $this->expectException(InvalidVisibilityException::class);
@@ -146,9 +125,7 @@ class LeagueVisibilityTest extends TestCase
         LeagueVisibility::fromString('invalid');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_throws_exception_for_empty_string(): void
     {
         $this->expectException(InvalidVisibilityException::class);
@@ -157,9 +134,7 @@ class LeagueVisibilityTest extends TestCase
         LeagueVisibility::fromString('');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_checks_equality_correctly(): void
     {
         $public1 = LeagueVisibility::PUBLIC;
@@ -170,9 +145,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertFalse($public1->equals($private));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_provides_all_three_visibility_options(): void
     {
         $cases = LeagueVisibility::cases();
@@ -183,9 +156,7 @@ class LeagueVisibilityTest extends TestCase
         $this->assertContains(LeagueVisibility::UNLISTED, $cases);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_can_be_used_in_match_expressions(): void
     {
         $visibility = LeagueVisibility::PUBLIC;

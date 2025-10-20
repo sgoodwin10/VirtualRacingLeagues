@@ -13,7 +13,7 @@ use Tests\TestCase;
 /**
  * Test driver platform validation against league platforms.
  */
-final class DriverPlatformValidationTest extends TestCase
+final class DriverPlatformValidationTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 

@@ -17,6 +17,7 @@ use App\Domain\League\ValueObjects\LeagueName;
 use App\Domain\League\ValueObjects\LeagueSlug;
 use App\Domain\League\ValueObjects\LeagueVisibility;
 use App\Domain\League\ValueObjects\Tagline;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Shared\ValueObjects\EmailAddress;
 use App\Infrastructure\Persistence\Eloquent\Models\Platform;
 use Illuminate\Support\Facades\DB;
@@ -172,7 +173,7 @@ final class LeagueApplicationService
 
             // Authorization check
             if ($league->ownerUserId() !== $userId) {
-                throw new \RuntimeException('Unauthorized to update this league');
+                throw UnauthorizedException::forResource('league');
             }
 
             // Validate platform IDs if provided
@@ -271,7 +272,7 @@ final class LeagueApplicationService
 
             // Authorization check
             if ($league->ownerUserId() !== $userId) {
-                throw new \RuntimeException('Unauthorized to delete this league');
+                throw UnauthorizedException::forResource('league');
             }
 
             $this->leagueRepository->delete($league);

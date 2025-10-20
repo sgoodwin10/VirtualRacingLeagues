@@ -6,9 +6,10 @@ namespace Tests\Feature\Http\Controllers\User;
 
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class TimezoneControllerTest extends TestCase
+class TimezoneControllerTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 
@@ -21,9 +22,7 @@ class TimezoneControllerTest extends TestCase
         $this->user = UserEloquent::factory()->create();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_list_of_timezones(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -38,9 +37,7 @@ class TimezoneControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_timezones_with_correct_structure(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -55,9 +52,7 @@ class TimezoneControllerTest extends TestCase
         $this->assertIsString($data[0]['label']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_includes_common_timezones(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -74,9 +69,7 @@ class TimezoneControllerTest extends TestCase
         $this->assertContains('Australia/Sydney', $timezoneValues);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_value_and_label_match(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -89,9 +82,7 @@ class TimezoneControllerTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_all_php_timezones(): void
     {
         $response = $this->actingAs($this->user, 'web')
@@ -104,9 +95,7 @@ class TimezoneControllerTest extends TestCase
         $this->assertCount(count($phpTimezones), $data);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_returns_success_response_format(): void
     {
         $response = $this->actingAs($this->user, 'web')

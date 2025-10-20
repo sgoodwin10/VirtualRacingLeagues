@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
+use App\Models\Admin;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<AdminEloquent>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<Admin>
  */
 class AdminFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
-     * @var class-string<AdminEloquent>
+     * @var class-string<Admin>
      */
-    protected $model = AdminEloquent::class;
+    protected $model = Admin::class;
 
     /**
      * Define the model's default state.

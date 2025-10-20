@@ -202,6 +202,10 @@ class SiteConfigControllerTest extends TestCase
 
     public function test_can_upload_logo_file(): void
     {
+        if (!function_exists('imagejpeg')) {
+            $this->markTestSkipped('GD extension not available');
+        }
+
         $file = UploadedFile::fake()->image('logo.png', 100, 100)->size(500);
 
         $response = $this->actingAs($this->superAdmin, 'admin')
@@ -246,6 +250,10 @@ class SiteConfigControllerTest extends TestCase
 
     public function test_validation_fails_for_file_too_large(): void
     {
+        if (!function_exists('imagejpeg')) {
+            $this->markTestSkipped('GD extension not available');
+        }
+
         $file = UploadedFile::fake()->image('logo.png')->size(3000); // 3MB - exceeds 2MB limit
 
         $response = $this->actingAs($this->superAdmin, 'admin')
