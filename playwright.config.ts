@@ -18,7 +18,7 @@ export default defineConfig({
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
         /* Base URL to use in actions like `await page.goto('/')`. */
-        baseURL: 'http://simracingleague.localhost:8000',
+        baseURL: 'http://virtualracingleagues.localhost:8000',
         /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
@@ -54,8 +54,8 @@ export default defineConfig({
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        command: 'php artisan serve --host=simracingleague.localhost --port=8000',
-        url: 'http://simracingleague.localhost:8000',
+        command: 'php artisan serve --host=virtualracingleagues.localhost --port=8000',
+        url: 'http://virtualracingleagues.localhost:8000',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
     },
