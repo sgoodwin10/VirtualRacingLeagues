@@ -117,7 +117,7 @@ const handleSubmit = async (): Promise<void> => {
       // Handle other types of errors
       const message = getErrorMessage(
         error,
-        'Login failed. Please check your credentials and try again.'
+        'Login failed. Please check your credentials and try again.',
       );
       errorMessage.value = message;
     }

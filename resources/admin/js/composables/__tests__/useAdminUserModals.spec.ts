@@ -221,7 +221,7 @@ describe('useAdminUserModals', () => {
         expect.objectContaining({
           severity: 'success',
           detail: 'Admin user created successfully',
-        })
+        }),
       );
       expect(createDialogVisible.value).toBe(false);
     });
@@ -257,7 +257,7 @@ describe('useAdminUserModals', () => {
         expect.objectContaining({
           severity: 'error',
           summary: 'Validation Error',
-        })
+        }),
       );
     });
 
@@ -282,7 +282,7 @@ describe('useAdminUserModals', () => {
         expect.objectContaining({
           severity: 'error',
           detail: 'Network error',
-        })
+        }),
       );
     });
   });
@@ -316,7 +316,7 @@ describe('useAdminUserModals', () => {
         expect.objectContaining({
           severity: 'success',
           detail: 'Admin user updated successfully',
-        })
+        }),
       );
       expect(editDialogVisible.value).toBe(false);
       expect(selectedAdminUser.value).toBeNull();
@@ -363,7 +363,7 @@ describe('useAdminUserModals', () => {
         expect.objectContaining({
           severity: 'error',
           detail: 'Update failed',
-        })
+        }),
       );
       expect(result).toBeUndefined();
     });
@@ -387,7 +387,7 @@ describe('useAdminUserModals', () => {
         expect.objectContaining({
           severity: 'success',
           detail: 'Admin user deactivated successfully',
-        })
+        }),
       );
       expect(deleteDialogVisible.value).toBe(false);
       expect(selectedAdminUser.value).toBeNull();
@@ -409,7 +409,7 @@ describe('useAdminUserModals', () => {
         expect.objectContaining({
           severity: 'error',
           detail: 'Delete failed',
-        })
+        }),
       );
     });
   });
@@ -432,7 +432,7 @@ describe('useAdminUserModals', () => {
         expect.objectContaining({
           severity: 'success',
           detail: 'Admin user reactivated successfully',
-        })
+        }),
       );
     });
 
@@ -452,7 +452,7 @@ describe('useAdminUserModals', () => {
         expect.objectContaining({
           severity: 'error',
           detail: 'Restore failed',
-        })
+        }),
       );
     });
   });

@@ -147,7 +147,7 @@ watch(
       };
     }
   },
-  { deep: true }
+  { deep: true },
 );
 
 // Form validation

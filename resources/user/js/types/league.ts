@@ -93,6 +93,7 @@ export interface CreateLeagueForm {
 export interface SlugCheckResponse {
   available: boolean;
   slug: string;
+  suggestion: string | null;
   message?: string;
 }
 
@@ -153,4 +154,27 @@ export interface FormErrors {
   instagram_handle?: string;
   youtube_url?: string;
   twitch_url?: string;
+}
+
+/**
+ * Platform column configuration for DataTable
+ */
+export interface PlatformColumn {
+  field: string;
+  label: string;
+  type: 'text' | 'number';
+}
+
+/**
+ * Platform form field configuration
+ */
+export interface PlatformFormField {
+  field: string;
+  label: string;
+  type: 'text' | 'number';
+  placeholder?: string;
+  validation?: {
+    required?: boolean;
+    pattern?: string;
+  };
 }

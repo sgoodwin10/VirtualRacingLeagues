@@ -24,6 +24,9 @@ describe('leagueStore', () => {
       expect(store.loading).toBe(false);
       expect(store.error).toBeNull();
       expect(store.currentStep).toBe(0);
+      expect(store.platformColumns).toEqual([]);
+      expect(store.platformFormFields).toEqual([]);
+      expect(store.platformCsvHeaders).toEqual([]);
     });
   });
 
@@ -107,35 +110,49 @@ describe('leagueStore', () => {
   });
 
   describe('checkSlug', () => {
-    it('should return true for available slug', async () => {
+    it('should return availability info for available slug', async () => {
       vi.mocked(leagueService.checkSlugAvailability).mockResolvedValue({
         available: true,
         slug: 'test-league',
+        suggestion: null,
       });
 
       const store = useLeagueStore();
       const result = await store.checkSlug('Test League');
 
-      expect(result).toBe(true);
+      expect(result).toEqual({
+        available: true,
+        slug: 'test-league',
+        suggestion: null,
+      });
     });
 
-    it('should return false for unavailable slug', async () => {
+    it('should return availability info with suggestion for unavailable slug', async () => {
       vi.mocked(leagueService.checkSlugAvailability).mockResolvedValue({
         available: false,
         slug: 'test-league',
+        suggestion: 'test-league-01',
       });
 
       const store = useLeagueStore();
       const result = await store.checkSlug('Test League');
 
-      expect(result).toBe(false);
+      expect(result).toEqual({
+        available: false,
+        slug: 'test-league',
+        suggestion: 'test-league-01',
+      });
     });
 
-    it('should return false for empty name', async () => {
+    it('should return unavailable for empty name', async () => {
       const store = useLeagueStore();
       const result = await store.checkSlug('');
 
-      expect(result).toBe(false);
+      expect(result).toEqual({
+        available: false,
+        slug: '',
+        suggestion: null,
+      });
       expect(leagueService.checkSlugAvailability).not.toHaveBeenCalled();
     });
   });
@@ -163,7 +180,8 @@ describe('leagueStore', () => {
       const result = await store.createNewLeague(form);
 
       expect(result).toEqual(mockLeague);
-      expect(store.leagues).toContain(mockLeague);
+      expect(store.leagues).toHaveLength(1);
+      expect(store.leagues[0]).toEqual(mockLeague);
       expect(store.currentLeague).toEqual(mockLeague);
     });
   });
@@ -268,7 +286,7 @@ describe('leagueStore', () => {
       store.leagues = [];
 
       await expect(store.updateExistingLeague(1, { name: 'Updated' })).rejects.toThrow(
-        'League not found'
+        'League not found',
       );
     });
 
@@ -285,7 +303,7 @@ describe('leagueStore', () => {
       store.leagues = [originalLeague];
 
       await expect(store.updateExistingLeague(1, { name: 'Updated' })).rejects.toThrow(
-        'Update failed'
+        'Update failed',
       );
       expect(store.error).toBe('Update failed');
       expect(store.loading).toBe(false);
@@ -313,6 +331,100 @@ describe('leagueStore', () => {
       store.error = 'Test error';
       store.clearError();
       expect(store.error).toBeNull();
+    });
+  });
+
+  describe('fetchDriverColumnsForLeague', () => {
+    it('should fetch driver columns successfully', async () => {
+      const mockColumns = [
+        { field: 'psn_id', label: 'PSN ID', type: 'text' as const },
+        { field: 'gt7_id', label: 'GT7 ID', type: 'text' as const },
+      ];
+
+      vi.mocked(leagueService.getDriverColumns).mockResolvedValue(mockColumns);
+
+      const store = useLeagueStore();
+      await store.fetchDriverColumnsForLeague(1);
+
+      expect(store.platformColumns).toEqual(mockColumns);
+      expect(store.loading).toBe(false);
+      expect(store.error).toBeNull();
+      expect(leagueService.getDriverColumns).toHaveBeenCalledWith(1);
+    });
+
+    it('should handle errors when fetching driver columns', async () => {
+      vi.mocked(leagueService.getDriverColumns).mockRejectedValue(new Error('Network error'));
+
+      const store = useLeagueStore();
+
+      await expect(store.fetchDriverColumnsForLeague(1)).rejects.toThrow('Network error');
+      expect(store.error).toBe('Network error');
+      expect(store.loading).toBe(false);
+    });
+  });
+
+  describe('fetchDriverFormFieldsForLeague', () => {
+    it('should fetch driver form fields successfully', async () => {
+      const mockFormFields = [
+        {
+          field: 'psn_id',
+          label: 'PSN ID',
+          type: 'text' as const,
+          placeholder: 'Enter PSN ID',
+        },
+        {
+          field: 'iracing_customer_id',
+          label: 'iRacing Customer ID',
+          type: 'number' as const,
+          placeholder: '123456',
+        },
+      ];
+
+      vi.mocked(leagueService.getDriverFormFields).mockResolvedValue(mockFormFields);
+
+      const store = useLeagueStore();
+      await store.fetchDriverFormFieldsForLeague(1);
+
+      expect(store.platformFormFields).toEqual(mockFormFields);
+      expect(store.loading).toBe(false);
+      expect(store.error).toBeNull();
+      expect(leagueService.getDriverFormFields).toHaveBeenCalledWith(1);
+    });
+
+    it('should handle errors when fetching driver form fields', async () => {
+      vi.mocked(leagueService.getDriverFormFields).mockRejectedValue(new Error('Network error'));
+
+      const store = useLeagueStore();
+
+      await expect(store.fetchDriverFormFieldsForLeague(1)).rejects.toThrow('Network error');
+      expect(store.error).toBe('Network error');
+      expect(store.loading).toBe(false);
+    });
+  });
+
+  describe('fetchDriverCsvHeadersForLeague', () => {
+    it('should fetch CSV headers successfully', async () => {
+      const mockHeaders = ['FirstName', 'LastName', 'Email', 'PSN_ID', 'GT7_ID', 'DriverNumber'];
+
+      vi.mocked(leagueService.getDriverCsvHeaders).mockResolvedValue(mockHeaders);
+
+      const store = useLeagueStore();
+      await store.fetchDriverCsvHeadersForLeague(1);
+
+      expect(store.platformCsvHeaders).toEqual(mockHeaders);
+      expect(store.loading).toBe(false);
+      expect(store.error).toBeNull();
+      expect(leagueService.getDriverCsvHeaders).toHaveBeenCalledWith(1);
+    });
+
+    it('should handle errors when fetching CSV headers', async () => {
+      vi.mocked(leagueService.getDriverCsvHeaders).mockRejectedValue(new Error('Network error'));
+
+      const store = useLeagueStore();
+
+      await expect(store.fetchDriverCsvHeadersForLeague(1)).rejects.toThrow('Network error');
+      expect(store.error).toBe('Network error');
+      expect(store.loading).toBe(false);
     });
   });
 });

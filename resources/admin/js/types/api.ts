@@ -166,7 +166,7 @@ export function isPaginatedResponse<T>(response: unknown): response is Paginated
  * Type guard to check if response is simple paginated
  */
 export function isSimplePaginatedResponse<T>(
-  response: unknown
+  response: unknown,
 ): response is SimplePaginatedResponse<T> {
   return (
     typeof response === 'object' &&
@@ -181,7 +181,7 @@ export function isSimplePaginatedResponse<T>(
  * Helper to extract data from various response formats
  */
 export function extractPaginatedData<T>(
-  response: PaginatedResponse<T> | SimplePaginatedResponse<T> | ApiResponse<PaginatedResponse<T>>
+  response: PaginatedResponse<T> | SimplePaginatedResponse<T> | ApiResponse<PaginatedResponse<T>>,
 ): T[] {
   if ('success' in response && response.data) {
     // ApiResponse wrapper
@@ -206,7 +206,7 @@ export function extractPaginatedData<T>(
  * Useful for normalizing different API response formats
  */
 export function normalizePaginatedResponse<T>(
-  response: SimplePaginatedResponse<T>
+  response: SimplePaginatedResponse<T>,
 ): PaginatedResponse<T> {
   return {
     current_page: response.meta.current_page,

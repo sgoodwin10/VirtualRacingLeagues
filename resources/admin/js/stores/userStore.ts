@@ -178,7 +178,7 @@ export const useUserStore = defineStore(
     async function updateUser(
       userId: string,
       payload: Partial<User>,
-      signal?: AbortSignal
+      signal?: AbortSignal,
     ): Promise<User> {
       try {
         const updatedUser = await userService.updateUser(userId, payload, signal);
@@ -305,5 +305,5 @@ export const useUserStore = defineStore(
       // Do not persist users array (fetched from server)
       pick: ['searchQuery', 'statusFilter', 'currentPage', 'rowsPerPage'],
     },
-  }
+  },
 );

@@ -378,7 +378,7 @@ describe('LoginForm - Error Scenarios', () => {
   it('shows error message for invalid credentials', async () => {
     // Override handler for this test
     server.use(
-      http.post('http://virtualracingleagues.localhost:8000/api/login', () => {
+      http.post('http://virtualracingleagues.localhost/api/login', () => {
         return HttpResponse.json(
           {
             success: false,
@@ -403,7 +403,7 @@ describe('LoginForm - Error Scenarios', () => {
 
   it('shows error message for network failure', async () => {
     server.use(
-      http.post('http://virtualracingleagues.localhost:8000/api/login', () => {
+      http.post('http://virtualracingleagues.localhost/api/login', () => {
         return HttpResponse.error();
       })
     );
@@ -429,7 +429,7 @@ Edit `tests/mocks/handlers.ts`:
 ```typescript
 import { http, HttpResponse } from 'msw';
 
-const USER_API_BASE = 'http://app.virtualracingleagues.localhost:8000/api';
+const USER_API_BASE = 'http://app.virtualracingleagues.localhost/api';
 
 export const handlers = [
   // ... existing handlers

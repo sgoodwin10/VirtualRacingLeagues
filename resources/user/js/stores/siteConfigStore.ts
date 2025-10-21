@@ -18,7 +18,7 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
   // Getters
   const siteName = computed(() => config.value?.siteName ?? 'Virtual Racing Leagues');
   const siteDescription = computed(
-    () => config.value?.siteDescription ?? 'Manage your racing leagues'
+    () => config.value?.siteDescription ?? 'Manage your racing leagues',
   );
   const googleAnalyticsId = computed(() => config.value?.googleAnalyticsId);
   const facebookPixelId = computed(() => config.value?.facebookPixelId);
@@ -29,7 +29,7 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
   const registrationsEnabled = computed(() => config.value?.registrationsEnabled ?? true);
   const maintenanceMode = computed(() => config.value?.maintenanceMode ?? false);
   const maintenanceMessage = computed(
-    () => config.value?.maintenanceMessage ?? 'Site is under maintenance. Please check back later.'
+    () => config.value?.maintenanceMessage ?? 'Site is under maintenance. Please check back later.',
   );
 
   /**

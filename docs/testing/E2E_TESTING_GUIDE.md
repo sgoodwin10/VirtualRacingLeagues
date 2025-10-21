@@ -29,15 +29,15 @@ End-to-end tests validate complete user workflows across the entire application 
 This project has **three separate subdomains**:
 
 ```
-1. Public Site:        http://virtualracingleagues.localhost:8000
+1. Public Site:        http://virtualracingleagues.localhost
    - Login, Register, Home, Password Reset
    - Unauthenticated users
 
-2. User Dashboard:     http://app.virtualracingleagues.localhost:8000
+2. User Dashboard:     http://app.virtualracingleagues.localhost
    - User profile, settings
    - Authenticated users only (redirects to public if not logged in)
 
-3. Admin Dashboard:    http://admin.virtualracingleagues.localhost:8000/admin
+3. Admin Dashboard:    http://admin.virtualracingleagues.localhost/admin
    - Admin panel, user management
    - Admin users only
 ```
@@ -424,7 +424,7 @@ test('completes multi-step league setup', async ({ page }) => {
 
 ```typescript
 // URL assertions
-await expect(page).toHaveURL('http://app.virtualracingleagues.localhost:8000/');
+await expect(page).toHaveURL('http://app.virtualracingleagues.localhost/');
 await expect(page).toHaveURL(/\/leagues\/\d+/);
 
 // Title assertions
@@ -496,7 +496,7 @@ await page.getByText('Loading complete').waitFor();
 await page.getByText('Loading...').waitFor({ state: 'hidden' });
 
 // Wait for URL change
-await page.waitForURL('http://app.virtualracingleagues.localhost:8000/');
+await page.waitForURL('http://app.virtualracingleagues.localhost/');
 
 // Wait for response
 await page.waitForResponse((response) =>

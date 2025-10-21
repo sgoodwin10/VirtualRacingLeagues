@@ -15,7 +15,9 @@ class PlatformSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('platforms')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $platforms = [
             ['name' => 'Gran Turismo 7', 'sort_order' => 1],

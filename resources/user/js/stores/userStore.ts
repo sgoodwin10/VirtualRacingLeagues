@@ -139,5 +139,5 @@ export const useUserStore = defineStore(
       storage: localStorage,
       pick: ['user', 'isAuthenticated'],
     },
-  }
+  },
 );

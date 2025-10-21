@@ -156,5 +156,5 @@ export const useAuthStore = defineStore(
       storage: localStorage,
       pick: ['user', 'isAuthenticated'],
     },
-  }
+  },
 );

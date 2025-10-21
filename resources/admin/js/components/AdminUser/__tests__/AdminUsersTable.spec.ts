@@ -56,7 +56,7 @@ describe('AdminUsersTable', () => {
     });
   };
 
-  const mockProps = {
+  const _mockProps = {
     adminUsers: mockAdmins,
     totalRecords: 1,
     rowsPerPage: 10,

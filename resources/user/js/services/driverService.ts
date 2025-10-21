@@ -46,18 +46,18 @@ interface PaginatedApiResponse {
  */
 export async function getLeagueDrivers(
   leagueId: number,
-  params?: LeagueDriversQueryParams
+  params?: LeagueDriversQueryParams,
 ): Promise<PaginatedDriversResponse> {
   const response: AxiosResponse<PaginatedApiResponse> = await apiClient.get(
     `/leagues/${leagueId}/drivers`,
-    { params }
+    { params },
   );
-  
+
   // Check if the response has the expected structure
   if (!response.data || typeof response.data !== 'object') {
     throw new Error('Invalid API response structure');
   }
-  
+
   // Transform the API response to match the expected structure
   const meta = response.data.meta || {
     total: 0,
@@ -83,11 +83,11 @@ export async function getLeagueDrivers(
  */
 export async function createDriver(
   leagueId: number,
-  data: CreateDriverRequest
+  data: CreateDriverRequest,
 ): Promise<LeagueDriver> {
   const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.post(
     `/leagues/${leagueId}/drivers`,
-    data
+    data,
   );
   return response.data.data;
 }
@@ -99,7 +99,7 @@ export async function createDriver(
  */
 export async function getLeagueDriver(leagueId: number, driverId: number): Promise<LeagueDriver> {
   const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.get(
-    `/leagues/${leagueId}/drivers/${driverId}`
+    `/leagues/${leagueId}/drivers/${driverId}`,
   );
   return response.data.data;
 }
@@ -113,11 +113,11 @@ export async function getLeagueDriver(leagueId: number, driverId: number): Promi
 export async function updateDriver(
   leagueId: number,
   driverId: number,
-  data: UpdateDriverRequest
+  data: UpdateDriverRequest,
 ): Promise<LeagueDriver> {
   const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.put(
     `/leagues/${leagueId}/drivers/${driverId}`,
-    data
+    data,
   );
   return response.data.data;
 }
@@ -132,11 +132,11 @@ export async function updateDriver(
 export async function updateLeagueDriver(
   leagueId: number,
   driverId: number,
-  data: UpdateLeagueDriverRequest
+  data: UpdateLeagueDriverRequest,
 ): Promise<LeagueDriver> {
   const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.put(
     `/leagues/${leagueId}/drivers/${driverId}`,
-    data
+    data,
   );
   return response.data.data;
 }
@@ -157,12 +157,12 @@ export async function removeDriverFromLeague(leagueId: number, driverId: number)
  */
 export async function importDriversFromCSV(
   leagueId: number,
-  csvData: string
+  csvData: string,
 ): Promise<ImportDriversResponse> {
   const payload: ImportDriversRequest = { csv_data: csvData };
   const response: AxiosResponse<ApiResponse<ImportDriversResponse>> = await apiClient.post(
     `/leagues/${leagueId}/drivers/import-csv`,
-    payload
+    payload,
   );
   return response.data.data;
 }

@@ -21,10 +21,10 @@ return [
 
     'allowed_origins' => [
         'http://localhost:5173',
-        'http://virtualracingleagues.localhost:8000',
-        'http://admin.virtualracingleagues.localhost:8000',
-        'http://app.virtualracingleagues.localhost:8000',
-        'http://localhost:8000',
+        'http://virtualracingleagues.localhost',
+        'http://admin.virtualracingleagues.localhost',
+        'http://app.virtualracingleagues.localhost',
+        'http://localhost',
     ],
 
     'allowed_origins_patterns' => [],

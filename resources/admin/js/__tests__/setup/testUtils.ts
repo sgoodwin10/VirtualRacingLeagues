@@ -77,7 +77,7 @@ export function createTestRouter(routes: any[] = []) {
  */
 export function mountWithStubs<T extends ComponentPublicInstance>(
   component: Component,
-  options: MountingOptions<any> = {}
+  options: MountingOptions<any> = {},
 ): VueWrapper<T> {
   // Merge PrimeVue stubs with any additional stubs provided
   const stubs = {
@@ -98,7 +98,7 @@ export function mountWithStubs<T extends ComponentPublicInstance>(
       plugin &&
       typeof plugin === 'object' &&
       'install' in plugin &&
-      ('_s' in plugin || '_p' in plugin) // Pinia-specific properties
+      ('_s' in plugin || '_p' in plugin), // Pinia-specific properties
   );
   const hasRouter = customPlugins.some(
     (plugin) =>
@@ -106,7 +106,7 @@ export function mountWithStubs<T extends ComponentPublicInstance>(
       typeof plugin === 'object' &&
       'install' in plugin &&
       'options' in plugin &&
-      'currentRoute' in plugin // Router-specific properties
+      'currentRoute' in plugin, // Router-specific properties
   );
 
   // Add default Pinia and Router only if not provided in custom plugins
@@ -224,7 +224,7 @@ export function createMockApiError(message: string, status = 500) {
 export async function waitFor(
   condition: () => boolean,
   timeout = 1000,
-  interval = 50
+  interval = 50,
 ): Promise<void> {
   const startTime = Date.now();
 
@@ -241,7 +241,7 @@ export async function waitFor(
  */
 export function findComponentByName<T extends ComponentPublicInstance>(
   wrapper: VueWrapper<any>,
-  name: string
+  name: string,
 ): VueWrapper<T> | undefined {
   return wrapper.findComponent({ name }) as VueWrapper<T> | undefined;
 }
@@ -251,7 +251,7 @@ export function findComponentByName<T extends ComponentPublicInstance>(
  */
 export function findAllComponentsByName<T extends ComponentPublicInstance>(
   wrapper: VueWrapper<any>,
-  name: string
+  name: string,
 ): VueWrapper<T>[] {
   return wrapper.findAllComponents({ name }) as VueWrapper<T>[];
 }
@@ -262,7 +262,7 @@ export function findAllComponentsByName<T extends ComponentPublicInstance>(
 export async function triggerNativeEvent(
   element: Element,
   eventType: string,
-  eventData: any = {}
+  eventData: any = {},
 ): Promise<void> {
   const event = new Event(eventType, { bubbles: true, cancelable: true });
   Object.assign(event, eventData);

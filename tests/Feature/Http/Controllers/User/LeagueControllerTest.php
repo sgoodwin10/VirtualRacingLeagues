@@ -101,8 +101,8 @@ class LeagueControllerTest extends UserControllerTestCase
             'platform_ids' => [1, 2],
             'discord_url' => 'https://discord.gg/league',
             'website_url' => 'https://league.example.com',
-            'twitter_handle' => '@f1league',
-            'instagram_handle' => '@f1league',
+            'twitter_handle' => 'f1league',
+            'instagram_handle' => 'f1league',
             'youtube_url' => 'https://youtube.com/@f1league',
             'twitch_url' => 'https://twitch.tv/f1league',
             'visibility' => 'public',
@@ -234,7 +234,7 @@ class LeagueControllerTest extends UserControllerTestCase
                 'success' => false,
             ])
             ->assertJsonFragment([
-                'message' => 'Free tier users can create a maximum of 1 league. Please upgrade your account to create more leagues.',
+                'message' => 'You have reached the maximum number of leagues (1) for the free tier. Please upgrade your account to create more leagues.',
             ]);
     }
 
@@ -249,9 +249,6 @@ class LeagueControllerTest extends UserControllerTestCase
                 'name',
                 'logo',
                 'platform_ids',
-                'timezone',
-                'contact_email',
-                'organizer_name',
                 'visibility',
             ]);
     }
@@ -610,6 +607,88 @@ class LeagueControllerTest extends UserControllerTestCase
     }
 
     #[Test]
+    public function it_checks_slug_availability_excluding_current_league(): void
+    {
+        // Create a league
+        $league = League::create([
+            'name' => 'F1 Racing League',
+            'slug' => 'f1-racing-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        // Check slug availability excluding the current league - should be available
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson('/api/leagues/check-slug', [
+                'name' => 'F1 Racing League',
+                'league_id' => $league->id,
+            ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'available' => true,
+                    'slug' => 'f1-racing-league',
+                    'suggestion' => null,
+                ],
+            ]);
+    }
+
+    #[Test]
+    public function it_detects_slug_conflict_when_checking_with_different_league_id(): void
+    {
+        // Create two leagues
+        $league1 = League::create([
+            'name' => 'F1 Racing League',
+            'slug' => 'f1-racing-league',
+            'logo_path' => 'leagues/logos/logo1.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact1@test.com',
+            'organizer_name' => 'John Doe',
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $league2 = League::create([
+            'name' => 'GT Racing League',
+            'slug' => 'gt-racing-league',
+            'logo_path' => 'leagues/logos/logo2.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact2@test.com',
+            'organizer_name' => 'Jane Doe',
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        // Try to check if we can rename league2 to league1's name - should NOT be available
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson('/api/leagues/check-slug', [
+                'name' => 'F1 Racing League',
+                'league_id' => $league2->id,
+            ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'available' => false,
+                    'slug' => 'f1-racing-league',
+                ],
+            ]);
+
+        $this->assertNotNull($response->json('data.suggestion'));
+        $this->assertStringStartsWith('f1-racing-league-', $response->json('data.suggestion'));
+    }
+
+    #[Test]
     public function it_requires_authentication_for_all_endpoints(): void
     {
         $endpoints = [
@@ -624,5 +703,417 @@ class LeagueControllerTest extends UserControllerTestCase
             $response = $this->{$endpoint['method'] . 'Json'}($endpoint['uri']);
             $response->assertUnauthorized();
         }
+    }
+
+    #[Test]
+    public function it_returns_driver_columns_for_gran_turismo_7_league(): void
+    {
+        $league = League::create([
+            'name' => 'GT7 League',
+            'slug' => 'gt7-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [1], // Gran Turismo 7
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/driver-columns");
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
+                    ['field' => 'gt7_id', 'label' => 'GT7 ID', 'type' => 'text'],
+                ],
+            ])
+            ->assertJsonCount(2, 'data');
+    }
+
+    #[Test]
+    public function it_returns_driver_columns_for_iracing_league(): void
+    {
+        $league = League::create([
+            'name' => 'iRacing League',
+            'slug' => 'iracing-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [2], // iRacing
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/driver-columns");
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
+                    ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
+                ],
+            ])
+            ->assertJsonCount(2, 'data');
+    }
+
+    #[Test]
+    public function it_returns_combined_driver_columns_for_multi_platform_league(): void
+    {
+        $league = League::create([
+            'name' => 'Multi-Platform League',
+            'slug' => 'multi-platform-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [1, 2], // GT7 + iRacing
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/driver-columns");
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
+                    ['field' => 'gt7_id', 'label' => 'GT7 ID', 'type' => 'text'],
+                    ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
+                    ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
+                ],
+            ])
+            ->assertJsonCount(4, 'data');
+    }
+
+    #[Test]
+    public function it_returns_empty_columns_for_platform_without_fields(): void
+    {
+        // Create platform 3 if it doesn't exist
+        Platform::firstOrCreate(
+            ['slug' => 'acc'],
+            [
+                'name' => 'Assetto Corsa Competizione',
+                'is_active' => true,
+                'sort_order' => 3,
+            ]
+        );
+
+        $league = League::create([
+            'name' => 'ACC League',
+            'slug' => 'acc-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [3], // ACC (no fields defined yet)
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/driver-columns");
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'data' => [],
+            ])
+            ->assertJsonCount(0, 'data');
+    }
+
+    #[Test]
+    public function it_returns_404_for_driver_columns_when_league_not_found(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson('/api/leagues/99999/driver-columns');
+
+        $response->assertNotFound()
+            ->assertJson([
+                'success' => false,
+                'message' => 'League not found.',
+            ]);
+    }
+
+    #[Test]
+    public function it_returns_driver_form_fields_for_league(): void
+    {
+        $league = League::create([
+            'name' => 'Test League',
+            'slug' => 'test-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [1, 2],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/driver-form-fields");
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonCount(4, 'data');
+    }
+
+    #[Test]
+    public function it_returns_404_for_driver_form_fields_when_league_not_found(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson('/api/leagues/99999/driver-form-fields');
+
+        $response->assertNotFound()
+            ->assertJson([
+                'success' => false,
+                'message' => 'League not found.',
+            ]);
+    }
+
+    #[Test]
+    public function it_returns_driver_csv_headers_for_league(): void
+    {
+        $league = League::create([
+            'name' => 'Test League',
+            'slug' => 'test-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [1, 2],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/driver-csv-headers");
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonCount(4, 'data');
+    }
+
+    #[Test]
+    public function it_returns_404_for_driver_csv_headers_when_league_not_found(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson('/api/leagues/99999/driver-csv-headers');
+
+        $response->assertNotFound()
+            ->assertJson([
+                'success' => false,
+                'message' => 'League not found.',
+            ]);
+    }
+
+    #[Test]
+    public function it_requires_authentication_for_driver_platform_endpoints(): void
+    {
+        $endpoints = [
+            ['method' => 'get', 'uri' => '/api/leagues/1/driver-columns'],
+            ['method' => 'get', 'uri' => '/api/leagues/1/driver-form-fields'],
+            ['method' => 'get', 'uri' => '/api/leagues/1/driver-csv-headers'],
+        ];
+
+        foreach ($endpoints as $endpoint) {
+            $response = $this->{$endpoint['method'] . 'Json'}($endpoint['uri']);
+            $response->assertUnauthorized();
+        }
+    }
+
+    #[Test]
+    public function it_updates_league_successfully(): void
+    {
+        $league = League::create([
+            'name' => 'Original League Name',
+            'slug' => 'original-league-name',
+            'logo_path' => 'leagues/logos/logo.png',
+            'tagline' => 'Original tagline',
+            'description' => 'Original description',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'original@test.com',
+            'organizer_name' => 'Original Organizer',
+            'platform_ids' => [1],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $data = [
+            'name' => 'Updated League Name',
+            'tagline' => 'Updated tagline',
+            'description' => 'Updated description',
+        ];
+
+        $response = $this->actingAs($this->user, 'web')
+            ->putJson("/api/leagues/{$league->id}", $data);
+
+        $response->assertOk()
+            ->assertJsonPath('data.name', 'Updated League Name')
+            ->assertJsonPath('data.slug', 'updated-league-name')
+            ->assertJsonPath('data.tagline', 'Updated tagline')
+            ->assertJsonPath('data.description', 'Updated description');
+
+        // Verify database was updated
+        $this->assertDatabaseHas('leagues', [
+            'id' => $league->id,
+            'name' => 'Updated League Name',
+            'slug' => 'updated-league-name',
+            'tagline' => 'Updated tagline',
+        ]);
+    }
+
+    #[Test]
+    public function it_regenerates_unique_slug_when_updating_league_name_to_existing_slug(): void
+    {
+        // Create first league
+        $league1 = League::create([
+            'name' => 'Existing League',
+            'slug' => 'existing-league',
+            'logo_path' => 'leagues/logos/logo1.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact1@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [1],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        // Create second league
+        $league2 = League::create([
+            'name' => 'Another League',
+            'slug' => 'another-league',
+            'logo_path' => 'leagues/logos/logo2.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact2@test.com',
+            'organizer_name' => 'Jane Doe',
+            'platform_ids' => [1],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        // Try to update league2's name to match league1's name
+        $data = [
+            'name' => 'Existing League',
+        ];
+
+        $response = $this->actingAs($this->user, 'web')
+            ->putJson("/api/leagues/{$league2->id}", $data);
+
+        $response->assertOk()
+            ->assertJsonPath('data.name', 'Existing League')
+            ->assertJsonPath('data.slug', 'existing-league-01'); // Should have unique slug
+
+        // Verify database has the unique slug
+        $this->assertDatabaseHas('leagues', [
+            'id' => $league2->id,
+            'name' => 'Existing League',
+            'slug' => 'existing-league-01',
+        ]);
+
+        // Verify original league is unchanged
+        $this->assertDatabaseHas('leagues', [
+            'id' => $league1->id,
+            'name' => 'Existing League',
+            'slug' => 'existing-league',
+        ]);
+    }
+
+    #[Test]
+    public function it_allows_updating_league_with_same_name(): void
+    {
+        $league = League::create([
+            'name' => 'My League',
+            'slug' => 'my-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'tagline' => 'Original tagline',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [1],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        // Update only the tagline, keeping the same name
+        $data = [
+            'name' => 'My League', // Same name
+            'tagline' => 'Updated tagline',
+        ];
+
+        $response = $this->actingAs($this->user, 'web')
+            ->putJson("/api/leagues/{$league->id}", $data);
+
+        $response->assertOk()
+            ->assertJsonPath('data.name', 'My League')
+            ->assertJsonPath('data.slug', 'my-league') // Slug should remain the same
+            ->assertJsonPath('data.tagline', 'Updated tagline');
+    }
+
+    #[Test]
+    public function it_prevents_updating_another_users_league(): void
+    {
+        $league = League::create([
+            'name' => 'Other User League',
+            'slug' => 'other-user-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->otherUser->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'Jane Doe',
+            'platform_ids' => [1],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $data = [
+            'name' => 'Hacked League',
+        ];
+
+        $response = $this->actingAs($this->user, 'web')
+            ->putJson("/api/leagues/{$league->id}", $data);
+
+        $response->assertStatus(403); // Forbidden
+
+        // Verify league was not updated
+        $this->assertDatabaseHas('leagues', [
+            'id' => $league->id,
+            'name' => 'Other User League',
+        ]);
+    }
+
+    #[Test]
+    public function it_returns_404_when_updating_non_existent_league(): void
+    {
+        $data = [
+            'name' => 'Updated Name',
+        ];
+
+        $response = $this->actingAs($this->user, 'web')
+            ->putJson('/api/leagues/99999', $data);
+
+        $response->assertNotFound();
     }
 }

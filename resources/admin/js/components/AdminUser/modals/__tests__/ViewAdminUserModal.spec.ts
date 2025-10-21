@@ -212,7 +212,7 @@ describe('ViewAdminUserModal', () => {
 
     it('displays loading state while fetching activities', async () => {
       mockGetActivitiesForAdmin.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve(mockActivities), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve(mockActivities), 100)),
       );
 
       const wrapper = createWrapper(defaultProps);

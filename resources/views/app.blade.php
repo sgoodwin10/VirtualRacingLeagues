@@ -7,7 +7,7 @@
         <title>{{ config('app.name', 'YOUR_APP_NAME') }} - User Dashboard</title>
         @vite(['resources/user/css/app.css', 'resources/user/js/app.ts'])
     </head>
-    <body>
-        <div id="user-app"></div>
+    <body class="bg-gray-50 min-h-full">
+        <div id="user-app" class=""></div>
     </body>
 </html>

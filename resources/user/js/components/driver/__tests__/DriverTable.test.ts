@@ -1,7 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 import DriverTable from '../DriverTable.vue';
 import type { LeagueDriver } from '@user/types/driver';
+import type { PlatformColumn } from '@user/types/league';
+
+// Mock the league store
+const mockFetchDriverColumnsForLeague = vi.fn();
+let mockPlatformColumnsValue: PlatformColumn[] = [];
+
+vi.mock('@user/stores/leagueStore', () => ({
+  useLeagueStore: vi.fn(() => ({
+    get platformColumns() {
+      return mockPlatformColumnsValue;
+    },
+    fetchDriverColumnsForLeague: mockFetchDriverColumnsForLeague,
+  })),
+}));
 
 // Mock PrimeVue components
 vi.mock('primevue/datatable', () => ({
@@ -39,20 +54,35 @@ vi.mock('primevue/button', () => ({
 
 describe('DriverTable', () => {
   let mockDrivers: LeagueDriver[];
+  let mockPlatformColumns: PlatformColumn[];
 
   beforeEach(() => {
+    // Set up Pinia
+    setActivePinia(createPinia());
+
+    // Reset mocks
+    mockFetchDriverColumnsForLeague.mockClear();
+    mockPlatformColumnsValue = []; // Reset to empty by default
+
     mockDrivers = [
       {
         id: 1,
-        first_name: 'John',
-        last_name: 'Smith',
-        nickname: 'JSmith',
-        email: 'john@example.com',
-        phone: null,
-        psn_id: 'JohnSmith77',
-        gt7_id: null,
-        iracing_id: null,
-        iracing_customer_id: null,
+        driver: {
+          id: 101,
+          first_name: 'John',
+          last_name: 'Smith',
+          nickname: 'JSmith',
+          email: 'john@example.com',
+          phone: null,
+          psn_id: 'JohnSmith77',
+          gt7_id: null,
+          iracing_id: null,
+          iracing_customer_id: null,
+          display_name: 'John Smith',
+          slug: 'john-smith',
+          created_at: '2025-10-18T10:00:00Z',
+          updated_at: '2025-10-18T10:00:00Z',
+        },
         driver_number: 5,
         status: 'active',
         league_notes: null,
@@ -62,15 +92,22 @@ describe('DriverTable', () => {
       },
       {
         id: 2,
-        first_name: null,
-        last_name: null,
-        nickname: 'FastRacer',
-        email: null,
-        phone: null,
-        psn_id: null,
-        gt7_id: 'FastRacer99',
-        iracing_id: null,
-        iracing_customer_id: null,
+        driver: {
+          id: 102,
+          first_name: null,
+          last_name: null,
+          nickname: 'FastRacer',
+          email: null,
+          phone: null,
+          psn_id: null,
+          gt7_id: 'FastRacer99',
+          iracing_id: null,
+          iracing_customer_id: null,
+          display_name: 'FastRacer',
+          slug: 'fastracer',
+          created_at: '2025-10-18T11:00:00Z',
+          updated_at: '2025-10-18T11:00:00Z',
+        },
         driver_number: null,
         status: 'inactive',
         league_notes: 'On break',
@@ -79,6 +116,11 @@ describe('DriverTable', () => {
         updated_at: '2025-10-18T11:00:00Z',
       },
     ];
+
+    mockPlatformColumns = [
+      { field: 'psn_id', label: 'PSN ID' },
+      { field: 'gt7_id', label: 'GT7 ID' },
+    ];
   });
 
   it('should render driver table with data', () => {
@@ -86,6 +128,7 @@ describe('DriverTable', () => {
       props: {
         drivers: mockDrivers,
         loading: false,
+        leagueId: 1,
       },
     });
 
@@ -97,6 +140,7 @@ describe('DriverTable', () => {
       props: {
         drivers: mockDrivers,
         loading: false,
+        leagueId: 1,
       },
     });
 
@@ -113,6 +157,7 @@ describe('DriverTable', () => {
       props: {
         drivers: mockDrivers,
         loading: false,
+        leagueId: 1,
       },
     });
 
@@ -129,12 +174,13 @@ describe('DriverTable', () => {
       props: {
         drivers: mockDrivers,
         loading: false,
+        leagueId: 1,
       },
     });
 
     const component = wrapper.vm as any;
 
-    // Test full name
+    // Test full name (now uses display_name from nested driver object)
     const name1 = component.getDriverName(mockDrivers[0]);
     expect(name1).toBe('John Smith');
 
@@ -143,23 +189,24 @@ describe('DriverTable', () => {
     expect(name2).toBe('FastRacer');
   });
 
-  it('should display platform IDs correctly', () => {
+  it('should display platform values correctly', () => {
     const wrapper = mount(DriverTable, {
       props: {
         drivers: mockDrivers,
         loading: false,
+        leagueId: 1,
       },
     });
 
     const component = wrapper.vm as any;
 
-    // Test PSN ID
-    const platform1 = component.getPlatformDisplay(mockDrivers[0]);
-    expect(platform1).toBe('PSN: JohnSmith77');
+    // Test PSN ID from nested driver object
+    const psnValue = component.getPlatformValue(mockDrivers[0], 'psn_id');
+    expect(psnValue).toBe('JohnSmith77');
 
-    // Test GT7 ID
-    const platform2 = component.getPlatformDisplay(mockDrivers[1]);
-    expect(platform2).toBe('GT7: FastRacer99');
+    // Test GT7 ID from nested driver object
+    const gt7Value = component.getPlatformValue(mockDrivers[1], 'gt7_id');
+    expect(gt7Value).toBe('FastRacer99');
   });
 
   it('should handle driver with no platform ID', () => {
@@ -167,19 +214,24 @@ describe('DriverTable', () => {
       props: {
         drivers: [],
         loading: false,
+        leagueId: 1,
       },
     });
 
     const component = wrapper.vm as any;
     const driverNoPlatform: LeagueDriver = {
       ...mockDrivers[0],
-      psn_id: null,
-      gt7_id: null,
-      iracing_id: null,
+      driver: {
+        ...mockDrivers[0].driver,
+        psn_id: null,
+        gt7_id: null,
+        iracing_id: null,
+        iracing_customer_id: null,
+      },
     } as LeagueDriver;
 
-    const platform = component.getPlatformDisplay(driverNoPlatform);
-    expect(platform).toBe('No platform ID');
+    const platform = component.getPlatformValue(driverNoPlatform, 'psn_id');
+    expect(platform).toBe('-');
   });
 
   it('should show loading state', () => {
@@ -187,6 +239,7 @@ describe('DriverTable', () => {
       props: {
         drivers: [],
         loading: true,
+        leagueId: 1,
       },
     });
 
@@ -198,6 +251,7 @@ describe('DriverTable', () => {
       props: {
         drivers: [],
         loading: false,
+        leagueId: 1,
       },
     });
 

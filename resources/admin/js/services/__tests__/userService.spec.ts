@@ -124,7 +124,7 @@ describe('userService', () => {
     expect(apiService.post).toHaveBeenCalledWith(
       `/users/${mockUser.id}/restore`,
       {},
-      { signal: undefined }
+      { signal: undefined },
     );
   });
 
@@ -142,7 +142,7 @@ describe('userService', () => {
     expect(apiService.patch).toHaveBeenCalledWith(
       `/users/${mockUser.id}/verify-email`,
       {},
-      { signal: undefined }
+      { signal: undefined },
     );
   });
 
@@ -154,7 +154,7 @@ describe('userService', () => {
     expect(apiService.post).toHaveBeenCalledWith(
       `/users/${mockUser.id}/resend-verification`,
       {},
-      { signal: undefined }
+      { signal: undefined },
     );
   });
 
@@ -172,7 +172,7 @@ describe('userService', () => {
     expect(apiService.post).toHaveBeenCalledWith(
       `/users/${mockUser.id}/login-as`,
       {},
-      { signal: undefined }
+      { signal: undefined },
     );
   });
 });

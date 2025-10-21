@@ -49,7 +49,7 @@ cp .env.example .env
 
 # Update .env with your settings (or use defaults):
 # - APP_NAME=VirtualRacingLeagues
-# - APP_URL=http://virtualracingleagues.localhost:8000
+# - APP_URL=http://virtualracingleagues.localhost
 # - SESSION_DOMAIN=.virtualracingleagues.localhost
 ```
 
@@ -90,9 +90,9 @@ npm run dev
 ```
 
 Then visit:
-- **Public Site**: http://virtualracingleagues.localhost:8000
-- **User Dashboard**: http://app.virtualracingleagues.localhost:8000
-- **Admin Dashboard**: http://admin.virtualracingleagues.localhost:8000/admin
+- **Public Site**: http://virtualracingleagues.localhost
+- **User Dashboard**: http://app.virtualracingleagues.localhost
+- **Admin Dashboard**: http://admin.virtualracingleagues.localhost/admin
 
 **Default Admin Login** (if seeded):
 - Email: `admin@example.com`
@@ -252,7 +252,7 @@ See [DDD Overview](./.claude/guides/backend/ddd-overview.md)
 
 ## Services
 
-- **Nginx:** http://localhost:8000
+- **Nginx:** http://localhost
 - **MariaDB:** localhost:3307 (user: `laravel`, pass: `secret`, db: `laravel`)
 - **Redis:** localhost:6379
 - **Elasticsearch:** http://localhost:9200

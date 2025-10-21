@@ -283,7 +283,7 @@ describe('driverStore', () => {
       const store = useDriverStore();
 
       await expect(
-        store.createNewDriver(1, { first_name: 'Test', psn_id: 'Test' })
+        store.createNewDriver(1, { first_name: 'Test', psn_id: 'Test' }),
       ).rejects.toThrow('Validation error');
       expect(store.error).toBe('Validation error');
     });
@@ -490,9 +490,7 @@ describe('driverStore', () => {
 
       const store = useDriverStore();
 
-      await expect(
-        store.updateDriver(1, 1, { status: 'active' })
-      ).rejects.toThrow('Update failed');
+      await expect(store.updateDriver(1, 1, { status: 'active' })).rejects.toThrow('Update failed');
       expect(store.error).toBe('Update failed');
     });
   });
@@ -503,8 +501,8 @@ describe('driverStore', () => {
 
       const store = useDriverStore();
       store.drivers = [
-        { id: 1, first_name: 'John' } as LeagueDriver,
-        { id: 2, first_name: 'Jane' } as LeagueDriver,
+        { id: 1, driver_id: 1, first_name: 'John' } as LeagueDriver,
+        { id: 2, driver_id: 2, first_name: 'Jane' } as LeagueDriver,
       ];
       store.totalDrivers = 2;
 
@@ -519,8 +517,8 @@ describe('driverStore', () => {
       vi.mocked(driverService.removeDriverFromLeague).mockResolvedValue();
 
       const store = useDriverStore();
-      store.currentDriver = { id: 1, first_name: 'John' } as LeagueDriver;
-      store.drivers = [{ id: 1, first_name: 'John' } as LeagueDriver];
+      store.currentDriver = { id: 1, driver_id: 1, first_name: 'John' } as LeagueDriver;
+      store.drivers = [{ id: 1, driver_id: 1, first_name: 'John' } as LeagueDriver];
 
       await store.removeDriver(1, 1);
 

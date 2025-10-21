@@ -52,7 +52,7 @@ describe('useUserStore', () => {
     const userStore = useUserStore();
 
     await expect(userStore.login({ email: 'john@example.com', password: 'wrong' })).rejects.toThrow(
-      'Login failed'
+      'Login failed',
     );
 
     expect(userStore.user).toBeNull();

@@ -36,7 +36,7 @@ describe('useAsyncAction', () => {
           new Promise((resolve) => {
             expect(isLoading.value).toBe(true);
             resolve('done');
-          })
+          }),
       );
 
       await execute(asyncFn);
@@ -218,7 +218,7 @@ describe('createAsyncActions', () => {
           expect(actions.create.isLoading.value).toBe(true);
           expect(actions.update.isLoading.value).toBe(false);
           resolve('done');
-        })
+        }),
     );
 
     await actions.create.execute(createFn);

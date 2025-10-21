@@ -121,7 +121,7 @@ describe('useErrorToast', () => {
       expect(() =>
         showErrorToast(error, 'Failed to save', {
           customMessage: 'Custom error message',
-        })
+        }),
       ).not.toThrow();
     });
 
@@ -132,7 +132,7 @@ describe('useErrorToast', () => {
       expect(() =>
         showErrorToast(error, 'Failed', {
           life: 3000,
-        })
+        }),
       ).not.toThrow();
     });
 
@@ -152,7 +152,7 @@ describe('useErrorToast', () => {
       expect(() =>
         showErrorToast(error, 'Validation failed', {
           showValidationErrors: true,
-        })
+        }),
       ).not.toThrow();
     });
   });

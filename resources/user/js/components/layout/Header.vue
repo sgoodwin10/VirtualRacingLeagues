@@ -46,7 +46,7 @@ async function handleLogout() {
       <div class="flex items-center justify-between h-16">
         <!-- Logo -->
         <router-link to="/" class="flex items-center">
-          <span class="text-xl font-bold text-blue-600">{{ siteName }} Dashboard</span>
+          <span class="text-xl font-bold text-blue-600">User Dashboard</span>
         </router-link>
 
         <!-- Navigation -->

@@ -1,0 +1,37 @@
+
+
+
+
+# install claude code
+`npm install -g @anthropic-ai/claude-code`
+
+`claude --dangerously-skip-permissions`
+
+
+# install context 7
+`claude mcp add --transport http context7 https://mcp.context7.com/mcp --header "CONTEXT7_API_KEY: YOUR_API_KEY"` ctx7sk-4a173fe9-ebc5-492a-8cc4-35a3692ed62c
+
+
+# CC Usage
+`npx ccstatusline@latest`
+
+
+# Access the docker container
+```bash
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan db:seed    # Optional: creates default admin user
+npm install
+npm run build
+```
+
+
+# URLS
+http://virtualracingleagues.localhost
+http://app.virtualracingleagues.localhost
+http://adminvirtualracingleagues.localhost
+
+# Mailpit
+http://virtualracingleagues.localhost:8025 
+

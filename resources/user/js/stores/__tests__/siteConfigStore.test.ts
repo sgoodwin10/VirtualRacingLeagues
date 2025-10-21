@@ -256,7 +256,7 @@ describe('siteConfigStore', () => {
       expect(store.error).toBe('Failed to load site configuration');
       expect(console.error).toHaveBeenCalledWith(
         'Site config error:',
-        'Failed to load site configuration'
+        'Failed to load site configuration',
       );
     });
 

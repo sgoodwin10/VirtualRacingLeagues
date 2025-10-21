@@ -6,7 +6,6 @@ import type {
   AuthCheckResponse,
   LogoutResponse,
 } from '@admin/types/admin';
-import { logger } from '@admin/utils/logger';
 import { handleServiceError } from '@admin/utils/errorHandler';
 import { isAxiosError, hasValidationErrors } from '@admin/types/errors';
 
@@ -59,8 +58,8 @@ class AuthService {
   async logout(signal?: AbortSignal): Promise<void> {
     try {
       await apiService.post<LogoutResponse>('/logout', {}, { signal });
-    } catch (error) {
-      logger.error('Logout error:', error);
+    } catch {
+      // Ignore logout errors - always proceed with cleanup
     } finally {
       // Always clear local data even if API call fails
       this.clearRememberMe();
@@ -80,8 +79,8 @@ class AuthService {
       }
 
       return null;
-    } catch (error) {
-      logger.error('Auth check error:', error);
+    } catch {
+      // Ignore auth check errors - return null to indicate not authenticated
       return null;
     }
   }
@@ -94,7 +93,7 @@ class AuthService {
     try {
       const response = await apiService.get<{ success: boolean; data: { admin: Admin } }>(
         '/auth/me',
-        { signal }
+        { signal },
       );
       return response.data?.admin || null;
     } catch {

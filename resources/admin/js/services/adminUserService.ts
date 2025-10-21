@@ -45,7 +45,7 @@ class AdminUserService {
     page: number = 1,
     perPage: number = 15,
     filters?: AdminUserFilterParams,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<AdminUserListResponse> {
     try {
       // Build query parameters
@@ -196,7 +196,7 @@ class AdminUserService {
   async updateAdminUser(
     id: number,
     data: AdminUserUpdateData,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<Admin> {
     try {
       const response = await apiService.put<AdminUserResponse>(`/admins/${id}`, data, { signal });
@@ -245,7 +245,7 @@ class AdminUserService {
       const response = await apiService.post<AdminUserResponse>(
         `/admins/${id}/restore`,
         {},
-        { signal }
+        { signal },
       );
 
       if (!response.success || !response.data) {

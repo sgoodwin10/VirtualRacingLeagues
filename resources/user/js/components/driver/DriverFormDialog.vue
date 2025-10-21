@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
-import FormLabel from '@user/components/common/FormLabel.vue';
-import FormError from '@user/components/common/FormError.vue';
+import FormInputGroup from '@user/components/common/forms/FormInputGroup.vue';
+import FormLabel from '@user/components/common/forms/FormLabel.vue';
+import FormError from '@user/components/common/forms/FormError.vue';
+import FormHelper from '@user/components/common/forms/FormHelper.vue';
+import FormCharacterCount from '@user/components/common/forms/FormCharacterCount.vue';
+import { useLeagueStore } from '@user/stores/leagueStore';
 import type { LeagueDriver, CreateDriverRequest } from '@user/types/driver';
-import type { Platform } from '@user/types/league';
 
 interface Props {
   visible: boolean;
   mode: 'create' | 'edit';
   driver?: LeagueDriver | null;
-  leaguePlatforms?: Platform[];
+  leagueId?: number;
 }
 
 interface Emits {
@@ -24,22 +27,18 @@ interface Emits {
   (e: 'cancel'): void;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  leaguePlatforms: () => [],
-});
+const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-// Form data
-const formData = ref<CreateDriverRequest>({
+const leagueStore = useLeagueStore();
+
+// Form data - platform fields stored dynamically
+const formData = ref<CreateDriverRequest & Record<string, unknown>>({
   first_name: '',
   last_name: '',
   nickname: '',
   email: '',
   phone: '',
-  psn_id: '',
-  gt7_id: '',
-  iracing_id: '',
-  iracing_customer_id: undefined,
   driver_number: undefined,
   status: 'active',
   league_notes: '',
@@ -60,19 +59,12 @@ const dialogTitle = computed(() => {
   return props.mode === 'create' ? 'Add Driver' : 'Edit Driver';
 });
 
-// Determine which platform fields to show based on league platforms
-const showPlatformFields = computed(() => {
-  const platformSlugs = props.leaguePlatforms.map(p => p.slug.toLowerCase());
-  return {
-    psn: platformSlugs.includes('playstation') || platformSlugs.includes('psn'),
-    gt7: platformSlugs.includes('gran turismo') || platformSlugs.includes('gt7'),
-    iracing: platformSlugs.includes('iracing'),
-  };
-});
+// Get platform form fields from store
+const platformFormFields = computed(() => leagueStore.platformFormFields);
 
 // Check if at least one platform field is shown
 const hasAnyPlatformField = computed(() => {
-  return showPlatformFields.value.psn || showPlatformFields.value.gt7 || showPlatformFields.value.iracing;
+  return platformFormFields.value.length > 0;
 });
 
 // Watch for driver changes in edit mode
@@ -81,23 +73,27 @@ watch(
   (leagueDriver) => {
     if (leagueDriver && props.mode === 'edit') {
       const driver = leagueDriver.driver;
-      formData.value = {
+      const newFormData: CreateDriverRequest & Record<string, unknown> = {
         first_name: driver?.first_name || '',
         last_name: driver?.last_name || '',
         nickname: driver?.nickname || '',
         email: driver?.email || '',
         phone: driver?.phone || '',
-        psn_id: driver?.psn_id || '',
-        gt7_id: driver?.gt7_id || '',
-        iracing_id: driver?.iracing_id || '',
-        iracing_customer_id: driver?.iracing_customer_id || undefined,
         driver_number: leagueDriver.driver_number || undefined,
         status: leagueDriver.status || 'active',
         league_notes: leagueDriver.league_notes || '',
       };
+
+      // Populate dynamic platform fields
+      platformFormFields.value.forEach((field) => {
+        const value = driver?.[field.field as keyof typeof driver];
+        newFormData[field.field] = value ?? (field.type === 'number' ? undefined : '');
+      });
+
+      formData.value = newFormData;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Watch for visible changes to reset form in create mode
@@ -107,7 +103,7 @@ watch(
     if (visible && props.mode === 'create') {
       resetForm();
     }
-  }
+  },
 );
 
 /**
@@ -122,14 +118,14 @@ const validateForm = (): boolean => {
     errors.value.name = 'At least one name field (First Name, Last Name, or Nickname) is required';
   }
 
-  // At least one platform ID is required (only check platforms shown for this league)
+  // At least one platform ID is required (check dynamic platform fields)
   if (hasAnyPlatformField.value) {
-    const hasPlatform =
-      (showPlatformFields.value.psn && formData.value.psn_id) ||
-      (showPlatformFields.value.gt7 && formData.value.gt7_id) ||
-      (showPlatformFields.value.iracing && (formData.value.iracing_id || formData.value.iracing_customer_id));
+    const hasPlatformValue = platformFormFields.value.some((field) => {
+      const value = formData.value[field.field];
+      return value !== undefined && value !== null && value !== '';
+    });
 
-    if (!hasPlatform) {
+    if (!hasPlatformValue) {
       errors.value.platform = 'At least one platform ID is required for this league';
     }
   }
@@ -161,20 +157,26 @@ const handleSubmit = (): void => {
   }
 
   // Clean up empty string values
-  const cleanedData: CreateDriverRequest = {
-    ...formData.value,
+  const cleanedData: CreateDriverRequest & Record<string, unknown> = {
     first_name: formData.value.first_name || undefined,
     last_name: formData.value.last_name || undefined,
     nickname: formData.value.nickname || undefined,
     email: formData.value.email || undefined,
     phone: formData.value.phone || undefined,
-    psn_id: formData.value.psn_id || undefined,
-    gt7_id: formData.value.gt7_id || undefined,
-    iracing_id: formData.value.iracing_id || undefined,
+    driver_number: formData.value.driver_number,
+    status: formData.value.status,
     league_notes: formData.value.league_notes || undefined,
   };
 
-  emit('save', cleanedData);
+  // Add dynamic platform fields
+  platformFormFields.value.forEach((field) => {
+    const value = formData.value[field.field];
+    if (value !== '' && value !== null && value !== undefined) {
+      cleanedData[field.field] = value;
+    }
+  });
+
+  emit('save', cleanedData as CreateDriverRequest);
 };
 
 /**
@@ -190,22 +192,42 @@ const handleCancel = (): void => {
  * Reset form to initial state
  */
 const resetForm = (): void => {
-  formData.value = {
+  const newFormData: CreateDriverRequest & Record<string, unknown> = {
     first_name: '',
     last_name: '',
     nickname: '',
     email: '',
     phone: '',
-    psn_id: '',
-    gt7_id: '',
-    iracing_id: '',
-    iracing_customer_id: undefined,
     driver_number: undefined,
     status: 'active',
     league_notes: '',
   };
+
+  // Reset dynamic platform fields
+  platformFormFields.value.forEach((field) => {
+    newFormData[field.field] = field.type === 'number' ? undefined : '';
+  });
+
+  formData.value = newFormData;
   errors.value = {};
 };
+
+/**
+ * Fetch platform form fields on mount if league is provided
+ */
+onMounted(async () => {
+  if (props.leagueId) {
+    try {
+      await leagueStore.fetchDriverFormFieldsForLeague(props.leagueId);
+      // Initialize form data with platform fields
+      if (props.mode === 'create') {
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Failed to fetch platform form fields:', error);
+    }
+  }
+});
 </script>
 
 <template>
@@ -221,7 +243,7 @@ const resetForm = (): void => {
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <!-- Name Fields -->
       <div class="grid grid-cols-3 gap-4">
-        <div class="form-field">
+        <FormInputGroup>
           <FormLabel for="first_name" text="First Name" />
           <InputText
             id="first_name"
@@ -229,8 +251,8 @@ const resetForm = (): void => {
             placeholder="John"
             class="w-full"
           />
-        </div>
-        <div class="form-field">
+        </FormInputGroup>
+        <FormInputGroup>
           <FormLabel for="last_name" text="Last Name" />
           <InputText
             id="last_name"
@@ -238,8 +260,8 @@ const resetForm = (): void => {
             placeholder="Smith"
             class="w-full"
           />
-        </div>
-        <div class="form-field">
+        </FormInputGroup>
+        <FormInputGroup>
           <FormLabel for="nickname" text="Nickname" />
           <InputText
             id="nickname"
@@ -247,14 +269,15 @@ const resetForm = (): void => {
             placeholder="JSmith"
             class="w-full"
           />
-        </div>
+        </FormInputGroup>
       </div>
+      <FormHelper text="At least one name field is required" />
       <FormError :error="errors.name" />
 
       <!-- Contact Fields -->
       <div class="grid grid-cols-2 gap-4">
-        <div class="form-field">
-          <FormLabel for="email" text="Email (Optional)" />
+        <FormInputGroup>
+          <FormLabel for="email" text="Email" />
           <InputText
             id="email"
             v-model="formData.email"
@@ -262,65 +285,48 @@ const resetForm = (): void => {
             placeholder="john@example.com"
             class="w-full"
           />
+          <FormHelper text="Optional: Driver's email address" />
           <FormError :error="errors.email" />
-        </div>
-        <div class="form-field">
-          <FormLabel for="phone" text="Phone (Optional)" />
+        </FormInputGroup>
+        <FormInputGroup>
+          <FormLabel for="phone" text="Phone" />
           <InputText id="phone" v-model="formData.phone" placeholder="+1234567890" class="w-full" />
-        </div>
+          <FormHelper text="Optional: Driver's phone number" />
+        </FormInputGroup>
       </div>
 
-      <!-- Platform IDs - Only show platforms used by the league -->
+      <!-- Dynamic Platform Fields - Rendered based on league's platforms -->
       <div v-if="hasAnyPlatformField" class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
-          <div v-if="showPlatformFields.psn" class="form-field">
-            <FormLabel for="psn_id" text="PSN ID" />
+          <FormInputGroup v-for="field in platformFormFields" :key="field.field">
+            <FormLabel :for="field.field" :text="field.label" />
             <InputText
-              id="psn_id"
-              v-model="formData.psn_id"
-              placeholder="JohnSmith77"
+              v-if="field.type === 'text'"
+              :id="field.field"
+              :model-value="(formData[field.field] as string) || ''"
+              :placeholder="field.placeholder || ''"
               class="w-full"
+              @update:model-value="formData[field.field] = $event"
             />
-          </div>
-          <div v-if="showPlatformFields.gt7" class="form-field">
-            <FormLabel for="gt7_id" text="GT7 ID" />
-            <InputText
-              id="gt7_id"
-              v-model="formData.gt7_id"
-              placeholder="JohnSmith_GT"
-              class="w-full"
-            />
-          </div>
-          <div v-if="showPlatformFields.iracing" class="form-field">
-            <FormLabel for="iracing_id" text="iRacing ID" />
-            <InputText
-              id="iracing_id"
-              v-model="formData.iracing_id"
-              placeholder="JohnSmith"
-              class="w-full"
-            />
-          </div>
-          <div v-if="showPlatformFields.iracing" class="form-field">
-            <FormLabel for="iracing_customer_id" text="iRacing Customer ID" />
             <InputNumber
-              id="iracing_customer_id"
-              v-model="formData.iracing_customer_id"
+              v-else-if="field.type === 'number'"
+              :id="field.field"
+              :model-value="(formData[field.field] as number) || undefined"
               :use-grouping="false"
-              placeholder="123456"
+              :placeholder="field.placeholder || ''"
               class="w-full"
+              @update:model-value="formData[field.field] = $event"
             />
-          </div>
+          </FormInputGroup>
         </div>
-        <div class="text-sm text-gray-600">
-          * At least one platform ID is required
-        </div>
+        <FormHelper text="At least one platform ID is required" />
         <FormError :error="errors.platform" />
       </div>
 
       <!-- League-Specific Fields -->
       <div class="grid grid-cols-2 gap-4">
-        <div class="form-field">
-          <FormLabel for="driver_number" text="Driver Number (Optional)" />
+        <FormInputGroup>
+          <FormLabel for="driver_number" text="Driver Number" />
           <InputNumber
             id="driver_number"
             v-model="formData.driver_number"
@@ -330,9 +336,10 @@ const resetForm = (): void => {
             placeholder="5"
             class="w-full"
           />
+          <FormHelper text="Optional: Between 1 and 999" />
           <FormError :error="errors.driver_number" />
-        </div>
-        <div class="form-field">
+        </FormInputGroup>
+        <FormInputGroup>
           <FormLabel for="status" text="Status" />
           <Select
             id="status"
@@ -343,20 +350,26 @@ const resetForm = (): void => {
             placeholder="Select status"
             class="w-full"
           />
-        </div>
+          <FormHelper text="Driver's current status in this league" />
+        </FormInputGroup>
       </div>
 
       <!-- League Notes -->
-      <div class="form-field">
-        <FormLabel for="league_notes" text="League Notes (Optional)" />
+      <FormInputGroup>
+        <FormLabel for="league_notes" text="League Notes" />
         <Textarea
           id="league_notes"
           v-model="formData.league_notes"
           rows="3"
           placeholder="Add any notes about this driver..."
           class="w-full"
+          maxlength="500"
         />
-      </div>
+        <div class="flex justify-between items-center">
+          <FormHelper text="Optional: Add notes specific to this league" />
+          <FormCharacterCount :current="formData.league_notes?.length || 0" :max="500" />
+        </div>
+      </FormInputGroup>
     </form>
 
     <template #footer>

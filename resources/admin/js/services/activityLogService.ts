@@ -42,7 +42,7 @@ class ActivityLogService {
    */
   async getUserActivities(
     params?: ActivityFilterParams,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<Activity[]> {
     try {
       const response = await apiService.get<ActivityListResponse>('/activities/users', {
@@ -67,7 +67,7 @@ class ActivityLogService {
    */
   async getAdminActivities(
     params?: ActivityFilterParams,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<Activity[]> {
     try {
       const response = await apiService.get<ActivityListResponse>('/activities/admins', {
@@ -153,13 +153,13 @@ class ActivityLogService {
    */
   async cleanOldActivities(
     days: number = 365,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<CleanActivitiesResponse> {
     try {
       const response = await apiService.post<CleanActivitiesResponse>(
         '/activities/clean',
         { days },
-        { signal }
+        { signal },
       );
 
       if (!response.success) {

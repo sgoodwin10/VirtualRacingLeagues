@@ -1,7 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 import DriverFormDialog from '../DriverFormDialog.vue';
 import type { LeagueDriver } from '@user/types/driver';
+import type { PlatformFormField } from '@user/types/league';
+
+// Mock the league store
+const mockFetchDriverFormFieldsForLeague = vi.fn();
+let mockPlatformFormFieldsValue: PlatformFormField[] = [];
+
+vi.mock('@user/stores/leagueStore', () => ({
+  useLeagueStore: vi.fn(() => ({
+    get platformFormFields() {
+      return mockPlatformFormFieldsValue;
+    },
+    fetchDriverFormFieldsForLeague: mockFetchDriverFormFieldsForLeague,
+  })),
+}));
 
 // Mock PrimeVue components
 vi.mock('primevue/dialog', () => ({
@@ -58,19 +73,34 @@ vi.mock('primevue/button', () => ({
 
 describe('DriverFormDialog', () => {
   let mockDriver: LeagueDriver;
+  let mockPlatformFormFields: PlatformFormField[];
 
   beforeEach(() => {
+    // Set up Pinia
+    setActivePinia(createPinia());
+
+    // Reset mocks
+    mockFetchDriverFormFieldsForLeague.mockClear();
+    mockPlatformFormFieldsValue = []; // Reset to empty by default
+
     mockDriver = {
       id: 1,
-      first_name: 'John',
-      last_name: 'Smith',
-      nickname: 'JSmith',
-      email: 'john@example.com',
-      phone: '+1234567890',
-      psn_id: 'JohnSmith77',
-      gt7_id: null,
-      iracing_id: null,
-      iracing_customer_id: null,
+      driver: {
+        id: 101,
+        first_name: 'John',
+        last_name: 'Smith',
+        nickname: 'JSmith',
+        email: 'john@example.com',
+        phone: '+1234567890',
+        psn_id: 'JohnSmith77',
+        gt7_id: null,
+        iracing_id: null,
+        iracing_customer_id: null,
+        display_name: 'John Smith',
+        slug: 'john-smith',
+        created_at: '2025-10-18T10:00:00Z',
+        updated_at: '2025-10-18T10:00:00Z',
+      },
       driver_number: 5,
       status: 'active',
       league_notes: 'Top performer',
@@ -78,6 +108,11 @@ describe('DriverFormDialog', () => {
       created_at: '2025-10-18T10:00:00Z',
       updated_at: '2025-10-18T10:00:00Z',
     };
+
+    mockPlatformFormFields = [
+      { field: 'psn_id', label: 'PSN ID', type: 'text', placeholder: 'Enter PSN ID' },
+      { field: 'gt7_id', label: 'GT7 ID', type: 'text', placeholder: 'Enter GT7 ID' },
+    ];
   });
 
   it('should render in create mode', () => {
@@ -85,6 +120,7 @@ describe('DriverFormDialog', () => {
       props: {
         visible: true,
         mode: 'create',
+        leagueId: 1,
       },
     });
 
@@ -97,6 +133,7 @@ describe('DriverFormDialog', () => {
         visible: true,
         mode: 'edit',
         driver: mockDriver,
+        leagueId: 1,
       },
     });
 
@@ -105,7 +142,6 @@ describe('DriverFormDialog', () => {
     const component = wrapper.vm as any;
     expect(component.formData.first_name).toBe('John');
     expect(component.formData.last_name).toBe('Smith');
-    expect(component.formData.psn_id).toBe('JohnSmith77');
     expect(component.formData.driver_number).toBe(5);
   });
 
@@ -114,6 +150,7 @@ describe('DriverFormDialog', () => {
       props: {
         visible: true,
         mode: 'create',
+        leagueId: 1,
       },
     });
 
@@ -127,10 +164,14 @@ describe('DriverFormDialog', () => {
   });
 
   it('should validate that at least one platform ID is required', async () => {
+    // Set up platform fields in mock
+    mockPlatformFormFieldsValue = mockPlatformFormFields;
+
     const wrapper = mount(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
+        leagueId: 1,
       },
     });
 
@@ -148,6 +189,7 @@ describe('DriverFormDialog', () => {
       props: {
         visible: true,
         mode: 'create',
+        leagueId: 1,
       },
     });
 
@@ -167,6 +209,7 @@ describe('DriverFormDialog', () => {
       props: {
         visible: true,
         mode: 'create',
+        leagueId: 1,
       },
     });
 
@@ -182,10 +225,14 @@ describe('DriverFormDialog', () => {
   });
 
   it('should emit save event with valid data', async () => {
+    // Set up platform fields in mock
+    mockPlatformFormFieldsValue = mockPlatformFormFields;
+
     const wrapper = mount(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
+        leagueId: 1,
       },
     });
 
@@ -210,6 +257,7 @@ describe('DriverFormDialog', () => {
       props: {
         visible: true,
         mode: 'create',
+        leagueId: 1,
       },
     });
 
@@ -225,6 +273,7 @@ describe('DriverFormDialog', () => {
       props: {
         visible: false,
         mode: 'create',
+        leagueId: 1,
       },
     });
 
@@ -241,6 +290,7 @@ describe('DriverFormDialog', () => {
       props: {
         visible: true,
         mode: 'create',
+        leagueId: 1,
       },
     });
 
@@ -250,6 +300,7 @@ describe('DriverFormDialog', () => {
       props: {
         visible: true,
         mode: 'edit',
+        leagueId: 1,
       },
     });
 

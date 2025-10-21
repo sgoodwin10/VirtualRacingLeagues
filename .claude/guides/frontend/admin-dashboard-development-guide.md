@@ -236,7 +236,7 @@ npm run dev
 composer dev
 ```
 
-Access at: `http://YOUR_DOMAIN.localhost:8000/admin`
+Access at: `http://YOUR_DOMAIN.localhost/admin`
 
 ### Running Tests
 
@@ -1802,7 +1802,7 @@ npm run test:admin
 npm run dev
 ```
 
-Navigate to `http://YOUR_DOMAIN.localhost:8000/teams`
+Navigate to `http://YOUR_DOMAIN.localhost/teams`
 
 ---
 

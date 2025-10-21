@@ -64,7 +64,7 @@ watch(
       };
       fieldErrors.value = {};
     }
-  }
+  },
 );
 
 const getFieldError = (fieldName: string): string | undefined => {

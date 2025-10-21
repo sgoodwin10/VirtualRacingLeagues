@@ -46,7 +46,7 @@ describe('ActivityLogTable', () => {
     });
   };
 
-  const mockProps = {
+  const _mockProps = {
     activities: mockActivities,
     loading: false,
   };

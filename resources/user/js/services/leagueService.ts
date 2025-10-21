@@ -11,6 +11,8 @@ import type {
   SlugCheckResponse,
   CreateLeagueForm,
   UpdateLeagueForm,
+  PlatformColumn,
+  PlatformFormField,
 } from '@user/types/league';
 import type { AxiosResponse } from 'axios';
 
@@ -41,11 +43,15 @@ export async function getTimezones(): Promise<Timezone[]> {
 /**
  * Check if a league slug is available
  * @param name - The league name to check
+ * @param leagueId - Optional league ID to exclude from the check (for edit mode)
  */
-export async function checkSlugAvailability(name: string): Promise<SlugCheckResponse> {
+export async function checkSlugAvailability(
+  name: string,
+  leagueId?: number,
+): Promise<SlugCheckResponse> {
   const response: AxiosResponse<ApiResponse<SlugCheckResponse>> = await apiClient.post(
     '/leagues/check-slug',
-    { name }
+    { name, league_id: leagueId },
   );
   return response.data.data;
 }
@@ -105,7 +111,7 @@ export async function updateLeague(id: number, formData: FormData): Promise<Leag
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-    }
+    },
   );
   return response.data.data;
 }
@@ -127,10 +133,12 @@ export function buildLeagueFormData(form: CreateLeagueForm): FormData {
 
   // Required fields
   formData.append('name', form.name);
-  formData.append('timezone', form.timezone);
   formData.append('visibility', form.visibility);
-  formData.append('contact_email', form.contact_email);
-  formData.append('organizer_name', form.organizer_name);
+
+  // Optional fields (append empty string if null/undefined to avoid "null" string)
+  formData.append('timezone', form.timezone || '');
+  formData.append('contact_email', form.contact_email || '');
+  formData.append('organizer_name', form.organizer_name || '');
 
   // File uploads
   if (form.logo) {
@@ -183,7 +191,7 @@ export function buildLeagueFormData(form: CreateLeagueForm): FormData {
  */
 export function buildUpdateLeagueFormData(
   form: UpdateLeagueForm,
-  _originalLeague: League
+  _originalLeague: League,
 ): FormData {
   const formData = new FormData();
 
@@ -193,7 +201,7 @@ export function buildUpdateLeagueFormData(
   }
 
   if (form.timezone !== undefined) {
-    formData.append('timezone', form.timezone);
+    formData.append('timezone', form.timezone || '');
   }
 
   if (form.visibility !== undefined) {
@@ -201,11 +209,11 @@ export function buildUpdateLeagueFormData(
   }
 
   if (form.contact_email !== undefined) {
-    formData.append('contact_email', form.contact_email);
+    formData.append('contact_email', form.contact_email || '');
   }
 
   if (form.organizer_name !== undefined) {
-    formData.append('organizer_name', form.organizer_name);
+    formData.append('organizer_name', form.organizer_name || '');
   }
 
   // File uploads (only if new file provided)
@@ -217,11 +225,18 @@ export function buildUpdateLeagueFormData(
     formData.append('header_image', form.header_image);
   }
 
-  // Platform IDs - always include if provided
+  // Platform IDs - only include if changed
   if (form.platform_ids !== undefined) {
-    form.platform_ids.forEach((id) => {
-      formData.append('platform_ids[]', id.toString());
-    });
+    const originalIds = _originalLeague.platform_ids || [];
+    const hasChanged =
+      form.platform_ids.length !== originalIds.length ||
+      form.platform_ids.some((id) => !originalIds.includes(id));
+
+    if (hasChanged) {
+      form.platform_ids.forEach((id) => {
+        formData.append('platform_ids[]', id.toString());
+      });
+    }
   }
 
   // Optional text fields - include if provided
@@ -251,4 +266,37 @@ export function buildUpdateLeagueFormData(
   });
 
   return formData;
+}
+
+/**
+ * Get driver columns configuration for a league's platforms
+ * @param leagueId - League ID
+ */
+export async function getDriverColumns(leagueId: number): Promise<PlatformColumn[]> {
+  const response: AxiosResponse<ApiResponse<PlatformColumn[]>> = await apiClient.get(
+    `/leagues/${leagueId}/driver-columns`,
+  );
+  return response.data.data;
+}
+
+/**
+ * Get driver form fields configuration for a league's platforms
+ * @param leagueId - League ID
+ */
+export async function getDriverFormFields(leagueId: number): Promise<PlatformFormField[]> {
+  const response: AxiosResponse<ApiResponse<PlatformFormField[]>> = await apiClient.get(
+    `/leagues/${leagueId}/driver-form-fields`,
+  );
+  return response.data.data;
+}
+
+/**
+ * Get CSV headers for driver import for a league's platforms
+ * @param leagueId - League ID
+ */
+export async function getDriverCsvHeaders(leagueId: number): Promise<string[]> {
+  const response: AxiosResponse<ApiResponse<string[]>> = await apiClient.get(
+    `/leagues/${leagueId}/driver-csv-headers`,
+  );
+  return response.data.data;
 }

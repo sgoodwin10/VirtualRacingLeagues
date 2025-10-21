@@ -47,7 +47,7 @@ class AuthService {
 
   async resetPassword(
     data: { email: string; token: string; password: string; password_confirmation: string },
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<void> {
     await apiService.fetchCSRFToken();
     await apiClient.post('/reset-password', data, { signal });
@@ -62,7 +62,7 @@ class AuthService {
       password_confirmation?: string;
       current_password?: string;
     },
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<User> {
     const response = await apiClient.put<{ data: { user: User } }>('/profile', data, { signal });
 

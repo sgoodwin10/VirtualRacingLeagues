@@ -119,7 +119,7 @@ class UserService {
     try {
       const response = await apiService.get<ApiResponse<{ user: User; activities: unknown[] }>>(
         `/users/${id}`,
-        { signal }
+        { signal },
       );
       // Return the user from the response
       if (response.success && response.data?.user) {
@@ -195,7 +195,7 @@ class UserService {
       const response = await apiService.post<ApiResponse<User>>(
         `/users/${id}/restore`,
         {},
-        { signal }
+        { signal },
       );
       // Return the restored user from the response
       if (response.success && response.data) {
@@ -218,7 +218,7 @@ class UserService {
       const response = await apiService.patch<ApiResponse<User>>(
         `/users/${id}/verify-email`,
         {},
-        { signal }
+        { signal },
       );
       // Return the updated user from the response
       if (response.success && response.data) {
@@ -255,7 +255,7 @@ class UserService {
       const response = await apiService.post<ApiResponse<{ token: string }>>(
         `/users/${id}/login-as`,
         {},
-        { signal }
+        { signal },
       );
       // Return the token from the response
       if (response.success && response.data) {

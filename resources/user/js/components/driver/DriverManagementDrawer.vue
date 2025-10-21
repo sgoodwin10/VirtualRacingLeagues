@@ -4,15 +4,17 @@ import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import Drawer from 'primevue/drawer';
 import Button from 'primevue/button';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
-import DriverStatsCard from './DriverStatsCard.vue';
 import DriverTable from './DriverTable.vue';
 import DriverFormDialog from './DriverFormDialog.vue';
 import ViewDriverModal from './ViewDriverModal.vue';
 import CSVImportDialog from './CSVImportDialog.vue';
+import DrawerHeader from '@user/components/common/modals/DrawerHeader.vue';
 import { useDriverStore } from '@user/stores/driverStore';
 import type { LeagueDriver, CreateDriverRequest } from '@user/types/driver';
 import type { Platform } from '@user/types/league';
@@ -67,7 +69,7 @@ watch(
       // Reset store when drawer closes
       driverStore.resetFilters();
     }
-  }
+  },
 );
 
 // Watch for search input changes (debounced)
@@ -87,7 +89,7 @@ watch(
   () => driverStore.statusFilter,
   () => {
     loadDrivers();
-  }
+  },
 );
 
 // Watch for page changes
@@ -95,7 +97,7 @@ watch(
   () => driverStore.currentPage,
   () => {
     loadDrivers();
-  }
+  },
 );
 
 /**
@@ -166,22 +168,7 @@ const handleSaveDriver = async (data: CreateDriverRequest): Promise<void> => {
     } else if (selectedDriver.value) {
       // In edit mode, update both driver fields and league-specific settings
       // Use driver_id (the actual driver ID), not id (the league_driver pivot ID)
-      await driverStore.updateDriver(props.leagueId, selectedDriver.value.driver_id, {
-        // Global driver fields
-        first_name: data.first_name,
-        last_name: data.last_name,
-        nickname: data.nickname,
-        email: data.email,
-        phone: data.phone,
-        psn_id: data.psn_id,
-        gt7_id: data.gt7_id,
-        iracing_id: data.iracing_id,
-        iracing_customer_id: data.iracing_customer_id,
-        // League-specific fields
-        driver_number: data.driver_number,
-        status: data.status,
-        league_notes: data.league_notes,
-      });
+      await driverStore.updateDriver(props.leagueId, selectedDriver.value.driver_id, data);
       toast.add({
         severity: 'success',
         summary: 'Success',
@@ -285,27 +272,22 @@ onMounted(() => {
     <Drawer
       :visible="visible"
       position="bottom"
-      :header="drawerTitle"
-      class="driver-management-drawer h-[80vh]"
+      class="!h-[60vh] bg-gray-50"
       @update:visible="$emit('update:visible', $event)"
     >
-      <div class="h-full flex flex-col">
-        <!-- Stats Card -->
-        <DriverStatsCard
-          :total-count="driverStore.driverStats.total"
-          :active-count="driverStore.driverStats.active"
-          :inactive-count="driverStore.driverStats.inactive"
-          :banned-count="driverStore.driverStats.banned"
-        />
+      <template #header>
+        <DrawerHeader :title="drawerTitle" subtitle="Manage drivers for this league" />
+      </template>
 
+      <div class="container mx-auto flex flex-col max-w-5xl px-4 h-full">
         <!-- Toolbar -->
         <div class="flex flex-wrap gap-4 items-center justify-between mb-4">
           <!-- Search and Filter -->
           <div class="flex gap-2 flex-1">
-            <span class="p-input-icon-left flex-1 max-w-md">
-              <i class="pi pi-search" />
+            <IconField>
+              <InputIcon class="pi pi-search" />
               <InputText v-model="searchInput" placeholder="Search drivers..." class="w-full" />
-            </span>
+            </IconField>
             <Select
               v-model="driverStore.statusFilter"
               :options="statusFilterOptions"
@@ -333,7 +315,7 @@ onMounted(() => {
           <DriverTable
             :drivers="driverStore.drivers"
             :loading="driverStore.loading"
-            :league-platforms="leaguePlatforms"
+            :league-id="leagueId"
             @view="handleViewDriver"
             @edit="handleEditDriver"
             @remove="handleRemoveDriver"
@@ -355,7 +337,7 @@ onMounted(() => {
       v-model:visible="showDriverForm"
       :mode="formMode"
       :driver="selectedDriver"
-      :league-platforms="leaguePlatforms"
+      :league-id="leagueId"
       @save="handleSaveDriver"
       @cancel="showDriverForm = false"
     />
@@ -377,13 +359,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.driver-management-drawer :deep(.p-drawer-content) {
-  height: 80vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.driver-management-drawer :deep(.p-drawer-header) {
-  flex-shrink: 0;
-}
+/* Custom styles if needed */
 </style>

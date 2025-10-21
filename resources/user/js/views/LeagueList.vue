@@ -7,6 +7,8 @@ import Card from 'primevue/card';
 import { useLeagueStore } from '@user/stores/leagueStore';
 import LeagueWizardDrawer from '@user/components/league/modals/LeagueWizardDrawer.vue';
 import LeagueCard from '@user/components/league/LeagueCard.vue';
+import PageHeader from '@user/components/common/PageHeader.vue';
+import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadcrumbs.vue';
 
 const toast = useToast();
 const leagueStore = useLeagueStore();
@@ -84,6 +86,17 @@ function handleLeagueView(leagueId: number): void {
 function handleLeagueDelete(leagueId: number): void {
   console.log('League deleted:', leagueId);
 }
+
+const breadcrumbItems = computed((): BreadcrumbItem[] => [
+  {
+    label: 'Dashboard',
+    to: { name: 'home' },
+    icon: 'pi-home',
+  },
+  {
+    label: 'Leagues',
+  },
+]);
 </script>
 
 <template>
@@ -95,11 +108,11 @@ function handleLeagueDelete(leagueId: number): void {
       @league-saved="handleLeagueSaved"
     />
 
-    <div class="flex justify-between items-center mb-8">
-      <div>
-        <h1 class="text-3xl font-bold mb-2">My Leagues</h1>
-        <p class="text-gray-600">Manage your racing leagues</p>
-      </div>
+    <!-- Breadcrumbs -->
+    <Breadcrumbs :items="breadcrumbItems" />
+
+    <div class="flex justify-between items-center mb-8 mt-4">
+      <PageHeader title="My Leagues" description="Manage your racing leagues" />
 
       <Button
         label="Create League"

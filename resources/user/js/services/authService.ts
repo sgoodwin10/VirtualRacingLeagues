@@ -44,7 +44,7 @@ class AuthService {
       password_confirmation?: string;
       current_password?: string;
     },
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<User> {
     const response = await apiClient.put<{ data: { user: User } }>('/profile', data, { signal });
 
@@ -57,7 +57,7 @@ class AuthService {
     const response = await apiClient.post<{ data: { user: User } }>(
       '/impersonate',
       { token },
-      { signal }
+      { signal },
     );
 
     return response.data.data.user;

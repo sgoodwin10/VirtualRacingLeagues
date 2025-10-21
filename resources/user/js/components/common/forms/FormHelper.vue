@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const helperClasses = computed(() => {
-  const baseClasses = 'text-sm text-gray-500 mt-1';
+  const baseClasses = 'text-xs text-gray-500';
   return props.class ? `${baseClasses} ${props.class}` : baseClasses;
 });
 </script>

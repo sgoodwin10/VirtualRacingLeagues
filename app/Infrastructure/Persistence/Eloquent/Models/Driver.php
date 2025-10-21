@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $first_name
  * @property string|null $last_name
  * @property string|null $nickname
+ * @property string $slug
  * @property string|null $email
  * @property string|null $phone
  * @property string|null $psn_id
@@ -48,6 +49,7 @@ final class Driver extends Model
         'first_name',
         'last_name',
         'nickname',
+        'slug',
         'email',
         'phone',
         'psn_id',

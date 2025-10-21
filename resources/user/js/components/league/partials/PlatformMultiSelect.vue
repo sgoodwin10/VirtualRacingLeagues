@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import MultiSelect from 'primevue/multiselect';
+import FormInputGroup from '@user/components/common/forms/FormInputGroup.vue';
+import FormLabel from '@user/components/common/forms/FormLabel.vue';
+import FormError from '@user/components/common/forms/FormError.vue';
+import FormHelper from '@user/components/common/forms/FormHelper.vue';
 import type { Platform } from '@user/types/league';
 
 interface Props {
@@ -28,11 +32,8 @@ const hasError = computed(() => !!props.error);
 </script>
 
 <template>
-  <div class="space-y-2">
-    <label for="platforms" class="block font-medium">
-      Platforms
-      <span v-if="required" class="text-red-500">*</span>
-    </label>
+  <FormInputGroup>
+    <FormLabel for="platforms" text="Platforms" :required="required" />
 
     <MultiSelect
       id="platforms"
@@ -44,11 +45,12 @@ const hasError = computed(() => !!props.error);
       :max-selected-labels="3"
       :class="{ 'p-invalid': hasError }"
       class="w-full"
+      size="small"
       display="chip"
     />
 
-    <p class="text-sm text-gray-600">Select all platforms your league supports</p>
+    <FormHelper text="Select all platforms your league supports" />
 
-    <small v-if="error" class="text-red-500">{{ error }}</small>
-  </div>
+    <FormError :error="error" />
+  </FormInputGroup>
 </template>

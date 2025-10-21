@@ -793,7 +793,7 @@ docker-compose up -d --force-recreate virtualracingleagues-app
 ### Port Already in Use
 ```bash
 # Check what's using the port (macOS/Linux)
-lsof -i :8000
+lsof -i 
 lsof -i :3307
 lsof -i :6379
 lsof -i :9200
@@ -875,7 +875,7 @@ docker-compose down
 
 ## Environment URLs
 
-- **Application:** http://localhost:8000
+- **Application:** http://localhost
 - **Mailpit UI:** http://localhost:8025
 - **Elasticsearch:** http://localhost:9200
 - **MariaDB:** localhost:3307

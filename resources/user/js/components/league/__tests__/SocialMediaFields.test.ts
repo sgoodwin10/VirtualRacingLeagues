@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { nextTick } from 'vue';
 import { mountWithStubs } from '@user/__tests__/setup';
 import SocialMediaFields from '../partials/SocialMediaFields.vue';
 
@@ -13,66 +12,12 @@ describe('SocialMediaFields', () => {
     twitchUrl: '',
   };
 
-  it('renders component with title', () => {
+  it('renders all social media fields', () => {
     const wrapper = mountWithStubs(SocialMediaFields, {
       props: defaultProps,
     });
 
-    expect(wrapper.text()).toContain('Social Media Links');
-  });
-
-  it('shows only primary fields (Discord and Website) initially', () => {
-    const wrapper = mountWithStubs(SocialMediaFields, {
-      props: defaultProps,
-    });
-
-    // Discord field should be visible
-    expect(wrapper.find('#discord-url').exists()).toBe(true);
-    expect(wrapper.text()).toContain('Discord Server');
-
-    // Website field should be visible
-    expect(wrapper.find('#website-url').exists()).toBe(true);
-    expect(wrapper.text()).toContain('Website');
-
-    // Other fields should not be visible initially
-    expect(wrapper.find('#twitter-handle').exists()).toBe(false);
-    expect(wrapper.find('#instagram-handle').exists()).toBe(false);
-    expect(wrapper.find('#youtube-url').exists()).toBe(false);
-    expect(wrapper.find('#twitch-url').exists()).toBe(false);
-  });
-
-  it('displays expand button when all fields are empty', () => {
-    const wrapper = mountWithStubs(SocialMediaFields, {
-      props: defaultProps,
-    });
-
-    const expandButton = wrapper.find('button');
-    expect(expandButton.exists()).toBe(true);
-    expect(expandButton.text()).toContain('Add Social Links');
-  });
-
-  it('displays "Show More" button when some fields have values but not expanded', () => {
-    const wrapper = mountWithStubs(SocialMediaFields, {
-      props: {
-        ...defaultProps,
-        discordUrl: 'https://discord.gg/test',
-      },
-    });
-
-    const expandButton = wrapper.find('button');
-    expect(expandButton.text()).toContain('Show More');
-  });
-
-  it('expands to show all fields when expand button is clicked', async () => {
-    const wrapper = mountWithStubs(SocialMediaFields, {
-      props: defaultProps,
-    });
-
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
-
-    // All fields should now be visible
+    // All fields should be visible
     expect(wrapper.find('#discord-url').exists()).toBe(true);
     expect(wrapper.find('#website-url').exists()).toBe(true);
     expect(wrapper.find('#twitter-handle').exists()).toBe(true);
@@ -81,37 +26,17 @@ describe('SocialMediaFields', () => {
     expect(wrapper.find('#twitch-url').exists()).toBe(true);
   });
 
-  it('shows "Show Less" button when expanded', async () => {
+  it('shows field labels', () => {
     const wrapper = mountWithStubs(SocialMediaFields, {
       props: defaultProps,
     });
 
-    let expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
-
-    // Re-query the button after state change
-    expandButton = wrapper.find('button');
-    expect(expandButton.text()).toContain('Show Less');
-  });
-
-  it('collapses when "Show Less" button is clicked', async () => {
-    const wrapper = mountWithStubs(SocialMediaFields, {
-      props: defaultProps,
-    });
-
-    // Expand first
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
-
-    expect(wrapper.find('#twitter-handle').exists()).toBe(true);
-
-    // Collapse
-    await expandButton.trigger('click');
-    await nextTick();
-
-    expect(wrapper.find('#twitter-handle').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Discord');
+    expect(wrapper.text()).toContain('Website');
+    expect(wrapper.text()).toContain('Twitter/X');
+    expect(wrapper.text()).toContain('Instagram');
+    expect(wrapper.text()).toContain('YouTube');
+    expect(wrapper.text()).toContain('Twitch');
   });
 
   it('emits update:discordUrl when Discord input changes', async () => {
@@ -143,11 +68,6 @@ describe('SocialMediaFields', () => {
       props: defaultProps,
     });
 
-    // Expand to show Twitter field
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
-
     const twitterInput = wrapper.find('#twitter-handle');
     await twitterInput.setValue('myleague');
 
@@ -159,11 +79,6 @@ describe('SocialMediaFields', () => {
     const wrapper = mountWithStubs(SocialMediaFields, {
       props: defaultProps,
     });
-
-    // Expand to show Instagram field
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
 
     const instagramInput = wrapper.find('#instagram-handle');
     await instagramInput.setValue('myleague');
@@ -177,11 +92,6 @@ describe('SocialMediaFields', () => {
       props: defaultProps,
     });
 
-    // Expand to show YouTube field
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
-
     const youtubeInput = wrapper.find('#youtube-url');
     await youtubeInput.setValue('https://youtube.com/@myleague');
 
@@ -193,11 +103,6 @@ describe('SocialMediaFields', () => {
     const wrapper = mountWithStubs(SocialMediaFields, {
       props: defaultProps,
     });
-
-    // Expand to show Twitch field
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
 
     const twitchInput = wrapper.find('#twitch-url');
     await twitchInput.setValue('https://twitch.tv/myleague');
@@ -274,11 +179,6 @@ describe('SocialMediaFields', () => {
       },
     });
 
-    // Expand to show Twitter field
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
-
     expect(wrapper.text()).toContain('Invalid Twitter handle');
 
     const twitterInput = wrapper.find('#twitter-handle');
@@ -291,59 +191,17 @@ describe('SocialMediaFields', () => {
       props: defaultProps,
     });
 
-    // Check primary fields
     const discordInput = wrapper.find('#discord-url');
     expect(discordInput.attributes('placeholder')).toContain('discord.gg');
 
     const websiteInput = wrapper.find('#website-url');
     expect(websiteInput.attributes('placeholder')).toContain('league-website.com');
 
-    // Expand and check other fields
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
-
     const twitterInput = wrapper.find('#twitter-handle');
     expect(twitterInput.attributes('placeholder')).toBe('yourleague');
 
     const instagramInput = wrapper.find('#instagram-handle');
     expect(instagramInput.attributes('placeholder')).toBe('yourleague');
-  });
-
-  it('shows @ symbol before Twitter handle input', async () => {
-    const wrapper = mountWithStubs(SocialMediaFields, {
-      props: defaultProps,
-    });
-
-    // Expand to show Twitter field
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
-
-    const twitterContainer = wrapper.find('#twitter-handle').element.parentElement;
-    expect(twitterContainer?.textContent).toContain('@');
-  });
-
-  it('shows @ symbol before Instagram handle input', async () => {
-    const wrapper = mountWithStubs(SocialMediaFields, {
-      props: defaultProps,
-    });
-
-    // Expand to show Instagram field
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
-
-    const instagramContainer = wrapper.find('#instagram-handle').element.parentElement;
-    expect(instagramContainer?.textContent).toContain('@');
-  });
-
-  it('displays help text', () => {
-    const wrapper = mountWithStubs(SocialMediaFields, {
-      props: defaultProps,
-    });
-
-    expect(wrapper.text()).toContain('Optional: Add links to your league');
   });
 
   it('handles all errors simultaneously', async () => {
@@ -360,11 +218,6 @@ describe('SocialMediaFields', () => {
         },
       },
     });
-
-    // Expand to see all errors
-    const expandButton = wrapper.find('button');
-    await expandButton.trigger('click');
-    await nextTick();
 
     expect(wrapper.text()).toContain('Discord error');
     expect(wrapper.text()).toContain('Website error');

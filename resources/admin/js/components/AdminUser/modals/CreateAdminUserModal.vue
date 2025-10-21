@@ -227,7 +227,7 @@ watch(
       errors.value = {};
       validationErrors.value = {};
     }
-  }
+  },
 );
 
 /**

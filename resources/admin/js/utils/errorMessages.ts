@@ -108,7 +108,7 @@ function getUserFriendlyMessage(message: string): string {
  */
 export function getSafeErrorMessage(
   error: unknown,
-  defaultMessage: string = ERROR_MESSAGES.UNKNOWN_ERROR
+  defaultMessage: string = ERROR_MESSAGES.UNKNOWN_ERROR,
 ): string {
   // Get the raw error message
   const message = getErrorMessage(error, defaultMessage);

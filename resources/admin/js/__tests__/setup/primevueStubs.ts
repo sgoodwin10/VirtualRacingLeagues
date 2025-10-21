@@ -1,3 +1,6 @@
+/* eslint-disable vue/no-reserved-component-names */
+/* eslint-disable vue/one-component-per-file */
+/* eslint-disable vue/require-default-prop */
 /**
  * Centralized PrimeVue Component Stubs for Testing
  *

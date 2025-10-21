@@ -179,5 +179,5 @@ export const useAdminStore = defineStore(
       // Do not persist promises (authCheckPromise) or temporary state (isLoading)
       pick: ['admin', 'isAuthenticated'],
     },
-  }
+  },
 );

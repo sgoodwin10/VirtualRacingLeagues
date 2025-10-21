@@ -289,7 +289,7 @@ watch(
       loadRecentActivities();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Watch for visibility changes
@@ -299,7 +299,7 @@ watch(
     if (isVisible && props.adminUser) {
       loadRecentActivities();
     }
-  }
+  },
 );
 
 /**

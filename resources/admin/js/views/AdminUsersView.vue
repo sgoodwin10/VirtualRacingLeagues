@@ -211,7 +211,7 @@ const loadAdminUsers = async (): Promise<void> => {
       currentPage.value,
       rowsPerPage.value,
       filters,
-      getSignal()
+      getSignal(),
     );
 
     adminUsers.value = response.data;

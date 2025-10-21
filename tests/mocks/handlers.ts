@@ -7,9 +7,9 @@ import { http, HttpResponse } from 'msw';
  * These handlers intercept HTTP requests and return mock data.
  */
 
-const API_BASE = 'http://virtualracingleagues.localhost:8000/api';
-const USER_API_BASE = 'http://app.virtualracingleagues.localhost:8000/api';
-const ADMIN_API_BASE = 'http://admin.virtualracingleagues.localhost:8000/admin/api';
+const API_BASE = 'http://virtualracingleagues.localhost/api';
+const USER_API_BASE = 'http://app.virtualracingleagues.localhost/api';
+const ADMIN_API_BASE = 'http://admin.virtualracingleagues.localhost/admin/api';
 
 export const handlers = [
   // ========================================
@@ -119,6 +119,33 @@ export const handlers = [
         email: body.email,
         updated_at: new Date().toISOString(),
       },
+    });
+  }),
+
+  // GET /api/leagues
+  http.get(`${USER_API_BASE}/leagues`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: [],
+    });
+  }),
+
+  // GET /api/leagues/:leagueId/driver-columns
+  http.get(`${USER_API_BASE}/leagues/:leagueId/driver-columns`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        {
+          field: 'psn_id',
+          label: 'PSN ID',
+          platform: 'Gran Turismo 7',
+        },
+        {
+          field: 'iracing_id',
+          label: 'iRacing ID',
+          platform: 'iRacing',
+        },
+      ],
     });
   }),
 

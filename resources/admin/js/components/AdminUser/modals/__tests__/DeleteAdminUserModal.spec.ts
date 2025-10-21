@@ -165,7 +165,7 @@ describe('DeleteAdminUserModal', () => {
       });
 
       expect(wrapper.text()).toContain(
-        'This will mark the user as inactive. They will no longer be able to access the admin panel.'
+        'This will mark the user as inactive. They will no longer be able to access the admin panel.',
       );
     });
   });

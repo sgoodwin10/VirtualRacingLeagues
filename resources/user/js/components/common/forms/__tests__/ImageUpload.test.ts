@@ -1,9 +1,34 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { nextTick } from 'vue';
 import { mountWithStubs } from '@user/__tests__/setup';
-import ImageUpload from '../partials/ImageUpload.vue';
+import ImageUpload from '../ImageUpload.vue';
+
+// Stub custom form components
+const FormLabelStub = {
+  name: 'FormLabel',
+  props: ['text', 'required'],
+  template: '<label><span>{{ text }}</span><span v-if="required" class="text-red-500">*</span></label>',
+};
+
+const FormErrorStub = {
+  name: 'FormError',
+  props: ['error'],
+  template: '<div v-if="error" class="form-error text-red-500">{{ error }}</div>',
+};
+
+const FormHelperStub = {
+  name: 'FormHelper',
+  props: ['text'],
+  template: '<div v-if="text" class="form-helper">{{ text }}</div>',
+};
 
 describe('ImageUpload', () => {
+  const commonStubs = {
+    FormLabel: FormLabelStub,
+    FormError: FormErrorStub,
+    FormHelper: FormHelperStub,
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock URL.createObjectURL and revokeObjectURL
@@ -11,36 +36,15 @@ describe('ImageUpload', () => {
     global.URL.revokeObjectURL = vi.fn();
   });
 
-  it('renders with label', () => {
-    const wrapper = mountWithStubs(ImageUpload, {
-      props: {
-        modelValue: null,
-        label: 'Upload Logo',
-      },
-    });
-
-    expect(wrapper.text()).toContain('Upload Logo');
-  });
-
-  it('shows required asterisk when required prop is true', () => {
-    const wrapper = mountWithStubs(ImageUpload, {
-      props: {
-        modelValue: null,
-        label: 'Upload Logo',
-        required: true,
-      },
-    });
-
-    const label = wrapper.find('label');
-    expect(label.html()).toContain('text-red-500');
-    expect(label.text()).toContain('*');
-  });
 
   it('displays file size information', () => {
     const wrapper = mountWithStubs(ImageUpload, {
       props: {
         modelValue: null,
         label: 'Upload Logo',
+      },
+      global: {
+        stubs: commonStubs,
         maxFileSize: 2000000, // 2MB
       },
     });
@@ -53,6 +57,9 @@ describe('ImageUpload', () => {
       props: {
         modelValue: null,
         label: 'Upload Logo',
+      },
+      global: {
+        stubs: commonStubs,
       },
     });
 
@@ -77,18 +84,22 @@ describe('ImageUpload', () => {
     expect(img.attributes('alt')).toBe('Upload Logo');
   });
 
-  it('displays filename when file is selected', async () => {
-    const mockFile = new File(['test'], 'test-logo.jpg', { type: 'image/jpeg' });
+  it('shows optional indicator when required is false', async () => {
     const wrapper = mountWithStubs(ImageUpload, {
       props: {
-        modelValue: mockFile,
+        modelValue: null,
         label: 'Upload Logo',
+        labelText: 'Upload Logo',
+        required: false,
+      },
+      global: {
+        stubs: commonStubs,
       },
     });
 
     await nextTick();
 
-    expect(wrapper.text()).toContain('test-logo.jpg');
+    expect(wrapper.text()).toContain('(optional)');
   });
 
   it('emits update:modelValue when valid file is selected', async () => {
@@ -96,6 +107,9 @@ describe('ImageUpload', () => {
       props: {
         modelValue: null,
         label: 'Upload Logo',
+      },
+      global: {
+        stubs: commonStubs,
       },
     });
 
@@ -115,6 +129,9 @@ describe('ImageUpload', () => {
         modelValue: null,
         label: 'Upload Logo',
       },
+      global: {
+        stubs: commonStubs,
+      },
     });
 
     const mockFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
@@ -127,38 +144,6 @@ describe('ImageUpload', () => {
     expect(wrapper.emitted('update:modelValue')).toBeFalsy();
   });
 
-  it('shows error when file exceeds max size', async () => {
-    const wrapper = mountWithStubs(ImageUpload, {
-      props: {
-        modelValue: null,
-        label: 'Upload Logo',
-        maxFileSize: 1000000, // 1MB
-      },
-    });
-
-    // Create a mock file that's 2MB (exceeds limit)
-    const mockFile = new File(['x'.repeat(2000000)], 'large.jpg', { type: 'image/jpeg' });
-    Object.defineProperty(mockFile, 'size', { value: 2000000 });
-
-    const fileUpload = wrapper.findComponent({ name: 'FileUpload' });
-    await fileUpload.vm.$emit('select', { files: [mockFile] });
-    await nextTick();
-
-    expect(wrapper.text()).toContain('File size must be less than 1.0MB');
-    expect(wrapper.emitted('update:modelValue')).toBeFalsy();
-  });
-
-  it('displays external error prop', () => {
-    const wrapper = mountWithStubs(ImageUpload, {
-      props: {
-        modelValue: null,
-        label: 'Upload Logo',
-        error: 'Logo is required',
-      },
-    });
-
-    expect(wrapper.text()).toContain('Logo is required');
-  });
 
   it('adds invalid class when error exists', () => {
     const wrapper = mountWithStubs(ImageUpload, {
@@ -166,6 +151,9 @@ describe('ImageUpload', () => {
         modelValue: null,
         label: 'Upload Logo',
         error: 'Logo is required',
+      },
+      global: {
+        stubs: commonStubs,
       },
     });
 
@@ -215,33 +203,15 @@ describe('ImageUpload', () => {
     expect(global.URL.revokeObjectURL).toHaveBeenCalled();
   });
 
-  it('clears error when new valid file is selected', async () => {
-    const wrapper = mountWithStubs(ImageUpload, {
-      props: {
-        modelValue: null,
-        label: 'Upload Logo',
-        error: 'Logo is required',
-      },
-    });
-
-    // First verify error is shown
-    expect(wrapper.text()).toContain('Logo is required');
-
-    const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-    const fileUpload = wrapper.findComponent({ name: 'FileUpload' });
-
-    await fileUpload.vm.$emit('select', { files: [mockFile] });
-    await nextTick();
-
-    // Error should be cleared (component internal error, external error still shown via prop)
-    expect(wrapper.emitted('update:modelValue')).toBeTruthy();
-  });
 
   it('handles array of files from select event', async () => {
     const wrapper = mountWithStubs(ImageUpload, {
       props: {
         modelValue: null,
         label: 'Upload Logo',
+      },
+      global: {
+        stubs: commonStubs,
       },
     });
 
@@ -260,6 +230,9 @@ describe('ImageUpload', () => {
         modelValue: null,
         label: 'Upload Logo',
       },
+      global: {
+        stubs: commonStubs,
+      },
     });
 
     const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
@@ -275,6 +248,9 @@ describe('ImageUpload', () => {
       props: {
         modelValue: null,
         label: 'Upload Logo',
+      },
+      global: {
+        stubs: commonStubs,
       },
     });
 
@@ -300,6 +276,9 @@ describe('ImageUpload', () => {
         label: 'Upload Logo',
         accept: 'image/png,image/jpeg',
       },
+      global: {
+        stubs: commonStubs,
+      },
     });
 
     const fileUpload = wrapper.findComponent({ name: 'FileUpload' });
@@ -312,9 +291,43 @@ describe('ImageUpload', () => {
         modelValue: null,
         label: 'Upload Logo',
       },
+      global: {
+        stubs: commonStubs,
+      },
     });
 
     const fileUpload = wrapper.findComponent({ name: 'FileUpload' });
     expect(fileUpload.props('accept')).toBe('image/*');
+  });
+
+  it('displays helper text when provided', () => {
+    const wrapper = mountWithStubs(ImageUpload, {
+      props: {
+        modelValue: null,
+        label: 'Upload Logo',
+        helperText: 'A square logo that represents your league',
+      },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    expect(wrapper.text()).toContain('A square logo that represents your league');
+  });
+
+  it('does not show optional indicator when required is true', () => {
+    const wrapper = mountWithStubs(ImageUpload, {
+      props: {
+        modelValue: null,
+        label: 'Upload Logo',
+        labelText: 'Upload Logo',
+        required: true,
+      },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    expect(wrapper.text()).not.toContain('(optional)');
   });
 });

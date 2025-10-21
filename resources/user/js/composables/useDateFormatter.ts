@@ -37,7 +37,7 @@ export function useDateFormatter() {
    */
   const formatDate = (
     dateString: string | null | undefined,
-    formatString: string = 'h:mmaaa do MMM yy'
+    formatString: string = 'h:mmaaa do MMM yy',
   ): string => {
     // Handle null, undefined, or empty strings
     if (!dateString) {
@@ -55,7 +55,7 @@ export function useDateFormatter() {
 
       // Format and return the date
       return format(date, formatString);
-    } catch (error) {
+    } catch {
       return 'Invalid date';
     }
   };
@@ -90,7 +90,7 @@ export function useDateFormatter() {
 
       // Format and return the relative time
       return formatDistanceToNow(date, { addSuffix: true });
-    } catch (error) {
+    } catch {
       return 'Invalid date';
     }
   };

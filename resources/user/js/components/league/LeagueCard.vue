@@ -6,6 +6,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
+import ButtonGroup from 'primevue/buttongroup';
 import { useLeagueStore } from '@user/stores/leagueStore';
 import { useUserStore } from '@user/stores/userStore';
 import { useImageUrl } from '@user/composables/useImageUrl';
@@ -115,7 +116,7 @@ async function deleteLeague(): Promise<void> {
 </script>
 
 <template>
-  <Card class="hover:shadow-lg transition-shadow">
+  <Card class="hover:shadow-lg transition-shadow duration-300">
     <template #header>
       <div class="relative">
         <!-- Header Image with Error Handling -->
@@ -137,37 +138,40 @@ async function deleteLeague(): Promise<void> {
           @load="logo.handleLoad"
           @error="logo.handleError"
         />
+
+        <div class="absolute top-0 right-0 p-2">
+          <Tag
+            :value="league.visibility.toUpperCase()"
+            :severity="getVisibilitySeverity(league.visibility)"
+            class="text-xs uppercase border"
+          />
+        </div>
       </div>
     </template>
 
     <template #title>
-      <div class="mt-8">
+      <div class="mt-6">
         <h3 class="text-xl font-bold mb-1">{{ league.name }}</h3>
-        <Tag
-          :value="league.visibility"
-          :severity="getVisibilitySeverity(league.visibility)"
-          class="text-xs"
-        />
       </div>
     </template>
 
     <template #content>
-      <div class="space-y-3">
-        <p v-if="league.tagline" class="text-gray-600 text-sm">
+      <div class="space-y-3 pb-2">
+        <p v-if="league.tagline" class="">
           {{ league.tagline }}
         </p>
 
-        <div class="flex items-center gap-2 text-sm text-gray-600">
+        <div class="flex items-center gap-2">
           <i class="pi pi-desktop"></i>
           <span>{{ getPlatformNames(league) }}</span>
         </div>
 
-        <div class="flex items-center gap-2 text-sm text-gray-600">
+        <div v-if="league.timezone" class="flex items-center gap-2">
           <i class="pi pi-clock"></i>
           <span>{{ league.timezone }}</span>
         </div>
 
-        <div class="flex items-center gap-2 text-sm text-gray-600">
+        <div v-if="league.organizer_name" class="flex items-center gap-2">
           <i class="pi pi-user"></i>
           <span>{{ league.organizer_name }}</span>
         </div>
@@ -175,23 +179,32 @@ async function deleteLeague(): Promise<void> {
     </template>
 
     <template #footer>
-      <div class="flex gap-2">
-        <Button label="View" icon="pi pi-eye" text class="flex-1" @click="handleView" />
+      <div class="flex w-full space-x-4 border-t border-gray-200 pt-4">
+        <ButtonGroup class="w-1/2">
+          <Button
+            v-if="isOwner"
+            icon="pi pi-trash"
+            severity="danger"
+            class="w-1/2"
+            variant="outlined"
+            @click="confirmDelete"
+          />
+          <Button
+            v-if="isOwner"
+            icon="pi pi-pencil"
+            severity="warn"
+            class="w-1/2"
+            variant="outlined"
+            @click="handleEdit"
+          />
+        </ButtonGroup>
         <Button
-          v-if="isOwner"
-          label="Edit"
-          icon="pi pi-pencil"
-          severity="secondary"
-          text
-          @click="handleEdit"
-        />
-        <Button
-          v-if="isOwner"
-          label="Delete"
-          icon="pi pi-trash"
-          severity="danger"
-          text
-          @click="confirmDelete"
+          label="View"
+          severity="info"
+          icon="pi pi-eye"
+          class="w-1/2"
+          variant="outlined"
+          @click="handleView"
         />
       </div>
     </template>

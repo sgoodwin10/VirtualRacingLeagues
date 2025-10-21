@@ -111,7 +111,7 @@ describe('activityLogService', () => {
     expect(apiService.post).toHaveBeenCalledWith(
       '/activities/clean',
       { days: 90 },
-      { signal: undefined }
+      { signal: undefined },
     );
   });
 

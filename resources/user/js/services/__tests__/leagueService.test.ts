@@ -149,13 +149,14 @@ describe('leagueService', () => {
       const formData = new FormData();
       formData.append('name', 'Updated League');
 
-      vi.mocked(apiClient.put).mockResolvedValue({
+      vi.mocked(apiClient.post).mockResolvedValue({
         data: { data: mockLeague },
       });
 
       const result = await updateLeague(1, formData);
 
-      expect(apiClient.put).toHaveBeenCalledWith('/leagues/1', formData, {
+      // updateLeague uses POST with _method=PUT for method spoofing
+      expect(apiClient.post).toHaveBeenCalledWith('/leagues/1', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

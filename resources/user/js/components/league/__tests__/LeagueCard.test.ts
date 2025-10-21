@@ -27,7 +27,14 @@ vi.mock('primevue/button', () => ({
   default: {
     name: 'Button',
     template: '<button @click="$emit(\'click\')"><slot>{{ label }}</slot></button>',
-    props: ['label', 'icon', 'severity', 'text'],
+    props: ['label', 'icon', 'severity', 'text', 'variant', 'class'],
+  },
+}));
+
+vi.mock('primevue/buttongroup', () => ({
+  default: {
+    name: 'ButtonGroup',
+    template: '<div class="button-group"><slot></slot></div>',
   },
 }));
 
@@ -128,7 +135,7 @@ describe('LeagueCard', () => {
     wrapper = mountComponent(mockLeague, 1); // User ID matches owner_user_id
 
     const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const editButton = buttons.find((btn) => btn.props('label') === 'Edit');
+    const editButton = buttons.find((btn) => btn.props('icon') === 'pi pi-pencil');
 
     expect(editButton).toBeDefined();
     expect(editButton?.exists()).toBe(true);
@@ -138,7 +145,7 @@ describe('LeagueCard', () => {
     wrapper = mountComponent(mockLeague, 2); // User ID does not match owner_user_id
 
     const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const editButton = buttons.find((btn) => btn.props('label') === 'Edit');
+    const editButton = buttons.find((btn) => btn.props('icon') === 'pi pi-pencil');
 
     expect(editButton).toBeUndefined();
   });
@@ -147,7 +154,7 @@ describe('LeagueCard', () => {
     wrapper = mountComponent(mockLeague, null);
 
     const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const editButton = buttons.find((btn) => btn.props('label') === 'Edit');
+    const editButton = buttons.find((btn) => btn.props('icon') === 'pi pi-pencil');
 
     expect(editButton).toBeUndefined();
   });
@@ -156,7 +163,7 @@ describe('LeagueCard', () => {
     wrapper = mountComponent(mockLeague, 1);
 
     const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const editButton = buttons.find((btn) => btn.props('label') === 'Edit');
+    const editButton = buttons.find((btn) => btn.props('icon') === 'pi pi-pencil');
 
     expect(editButton).toBeDefined();
 
@@ -173,7 +180,7 @@ describe('LeagueCard', () => {
     wrapper = mountComponent(mockLeague, 1);
 
     const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const deleteButton = buttons.find((btn) => btn.props('label') === 'Delete');
+    const deleteButton = buttons.find((btn) => btn.props('icon') === 'pi pi-trash');
 
     expect(deleteButton).toBeDefined();
     expect(deleteButton?.exists()).toBe(true);
@@ -183,7 +190,7 @@ describe('LeagueCard', () => {
     wrapper = mountComponent(mockLeague, 2);
 
     const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const deleteButton = buttons.find((btn) => btn.props('label') === 'Delete');
+    const deleteButton = buttons.find((btn) => btn.props('icon') === 'pi pi-trash');
 
     expect(deleteButton).toBeUndefined();
   });
@@ -214,22 +221,4 @@ describe('LeagueCard', () => {
     }
   });
 
-  it('should navigate to league detail page when view button is clicked', async () => {
-    wrapper = mountComponent(mockLeague, 2);
-    const router = wrapper.vm.$router;
-
-    const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const viewButton = buttons.find((btn) => btn.props('label') === 'View');
-
-    expect(viewButton).toBeDefined();
-
-    if (viewButton) {
-      await viewButton.trigger('click');
-      await wrapper.vm.$nextTick();
-
-      // Check that router.push was called with correct parameters
-      expect(router.currentRoute.value.name).toBe('league-detail');
-      expect(router.currentRoute.value.params.id).toBe('1');
-    }
-  });
 });

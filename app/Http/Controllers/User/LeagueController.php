@@ -7,6 +7,7 @@ namespace App\Http\Controllers\User;
 use App\Application\League\DTOs\CreateLeagueData;
 use App\Application\League\DTOs\UpdateLeagueData;
 use App\Application\League\Services\LeagueApplicationService;
+use App\Domain\League\Exceptions\LeagueLimitReachedException;
 use App\Domain\League\Exceptions\LeagueNotFoundException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
@@ -45,9 +46,13 @@ class LeagueController extends Controller
         $user = Auth::guard('web')->user();
         assert($user instanceof \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent);
 
-        $data = CreateLeagueData::from($request->validated());
-        $league = $this->leagueService->createLeague($data, $user->id);
-        return ApiResponse::created($league->toArray(), 'League created successfully');
+        try {
+            $data = CreateLeagueData::from($request->validated());
+            $league = $this->leagueService->createLeague($data, $user->id);
+            return ApiResponse::created($league->toArray(), 'League created successfully');
+        } catch (LeagueLimitReachedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 422);
+        }
     }
 
     /**
@@ -100,7 +105,8 @@ class LeagueController extends Controller
             return ApiResponse::error('Name is required', null, 400);
         }
 
-        $result = $this->leagueService->checkSlugAvailability($name);
+        $excludeLeagueId = $request->input('league_id') ? (int) $request->input('league_id') : null;
+        $result = $this->leagueService->checkSlugAvailability($name, $excludeLeagueId);
         return ApiResponse::success($result);
     }
 
@@ -112,6 +118,45 @@ class LeagueController extends Controller
         try {
             $platforms = $this->leagueService->getLeaguePlatforms($id);
             return ApiResponse::success($platforms);
+        } catch (LeagueNotFoundException $e) {
+            return ApiResponse::notFound('League not found.');
+        }
+    }
+
+    /**
+     * Get driver columns for a league's platforms.
+     */
+    public function driverColumns(int $id): JsonResponse
+    {
+        try {
+            $columns = $this->leagueService->getDriverColumnsForLeague($id);
+            return ApiResponse::success($columns);
+        } catch (LeagueNotFoundException $e) {
+            return ApiResponse::notFound('League not found.');
+        }
+    }
+
+    /**
+     * Get driver form fields for a league's platforms.
+     */
+    public function driverFormFields(int $id): JsonResponse
+    {
+        try {
+            $formFields = $this->leagueService->getDriverFormFieldsForLeague($id);
+            return ApiResponse::success($formFields);
+        } catch (LeagueNotFoundException $e) {
+            return ApiResponse::notFound('League not found.');
+        }
+    }
+
+    /**
+     * Get driver CSV headers for a league's platforms.
+     */
+    public function driverCsvHeaders(int $id): JsonResponse
+    {
+        try {
+            $csvHeaders = $this->leagueService->getDriverCsvHeadersForLeague($id);
+            return ApiResponse::success($csvHeaders);
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
         }

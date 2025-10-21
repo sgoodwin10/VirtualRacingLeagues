@@ -31,9 +31,9 @@ composer dev                   # Runs all services: Laravel server, queue, logs,
 ```
 
 After starting, access:
-- Public Site: `http://virtualracingleagues.localhost:8000` (renders `resources/views/public.blade.php`)
-- User Dashboard: `http://app.virtualracingleagues.localhost:8000` (renders `resources/views/app.blade.php`)
-- Admin Dashboard: `http://admin.virtualracingleagues.localhost:8000/admin` (renders `resources/views/admin.blade.php`)
+- Public Site: `http://virtualracingleagues.localhost` (renders `resources/views/public.blade.php`)
+- User Dashboard: `http://app.virtualracingleagues.localhost` (renders `resources/views/app.blade.php`)
+- Admin Dashboard: `http://admin.virtualracingleagues.localhost/admin` (renders `resources/views/admin.blade.php`)
 
 **Note**: The domain `virtualracingleagues.localhost` is configured in `.env` and `routes/subdomain.php`. For production, update both locations with your actual domain.
 
@@ -417,7 +417,7 @@ redis-cli
 Key environment variables in `.env`:
 ```env
 APP_NAME=YOUR_APP_NAME
-APP_URL=http://virtualracingleagues.localhost:8000
+APP_URL=http://virtualracingleagues.localhost
 
 # Session configuration (critical for subdomain auth)
 SESSION_DOMAIN=.virtualracingleagues.localhost  # Leading dot enables cross-subdomain sharing
@@ -427,7 +427,7 @@ SESSION_SAME_SITE=lax
 # Vite configuration
 VITE_APP_NAME="${APP_NAME}"
 VITE_APP_URL="${APP_URL}"
-VITE_APP_DOMAIN=app.virtualracingleagues.localhost:8000
+VITE_APP_DOMAIN=app.virtualracingleagues.localhost
 
 # Database
 DB_CONNECTION=mysql
@@ -450,7 +450,7 @@ MAIL_HOST=mailpit
 MAIL_PORT=1025
 
 # Sanctum (for API authentication)
-SANCTUM_STATEFUL_DOMAINS=virtualracingleagues.localhost:8000,app.virtualracingleagues.localhost:8000,admin.virtualracingleagues.localhost:8000
+SANCTUM_STATEFUL_DOMAINS=virtualracingleagues.localhost,app.virtualracingleagues.localhost,admin.virtualracingleagues.localhost
 ```
 
 **Important**: The `SESSION_DOMAIN` must have a leading dot (`.virtualracingleagues.localhost`) to enable session sharing across all subdomains.

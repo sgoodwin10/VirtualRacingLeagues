@@ -156,7 +156,7 @@ describe('adminUserService', () => {
     expect(apiService.post).toHaveBeenCalledWith(
       `/admins/${mockAdmin.id}/restore`,
       {},
-      { signal: undefined }
+      { signal: undefined },
     );
   });
 });

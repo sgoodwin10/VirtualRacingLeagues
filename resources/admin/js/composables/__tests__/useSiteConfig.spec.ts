@@ -84,7 +84,7 @@ describe('useSiteConfig', () => {
             const { loading } = useSiteConfig();
             expect(loading.value).toBe(true);
             resolve(mockConfig);
-          })
+          }),
       );
       const { fetchConfig, loading } = useSiteConfig();
 

@@ -12,11 +12,16 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Editor from 'primevue/editor';
 import { useLeagueStore } from '@user/stores/leagueStore';
-import ImageUpload from '@user/components/league/partials/ImageUpload.vue';
+import ImageUpload from '@user/components/common/forms/ImageUpload.vue';
 import PlatformMultiSelect from '@user/components/league/partials/PlatformMultiSelect.vue';
 import SocialMediaFields from '@user/components/league/partials/SocialMediaFields.vue';
-import FormLabel from '@user/components/common/FormLabel.vue';
-import FormError from '@user/components/common/FormError.vue';
+import FormLabel from '@user/components/common/forms/FormLabel.vue';
+import FormError from '@user/components/common/forms/FormError.vue';
+import FormInputGroup from '@user/components/common/forms/FormInputGroup.vue';
+import FormOptionalText from '@user/components/common/forms/FormOptionalText.vue';
+import BasePanel from '@user/components/common/panels/BasePanel.vue';
+import DrawerHeader from '@user/components/common/modals/DrawerHeader.vue';
+import DrawerLoading from '@user/components/common/modals/DrawerLoading.vue';
 import type {
   CreateLeagueForm,
   UpdateLeagueForm,
@@ -73,9 +78,11 @@ const errors = reactive<FormErrors>({});
 // Slug checking
 const isCheckingSlug = ref(false);
 const slugAvailable = ref<boolean | null>(null);
+const generatedSlug = ref<string>('');
+const suggestedSlug = ref<string | null>(null);
 const debouncedName = useDebounce(
   computed(() => form.name),
-  500
+  500,
 );
 
 // Visibility options with tooltips
@@ -116,7 +123,7 @@ const drawerTitle = computed(() => (props.isEditMode ? 'Edit League' : 'Create N
 const drawerSubtitle = computed(() =>
   props.isEditMode
     ? 'Update your league information'
-    : 'Complete the information below to create your racing league'
+    : 'Complete the information below to create your racing league',
 );
 
 const submitButtonLabel = computed(() => (props.isEditMode ? 'Save Changes' : 'Create League'));
@@ -157,7 +164,7 @@ watch(
       // Reset form when drawer closes
       resetForm();
     }
-  }
+  },
 );
 
 async function loadLeagueData(leagueId: number): Promise<void> {
@@ -174,8 +181,8 @@ async function loadLeagueData(leagueId: number): Promise<void> {
     form.tagline = league.tagline || '';
     form.description = league.description || '';
     form.header_image_url = league.header_image_url;
-    form.contact_email = league.contact_email;
-    form.organizer_name = league.organizer_name;
+    form.contact_email = league.contact_email || '';
+    form.organizer_name = league.organizer_name || '';
     form.discord_url = league.discord_url || '';
     form.website_url = league.website_url || '';
     form.twitter_handle = league.twitter_handle || '';
@@ -200,21 +207,33 @@ async function loadLeagueData(leagueId: number): Promise<void> {
 
 async function checkSlugAvailability(): Promise<void> {
   if (!form.name || !form.name.trim()) {
+    slugAvailable.value = null;
+    generatedSlug.value = '';
+    suggestedSlug.value = null;
     return;
   }
 
   isCheckingSlug.value = true;
 
   try {
-    slugAvailable.value = await leagueStore.checkSlug(form.name);
+    // Pass the league ID when in edit mode to exclude it from the check
+    const leagueIdToExclude = props.isEditMode ? props.leagueId : undefined;
+    const result = await leagueStore.checkSlug(form.name, leagueIdToExclude);
 
-    if (!slugAvailable.value) {
+    slugAvailable.value = result.available;
+    generatedSlug.value = result.slug;
+    suggestedSlug.value = result.suggestion;
+
+    if (!result.available) {
       errors.name = 'This league name is already taken';
     } else {
       delete errors.name;
     }
   } catch (error) {
     console.error('Error checking slug:', error);
+    slugAvailable.value = null;
+    generatedSlug.value = '';
+    suggestedSlug.value = null;
   } finally {
     isCheckingSlug.value = false;
   }
@@ -223,7 +242,7 @@ async function checkSlugAvailability(): Promise<void> {
 function validateForm(): boolean {
   let isValid = true;
 
-  // Required fields from Information tab
+  // Required fields: only name and platforms
   if (!form.name.trim()) {
     isValid = false;
   }
@@ -232,24 +251,8 @@ function validateForm(): boolean {
     isValid = false;
   }
 
-  if (!form.contact_email.trim() || !isValidEmail(form.contact_email)) {
-    isValid = false;
-  }
-
-  if (!form.organizer_name.trim()) {
-    isValid = false;
-  }
-
-  if (!form.visibility) {
-    isValid = false;
-  }
-
-  if (!form.timezone) {
-    isValid = false;
-  }
-
-  // Logo is only required for create mode, not edit mode
-  if (!props.isEditMode && !form.logo) {
+  // Validate email format if email is provided (optional field)
+  if (form.contact_email && form.contact_email.trim() && !isValidEmail(form.contact_email)) {
     isValid = false;
   }
 
@@ -271,15 +274,9 @@ async function submitForm(): Promise<void> {
   clearErrors();
   let hasErrors = false;
 
-  // Validate required fields
+  // Validate required fields: only name and platforms
   if (!form.name.trim()) {
     errors.name = 'League name is required';
-    hasErrors = true;
-  }
-
-  // Logo is only required for create mode
-  if (!props.isEditMode && !form.logo) {
-    errors.logo = 'League logo is required';
     hasErrors = true;
   }
 
@@ -288,26 +285,9 @@ async function submitForm(): Promise<void> {
     hasErrors = true;
   }
 
-  if (!form.timezone) {
-    errors.timezone = 'Timezone is required';
-    hasErrors = true;
-  }
-
-  if (!form.visibility) {
-    errors.visibility = 'Visibility is required';
-    hasErrors = true;
-  }
-
-  if (!form.contact_email.trim()) {
-    errors.contact_email = 'Contact email is required';
-    hasErrors = true;
-  } else if (!isValidEmail(form.contact_email)) {
+  // Validate email format if provided (optional field)
+  if (form.contact_email && form.contact_email.trim() && !isValidEmail(form.contact_email)) {
     errors.contact_email = 'Please enter a valid email address';
-    hasErrors = true;
-  }
-
-  if (!form.organizer_name.trim()) {
-    errors.organizer_name = 'Organizer name is required';
     hasErrors = true;
   }
 
@@ -438,6 +418,8 @@ function resetForm(): void {
 
   // Reset slug checking state
   slugAvailable.value = null;
+  generatedSlug.value = '';
+  suggestedSlug.value = null;
 
   // Clear errors
   clearErrors();
@@ -448,211 +430,211 @@ function resetForm(): void {
   <Drawer
     :visible="visible"
     position="bottom"
-    class="!h-[80vh] bg-gray-50"
+    class="!h-[60vh] bg-gray-50"
     @update:visible="emit('update:visible', $event)"
   >
     <template #header>
-      <div class="container w-full xl:mx-auto px-4">
-        <h2 class="text-2xl font-bold mb-1">{{ drawerTitle }}</h2>
-        <p class="text-gray-600">{{ drawerSubtitle }}</p>
-      </div>
+      <DrawerHeader :title="drawerTitle" :subtitle="drawerSubtitle" />
     </template>
 
-    <div v-if="isLoadingLeague" class="h-full flex items-center justify-center">
-      <div class="text-center">
-        <i class="pi pi-spin pi-spinner text-4xl text-blue-500 mb-4"></i>
-        <p class="text-gray-600">Loading league data...</p>
-      </div>
-    </div>
+    <DrawerLoading v-if="isLoadingLeague" message="Loading league data..." />
 
-    <div v-else class="h-full flex flex-col">
-      <Tabs v-model:value="activeTab" class="flex-1 flex flex-col">
-        <TabList>
-          <Tab value="0">Information</Tab>
-          <Tab value="1">Media</Tab>
+    <div v-else class="container mx-auto flex flex-col max-w-5xl px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Left Column (66%) -->
+        <div class="md:col-span-2 space-y-4">
+          <div class="flex space-x-2">
+            <!-- League Name -->
+            <FormInputGroup class="w-1/3">
+              <FormLabel for="league-name" text="League Name" :required="true" />
+              <InputText
+                id="league-name"
+                v-model="form.name"
+                size="small"
+                placeholder="Enter your league name"
+                :class="{ 'p-invalid': !!errors.name }"
+                class="w-full"
+                @blur="checkSlugAvailability"
+              />
+              <div class="flex flex-col gap-1">
+                <!-- Checking status -->
+                <div v-if="isCheckingSlug" class="flex items-center gap-2">
+                  <i class="pi pi-spin pi-spinner text-sm text-gray-500"></i>
+                  <small class="text-gray-600">Checking availability...</small>
+                </div>
+
+                <!-- Available - show the slug that will be used -->
+                <div
+                  v-else-if="slugAvailable === true && generatedSlug"
+                  class="flex items-center gap-2"
+                >
+                  <i class="pi pi-check-circle text-green-500 text-sm"></i>
+                  <small class="text-green-600">
+                    League URL: <span class="font-mono font-semibold">{{ generatedSlug }}</span>
+                  </small>
+                </div>
+
+                <!-- Not available - show the suggested unique slug -->
+                <div
+                  v-else-if="slugAvailable === false && suggestedSlug"
+                  class="flex items-center gap-2"
+                >
+                  <i class="pi pi-info-circle text-amber-500 text-sm"></i>
+                  <small class="text-amber-700">
+                    Name taken. League will use URL:
+                    <span class="font-mono font-semibold">{{ suggestedSlug }}</span>
+                  </small>
+                </div>
+              </div>
+              <FormError :error="errors.name" />
+            </FormInputGroup>
+
+            <!-- Tagline -->
+            <FormInputGroup class="w-2/3">
+              <FormLabel for="tagline" text="Tagline" />
+              <InputText
+                id="tagline"
+                v-model="form.tagline"
+                size="small"
+                placeholder="A short, catchy phrase describing your league"
+                maxlength="150"
+                :class="{ 'p-invalid': !!errors.tagline }"
+                class="w-full"
+              />
+              <FormOptionalText text="A brief one-liner about your league (max 150 characters)" />
+              <FormError :error="errors.tagline" />
+            </FormInputGroup>
+          </div>
+
+          <!-- Platforms -->
+          <PlatformMultiSelect
+            v-model="form.platform_ids"
+            :platforms="leagueStore.platforms"
+            :error="errors.platform_ids"
+            :required="true"
+          />
+
+          <!-- Description -->
+          <FormInputGroup>
+            <FormLabel for="description" text="Description" />
+            <Editor
+              id="description"
+              v-model="form.description"
+              editor-style="height: 200px"
+              :class="{ 'p-invalid': !!errors.description }"
+            >
+              <template #toolbar>
+                <span class="ql-formats">
+                  <button class="ql-bold" type="button"></button>
+                  <button class="ql-italic" type="button"></button>
+                  <button class="ql-underline" type="button"></button>
+                </span>
+                <span class="ql-formats">
+                  <button class="ql-list" value="ordered" type="button"></button>
+                  <button class="ql-list" value="bullet" type="button"></button>
+                </span>
+                <span class="ql-formats">
+                  <button class="ql-link" type="button"></button>
+                </span>
+                <span class="ql-formats">
+                  <button class="ql-clean" type="button"></button>
+                </span>
+              </template>
+            </Editor>
+            <FormOptionalText text="Tell potential members what your league is all about" />
+            <FormError :error="errors.description" />
+          </FormInputGroup>
+        </div>
+
+        <!-- Right Column (33%) -->
+        <div class="space-y-6">
+          <!-- Contact Email -->
+          <FormInputGroup>
+            <FormLabel for="contact-email" text="Contact Email" />
+            <InputText
+              id="contact-email"
+              v-model="form.contact_email"
+              type="email"
+              size="small"
+              placeholder="league@example.com"
+              :class="{ 'p-invalid': !!errors.contact_email }"
+              class="w-full"
+            />
+            <FormOptionalText text="Visible to league members for inquiries" />
+            <FormError :error="errors.contact_email" />
+          </FormInputGroup>
+
+          <!-- Organizer Name -->
+          <FormInputGroup>
+            <FormLabel for="organizer-name" text="Contact Name" />
+            <InputText
+              id="organizer-name"
+              v-model="form.organizer_name"
+              placeholder="Your name or organisation"
+              maxlength="100"
+              size="small"
+              :class="{ 'p-invalid': !!errors.organizer_name }"
+              class="w-full"
+            />
+            <FormOptionalText text="Displayed as the league organiser" />
+            <FormError :error="errors.organizer_name" />
+          </FormInputGroup>
+
+          <!-- Visibility (Compact) -->
+          <FormInputGroup>
+            <FormLabel text="Visibility" />
+            <div class="flex gap-2">
+              <button
+                v-for="option in visibilityOptions"
+                :key="option.value"
+                v-tooltip.top="option.description"
+                type="button"
+                class="flex-1 px-3 py-2 border rounded-lg transition-all flex items-center justify-center gap-2"
+                :class="{
+                  'border-blue-500 bg-blue-100 text-blue-700': form.visibility === option.value,
+                  'border-gray-300 hover:border-gray-400 bg-white':
+                    form.visibility !== option.value,
+                }"
+                @click="form.visibility = option.value as LeagueVisibility"
+              >
+                <i :class="option.icon" class="text-sm"></i>
+                <span class="text-sm font-medium">{{ option.label }}</span>
+              </button>
+            </div>
+            <FormOptionalText text="Choose how your league appears in searches" />
+            <FormError :error="errors.visibility" />
+          </FormInputGroup>
+
+          <!-- Timezone -->
+          <FormInputGroup>
+            <FormLabel for="timezone" text="Timezone" />
+            <Select
+              id="timezone"
+              v-model="form.timezone"
+              :options="timezoneOptions"
+              option-label="label"
+              option-value="value"
+              placeholder="Select timezone"
+              :filter="true"
+              size="small"
+              :class="{ 'p-invalid': !!errors.timezone }"
+              class="w-full"
+            />
+            <FormOptionalText text="Used for scheduling events and race times" />
+            <FormError :error="errors.timezone" />
+          </FormInputGroup>
+        </div>
+      </div>
+
+      <Tabs v-model:value="activeTab" class="flex-1 flex flex-col mt-4">
+        <TabList class="bg-gray-50">
+          <Tab value="0" class="bg-white border-r border-gray-100">Logo & Header Image</Tab>
+          <Tab value="1" class="bg-white">Social Media</Tab>
         </TabList>
         <TabPanels class="flex-1">
           <!-- Tab 1: Information -->
-          <TabPanel value="0" class="flex-1">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <!-- Left Column (66%) -->
-              <div class="lg:col-span-2 space-y-4">
-                <div class="flex space-x-2">
-                  <!-- League Name -->
-                  <div class="space-y-1 w-1/3 class=" :required="true">
-                    <FormLabel for="league-name" text="League Name" :required="true" />
-                    <InputText
-                      id="league-name"
-                      v-model="form.name"
-                      size="small"
-                      placeholder="Enter your league name"
-                      :class="{ 'p-invalid': !!errors.name }"
-                      class="w-full"
-                      @blur="checkSlugAvailability"
-                    />
-                    <div class="flex items-center gap-2">
-                      <i v-if="isCheckingSlug" class="pi pi-spin pi-spinner text-sm"></i>
-                      <i
-                        v-else-if="slugAvailable === true"
-                        class="pi pi-check-circle text-green-500 text-sm"
-                      ></i>
-                      <i
-                        v-else-if="slugAvailable === false"
-                        class="pi pi-times-circle text-red-500 text-sm"
-                      ></i>
-                      <small v-if="isCheckingSlug" class="text-gray-600"
-                        >Checking availability...</small
-                      >
-                      <small v-else-if="slugAvailable === true" class="text-green-600">
-                        League name is available
-                      </small>
-                    </div>
-                    <FormError :error="errors.name" />
-                  </div>
-
-                  <!-- Tagline -->
-                  <div class="space-y-1 w-2/3">
-                    <FormLabel for="tagline" text="Tagline" />
-                    <InputText
-                      id="tagline"
-                      v-model="form.tagline"
-                      size="small"
-                      placeholder="A short, catchy phrase describing your league"
-                      maxlength="150"
-                      :class="{ 'p-invalid': !!errors.tagline }"
-                      class="w-full"
-                    />
-                    <p class="text-xs text-gray-500">
-                      <span class="font-medium">Optional:</span> A brief one-liner about your league
-                      (max 150 characters)
-                    </p>
-                    <FormError :error="errors.tagline" />
-                  </div>
-                </div>
-
-                <!-- Description -->
-                <div class="space-y-1">
-                  <FormLabel for="description" text="Description" />
-                  <Editor
-                    id="description"
-                    v-model="form.description"
-                    editor-style="height: 200px"
-                    :class="{ 'p-invalid': !!errors.description }"
-                  >
-                    <template #toolbar>
-                      <span class="ql-formats">
-                        <button class="ql-bold" type="button"></button>
-                        <button class="ql-italic" type="button"></button>
-                        <button class="ql-underline" type="button"></button>
-                      </span>
-                      <span class="ql-formats">
-                        <button class="ql-list" value="ordered" type="button"></button>
-                        <button class="ql-list" value="bullet" type="button"></button>
-                      </span>
-                      <span class="ql-formats">
-                        <button class="ql-link" type="button"></button>
-                      </span>
-                      <span class="ql-formats">
-                        <button class="ql-clean" type="button"></button>
-                      </span>
-                    </template>
-                  </Editor>
-                  <p class="text-xs text-gray-500">
-                    <span class="font-medium">Optional:</span> Tell potential members what your
-                    league is all about
-                  </p>
-                  <FormError :error="errors.description" />
-                </div>
-
-                <!-- Platforms -->
-                <PlatformMultiSelect
-                  v-model="form.platform_ids"
-                  :platforms="leagueStore.platforms"
-                  :error="errors.platform_ids"
-                  :required="true"
-                />
-              </div>
-
-              <!-- Right Column (33%) -->
-              <div class="space-y-6">
-                <!-- Contact Email -->
-                <div class="space-y-1">
-                  <FormLabel for="contact-email" text="Contact Email" :required="true" />
-                  <InputText
-                    id="contact-email"
-                    v-model="form.contact_email"
-                    type="email"
-                    size="small"
-                    placeholder="league@example.com"
-                    :class="{ 'p-invalid': !!errors.contact_email }"
-                    class="w-full"
-                  />
-                  <p class="text-xs text-gray-500">Visible to league members for inquiries</p>
-                  <FormError :error="errors.contact_email" />
-                </div>
-
-                <!-- Organizer Name -->
-                <div class="space-y-1">
-                  <FormLabel for="organizer-name" text="Contact Name" :required="true" />
-                  <InputText
-                    id="organizer-name"
-                    v-model="form.organizer_name"
-                    placeholder="Your name or organization"
-                    maxlength="100"
-                    size="small"
-                    :class="{ 'p-invalid': !!errors.organizer_name }"
-                    class="w-full"
-                  />
-                  <p class="text-xs text-gray-500">Displayed as the league organizer</p>
-                  <FormError :error="errors.organizer_name" />
-                </div>
-
-                <!-- Visibility (Compact) -->
-                <div class="space-y-1">
-                  <FormLabel text="Visibility" :required="true" />
-                  <div class="flex gap-2">
-                    <button
-                      v-for="option in visibilityOptions"
-                      :key="option.value"
-                      v-tooltip.top="option.description"
-                      type="button"
-                      class="flex-1 px-3 py-2 border rounded-lg transition-all flex items-center justify-center gap-2"
-                      :class="{
-                        'border-blue-500 bg-blue-50 text-blue-700':
-                          form.visibility === option.value,
-                        'border-gray-300 hover:border-gray-400': form.visibility !== option.value,
-                      }"
-                      @click="form.visibility = option.value as LeagueVisibility"
-                    >
-                      <i :class="option.icon" class="text-sm"></i>
-                      <span class="text-sm font-medium">{{ option.label }}</span>
-                    </button>
-                  </div>
-                  <FormError :error="errors.visibility" />
-                </div>
-
-                <!-- Timezone -->
-                <div class="space-y-1">
-                  <FormLabel for="timezone" text="Timezone" :required="true" />
-                  <Select
-                    id="timezone"
-                    v-model="form.timezone"
-                    :options="timezoneOptions"
-                    option-label="label"
-                    option-value="value"
-                    placeholder="Select timezone"
-                    :filter="true"
-                    :class="{ 'p-invalid': !!errors.timezone }"
-                    class="w-full"
-                  />
-                  <p class="text-xs text-gray-500">Used for scheduling events and race times</p>
-                  <FormError :error="errors.timezone" />
-                </div>
-              </div>
-            </div>
-
-            <!-- Full Width Section: Social Media -->
-            <div class="mt-8 pt-6 border-t">
+          <TabPanel value="1" class="flex-1">
+            <div class="">
               <SocialMediaFields
                 :discord-url="form.discord_url"
                 :website-url="form.website_url"
@@ -679,61 +661,67 @@ function resetForm(): void {
           </TabPanel>
 
           <!-- Tab 2: Media -->
-          <TabPanel value="1">
-            <div class="space-y-6 max-w-2xl">
-              <div>
-                <h2 class="text-2xl font-bold mb-2">League Media</h2>
-                <p class="text-gray-600">Upload logo and header image for your league</p>
+          <TabPanel value="0">
+            <div>
+              <div>Upload images to personalise your league.</div>
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
+                <!-- Logo Upload -->
+                <BasePanel :header="'League Logo'" class="lg:col-span-1">
+                  <ImageUpload
+                    v-model="form.logo"
+                    :existing-image-url="form.logo_url ?? null"
+                    label="League Logo"
+                    :required="false"
+                    :error="errors.logo"
+                    preview-size="small"
+                    helper-text="A square logo. Recommended: 400x400px"
+                    @remove-existing="form.logo_url = null"
+                  />
+                </BasePanel>
+
+                <!-- Header Image -->
+                <BasePanel :header="'League Header Image'" class="lg:col-span-2">
+                  <ImageUpload
+                    v-model="form.header_image"
+                    :existing-image-url="form.header_image_url ?? null"
+                    label="League Header Image"
+                    :required="false"
+                    :error="errors.header_image"
+                    preview-size="large"
+                    helper-text="A banner image for your league's profile page.Recommended: 1200x400px"
+                    @remove-existing="form.header_image_url = null"
+                  />
+                </BasePanel>
               </div>
-
-              <!-- Logo Upload -->
-              <ImageUpload
-                v-model="form.logo"
-                :existing-image-url="form.logo_url ?? null"
-                label="League Logo"
-                :required="!isEditMode"
-                :error="errors.logo"
-                preview-size="small"
-                @remove-existing="form.logo_url = null"
-              />
-
-              <!-- Header Image -->
-              <ImageUpload
-                v-model="form.header_image"
-                :existing-image-url="form.header_image_url ?? null"
-                label="Header Image"
-                :required="false"
-                :error="errors.header_image"
-                preview-size="large"
-                @remove-existing="form.header_image_url = null"
-              />
-              <p class="text-sm text-gray-600">
-                Optional: A banner image for your league's profile page (recommended: 1200x400px)
-              </p>
             </div>
           </TabPanel>
         </TabPanels>
       </Tabs>
+    </div>
 
+    <div v-if="!isLoadingLeague" class="bg-tertiary mt-4 shadow-reverse border-t border-gray-200">
       <!-- Action Buttons -->
-      <div class="flex justify-between pt-6 border-t mt-4">
-        <div>
-          <Button
-            label="Cancel"
-            severity="secondary"
-            outlined
-            :disabled="isSubmitting"
-            @click="closeDrawer"
-          />
-        </div>
+      <div class="container mx-auto flex flex-col max-w-5xl">
+        <div class="flex justify-between p-4">
+          <div>
+            <Button
+              label="Cancel"
+              severity="danger"
+              class="bg-white"
+              outlined
+              :disabled="isSubmitting"
+              @click="closeDrawer"
+            />
+          </div>
 
-        <div>
-          <Button
-            :label="submitButtonLabel"
-            :loading="isSubmitting"
-            :disabled="!canSubmit"
-            @click="submitForm"
-          />
+          <div>
+            <Button
+              :label="submitButtonLabel"
+              :loading="isSubmitting"
+              :disabled="!canSubmit"
+              @click="submitForm"
+            />
+          </div>
         </div>
       </div>
     </div>

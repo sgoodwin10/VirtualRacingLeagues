@@ -39,8 +39,11 @@ interface LeagueRepositoryInterface
 
     /**
      * Check if a slug is available.
+     *
+     * @param string $slug The slug to check
+     * @param int|null $excludeLeagueId Optional league ID to exclude from the check (for updates)
      */
-    public function isSlugAvailable(string $slug): bool;
+    public function isSlugAvailable(string $slug, ?int $excludeLeagueId = null): bool;
 
     /**
      * Get all leagues for a specific user (owner).

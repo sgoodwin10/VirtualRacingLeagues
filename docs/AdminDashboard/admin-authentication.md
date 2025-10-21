@@ -502,7 +502,7 @@ resources/admin/js/components/layout/AppTopbar.vue
 
 **Login:**
 ```bash
-curl -X POST http://localhost:8000/api/login \
+curl -X POST http://localhost/api/login \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
   -H "X-XSRF-TOKEN: <csrf-token>" \
@@ -512,7 +512,7 @@ curl -X POST http://localhost:8000/api/login \
 
 **Check Auth:**
 ```bash
-curl -X GET http://localhost:8000/api/check \
+curl -X GET http://localhost/api/check \
   -H "Accept: application/json" \
   -H "X-XSRF-TOKEN: <csrf-token>" \
   -b cookies.txt
@@ -520,7 +520,7 @@ curl -X GET http://localhost:8000/api/check \
 
 **Logout:**
 ```bash
-curl -X POST http://localhost:8000/api/logout \
+curl -X POST http://localhost/api/logout \
   -H "Accept: application/json" \
   -H "X-XSRF-TOKEN: <csrf-token>" \
   -b cookies.txt
@@ -529,7 +529,7 @@ curl -X POST http://localhost:8000/api/logout \
 ### Using Postman
 
 1. Import the API endpoints
-2. Set environment variable: `base_url = http://localhost:8000`
+2. Set environment variable: `base_url = http://localhost`
 3. Enable "Save Cookies" in Postman settings
 4. First request: GET `/sanctum/csrf-cookie` to get CSRF token
 5. Subsequent requests: Include `X-XSRF-TOKEN` header

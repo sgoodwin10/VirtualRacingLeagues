@@ -151,6 +151,9 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             Route::delete('/leagues/{id}', [LeagueController::class, 'destroy'])->name('leagues.destroy');
             Route::post('/leagues/check-slug', [LeagueController::class, 'checkSlug'])->name('leagues.check-slug');
             Route::get('/leagues/{id}/platforms', [LeagueController::class, 'platforms'])->name('leagues.platforms');
+            Route::get('/leagues/{id}/driver-columns', [LeagueController::class, 'driverColumns'])->name('leagues.driver-columns');
+            Route::get('/leagues/{id}/driver-form-fields', [LeagueController::class, 'driverFormFields'])->name('leagues.driver-form-fields');
+            Route::get('/leagues/{id}/driver-csv-headers', [LeagueController::class, 'driverCsvHeaders'])->name('leagues.driver-csv-headers');
 
             // League Drivers
             Route::get('/leagues/{league}/drivers', [DriverController::class, 'index'])->name('leagues.drivers.index');

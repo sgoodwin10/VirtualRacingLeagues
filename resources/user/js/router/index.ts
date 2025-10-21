@@ -50,7 +50,7 @@ const router = createRouter({
 // Get public site domain from environment
 const getPublicDomain = (): string => {
   // Extract domain without 'app.' subdomain
-  // e.g., http://app.virtualracingleagues.localhost:8000 -> http://virtualracingleagues.localhost:8000
+  // e.g., http://app.virtualracingleagues.localhost -> http://virtualracingleagues.localhost
   return import.meta.env.VITE_APP_URL.replace('//app.', '//');
 };
 

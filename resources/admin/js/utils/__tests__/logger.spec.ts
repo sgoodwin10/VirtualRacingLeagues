@@ -63,7 +63,7 @@ describe('logger', () => {
       '[ERROR]',
       'Error occurred',
       { code: 500 },
-      'Additional info'
+      'Additional info',
     );
 
     consoleSpy.mockRestore();

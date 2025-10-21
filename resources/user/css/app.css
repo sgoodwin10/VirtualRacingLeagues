@@ -4,11 +4,12 @@
 @import 'tailwindcss';
 @plugin 'tailwindcss-primeui';
 
+
 /* User Dashboard Specific Styles */
 :root {
-  --admin-primary: #3b82f6;
-  --admin-secondary: #8b5cf6;
-  --admin-accent: #ef4444;
+  --user-primary: #3b82f6;
+  --user-secondary: #8b5cf6;
+  --user-accent: #ef4444;
   --sidebar-width: 16rem; /* 64 * 0.25rem = 16rem */
   --sidebar-collapsed-width: 5rem; /* 20 * 0.25rem = 5rem */
   --topbar-height: 4rem; /* 16 * 0.25rem = 4rem */
@@ -22,6 +23,7 @@
   --text-primary: #111827;
   --text-secondary: #6b7280;
   --text-muted: #9ca3af;
+  --bg-white: #ffffff;
 
   /* Font size scale */
   --font-size-base: 14px;
@@ -31,6 +33,13 @@
   --font-size-lg: 16px;
   --font-size-xl: 18px;
   --font-size-2xl: 24px;
+
+  --shadow-reverse: 0 -2px 4px rgb(0 0 0 / 0.08);
+  --shadow-reverse-md: 0 -3px 6px rgb(0 0 0 / 0.1);
+  --shadow-reverse-lg: 0 -4px 8px rgb(0 0 0 / 0.12);
+  --shadow-reverse-xl: 0 -6px 12px rgb(0 0 0 / 0.15);
+
+  --p-drawer-header-padding: 1rem 1rem;
 }
 
 body {
@@ -44,6 +53,65 @@ body {
 
 
 /* Add your user dashboard custom styles here */
+
+/* Reverse Shadow Utilities */
+@layer utilities {
+  .shadow-reverse {
+    box-shadow: var(--shadow-reverse);
+  }
+  .shadow-reverse-md {
+    box-shadow: var(--shadow-reverse-md);
+  }
+  .shadow-reverse-lg {
+    box-shadow: var(--shadow-reverse-lg);
+  }
+  .shadow-reverse-xl {
+    box-shadow: var(--shadow-reverse-xl);
+  }
+
+  .bg-tertiary {
+    background-color: var(--bg-tertiary);
+  }
+  .bg-secondary {
+    background-color: var(--bg-secondary);
+  }
+  .bg-primary {
+    background-color: var(--bg-primary);
+  }
+  .bg-white {
+    background-color: var(--bg-white);
+  }
+}
+
+.p-panel-header {
+  padding-bottom: 0;
+}
 .p-card-body {
-  padding: 0;
+  /* padding: 0; */
+}
+
+.p-dataview-content {
+  background-color: inherit;
+}
+
+/* PrimeVue Drawer Styling */
+.p-drawer-header {
+  background-color: var(--bg-tertiary);
+  margin-bottom: 0;
+  box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border-medium);
+}
+.p-drawer-content {
+  padding: 16px 0 0;
+}
+
+/* PrimeVue Tabs Styling */
+.p-tab {
+
+}
+.p-tab.p-tab-active {
+  color: var(--user-primary);
+}
+.p-tablist-active-bar {
+  background-color: var(--user-primary);
 }

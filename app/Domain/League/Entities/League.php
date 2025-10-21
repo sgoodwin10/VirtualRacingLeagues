@@ -26,10 +26,10 @@ final class League
         private LeagueName $name,
         private LeagueSlug $slug,
         private string $logoPath,
-        private string $timezone,
+        private ?string $timezone,
         private int $ownerUserId,
-        private EmailAddress $contactEmail,
-        private string $organizerName,
+        private ?EmailAddress $contactEmail,
+        private ?string $organizerName,
         private ?Tagline $tagline,
         private ?string $description,
         private ?string $headerImagePath,
@@ -53,10 +53,10 @@ final class League
         LeagueName $name,
         LeagueSlug $slug,
         string $logoPath,
-        string $timezone,
         int $ownerUserId,
-        EmailAddress $contactEmail,
-        string $organizerName,
+        ?string $timezone = null,
+        ?EmailAddress $contactEmail = null,
+        ?string $organizerName = null,
         ?Tagline $tagline = null,
         ?string $description = null,
         ?string $headerImagePath = null,
@@ -119,10 +119,10 @@ final class League
         LeagueName $name,
         LeagueSlug $slug,
         string $logoPath,
-        string $timezone,
         int $ownerUserId,
-        EmailAddress $contactEmail,
-        string $organizerName,
+        ?string $timezone,
+        ?EmailAddress $contactEmail,
+        ?string $organizerName,
         ?Tagline $tagline,
         ?string $description,
         ?string $headerImagePath,
@@ -187,7 +187,7 @@ final class League
         return $this->logoPath;
     }
 
-    public function timezone(): string
+    public function timezone(): ?string
     {
         return $this->timezone;
     }
@@ -197,12 +197,12 @@ final class League
         return $this->ownerUserId;
     }
 
-    public function contactEmail(): EmailAddress
+    public function contactEmail(): ?EmailAddress
     {
         return $this->contactEmail;
     }
 
-    public function organizerName(): string
+    public function organizerName(): ?string
     {
         return $this->organizerName;
     }
@@ -334,8 +334,8 @@ final class League
      * Update contact information.
      */
     public function updateContactInfo(
-        EmailAddress $contactEmail,
-        string $organizerName
+        ?EmailAddress $contactEmail,
+        ?string $organizerName
     ): void {
         $this->contactEmail = $contactEmail;
         $this->organizerName = $organizerName;
@@ -374,7 +374,7 @@ final class League
     /**
      * Update timezone.
      */
-    public function updateTimezone(string $timezone): void
+    public function updateTimezone(?string $timezone): void
     {
         $this->timezone = $timezone;
         $this->recordEvent(new LeagueUpdated($this));
@@ -395,6 +395,15 @@ final class League
     public function updateHeaderImage(?string $headerImagePath): void
     {
         $this->headerImagePath = $headerImagePath;
+        $this->recordEvent(new LeagueUpdated($this));
+    }
+
+    /**
+     * Update league slug.
+     */
+    public function updateSlug(LeagueSlug $slug): void
+    {
+        $this->slug = $slug;
         $this->recordEvent(new LeagueUpdated($this));
     }
 

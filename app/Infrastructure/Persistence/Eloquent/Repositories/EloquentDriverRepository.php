@@ -11,6 +11,7 @@ use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\Driver\ValueObjects\DriverName;
 use App\Domain\Driver\ValueObjects\DriverStatus;
 use App\Domain\Driver\ValueObjects\PlatformIdentifiers;
+use App\Domain\Driver\ValueObjects\Slug;
 use App\Infrastructure\Persistence\Eloquent\Models\Driver as DriverEloquent;
 use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
@@ -66,6 +67,7 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         $eloquent->first_name = $driver->name()->firstName();
         $eloquent->last_name = $driver->name()->lastName();
         $eloquent->nickname = $driver->name()->nickname();
+        $eloquent->slug = $driver->slug()->value();
         $eloquent->email = $driver->email();
         $eloquent->phone = $driver->phone();
         $eloquent->psn_id = $driver->platformIds()->psnId();
@@ -140,6 +142,7 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
                 $q->where('drivers.first_name', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.last_name', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.nickname', 'LIKE', "%{$search}%")
+                    ->orWhere('drivers.slug', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.psn_id', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.gt7_id', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.iracing_id', 'LIKE', "%{$search}%");
@@ -196,6 +199,7 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             $driver = DriverEntity::reconstitute(
                 id: $row->driver_id,
                 name: DriverName::from($row->first_name, $row->last_name, $row->nickname),
+                slug: Slug::from($row->slug),
                 platformIds: PlatformIdentifiers::from(
                     $row->psn_id,
                     $row->gt7_id,
@@ -260,6 +264,7 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         $driver = DriverEntity::reconstitute(
             id: $row->driver_id,
             name: DriverName::from($row->first_name, $row->last_name, $row->nickname),
+            slug: Slug::from($row->slug),
             platformIds: PlatformIdentifiers::from(
                 $row->psn_id,
                 $row->gt7_id,
@@ -366,6 +371,7 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
                 $eloquent->last_name,
                 $eloquent->nickname
             ),
+            slug: Slug::from($eloquent->slug),
             platformIds: PlatformIdentifiers::from(
                 $eloquent->psn_id,
                 $eloquent->gt7_id,

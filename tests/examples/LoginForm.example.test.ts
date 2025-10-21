@@ -72,7 +72,7 @@ const LoginForm = {
 
       try {
         const response = await fetch(
-          'http://virtualracingleagues.localhost:8000/api/login',
+          'http://virtualracingleagues.localhost/api/login',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -203,7 +203,7 @@ describe('LoginForm (Example Test with Testing Library + MSW)', () => {
   it('can override MSW handler for specific test case', async () => {
     // Override the default login handler for this specific test
     server.use(
-      http.post('http://virtualracingleagues.localhost:8000/api/login', () => {
+      http.post('http://virtualracingleagues.localhost/api/login', () => {
         return HttpResponse.json(
           {
             success: false,

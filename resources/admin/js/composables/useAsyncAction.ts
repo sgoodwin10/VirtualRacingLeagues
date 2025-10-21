@@ -83,7 +83,7 @@ export interface UseAsyncActionReturn<T> {
    */
   execute: (
     asyncFn: () => Promise<T>,
-    options?: AsyncActionOptions<T>
+    options?: AsyncActionOptions<T>,
   ) => Promise<AsyncActionResult<T>>;
 
   /**
@@ -165,7 +165,7 @@ export function useAsyncAction<T = unknown>(): UseAsyncActionReturn<T> {
    */
   const execute = async (
     asyncFn: () => Promise<T>,
-    options: AsyncActionOptions<T> = {}
+    options: AsyncActionOptions<T> = {},
   ): Promise<AsyncActionResult<T>> => {
     const {
       onSuccess,
@@ -283,7 +283,7 @@ export function useAsyncActionGroup<
         }
         return undefined;
       },
-    }
+    },
   ) as Record<keyof T, UseAsyncActionReturn<unknown>>;
 }
 
@@ -310,7 +310,7 @@ export function useAsyncActionGroup<
  * @returns The same record with full type information
  */
 export function createAsyncActions<T extends Record<string, UseAsyncActionReturn<any>>>(
-  actions: T
+  actions: T,
 ): T {
   return actions;
 }

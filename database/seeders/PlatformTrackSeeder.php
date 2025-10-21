@@ -15,7 +15,9 @@ class PlatformTrackSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('platform_tracks')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // Get Gran Turismo 7 platform ID
         $gt7Platform = DB::table('platforms')->where('slug', 'gran-turismo-7')->first();

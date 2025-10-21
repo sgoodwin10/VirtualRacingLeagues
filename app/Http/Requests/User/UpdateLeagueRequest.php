@@ -40,10 +40,13 @@ class UpdateLeagueRequest extends FormRequest
     {
         $input = $this->all();
 
-        // Convert empty strings to null for optional fields
+        // Convert empty strings and string "null" to null for optional fields
         $optionalFields = [
             'tagline',
             'description',
+            'timezone',
+            'contact_email',
+            'organizer_name',
             'discord_url',
             'website_url',
             'twitter_handle',
@@ -53,7 +56,7 @@ class UpdateLeagueRequest extends FormRequest
         ];
 
         foreach ($optionalFields as $field) {
-            if (isset($input[$field]) && $input[$field] === '') {
+            if (isset($input[$field]) && ($input[$field] === '' || $input[$field] === 'null')) {
                 $input[$field] = null;
             }
         }
@@ -156,19 +159,19 @@ class UpdateLeagueRequest extends FormRequest
                 Rule::in(['public', 'unlisted', 'private']),
             ],
             'timezone' => [
-                'sometimes',
+                'nullable',
                 'string',
                 'timezone',
             ],
 
             // Contact Information
             'contact_email' => [
-                'sometimes',
+                'nullable',
                 'email',
                 'max:255',
             ],
             'organizer_name' => [
-                'sometimes',
+                'nullable',
                 'string',
                 'min:2',
                 'max:100',

@@ -28,7 +28,7 @@ return new class extends Migration
             $table->index('platform_track_location_id');
             $table->index('slug');
             $table->index('is_active');
-            $table->unique(['platform_id', 'platform_track_location_id', 'slug']);
+            $table->unique(['platform_id', 'platform_track_location_id', 'slug'], 'platform_tracks_unique');
         });
     }
 

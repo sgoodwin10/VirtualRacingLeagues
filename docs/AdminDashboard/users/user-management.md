@@ -14,7 +14,7 @@ The User Management feature allows administrators to view, create, edit, and man
 
 **Navigation:**
 - Sidebar: Click "Users"
-- Direct URL: `http://your-domain.localhost:8000/users`
+- Direct URL: `http://your-domain.localhost/users`
 
 ## Features
 

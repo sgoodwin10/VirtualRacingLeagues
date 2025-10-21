@@ -6,6 +6,7 @@ namespace App\Domain\Driver\Entities;
 
 use App\Domain\Driver\ValueObjects\DriverName;
 use App\Domain\Driver\ValueObjects\PlatformIdentifiers;
+use App\Domain\Driver\ValueObjects\Slug;
 use DateTimeImmutable;
 
 final class Driver
@@ -16,6 +17,7 @@ final class Driver
     private function __construct(
         private ?int $id,
         private DriverName $name,
+        private Slug $slug,
         private PlatformIdentifiers $platformIds,
         private ?string $email,
         private ?string $phone,
@@ -32,11 +34,20 @@ final class Driver
         DriverName $name,
         PlatformIdentifiers $platformIds,
         ?string $email = null,
-        ?string $phone = null
+        ?string $phone = null,
+        ?Slug $slug = null
     ): self {
+        // Generate slug from name if not provided
+        $generatedSlug = $slug ?? Slug::generate(
+            $name->firstName(),
+            $name->lastName(),
+            $name->nickname()
+        );
+
         return new self(
             id: null,
             name: $name,
+            slug: $generatedSlug,
             platformIds: $platformIds,
             email: $email,
             phone: $phone,
@@ -52,6 +63,7 @@ final class Driver
     public static function reconstitute(
         int $id,
         DriverName $name,
+        Slug $slug,
         PlatformIdentifiers $platformIds,
         ?string $email,
         ?string $phone,
@@ -62,6 +74,7 @@ final class Driver
         return new self(
             id: $id,
             name: $name,
+            slug: $slug,
             platformIds: $platformIds,
             email: $email,
             phone: $phone,
@@ -80,6 +93,11 @@ final class Driver
     public function name(): DriverName
     {
         return $this->name;
+    }
+
+    public function slug(): Slug
+    {
+        return $this->slug;
     }
 
     public function platformIds(): PlatformIdentifiers
@@ -126,6 +144,11 @@ final class Driver
         ?string $phone
     ): void {
         $this->name = $name;
+        $this->slug = Slug::generate(
+            $name->firstName(),
+            $name->lastName(),
+            $name->nickname()
+        );
         $this->platformIds = $platformIds;
         $this->email = $email;
         $this->phone = $phone;
@@ -135,6 +158,17 @@ final class Driver
     public function updateName(DriverName $name): void
     {
         $this->name = $name;
+        $this->slug = Slug::generate(
+            $name->firstName(),
+            $name->lastName(),
+            $name->nickname()
+        );
+        $this->updatedAt = new DateTimeImmutable();
+    }
+
+    public function updateSlug(Slug $slug): void
+    {
+        $this->slug = $slug;
         $this->updatedAt = new DateTimeImmutable();
     }
 

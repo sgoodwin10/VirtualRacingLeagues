@@ -33,7 +33,7 @@ The **User Dashboard** is an **authenticated-only** Single Page Application (SPA
 - Shares session cookies with public site via subdomain configuration
 - Users who are not authenticated are automatically redirected to the public site login page
 
-**Access URL**: `http://app.virtualracingleagues.localhost:8000`
+**Access URL**: `http://app.virtualracingleagues.localhost`
 
 ---
 
@@ -274,7 +274,7 @@ SESSION_SAME_SITE=lax
 **Sanctum Domains** (`config/sanctum.php`):
 ```php
 'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS',
-    'virtualracingleagues.localhost:8000,app.virtualracingleagues.localhost:8000'
+    'virtualracingleagues.localhost,app.virtualracingleagues.localhost'
 ))
 ```
 
@@ -996,7 +996,7 @@ Create tests for:
 # Start dev server
 npm run dev
 
-# Navigate to http://app.virtualracingleagues.localhost:8000
+# Navigate to http://app.virtualracingleagues.localhost
 # Test the new feature
 ```
 

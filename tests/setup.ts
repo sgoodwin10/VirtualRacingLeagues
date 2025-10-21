@@ -17,19 +17,24 @@ import '@testing-library/jest-dom/vitest';
 // Enable API mocking for all tests
 setupMockServer();
 
-// Mock window.matchMedia (used by PrimeVue and responsive components)
+// Mock window.matchMedia (used by PrimeVue, VueUse, and responsive components)
+// This mock needs to support both direct access and as a function
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
+  configurable: true,
+  value: vi.fn((query: string) => {
+    const mediaQueryList = {
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    };
+    return mediaQueryList;
+  }),
 });
 
 // Mock IntersectionObserver (used by lazy loading, infinite scroll, etc.)
@@ -65,22 +70,39 @@ Object.defineProperty(window, 'scrollTo', {
   value: vi.fn(),
 });
 
+// Create a proper localStorage mock that actually stores values
+const createStorageMock = () => {
+  const store: Record<string, string> = {};
+
+  return {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      Object.keys(store).forEach((key) => delete store[key]);
+    }),
+    get length() {
+      return Object.keys(store).length;
+    },
+    key: vi.fn((index: number) => {
+      const keys = Object.keys(store);
+      return keys[index] || null;
+    }),
+  };
+};
+
 Object.defineProperty(window, 'localStorage', {
-  value: {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-  },
+  value: createStorageMock(),
+  writable: true,
 });
 
 Object.defineProperty(window, 'sessionStorage', {
-  value: {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-  },
+  value: createStorageMock(),
+  writable: true,
 });
 
 // Suppress console warnings in tests (optional - comment out if you want to see warnings)

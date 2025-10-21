@@ -225,7 +225,7 @@ watch(
       errors.value = {};
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 /**

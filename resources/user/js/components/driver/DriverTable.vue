@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { onMounted } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import DriverStatusBadge from './DriverStatusBadge.vue';
+import { useLeagueStore } from '@user/stores/leagueStore';
 import type { LeagueDriver } from '@user/types/driver';
-import type { Platform } from '@user/types/league';
 
 interface Props {
   drivers?: LeagueDriver[];
   loading?: boolean;
-  leaguePlatforms?: Platform[];
+  leagueId?: number;
 }
 
 interface Emits {
@@ -22,9 +22,10 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   drivers: () => [],
   loading: false,
-  leaguePlatforms: () => [],
 });
 const emit = defineEmits<Emits>();
+
+const leagueStore = useLeagueStore();
 
 /**
  * Get driver's display name from nested driver object
@@ -48,16 +49,16 @@ const getDriverNickname = (leagueDriver: LeagueDriver): string | null => {
 };
 
 /**
- * Check if league uses a specific platform
+ * Get the value for a dynamic platform column
  */
-const hasPlatform = computed(() => {
-  const platformSlugs = props.leaguePlatforms.map(p => p.slug.toLowerCase());
-  return {
-    psn: platformSlugs.includes('playstation') || platformSlugs.includes('psn'),
-    gt7: platformSlugs.includes('gran turismo') || platformSlugs.includes('gt7'),
-    iracing: platformSlugs.includes('iracing'),
-  };
-});
+const getPlatformValue = (leagueDriver: LeagueDriver, field: string): string => {
+  const driver = leagueDriver.driver;
+  if (!driver) return '-';
+
+  // Access the field dynamically from the driver object
+  const value = driver[field as keyof typeof driver];
+  return value != null ? String(value) : '-';
+};
 
 /**
  * Handle edit button click
@@ -79,6 +80,19 @@ const handleView = (driver: LeagueDriver): void => {
 const handleRemove = (driver: LeagueDriver): void => {
   emit('remove', driver);
 };
+
+/**
+ * Fetch platform columns on mount if league is provided
+ */
+onMounted(async () => {
+  if (props.leagueId) {
+    try {
+      await leagueStore.fetchDriverColumnsForLeague(props.leagueId);
+    } catch (error) {
+      console.error('Failed to fetch platform columns:', error);
+    }
+  }
+});
 </script>
 
 <template>
@@ -101,12 +115,6 @@ const handleRemove = (driver: LeagueDriver): void => {
       <div class="text-center py-8 text-gray-500">Loading drivers...</div>
     </template>
 
-    <Column field="driver_number" header="#" style="width: 80px">
-      <template #body="{ data }">
-        <span class="font-semibold">{{ data.driver_number ?? '-' }}</span>
-      </template>
-    </Column>
-
     <Column field="status" header="Status" style="width: 120px">
       <template #body="{ data }">
         <DriverStatusBadge :status="data.status" />
@@ -124,27 +132,16 @@ const handleRemove = (driver: LeagueDriver): void => {
       </template>
     </Column>
 
-    <!-- Platform Columns - Only show platforms used by the league -->
-    <Column v-if="hasPlatform.psn" field="driver.psn_id" header="PSN ID" style="width: 150px">
-      <template #body="{ data }">
-        <span class="text-sm">{{ data.driver?.psn_id || '-' }}</span>
-      </template>
-    </Column>
-
-    <Column v-if="hasPlatform.gt7" field="driver.gt7_id" header="GT7 ID" style="width: 150px">
-      <template #body="{ data }">
-        <span class="text-sm">{{ data.driver?.gt7_id || '-' }}</span>
-      </template>
-    </Column>
-
+    <!-- Dynamic Platform Columns - Rendered based on league's platforms -->
     <Column
-      v-if="hasPlatform.iracing"
-      field="driver.iracing_id"
-      header="iRacing ID"
+      v-for="column in leagueStore.platformColumns"
+      :key="column.field"
+      :field="`driver.${column.field}`"
+      :header="column.label"
       style="width: 150px"
     >
       <template #body="{ data }">
-        <span class="text-sm">{{ data.driver?.iracing_id || '-' }}</span>
+        <span class="text-sm">{{ getPlatformValue(data, column.field) }}</span>
       </template>
     </Column>
 

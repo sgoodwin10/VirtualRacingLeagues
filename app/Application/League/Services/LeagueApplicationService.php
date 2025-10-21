@@ -8,6 +8,7 @@ use App\Application\League\DTOs\CreateLeagueData;
 use App\Application\League\DTOs\LeagueData;
 use App\Application\League\DTOs\LeaguePlatformData;
 use App\Application\League\DTOs\UpdateLeagueData;
+use App\Domain\Driver\Services\DriverPlatformColumnService;
 use App\Domain\League\Entities\League;
 use App\Domain\League\Exceptions\InvalidPlatformException;
 use App\Domain\League\Exceptions\LeagueLimitReachedException;
@@ -34,6 +35,7 @@ final class LeagueApplicationService
 
     public function __construct(
         private readonly LeagueRepositoryInterface $leagueRepository,
+        private readonly DriverPlatformColumnService $driverPlatformColumnService,
     ) {
     }
 
@@ -78,9 +80,9 @@ final class LeagueApplicationService
                 name: LeagueName::from($data->name),
                 slug: $slug,
                 logoPath: $logoPath,
-                timezone: $data->timezone,
                 ownerUserId: $userId,
-                contactEmail: EmailAddress::from($data->contact_email),
+                timezone: $data->timezone,
+                contactEmail: $data->contact_email ? EmailAddress::from($data->contact_email) : null,
                 organizerName: $data->organizer_name,
                 tagline: Tagline::fromNullable($data->tagline),
                 description: $data->description,
@@ -114,17 +116,19 @@ final class LeagueApplicationService
     /**
      * Check slug availability (for blur validation).
      *
+     * @param string $name The league name to generate a slug from
+     * @param int|null $excludeLeagueId Optional league ID to exclude from the check (for updates)
      * @return array{available: bool, slug: string, suggestion: string|null}
      */
-    public function checkSlugAvailability(string $name): array
+    public function checkSlugAvailability(string $name, ?int $excludeLeagueId = null): array
     {
         $slug = LeagueSlug::fromName($name);
-        $available = $this->leagueRepository->isSlugAvailable($slug->value());
+        $available = $this->leagueRepository->isSlugAvailable($slug->value(), $excludeLeagueId);
 
         return [
             'available' => $available,
             'slug' => $slug->value(),
-            'suggestion' => $available ? null : $this->generateUniqueSlug($slug)->value(),
+            'suggestion' => $available ? null : $this->generateUniqueSlug($slug, $excludeLeagueId)->value(),
         ];
     }
 
@@ -189,6 +193,13 @@ final class LeagueApplicationService
                     $data->tagline !== null ? Tagline::fromNullable($data->tagline) : $league->tagline(),
                     $data->description !== null ? $data->description : $league->description()
                 );
+            }
+
+            // Regenerate slug if name is changing
+            if ($data->name !== null) {
+                $baseSlug = LeagueSlug::fromName($data->name);
+                $newSlug = $this->generateUniqueSlug($baseSlug, $leagueId);
+                $league->updateSlug($newSlug);
             }
 
             // Update visibility if provided
@@ -303,13 +314,16 @@ final class LeagueApplicationService
 
     /**
      * Generate a unique slug by appending a counter if needed.
+     *
+     * @param LeagueSlug $baseSlug The base slug to make unique
+     * @param int|null $excludeLeagueId Optional league ID to exclude from the check (for updates)
      */
-    private function generateUniqueSlug(LeagueSlug $baseSlug): LeagueSlug
+    private function generateUniqueSlug(LeagueSlug $baseSlug, ?int $excludeLeagueId = null): LeagueSlug
     {
         $slug = $baseSlug;
         $counter = 1;
 
-        while (!$this->leagueRepository->isSlugAvailable($slug->value())) {
+        while (!$this->leagueRepository->isSlugAvailable($slug->value(), $excludeLeagueId)) {
             $newSlug = $baseSlug->value() . '-' . str_pad((string)$counter, 2, '0', STR_PAD_LEFT);
             $slug = LeagueSlug::from($newSlug);
             $counter++;
@@ -378,6 +392,45 @@ final class LeagueApplicationService
             || $data->instagram_handle !== null
             || $data->youtube_url !== null
             || $data->twitch_url !== null;
+    }
+
+    /**
+     * Get driver columns for a league's platforms.
+     *
+     * @param int $leagueId
+     * @return array<int, array{field: string, label: string, type: string}>
+     * @throws LeagueNotFoundException
+     */
+    public function getDriverColumnsForLeague(int $leagueId): array
+    {
+        $league = $this->leagueRepository->findById($leagueId);
+        return $this->driverPlatformColumnService->getColumnsForLeague($league->platformIds());
+    }
+
+    /**
+     * Get driver form fields for a league's platforms.
+     *
+     * @param int $leagueId
+     * @return array<int, array{field: string, label: string, type: string}>
+     * @throws LeagueNotFoundException
+     */
+    public function getDriverFormFieldsForLeague(int $leagueId): array
+    {
+        $league = $this->leagueRepository->findById($leagueId);
+        return $this->driverPlatformColumnService->getFormFieldsForLeague($league->platformIds());
+    }
+
+    /**
+     * Get driver CSV headers for a league's platforms.
+     *
+     * @param int $leagueId
+     * @return array<int, array{field: string, label: string, type: string}>
+     * @throws LeagueNotFoundException
+     */
+    public function getDriverCsvHeadersForLeague(int $leagueId): array
+    {
+        $league = $this->leagueRepository->findById($leagueId);
+        return $this->driverPlatformColumnService->getCsvHeadersForLeague($league->platformIds());
     }
 
     /**

@@ -11,6 +11,8 @@ import type {
   Timezone,
   CreateLeagueForm,
   UpdateLeagueForm,
+  PlatformColumn,
+  PlatformFormField,
 } from '@user/types/league';
 import {
   getPlatforms,
@@ -23,6 +25,9 @@ import {
   deleteLeague,
   buildLeagueFormData,
   buildUpdateLeagueFormData,
+  getDriverColumns,
+  getDriverFormFields,
+  getDriverCsvHeaders,
 } from '@user/services/leagueService';
 
 export const useLeagueStore = defineStore('league', () => {
@@ -34,6 +39,11 @@ export const useLeagueStore = defineStore('league', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
   const currentStep = ref(0);
+
+  // Platform configuration state
+  const platformColumns = ref<PlatformColumn[]>([]);
+  const platformFormFields = ref<PlatformFormField[]>([]);
+  const platformCsvHeaders = ref<string[]>([]);
 
   // Getters
   const hasReachedFreeLimit = computed(() => {
@@ -98,18 +108,27 @@ export const useLeagueStore = defineStore('league', () => {
   /**
    * Check if a league slug is available
    * @param name - The league name to check
+   * @param leagueId - Optional league ID to exclude from the check (for edit mode)
+   * @returns SlugCheckResponse with availability status, generated slug, and suggestion if unavailable
    */
-  async function checkSlug(name: string): Promise<boolean> {
+  async function checkSlug(
+    name: string,
+    leagueId?: number,
+  ): Promise<{ available: boolean; slug: string; suggestion: string | null }> {
     if (!name.trim()) {
-      return false;
+      return { available: false, slug: '', suggestion: null };
     }
 
     try {
-      const result = await checkSlugAvailability(name);
-      return result.available;
+      const result = await checkSlugAvailability(name, leagueId);
+      return {
+        available: result.available,
+        slug: result.slug,
+        suggestion: result.suggestion,
+      };
     } catch (err: unknown) {
       console.error('Slug check error:', err);
-      return false;
+      return { available: false, slug: '', suggestion: null };
     }
   }
 
@@ -261,6 +280,66 @@ export const useLeagueStore = defineStore('league', () => {
     error.value = null;
   }
 
+  /**
+   * Fetch driver columns configuration for a league's platforms
+   * @param leagueId - League ID
+   */
+  async function fetchDriverColumnsForLeague(leagueId: number): Promise<void> {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      platformColumns.value = await getDriverColumns(leagueId);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load driver columns configuration';
+      error.value = errorMessage;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  /**
+   * Fetch driver form fields configuration for a league's platforms
+   * @param leagueId - League ID
+   */
+  async function fetchDriverFormFieldsForLeague(leagueId: number): Promise<void> {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      platformFormFields.value = await getDriverFormFields(leagueId);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load driver form fields configuration';
+      error.value = errorMessage;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  /**
+   * Fetch CSV headers for driver import for a league's platforms
+   * @param leagueId - League ID
+   */
+  async function fetchDriverCsvHeadersForLeague(leagueId: number): Promise<void> {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      platformCsvHeaders.value = await getDriverCsvHeaders(leagueId);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load CSV headers configuration';
+      error.value = errorMessage;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     // State
     leagues,
@@ -270,6 +349,9 @@ export const useLeagueStore = defineStore('league', () => {
     loading,
     error,
     currentStep,
+    platformColumns,
+    platformFormFields,
+    platformCsvHeaders,
 
     // Getters
     hasReachedFreeLimit,
@@ -288,5 +370,8 @@ export const useLeagueStore = defineStore('league', () => {
     setCurrentStep,
     resetWizard,
     clearError,
+    fetchDriverColumnsForLeague,
+    fetchDriverFormFieldsForLeague,
+    fetchDriverCsvHeadersForLeague,
   };
 });

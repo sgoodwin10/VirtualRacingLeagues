@@ -142,7 +142,7 @@ export function useErrorToast() {
   const showErrorToast = (
     error: unknown,
     fallbackMessage?: string,
-    options: ErrorToastOptions = {}
+    options: ErrorToastOptions = {},
   ): void => {
     const { customMessage, life = 5000, showValidationErrors = false } = options;
 

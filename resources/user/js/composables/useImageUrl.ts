@@ -16,7 +16,7 @@ import type { Ref, ComputedRef } from 'vue';
  */
 export function useImageUrl(
   imageUrl: Ref<string | null | undefined> | (() => string | null | undefined),
-  fallbackUrl?: string
+  fallbackUrl?: string,
 ) {
   const isLoading = ref(true);
   const hasError = ref(false);

@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
+import { PhUsers, PhFlagCheckered } from '@phosphor-icons/vue';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Chip from 'primevue/chip';
@@ -10,12 +11,20 @@ import { getLeagueById } from '@user/services/leagueService';
 import { useImageUrl } from '@user/composables/useImageUrl';
 import { useDateFormatter } from '@user/composables/useDateFormatter';
 import DriverManagementDrawer from '@user/components/driver/DriverManagementDrawer.vue';
+import ReadOnlyDriverTable from '@user/components/driver/ReadOnlyDriverTable.vue';
 import LeagueWizardDrawer from '@user/components/league/modals/LeagueWizardDrawer.vue';
 import type { League } from '@user/types/league';
+import HTag from '@user/components/common/HTag.vue';
+import Tag from 'primevue/tag';
+import BasePanel from '@user/components/common/panels/BasePanel.vue';
+import { useDriverStore } from '@user/stores/driverStore';
+import FormLabel from '@user/components/common/forms/FormLabel.vue';
+import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadcrumbs.vue';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const driverStore = useDriverStore();
 
 const league = ref<League | null>(null);
 const isLoading = ref(true);
@@ -31,13 +40,14 @@ const leagueIdNumber = computed(() => parseInt(leagueId.value, 10));
 
 // Image handling with composables
 const logo = computed(() =>
-  useImageUrl(() => league.value?.logo_url, '/images/default-league-logo.png')
+  useImageUrl(() => league.value?.logo_url, '/images/default-league-logo.png'),
 );
 
 const headerImage = computed(() => useImageUrl(() => league.value?.header_image_url));
 
 onMounted(async () => {
   await loadLeague();
+  await loadDrivers();
 });
 
 async function loadLeague(): Promise<void> {
@@ -66,6 +76,24 @@ async function loadLeague(): Promise<void> {
   }
 }
 
+async function loadDrivers(): Promise<void> {
+  if (!leagueIdNumber.value) {
+    return;
+  }
+
+  try {
+    await driverStore.fetchLeagueDrivers(leagueIdNumber.value);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to load drivers';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 3000,
+    });
+  }
+}
+
 function handleCreateCompetitions(): void {
   toast.add({
     severity: 'info',
@@ -88,9 +116,48 @@ function handleLeagueSaved(): void {
   loadLeague();
 }
 
-function goBack(): void {
-  router.push({ name: 'leagues' });
-}
+const breadcrumbItems = computed((): BreadcrumbItem[] => [
+  {
+    label: 'Dashboard',
+    to: { name: 'home' },
+    icon: 'pi-home',
+  },
+  {
+    label: 'Leagues',
+    to: { name: 'leagues' },
+  },
+  {
+    label: league.value?.name || 'League Details',
+  },
+]);
+
+const visibilitySeverity = computed((): 'success' | 'info' | 'warning' => {
+  if (!league.value) return 'info';
+
+  switch (league.value.visibility) {
+    case 'public':
+      return 'info';
+    case 'private':
+      return 'warning';
+    case 'unlisted':
+      return 'info';
+    default:
+      return 'info';
+  }
+});
+
+const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' => {
+  if (!league.value) return 'info';
+
+  switch (league.value.status) {
+    case 'active':
+      return 'success';
+    case 'archived':
+      return 'danger';
+    default:
+      return 'info';
+  }
+});
 </script>
 
 <template>
@@ -112,7 +179,11 @@ function goBack(): void {
             <p class="text-red-700">
               {{ error || 'The league you are looking for does not exist or has been removed.' }}
             </p>
-            <Button label="Back to Leagues" icon="pi pi-arrow-left" @click="goBack" />
+            <Button
+              label="Back to Leagues"
+              icon="pi pi-arrow-left"
+              @click="router.push({ name: 'leagues' })"
+            />
           </div>
         </template>
       </Card>
@@ -120,17 +191,11 @@ function goBack(): void {
 
     <!-- League Content -->
     <div v-else class="space-y-6">
-      <!-- Back Button -->
-      <Button
-        label="Back to Leagues"
-        icon="pi pi-arrow-left"
-        text
-        severity="secondary"
-        @click="goBack"
-      />
+      <!-- Breadcrumbs -->
+      <Breadcrumbs :items="breadcrumbItems" />
 
       <!-- Header Image and Logo -->
-      <Card class="overflow-hidden">
+      <Card class="overflow-hidden p-0">
         <template #header>
           <div class="relative">
             <!-- Header Image with Error Handling -->
@@ -153,21 +218,46 @@ function goBack(): void {
               @error="logo.handleError"
             />
 
-            <div class="absolute top-0 right-0 flex flex-col items-center gap-3 p-3">
-              <Chip
-                :label="league.visibility"
-                :class="{
-                  'bg-green-100 text-green-800': league.visibility === 'public',
-                  'bg-yellow-100 text-yellow-800': league.visibility === 'private',
-                  'bg-blue-100 text-blue-800': league.visibility === 'unlisted',
-                }"
+            <div class="absolute top-0 right-0 flex flex-col items-center gap-3 p-2">
+              <Tag
+                icon="pi pi-eye"
+                :value="league.visibility.toUpperCase()"
+                :severity="visibilitySeverity"
               />
-              <Chip
-                :label="league.status"
-                :class="{
-                  'bg-emerald-100 text-emerald-800': league.status === 'active',
-                  'bg-gray-100 text-gray-800': league.status === 'archived',
-                }"
+            </div>
+          </div>
+          <!-- Title and Visibility -->
+          <div
+            class="flex flex-wrap items-start justify-between gap-4 bg-slate-100 border-b border-gray-200 p-3 shadow-lg"
+          >
+            <HTag additional-classes="ml-32">{{ league.name }}</HTag>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+              <Button
+                label="Create Competitions"
+                icon="pi pi-trophy"
+                severity="success"
+                size="small"
+                class="bg-white"
+                outlined
+                @click="handleCreateCompetitions"
+              />
+              <Button
+                label="Create Drivers"
+                icon="pi pi-users"
+                severity="info"
+                size="small"
+                @click="handleCreateDrivers"
+              />
+              <Button
+                label="Edit League"
+                icon="pi pi-pencil"
+                severity="secondary"
+                class="bg-white"
+                outlined
+                size="small"
+                @click="handleEditLeague"
               />
             </div>
           </div>
@@ -175,211 +265,236 @@ function goBack(): void {
 
         <template #content>
           <div class="space-y-6">
-            <!-- Title and Visibility -->
-            <div class="flex flex-wrap items-start justify-between gap-4 bg-gray-100 border-b border-gray-200 p-3">
-              <div>
-                <h1 class="text-4xl font-bold pl-32">{{ league.name }}</h1>
-              </div>
-
-              <!-- Action Buttons -->
-              <div class="flex gap-3">
-                <Button
-                  label="Create Competitions"
-                  icon="pi pi-trophy"
-                  severity="success"
-                  size="small"
-                  class="bg-white"
-                  outlined
-                  @click="handleCreateCompetitions"
-                />
-                <Button
-                  label="Create Drivers"
-                  icon="pi pi-users"
-                  severity="info"
-                  size="small"
-                  @click="handleCreateDrivers"
-                />
-                <Button
-                  label="Edit League"
-                  icon="pi pi-pencil"
-                  severity="secondary"
-                  class="bg-white"
-                  outlined
-                  size="small"
-                  @click="handleEditLeague"
-                />
-              </div>
+            <!-- Hero Section: Tagline -->
+            <div v-if="league.tagline" class="text-center py-4 hidden">
+              <p class="text-xl text-gray-600 italic font-light">{{ league.tagline }}</p>
             </div>
 
-            <!-- Tagline -->
-            <p v-if="league.tagline" class="text-xl text-gray-600 italic p-0">
-              {{ league.tagline }}
-            </p>
+            <!-- Main Content: Two-Column Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <!-- Left Column: Description (2/3 width) -->
+              <div class="lg:col-span-2 space-y-4">
+                <BasePanel>
+                  <template #header>
+                    <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
+                      <i class="pi pi-info-circle text-lg"></i>
+                      <span class="font-semibold">About</span>
+                    </div>
+                  </template>
 
-            <!-- Description -->
-            <div v-if="league.description" class="prose max-w-none p-4">
-              <h2 class="text-2xl font-semibold mb-3">About</h2>
-              <div class="text-gray-700" v-html="league.description"></div>
-            </div>
+                  <div v-if="league.description" class="prose max-w-none pt-4">
+                    <!-- eslint-disable-next-line vue/no-v-html -->
+                    <div class="text-gray-700 leading-relaxed" v-html="league.description"></div>
+                  </div>
+                  <div v-else class="text-gray-500 italic">No description provided</div>
+                </BasePanel>
+                <BasePanel>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Organizer -->
+                    <div>
+                      <FormLabel text="Contact Name" />
+                      <p class="text-gray-700 mt-1">{{ league.organizer_name }}</p>
+                    </div>
 
-            <!-- Details Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t p-4">
-              <!-- Platforms -->
-              <div>
-                <h3 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <i class="pi pi-desktop"></i>
-                  Platforms
-                </h3>
-                <div
-                  v-if="league.platforms && league.platforms.length > 0"
-                  class="flex flex-wrap gap-2"
+                    <!-- Contact Email -->
+                    <div v-if="league.contact_email">
+                      <FormLabel text="Contact Email" />
+                      <a
+                        :href="`mailto:${league.contact_email}`"
+                        class="text-blue-600 hover:underline block mt-1"
+                      >
+                        {{ league.contact_email }}
+                      </a>
+                    </div>
+                  </div>
+                </BasePanel>
+
+                <!-- Social Media & Links Section -->
+                <BasePanel
+                  v-if="
+                    league.discord_url ||
+                    league.website_url ||
+                    league.twitter_handle ||
+                    league.instagram_handle ||
+                    league.youtube_url ||
+                    league.twitch_url
+                  "
                 >
-                  <Chip
-                    v-for="platform in league.platforms"
-                    :key="platform.id"
-                    :label="platform.name"
-                    class="bg-blue-100 text-blue-800"
-                  />
-                </div>
-                <p v-else class="text-gray-500">No platforms specified</p>
+                  <div class="flex flex-wrap gap-3">
+                    <Button
+                      v-if="league.discord_url"
+                      v-tooltip.top="'Discord'"
+                      icon="pi pi-discord"
+                      size="small"
+                      class="bg-indigo-600 hover:bg-indigo-700 text-white border-0"
+                      :href="league.discord_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      as="a"
+                    />
+                    <Button
+                      v-if="league.website_url"
+                      v-tooltip.top="'Website'"
+                      icon="pi pi-globe"
+                      size="small"
+                      class="bg-blue-600 hover:bg-blue-700 text-white border-0"
+                      :href="league.website_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      as="a"
+                    />
+                    <Button
+                      v-if="league.twitter_handle"
+                      v-tooltip.top="'Twitter'"
+                      icon="pi pi-twitter"
+                      size="small"
+                      class="bg-black hover:bg-gray-900 text-white border-0"
+                      :href="`https://twitter.com/${league.twitter_handle}`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      as="a"
+                    />
+                    <Button
+                      v-if="league.instagram_handle"
+                      v-tooltip.top="'Instagram'"
+                      icon="pi pi-instagram"
+                      size="small"
+                      class="bg-pink-600 hover:bg-pink-700 text-white border-0"
+                      :href="`https://instagram.com/${league.instagram_handle}`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      as="a"
+                    />
+                    <Button
+                      v-if="league.youtube_url"
+                      v-tooltip.top="'YouTube'"
+                      icon="pi pi-youtube"
+                      size="small"
+                      class="bg-red-600 hover:bg-red-700 text-white border-0"
+                      :href="league.youtube_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      as="a"
+                    />
+                    <Button
+                      v-if="league.twitch_url"
+                      v-tooltip.top="'Twitch'"
+                      icon="pi pi-twitch"
+                      size="small"
+                      class="bg-purple-600 hover:bg-purple-700 text-white border-0"
+                      :href="league.twitch_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      as="a"
+                    />
+                  </div>
+                </BasePanel>
               </div>
 
-              <!-- Timezone -->
-              <div>
-                <h3 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <i class="pi pi-clock"></i>
-                  Timezone
-                </h3>
-                <p class="text-gray-700">{{ league.timezone }}</p>
-              </div>
+              <!-- Right Column: Basic Info & Metadata (1/3 width) -->
+              <div class="lg:col-span-1">
+                <BasePanel>
+                  <template #header>
+                    <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
+                      <i class="pi pi-list text-lg"></i>
+                      <span class="font-semibold">Basic Info</span>
+                    </div>
+                  </template>
 
-              <!-- Organizer -->
-              <div>
-                <h3 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <i class="pi pi-user"></i>
-                  Organizer
-                </h3>
-                <p class="text-gray-700">{{ league.organizer_name }}</p>
-              </div>
+                  <div class="space-y-6 pt-4">
+                    <!-- Platforms -->
+                    <div>
+                      <FormLabel text="Platforms" />
+                      <div
+                        v-if="league.platforms && league.platforms.length > 0"
+                        class="flex flex-wrap gap-2 mt-1"
+                      >
+                        <Chip
+                          v-for="platform in league.platforms"
+                          :key="platform.id"
+                          :label="platform.name"
+                          class="bg-blue-100 text-blue-800"
+                        />
+                      </div>
+                      <p v-else class="text-gray-500 text-sm mt-1">No platforms specified</p>
+                    </div>
 
-              <!-- Contact Email -->
-              <div>
-                <h3 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <i class="pi pi-envelope"></i>
-                  Contact Email
-                </h3>
-                <a :href="`mailto:${league.contact_email}`" class="text-blue-600 hover:underline">
-                  {{ league.contact_email }}
-                </a>
-              </div>
+                    <!-- Timezone -->
+                    <div>
+                      <FormLabel text="Timezone" />
+                      <p class="text-gray-700 mt-1">{{ league.timezone }}</p>
+                    </div>
 
-              <!-- Created Date -->
-              <div v-if="league.created_at">
-                <h3 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <i class="pi pi-calendar"></i>
-                  Created
-                </h3>
-                <p class="text-gray-700">{{ formatDate(league.created_at) }}</p>
-              </div>
+                    <!-- Status -->
+                    <div>
+                      <FormLabel text="Status" />
+                      <div class="mt-1">
+                        <Tag
+                          :value="league.status.toUpperCase()"
+                          :severity="statusSeverity"
+                          class="font-medium"
+                        />
+                      </div>
+                    </div>
 
-              <!-- Last Updated -->
-              <div v-if="league.updated_at">
-                <h3 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <i class="pi pi-refresh"></i>
-                  Last Updated
-                </h3>
-                <p class="text-gray-700">{{ formatDate(league.updated_at) }}</p>
+                    <!-- Metadata Section -->
+                    <div
+                      v-if="league.created_at || league.updated_at"
+                      class="pt-4 border-t border-gray-200 space-y-3"
+                    >
+                      <!-- Created Date -->
+                      <div v-if="league.created_at">
+                        <FormLabel text="Created" />
+                        <p class="text-gray-600 text-sm mt-1">
+                          {{ formatDate(league.created_at) }}
+                        </p>
+                      </div>
+
+                      <!-- Last Updated -->
+                      <div v-if="league.updated_at">
+                        <FormLabel text="Last Updated" />
+                        <p class="text-gray-600 text-sm mt-1">
+                          {{ formatDate(league.updated_at) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </BasePanel>
               </div>
             </div>
 
-            <!-- Social Media Links -->
-            <div
-              v-if="
-                league.discord_url ||
-                league.website_url ||
-                league.twitter_handle ||
-                league.instagram_handle ||
-                league.youtube_url ||
-                league.twitch_url
-              "
-              class="pt-6 border-t"
-            >
-              <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <i class="pi pi-share-alt"></i>
-                Social Media & Links
-              </h3>
-              <div class="flex flex-wrap gap-3">
-                <Button
-                  v-if="league.discord_url"
-                  label="Discord"
-                  icon="pi pi-discord"
-                  severity="secondary"
-                  outlined
-                  :href="league.discord_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  as="a"
-                />
-                <Button
-                  v-if="league.website_url"
-                  label="Website"
-                  icon="pi pi-globe"
-                  severity="secondary"
-                  outlined
-                  :href="league.website_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  as="a"
-                />
-                <Button
-                  v-if="league.twitter_handle"
-                  label="Twitter"
-                  icon="pi pi-twitter"
-                  severity="secondary"
-                  outlined
-                  :href="`https://twitter.com/${league.twitter_handle}`"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  as="a"
-                />
-                <Button
-                  v-if="league.instagram_handle"
-                  label="Instagram"
-                  icon="pi pi-instagram"
-                  severity="secondary"
-                  outlined
-                  :href="`https://instagram.com/${league.instagram_handle}`"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  as="a"
-                />
-                <Button
-                  v-if="league.youtube_url"
-                  label="YouTube"
-                  icon="pi pi-youtube"
-                  severity="secondary"
-                  outlined
-                  :href="league.youtube_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  as="a"
-                />
-                <Button
-                  v-if="league.twitch_url"
-                  label="Twitch"
-                  icon="pi pi-twitch"
-                  severity="secondary"
-                  outlined
-                  :href="league.twitch_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  as="a"
-                />
-              </div>
+            <!-- Full-Width Sections Below Main Content -->
+            <div class="space-y-6">
+              <!-- Contact Details Section -->
             </div>
           </div>
         </template>
       </Card>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <BasePanel class="col-span-1" header="Competitions">
+        <template #header>
+          <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
+            <PhFlagCheckered size="24" />
+            <span class="font-semibold">Competitions</span>
+          </div>
+        </template>
+      </BasePanel>
+
+      <BasePanel class="col-span-1">
+        <template #header>
+          <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
+            <PhUsers size="24" />
+            <span class="font-semibold">Drivers</span>
+          </div>
+        </template>
+        <ReadOnlyDriverTable
+          :drivers="driverStore.drivers"
+          :loading="driverStore.loading"
+          :league-id="leagueIdNumber"
+        />
+      </BasePanel>
     </div>
 
     <!-- Driver Management Drawer -->

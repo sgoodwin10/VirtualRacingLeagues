@@ -65,9 +65,15 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         return $this->toDomainEntity($eloquentLeague);
     }
 
-    public function isSlugAvailable(string $slug): bool
+    public function isSlugAvailable(string $slug, ?int $excludeLeagueId = null): bool
     {
-        return !LeagueEloquent::withTrashed()->where('slug', $slug)->exists();
+        $query = LeagueEloquent::withTrashed()->where('slug', $slug);
+
+        if ($excludeLeagueId !== null) {
+            $query->where('id', '!=', $excludeLeagueId);
+        }
+
+        return !$query->exists();
     }
 
     public function findByUserId(int $userId): array
@@ -139,7 +145,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         $eloquentLeague->twitch_url = $league->twitchUrl();
         $eloquentLeague->visibility = $league->visibility()->value;
         $eloquentLeague->status = $league->status();
-        $eloquentLeague->contact_email = $league->contactEmail()->value();
+        $eloquentLeague->contact_email = $league->contactEmail()?->value();
         $eloquentLeague->organizer_name = $league->organizerName();
 
         $eloquentLeague->save();
@@ -222,9 +228,9 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             name: LeagueName::from($eloquentLeague->name),
             slug: LeagueSlug::from($eloquentLeague->slug),
             logoPath: $eloquentLeague->logo_path,
-            timezone: $eloquentLeague->timezone,
             ownerUserId: $eloquentLeague->owner_user_id,
-            contactEmail: EmailAddress::from($eloquentLeague->contact_email),
+            timezone: $eloquentLeague->timezone,
+            contactEmail: $eloquentLeague->contact_email ? EmailAddress::from($eloquentLeague->contact_email) : null,
             organizerName: $eloquentLeague->organizer_name,
             tagline: Tagline::fromNullable($eloquentLeague->tagline),
             description: $eloquentLeague->description,
@@ -262,7 +268,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         $eloquentLeague->visibility = $league->visibility()->value;
         $eloquentLeague->timezone = $league->timezone();
         $eloquentLeague->owner_user_id = $league->ownerUserId();
-        $eloquentLeague->contact_email = $league->contactEmail()->value();
+        $eloquentLeague->contact_email = $league->contactEmail()?->value();
         $eloquentLeague->organizer_name = $league->organizerName();
         $eloquentLeague->status = $league->status();
     }

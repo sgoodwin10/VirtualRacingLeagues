@@ -31,7 +31,7 @@ final class LeagueFactory extends Factory
             'header_image_path' => null,
             'platform_ids' => [1, 2],
             'visibility' => 'public',
-            'timezone' => 'UTC',
+            'timezone' => $this->faker->timezone(),
             'owner_user_id' => UserEloquent::factory(),
             'contact_email' => $this->faker->safeEmail(),
             'organizer_name' => $this->faker->name(),
@@ -43,5 +43,38 @@ final class LeagueFactory extends Factory
             'twitch_url' => null,
             'status' => 'active',
         ];
+    }
+
+    /**
+     * Indicate that the league has no contact information.
+     */
+    public function withoutContactInfo(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'contact_email' => null,
+            'organizer_name' => null,
+            'timezone' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the league has minimal required fields only.
+     */
+    public function minimal(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'tagline' => null,
+            'description' => null,
+            'header_image_path' => null,
+            'contact_email' => null,
+            'organizer_name' => null,
+            'timezone' => null,
+            'discord_url' => null,
+            'website_url' => null,
+            'twitter_handle' => null,
+            'instagram_handle' => null,
+            'youtube_url' => null,
+            'twitch_url' => null,
+        ]);
     }
 }

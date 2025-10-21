@@ -285,7 +285,7 @@ watch(
         loading.value = false;
       }
     }
-  }
+  },
 );
 
 /**

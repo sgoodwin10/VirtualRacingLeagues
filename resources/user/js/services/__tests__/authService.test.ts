@@ -34,7 +34,7 @@ describe('AuthService', () => {
       expect(apiClient.post).toHaveBeenCalledWith(
         '/login',
         { email: 'john@example.com', password: 'password' },
-        { signal: undefined }
+        { signal: undefined },
       );
       expect(result).toEqual(mockUser);
     });
@@ -118,7 +118,7 @@ describe('AuthService', () => {
       expect(apiClient.put).toHaveBeenCalledWith(
         '/profile',
         { first_name: 'Jane', last_name: 'Doe', email: 'jane@example.com' },
-        { signal: undefined }
+        { signal: undefined },
       );
       expect(result).toEqual(updatedUser);
     });

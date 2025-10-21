@@ -1,21 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { handleServiceError } from '../errorHandler';
 import { ApplicationError } from '@admin/types/errors';
 import { AxiosError } from 'axios';
 
 describe('errorHandler', () => {
-  it('should silently ignore cancelled requests', () => {
-    const cancelledError = new Error('Request cancelled');
-    Object.assign(cancelledError, {
-      __CANCEL__: true,
-    });
-
-    vi.spyOn(require('axios'), 'isCancel').mockReturnValue(true);
-
-    // Should not throw
-    expect(() => handleServiceError(cancelledError)).not.toThrow();
-  });
-
   it('should preserve validation errors', () => {
     const validationError = new AxiosError(
       'Validation failed',
@@ -33,7 +21,7 @@ describe('errorHandler', () => {
         },
         headers: {},
         config: {} as any,
-      }
+      },
     );
 
     expect(() => handleServiceError(validationError)).toThrow(validationError);

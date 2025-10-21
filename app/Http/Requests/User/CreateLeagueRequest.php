@@ -116,19 +116,19 @@ class CreateLeagueRequest extends FormRequest
                 Rule::in(['public', 'unlisted', 'private']),
             ],
             'timezone' => [
-                'required',
+                'nullable',
                 'string',
                 'timezone',
             ],
 
             // Contact Information
             'contact_email' => [
-                'required',
+                'nullable',
                 'email',
                 'max:255',
             ],
             'organizer_name' => [
-                'required',
+                'nullable',
                 'string',
                 'min:2',
                 'max:100',
@@ -184,13 +184,10 @@ class CreateLeagueRequest extends FormRequest
             // Settings
             'visibility.required' => 'Please select a visibility setting.',
             'visibility.in' => 'Invalid visibility setting selected.',
-            'timezone.required' => 'Please select a timezone.',
             'timezone.timezone' => 'Please select a valid timezone.',
 
             // Contact Information
-            'contact_email.required' => 'Please provide a contact email address.',
             'contact_email.email' => 'Please provide a valid email address.',
-            'organizer_name.required' => 'Please provide the organizer name.',
             'organizer_name.min' => 'Organizer name must be at least 2 characters.',
             'organizer_name.max' => 'Organizer name cannot exceed 100 characters.',
         ];

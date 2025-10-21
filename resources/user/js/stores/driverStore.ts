@@ -79,7 +79,7 @@ export const useDriverStore = defineStore('driver', () => {
    */
   async function fetchLeagueDrivers(
     leagueId: number,
-    params?: LeagueDriversQueryParams
+    params?: LeagueDriversQueryParams,
   ): Promise<void> {
     loading.value = true;
     error.value = null;
@@ -115,7 +115,7 @@ export const useDriverStore = defineStore('driver', () => {
    */
   async function createNewDriver(
     leagueId: number,
-    data: CreateDriverRequest
+    data: CreateDriverRequest,
   ): Promise<LeagueDriver> {
     loading.value = true;
     error.value = null;
@@ -165,7 +165,7 @@ export const useDriverStore = defineStore('driver', () => {
   async function updateDriver(
     leagueId: number,
     driverId: number,
-    data: UpdateDriverRequest
+    data: UpdateDriverRequest,
   ): Promise<LeagueDriver> {
     loading.value = true;
     error.value = null;

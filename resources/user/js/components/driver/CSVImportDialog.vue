@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
-import FormLabel from '@user/components/common/FormLabel.vue';
+import FormInputGroup from '@user/components/common/forms/FormInputGroup.vue';
+import FormLabel from '@user/components/common/forms/FormLabel.vue';
+import FormHelper from '@user/components/common/forms/FormHelper.vue';
+import { useLeagueStore } from '@user/stores/leagueStore';
 import type { ImportDriversResponse } from '@user/types/driver';
 
 interface Props {
@@ -21,16 +24,34 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+const leagueStore = useLeagueStore();
+
 const csvData = ref('');
 const importing = ref(false);
 const importResult = ref<ImportDriversResponse | null>(null);
 const error = ref<string | null>(null);
 
-// CSV format example
-const csvExample = `FirstName,LastName,PSN_ID,Email,DriverNumber
-John,Smith,JohnSmith77,john@example.com,5
-Jane,Doe,JaneDoe_GT,jane@example.com,7
-Mike,Ross,MikeR_Racing,,3`;
+// Generate CSV example dynamically based on league's platform headers
+const csvExample = computed(() => {
+  const headers = leagueStore.platformCsvHeaders;
+  if (headers.length === 0) {
+    // Fallback example if headers not loaded yet
+    return `FirstName,LastName,Email,DriverNumber
+John,Smith,john@example.com,5
+Jane,Doe,jane@example.com,7
+Mike,Ross,,3`;
+  }
+
+  // Create example with actual headers
+  const headerRow = headers.join(',');
+  const exampleRows = [
+    'John,Smith,john@example.com,5',
+    'Jane,Doe,jane@example.com,7',
+    'Mike,Ross,,3',
+  ];
+
+  return `${headerRow}\n${exampleRows.join('\n')}`;
+});
 
 // Watch for visible changes to reset form
 watch(
@@ -39,7 +60,7 @@ watch(
     if (visible) {
       resetForm();
     }
-  }
+  },
 );
 
 /**
@@ -95,8 +116,46 @@ const resetForm = (): void => {
  * Copy example to clipboard and paste in textarea
  */
 const useExample = (): void => {
-  csvData.value = csvExample;
+  csvData.value = csvExample.value;
 };
+
+/**
+ * Download CSV template with correct headers
+ */
+const downloadTemplate = (): void => {
+  const headers = leagueStore.platformCsvHeaders;
+  if (headers.length === 0) {
+    error.value = 'Platform headers not loaded. Please try again.';
+    return;
+  }
+
+  const csvContent = headers.join(',');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'driver_import_template.csv');
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * Fetch CSV headers on mount
+ */
+onMounted(async () => {
+  if (props.leagueId) {
+    try {
+      await leagueStore.fetchDriverCsvHeadersForLeague(props.leagueId);
+    } catch (err) {
+      console.error('Failed to fetch CSV headers:', err);
+      error.value = 'Failed to load CSV template configuration';
+    }
+  }
+});
 </script>
 
 <template>
@@ -113,28 +172,37 @@ const useExample = (): void => {
       <!-- Instructions -->
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 class="font-semibold text-blue-900 mb-2">CSV Format Instructions</h4>
-        <p class="text-sm text-blue-800 mb-3">
-          Paste your CSV data below. The CSV must include headers and at least the following
-          columns:
-        </p>
-        <ul class="text-sm text-blue-800 space-y-1 mb-3">
+        <FormHelper
+          text="Paste your CSV data below. The CSV must include headers and at least the following columns:"
+          class="text-blue-800"
+        />
+        <ul class="text-sm text-blue-800 space-y-1 my-3">
           <li><strong>Required:</strong> At least one name (FirstName, LastName, or Nickname)</li>
-          <li>
-            <strong>Required:</strong> At least one platform ID (PSN_ID, GT7_ID, or iRacing_ID)
-          </li>
+          <li><strong>Required:</strong> At least one platform ID for this league's platforms</li>
           <li><strong>Optional:</strong> Email, Phone, DriverNumber</li>
         </ul>
-        <div class="flex items-center gap-2">
-          <p class="text-sm font-medium text-blue-900">Example CSV:</p>
+        <div class="flex items-center gap-2 mb-2">
+          <p class="text-sm font-medium text-blue-900">CSV Template:</p>
+          <Button
+            label="Download Template"
+            size="small"
+            severity="info"
+            icon="pi pi-download"
+            @click="downloadTemplate"
+          />
           <Button label="Use Example" size="small" severity="info" text @click="useExample" />
         </div>
-        <pre class="text-xs bg-white border border-blue-200 rounded p-2 mt-2 overflow-x-auto">{{
-          csvExample
-        }}</pre>
+        <div v-if="leagueStore.platformCsvHeaders.length > 0">
+          <p class="text-xs text-blue-800 mb-1">Expected headers for this league:</p>
+          <pre class="text-xs bg-white border border-blue-200 rounded p-2 overflow-x-auto">{{
+            leagueStore.platformCsvHeaders.join(',')
+          }}</pre>
+        </div>
+        <div v-else class="text-sm text-blue-600">Loading CSV template configuration...</div>
       </div>
 
       <!-- CSV Input -->
-      <div class="form-field">
+      <FormInputGroup>
         <FormLabel for="csv_data" text="CSV Data" />
         <Textarea
           id="csv_data"
@@ -144,7 +212,8 @@ const useExample = (): void => {
           class="w-full font-mono text-sm"
           :disabled="importing"
         />
-      </div>
+        <FormHelper text="Paste your CSV data including the header row" />
+      </FormInputGroup>
 
       <!-- Error Message -->
       <Message v-if="error" severity="error" :closable="false">

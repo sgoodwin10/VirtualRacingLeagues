@@ -30,14 +30,14 @@ final class CreateLeagueData extends Data
         /** @var array<int> */
         #[Required, ArrayType]
         public readonly array $platform_ids,
-        #[Required, Max(50)]
-        public readonly string $timezone,
         #[Required, In(['public', 'private', 'unlisted'])]
         public readonly string $visibility,
-        #[Required, Email, Max(255)]
-        public readonly string $contact_email,
-        #[Required, Max(100)]
-        public readonly string $organizer_name,
+        #[Sometimes, Max(50)]
+        public readonly ?string $timezone = null,
+        #[Sometimes, Email, Max(255)]
+        public readonly ?string $contact_email = null,
+        #[Sometimes, Max(100)]
+        public readonly ?string $organizer_name = null,
         #[Sometimes, Max(150)]
         public readonly ?string $tagline = null,
         #[Sometimes]

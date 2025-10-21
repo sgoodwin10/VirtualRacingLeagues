@@ -124,7 +124,7 @@ watch(
   (newValue) => {
     emit('update:formData', newValue);
   },
-  { deep: true }
+  { deep: true },
 );
 </script>
 

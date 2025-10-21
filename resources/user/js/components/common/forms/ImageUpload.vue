@@ -3,6 +3,9 @@ import { ref, computed, watch } from 'vue';
 import FileUpload, { type FileUploadSelectEvent } from 'primevue/fileupload';
 import Button from 'primevue/button';
 import Image from 'primevue/image';
+import FormLabel from '@user/components/common/forms/FormLabel.vue';
+import FormError from '@user/components/common/forms/FormError.vue';
+import FormHelper from '@user/components/common/forms/FormHelper.vue';
 
 interface Props {
   modelValue: File | null;
@@ -13,6 +16,8 @@ interface Props {
   required?: boolean;
   error?: string;
   previewSize?: 'small' | 'medium' | 'large';
+  helperText?: string;
+  labelText?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -22,6 +27,8 @@ const props = withDefaults(defineProps<Props>(), {
   required: false,
   error: '',
   previewSize: 'small',
+  helperText: '',
+  labelText: '',
 });
 
 const emit = defineEmits<{
@@ -58,7 +65,7 @@ watch(
       clearPreview();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Reset showExistingImage when existingImageUrl changes
@@ -68,7 +75,7 @@ watch(
     if (props.existingImageUrl) {
       showExistingImage.value = true;
     }
-  }
+  },
 );
 
 function generatePreview(file: File): void {
@@ -134,10 +141,12 @@ function removeExistingImage(): void {
 
 <template>
   <div class="space-y-2">
-    <label class="block font-medium">
-      {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
-    </label>
+    <div v-if="labelText" class="flex items-baseline gap-2">
+      <FormLabel :text="label" :required="required" />
+      <span v-if="!required" class="text-xs text-gray-500">(optional)</span>
+    </div>
+
+    <p v-if="helperText" class="text-xs text-gray-500 mt-1">{{ helperText }}</p>
 
     <!-- Show existing image if present and no new file selected -->
     <div v-if="hasExistingImage && !hasFile" class="space-y-3">
@@ -156,7 +165,6 @@ function removeExistingImage(): void {
       </div>
 
       <div class="flex items-center gap-2">
-        <p class="text-sm text-gray-600">Current image</p>
         <Button
           label="Change Image"
           icon="pi pi-upload"
@@ -180,9 +188,7 @@ function removeExistingImage(): void {
         @select="onSelect"
       />
 
-      <p class="text-sm text-gray-600">
-        Maximum file size: {{ (maxFileSize / 1000000).toFixed(1) }}MB
-      </p>
+      <FormHelper :text="`Maximum file size: ${(maxFileSize / 1000000).toFixed(1)}MB`" />
     </div>
 
     <!-- Show new file preview -->
@@ -200,10 +206,8 @@ function removeExistingImage(): void {
           @click="removeFile"
         />
       </div>
-
-      <p class="text-sm text-gray-600">{{ modelValue?.name }}</p>
     </div>
 
-    <small v-if="displayError" class="text-red-500">{{ displayError }}</small>
+    <FormError :error="displayError" />
   </div>
 </template>

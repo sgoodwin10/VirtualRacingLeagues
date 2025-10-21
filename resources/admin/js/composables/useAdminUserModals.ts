@@ -76,7 +76,7 @@ export interface UseAdminUserModalsReturn {
   handleCreate: (formData: AdminUserUpdateData) => Promise<void>;
   handleSave: (
     formData: AdminUserUpdateData,
-    adminToUpdate?: Admin | null
+    adminToUpdate?: Admin | null,
   ) => Promise<Admin | undefined>;
   handleDelete: (user: Admin) => Promise<void>;
   handleReactivate: (user: Admin) => Promise<void>;
@@ -373,7 +373,7 @@ export function useAdminUserModals(options: UseAdminUserModalsOptions): UseAdmin
    */
   const handleSave = async (
     formData: AdminUserUpdateData,
-    adminToUpdate: Admin | null = null
+    adminToUpdate: Admin | null = null,
   ): Promise<Admin | undefined> => {
     const userToUpdate = adminToUpdate || selectedAdminUser.value;
     if (!userToUpdate) return undefined;

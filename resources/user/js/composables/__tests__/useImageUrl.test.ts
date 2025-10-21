@@ -7,7 +7,7 @@ describe('useImageUrl', () => {
     // Reset window.location.origin for each test
     Object.defineProperty(window, 'location', {
       value: {
-        origin: 'http://app.virtualracingleagues.localhost:8000',
+        origin: 'http://app.virtualracingleagues.localhost',
       },
       writable: true,
     });
@@ -47,7 +47,7 @@ describe('useImageUrl', () => {
       const { url } = useImageUrl(relativeUrl);
 
       expect(url.value).toBe(
-        'http://app.virtualracingleagues.localhost:8000/storage/leagues/logos/image.jpg'
+        'http://app.virtualracingleagues.localhost/storage/leagues/logos/image.jpg',
       );
     });
 
@@ -62,18 +62,18 @@ describe('useImageUrl', () => {
       const imageUrl = ref<string | null>('/storage/image1.jpg');
       const { url } = useImageUrl(imageUrl);
 
-      expect(url.value).toBe('http://app.virtualracingleagues.localhost:8000/storage/image1.jpg');
+      expect(url.value).toBe('http://app.virtualracingleagues.localhost/storage/image1.jpg');
 
       // Change the URL
       imageUrl.value = '/storage/image2.jpg';
-      expect(url.value).toBe('http://app.virtualracingleagues.localhost:8000/storage/image2.jpg');
+      expect(url.value).toBe('http://app.virtualracingleagues.localhost/storage/image2.jpg');
     });
 
     it('works with getter functions', () => {
       const imageUrl = '/storage/image1.jpg';
       const { url } = useImageUrl(() => imageUrl);
 
-      expect(url.value).toBe('http://app.virtualracingleagues.localhost:8000/storage/image1.jpg');
+      expect(url.value).toBe('http://app.virtualracingleagues.localhost/storage/image1.jpg');
     });
   });
 
@@ -127,9 +127,7 @@ describe('useImageUrl', () => {
 
       handleLoad();
 
-      expect(displayUrl.value).toBe(
-        'http://app.virtualracingleagues.localhost:8000/storage/image.jpg'
-      );
+      expect(displayUrl.value).toBe('http://app.virtualracingleagues.localhost/storage/image.jpg');
     });
 
     it('returns fallback URL when error occurred', () => {
@@ -147,9 +145,7 @@ describe('useImageUrl', () => {
 
       handleError();
 
-      expect(displayUrl.value).toBe(
-        'http://app.virtualracingleagues.localhost:8000/storage/image.jpg'
-      );
+      expect(displayUrl.value).toBe('http://app.virtualracingleagues.localhost/storage/image.jpg');
     });
   });
 
@@ -157,7 +153,7 @@ describe('useImageUrl', () => {
     it('works on public subdomain', () => {
       Object.defineProperty(window, 'location', {
         value: {
-          origin: 'http://virtualracingleagues.localhost:8000',
+          origin: 'http://virtualracingleagues.localhost',
         },
         writable: true,
       });
@@ -165,13 +161,13 @@ describe('useImageUrl', () => {
       const imageUrl = ref('/storage/image.jpg');
       const { url } = useImageUrl(imageUrl);
 
-      expect(url.value).toBe('http://virtualracingleagues.localhost:8000/storage/image.jpg');
+      expect(url.value).toBe('http://virtualracingleagues.localhost/storage/image.jpg');
     });
 
     it('works on app subdomain', () => {
       Object.defineProperty(window, 'location', {
         value: {
-          origin: 'http://app.virtualracingleagues.localhost:8000',
+          origin: 'http://app.virtualracingleagues.localhost',
         },
         writable: true,
       });
@@ -179,13 +175,13 @@ describe('useImageUrl', () => {
       const imageUrl = ref('/storage/image.jpg');
       const { url } = useImageUrl(imageUrl);
 
-      expect(url.value).toBe('http://app.virtualracingleagues.localhost:8000/storage/image.jpg');
+      expect(url.value).toBe('http://app.virtualracingleagues.localhost/storage/image.jpg');
     });
 
     it('works on admin subdomain', () => {
       Object.defineProperty(window, 'location', {
         value: {
-          origin: 'http://admin.virtualracingleagues.localhost:8000',
+          origin: 'http://admin.virtualracingleagues.localhost',
         },
         writable: true,
       });
@@ -193,7 +189,7 @@ describe('useImageUrl', () => {
       const imageUrl = ref('/storage/image.jpg');
       const { url } = useImageUrl(imageUrl);
 
-      expect(url.value).toBe('http://admin.virtualracingleagues.localhost:8000/storage/image.jpg');
+      expect(url.value).toBe('http://admin.virtualracingleagues.localhost/storage/image.jpg');
     });
   });
 });

@@ -194,7 +194,7 @@ export function useModal(options: UseModalOptions = {}): UseModalReturn {
  * @returns Record of modal keys to their useModal return values
  */
 export function useModalGroup<T extends Record<string, UseModalOptions>>(
-  modals: T
+  modals: T,
 ): Record<keyof T, UseModalReturn> {
   const modalGroup = {} as Record<keyof T, UseModalReturn>;
 
