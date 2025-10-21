@@ -101,7 +101,7 @@ return [
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', 'mariadb'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_TEST_DATABASE', 'laravel_test'),
+            'database' => env('DB_TEST_DATABASE', 'virtualracingleagues_test'),
             'username' => env('DB_USERNAME', 'laravel'),
             'password' => env('DB_PASSWORD', 'secret'),
             'unix_socket' => env('DB_SOCKET', ''),

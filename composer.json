@@ -68,7 +68,8 @@
         ],
         "test:integration": [
             "@php artisan config:clear --ansi",
-            "DB_CONNECTION=testing @php artisan test --testsuite=Integration"
+            "@putenv DB_CONNECTION=testing",
+            "@php artisan test --testsuite=Integration"
         ],
         "test:feature": [
             "@php artisan config:clear --ansi",
@@ -77,6 +78,20 @@
         "test:coverage": [
             "@php artisan config:clear --ansi",
             "XDEBUG_MODE=coverage @php artisan test --coverage --min=70"
+        ],
+        "test:feature:db": [
+            "@php artisan config:clear --ansi",
+            "@putenv DB_CONNECTION=testing",
+            "@php artisan test --testsuite=Feature"
+        ],
+        "test:all:db": [
+            "@php artisan config:clear --ansi",
+            "@putenv DB_CONNECTION=testing",
+            "@php artisan test"
+        ],
+        "test:setup": [
+            "@php -r \"file_exists('.env.testing') || copy('.env.testing.example', '.env.testing');\"",
+            "bash scripts/setup-test-database.sh"
         ],
         "phpstan": "vendor/bin/phpstan analyse",
         "phpcs": "vendor/bin/phpcs",

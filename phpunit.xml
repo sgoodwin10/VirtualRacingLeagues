@@ -47,11 +47,19 @@
     <env name="MAIL_MAILER" value="array"/>
     <env name="QUEUE_CONNECTION" value="sync"/>
     <env name="SESSION_DRIVER" value="array"/>
-    <!-- Database: SQLite in-memory for Unit/Domain tests (fast) -->
+    <!--
+        Database Configuration:
+        - Default: SQLite in-memory (fast, isolated, auto-reset)
+        - For Integration tests: Use MariaDB via DB_CONNECTION=testing
+        - For Feature tests: SQLite is sufficient unless testing MariaDB-specific features
+
+        To use MariaDB test database:
+        1. Integration suite: composer test:integration (already configured)
+        2. Specific test: DB_CONNECTION=testing ./vendor/bin/phpunit path/to/test
+        3. All tests: DB_CONNECTION=testing composer test
+    -->
     <env name="DB_CONNECTION" value="sqlite"/>
     <env name="DB_DATABASE" value=":memory:"/>
-    <!-- For Integration tests, use DB_CONNECTION=testing to test against MariaDB.
-             Set via: phpunit testsuite=Integration -->
     <!-- Disable Unnecessary Services -->
     <env name="PULSE_ENABLED" value="false"/>
     <env name="TELESCOPE_ENABLED" value="false"/>

@@ -46,4 +46,20 @@ abstract class TestCase extends BaseTestCase
         $_SERVER['HTTP_HOST'] = 'virtualracingleagues.localhost';
         return $this;
     }
+
+    /**
+     * Use MariaDB testing connection for this test.
+     * Useful when you need to test MariaDB-specific features in Feature tests.
+     *
+     * Usage:
+     *   protected function setUp(): void
+     *   {
+     *       parent::setUp();
+     *       $this->useTestDatabase();
+     *   }
+     */
+    protected function useTestDatabase(): void
+    {
+        config(['database.default' => 'testing']);
+    }
 }
