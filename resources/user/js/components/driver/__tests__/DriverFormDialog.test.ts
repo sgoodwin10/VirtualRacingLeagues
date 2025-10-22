@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import DriverFormDialog from '../DriverFormDialog.vue';
+import DriverFormDialog from '../modals/DriverFormDialog.vue';
 import type { LeagueDriver } from '@user/types/driver';
 import type { PlatformFormField } from '@user/types/league';
 
@@ -18,12 +18,12 @@ vi.mock('@user/stores/leagueStore', () => ({
   })),
 }));
 
-// Mock PrimeVue components
-vi.mock('primevue/dialog', () => ({
+// Mock BaseModal component
+vi.mock('@user/components/common/modals/BaseModal.vue', () => ({
   default: {
-    name: 'Dialog',
+    name: 'BaseModal',
     template: '<div v-if="visible"><slot></slot><slot name="footer"></slot></div>',
-    props: ['visible', 'header', 'modal', 'closable', 'draggable'],
+    props: ['visible', 'header', 'width'],
   },
 }));
 

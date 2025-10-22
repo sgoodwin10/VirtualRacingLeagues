@@ -83,13 +83,17 @@ body {
   }
 }
 
+/* PrimeVue Panel Styling */
 .p-panel-header {
   padding-bottom: 0;
 }
+
+/* PrimeVue Card Styling */
 .p-card-body {
   /* padding: 0; */
 }
 
+/* PrimeVue DataTable Styling */
 .p-dataview-content {
   background-color: inherit;
 }
@@ -114,4 +118,36 @@ body {
 }
 .p-tablist-active-bar {
   background-color: var(--user-primary);
+}
+
+/* PrimeVue Dialog Styling */
+.p-dialog {
+  
+}
+.p-dialog-header {
+  background-color: var(--bg-tertiary);
+  border-radius: 1rem 1em 0 0;
+  margin-bottom: 0;
+  box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border-medium);
+}
+.p-dialog-content {
+  padding: 1rem;
+}
+
+.p-dialog-footer {
+  background-color: var(--bg-tertiary);
+  border-radius: 0 0 1rem 1em;
+  padding: 1rem;
+  box-shadow: var(--shadow-reverse-md);
+}
+
+.p-dialog-close-button {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-medium);
+}
+.p-dialog-close-button:hover {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  box-shadow: var(--shadow-md);
 }

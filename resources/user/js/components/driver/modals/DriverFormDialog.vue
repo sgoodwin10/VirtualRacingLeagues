@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import Dialog from 'primevue/dialog';
+import BaseModal from '@user/components/common/modals/BaseModal.vue';
+import BaseModalHeader from '@user/components/common/modals/BaseModalHeader.vue';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
@@ -231,15 +232,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    :header="dialogTitle"
-    :modal="true"
-    :closable="true"
-    :draggable="false"
-    class="w-full max-w-2xl"
-    @update:visible="$emit('update:visible', $event)"
-  >
+  <BaseModal :visible="visible" width="2xl" @update:visible="$emit('update:visible', $event)">
+    <template #header>
+      <BaseModalHeader :title="dialogTitle" />
+    </template>
+
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <!-- Name Fields -->
       <div class="grid grid-cols-3 gap-4">
@@ -378,5 +375,5 @@ onMounted(async () => {
         <Button :label="mode === 'create' ? 'Add Driver' : 'Save Changes'" @click="handleSubmit" />
       </div>
     </template>
-  </Dialog>
+  </BaseModal>
 </template>

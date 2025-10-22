@@ -109,7 +109,6 @@ describe('ReadOnlyDriverTable', () => {
     expect(wrapper.exists()).toBe(true);
   });
 
-
   it('shows loading state', () => {
     const wrapper = mount(ReadOnlyDriverTable, {
       global: {
@@ -137,5 +136,4 @@ describe('ReadOnlyDriverTable', () => {
 
     expect(wrapper.html()).toContain('No drivers found');
   });
-
 });

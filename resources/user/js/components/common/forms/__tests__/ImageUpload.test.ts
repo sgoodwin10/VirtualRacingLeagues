@@ -7,7 +7,8 @@ import ImageUpload from '../ImageUpload.vue';
 const FormLabelStub = {
   name: 'FormLabel',
   props: ['text', 'required'],
-  template: '<label><span>{{ text }}</span><span v-if="required" class="text-red-500">*</span></label>',
+  template:
+    '<label><span>{{ text }}</span><span v-if="required" class="text-red-500">*</span></label>',
 };
 
 const FormErrorStub = {
@@ -35,7 +36,6 @@ describe('ImageUpload', () => {
     global.URL.createObjectURL = vi.fn(() => 'mock-url');
     global.URL.revokeObjectURL = vi.fn();
   });
-
 
   it('displays file size information', () => {
     const wrapper = mountWithStubs(ImageUpload, {
@@ -144,7 +144,6 @@ describe('ImageUpload', () => {
     expect(wrapper.emitted('update:modelValue')).toBeFalsy();
   });
 
-
   it('adds invalid class when error exists', () => {
     const wrapper = mountWithStubs(ImageUpload, {
       props: {
@@ -202,7 +201,6 @@ describe('ImageUpload', () => {
     expect(wrapper.find('img').exists()).toBe(false);
     expect(global.URL.revokeObjectURL).toHaveBeenCalled();
   });
-
 
   it('handles array of files from select event', async () => {
     const wrapper = mountWithStubs(ImageUpload, {

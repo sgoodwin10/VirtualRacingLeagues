@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue';
-import Dialog from 'primevue/dialog';
+import BaseModal from '@user/components/common/modals/BaseModal.vue';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
@@ -9,6 +9,7 @@ import FormLabel from '@user/components/common/forms/FormLabel.vue';
 import FormHelper from '@user/components/common/forms/FormHelper.vue';
 import { useLeagueStore } from '@user/stores/leagueStore';
 import type { ImportDriversResponse } from '@user/types/driver';
+import BaseModalHeader from '@user/components/common/modals/BaseModalHeader.vue';
 
 interface Props {
   visible: boolean;
@@ -159,15 +160,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Dialog
+  <BaseModal
     :visible="visible"
-    header="Import Drivers from CSV"
-    :modal="true"
-    :closable="true"
-    :draggable="false"
-    class="w-full max-w-3xl"
+    width="3xl"
     @update:visible="$emit('update:visible', $event)"
   >
+    <template #header>
+      <BaseModalHeader title="Import Drivers from CSV" />
+    </template>
     <div class="space-y-4">
       <!-- Instructions -->
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -257,5 +257,5 @@ onMounted(async () => {
         />
       </div>
     </template>
-  </Dialog>
+  </BaseModal>
 </template>

@@ -220,5 +220,4 @@ describe('LeagueCard', () => {
       expect(wrapper.emitted('view')?.[0]).toEqual([1]);
     }
   });
-
 });
