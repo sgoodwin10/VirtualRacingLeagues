@@ -17,7 +17,11 @@
 
 # Playwright
 claude mcp add playwright npx @playwright/mcp@latest
-sudo npx playwright install-deps
+
+## need to login as root
+sudo npx playwright install-deps 
+
+## need to login as normal
 npx playwright install
 npm run test:e2e
 
@@ -26,6 +30,8 @@ npm run test:e2e
 docker exec -it -u root virtualracingleagues-app bash
 ```
 
+## Force Rebuild
+`docker compose up --build --force-recreate -d`
 
 # Access the docker container
 ```bash

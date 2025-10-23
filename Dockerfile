@@ -41,9 +41,8 @@ RUN useradd -G www-data,root -u 1000 -d /home/laravel laravel -s /bin/zsh
 RUN mkdir -p /home/laravel/.composer && \
     chown -R laravel:laravel /home/laravel
 
-# Install oh-my-zsh for laravel user
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && \
-    chown -R laravel:laravel /home/laravel/.oh-my-zsh /home/laravel/.zshrc
+# Install oh-my-zsh for laravel user (FIXED)
+RUN su - laravel -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
 
 # Set user
 USER laravel
