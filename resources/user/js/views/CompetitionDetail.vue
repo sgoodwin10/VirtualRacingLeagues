@@ -18,6 +18,7 @@ import Card from 'primevue/card';
 import CompetitionHeader from '@user/components/competition/CompetitionHeader.vue';
 import CompetitionSettings from '@user/components/competition/CompetitionSettings.vue';
 import CompetitionFormDrawer from '@user/components/competition/CompetitionFormDrawer.vue';
+import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadcrumbs.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -27,7 +28,7 @@ const competitionStore = useCompetitionStore();
 const competition = ref<Competition | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const activeTab = ref('overview');
+const activeTab = ref('seasons');
 const showEditDrawer = ref(false);
 
 const leagueId = computed(() => parseInt(route.params.leagueId as string, 10));
@@ -84,10 +85,29 @@ function handleDeleted(): void {
     handleBackToLeague();
   }, 1500);
 }
+
+const breadcrumbItems = computed((): BreadcrumbItem[] => [
+  {
+    label: 'Dashboard',
+    to: { name: 'home' },
+    icon: 'pi-home',
+  },
+  {
+    label: 'Leagues',
+    to: { name: 'leagues' },
+  },
+  {
+    label: competition.value?.league?.name || 'League',
+    to: { name: 'league-detail', params: { id: leagueId.value } },
+  },
+  {
+    label: competition.value?.name || 'Competition Details',
+  },
+]);
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div class="max-w-7xl mx-auto p-6">
     <!-- Loading skeleton -->
     <Skeleton v-if="isLoading" height="30rem" />
 
@@ -98,6 +118,9 @@ function handleDeleted(): void {
 
     <!-- Competition content -->
     <div v-else-if="competition">
+      <!-- Breadcrumbs -->
+      <Breadcrumbs :items="breadcrumbItems" class="mb-4" />
+
       <!-- Archived banner -->
       <Message v-if="competition.is_archived" severity="warn" :closable="false" class="mb-4">
         <div class="flex items-center justify-between">
@@ -116,15 +139,14 @@ function handleDeleted(): void {
       <!-- Tabs -->
       <Tabs v-model:value="activeTab">
         <TabList>
-          <Tab value="overview">Overview</Tab>
           <Tab value="seasons">Seasons</Tab>
-          <Tab value="drivers">Drivers</Tab>
           <Tab value="settings">Settings</Tab>
         </TabList>
 
         <TabPanels>
-          <TabPanel value="overview">
-            <!-- Simple empty state for now -->
+
+          <TabPanel value="seasons">
+            <Message severity="info">Season management coming in next update</Message>
             <Card>
               <template #content>
                 <div class="text-center py-8">
@@ -140,13 +162,6 @@ function handleDeleted(): void {
             </Card>
           </TabPanel>
 
-          <TabPanel value="seasons">
-            <Message severity="info">Season management coming in next update</Message>
-          </TabPanel>
-
-          <TabPanel value="drivers">
-            <Message severity="info">Driver management coming in next update</Message>
-          </TabPanel>
 
           <TabPanel value="settings">
             <CompetitionSettings

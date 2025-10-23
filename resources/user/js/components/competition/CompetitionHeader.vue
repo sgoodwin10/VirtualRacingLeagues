@@ -20,14 +20,6 @@ const emit = defineEmits<Emits>();
 
 <template>
   <div class="competition-header bg-white shadow-sm rounded-lg p-6 mb-6">
-    <!-- Back button -->
-    <Button
-      icon="pi pi-arrow-left"
-      label="Back to League"
-      text
-      class="mb-4"
-      @click="emit('back-to-league')"
-    />
 
     <div class="flex items-start gap-6">
       <!-- Competition Logo -->

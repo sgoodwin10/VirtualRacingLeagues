@@ -3,6 +3,7 @@ import { ref, reactive, computed, watch } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
 import { useCompetitionStore } from '@user/stores/competitionStore';
+import { useLeagueStore } from '@user/stores/leagueStore';
 import { useLeaguePlatforms } from '@user/composables/useLeaguePlatforms';
 import { useCompetitionValidation } from '@user/composables/useCompetitionValidation';
 import { checkSlugAvailability } from '@user/services/competitionService';
@@ -56,6 +57,7 @@ const emit = defineEmits<Emits>();
 // Composables
 const toast = useToast();
 const competitionStore = useCompetitionStore();
+const leagueStore = useLeagueStore();
 const { platformOptions } = useLeaguePlatforms(() => props.leagueId);
 
 // State
@@ -146,8 +148,27 @@ watch(
 // Watch drawer visibility
 watch(
   () => props.visible,
-  (visible) => {
+  async (visible) => {
     if (visible) {
+      // Ensure platforms and league are loaded before opening the drawer
+      try {
+        await leagueStore.fetchPlatforms();
+
+        // Load the league into currentLeague if not already loaded
+        if (leagueStore.currentLeague?.id !== props.leagueId) {
+          await leagueStore.fetchLeague(props.leagueId);
+        }
+      } catch (error) {
+        console.error('Failed to load required data:', error);
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load required data. Please try again.',
+          life: 5000,
+        });
+        return;
+      }
+
       if (props.isEditMode && props.competition) {
         loadCompetitionData();
       } else {
@@ -167,7 +188,8 @@ function loadCompetitionData(): void {
   form.description = props.competition.description || '';
   form.platform_id = props.competition.platform_id;
   form.logo = null;
-  form.logo_url = props.competition.logo_url;
+  // Only set logo_url if competition has its own logo (not using league fallback)
+  form.logo_url = props.competition.has_own_logo ? props.competition.logo_url : null;
 
   originalName.value = props.competition.name;
 

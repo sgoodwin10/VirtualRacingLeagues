@@ -26,6 +26,7 @@ describe('competitionStore', () => {
       slug: 'iracing',
     },
     logo_url: 'https://example.com/logo.png',
+    has_own_logo: true,
     status: 'active',
     is_active: true,
     is_archived: false,

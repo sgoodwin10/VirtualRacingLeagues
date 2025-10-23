@@ -74,6 +74,44 @@ describe('useLeaguePlatforms', () => {
       expect(leaguePlatforms.value.find((p) => p.id === 2)).toBeUndefined();
     });
 
+    it('should use currentLeague when available', () => {
+      const leagueStore = useLeagueStore();
+      leagueStore.currentLeague = mockLeague;
+      leagueStore.platforms = mockPlatforms;
+
+      const { leaguePlatforms } = useLeaguePlatforms(() => 1);
+
+      expect(leaguePlatforms.value).toHaveLength(2);
+      expect(leaguePlatforms.value.map((p) => p.id)).toEqual([1, 3]);
+    });
+
+    it('should prioritize currentLeague over leagues array', () => {
+      const leagueStore = useLeagueStore();
+      // Set up leagues array with different platform_ids
+      leagueStore.leagues = [{ ...mockLeague, platform_ids: [2] }];
+      // Set currentLeague with different platform_ids
+      leagueStore.currentLeague = mockLeague; // platform_ids: [1, 3]
+      leagueStore.platforms = mockPlatforms;
+
+      const { leaguePlatforms } = useLeaguePlatforms(() => 1);
+
+      // Should use currentLeague's platform_ids [1, 3], not leagues array [2]
+      expect(leaguePlatforms.value).toHaveLength(2);
+      expect(leaguePlatforms.value.map((p) => p.id)).toEqual([1, 3]);
+    });
+
+    it('should fallback to leagues array if currentLeague does not match', () => {
+      const leagueStore = useLeagueStore();
+      leagueStore.currentLeague = { ...mockLeague, id: 2 }; // Different ID
+      leagueStore.leagues = [mockLeague];
+      leagueStore.platforms = mockPlatforms;
+
+      const { leaguePlatforms } = useLeaguePlatforms(() => 1);
+
+      expect(leaguePlatforms.value).toHaveLength(2);
+      expect(leaguePlatforms.value.map((p) => p.id)).toEqual([1, 3]);
+    });
+
     it('should react to leagueId changes', () => {
       const leagueStore = useLeagueStore();
       leagueStore.leagues = [mockLeague];

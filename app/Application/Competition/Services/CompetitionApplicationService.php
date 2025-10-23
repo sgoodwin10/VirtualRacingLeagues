@@ -328,9 +328,19 @@ final class CompetitionApplicationService
 
     /**
      * Convert Competition entity to CompetitionData DTO.
+     * Accepts league logo path to avoid re-fetching the league entity when already available.
      */
     private function toCompetitionData(Competition $competition, string $leagueLogoPath): CompetitionData
     {
+        // Fetch league for additional data (we need more than just logo path now)
+        $league = $this->leagueRepository->findById($competition->leagueId());
+
+        $leagueData = [
+            'id' => $league->id() ?? 0,
+            'name' => $league->name()->value(),
+            'slug' => $league->slug()->value(),
+        ];
+
         // Get platform data
         $platform = Platform::findOrFail($competition->platformId());
         $platformData = [
@@ -347,6 +357,7 @@ final class CompetitionApplicationService
             competition: $competition,
             platformData: $platformData,
             logoUrl: $logoUrl,
+            leagueData: $leagueData,
         );
     }
 

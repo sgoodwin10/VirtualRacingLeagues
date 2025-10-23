@@ -22,7 +22,15 @@ export function useLeaguePlatforms(leagueId: MaybeRefOrGetter<number>) {
    */
   const leaguePlatforms = computed((): Platform[] => {
     const id = toValue(leagueId);
-    const league = leagueStore.leagues.find((l) => l.id === id);
+
+    // First check currentLeague (used in detail views)
+    // Then fall back to searching leagues array (used in list views)
+    let league = leagueStore.currentLeague?.id === id ? leagueStore.currentLeague : null;
+
+    if (!league) {
+      league = leagueStore.leagues.find((l) => l.id === id) || null;
+    }
+
     if (!league || !league.platform_ids) {
       return [];
     }

@@ -21,7 +21,9 @@ class CompetitionListData extends Data
         public int $platform_id,
         public string $platform_name,
         public string $platform_slug,
+        public ?CompetitionLeagueData $league,
         public string $logo_url,
+        public bool $has_own_logo,
         public string $status,
         public bool $is_active,
         public bool $is_archived,
@@ -35,11 +37,13 @@ class CompetitionListData extends Data
      * Create from domain entity with platform data and logo URL.
      *
      * @param array{id: int, name: string, slug: string} $platformData
+     * @param array{id: int, name: string, slug: string}|null $leagueData
      */
     public static function fromEntity(
         Competition $competition,
         array $platformData,
-        string $logoUrl
+        string $logoUrl,
+        ?array $leagueData = null
     ): self {
         return new self(
             id: $competition->id() ?? 0,
@@ -49,7 +53,15 @@ class CompetitionListData extends Data
             platform_id: $competition->platformId(),
             platform_name: $platformData['name'],
             platform_slug: $platformData['slug'],
+            league: $leagueData !== null
+                ? new CompetitionLeagueData(
+                    id: $leagueData['id'],
+                    name: $leagueData['name'],
+                    slug: $leagueData['slug'],
+                )
+                : null,
             logo_url: $logoUrl,
+            has_own_logo: $competition->logoPath() !== null,
             status: $competition->status()->value,
             is_active: $competition->isActive(),
             is_archived: $competition->isArchived(),

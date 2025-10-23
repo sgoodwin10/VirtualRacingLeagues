@@ -220,6 +220,13 @@ class CompetitionControllerTest extends UserControllerTestCase
 
         $response->assertStatus(201)
             ->assertJsonFragment(['name' => 'GT3 Championship'])
+            ->assertJsonFragment([
+                'league' => [
+                    'id' => $this->league->id,
+                    'name' => $this->league->name,
+                    'slug' => $this->league->slug,
+                ],
+            ])
             ->assertJsonStructure([
                 'data' => [
                     'id',
@@ -230,6 +237,11 @@ class CompetitionControllerTest extends UserControllerTestCase
                     'platform_id',
                     'platform_name',
                     'platform_slug',
+                    'league' => [
+                        'id',
+                        'name',
+                        'slug',
+                    ],
                     'logo_url',
                     'status',
                     'is_active',

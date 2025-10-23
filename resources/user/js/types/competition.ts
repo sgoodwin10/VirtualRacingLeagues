@@ -9,6 +9,13 @@ export interface CompetitionPlatform {
   slug: string;
 }
 
+// League reference (subset of full League type)
+export interface CompetitionLeague {
+  id: number;
+  name: string;
+  slug: string;
+}
+
 // Status type
 export type CompetitionStatus = 'active' | 'archived';
 
@@ -21,7 +28,9 @@ export interface Competition {
   description: string | null;
   platform_id: number;
   platform?: CompetitionPlatform;
+  league?: CompetitionLeague;
   logo_url: string; // Never null (backend resolves fallback)
+  has_own_logo: boolean; // True if competition has its own logo, false if using league logo fallback
   status: CompetitionStatus;
   is_active: boolean;
   is_archived: boolean;
