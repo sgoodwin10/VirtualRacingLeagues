@@ -35,12 +35,12 @@ return new class extends Migration
 
             // Settings
             $table->enum('visibility', ['public', 'private', 'unlisted'])->default('public');
-            $table->string('timezone', 50)->nullable();
+            $table->string('timezone', 50);
 
             // Administration
             $table->foreignId('owner_user_id')->constrained('users')->onDelete('cascade');
-            $table->string('contact_email')->nullable();
-            $table->string('organizer_name', 100)->nullable();
+            $table->string('contact_email');
+            $table->string('organizer_name', 100);
 
             // Status
             $table->enum('status', ['active', 'archived'])->default('active');

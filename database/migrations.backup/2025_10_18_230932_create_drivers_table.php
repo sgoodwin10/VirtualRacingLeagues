@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('first_name', 100)->nullable();
             $table->string('last_name', 100)->nullable();
             $table->string('nickname', 100)->nullable();
-            $table->string('slug', 255)->unique();
 
             // Contact information (optional)
             $table->string('email', 255)->nullable();
@@ -36,7 +35,6 @@ return new class extends Migration
             // Indexes for searching and filtering
             $table->index(['first_name', 'last_name'], 'idx_driver_name');
             $table->index('nickname', 'idx_driver_nickname');
-            $table->index('slug', 'idx_driver_slug');
             $table->index('psn_id', 'idx_driver_psn_id');
             $table->index('iracing_id', 'idx_driver_iracing_id');
             $table->index('email', 'idx_driver_email');

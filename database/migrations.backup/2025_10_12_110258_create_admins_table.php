@@ -24,14 +24,10 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            // Single column indexes for performance
+            // Indexes for performance
             $table->index('email');
             $table->index('status');
             $table->index('role');
-
-            // Composite indexes for common query patterns
-            $table->index(['status', 'role'], 'admins_status_role_index');
-            $table->index(['email', 'status'], 'admins_email_status_index');
         });
 
         Schema::create('password_reset_tokens_admins', function (Blueprint $table) {
