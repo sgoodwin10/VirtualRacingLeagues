@@ -15,6 +15,17 @@
 # CC Usage
 `npx ccstatusline@latest`
 
+# Playwright
+claude mcp add playwright npx @playwright/mcp@latest
+sudo npx playwright install-deps
+npx playwright install
+npm run test:e2e
+
+### PHP Application Container as Root
+```bash
+docker exec -it -u root virtualracingleagues-app bash
+```
+
 
 # Access the docker container
 ```bash
@@ -26,6 +37,7 @@ npm install
 npm run build
 ```
 
+`docker exec -it -u root virtualracingleagues-app bash`
 
 # URLS
 http://virtualracingleagues.localhost
@@ -35,3 +47,6 @@ http://adminvirtualracingleagues.localhost
 # Mailpit
 http://virtualracingleagues.localhost:8025 
 
+
+ docker compose down
+  docker compose up -d

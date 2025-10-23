@@ -79,12 +79,12 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
 
     public function test_can_add_driver_with_matching_platform(): void
     {
-        // GT7 league should accept GT7 driver
+        // GT7 league should accept GT7 driver (using PSN ID)
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->gt7League->id}/drivers", [
                 'first_name' => 'Test',
                 'last_name' => 'Driver',
-                'gt7_id' => 'GT7_Player_123',
+                'psn_id' => 'PSN_Player_123',
                 'status' => 'active',
             ]);
 
@@ -95,7 +95,7 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
 
         $this->assertDatabaseHas('drivers', [
             'first_name' => 'Test',
-            'gt7_id' => 'GT7_Player_123',
+            'psn_id' => 'PSN_Player_123',
         ]);
     }
 
@@ -155,12 +155,12 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
 
     public function test_cannot_add_gt7_driver_to_iracing_league(): void
     {
-        // iRacing league should reject GT7 driver
+        // iRacing league should reject GT7 driver (with PSN ID)
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->iracingLeague->id}/drivers", [
                 'first_name' => 'GT7',
                 'last_name' => 'Player',
-                'gt7_id' => 'GT7_Player',
+                'psn_id' => 'PSN_Player',
                 'status' => 'active',
             ]);
 
@@ -192,12 +192,12 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
 
     public function test_can_add_driver_with_multiple_platforms_when_one_matches(): void
     {
-        // Driver has both GT7 and iRacing IDs, GT7 league should accept
+        // Driver has both PSN and iRacing IDs, GT7 league should accept
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->gt7League->id}/drivers", [
                 'first_name' => 'Multi',
                 'last_name' => 'Platform',
-                'gt7_id' => 'GT7_Player',
+                'psn_id' => 'PSN_Player',
                 'iracing_id' => 'iRacing_Player',
                 'status' => 'active',
             ]);
@@ -213,12 +213,12 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
             'platform_ids' => [1, 2], // GT7 and iRacing
         ]);
 
-        // Should accept GT7 driver
+        // Should accept GT7 driver (with PSN ID)
         $response1 = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$multiPlatformLeague->id}/drivers", [
                 'first_name' => 'GT7',
                 'last_name' => 'Driver',
-                'gt7_id' => 'GT7_Player_1',
+                'psn_id' => 'PSN_Player_1',
                 'status' => 'active',
             ]);
         $response1->assertStatus(201);
@@ -241,7 +241,7 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
             ->postJson("/api/leagues/{$this->gt7League->id}/drivers", [
                 'first_name' => 'No',
                 'last_name' => 'Contact',
-                'gt7_id' => 'GT7_NoContact',
+                'psn_id' => 'PSN_NoContact',
                 'status' => 'active',
             ]);
 
@@ -260,7 +260,7 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
             ->postJson("/api/leagues/{$this->gt7League->id}/drivers", [
                 'first_name' => 'With',
                 'last_name' => 'Email',
-                'gt7_id' => 'GT7_WithEmail',
+                'psn_id' => 'PSN_WithEmail',
                 'email' => 'driver@example.com',
                 'status' => 'active',
             ]);
@@ -278,7 +278,7 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
             ->postJson("/api/leagues/{$this->gt7League->id}/drivers", [
                 'first_name' => 'With',
                 'last_name' => 'Phone',
-                'gt7_id' => 'GT7_WithPhone',
+                'psn_id' => 'PSN_WithPhone',
                 'phone' => '+1234567890',
                 'status' => 'active',
             ]);

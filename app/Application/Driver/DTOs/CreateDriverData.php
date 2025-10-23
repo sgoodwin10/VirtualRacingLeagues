@@ -15,7 +15,6 @@ final class CreateDriverData extends Data
         public readonly ?string $email,
         public readonly ?string $phone,
         public readonly ?string $psn_id,
-        public readonly ?string $gt7_id,
         public readonly ?string $iracing_id,
         public readonly ?int $iracing_customer_id,
         public readonly ?int $driver_number,
@@ -43,7 +42,6 @@ final class CreateDriverData extends Data
 
             // At least one platform ID required - validated at application layer
             'psn_id' => ['nullable', 'string', 'max:255'],
-            'gt7_id' => ['nullable', 'string', 'max:255'],
             'iracing_id' => ['nullable', 'string', 'max:255'],
             'iracing_customer_id' => ['nullable', 'integer', 'min:1'],
 

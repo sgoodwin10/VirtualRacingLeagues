@@ -62,9 +62,6 @@ const platformIds = computed(() => {
   if (driver.psn_id) {
     platforms.push({ label: 'PSN ID', value: driver.psn_id });
   }
-  if (driver.gt7_id) {
-    platforms.push({ label: 'GT7 ID', value: driver.gt7_id });
-  }
   if (driver.iracing_id) {
     platforms.push({ label: 'iRacing ID', value: driver.iracing_id });
   }

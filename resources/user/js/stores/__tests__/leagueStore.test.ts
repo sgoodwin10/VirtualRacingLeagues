@@ -338,7 +338,7 @@ describe('leagueStore', () => {
     it('should fetch driver columns successfully', async () => {
       const mockColumns = [
         { field: 'psn_id', label: 'PSN ID', type: 'text' as const },
-        { field: 'gt7_id', label: 'GT7 ID', type: 'text' as const },
+        { field: 'iracing_id', label: 'iRacing ID', type: 'text' as const },
       ];
 
       vi.mocked(leagueService.getDriverColumns).mockResolvedValue(mockColumns);
@@ -404,7 +404,14 @@ describe('leagueStore', () => {
 
   describe('fetchDriverCsvHeadersForLeague', () => {
     it('should fetch CSV headers successfully', async () => {
-      const mockHeaders = ['FirstName', 'LastName', 'Email', 'PSN_ID', 'GT7_ID', 'DriverNumber'];
+      const mockHeaders = [
+        { field: 'FirstName', label: 'First Name', type: 'text' as const },
+        { field: 'LastName', label: 'Last Name', type: 'text' as const },
+        { field: 'Email', label: 'Email', type: 'text' as const },
+        { field: 'PSN_ID', label: 'PSN ID', type: 'text' as const },
+        { field: 'iRacing_ID', label: 'iRacing ID', type: 'text' as const },
+        { field: 'DriverNumber', label: 'Driver Number', type: 'number' as const },
+      ];
 
       vi.mocked(leagueService.getDriverCsvHeaders).mockResolvedValue(mockHeaders);
 

@@ -52,7 +52,6 @@ final class DriverApplicationService
 
         // Validate at least one platform ID
         $hasPlatformId = ($data->psn_id !== null && trim($data->psn_id) !== '')
-            || ($data->gt7_id !== null && trim($data->gt7_id) !== '')
             || ($data->iracing_id !== null && trim($data->iracing_id) !== '')
             || $data->iracing_customer_id !== null;
 
@@ -66,7 +65,6 @@ final class DriverApplicationService
 
         $driverData = [
             'psn_id' => $data->psn_id,
-            'gt7_id' => $data->gt7_id,
             'iracing_id' => $data->iracing_id,
             'iracing_customer_id' => $data->iracing_customer_id,
         ];
@@ -80,14 +78,13 @@ final class DriverApplicationService
             $this->driverRepository->existsInLeagueByPlatformId(
                 $leagueId,
                 $data->psn_id,
-                $data->gt7_id,
                 $data->iracing_id,
                 $data->iracing_customer_id
             )
         ) {
             throw DriverAlreadyInLeagueException::withPlatformId(
                 'platform',
-                $data->psn_id ?? $data->gt7_id ?? $data->iracing_id ?? (string) $data->iracing_customer_id,
+                $data->psn_id ?? $data->iracing_id ?? (string) $data->iracing_customer_id,
                 $leagueId
             );
         }
@@ -97,7 +94,6 @@ final class DriverApplicationService
             $driverName = DriverName::from($data->first_name, $data->last_name, $data->nickname);
             $platformIds = PlatformIdentifiers::from(
                 $data->psn_id,
-                $data->gt7_id,
                 $data->iracing_id,
                 $data->iracing_customer_id
             );
@@ -105,7 +101,6 @@ final class DriverApplicationService
             // Check if driver already exists globally (by platform IDs)
             $existingDriver = $this->driverRepository->findByPlatformId(
                 $data->psn_id,
-                $data->gt7_id,
                 $data->iracing_id,
                 $data->iracing_customer_id
             );
@@ -257,13 +252,12 @@ final class DriverApplicationService
             }
 
             // Update platform IDs if provided
-            $hasPlatformUpdate = $data->psn_id !== null || $data->gt7_id !== null
+            $hasPlatformUpdate = $data->psn_id !== null
                 || $data->iracing_id !== null || $data->iracing_customer_id !== null;
             if ($hasPlatformUpdate) {
                 $driver->updatePlatformIds(
                     PlatformIdentifiers::from(
                         $data->psn_id ?? $driver->platformIds()->psnId(),
-                        $data->gt7_id ?? $driver->platformIds()->gt7Id(),
                         $data->iracing_id ?? $driver->platformIds()->iracingId(),
                         $data->iracing_customer_id ?? $driver->platformIds()->iracingCustomerId()
                     )
@@ -331,13 +325,13 @@ final class DriverApplicationService
 
         // Parse CSV
         $lines = explode("\n", trim($data->csv_data));
-        if (empty($lines)) {
-            return new ImportResultData(0, ['CSV data is empty']);
+        if (count($lines) === 1 && trim($lines[0]) === '') {
+            return new ImportResultData(0, [['row' => 0, 'message' => 'CSV data is empty']]);
         }
 
         // Get header row
         $header = str_getcsv(array_shift($lines));
-        $header = array_map('trim', $header);
+        $header = array_map(fn ($value) => trim((string) $value), $header);
 
         // Process each row
         foreach ($lines as $lineNumber => $line) {
@@ -349,7 +343,7 @@ final class DriverApplicationService
 
             try {
                 $row = str_getcsv($line);
-                $row = array_map('trim', $row);
+                $row = array_map(fn ($value) => trim((string) $value), $row);
 
                 // Create associative array
                 $rowData = [];
@@ -357,18 +351,28 @@ final class DriverApplicationService
                     $rowData[$columnName] = $row[$index] ?? null;
                 }
 
-                // Extract data
-                $firstName = $rowData['FirstName'] ?? $rowData['first_name'] ?? null;
-                $lastName = $rowData['LastName'] ?? $rowData['last_name'] ?? null;
-                $nickname = $rowData['Nickname'] ?? $rowData['nickname'] ?? null;
-                $psnId = $rowData['PSN_ID'] ?? $rowData['psn_id'] ?? null;
-                $gt7Id = $rowData['GT7_ID'] ?? $rowData['gt7_id'] ?? null;
-                $iracingId = $rowData['iRacing_ID'] ?? $rowData['iracing_id'] ?? null;
-                $email = $rowData['Email'] ?? $rowData['email'] ?? null;
-                $phone = $rowData['Phone'] ?? $rowData['phone'] ?? null;
-                $driverNumber = isset($rowData['DriverNumber']) || isset($rowData['driver_number'])
-                    ? (int) ($rowData['DriverNumber'] ?? $rowData['driver_number'])
-                    : null;
+                // Extract data (case-insensitive column matching)
+                $firstName = $this->getCaseInsensitiveValue(
+                    $rowData,
+                    ['FirstName', 'first_name', 'firstname']
+                );
+                $lastName = $this->getCaseInsensitiveValue(
+                    $rowData,
+                    ['LastName', 'last_name', 'lastname']
+                );
+                $nickname = $this->getCaseInsensitiveValue($rowData, ['Nickname', 'nickname']);
+                $psnId = $this->getCaseInsensitiveValue($rowData, ['PSN_ID', 'psn_id', 'psnid']);
+                $iracingId = $this->getCaseInsensitiveValue(
+                    $rowData,
+                    ['iRacing_ID', 'iracing_id', 'iracinid']
+                );
+                $email = $this->getCaseInsensitiveValue($rowData, ['Email', 'email']);
+                $phone = $this->getCaseInsensitiveValue($rowData, ['Phone', 'phone']);
+                $driverNumber = $this->getCaseInsensitiveValue(
+                    $rowData,
+                    ['DriverNumber', 'driver_number', 'drivernumber']
+                );
+                $driverNumber = $driverNumber !== null ? (int) $driverNumber : null;
 
                 // Validate: at least one name field
                 $hasName = ($firstName !== null && $firstName !== '')
@@ -376,26 +380,43 @@ final class DriverApplicationService
                     || ($nickname !== null && $nickname !== '');
 
                 if (! $hasName) {
-                    $errors[$rowNumber] = "Row {$rowNumber}: At least one name field is required";
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'message' => "Row {$rowNumber}: At least one name field is required",
+                    ];
 
                     continue;
                 }
 
                 // Validate: at least one platform ID
                 $hasPlatformId = ($psnId !== null && $psnId !== '')
-                    || ($gt7Id !== null && $gt7Id !== '')
                     || ($iracingId !== null && $iracingId !== '');
 
                 if (! $hasPlatformId) {
-                    $errors[$rowNumber] = "Row {$rowNumber}: At least one platform ID is required";
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'message' => "Row {$rowNumber}: At least one platform ID is required",
+                    ];
 
                     continue;
                 }
 
                 // Check if already in league
-                if ($this->driverRepository->existsInLeagueByPlatformId($leagueId, $psnId, $gt7Id, $iracingId, null)) {
-                    $platformStr = $psnId ?? $gt7Id ?? $iracingId ?? 'unknown';
-                    $errors[$rowNumber] = "Row {$rowNumber}: Driver with platform ID '{$platformStr}' already exists in this league";
+                if (
+                    $this->driverRepository->existsInLeagueByPlatformId(
+                        $leagueId,
+                        $psnId,
+                        $iracingId,
+                        null
+                    )
+                ) {
+                    $platformStr = $psnId ?? $iracingId ?? 'unknown';
+                    $message = "Row {$rowNumber}: Driver with platform ID '{$platformStr}' ";
+                    $message .= 'already exists in this league';
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'message' => $message,
+                    ];
 
                     continue;
                 }
@@ -408,7 +429,6 @@ final class DriverApplicationService
                     email: $email,
                     phone: $phone,
                     psn_id: $psnId,
-                    gt7_id: $gt7Id,
                     iracing_id: $iracingId,
                     iracing_customer_id: null,
                     driver_number: $driverNumber,
@@ -420,14 +440,40 @@ final class DriverApplicationService
                 $this->createDriverForLeague($createData, $leagueId);
                 $successCount++;
             } catch (InvalidArgumentException $e) {
-                $errors[$rowNumber] = "Row {$rowNumber}: " . $e->getMessage();
+                $errors[] = [
+                    'row' => $rowNumber,
+                    'message' => "Row {$rowNumber}: " . $e->getMessage(),
+                ];
             } catch (DriverAlreadyInLeagueException $e) {
-                $errors[$rowNumber] = "Row {$rowNumber}: " . $e->getMessage();
+                $errors[] = [
+                    'row' => $rowNumber,
+                    'message' => "Row {$rowNumber}: " . $e->getMessage(),
+                ];
             } catch (\Exception $e) {
-                $errors[$rowNumber] = "Row {$rowNumber}: Unexpected error - " . $e->getMessage();
+                $errors[] = [
+                    'row' => $rowNumber,
+                    'message' => "Row {$rowNumber}: Unexpected error - " . $e->getMessage(),
+                ];
             }
         }
 
         return new ImportResultData($successCount, $errors);
+    }
+
+    /**
+     * Get value from row data using case-insensitive column name matching.
+     *
+     * @param array<string, mixed> $rowData
+     * @param array<int, string> $possibleKeys
+     */
+    private function getCaseInsensitiveValue(array $rowData, array $possibleKeys): ?string
+    {
+        foreach ($possibleKeys as $key) {
+            if (array_key_exists($key, $rowData) && $rowData[$key] !== null && $rowData[$key] !== '') {
+                return (string) $rowData[$key];
+            }
+        }
+
+        return null;
     }
 }

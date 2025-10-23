@@ -13,6 +13,7 @@ import type {
   UpdateLeagueForm,
   PlatformColumn,
   PlatformFormField,
+  PlatformCsvHeader,
 } from '@user/types/league';
 import {
   getPlatforms,
@@ -43,7 +44,7 @@ export const useLeagueStore = defineStore('league', () => {
   // Platform configuration state
   const platformColumns = ref<PlatformColumn[]>([]);
   const platformFormFields = ref<PlatformFormField[]>([]);
-  const platformCsvHeaders = ref<string[]>([]);
+  const platformCsvHeaders = ref<PlatformCsvHeader[]>([]);
 
   // Getters
   const hasReachedFreeLimit = computed(() => {

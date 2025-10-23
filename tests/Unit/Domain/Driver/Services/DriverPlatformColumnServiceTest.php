@@ -21,24 +21,17 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->service = new DriverPlatformColumnService();
     }
 
-    /**
-     * @test
-     */
-    public function it_returns_columns_for_gran_turismo_7_platform(): void
+    public function test_it_returns_columns_for_gran_turismo_7_platform(): void
     {
         $columns = $this->service->getColumnsForLeague([1]); // Platform ID 1 = GT7
 
-        $this->assertCount(2, $columns);
+        $this->assertCount(1, $columns);
         $this->assertEquals([
             ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
-            ['field' => 'gt7_id', 'label' => 'GT7 ID', 'type' => 'text'],
         ], $columns);
     }
 
-    /**
-     * @test
-     */
-    public function it_returns_columns_for_iracing_platform(): void
+    public function test_it_returns_columns_for_iracing_platform(): void
     {
         $columns = $this->service->getColumnsForLeague([2]); // Platform ID 2 = iRacing
 
@@ -49,56 +42,40 @@ class DriverPlatformColumnServiceTest extends TestCase
         ], $columns);
     }
 
-    /**
-     * @test
-     */
-    public function it_returns_combined_columns_for_multiple_platforms(): void
+    public function test_it_returns_combined_columns_for_multiple_platforms(): void
     {
         $columns = $this->service->getColumnsForLeague([1, 2]); // GT7 + iRacing
 
-        $this->assertCount(4, $columns);
+        $this->assertCount(3, $columns);
         $this->assertEquals([
             ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
-            ['field' => 'gt7_id', 'label' => 'GT7 ID', 'type' => 'text'],
             ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
             ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
         ], $columns);
     }
 
-    /**
-     * @test
-     */
-    public function it_returns_empty_array_for_platforms_without_fields(): void
+    public function test_it_returns_empty_array_for_platforms_without_fields(): void
     {
         $columns = $this->service->getColumnsForLeague([3]); // Platform ID 3 = ACC (no fields yet)
 
         $this->assertEmpty($columns);
     }
 
-    /**
-     * @test
-     */
-    public function it_returns_empty_array_for_unknown_platform_ids(): void
+    public function test_it_returns_empty_array_for_unknown_platform_ids(): void
     {
         $columns = $this->service->getColumnsForLeague([999]); // Non-existent platform
 
         $this->assertEmpty($columns);
     }
 
-    /**
-     * @test
-     */
-    public function it_returns_empty_array_for_empty_platform_ids(): void
+    public function test_it_returns_empty_array_for_empty_platform_ids(): void
     {
         $columns = $this->service->getColumnsForLeague([]);
 
         $this->assertEmpty($columns);
     }
 
-    /**
-     * @test
-     */
-    public function get_form_fields_returns_same_as_columns(): void
+    public function test_get_form_fields_returns_same_as_columns(): void
     {
         $platformIds = [1, 2];
         $columns = $this->service->getColumnsForLeague($platformIds);
@@ -107,10 +84,7 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertEquals($columns, $formFields);
     }
 
-    /**
-     * @test
-     */
-    public function get_csv_headers_returns_same_as_columns(): void
+    public function test_get_csv_headers_returns_same_as_columns(): void
     {
         $platformIds = [1, 2];
         $columns = $this->service->getColumnsForLeague($platformIds);
@@ -119,14 +93,10 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertEquals($columns, $csvHeaders);
     }
 
-    /**
-     * @test
-     */
-    public function it_validates_driver_is_compatible_when_has_psn_id(): void
+    public function test_it_validates_driver_is_compatible_when_has_psn_id(): void
     {
         $driver = $this->createDriver(
             psnId: 'player123',
-            gt7Id: null,
             iracingId: null,
             iracingCustomerId: null
         );
@@ -136,31 +106,10 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertTrue($isCompatible);
     }
 
-    /**
-     * @test
-     */
-    public function it_validates_driver_is_compatible_when_has_gt7_id(): void
+    public function test_it_validates_driver_is_compatible_when_has_iracing_id(): void
     {
         $driver = $this->createDriver(
             psnId: null,
-            gt7Id: 'gt7player',
-            iracingId: null,
-            iracingCustomerId: null
-        );
-
-        $isCompatible = $this->service->validateDriverPlatformCompatibility($driver, [1]); // GT7 platform
-
-        $this->assertTrue($isCompatible);
-    }
-
-    /**
-     * @test
-     */
-    public function it_validates_driver_is_compatible_when_has_iracing_id(): void
-    {
-        $driver = $this->createDriver(
-            psnId: null,
-            gt7Id: null,
             iracingId: 'iracing123',
             iracingCustomerId: null
         );
@@ -170,14 +119,10 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertTrue($isCompatible);
     }
 
-    /**
-     * @test
-     */
-    public function it_validates_driver_is_compatible_when_has_iracing_customer_id(): void
+    public function test_it_validates_driver_is_compatible_when_has_iracing_customer_id(): void
     {
         $driver = $this->createDriver(
             psnId: null,
-            gt7Id: null,
             iracingId: null,
             iracingCustomerId: 456789
         );
@@ -187,14 +132,10 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertTrue($isCompatible);
     }
 
-    /**
-     * @test
-     */
-    public function it_validates_driver_is_incompatible_when_has_no_matching_platform_ids(): void
+    public function test_it_validates_driver_is_incompatible_when_has_no_matching_platform_ids(): void
     {
         $driver = $this->createDriver(
             psnId: 'player123',
-            gt7Id: 'gt7player',
             iracingId: null,
             iracingCustomerId: null
         );
@@ -204,14 +145,10 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertFalse($isCompatible);
     }
 
-    /**
-     * @test
-     */
-    public function it_validates_driver_is_compatible_for_platforms_without_defined_fields(): void
+    public function test_it_validates_driver_is_compatible_for_platforms_without_defined_fields(): void
     {
         $driver = $this->createDriver(
             psnId: null,
-            gt7Id: null,
             iracingId: null,
             iracingCustomerId: 12345
         );
@@ -221,14 +158,10 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertTrue($isCompatible); // Should pass when no fields are defined
     }
 
-    /**
-     * @test
-     */
-    public function it_validates_driver_is_compatible_when_has_at_least_one_matching_id_for_multiple_platforms(): void
+    public function test_it_validates_driver_is_compatible_when_has_at_least_one_matching_id_for_multiple_platforms(): void
     {
         $driver = $this->createDriver(
             psnId: 'player123',
-            gt7Id: null,
             iracingId: null,
             iracingCustomerId: null
         );
@@ -238,15 +171,11 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertTrue($isCompatible); // Has PSN ID which matches GT7 platform
     }
 
-    /**
-     * @test
-     */
-    public function it_validates_driver_is_incompatible_when_platform_ids_are_empty_strings(): void
+    public function test_it_validates_driver_is_incompatible_when_platform_ids_are_empty_strings(): void
     {
-        // Create driver with valid iracing ID but empty PSN/GT7 IDs
+        // Create driver with valid iracing ID but empty PSN ID
         $driver = $this->createDriver(
             psnId: null,
-            gt7Id: null,
             iracingId: 'valid-iracing-id', // Need at least one valid ID
             iracingCustomerId: null
         );
@@ -263,12 +192,11 @@ class DriverPlatformColumnServiceTest extends TestCase
      */
     private function createDriver(
         ?string $psnId,
-        ?string $gt7Id,
         ?string $iracingId,
         ?int $iracingCustomerId
     ): Driver {
         // If all IDs are null/empty, provide at least one valid ID to pass PlatformIdentifiers validation
-        if ($psnId === null && $gt7Id === null && $iracingId === null && $iracingCustomerId === null) {
+        if ($psnId === null && $iracingId === null && $iracingCustomerId === null) {
             $psnId = 'dummy'; // Provide a dummy value to pass validation
         }
 
@@ -281,7 +209,6 @@ class DriverPlatformColumnServiceTest extends TestCase
             name: DriverName::from('John', 'Doe', 'JD'),
             platformIds: PlatformIdentifiers::from(
                 $psnId,
-                $gt7Id,
                 $iracingId,
                 $iracingCustomerId
             ),

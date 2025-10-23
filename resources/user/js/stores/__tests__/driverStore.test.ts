@@ -336,7 +336,6 @@ describe('driverStore', () => {
           email: 'john@example.com',
           phone: null,
           psn_id: 'JohnSmith77',
-          gt7_id: null,
           iracing_id: null,
           iracing_customer_id: null,
           primary_platform_id: 'JohnSmith77',
@@ -360,7 +359,6 @@ describe('driverStore', () => {
           email: 'jonathan@example.com',
           phone: null,
           psn_id: 'JohnSmith77',
-          gt7_id: null,
           iracing_id: null,
           iracing_customer_id: null,
           primary_platform_id: 'JohnSmith77',
@@ -403,7 +401,6 @@ describe('driverStore', () => {
           email: null,
           phone: null,
           psn_id: 'JohnSmith77',
-          gt7_id: null,
           iracing_id: null,
           iracing_customer_id: null,
           primary_platform_id: 'JohnSmith77',
@@ -446,7 +443,6 @@ describe('driverStore', () => {
           email: null,
           phone: null,
           psn_id: 'JohnSmith77',
-          gt7_id: null,
           iracing_id: null,
           iracing_customer_id: null,
           primary_platform_id: 'JohnSmith77',
@@ -473,7 +469,6 @@ describe('driverStore', () => {
           email: null,
           phone: null,
           psn_id: 'JohnSmith77',
-          gt7_id: null,
           iracing_id: null,
           iracing_customer_id: null,
           primary_platform_id: 'JohnSmith77',
@@ -533,7 +528,6 @@ describe('driverStore', () => {
       const mockImportResponse: ImportDriversResponse = {
         success_count: 1,
         errors: [],
-        message: '1 driver imported successfully',
       };
 
       const mockDriversResponse: PaginatedDriversResponse = {

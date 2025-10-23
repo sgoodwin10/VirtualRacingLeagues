@@ -31,19 +31,15 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
 
     public function findByPlatformId(
         ?string $psnId,
-        ?string $gt7Id,
         ?string $iracingId,
         ?int $iracingCustomerId
     ): ?DriverEntity {
         $query = DriverEloquent::query();
 
         // Build OR conditions for platform IDs
-        $query->where(function ($q) use ($psnId, $gt7Id, $iracingId, $iracingCustomerId) {
+        $query->where(function ($q) use ($psnId, $iracingId, $iracingCustomerId) {
             if ($psnId !== null) {
                 $q->orWhere('psn_id', $psnId);
-            }
-            if ($gt7Id !== null) {
-                $q->orWhere('gt7_id', $gt7Id);
             }
             if ($iracingId !== null) {
                 $q->orWhere('iracing_id', $iracingId);
@@ -71,7 +67,6 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         $eloquent->email = $driver->email();
         $eloquent->phone = $driver->phone();
         $eloquent->psn_id = $driver->platformIds()->psnId();
-        $eloquent->gt7_id = $driver->platformIds()->gt7Id();
         $eloquent->iracing_id = $driver->platformIds()->iracingId();
         $eloquent->iracing_customer_id = $driver->platformIds()->iracingCustomerId();
         $eloquent->deleted_at = $driver->deletedAt()?->format('Y-m-d H:i:s');
@@ -97,7 +92,6 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
     public function existsInLeagueByPlatformId(
         int $leagueId,
         ?string $psnId,
-        ?string $gt7Id,
         ?string $iracingId,
         ?int $iracingCustomerId
     ): bool {
@@ -106,12 +100,9 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
                 $q->where('leagues.id', $leagueId);
             });
 
-        $query->where(function ($q) use ($psnId, $gt7Id, $iracingId, $iracingCustomerId) {
+        $query->where(function ($q) use ($psnId, $iracingId, $iracingCustomerId) {
             if ($psnId !== null) {
                 $q->orWhere('psn_id', $psnId);
-            }
-            if ($gt7Id !== null) {
-                $q->orWhere('gt7_id', $gt7Id);
             }
             if ($iracingId !== null) {
                 $q->orWhere('iracing_id', $iracingId);
@@ -144,7 +135,6 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
                     ->orWhere('drivers.nickname', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.slug', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.psn_id', 'LIKE', "%{$search}%")
-                    ->orWhere('drivers.gt7_id', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.iracing_id', 'LIKE', "%{$search}%");
             });
         }
@@ -202,7 +192,6 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
                 slug: Slug::from($row->slug),
                 platformIds: PlatformIdentifiers::from(
                     $row->psn_id,
-                    $row->gt7_id,
                     $row->iracing_id,
                     $row->iracing_customer_id
                 ),
@@ -267,7 +256,6 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             slug: Slug::from($row->slug),
             platformIds: PlatformIdentifiers::from(
                 $row->psn_id,
-                $row->gt7_id,
                 $row->iracing_id,
                 $row->iracing_customer_id
             ),
@@ -374,7 +362,6 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             slug: Slug::from($eloquent->slug),
             platformIds: PlatformIdentifiers::from(
                 $eloquent->psn_id,
-                $eloquent->gt7_id,
                 $eloquent->iracing_id,
                 $eloquent->iracing_customer_id
             ),

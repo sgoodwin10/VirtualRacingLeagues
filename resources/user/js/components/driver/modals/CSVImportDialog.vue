@@ -14,11 +14,11 @@ import BaseModalHeader from '@user/components/common/modals/BaseModalHeader.vue'
 interface Props {
   visible: boolean;
   leagueId: number;
+  onImport: (csvData: string) => Promise<ImportDriversResponse>;
 }
 
 interface Emits {
   (e: 'update:visible', value: boolean): void;
-  (e: 'import', csvData: string): Promise<ImportDriversResponse>;
   (e: 'close'): void;
 }
 
@@ -34,24 +34,75 @@ const error = ref<string | null>(null);
 
 // Generate CSV example dynamically based on league's platform headers
 const csvExample = computed(() => {
-  const headers = leagueStore.platformCsvHeaders;
-  if (headers.length === 0) {
+  const platformHeaders = leagueStore.platformCsvHeaders;
+
+  if (platformHeaders.length === 0) {
     // Fallback example if headers not loaded yet
-    return `FirstName,LastName,Email,DriverNumber
-John,Smith,john@example.com,5
-Jane,Doe,jane@example.com,7
-Mike,Ross,,3`;
+    return `Nickname,DriverNumber
+John Smith,5
+Jane Doe,7
+Mike Ross,3`;
   }
 
-  // Create example with actual headers
-  const headerRow = headers.join(',');
-  const exampleRows = [
-    'John,Smith,john@example.com,5',
-    'Jane,Doe,jane@example.com,7',
-    'Mike,Ross,,3',
-  ];
+  // Build headers: Nickname + platform ID columns + DriverNumber (optional)
+  const headers = ['Nickname', ...platformHeaders.map((h) => h.field), 'DriverNumber'];
 
-  return `${headerRow}\n${exampleRows.join('\n')}`;
+  // Generate example data rows based on the platform columns
+  const exampleRows: string[][] = [];
+
+  // Example 1: Full data
+  const row1 = ['John Smith'];
+  platformHeaders.forEach((header) => {
+    if (header.field === 'psn_id') {
+      row1.push('john_psn_123');
+    } else if (header.field === 'iracing_id') {
+      row1.push('john_iracing');
+    } else if (header.field === 'iracing_customer_id') {
+      row1.push('123456');
+    } else {
+      row1.push('john_' + header.field);
+    }
+  });
+  row1.push('5'); // DriverNumber
+  exampleRows.push(row1);
+
+  // Example 2: Different driver with optional empty driver number
+  const row2 = ['Jane Doe'];
+  platformHeaders.forEach((header) => {
+    if (header.field === 'psn_id') {
+      row2.push('jane_psn_456');
+    } else if (header.field === 'iracing_id') {
+      row2.push('jane_iracing');
+    } else if (header.field === 'iracing_customer_id') {
+      row2.push('789012');
+    } else {
+      row2.push('jane_' + header.field);
+    }
+  });
+  row2.push('7'); // DriverNumber
+  exampleRows.push(row2);
+
+  // Example 3: Driver with empty driver number to show optional field
+  const row3 = ['Mike Ross'];
+  platformHeaders.forEach((header) => {
+    if (header.field === 'psn_id') {
+      row3.push('mike_psn_789');
+    } else if (header.field === 'iracing_id') {
+      row3.push('mike_iracing');
+    } else if (header.field === 'iracing_customer_id') {
+      row3.push('345678');
+    } else {
+      row3.push('mike_' + header.field);
+    }
+  });
+  row3.push(''); // Empty DriverNumber to show it's optional
+  exampleRows.push(row3);
+
+  // Format as CSV
+  const headerRow = headers.join(',');
+  const dataRows = exampleRows.map((row) => row.join(','));
+
+  return `${headerRow}\n${dataRows.join('\n')}`;
 });
 
 // Watch for visible changes to reset form
@@ -78,7 +129,7 @@ const handleImport = async (): Promise<void> => {
   importResult.value = null;
 
   try {
-    const result = await emit('import', csvData.value);
+    const result = await props.onImport(csvData.value);
     importResult.value = result;
 
     // If all successful, close dialog after a short delay
@@ -130,7 +181,7 @@ const downloadTemplate = (): void => {
     return;
   }
 
-  const csvContent = headers.join(',');
+  const csvContent = headers.map((h) => h.field).join(',');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
@@ -160,11 +211,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <BaseModal
-    :visible="visible"
-    width="3xl"
-    @update:visible="$emit('update:visible', $event)"
-  >
+  <BaseModal :visible="visible" width="3xl" @update:visible="$emit('update:visible', $event)">
     <template #header>
       <BaseModalHeader title="Import Drivers from CSV" />
     </template>
@@ -179,23 +226,24 @@ onMounted(async () => {
         <ul class="text-sm text-blue-800 space-y-1 my-3">
           <li><strong>Required:</strong> At least one name (FirstName, LastName, or Nickname)</li>
           <li><strong>Required:</strong> At least one platform ID for this league's platforms</li>
-          <li><strong>Optional:</strong> Email, Phone, DriverNumber</li>
+          <li><strong>Optional:</strong> DriverNumber</li>
         </ul>
         <div class="flex items-center gap-2 mb-2">
-          <p class="text-sm font-medium text-blue-900">CSV Template:</p>
+          <p class="text-sm font-medium text-blue-900 hidden">CSV Template:</p>
           <Button
             label="Download Template"
             size="small"
             severity="info"
             icon="pi pi-download"
+            class="hidden"
             @click="downloadTemplate"
           />
-          <Button label="Use Example" size="small" severity="info" text @click="useExample" />
+          <Button label="Use Example" size="small" severity="info" @click="useExample" />
         </div>
         <div v-if="leagueStore.platformCsvHeaders.length > 0">
           <p class="text-xs text-blue-800 mb-1">Expected headers for this league:</p>
           <pre class="text-xs bg-white border border-blue-200 rounded p-2 overflow-x-auto">{{
-            leagueStore.platformCsvHeaders.join(',')
+            leagueStore.platformCsvHeaders.map((h) => h.field).join(',')
           }}</pre>
         </div>
         <div v-else class="text-sm text-blue-600">Loading CSV template configuration...</div>

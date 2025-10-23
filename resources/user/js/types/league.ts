@@ -178,3 +178,12 @@ export interface PlatformFormField {
     pattern?: string;
   };
 }
+
+/**
+ * Platform CSV header configuration for driver import
+ */
+export interface PlatformCsvHeader {
+  field: string;
+  label: string;
+  type: 'text' | 'number';
+}

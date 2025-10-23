@@ -29,4 +29,12 @@ final class InvalidPlatformException extends DomainException
     {
         return new self('At least one platform must be specified');
     }
+
+    /**
+     * Create exception for platform not in league.
+     */
+    public static function notInLeague(int $platformId): self
+    {
+        return new self("Platform with ID {$platformId} is not available in this league");
+    }
 }

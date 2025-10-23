@@ -71,6 +71,36 @@ vi.mock('primevue/button', () => ({
   },
 }));
 
+vi.mock('primevue/accordion', () => ({
+  default: {
+    name: 'Accordion',
+    template: '<div class="mock-accordion"><slot></slot></div>',
+    props: ['multiple'],
+  },
+}));
+
+vi.mock('primevue/accordionpanel', () => ({
+  default: {
+    name: 'AccordionPanel',
+    template: '<div class="mock-accordion-panel"><slot></slot></div>',
+    props: ['value'],
+  },
+}));
+
+vi.mock('primevue/accordionheader', () => ({
+  default: {
+    name: 'AccordionHeader',
+    template: '<div class="mock-accordion-header"><slot></slot></div>',
+  },
+}));
+
+vi.mock('primevue/accordioncontent', () => ({
+  default: {
+    name: 'AccordionContent',
+    template: '<div class="mock-accordion-content"><slot></slot></div>',
+  },
+}));
+
 describe('DriverFormDialog', () => {
   let mockDriver: LeagueDriver;
   let mockPlatformFormFields: PlatformFormField[];
@@ -93,7 +123,6 @@ describe('DriverFormDialog', () => {
         email: 'john@example.com',
         phone: '+1234567890',
         psn_id: 'JohnSmith77',
-        gt7_id: null,
         iracing_id: null,
         iracing_customer_id: null,
         display_name: 'John Smith',
@@ -111,7 +140,7 @@ describe('DriverFormDialog', () => {
 
     mockPlatformFormFields = [
       { field: 'psn_id', label: 'PSN ID', type: 'text', placeholder: 'Enter PSN ID' },
-      { field: 'gt7_id', label: 'GT7 ID', type: 'text', placeholder: 'Enter GT7 ID' },
+      { field: 'iracing_id', label: 'iRacing ID', type: 'text', placeholder: 'Enter iRacing ID' },
     ];
   });
 

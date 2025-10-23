@@ -17,12 +17,11 @@ interface DriverRepositoryInterface
     public function findById(int $id): Driver;
 
     /**
-     * Find driver by platform ID (PSN, GT7, or iRacing).
+     * Find driver by platform ID (PSN or iRacing).
      * Returns null if not found.
      */
     public function findByPlatformId(
         ?string $psnId,
-        ?string $gt7Id,
         ?string $iracingId,
         ?int $iracingCustomerId
     ): ?Driver;
@@ -43,7 +42,6 @@ interface DriverRepositoryInterface
     public function existsInLeagueByPlatformId(
         int $leagueId,
         ?string $psnId,
-        ?string $gt7Id,
         ?string $iracingId,
         ?int $iracingCustomerId
     ): bool;

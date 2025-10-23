@@ -7,6 +7,10 @@ import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
+import Accordion from 'primevue/accordion';
+import AccordionPanel from 'primevue/accordionpanel';
+import AccordionHeader from 'primevue/accordionheader';
+import AccordionContent from 'primevue/accordioncontent';
 import FormInputGroup from '@user/components/common/forms/FormInputGroup.vue';
 import FormLabel from '@user/components/common/forms/FormLabel.vue';
 import FormError from '@user/components/common/forms/FormError.vue';
@@ -237,64 +241,37 @@ onMounted(async () => {
       <BaseModalHeader :title="dialogTitle" />
     </template>
 
-    <form class="space-y-4" @submit.prevent="handleSubmit">
-      <!-- Name Fields -->
-      <div class="grid grid-cols-3 gap-4">
+    <form class="space-y-3" @submit.prevent="handleSubmit">
+      <!-- Primary Fields Section -->
+      <div class="space-y-3">
+        <!-- Nickname (Most Important) -->
         <FormInputGroup>
-          <FormLabel for="first_name" text="First Name" />
-          <InputText
-            id="first_name"
-            v-model="formData.first_name"
-            placeholder="John"
-            class="w-full"
-          />
-        </FormInputGroup>
-        <FormInputGroup>
-          <FormLabel for="last_name" text="Last Name" />
-          <InputText
-            id="last_name"
-            v-model="formData.last_name"
-            placeholder="Smith"
-            class="w-full"
-          />
-        </FormInputGroup>
-        <FormInputGroup>
-          <FormLabel for="nickname" text="Nickname" />
+          <FormLabel for="nickname" text="Nickname" required />
           <InputText
             id="nickname"
             v-model="formData.nickname"
             placeholder="JSmith"
             class="w-full"
           />
+          <FormHelper text="Primary identifier for the driver" />
         </FormInputGroup>
-      </div>
-      <FormHelper text="At least one name field is required" />
-      <FormError :error="errors.name" />
 
-      <!-- Contact Fields -->
-      <div class="grid grid-cols-2 gap-4">
-        <FormInputGroup>
-          <FormLabel for="email" text="Email" />
-          <InputText
-            id="email"
-            v-model="formData.email"
-            type="email"
-            placeholder="john@example.com"
-            class="w-full"
-          />
-          <FormHelper text="Optional: Driver's email address" />
-          <FormError :error="errors.email" />
-        </FormInputGroup>
-        <FormInputGroup>
-          <FormLabel for="phone" text="Phone" />
-          <InputText id="phone" v-model="formData.phone" placeholder="+1234567890" class="w-full" />
-          <FormHelper text="Optional: Driver's phone number" />
-        </FormInputGroup>
-      </div>
+        <!-- Status and Dynamic Platform Fields in Grid -->
+        <div class="grid grid-cols-2 gap-3">
+          <FormInputGroup>
+            <FormLabel for="status" text="Status" required />
+            <Select
+              id="status"
+              v-model="formData.status"
+              :options="statusOptions"
+              option-label="label"
+              option-value="value"
+              placeholder="Select status"
+              class="w-full"
+            />
+          </FormInputGroup>
 
-      <!-- Dynamic Platform Fields - Rendered based on league's platforms -->
-      <div v-if="hasAnyPlatformField" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
+          <!-- Dynamic Platform Fields - Rendered based on league's platforms -->
           <FormInputGroup v-for="field in platformFormFields" :key="field.field">
             <FormLabel :for="field.field" :text="field.label" />
             <InputText
@@ -316,57 +293,105 @@ onMounted(async () => {
             />
           </FormInputGroup>
         </div>
-        <FormHelper text="At least one platform ID is required" />
-        <FormError :error="errors.platform" />
-      </div>
 
-      <!-- League-Specific Fields -->
-      <div class="grid grid-cols-2 gap-4">
-        <FormInputGroup>
-          <FormLabel for="driver_number" text="Driver Number" />
-          <InputNumber
-            id="driver_number"
-            v-model="formData.driver_number"
-            :min="1"
-            :max="999"
-            :use-grouping="false"
-            placeholder="5"
-            class="w-full"
-          />
-          <FormHelper text="Optional: Between 1 and 999" />
-          <FormError :error="errors.driver_number" />
-        </FormInputGroup>
-        <FormInputGroup>
-          <FormLabel for="status" text="Status" />
-          <Select
-            id="status"
-            v-model="formData.status"
-            :options="statusOptions"
-            option-label="label"
-            option-value="value"
-            placeholder="Select status"
-            class="w-full"
-          />
-          <FormHelper text="Driver's current status in this league" />
-        </FormInputGroup>
-      </div>
-
-      <!-- League Notes -->
-      <FormInputGroup>
-        <FormLabel for="league_notes" text="League Notes" />
-        <Textarea
-          id="league_notes"
-          v-model="formData.league_notes"
-          rows="3"
-          placeholder="Add any notes about this driver..."
-          class="w-full"
-          maxlength="500"
-        />
-        <div class="flex justify-between items-center">
-          <FormHelper text="Optional: Add notes specific to this league" />
-          <FormCharacterCount :current="formData.league_notes?.length || 0" :max="500" />
+        <!-- Validation Messages -->
+        <div v-if="errors.name || errors.platform" class="space-y-1">
+          <FormError :error="errors.name" />
+          <FormError :error="errors.platform" />
         </div>
-      </FormInputGroup>
+      </div>
+
+      <!-- Secondary Fields Section (Expandable) -->
+      <Accordion :multiple="false" class="mt-2">
+        <AccordionPanel value="0">
+          <AccordionHeader>
+            <span class="text-sm font-medium text-gray-700">
+              Additional Information (Optional)
+            </span>
+          </AccordionHeader>
+          <AccordionContent>
+            <div class="space-y-3 pt-2">
+              <!-- Name Fields -->
+              <div class="grid grid-cols-2 gap-3">
+                <FormInputGroup>
+                  <FormLabel for="first_name" text="First Name" />
+                  <InputText
+                    id="first_name"
+                    v-model="formData.first_name"
+                    placeholder="John"
+                    class="w-full"
+                  />
+                </FormInputGroup>
+                <FormInputGroup>
+                  <FormLabel for="last_name" text="Last Name" />
+                  <InputText
+                    id="last_name"
+                    v-model="formData.last_name"
+                    placeholder="Smith"
+                    class="w-full"
+                  />
+                </FormInputGroup>
+              </div>
+
+              <!-- Contact Fields -->
+              <div class="grid grid-cols-2 gap-3">
+                <FormInputGroup>
+                  <FormLabel for="email" text="Email" />
+                  <InputText
+                    id="email"
+                    v-model="formData.email"
+                    type="email"
+                    placeholder="john@example.com"
+                    class="w-full"
+                  />
+                  <FormError :error="errors.email" />
+                </FormInputGroup>
+                <FormInputGroup>
+                  <FormLabel for="phone" text="Phone" />
+                  <InputText
+                    id="phone"
+                    v-model="formData.phone"
+                    placeholder="+1234567890"
+                    class="w-full"
+                  />
+                </FormInputGroup>
+                <!-- Driver Number -->
+                <FormInputGroup>
+                  <FormLabel for="driver_number" text="Driver Number" />
+                  <InputNumber
+                    id="driver_number"
+                    v-model="formData.driver_number"
+                    :min="1"
+                    :max="999"
+                    :use-grouping="false"
+                    placeholder="5"
+                    class=""
+                  />
+                  <FormHelper text="Between 1 and 999" />
+                  <FormError :error="errors.driver_number" />
+                </FormInputGroup>
+              </div>
+
+              <!-- League Notes -->
+              <FormInputGroup>
+                <FormLabel for="league_notes" text="League Notes" />
+                <Textarea
+                  id="league_notes"
+                  v-model="formData.league_notes"
+                  rows="3"
+                  placeholder="Add any notes about this driver..."
+                  class="w-full"
+                  maxlength="500"
+                />
+                <div class="flex justify-between items-center">
+                  <FormHelper text="Notes specific to this league" />
+                  <FormCharacterCount :current="formData.league_notes?.length || 0" :max="500" />
+                </div>
+              </FormInputGroup>
+            </div>
+          </AccordionContent>
+        </AccordionPanel>
+      </Accordion>
     </form>
 
     <template #footer>

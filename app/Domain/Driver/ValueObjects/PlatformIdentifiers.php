@@ -10,7 +10,6 @@ final readonly class PlatformIdentifiers
 {
     private function __construct(
         private ?string $psnId,
-        private ?string $gt7Id,
         private ?string $iracingId,
         private ?int $iracingCustomerId
     ) {
@@ -19,32 +18,26 @@ final readonly class PlatformIdentifiers
 
     public static function from(
         ?string $psnId,
-        ?string $gt7Id,
         ?string $iracingId,
         ?int $iracingCustomerId
     ): self {
-        return new self($psnId, $gt7Id, $iracingId, $iracingCustomerId);
+        return new self($psnId, $iracingId, $iracingCustomerId);
     }
 
     private function validate(): void
     {
         // At least one platform ID is required
         $hasPsn = $this->psnId !== null && trim($this->psnId) !== '';
-        $hasGt7 = $this->gt7Id !== null && trim($this->gt7Id) !== '';
         $hasIracing = $this->iracingId !== null && trim($this->iracingId) !== '';
         $hasIracingCustomer = $this->iracingCustomerId !== null;
 
-        if (!$hasPsn && !$hasGt7 && !$hasIracing && !$hasIracingCustomer) {
+        if (!$hasPsn && !$hasIracing && !$hasIracingCustomer) {
             throw new InvalidArgumentException('At least one platform identifier is required');
         }
 
         // Validate lengths
         if ($this->psnId !== null && mb_strlen($this->psnId) > 255) {
             throw new InvalidArgumentException('PSN ID cannot exceed 255 characters');
-        }
-
-        if ($this->gt7Id !== null && mb_strlen($this->gt7Id) > 255) {
-            throw new InvalidArgumentException('GT7 ID cannot exceed 255 characters');
         }
 
         if ($this->iracingId !== null && mb_strlen($this->iracingId) > 255) {
@@ -60,11 +53,6 @@ final readonly class PlatformIdentifiers
     public function psnId(): ?string
     {
         return $this->psnId;
-    }
-
-    public function gt7Id(): ?string
-    {
-        return $this->gt7Id;
     }
 
     public function iracingId(): ?string
@@ -84,10 +72,6 @@ final readonly class PlatformIdentifiers
     {
         if ($this->psnId !== null && trim($this->psnId) !== '') {
             return 'PSN: ' . $this->psnId;
-        }
-
-        if ($this->gt7Id !== null && trim($this->gt7Id) !== '') {
-            return 'GT7: ' . $this->gt7Id;
         }
 
         if ($this->iracingId !== null && trim($this->iracingId) !== '') {
@@ -111,10 +95,6 @@ final readonly class PlatformIdentifiers
             return true;
         }
 
-        if ($this->gt7Id !== null && $this->gt7Id === $other->gt7Id) {
-            return true;
-        }
-
         if ($this->iracingId !== null && $this->iracingId === $other->iracingId) {
             return true;
         }
@@ -129,7 +109,6 @@ final readonly class PlatformIdentifiers
     public function equals(self $other): bool
     {
         return $this->psnId === $other->psnId
-            && $this->gt7Id === $other->gt7Id
             && $this->iracingId === $other->iracingId
             && $this->iracingCustomerId === $other->iracingCustomerId;
     }

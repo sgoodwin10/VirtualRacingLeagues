@@ -23,7 +23,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $email
  * @property string|null $phone
  * @property string|null $psn_id
- * @property string|null $gt7_id
  * @property string|null $iracing_id
  * @property int|null $iracing_customer_id
  * @property \Illuminate\Support\Carbon $created_at
@@ -53,7 +52,6 @@ final class Driver extends Model
         'email',
         'phone',
         'psn_id',
-        'gt7_id',
         'iracing_id',
         'iracing_customer_id',
     ];

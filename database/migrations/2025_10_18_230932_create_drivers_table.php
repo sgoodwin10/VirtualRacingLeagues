@@ -25,7 +25,6 @@ return new class extends Migration
 
             // Platform identifiers (at least one required - enforced at application layer)
             $table->string('psn_id', 255)->nullable();
-            $table->string('gt7_id', 255)->nullable();
             $table->string('iracing_id', 255)->nullable();
             $table->integer('iracing_customer_id')->nullable();
 
@@ -37,7 +36,6 @@ return new class extends Migration
             $table->index(['first_name', 'last_name'], 'idx_driver_name');
             $table->index('nickname', 'idx_driver_nickname');
             $table->index('psn_id', 'idx_driver_psn_id');
-            $table->index('gt7_id', 'idx_driver_gt7_id');
             $table->index('iracing_id', 'idx_driver_iracing_id');
             $table->index('email', 'idx_driver_email');
         });

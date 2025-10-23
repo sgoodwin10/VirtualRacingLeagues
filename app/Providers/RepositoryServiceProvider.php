@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domain\Admin\Repositories\AdminRepositoryInterface;
+use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Repositories\AdminReadModelService;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentAdminRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetitionRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDriverRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentLeagueRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserRepository;
@@ -47,6 +49,12 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             DriverRepositoryInterface::class,
             EloquentDriverRepository::class
+        );
+
+        // Bind Competition Repository
+        $this->app->bind(
+            CompetitionRepositoryInterface::class,
+            EloquentCompetitionRepository::class
         );
 
         // Bind Admin Read Model Service (singleton for better performance)

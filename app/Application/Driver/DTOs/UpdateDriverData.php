@@ -20,7 +20,6 @@ final class UpdateDriverData extends Data
         public readonly ?string $email,
         public readonly ?string $phone,
         public readonly ?string $psn_id,
-        public readonly ?string $gt7_id,
         public readonly ?string $iracing_id,
         public readonly ?int $iracing_customer_id,
         // League-specific fields
@@ -45,7 +44,6 @@ final class UpdateDriverData extends Data
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
             'psn_id' => ['nullable', 'string', 'max:255'],
-            'gt7_id' => ['nullable', 'string', 'max:255'],
             'iracing_id' => ['nullable', 'string', 'max:255'],
             'iracing_customer_id' => ['nullable', 'integer', 'min:1'],
             // League-specific fields
@@ -70,7 +68,6 @@ final class UpdateDriverData extends Data
             'email.max' => 'Email must not exceed 255 characters',
             'phone.max' => 'Phone number must not exceed 20 characters',
             'psn_id.max' => 'PSN ID must not exceed 255 characters',
-            'gt7_id.max' => 'GT7 ID must not exceed 255 characters',
             'iracing_id.max' => 'iRacing ID must not exceed 255 characters',
             'iracing_customer_id.min' => 'iRacing Customer ID must be a positive number',
             'driver_number.min' => 'Driver number must be between 1 and 999',

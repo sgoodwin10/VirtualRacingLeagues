@@ -1,9 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
-import { createTestPinia } from '@user/__tests__/setup/testUtils';
+import { mount, VueWrapper } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 import ReadOnlyDriverTable from '../ReadOnlyDriverTable.vue';
-import { useLeagueStore } from '@user/stores/leagueStore';
 import type { LeagueDriver } from '@user/types/driver';
+import type { PlatformColumn } from '@user/types/league';
+
+// Mock the league store
+const mockFetchDriverColumnsForLeague = vi.fn();
+let mockPlatformColumnsValue: PlatformColumn[] = [];
+
+vi.mock('@user/stores/leagueStore', () => ({
+  useLeagueStore: vi.fn(() => ({
+    get platformColumns() {
+      return mockPlatformColumnsValue;
+    },
+    fetchDriverColumnsForLeague: mockFetchDriverColumnsForLeague,
+  })),
+}));
 
 // Mock PrimeVue components
 vi.mock('primevue/datatable', () => ({
@@ -13,22 +26,18 @@ vi.mock('primevue/datatable', () => ({
       <div class="p-datatable">
         <div v-if="loading"><slot name="loading">Loading...</slot></div>
         <div v-else-if="!value || value.length === 0"><slot name="empty">No data</slot></div>
-        <div v-else>
-          <div v-for="(item, index) in value" :key="index" class="p-datatable-row">
-            <slot :data="item" />
-          </div>
-        </div>
+        <div v-else><slot></slot></div>
       </div>
     `,
     props: [
       'value',
       'loading',
-      'stripedRows',
+      'striped-rows',
       'paginator',
       'rows',
-      'rowsPerPageOptions',
-      'dataKey',
-      'responsiveLayout',
+      'rows-per-page-options',
+      'data-key',
+      'responsive-layout',
     ],
   },
 }));
@@ -36,8 +45,50 @@ vi.mock('primevue/datatable', () => ({
 vi.mock('primevue/column', () => ({
   default: {
     name: 'Column',
-    template: '<div class="p-column"><slot name="body" :data="$parent.$attrs.data" /></div>',
+    template: '<div class="p-column"></div>',
     props: ['field', 'header', 'style'],
+  },
+}));
+
+vi.mock('primevue/button', () => ({
+  default: {
+    name: 'Button',
+    template: '<button class="p-button" @click="$emit(\'click\')"><slot name="icon" /></button>',
+    props: ['label', 'icon', 'size', 'text', 'severity', 'rounded', 'title'],
+    emits: ['click'],
+  },
+}));
+
+// Mock Phosphor icons
+vi.mock('@phosphor-icons/vue', () => ({
+  PhEye: {
+    name: 'PhEye',
+    template: '<span class="ph-eye" />',
+    props: ['size'],
+  },
+  PhPencilSimple: {
+    name: 'PhPencilSimple',
+    template: '<span class="ph-pencil" />',
+    props: ['size'],
+  },
+}));
+
+// Mock modals
+vi.mock('../ViewDriverModal.vue', () => ({
+  default: {
+    name: 'ViewDriverModal',
+    template: '<div class="view-driver-modal"></div>',
+    props: ['visible', 'driver'],
+    emits: ['update:visible', 'close', 'edit'],
+  },
+}));
+
+vi.mock('../modals/DriverFormDialog.vue', () => ({
+  default: {
+    name: 'DriverFormDialog',
+    template: '<div class="driver-form-dialog"></div>',
+    props: ['visible', 'mode', 'driver', 'leagueId'],
+    emits: ['update:visible', 'save', 'cancel'],
   },
 }));
 
@@ -60,7 +111,6 @@ describe('ReadOnlyDriverTable', () => {
         email: 'john@example.com',
         phone: null,
         psn_id: 'johndoe',
-        gt7_id: null,
         iracing_id: null,
         iracing_customer_id: null,
         primary_platform_id: 'psn_id',
@@ -83,7 +133,6 @@ describe('ReadOnlyDriverTable', () => {
         email: 'jane@example.com',
         phone: null,
         psn_id: null,
-        gt7_id: null,
         iracing_id: 'janesmith123',
         iracing_customer_id: 12345,
         primary_platform_id: 'iracing_id',
@@ -91,15 +140,20 @@ describe('ReadOnlyDriverTable', () => {
     },
   ];
 
+  let wrapper: VueWrapper;
+
   beforeEach(() => {
+    // Set up Pinia
+    setActivePinia(createPinia());
+
+    // Reset mocks
+    mockFetchDriverColumnsForLeague.mockClear();
+    mockPlatformColumnsValue = [];
     vi.clearAllMocks();
   });
 
   it('renders without crashing', () => {
-    const wrapper = mount(ReadOnlyDriverTable, {
-      global: {
-        plugins: [createTestPinia()],
-      },
+    wrapper = mount(ReadOnlyDriverTable, {
       props: {
         drivers: [],
         loading: false,
@@ -110,10 +164,7 @@ describe('ReadOnlyDriverTable', () => {
   });
 
   it('shows loading state', () => {
-    const wrapper = mount(ReadOnlyDriverTable, {
-      global: {
-        plugins: [createTestPinia()],
-      },
+    wrapper = mount(ReadOnlyDriverTable, {
       props: {
         drivers: [],
         loading: true,
@@ -124,10 +175,7 @@ describe('ReadOnlyDriverTable', () => {
   });
 
   it('shows empty state when no drivers', () => {
-    const wrapper = mount(ReadOnlyDriverTable, {
-      global: {
-        plugins: [createTestPinia()],
-      },
+    wrapper = mount(ReadOnlyDriverTable, {
       props: {
         drivers: [],
         loading: false,
@@ -135,5 +183,44 @@ describe('ReadOnlyDriverTable', () => {
     });
 
     expect(wrapper.html()).toContain('No drivers found');
+  });
+
+  it('renders modals in the component', () => {
+    wrapper = mount(ReadOnlyDriverTable, {
+      props: {
+        drivers: mockDrivers,
+        loading: false,
+        leagueId: 1,
+      },
+    });
+
+    // Check that modals exist in component
+    const html = wrapper.html();
+    expect(html).toContain('view-driver-modal');
+    expect(html).toContain('driver-form-dialog');
+  });
+
+  it('passes correct props to modals', () => {
+    wrapper = mount(ReadOnlyDriverTable, {
+      props: {
+        drivers: mockDrivers,
+        loading: false,
+        leagueId: 1,
+      },
+    });
+
+    const viewModal = wrapper.findComponent({ name: 'ViewDriverModal' });
+    const editModal = wrapper.findComponent({ name: 'DriverFormDialog' });
+
+    expect(viewModal.exists()).toBe(true);
+    expect(editModal.exists()).toBe(true);
+
+    // Initially modals should not be visible
+    expect(viewModal.props('visible')).toBe(false);
+    expect(editModal.props('visible')).toBe(false);
+
+    // Edit modal should have correct mode and leagueId
+    expect(editModal.props('mode')).toBe('edit');
+    expect(editModal.props('leagueId')).toBe(1);
   });
 });

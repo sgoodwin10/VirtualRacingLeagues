@@ -37,7 +37,8 @@
       "Bash(npx vitest run resources/user/js/components/common/panels/__tests__/BasePanel.test.ts)",
       "Bash(npm run lint:user -- --fix resources/user/js/components/common/panels/)",
       "Bash(npm run format:user -- resources/user/js/components/common/panels/)",
-      "Bash(npx vitest run resources/user/js/components/common/panels/__tests__/BasePanel.test.ts --coverage)"
+      "Bash(npx vitest run resources/user/js/components/common/panels/__tests__/BasePanel.test.ts --coverage)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

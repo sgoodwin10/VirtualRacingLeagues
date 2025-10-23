@@ -71,11 +71,41 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 404);
         });
 
+        $exceptions->render(function (\App\Domain\Competition\Exceptions\CompetitionNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 404);
+        });
+
         // Handle UnauthorizedException with 403 responses
         $exceptions->render(function (\App\Domain\Shared\Exceptions\UnauthorizedException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 403);
+        });
+
+        // Handle Competition archived exceptions with 422 responses
+        $exceptions->render(function (\App\Domain\Competition\Exceptions\CompetitionIsArchivedException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        });
+
+        $exceptions->render(function (\App\Domain\Competition\Exceptions\CompetitionAlreadyArchivedException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        });
+
+        // Handle InvalidPlatformException with 422 responses
+        $exceptions->render(function (\App\Domain\League\Exceptions\InvalidPlatformException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
         });
     })->create();

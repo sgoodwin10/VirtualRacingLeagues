@@ -21,7 +21,6 @@ final class DriverPlatformColumnService
     private const PLATFORM_FIELD_MAPPINGS = [
         1 => [ // Gran Turismo 7
             ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
-            ['field' => 'gt7_id', 'label' => 'GT7 ID', 'type' => 'text'],
         ],
         2 => [ // iRacing
             ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
@@ -104,7 +103,6 @@ final class DriverPlatformColumnService
             // Map field names to PlatformIdentifiers methods
             $value = match ($field) {
                 'psn_id' => $platformIdentifiers->psnId(),
-                'gt7_id' => $platformIdentifiers->gt7Id(),
                 'iracing_id' => $platformIdentifiers->iracingId(),
                 'iracing_customer_id' => $platformIdentifiers->iracingCustomerId(),
                 default => null,

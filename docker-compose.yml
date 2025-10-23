@@ -18,6 +18,10 @@ services:
     depends_on:
       - mariadb
       - redis
+    extra_hosts:
+      - "virtualracingleagues.localhost:host-gateway"
+      - "app.virtualracingleagues.localhost:host-gateway"
+      - "admin.virtualracingleagues.localhost:host-gateway"
 
   # Nginx Service
   nginx:

@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UserImpersonationController;
+use App\Http\Controllers\User\CompetitionController;
 use App\Http\Controllers\User\DriverController;
 use App\Http\Controllers\User\LeagueController;
 use App\Http\Controllers\User\PlatformController;
@@ -162,6 +163,17 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             Route::put('/leagues/{league}/drivers/{driver}', [DriverController::class, 'update'])->name('leagues.drivers.update');
             Route::delete('/leagues/{league}/drivers/{driver}', [DriverController::class, 'destroy'])->name('leagues.drivers.destroy');
             Route::post('/leagues/{league}/drivers/import-csv', [DriverController::class, 'importCsv'])->name('leagues.drivers.import-csv');
+
+            // League Competitions
+            Route::get('/leagues/{leagueId}/competitions', [CompetitionController::class, 'index'])->name('leagues.competitions.index');
+            Route::post('/leagues/{leagueId}/competitions', [CompetitionController::class, 'store'])->name('leagues.competitions.store');
+            Route::post('/leagues/{leagueId}/competitions/check-slug', [CompetitionController::class, 'checkSlug'])->name('leagues.competitions.check-slug');
+
+            // Competitions
+            Route::get('/competitions/{id}', [CompetitionController::class, 'show'])->name('competitions.show');
+            Route::put('/competitions/{id}', [CompetitionController::class, 'update'])->name('competitions.update');
+            Route::delete('/competitions/{id}', [CompetitionController::class, 'destroy'])->name('competitions.destroy');
+            Route::post('/competitions/{id}/archive', [CompetitionController::class, 'archive'])->name('competitions.archive');
         });
     });
 

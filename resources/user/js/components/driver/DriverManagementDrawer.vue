@@ -234,17 +234,24 @@ const handleCSVImport = async (csvData: string) => {
   const result = await driverStore.importCSV(props.leagueId, csvData);
 
   if (result.errors.length === 0) {
+    const message =
+      result.success_count === 1
+        ? 'Successfully imported 1 driver'
+        : `Successfully imported ${result.success_count} drivers`;
+
     toast.add({
       severity: 'success',
       summary: 'Import Successful',
-      detail: result.message,
+      detail: message,
       life: 3000,
     });
   } else if (result.success_count > 0) {
+    const message = `Imported ${result.success_count} driver${result.success_count === 1 ? '' : 's'} with ${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`;
+
     toast.add({
       severity: 'warn',
       summary: 'Partial Import',
-      detail: result.message,
+      detail: message,
       life: 5000,
     });
   }
@@ -346,7 +353,7 @@ onMounted(() => {
     <CSVImportDialog
       v-model:visible="showCSVImport"
       :league-id="leagueId"
-      @import="handleCSVImport"
+      :on-import="handleCSVImport"
       @close="showCSVImport = false"
     />
 

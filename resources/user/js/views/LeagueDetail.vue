@@ -13,7 +13,9 @@ import { useDateFormatter } from '@user/composables/useDateFormatter';
 import DriverManagementDrawer from '@user/components/driver/DriverManagementDrawer.vue';
 import ReadOnlyDriverTable from '@user/components/driver/ReadOnlyDriverTable.vue';
 import LeagueWizardDrawer from '@user/components/league/modals/LeagueWizardDrawer.vue';
+import CompetitionList from '@user/components/competition/CompetitionList.vue';
 import type { League } from '@user/types/league';
+import type { Competition } from '@user/types/competition';
 import HTag from '@user/components/common/HTag.vue';
 import Tag from 'primevue/tag';
 import BasePanel from '@user/components/common/panels/BasePanel.vue';
@@ -103,6 +105,19 @@ function handleCreateCompetitions(): void {
   });
 }
 
+function handleCompetitionCreated(competition: Competition): void {
+  // Competition created successfully - toast shown in CompetitionList
+  console.log('Competition created:', competition);
+}
+
+function handleCompetitionUpdated(competition: Competition): void {
+  console.log('Competition updated:', competition);
+}
+
+function handleCompetitionDeleted(competitionId: number): void {
+  console.log('Competition deleted:', competitionId);
+}
+
 function handleCreateDrivers(): void {
   showDriverDrawer.value = true;
 }
@@ -114,6 +129,15 @@ function handleEditLeague(): void {
 function handleLeagueSaved(): void {
   showEditDrawer.value = false;
   loadLeague();
+}
+
+function handleDriverUpdated(): void {
+  toast.add({
+    severity: 'success',
+    summary: 'Success',
+    detail: 'Driver updated successfully',
+    life: 3000,
+  });
 }
 
 const breadcrumbItems = computed((): BreadcrumbItem[] => [
@@ -237,14 +261,14 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
               <Button
                 label="Create Competitions"
                 icon="pi pi-trophy"
-                severity="success"
+                severity="help"
                 size="small"
                 class="bg-white"
                 outlined
                 @click="handleCreateCompetitions"
               />
               <Button
-                label="Create Drivers"
+                label="Manage Drivers"
                 icon="pi pi-users"
                 severity="info"
                 size="small"
@@ -278,7 +302,7 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
                   <template #header>
                     <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
                       <i class="pi pi-info-circle text-lg"></i>
-                      <span class="font-semibold">About</span>
+                      <span class="font-semibold">About {{ league.name }}</span>
                     </div>
                   </template>
 
@@ -286,7 +310,7 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
                     <!-- eslint-disable-next-line vue/no-v-html -->
                     <div class="text-gray-700 leading-relaxed" v-html="league.description"></div>
                   </div>
-                  <div v-else class="text-gray-500 italic">No description provided</div>
+                  <div v-else class="text-gray-500 italic pt-4">No description provided</div>
                 </BasePanel>
                 <BasePanel>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -397,7 +421,7 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
                   <template #header>
                     <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
                       <i class="pi pi-list text-lg"></i>
-                      <span class="font-semibold">Basic Info</span>
+                      <span class="font-semibold">League Information</span>
                     </div>
                   </template>
 
@@ -472,17 +496,34 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
       </Card>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-      <BasePanel class="col-span-1" header="Competitions">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
+      <BasePanel class="md:col-span-3" header="Competitions">
         <template #header>
           <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
             <PhFlagCheckered size="24" />
             <span class="font-semibold">Competitions</span>
           </div>
         </template>
+        <template #icons>
+          <Button
+            size="small"
+            icon="pi pi-plus"
+            class="whitespace-nowrap"
+            label="New Competition"
+            severity="secondary"
+            outlined
+            @click="handleCreateCompetitions"
+          />
+        </template>
+        <CompetitionList
+          :league-id="leagueIdNumber"
+          @competition-created="handleCompetitionCreated"
+          @competition-updated="handleCompetitionUpdated"
+          @competition-deleted="handleCompetitionDeleted"
+        />
       </BasePanel>
 
-      <BasePanel class="col-span-1">
+      <BasePanel class="md:col-span-2">
         <template #header>
           <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
             <PhUsers size="24" />
@@ -493,6 +534,7 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
           :drivers="driverStore.drivers"
           :loading="driverStore.loading"
           :league-id="leagueIdNumber"
+          @driver-updated="handleDriverUpdated"
         />
       </BasePanel>
     </div>

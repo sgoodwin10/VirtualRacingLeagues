@@ -11,7 +11,7 @@ import {
 import type {
   CreateDriverRequest,
   UpdateLeagueDriverRequest,
-  ImportDriversResponse,
+  ImportDriversBackendResponse,
   LeagueDriversQueryParams,
 } from '@user/types/driver';
 import { createMockLeagueDriver } from '@user/__tests__/helpers/driverTestHelpers';
@@ -42,7 +42,6 @@ describe('driverService', () => {
           email: 'john@example.com',
           phone: null,
           psn_id: 'JohnSmith77',
-          gt7_id: null,
           iracing_id: null,
           iracing_customer_id: null,
           primary_platform_id: 'PSN: JohnSmith77',
@@ -124,7 +123,6 @@ describe('driverService', () => {
           email: 'jane@example.com',
           phone: null,
           psn_id: 'JaneDoe_GT',
-          gt7_id: null,
           iracing_id: null,
           iracing_customer_id: null,
           primary_platform_id: 'PSN: JaneDoe_GT',
@@ -147,7 +145,7 @@ describe('driverService', () => {
     it('should create driver with minimal data', async () => {
       const driverData: CreateDriverRequest = {
         nickname: 'FastRacer',
-        gt7_id: 'FastRacer99',
+        iracing_id: 'FastRacer99',
       };
 
       const mockDriver = createMockLeagueDriver({
@@ -161,10 +159,9 @@ describe('driverService', () => {
           email: null,
           phone: null,
           psn_id: null,
-          gt7_id: 'FastRacer99',
-          iracing_id: null,
+          iracing_id: 'FastRacer99',
           iracing_customer_id: null,
-          primary_platform_id: 'GT7: FastRacer99',
+          primary_platform_id: 'iRacing: FastRacer99',
         },
         driver_number: null,
         status: 'active',
@@ -178,7 +175,7 @@ describe('driverService', () => {
 
       expect(apiClient.post).toHaveBeenCalledWith('/leagues/1/drivers', driverData);
       expect(result.driver.nickname).toBe('FastRacer');
-      expect(result.driver.gt7_id).toBe('FastRacer99');
+      expect(result.driver.iracing_id).toBe('FastRacer99');
     });
   });
 
@@ -195,7 +192,6 @@ describe('driverService', () => {
           email: 'john@example.com',
           phone: null,
           psn_id: 'JohnSmith77',
-          gt7_id: null,
           iracing_id: null,
           iracing_customer_id: null,
           primary_platform_id: 'PSN: JohnSmith77',
@@ -257,14 +253,13 @@ describe('driverService', () => {
   describe('importDriversFromCSV', () => {
     it('should import drivers from CSV data successfully', async () => {
       const csvData = 'first_name,last_name,psn_id\nJohn,Smith,JSmith77';
-      const mockResponse: ImportDriversResponse = {
+      const mockBackendResponse: ImportDriversBackendResponse = {
         success_count: 1,
-        errors: [],
-        message: '1 driver(s) imported successfully',
+        errors: [], // Empty array for no errors
       };
 
       vi.mocked(apiClient.post).mockResolvedValue({
-        data: { data: mockResponse },
+        data: { data: mockBackendResponse },
       });
 
       const result = await importDriversFromCSV(1, csvData);
@@ -276,28 +271,70 @@ describe('driverService', () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it('should handle import errors', async () => {
+    it('should handle import errors in backend array format', async () => {
       const csvData = 'first_name,last_name\nJohn,';
-      const mockResponse: ImportDriversResponse = {
+      const mockBackendResponse: ImportDriversBackendResponse = {
         success_count: 0,
         errors: [
-          {
-            row: 2,
-            message: 'Missing required fields',
-          },
+          { row: 2, message: 'Row 2: Missing required fields' },
+          { row: 5, message: 'Row 5: Invalid platform ID' },
         ],
-        message: 'Import completed with errors',
       };
 
       vi.mocked(apiClient.post).mockResolvedValue({
-        data: { data: mockResponse },
+        data: { data: mockBackendResponse },
+      });
+
+      const result = await importDriversFromCSV(1, csvData);
+
+      expect(result.success_count).toBe(0);
+      expect(result.errors).toHaveLength(2);
+      expect(result.errors).toEqual([
+        { row: 2, message: 'Row 2: Missing required fields' },
+        { row: 5, message: 'Row 5: Invalid platform ID' },
+      ]);
+    });
+
+    it('should handle single error correctly', async () => {
+      const csvData = 'first_name,last_name,psn_id\nJohn,,';
+      const mockBackendResponse: ImportDriversBackendResponse = {
+        success_count: 0,
+        errors: [{ row: 2, message: 'Row 2: At least one name field is required' }],
+      };
+
+      vi.mocked(apiClient.post).mockResolvedValue({
+        data: { data: mockBackendResponse },
       });
 
       const result = await importDriversFromCSV(1, csvData);
 
       expect(result.success_count).toBe(0);
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]?.message).toBe('Missing required fields');
+      expect(result.errors[0]).toEqual({
+        row: 2,
+        message: 'Row 2: At least one name field is required',
+      });
+    });
+
+    it('should handle mixed success and errors', async () => {
+      const csvData = 'first_name,last_name,psn_id\nJohn,Smith,JSmith77\nJane,,';
+      const mockBackendResponse: ImportDriversBackendResponse = {
+        success_count: 1,
+        errors: [{ row: 3, message: 'Row 3: Missing platform ID' }],
+      };
+
+      vi.mocked(apiClient.post).mockResolvedValue({
+        data: { data: mockBackendResponse },
+      });
+
+      const result = await importDriversFromCSV(1, csvData);
+
+      expect(result.success_count).toBe(1);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toEqual({
+        row: 3,
+        message: 'Row 3: Missing platform ID',
+      });
     });
   });
 });

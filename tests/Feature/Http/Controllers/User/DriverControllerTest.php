@@ -245,7 +245,7 @@ final class DriverControllerTest extends UserControllerTestCase
             'email' => 'john@example.com',
             'phone' => '+1234567890',
             'psn_id' => 'JohnDoe77',
-            'gt7_id' => 'JohnDoe_GT',
+            'iracing_id' => 'JohnDoe_iR',
         ]);
         DB::table('league_drivers')->insert([
             'league_id' => $this->league->id,
@@ -266,7 +266,7 @@ final class DriverControllerTest extends UserControllerTestCase
                 'email' => 'jonathan@example.com',
                 'phone' => '+9876543210',
                 'psn_id' => 'JonathanDoe77',
-                'gt7_id' => 'JonathanDoe_GT',
+                'iracing_id' => 'JonathanDoe_iR',
                 // Update league-specific fields
                 'driver_number' => 99,
                 'status' => 'inactive',
@@ -288,7 +288,7 @@ final class DriverControllerTest extends UserControllerTestCase
                         'email' => 'jonathan@example.com',
                         'phone' => '+9876543210',
                         'psn_id' => 'JonathanDoe77',
-                        'gt7_id' => 'JonathanDoe_GT',
+                        'iracing_id' => 'JonathanDoe_iR',
                     ],
                 ],
             ]);
@@ -302,7 +302,7 @@ final class DriverControllerTest extends UserControllerTestCase
             'email' => 'jonathan@example.com',
             'phone' => '+9876543210',
             'psn_id' => 'JonathanDoe77',
-            'gt7_id' => 'JonathanDoe_GT',
+            'iracing_id' => 'JonathanDoe_iR',
         ]);
 
         // Verify league_drivers table was updated
@@ -476,10 +476,77 @@ final class DriverControllerTest extends UserControllerTestCase
         $response->assertOk()
             ->assertJsonPath('data.success_count', 1);
 
-        // Verify there are errors
+        // Verify there are errors with correct structure
         $errors = $response->json('data.errors');
         $this->assertNotEmpty($errors);
-        $this->assertStringContainsString('At least one name field is required', implode(' ', $errors));
+        $this->assertIsArray($errors);
+
+        // Verify error structure: [{row: number, message: string}]
+        foreach ($errors as $error) {
+            $this->assertArrayHasKey('row', $error);
+            $this->assertArrayHasKey('message', $error);
+            $this->assertIsInt($error['row']);
+            $this->assertIsString($error['message']);
+        }
+
+        // Verify at least one error mentions missing name field
+        $errorMessages = array_column($errors, 'message');
+        $hasNameError = false;
+        foreach ($errorMessages as $message) {
+            if (str_contains($message, 'At least one name field is required')) {
+                $hasNameError = true;
+                break;
+            }
+        }
+        $this->assertTrue($hasNameError, 'Expected to find error about missing name field');
+    }
+
+    public function test_csv_import_accepts_lowercase_column_names(): void
+    {
+        // Test with lowercase column names (nickname, psn_id, iracing_id)
+        $csvData = "nickname,psn_id,iracing_id\n"
+            . "btwong,btwong10,btwong\n"
+            . "racer42,racer42psn,racer42ir";
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
+                'csv_data' => $csvData,
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'success_count' => 2,
+                    'errors' => [],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('drivers', ['nickname' => 'btwong', 'psn_id' => 'btwong10']);
+        $this->assertDatabaseHas('drivers', ['nickname' => 'racer42', 'psn_id' => 'racer42psn']);
+    }
+
+    public function test_csv_import_accepts_mixed_case_column_names(): void
+    {
+        // Test with PascalCase and lowercase mixed
+        $csvData = "Nickname,psn_id,iRacing_ID\n"
+            . "speedster,speedster99,speed99";
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
+                'csv_data' => $csvData,
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'success_count' => 1,
+                    'errors' => [],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('drivers', ['nickname' => 'speedster', 'psn_id' => 'speedster99']);
     }
 
     public function test_requires_authentication(): void

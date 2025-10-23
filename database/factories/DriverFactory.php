@@ -36,7 +36,6 @@ final class DriverFactory extends Factory
             'email' => $this->faker->optional()->email(),
             'phone' => $this->faker->optional()->phoneNumber(),
             'psn_id' => $this->faker->unique()->userName(),
-            'gt7_id' => $this->faker->optional()->userName(),
             'iracing_id' => $this->faker->optional()->userName(),
             'iracing_customer_id' => $this->faker->optional()->numberBetween(1, 999999),
         ];

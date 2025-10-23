@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     procps \
+    zsh \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions with enhanced GD support
@@ -36,9 +37,13 @@ RUN pecl install redis && docker-php-ext-enable redis
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Create system user to run Composer and Artisan Commands
-RUN useradd -G www-data,root -u 1000 -d /home/laravel laravel
+RUN useradd -G www-data,root -u 1000 -d /home/laravel laravel -s /bin/zsh
 RUN mkdir -p /home/laravel/.composer && \
     chown -R laravel:laravel /home/laravel
+
+# Install oh-my-zsh for laravel user
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && \
+    chown -R laravel:laravel /home/laravel/.oh-my-zsh /home/laravel/.zshrc
 
 # Set user
 USER laravel
@@ -61,6 +66,10 @@ RUN apt-get update && \
     apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install Playwright system dependencies
+# This installs the required system libraries for running browsers
+RUN npx -y playwright@latest install-deps
+
 # Configure npm to use user-writable directory for global packages
 RUN mkdir -p /home/laravel/.npm-global && \
     chown -R laravel:laravel /home/laravel/.npm-global
@@ -71,3 +80,7 @@ USER laravel
 # Set npm global directory to user-writable location
 ENV NPM_CONFIG_PREFIX=/home/laravel/.npm-global
 ENV PATH=/home/laravel/.npm-global/bin:$PATH
+
+# Install Playwright browsers
+# This downloads and installs chromium, firefox, and webkit browsers
+RUN npx -y playwright@latest install

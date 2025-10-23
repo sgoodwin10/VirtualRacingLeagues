@@ -19,7 +19,7 @@ final class PlatformMappingService
      * @var array<int, array<string>>
      */
     private const PLATFORM_FIELD_MAP = [
-        1 => ['gt7_id', 'psn_id'], // Gran Turismo 7 (includes PSN ID for PlayStation Network)
+        1 => ['psn_id'], // Gran Turismo 7 (uses PSN ID for PlayStation Network)
         2 => ['iracing_id', 'iracing_customer_id'], // iRacing
         3 => [], // Assetto Corsa Competizione - no specific field yet
         4 => [], // rFactor 2 - no specific field yet

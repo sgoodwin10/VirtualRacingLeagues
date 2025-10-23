@@ -87,6 +87,10 @@ body {
 .p-panel-header {
   padding-bottom: 0;
 }
+.p-panel-header-actions {
+  border-bottom: 1px solid var(--border-se)
+  ;
+}
 
 /* PrimeVue Card Styling */
 .p-card-body {
@@ -150,4 +154,12 @@ body {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-medium);
   box-shadow: var(--shadow-md);
+}
+
+/* PrimeVue input Styling */
+.p-inputtext::placeholder, .p-inputnumber-input::placeholder, .p-textarea::placeholder {
+  color: var(--text-muted);
+}
+.p-inputtext:focus, .p-inputnumber-input:focus, .p-textarea:focus {
+  /* border-color: var(--user-primary); */
 }

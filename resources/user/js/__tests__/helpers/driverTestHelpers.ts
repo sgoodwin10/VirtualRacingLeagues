@@ -17,7 +17,6 @@ export function createMockDriver(overrides?: Partial<Driver>): Driver {
     email: 'john@example.com',
     phone: '+1234567890',
     psn_id: 'JohnDoe123',
-    gt7_id: null,
     iracing_id: null,
     iracing_customer_id: null,
     primary_platform_id: 'PSN: JohnDoe123',

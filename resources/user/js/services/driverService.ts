@@ -10,6 +10,7 @@ import type {
   UpdateDriverRequest,
   UpdateLeagueDriverRequest,
   ImportDriversRequest,
+  ImportDriversBackendResponse,
   ImportDriversResponse,
   PaginatedDriversResponse,
   LeagueDriversQueryParams,
@@ -160,9 +161,11 @@ export async function importDriversFromCSV(
   csvData: string,
 ): Promise<ImportDriversResponse> {
   const payload: ImportDriversRequest = { csv_data: csvData };
-  const response: AxiosResponse<ApiResponse<ImportDriversResponse>> = await apiClient.post(
+  const response: AxiosResponse<ApiResponse<ImportDriversBackendResponse>> = await apiClient.post(
     `/leagues/${leagueId}/drivers/import-csv`,
     payload,
   );
+
+  // Backend now returns the correct format directly
   return response.data.data;
 }

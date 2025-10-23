@@ -75,7 +75,6 @@ describe('DriverTable', () => {
           email: 'john@example.com',
           phone: null,
           psn_id: 'JohnSmith77',
-          gt7_id: null,
           iracing_id: null,
           iracing_customer_id: null,
           display_name: 'John Smith',
@@ -100,8 +99,7 @@ describe('DriverTable', () => {
           email: null,
           phone: null,
           psn_id: null,
-          gt7_id: 'FastRacer99',
-          iracing_id: null,
+          iracing_id: 'FastRacer99',
           iracing_customer_id: null,
           display_name: 'FastRacer',
           slug: 'fastracer',
@@ -119,7 +117,7 @@ describe('DriverTable', () => {
 
     mockPlatformColumns = [
       { field: 'psn_id', label: 'PSN ID' },
-      { field: 'gt7_id', label: 'GT7 ID' },
+      { field: 'iracing_id', label: 'iRacing ID' },
     ];
   });
 
@@ -204,9 +202,9 @@ describe('DriverTable', () => {
     const psnValue = component.getPlatformValue(mockDrivers[0], 'psn_id');
     expect(psnValue).toBe('JohnSmith77');
 
-    // Test GT7 ID from nested driver object
-    const gt7Value = component.getPlatformValue(mockDrivers[1], 'gt7_id');
-    expect(gt7Value).toBe('FastRacer99');
+    // Test iRacing ID from nested driver object
+    const iracingValue = component.getPlatformValue(mockDrivers[1], 'iracing_id');
+    expect(iracingValue).toBe('FastRacer99');
   });
 
   it('should handle driver with no platform ID', () => {
@@ -224,7 +222,6 @@ describe('DriverTable', () => {
       driver: {
         ...mockDrivers[0].driver,
         psn_id: null,
-        gt7_id: null,
         iracing_id: null,
         iracing_customer_id: null,
       },

@@ -19,7 +19,6 @@ export interface Driver {
   email: string | null;
   phone: string | null;
   psn_id: string | null;
-  gt7_id: string | null;
   iracing_id: string | null;
   iracing_customer_id: number | null;
   primary_platform_id: string | null;
@@ -57,7 +56,6 @@ export interface CreateDriverRequest {
 
   // Platform IDs (at least one required)
   psn_id?: string;
-  gt7_id?: string;
   iracing_id?: string;
   iracing_customer_id?: number;
 
@@ -87,7 +85,6 @@ export interface UpdateDriverRequest {
   email?: string;
   phone?: string;
   psn_id?: string;
-  gt7_id?: string;
   iracing_id?: string;
   iracing_customer_id?: number;
   // League-specific fields
@@ -104,12 +101,19 @@ export interface ImportDriversRequest {
 }
 
 /**
- * CSV import response (success case)
+ * CSV import response from backend (raw format)
+ */
+export interface ImportDriversBackendResponse {
+  success_count: number;
+  errors: Array<{ row: number; message: string }>; // [{ row: 2, message: "Row 2: Error message" }]
+}
+
+/**
+ * CSV import response (transformed for frontend use)
  */
 export interface ImportDriversResponse {
   success_count: number;
   errors: ImportError[];
-  message: string;
 }
 
 /**

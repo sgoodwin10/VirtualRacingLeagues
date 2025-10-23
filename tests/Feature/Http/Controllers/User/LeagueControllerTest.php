@@ -729,10 +729,9 @@ class LeagueControllerTest extends UserControllerTestCase
                 'success' => true,
                 'data' => [
                     ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
-                    ['field' => 'gt7_id', 'label' => 'GT7 ID', 'type' => 'text'],
                 ],
             ])
-            ->assertJsonCount(2, 'data');
+            ->assertJsonCount(1, 'data');
     }
 
     #[Test]
@@ -789,12 +788,11 @@ class LeagueControllerTest extends UserControllerTestCase
                 'success' => true,
                 'data' => [
                     ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
-                    ['field' => 'gt7_id', 'label' => 'GT7 ID', 'type' => 'text'],
                     ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
                     ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
                 ],
             ])
-            ->assertJsonCount(4, 'data');
+            ->assertJsonCount(3, 'data');
     }
 
     #[Test]
@@ -870,7 +868,7 @@ class LeagueControllerTest extends UserControllerTestCase
             ->assertJson([
                 'success' => true,
             ])
-            ->assertJsonCount(4, 'data');
+            ->assertJsonCount(3, 'data');
     }
 
     #[Test]
@@ -909,7 +907,7 @@ class LeagueControllerTest extends UserControllerTestCase
             ->assertJson([
                 'success' => true,
             ])
-            ->assertJsonCount(4, 'data');
+            ->assertJsonCount(3, 'data');
     }
 
     #[Test]

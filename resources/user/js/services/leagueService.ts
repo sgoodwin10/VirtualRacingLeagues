@@ -13,6 +13,7 @@ import type {
   UpdateLeagueForm,
   PlatformColumn,
   PlatformFormField,
+  PlatformCsvHeader,
 } from '@user/types/league';
 import type { AxiosResponse } from 'axios';
 
@@ -294,8 +295,8 @@ export async function getDriverFormFields(leagueId: number): Promise<PlatformFor
  * Get CSV headers for driver import for a league's platforms
  * @param leagueId - League ID
  */
-export async function getDriverCsvHeaders(leagueId: number): Promise<string[]> {
-  const response: AxiosResponse<ApiResponse<string[]>> = await apiClient.get(
+export async function getDriverCsvHeaders(leagueId: number): Promise<PlatformCsvHeader[]> {
+  const response: AxiosResponse<ApiResponse<PlatformCsvHeader[]>> = await apiClient.get(
     `/leagues/${leagueId}/driver-csv-headers`,
   );
   return response.data.data;

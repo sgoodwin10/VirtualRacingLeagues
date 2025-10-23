@@ -44,6 +44,15 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+    {
+      path: '/leagues/:leagueId/competitions/:competitionId',
+      name: 'competition-detail',
+      component: () => import('@user/views/CompetitionDetail.vue'),
+      meta: {
+        title: 'Competition Details',
+        requiresAuth: true,
+      },
+    },
   ],
 });
 
