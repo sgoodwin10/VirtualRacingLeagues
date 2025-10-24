@@ -56,6 +56,7 @@ export interface Season {
   has_own_banner: boolean;
 
   // Settings
+  race_divisions_enabled: boolean;
   team_championship_enabled: boolean;
 
   // Status
@@ -108,6 +109,7 @@ export interface CreateSeasonRequest {
   technical_specs?: string;
   logo?: File;
   banner?: File;
+  race_divisions_enabled?: boolean;
   team_championship_enabled?: boolean;
 }
 
@@ -121,6 +123,7 @@ export interface UpdateSeasonRequest {
   technical_specs?: string | null;
   logo?: File | null;
   banner?: File | null;
+  race_divisions_enabled?: boolean;
   team_championship_enabled?: boolean;
 }
 
@@ -136,6 +139,7 @@ export interface SeasonForm {
   logo_url: string | null;
   banner: File | null;
   banner_url: string | null;
+  race_divisions_enabled: boolean;
   team_championship_enabled: boolean;
 }
 

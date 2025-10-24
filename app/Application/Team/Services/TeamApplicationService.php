@@ -13,6 +13,7 @@ use App\Domain\Team\Entities\Team;
 use App\Domain\Team\Exceptions\TeamNotFoundException;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use App\Domain\Team\ValueObjects\TeamName;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -160,10 +161,31 @@ final class TeamApplicationService
      *
      * @param int $seasonDriverId The season_driver ID (not driver ID)
      * @param AssignDriverTeamData $data Contains team_id or null for Privateer
+     * @return array{
+     *     id: int,
+     *     season_id: int,
+     *     league_driver_id: int,
+     *     driver_id: int,
+     *     first_name: string|null,
+     *     last_name: string|null,
+     *     nickname: string|null,
+     *     driver_number: string|null,
+     *     psn_id: string|null,
+     *     iracing_id: string|null,
+     *     discord_id: string|null,
+     *     team_name: string|null,
+     *     status: string,
+     *     is_active: bool,
+     *     is_reserve: bool,
+     *     is_withdrawn: bool,
+     *     notes: string|null,
+     *     added_at: string,
+     *     updated_at: string
+     * }
      */
-    public function assignDriverToTeam(int $seasonDriverId, AssignDriverTeamData $data): void
+    public function assignDriverToTeam(int $seasonDriverId, AssignDriverTeamData $data): array
     {
-        DB::transaction(function () use ($seasonDriverId, $data) {
+        return DB::transaction(function () use ($seasonDriverId, $data) {
             // If team_id is provided, verify it exists
             if ($data->team_id !== null) {
                 $this->teamRepository->findById($data->team_id);
@@ -171,7 +193,71 @@ final class TeamApplicationService
 
             // Update season_driver.team_id
             $this->seasonDriverRepository->updateTeamId($seasonDriverId, $data->team_id);
+
+            // Fetch the updated season driver with all relationships
+            $seasonDriverModel = $this->seasonDriverRepository->findByIdWithRelations($seasonDriverId);
+
+            // Convert to array format matching SeasonDriverData
+            return $this->toSeasonDriverArray($seasonDriverModel);
         });
+    }
+
+    /**
+     * Convert SeasonDriverEloquent model to array format matching SeasonDriverData.
+     *
+     * @param SeasonDriverEloquent $seasonDriverModel
+     * @return array{
+     *     id: int,
+     *     season_id: int,
+     *     league_driver_id: int,
+     *     driver_id: int,
+     *     first_name: string|null,
+     *     last_name: string|null,
+     *     nickname: string|null,
+     *     driver_number: string|null,
+     *     psn_id: string|null,
+     *     iracing_id: string|null,
+     *     discord_id: string|null,
+     *     team_name: string|null,
+     *     status: string,
+     *     is_active: bool,
+     *     is_reserve: bool,
+     *     is_withdrawn: bool,
+     *     notes: string|null,
+     *     added_at: string,
+     *     updated_at: string
+     * }
+     */
+    private function toSeasonDriverArray(SeasonDriverEloquent $seasonDriverModel): array
+    {
+        $leagueDriver = $seasonDriverModel->leagueDriver;
+        $driver = $leagueDriver->driver ?? null;
+        $team = $seasonDriverModel->team;
+
+        // Prefer team name from season team relationship, fallback to league driver's team_name
+        $teamName = $team !== null ? $team->name : $leagueDriver->team_name;
+
+        return [
+            'id' => $seasonDriverModel->id,
+            'season_id' => $seasonDriverModel->season_id,
+            'league_driver_id' => $seasonDriverModel->league_driver_id,
+            'driver_id' => $leagueDriver->driver_id,
+            'first_name' => $driver?->first_name,
+            'last_name' => $driver?->last_name,
+            'nickname' => $driver?->nickname,
+            'driver_number' => $leagueDriver->number !== null ? (string) $leagueDriver->number : null,
+            'psn_id' => $driver?->psn_id,
+            'iracing_id' => $driver?->iracing_id,
+            'discord_id' => $driver?->discord_id,
+            'team_name' => $teamName,
+            'status' => $seasonDriverModel->status,
+            'is_active' => $seasonDriverModel->status === 'active',
+            'is_reserve' => $seasonDriverModel->status === 'reserve',
+            'is_withdrawn' => $seasonDriverModel->status === 'withdrawn',
+            'notes' => $seasonDriverModel->notes,
+            'added_at' => $seasonDriverModel->added_at->format('Y-m-d H:i:s'),
+            'updated_at' => $seasonDriverModel->updated_at->format('Y-m-d H:i:s'),
+        ];
     }
 
     /**

@@ -201,6 +201,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             logoPath: $model->logo_path,
             bannerPath: $model->banner_path,
             teamChampionshipEnabled: $model->team_championship_enabled,
+            raceDivisionsEnabled: $model->race_divisions_enabled ?? false,
             deletedAt: $model->deleted_at
                 ? new DateTimeImmutable($model->deleted_at->toDateTimeString())
                 : null,
@@ -224,6 +225,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             'logo_path' => $season->logoPath(),
             'banner_path' => $season->bannerPath(),
             'team_championship_enabled' => $season->teamChampionshipEnabled(),
+            'race_divisions_enabled' => $season->raceDivisionsEnabled(),
             'status' => $season->status()->value,
             'created_by_user_id' => $season->createdByUserId(),
         ];

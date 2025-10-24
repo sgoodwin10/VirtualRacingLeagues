@@ -47,7 +47,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel whereTimezone($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel whereUserRegistrationEnabled($value)
- * @mixin \Eloquent
  */
 class SiteConfigModel extends Model
 {

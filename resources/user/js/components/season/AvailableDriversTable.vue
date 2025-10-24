@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useSeasonDriverStore } from '@user/stores/seasonDriverStore';
 import type { AvailableDriver } from '@user/types/seasonDriver';
 import { usesPsnId, usesIracingId } from '@user/constants/platforms';
 
 import DataTable from 'primevue/datatable';
+import type { DataTablePageEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 
 interface Props {
-  loading?: boolean;
+  seasonId: number;
+  leagueId: number;
   platformId?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false,
   platformId: undefined,
 });
 
@@ -28,6 +29,11 @@ const emit = defineEmits<Emits>();
 const seasonDriverStore = useSeasonDriverStore();
 
 const availableDrivers = computed(() => seasonDriverStore.availableDrivers);
+const loading = computed(() => seasonDriverStore.loadingAvailable);
+const totalRecords = computed(() => seasonDriverStore.totalAvailable);
+const first = computed(
+  () => (seasonDriverStore.availablePage - 1) * seasonDriverStore.availablePerPage,
+);
 
 const showPsnColumn = computed(() => {
   const result = usesPsnId(props.platformId);
@@ -59,6 +65,34 @@ function handleView(driver: AvailableDriver): void {
 function handleAdd(driver: AvailableDriver): void {
   emit('add', driver);
 }
+
+/**
+ * Handle pagination change event
+ */
+async function handlePageChange(event: DataTablePageEvent): Promise<void> {
+  const page = event.page + 1; // PrimeVue uses 0-based pages
+  const perPage = event.rows;
+
+  try {
+    await seasonDriverStore.fetchAvailableDrivers(props.seasonId, props.leagueId, {
+      page,
+      per_page: perPage,
+    });
+  } catch (error) {
+    console.error('Failed to fetch available drivers:', error);
+  }
+}
+
+/**
+ * Load initial available drivers on mount
+ */
+onMounted(async () => {
+  try {
+    await seasonDriverStore.fetchAvailableDrivers(props.seasonId, props.leagueId);
+  } catch (error) {
+    console.error('Failed to load available drivers:', error);
+  }
+});
 </script>
 
 <template>
@@ -66,12 +100,16 @@ function handleAdd(driver: AvailableDriver): void {
     <DataTable
       :value="availableDrivers"
       :loading="loading"
+      lazy
       paginator
       :rows="10"
       :rows-per-page-options="[10, 25, 50]"
+      :total-records="totalRecords"
+      :first="first"
       striped-rows
       show-gridlines
       responsive-layout="scroll"
+      @page="handlePageChange"
     >
       <template #empty>
         <div class="text-center py-8">

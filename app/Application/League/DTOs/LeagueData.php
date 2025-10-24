@@ -34,6 +34,8 @@ final class LeagueData extends Data
         public readonly string $visibility,
         public readonly ?string $timezone,
         public readonly int $owner_user_id,
+        public readonly ?string $owner_name,
+        public readonly ?string $owner_email,
         public readonly ?string $contact_email,
         public readonly ?string $organizer_name,
         public readonly string $status,
@@ -46,8 +48,9 @@ final class LeagueData extends Data
      * Create from domain entity with platform data.
      *
      * @param array<array{id: int, name: string, slug: string}> $platforms
+     * @param array{name: string, email: string}|null $owner
      */
-    public static function fromEntity(League $league, array $platforms = []): self
+    public static function fromEntity(League $league, array $platforms = [], ?array $owner = null): self
     {
         return new self(
             id: $league->id(),
@@ -70,6 +73,8 @@ final class LeagueData extends Data
             visibility: $league->visibility()->value,
             timezone: $league->timezone(),
             owner_user_id: $league->ownerUserId(),
+            owner_name: $owner['name'] ?? null,
+            owner_email: $owner['email'] ?? null,
             contact_email: $league->contactEmail()?->value(),
             organizer_name: $league->organizerName(),
             status: $league->status(),

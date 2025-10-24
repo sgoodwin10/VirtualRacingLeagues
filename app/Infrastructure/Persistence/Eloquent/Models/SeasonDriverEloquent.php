@@ -32,7 +32,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SeasonDriverEloquent whereSeasonId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SeasonDriverEloquent whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SeasonDriverEloquent whereUpdatedAt($value)
- * @mixin \Eloquent
  */
 final class SeasonDriverEloquent extends Model
 {
@@ -54,6 +53,7 @@ final class SeasonDriverEloquent extends Model
     protected $fillable = [
         'season_id',
         'league_driver_id',
+        'team_id',
         'status',
         'notes',
         'added_at',
@@ -88,5 +88,15 @@ final class SeasonDriverEloquent extends Model
     public function leagueDriver(): BelongsTo
     {
         return $this->belongsTo(LeagueDriverEloquent::class, 'league_driver_id');
+    }
+
+    /**
+     * Get the team this driver is assigned to.
+     *
+     * @return BelongsTo<Team, self>
+     */
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'team_id');
     }
 }

@@ -35,7 +35,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigFileModel whereSiteConfigId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigFileModel whereStorageDisk($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigFileModel whereUpdatedAt($value)
- * @mixin \Eloquent
  */
 class SiteConfigFileModel extends Model
 {

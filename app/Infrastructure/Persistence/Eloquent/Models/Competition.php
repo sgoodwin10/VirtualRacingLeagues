@@ -56,7 +56,6 @@ use Illuminate\Support\Facades\Storage;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition withoutTrashed()
- * @mixin \Eloquent
  */
 class Competition extends Model
 {
@@ -155,7 +154,6 @@ class Competition extends Model
             return null;
         }
 
-        // @phpstan-ignore-next-line (url() method exists on LocalFilesystemAdapter)
         return Storage::disk('public')->url($this->logo_path);
     }
 }

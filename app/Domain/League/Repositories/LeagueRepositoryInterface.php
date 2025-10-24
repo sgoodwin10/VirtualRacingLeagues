@@ -97,4 +97,14 @@ interface LeagueRepositoryInterface
      * @return array<int, array{id: int, name: string, slug: string, description: ?string, logo_url: ?string}>
      */
     public function getPlatformsByLeagueId(int $leagueId): array;
+
+    /**
+     * Get paginated leagues for admin with filters.
+     *
+     * @param int $page
+     * @param int $perPage
+     * @param array<string, mixed> $filters
+     * @return array{data: array<int, League>, total: int, per_page: int, current_page: int, last_page: int}
+     */
+    public function getPaginatedForAdmin(int $page, int $perPage, array $filters = []): array;
 }

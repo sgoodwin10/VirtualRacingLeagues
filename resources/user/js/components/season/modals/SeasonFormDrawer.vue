@@ -67,6 +67,7 @@ const form = reactive<SeasonForm>({
   logo_url: null,
   banner: null,
   banner_url: null,
+  race_divisions_enabled: false,
   team_championship_enabled: false,
 });
 
@@ -180,6 +181,7 @@ function loadSeasonData(): void {
   form.logo_url = props.season.has_own_logo ? props.season.logo_url : null;
   form.banner = null;
   form.banner_url = props.season.banner_url;
+  form.race_divisions_enabled = props.season.race_divisions_enabled;
   form.team_championship_enabled = props.season.team_championship_enabled;
 
   originalName.value = props.season.name;
@@ -197,6 +199,7 @@ function resetForm(): void {
   form.logo_url = null;
   form.banner = null;
   form.banner_url = null;
+  form.race_divisions_enabled = false;
   form.team_championship_enabled = false;
   originalName.value = '';
   slugPreview.value = '';
@@ -241,6 +244,7 @@ async function submitForm(): Promise<void> {
         technical_specs: form.technical_specs || null,
         logo: form.logo,
         banner: form.banner,
+        race_divisions_enabled: form.race_divisions_enabled,
         team_championship_enabled: form.team_championship_enabled,
       });
 
@@ -260,6 +264,7 @@ async function submitForm(): Promise<void> {
         technical_specs: form.technical_specs || undefined,
         logo: form.logo || undefined,
         banner: form.banner || undefined,
+        race_divisions_enabled: form.race_divisions_enabled,
         team_championship_enabled: form.team_championship_enabled,
       });
 
@@ -410,6 +415,24 @@ function cancelNameChange(): void {
 
         <!-- Right Column (33%) -->
         <div class="space-y-6">
+          <!-- Race Divisions Toggle -->
+          <FormInputGroup>
+            <div class="flex items-center gap-3">
+              <Checkbox
+                v-model="form.race_divisions_enabled"
+                input-id="race_divisions"
+                :binary="true"
+                :disabled="isSubmitting"
+              />
+              <FormLabel
+                for="race_divisions"
+                text="Enable division championship"
+                class="mb-0 cursor-pointer"
+              />
+            </div>
+            <FormOptionalText text="Organize drivers into competitive divisions" />
+          </FormInputGroup>
+
           <!-- Team Championship Toggle -->
           <FormInputGroup>
             <div class="flex items-center gap-3">

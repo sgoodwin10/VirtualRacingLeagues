@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminActivityLogController;
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminLeagueController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\SiteConfigController;
 use App\Http\Controllers\Admin\UserController;
@@ -92,6 +93,14 @@ Route::domain('admin.virtualracingleagues.localhost')->middleware('web')->group(
             Route::middleware([SuperAdminOnly::class])->group(function () {
                 Route::get('/site-config', [SiteConfigController::class, 'show'])->name('site-config.show');
                 Route::put('/site-config', [SiteConfigController::class, 'update'])->name('site-config.update');
+            });
+
+            // Leagues Management (Admin)
+            Route::prefix('leagues')->name('leagues.')->group(function () {
+                Route::get('/', [AdminLeagueController::class, 'index'])->name('index');
+                Route::get('/{id}', [AdminLeagueController::class, 'show'])->name('show');
+                Route::post('/{id}/archive', [AdminLeagueController::class, 'archive'])->name('archive');
+                Route::delete('/{id}', [AdminLeagueController::class, 'destroy'])->name('destroy');
             });
         });
     });
@@ -288,6 +297,14 @@ Route::domain('virtualracingleagues.localhost')->middleware('web')->group(functi
             Route::middleware([SuperAdminOnly::class])->group(function () {
                 Route::get('/site-config', [SiteConfigController::class, 'show'])->name('site-config.show');
                 Route::put('/site-config', [SiteConfigController::class, 'update'])->name('site-config.update');
+            });
+
+            // Leagues Management (Admin)
+            Route::prefix('leagues')->name('leagues.')->group(function () {
+                Route::get('/', [AdminLeagueController::class, 'index'])->name('index');
+                Route::get('/{id}', [AdminLeagueController::class, 'show'])->name('show');
+                Route::post('/{id}/archive', [AdminLeagueController::class, 'archive'])->name('archive');
+                Route::delete('/{id}', [AdminLeagueController::class, 'destroy'])->name('destroy');
             });
         });
     });

@@ -45,6 +45,7 @@ final class Season
         private ?string $logoPath,
         private ?string $bannerPath,
         private bool $teamChampionshipEnabled,
+        private bool $raceDivisionsEnabled,
         private SeasonStatus $status,
         private int $createdByUserId,
         private DateTimeImmutable $createdAt,
@@ -67,6 +68,7 @@ final class Season
         ?string $logoPath = null,
         ?string $bannerPath = null,
         bool $teamChampionshipEnabled = false,
+        bool $raceDivisionsEnabled = false,
     ): self {
         $now = new DateTimeImmutable();
 
@@ -81,6 +83,7 @@ final class Season
             logoPath: $logoPath,
             bannerPath: $bannerPath,
             teamChampionshipEnabled: $teamChampionshipEnabled,
+            raceDivisionsEnabled: $raceDivisionsEnabled,
             status: SeasonStatus::SETUP,
             createdByUserId: $createdByUserId,
             createdAt: $now,
@@ -107,6 +110,7 @@ final class Season
         ?string $logoPath = null,
         ?string $bannerPath = null,
         bool $teamChampionshipEnabled = false,
+        bool $raceDivisionsEnabled = false,
         ?DateTimeImmutable $deletedAt = null,
     ): self {
         return new self(
@@ -120,6 +124,7 @@ final class Season
             logoPath: $logoPath,
             bannerPath: $bannerPath,
             teamChampionshipEnabled: $teamChampionshipEnabled,
+            raceDivisionsEnabled: $raceDivisionsEnabled,
             status: $status,
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
@@ -204,6 +209,11 @@ final class Season
     public function teamChampionshipEnabled(): bool
     {
         return $this->teamChampionshipEnabled;
+    }
+
+    public function raceDivisionsEnabled(): bool
+    {
+        return $this->raceDivisionsEnabled;
     }
 
     public function status(): SeasonStatus
@@ -393,6 +403,54 @@ final class Season
                 seasonId: $this->id ?? 0,
                 competitionId: $this->competitionId,
                 changes: ['team_championship_enabled' => ['old' => true, 'new' => false]],
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Enable race divisions.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function enableRaceDivisions(): void
+    {
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id ?? 0);
+        }
+
+        if (!$this->raceDivisionsEnabled) {
+            $this->raceDivisionsEnabled = true;
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonUpdated(
+                seasonId: $this->id ?? 0,
+                competitionId: $this->competitionId,
+                changes: ['race_divisions_enabled' => ['old' => false, 'new' => true]],
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Disable race divisions.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function disableRaceDivisions(): void
+    {
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id ?? 0);
+        }
+
+        if ($this->raceDivisionsEnabled) {
+            $this->raceDivisionsEnabled = false;
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonUpdated(
+                seasonId: $this->id ?? 0,
+                competitionId: $this->competitionId,
+                changes: ['race_divisions_enabled' => ['old' => true, 'new' => false]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
             ));
         }

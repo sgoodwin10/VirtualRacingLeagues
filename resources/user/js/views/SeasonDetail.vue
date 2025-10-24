@@ -284,6 +284,10 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                     <p>{{ season.team_championship_enabled ? 'Enabled' : 'Disabled' }}</p>
                   </div>
                   <div>
+                    <span class="text-sm font-semibold text-gray-600">Race Divisions</span>
+                    <p>{{ season.race_divisions_enabled ? 'Enabled' : 'Disabled' }}</p>
+                  </div>
+                  <div>
                     <span class="text-sm font-semibold text-gray-600">Status</span>
                     <p class="capitalize">{{ season.status }}</p>
                   </div>

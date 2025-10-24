@@ -41,7 +41,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereSortOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereUpdatedAt($value)
- * @mixin \Eloquent
  */
 class PlatformTrack extends Model
 {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -9,10 +9,9 @@ import DriverFormDialog from './modals/DriverFormDialog.vue';
 import { useLeagueStore } from '@user/stores/leagueStore';
 import { useDriverStore } from '@user/stores/driverStore';
 import type { LeagueDriver, CreateDriverRequest, UpdateDriverRequest } from '@user/types/driver';
+import type { DataTablePageEvent } from 'primevue/datatable';
 
 interface Props {
-  drivers?: LeagueDriver[];
-  loading?: boolean;
   leagueId?: number;
 }
 
@@ -21,8 +20,6 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  drivers: () => [],
-  loading: false,
   leagueId: undefined,
 });
 
@@ -30,6 +27,12 @@ const emit = defineEmits<Emits>();
 
 const leagueStore = useLeagueStore();
 const driverStore = useDriverStore();
+
+// Computed properties bound to store
+const drivers = computed(() => driverStore.drivers);
+const loading = computed(() => driverStore.loading);
+const totalRecords = computed(() => driverStore.totalDrivers);
+const first = computed(() => (driverStore.currentPage - 1) * driverStore.perPage);
 
 // Modal state management
 const viewModalVisible = ref(false);
@@ -145,14 +148,37 @@ const handleEditModalCancel = (): void => {
 };
 
 /**
- * Fetch platform columns on mount if league is provided
+ * Handle pagination change event
+ */
+const handlePageChange = async (event: DataTablePageEvent): Promise<void> => {
+  if (!props.leagueId) return;
+
+  const page = event.page + 1; // PrimeVue uses 0-based pages
+  const perPage = event.rows;
+
+  try {
+    await driverStore.fetchLeagueDrivers(props.leagueId, {
+      page,
+      per_page: perPage,
+    });
+  } catch (error) {
+    console.error('Failed to fetch drivers:', error);
+  }
+};
+
+/**
+ * Fetch platform columns and initial drivers on mount if league is provided
  */
 onMounted(async () => {
   if (props.leagueId) {
     try {
+      // Fetch platform columns for dynamic columns
       await leagueStore.fetchDriverColumnsForLeague(props.leagueId);
+
+      // Fetch initial driver data
+      await driverStore.fetchLeagueDrivers(props.leagueId);
     } catch (error) {
-      console.error('Failed to fetch platform columns:', error);
+      console.error('Failed to fetch initial data:', error);
     }
   }
 });
@@ -160,15 +186,19 @@ onMounted(async () => {
 
 <template>
   <DataTable
-    :value="props.drivers || []"
-    :loading="props.loading"
+    :value="drivers"
+    :loading="loading"
+    lazy
     striped-rows
     paginator
     :rows="10"
     :rows-per-page-options="[10, 25, 50]"
+    :total-records="totalRecords"
+    :first="first"
     data-key="id"
     responsive-layout="scroll"
     class="read-only-driver-table"
+    @page="handlePageChange"
   >
     <template #empty>
       <div class="text-center py-8 text-gray-500">No drivers found.</div>

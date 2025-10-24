@@ -290,6 +290,9 @@ npm run lint:admin         # Lint admin dashboard only
 npm run format             # Format all (Prettier)
 npm run format:user        # Format user dashboard only
 npm run format:admin       # Format admin dashboard only
+
+# Access to MariaDB when in container
+mysql -h mariadb -u laravel -psecret --skip-ssl virtualracingleagues
 ```
 
 ### Docker

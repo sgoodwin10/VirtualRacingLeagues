@@ -33,7 +33,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
 
     public function findById(int $id): SeasonDriver
     {
-        $model = SeasonDriverEloquent::find($id);
+        $model = SeasonDriverEloquent::with(['leagueDriver.driver', 'team'])->find($id);
 
         if (!$model) {
             throw SeasonDriverNotFoundException::withId($id);
@@ -161,7 +161,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     public function findBySeasonPaginated(int $seasonId, int $page, int $perPage, array $filters = []): array
     {
         $query = SeasonDriverEloquent::where('season_id', $seasonId)
-            ->with(['leagueDriver.driver']); // Eager load to prevent N+1 queries
+            ->with(['leagueDriver.driver', 'team']); // Eager load to prevent N+1 queries
 
         $this->applyFilters($query, $filters);
 
@@ -246,7 +246,25 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     {
         SeasonDriverEloquent::where('id', $seasonDriverId)->update([
             'team_id' => $teamId,
+            'updated_at' => now(),
         ]);
+    }
+
+    /**
+     * Find season driver by ID with all relationships loaded.
+     * Used after team assignment to return complete driver data.
+     *
+     * @throws SeasonDriverNotFoundException
+     */
+    public function findByIdWithRelations(int $seasonDriverId): SeasonDriverEloquent
+    {
+        $model = SeasonDriverEloquent::with(['leagueDriver.driver', 'team'])->find($seasonDriverId);
+
+        if (!$model) {
+            throw SeasonDriverNotFoundException::withId($seasonDriverId);
+        }
+
+        return $model;
     }
 
     /**

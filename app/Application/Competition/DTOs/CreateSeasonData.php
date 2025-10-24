@@ -22,6 +22,7 @@ class CreateSeasonData extends Data
         public ?UploadedFile $logo = null,
         public ?UploadedFile $banner = null,
         public bool $team_championship_enabled = false,
+        public bool $race_divisions_enabled = false,
     ) {
     }
 
@@ -41,6 +42,7 @@ class CreateSeasonData extends Data
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'banner' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:4096'],
             'team_championship_enabled' => ['boolean'],
+            'race_divisions_enabled' => ['boolean'],
         ];
     }
 }

@@ -12,7 +12,6 @@ use App\Domain\Team\Exceptions\TeamNotFoundException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * Team Controller.
@@ -37,25 +36,19 @@ final class TeamController extends Controller
     /**
      * Create a new team.
      */
-    public function store(Request $request, int $seasonId): JsonResponse
+    public function store(CreateTeamData $data, int $seasonId): JsonResponse
     {
-        $validated = $request->validate(CreateTeamData::rules());
-        $data = CreateTeamData::from($validated);
         $team = $this->teamService->createTeam($data, $seasonId);
-
         return ApiResponse::created($team->toArray(), 'Team created successfully');
     }
 
     /**
      * Update a team.
      */
-    public function update(Request $request, int $seasonId, int $teamId): JsonResponse
+    public function update(UpdateTeamData $data, int $seasonId, int $teamId): JsonResponse
     {
         try {
-            $validated = $request->validate(UpdateTeamData::rules());
-            $data = UpdateTeamData::from($validated);
             $team = $this->teamService->updateTeam($teamId, $data);
-
             return ApiResponse::success($team->toArray(), 'Team updated successfully');
         } catch (TeamNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -78,12 +71,9 @@ final class TeamController extends Controller
     /**
      * Assign a driver to a team.
      */
-    public function assignDriver(Request $request, int $seasonId, int $seasonDriverId): JsonResponse
+    public function assignDriver(AssignDriverTeamData $data, int $seasonId, int $seasonDriverId): JsonResponse
     {
-        $validated = $request->validate(AssignDriverTeamData::rules());
-        $data = AssignDriverTeamData::from($validated);
-        $this->teamService->assignDriverToTeam($seasonDriverId, $data);
-
-        return ApiResponse::success(null, 'Driver assigned to team successfully');
+        $updatedDriver = $this->teamService->assignDriverToTeam($seasonDriverId, $data);
+        return ApiResponse::success($updatedDriver, 'Driver assigned to team successfully');
     }
 }

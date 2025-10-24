@@ -18,6 +18,35 @@ vi.mock('@user/stores/leagueStore', () => ({
   })),
 }));
 
+// Mock the driver store
+const mockFetchLeagueDrivers = vi.fn();
+let mockDriversValue: LeagueDriver[] = [];
+let mockLoadingValue = false;
+let mockTotalDriversValue = 0;
+let mockCurrentPageValue = 1;
+let mockPerPageValue = 10;
+
+vi.mock('@user/stores/driverStore', () => ({
+  useDriverStore: vi.fn(() => ({
+    get drivers() {
+      return mockDriversValue;
+    },
+    get loading() {
+      return mockLoadingValue;
+    },
+    get totalDrivers() {
+      return mockTotalDriversValue;
+    },
+    get currentPage() {
+      return mockCurrentPageValue;
+    },
+    get perPage() {
+      return mockPerPageValue;
+    },
+    fetchLeagueDrivers: mockFetchLeagueDrivers,
+  })),
+}));
+
 // Mock PrimeVue components
 vi.mock('primevue/datatable', () => ({
   default: {
@@ -61,7 +90,12 @@ describe('DriverTable', () => {
 
     // Reset mocks
     mockFetchDriverColumnsForLeague.mockClear();
+    mockFetchLeagueDrivers.mockClear();
     mockPlatformColumnsValue = []; // Reset to empty by default
+    mockLoadingValue = false;
+    mockTotalDriversValue = 0;
+    mockCurrentPageValue = 1;
+    mockPerPageValue = 10;
 
     mockDrivers = [
       {
@@ -118,10 +152,9 @@ describe('DriverTable', () => {
   });
 
   it('should render driver table with data', () => {
+    mockDriversValue = mockDrivers;
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: mockDrivers,
-        loading: false,
         leagueId: 1,
       },
     });
@@ -130,10 +163,9 @@ describe('DriverTable', () => {
   });
 
   it('should emit edit event when edit button is clicked', async () => {
+    mockDriversValue = mockDrivers;
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: mockDrivers,
-        loading: false,
         leagueId: 1,
       },
     });
@@ -147,10 +179,9 @@ describe('DriverTable', () => {
   });
 
   it('should emit remove event when remove button is clicked', async () => {
+    mockDriversValue = mockDrivers;
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: mockDrivers,
-        loading: false,
         leagueId: 1,
       },
     });
@@ -164,10 +195,9 @@ describe('DriverTable', () => {
   });
 
   it('should display driver name correctly', () => {
+    mockDriversValue = mockDrivers;
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: mockDrivers,
-        loading: false,
         leagueId: 1,
       },
     });
@@ -184,10 +214,9 @@ describe('DriverTable', () => {
   });
 
   it('should display platform values correctly', () => {
+    mockDriversValue = mockDrivers;
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: mockDrivers,
-        loading: false,
         leagueId: 1,
       },
     });
@@ -204,10 +233,9 @@ describe('DriverTable', () => {
   });
 
   it('should handle driver with no platform ID', () => {
+    mockDriversValue = [];
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: [],
-        loading: false,
         leagueId: 1,
       },
     });
@@ -228,34 +256,34 @@ describe('DriverTable', () => {
   });
 
   it('should show loading state', () => {
+    mockLoadingValue = true;
+    mockDriversValue = [];
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: [],
-        loading: true,
         leagueId: 1,
       },
     });
 
-    expect(wrapper.props('loading')).toBe(true);
+    const component = wrapper.vm as any;
+    expect(component.loading).toBe(true);
   });
 
   it('should handle empty drivers array', () => {
+    mockDriversValue = [];
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: [],
-        loading: false,
         leagueId: 1,
       },
     });
 
-    expect(wrapper.props('drivers')).toEqual([]);
+    const component = wrapper.vm as any;
+    expect(component.drivers).toEqual([]);
   });
 
   it('should display Discord ID correctly', () => {
+    mockDriversValue = mockDrivers;
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: mockDrivers,
-        loading: false,
         leagueId: 1,
       },
     });
@@ -272,10 +300,9 @@ describe('DriverTable', () => {
   });
 
   it('should handle driver with no Discord ID', () => {
+    mockDriversValue = [];
     const wrapper = mount(DriverTable, {
       props: {
-        drivers: [],
-        loading: false,
         leagueId: 1,
       },
     });

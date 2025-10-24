@@ -2,9 +2,12 @@
 import { ref, computed } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
+import { useRoute } from 'vue-router';
 import { useSeasonDriverStore } from '@user/stores/seasonDriverStore';
+import { useDriverStore } from '@user/stores/driverStore';
 import { useTeamStore } from '@user/stores/teamStore';
 import type { SeasonDriver } from '@user/types/seasonDriver';
+import type { LeagueDriver } from '@user/types/driver';
 import type { Team } from '@user/types/team';
 import { usesPsnId, usesIracingId } from '@user/constants/platforms';
 
@@ -12,7 +15,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
-import ConfirmDialog from 'primevue/confirmdialog';
+import ViewDriverModal from '@user/components/driver/ViewDriverModal.vue';
 
 interface Props {
   seasonId: number;
@@ -37,10 +40,17 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 
+const route = useRoute();
 const confirm = useConfirm();
 const toast = useToast();
 const seasonDriverStore = useSeasonDriverStore();
+const driverStore = useDriverStore();
 const teamStore = useTeamStore();
+
+// Modal state
+const showViewDriverModal = ref(false);
+const selectedDriver = ref<LeagueDriver | null>(null);
+const loadingDriver = ref(false);
 
 const updatingTeam = ref<{ [key: number]: boolean }>({});
 
@@ -74,8 +84,76 @@ function getDriverDisplayName(driver: SeasonDriver): string {
   return nickname || 'Unknown Driver';
 }
 
-function handleView(driver: SeasonDriver): void {
+/**
+ * Get leagueId from route params
+ */
+const leagueId = computed(() => {
+  const id = route.params.leagueId;
+  return id ? parseInt(id as string, 10) : null;
+});
+
+/**
+ * Handle view driver button click
+ * Fetches the full LeagueDriver data and opens the ViewDriverModal
+ */
+async function handleView(driver: SeasonDriver): Promise<void> {
+  // Emit the view event for backward compatibility
   emit('view', driver);
+
+  // Check if leagueId is available
+  if (!leagueId.value) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'League ID not available',
+      life: 5000,
+    });
+    return;
+  }
+
+  loadingDriver.value = true;
+
+  try {
+    // Fetch the full LeagueDriver data using the driver_id
+    const fullDriver = await driverStore.fetchLeagueDriver(leagueId.value, driver.driver_id);
+    selectedDriver.value = fullDriver;
+    showViewDriverModal.value = true;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to load driver details';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  } finally {
+    loadingDriver.value = false;
+  }
+}
+
+/**
+ * Handle close event from ViewDriverModal
+ */
+function handleCloseModal(): void {
+  showViewDriverModal.value = false;
+  selectedDriver.value = null;
+}
+
+/**
+ * Handle edit event from ViewDriverModal
+ * Currently not implemented - could emit an edit event to parent
+ */
+function handleEditDriver(): void {
+  // Close the view modal
+  showViewDriverModal.value = false;
+
+  // Optionally emit an edit event to the parent component
+  toast.add({
+    severity: 'info',
+    summary: 'Info',
+    detail: 'Edit functionality coming soon',
+    life: 3000,
+  });
 }
 
 function handleRemove(driver: SeasonDriver): void {
@@ -89,7 +167,7 @@ function handleRemove(driver: SeasonDriver): void {
     rejectLabel: 'Cancel',
     accept: async () => {
       try {
-        await seasonDriverStore.removeDriver(props.seasonId, driver.id);
+        await seasonDriverStore.removeDriver(props.seasonId, driver.league_driver_id);
 
         toast.add({
           severity: 'success',
@@ -179,9 +257,17 @@ async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null):
 
 <template>
   <div class="season-drivers-table">
+    <!-- View Driver Modal -->
+    <ViewDriverModal
+      v-model:visible="showViewDriverModal"
+      :driver="selectedDriver"
+      @close="handleCloseModal"
+      @edit="handleEditDriver"
+    />
+
     <DataTable
       :value="drivers"
-      :loading="loading"
+      :loading="loading || loadingDriver"
       paginator
       :rows="10"
       :rows-per-page-options="[10, 25, 50]"
@@ -224,7 +310,7 @@ async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null):
         </template>
       </Column>
 
-      <Column v-if="showNumberColumn" field="driver_number" header="Number">
+      <Column v-if="showNumberColumn" field="driver_number" header="#" class="text-center">
         <template #body="{ data }">
           <span class="text-sm text-gray-600">{{ data.driver_number || '-' }}</span>
         </template>
@@ -288,7 +374,5 @@ async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null):
         </template>
       </Column>
     </DataTable>
-
-    <ConfirmDialog />
   </div>
 </template>

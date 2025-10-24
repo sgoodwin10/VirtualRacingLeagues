@@ -77,7 +77,8 @@ describe('AvailableDriversTable', () => {
 
     wrapper = mount(AvailableDriversTable, {
       props: {
-        loading: false,
+        seasonId: 1,
+        leagueId: 1,
       },
       global: {
         plugins: [createPinia()],
@@ -90,7 +91,8 @@ describe('AvailableDriversTable', () => {
   it('computes driver display name correctly with first and last name', () => {
     wrapper = mount(AvailableDriversTable, {
       props: {
-        loading: false,
+        seasonId: 1,
+        leagueId: 1,
       },
       global: {
         plugins: [createPinia()],
@@ -106,7 +108,8 @@ describe('AvailableDriversTable', () => {
   it('computes driver display name correctly with nickname only', () => {
     wrapper = mount(AvailableDriversTable, {
       props: {
-        loading: false,
+        seasonId: 1,
+        leagueId: 1,
       },
       global: {
         plugins: [createPinia()],
@@ -122,7 +125,8 @@ describe('AvailableDriversTable', () => {
   it('shows both PSN and iRacing columns when no platformId is provided', () => {
     wrapper = mount(AvailableDriversTable, {
       props: {
-        loading: false,
+        seasonId: 1,
+        leagueId: 1,
       },
       global: {
         plugins: [createPinia()],
@@ -137,7 +141,8 @@ describe('AvailableDriversTable', () => {
   it('shows only PSN column when platformId is 1 (PSN)', () => {
     wrapper = mount(AvailableDriversTable, {
       props: {
-        loading: false,
+        seasonId: 1,
+        leagueId: 1,
         platformId: 1,
       },
       global: {
@@ -153,7 +158,8 @@ describe('AvailableDriversTable', () => {
   it('shows only iRacing column when platformId is 2 (iRacing)', () => {
     wrapper = mount(AvailableDriversTable, {
       props: {
-        loading: false,
+        seasonId: 1,
+        leagueId: 1,
         platformId: 2,
       },
       global: {
@@ -169,7 +175,8 @@ describe('AvailableDriversTable', () => {
   it('emits add event when add button is clicked', async () => {
     wrapper = mount(AvailableDriversTable, {
       props: {
-        loading: false,
+        seasonId: 1,
+        leagueId: 1,
       },
       global: {
         plugins: [createPinia()],

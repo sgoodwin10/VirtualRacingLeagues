@@ -7,7 +7,6 @@ import type { Season } from '@user/types/season';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
-import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
 
 import SeasonDeleteDialog from './modals/SeasonDeleteDialog.vue';
@@ -258,7 +257,5 @@ function handleSeasonDeleted(): void {
       :season="season"
       @confirmed="handleSeasonDeleted"
     />
-
-    <ConfirmDialog />
   </div>
 </template>

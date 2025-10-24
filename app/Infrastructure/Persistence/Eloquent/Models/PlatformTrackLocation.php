@@ -31,7 +31,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation whereSortOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation whereUpdatedAt($value)
- * @mixin \Eloquent
  */
 class PlatformTrackLocation extends Model
 {

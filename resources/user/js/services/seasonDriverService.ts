@@ -125,9 +125,9 @@ export async function updateSeasonDriver(
  */
 export async function removeDriverFromSeason(
   seasonId: number,
-  seasonDriverId: number,
+  leagueDriverId: number,
 ): Promise<void> {
-  await apiClient.delete(`/seasons/${seasonId}/drivers/${seasonDriverId}`);
+  await apiClient.delete(`/seasons/${seasonId}/drivers/${leagueDriverId}`);
 }
 
 /**

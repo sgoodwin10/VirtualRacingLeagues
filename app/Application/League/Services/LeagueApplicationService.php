@@ -21,6 +21,7 @@ use App\Domain\League\ValueObjects\Tagline;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Shared\ValueObjects\EmailAddress;
 use App\Infrastructure\Persistence\Eloquent\Models\Platform;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -431,6 +432,105 @@ final class LeagueApplicationService
     {
         $league = $this->leagueRepository->findById($leagueId);
         return $this->driverPlatformColumnService->getCsvHeadersForLeague($league->platformIds());
+    }
+
+    /**
+     * Get all leagues for admin with pagination and filters.
+     *
+     * @param int $page
+     * @param int $perPage
+     * @param array<string, mixed> $filters
+     * @return array{data: array<int, LeagueData>, total: int, per_page: int, current_page: int, last_page: int}
+     */
+    public function getAllLeaguesForAdmin(int $page, int $perPage, array $filters = []): array
+    {
+        return DB::transaction(function () use ($page, $perPage, $filters) {
+            // Get paginated leagues from repository
+            $result = $this->leagueRepository->getPaginatedForAdmin($page, $perPage, $filters);
+
+            // Fetch owner data for all leagues
+            $ownerUserIds = array_map(fn(League $league) => $league->ownerUserId(), $result['data']);
+            $owners = UserEloquent::whereIn('id', $ownerUserIds)
+                ->get()
+                ->keyBy('id');
+
+            // Convert to DTOs with platform and owner data
+            $leagueDTOs = array_map(
+                function (League $league) use ($owners) {
+                    $platforms = $this->fetchPlatformData($league->platformIds());
+
+                    // Get owner data
+                    $owner = $owners->get($league->ownerUserId());
+                    $ownerData = $owner ? [
+                        'name' => trim($owner->first_name . ' ' . $owner->last_name),
+                        'email' => $owner->email,
+                    ] : null;
+
+                    return LeagueData::fromEntity($league, $platforms, $ownerData);
+                },
+                $result['data']
+            );
+
+            return [
+                'data' => $leagueDTOs,
+                'total' => $result['total'],
+                'per_page' => $result['per_page'],
+                'current_page' => $result['current_page'],
+                'last_page' => $result['last_page'],
+            ];
+        });
+    }
+
+    /**
+     * Get a league by ID for admin (no authorization check).
+     *
+     * @throws LeagueNotFoundException
+     */
+    public function getLeagueForAdmin(int $leagueId): LeagueData
+    {
+        $league = $this->leagueRepository->findById($leagueId);
+        $platforms = $this->fetchPlatformData($league->platformIds());
+
+        // Fetch owner data
+        $owner = UserEloquent::find($league->ownerUserId());
+        $ownerData = $owner ? [
+            'name' => trim($owner->first_name . ' ' . $owner->last_name),
+            'email' => $owner->email,
+        ] : null;
+
+        return LeagueData::fromEntity($league, $platforms, $ownerData);
+    }
+
+    /**
+     * Archive a league (admin action).
+     *
+     * @throws LeagueNotFoundException
+     */
+    public function archiveLeague(int $leagueId): LeagueData
+    {
+        return DB::transaction(function () use ($leagueId) {
+            // Find league by ID
+            $league = $this->leagueRepository->findById($leagueId);
+
+            // Call archive domain method
+            $league->archive();
+
+            // Save via repository
+            $this->leagueRepository->update($league);
+
+            // Dispatch domain events
+            $this->dispatchEvents($league);
+
+            // Fetch platform and owner data for response
+            $platforms = $this->fetchPlatformData($league->platformIds());
+            $owner = UserEloquent::find($league->ownerUserId());
+            $ownerData = $owner ? [
+                'name' => trim($owner->first_name . ' ' . $owner->last_name),
+                'email' => $owner->email,
+            ] : null;
+
+            return LeagueData::fromEntity($league, $platforms, $ownerData);
+        });
     }
 
     /**

@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     procps \
     zsh \
+    default-mysql-client \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions with enhanced GD support

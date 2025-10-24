@@ -18,6 +18,36 @@ vi.mock('@user/stores/leagueStore', () => ({
   })),
 }));
 
+// Mock the driver store
+const mockFetchLeagueDrivers = vi.fn();
+let mockDriversValue: LeagueDriver[] = [];
+let mockLoadingValue = false;
+let mockTotalDriversValue = 0;
+let mockCurrentPageValue = 1;
+let mockPerPageValue = 10;
+
+vi.mock('@user/stores/driverStore', () => ({
+  useDriverStore: vi.fn(() => ({
+    get drivers() {
+      return mockDriversValue;
+    },
+    get loading() {
+      return mockLoadingValue;
+    },
+    get totalDrivers() {
+      return mockTotalDriversValue;
+    },
+    get currentPage() {
+      return mockCurrentPageValue;
+    },
+    get perPage() {
+      return mockPerPageValue;
+    },
+    fetchLeagueDrivers: mockFetchLeagueDrivers,
+    updateDriver: vi.fn(),
+  })),
+}));
+
 // Mock PrimeVue components
 vi.mock('primevue/datatable', () => ({
   default: {
@@ -150,15 +180,21 @@ describe('ReadOnlyDriverTable', () => {
 
     // Reset mocks
     mockFetchDriverColumnsForLeague.mockClear();
+    mockFetchLeagueDrivers.mockClear();
     mockPlatformColumnsValue = [];
+    mockDriversValue = [];
+    mockLoadingValue = false;
+    mockTotalDriversValue = 0;
+    mockCurrentPageValue = 1;
+    mockPerPageValue = 10;
     vi.clearAllMocks();
   });
 
   it('renders without crashing', () => {
+    mockDriversValue = [];
     wrapper = mount(ReadOnlyDriverTable, {
       props: {
-        drivers: [],
-        loading: false,
+        leagueId: 1,
       },
     });
 
@@ -166,10 +202,11 @@ describe('ReadOnlyDriverTable', () => {
   });
 
   it('shows loading state', () => {
+    mockDriversValue = [];
+    mockLoadingValue = true;
     wrapper = mount(ReadOnlyDriverTable, {
       props: {
-        drivers: [],
-        loading: true,
+        leagueId: 1,
       },
     });
 
@@ -177,10 +214,10 @@ describe('ReadOnlyDriverTable', () => {
   });
 
   it('shows empty state when no drivers', () => {
+    mockDriversValue = [];
     wrapper = mount(ReadOnlyDriverTable, {
       props: {
-        drivers: [],
-        loading: false,
+        leagueId: 1,
       },
     });
 
@@ -188,10 +225,9 @@ describe('ReadOnlyDriverTable', () => {
   });
 
   it('renders modals in the component', () => {
+    mockDriversValue = mockDrivers;
     wrapper = mount(ReadOnlyDriverTable, {
       props: {
-        drivers: mockDrivers,
-        loading: false,
         leagueId: 1,
       },
     });
@@ -203,10 +239,9 @@ describe('ReadOnlyDriverTable', () => {
   });
 
   it('passes correct props to modals', () => {
+    mockDriversValue = mockDrivers;
     wrapper = mount(ReadOnlyDriverTable, {
       props: {
-        drivers: mockDrivers,
-        loading: false,
         leagueId: 1,
       },
     });

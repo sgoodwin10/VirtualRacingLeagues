@@ -56,7 +56,6 @@ use Spatie\Activitylog\Models\Activity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent withoutTrashed()
- * @mixin \Eloquent
  */
 class AdminEloquent extends Authenticatable
 {

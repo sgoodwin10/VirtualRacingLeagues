@@ -19,6 +19,7 @@ use App\Domain\Competition\ValueObjects\SeasonDriverStatus;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
@@ -193,8 +194,16 @@ final class SeasonDriverApplicationService
             ->get()
             ->keyBy('id');
 
+        // Eager load SeasonDriverEloquent models to get team information
+        $seasonDriverIds = array_map(fn(SeasonDriver $sd) => $sd->id(), $seasonDrivers);
+        /** @var \Illuminate\Support\Collection<int, SeasonDriverEloquent> $seasonDriverModels */
+        $seasonDriverModels = SeasonDriverEloquent::with('team')
+            ->whereIn('id', $seasonDriverIds)
+            ->get()
+            ->keyBy('id');
+
         return array_map(
-            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData($seasonDriver, $leagueDrivers),
+            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData($seasonDriver, $leagueDrivers, $seasonDriverModels),
             $seasonDrivers
         );
     }
@@ -251,9 +260,17 @@ final class SeasonDriverApplicationService
             ->get()
             ->keyBy('id');
 
+        // Eager load SeasonDriverEloquent models to get team information
+        $seasonDriverIds = array_map(fn(SeasonDriver $sd) => $sd->id(), $result['data']);
+        /** @var \Illuminate\Support\Collection<int, SeasonDriverEloquent> $seasonDriverModels */
+        $seasonDriverModels = SeasonDriverEloquent::with('team')
+            ->whereIn('id', $seasonDriverIds)
+            ->get()
+            ->keyBy('id');
+
         // Convert entities to DTOs
         $data = array_map(
-            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData($seasonDriver, $leagueDrivers),
+            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData($seasonDriver, $leagueDrivers, $seasonDriverModels),
             $result['data']
         );
 
@@ -471,8 +488,9 @@ final class SeasonDriverApplicationService
      * Convert SeasonDriver entity to SeasonDriverData DTO.
      *
      * @param \Illuminate\Support\Collection<int, LeagueDriverEloquent>|null $leagueDrivers
+     * @param \Illuminate\Support\Collection<int, SeasonDriverEloquent>|null $seasonDriverModels
      */
-    private function toSeasonDriverData(SeasonDriver $seasonDriver, $leagueDrivers = null): SeasonDriverData
+    private function toSeasonDriverData(SeasonDriver $seasonDriver, $leagueDrivers = null, $seasonDriverModels = null): SeasonDriverData
     {
         // If preloaded drivers provided, use them (optimized path)
         if ($leagueDrivers !== null) {
@@ -484,6 +502,23 @@ final class SeasonDriverApplicationService
 
         if (!$leagueDriver) {
             throw new \RuntimeException("League driver not found");
+        }
+
+        // Get team name from season driver's team relationship if assigned
+        $teamName = null;
+
+        if ($seasonDriverModels !== null && $seasonDriver->id() !== null) {
+            $seasonDriverModel = $seasonDriverModels->get($seasonDriver->id());
+            if ($seasonDriverModel && $seasonDriverModel->team) {
+                $teamName = $seasonDriverModel->team->name;
+            }
+        } elseif ($seasonDriver->id() !== null) {
+            // Fallback: fetch the season driver model to get team info
+            $seasonDriverModel = SeasonDriverEloquent::with('team')
+                ->find($seasonDriver->id());
+            if ($seasonDriverModel && $seasonDriverModel->team) {
+                $teamName = $seasonDriverModel->team->name;
+            }
         }
 
         return SeasonDriverData::fromEntity(
@@ -498,7 +533,7 @@ final class SeasonDriverApplicationService
                 'psn_id' => $leagueDriver->driver->psn_id ?? null,
                 'iracing_id' => $leagueDriver->driver->iracing_id ?? null,
                 'discord_id' => $leagueDriver->driver->discord_id ?? null,
-                'team_name' => $leagueDriver->team_name,
+                'team_name' => $teamName,
             ]
         );
     }

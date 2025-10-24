@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $logo_path
  * @property string|null $banner_path
  * @property bool $team_championship_enabled
+ * @property bool $race_divisions_enabled
  * @property string $status
  * @property int $created_by_user_id
  * @property \Illuminate\Support\Carbon $created_at
@@ -58,6 +59,7 @@ final class SeasonEloquent extends Model
         'logo_path',
         'banner_path',
         'team_championship_enabled',
+        'race_divisions_enabled',
         'status',
         'created_by_user_id',
     ];
@@ -69,6 +71,7 @@ final class SeasonEloquent extends Model
      */
     protected $casts = [
         'team_championship_enabled' => 'boolean',
+        'race_divisions_enabled' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

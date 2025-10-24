@@ -103,4 +103,16 @@ interface SeasonDriverRepositoryInterface
      * @param int|null $teamId Null for "Privateer" (no team)
      */
     public function updateTeamId(int $seasonDriverId, ?int $teamId): void;
+
+    /**
+     * Find season driver by ID with all relationships loaded.
+     * Used after team assignment to return complete driver data.
+     *
+     * @param int $seasonDriverId
+     * @return \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent
+     * @throws SeasonDriverNotFoundException
+     */
+    public function findByIdWithRelations(
+        int $seasonDriverId
+    ): \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 }

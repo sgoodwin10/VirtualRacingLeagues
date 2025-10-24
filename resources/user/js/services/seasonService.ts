@@ -167,6 +167,10 @@ export function buildCreateSeasonFormData(data: CreateSeasonRequest): FormData {
     formData.append('banner', data.banner);
   }
 
+  if (data.race_divisions_enabled !== undefined) {
+    formData.append('race_divisions_enabled', data.race_divisions_enabled ? '1' : '0');
+  }
+
   if (data.team_championship_enabled !== undefined) {
     formData.append('team_championship_enabled', data.team_championship_enabled ? '1' : '0');
   }
@@ -214,6 +218,10 @@ export function buildUpdateSeasonFormData(data: UpdateSeasonRequest): FormData {
   // Only send if it's an actual File object (new upload)
   if (data.banner !== undefined && data.banner !== null) {
     formData.append('banner', data.banner);
+  }
+
+  if (data.race_divisions_enabled !== undefined) {
+    formData.append('race_divisions_enabled', data.race_divisions_enabled ? '1' : '0');
   }
 
   if (data.team_championship_enabled !== undefined) {

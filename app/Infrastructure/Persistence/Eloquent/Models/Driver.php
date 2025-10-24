@@ -55,7 +55,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Driver whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Driver withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Driver withoutTrashed()
- * @mixin \Eloquent
  */
 final class Driver extends Model
 {

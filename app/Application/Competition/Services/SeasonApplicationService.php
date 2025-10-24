@@ -96,6 +96,7 @@ final class SeasonApplicationService
                     logoPath: $logoPath,
                     bannerPath: $bannerPath,
                     teamChampionshipEnabled: $data->team_championship_enabled,
+                    raceDivisionsEnabled: $data->race_divisions_enabled,
                 );
 
                 // 7. Save via repository
@@ -153,6 +154,15 @@ final class SeasonApplicationService
                     $season->enableTeamChampionship();
                 } else {
                     $season->disableTeamChampionship();
+                }
+            }
+
+            // 5b. Handle race divisions toggle
+            if ($data->race_divisions_enabled !== null) {
+                if ($data->race_divisions_enabled) {
+                    $season->enableRaceDivisions();
+                } else {
+                    $season->disableRaceDivisions();
                 }
             }
 

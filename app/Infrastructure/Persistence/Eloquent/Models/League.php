@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use App\Models\User;
 use Database\Factories\LeagueFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -69,7 +70,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereYoutubeUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|League withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|League withoutTrashed()
- * @mixin \Eloquent
  */
 class League extends Model
 {

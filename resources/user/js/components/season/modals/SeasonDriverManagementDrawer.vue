@@ -66,12 +66,7 @@ async function loadData(): Promise<void> {
     console.error('Failed to load season drivers:', error);
   }
 
-  // Load available drivers (critical)
-  try {
-    await seasonDriverStore.fetchAvailableDrivers(props.seasonId, props.leagueId);
-  } catch (error) {
-    console.error('Failed to load available drivers:', error);
-  }
+  // Note: Available drivers are now loaded by AvailableDriversTable component itself
 
   // Load stats (nice-to-have, don't block on failure)
   try {
@@ -117,13 +112,14 @@ async function handleAddDriver(driver: AvailableDriver): Promise<void> {
 }
 
 async function refreshData(): Promise<void> {
-  // Re-fetch season drivers and available drivers
+  // Re-fetch season drivers
   try {
     await seasonDriverStore.fetchSeasonDrivers(props.seasonId);
   } catch (error) {
     console.error('Failed to reload season drivers:', error);
   }
 
+  // Re-fetch available drivers
   try {
     await seasonDriverStore.fetchAvailableDrivers(props.seasonId, props.leagueId);
   } catch (error) {
@@ -216,8 +212,9 @@ function handleViewDriver(driver: SeasonDriver | AvailableDriver): void {
           </div>
           <div class="flex-1 overflow-auto">
             <AvailableDriversTable
+              :season-id="seasonId"
+              :league-id="leagueId"
               :platform-id="platformId"
-              :loading="seasonDriverStore.loadingAvailable || isAddingDriver"
               @view="handleViewDriver"
               @add="handleAddDriver"
             />

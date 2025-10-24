@@ -61,6 +61,16 @@ const routes = [
         },
       },
       {
+        path: 'leagues',
+        name: 'leagues',
+        component: () => import('@admin/views/LeaguesView.vue'),
+        meta: {
+          title: 'Leagues',
+          breadcrumb: [{ label: 'Leagues' }],
+          requiresAuth: true,
+        },
+      },
+      {
         path: 'admin-users',
         name: 'admin-users',
         component: () => import('@admin/views/AdminUsersView.vue'),

@@ -37,7 +37,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LeagueDriverEloquent whereLeagueNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LeagueDriverEloquent whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LeagueDriverEloquent whereUpdatedAt($value)
- * @mixin \Eloquent
  */
 final class LeagueDriverEloquent extends Model
 {

@@ -235,15 +235,17 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
   /**
    * Remove driver from season
    */
-  async function removeDriver(seasonId: number, seasonDriverId: number): Promise<void> {
+  async function removeDriver(seasonId: number, leagueDriverId: number): Promise<void> {
     loading.value = true;
     error.value = null;
 
     try {
-      await removeDriverFromSeason(seasonId, seasonDriverId);
+      await removeDriverFromSeason(seasonId, leagueDriverId);
 
       // Remove from local state
-      seasonDrivers.value = seasonDrivers.value.filter((sd) => sd.id !== seasonDriverId);
+      seasonDrivers.value = seasonDrivers.value.filter(
+        (sd) => sd.league_driver_id !== leagueDriverId,
+      );
 
       // Update pagination metadata
       totalDrivers.value = Math.max(0, totalDrivers.value - 1);

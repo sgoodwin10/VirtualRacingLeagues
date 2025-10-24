@@ -65,7 +65,6 @@ use Spatie\Activitylog\Models\Activity;
  * @method static Builder<static>|UserEloquent whereUuid($value)
  * @method static Builder<static>|UserEloquent withTrashed(bool $withTrashed = true)
  * @method static Builder<static>|UserEloquent withoutTrashed()
- * @mixin \Eloquent
  */
 class UserEloquent extends Authenticatable implements MustVerifyEmail
 {

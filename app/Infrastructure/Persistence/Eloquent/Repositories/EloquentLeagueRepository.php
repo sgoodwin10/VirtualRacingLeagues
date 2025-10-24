@@ -297,4 +297,77 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             ];
         })->all();
     }
+
+    public function getPaginatedForAdmin(int $page, int $perPage, array $filters = []): array
+    {
+        $query = LeagueEloquent::query()->with('owner:id,first_name,last_name,email');
+
+        // Apply search filter (search in name and slug)
+        if (isset($filters['search']) && !empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('slug', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Apply visibility filter (exact match)
+        if (isset($filters['visibility']) && !empty($filters['visibility'])) {
+            $query->where('visibility', $filters['visibility']);
+        }
+
+        // Apply status filter (exact match)
+        if (isset($filters['status']) && !empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        // Apply platform filter (whereJsonContains for any of the selected platforms)
+        if (isset($filters['platform_ids']) && !empty($filters['platform_ids'])) {
+            $platformIds = $filters['platform_ids'];
+            $query->where(function ($q) use ($platformIds) {
+                foreach ($platformIds as $platformId) {
+                    $q->orWhereJsonContains('platform_ids', $platformId);
+                }
+            });
+        }
+
+        // Apply sorting
+        $sortBy = $filters['sort_by'] ?? 'id';
+        $sortDirection = $filters['sort_direction'] ?? 'desc';
+
+        // Validate sort_by to prevent SQL injection
+        $allowedSortFields = ['id', 'name', 'visibility', 'status', 'created_at', 'updated_at'];
+        if (!in_array($sortBy, $allowedSortFields, true)) {
+            $sortBy = 'id';
+        }
+
+        $query->orderBy($sortBy, $sortDirection);
+
+        // Get total count before pagination
+        $total = $query->count();
+
+        // Calculate pagination metadata
+        $lastPage = (int) ceil($total / $perPage);
+
+        // Apply pagination
+        $offset = ($page - 1) * $perPage;
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, LeagueEloquent> $eloquentLeagues */
+        // @phpstan-ignore-next-line (skip() is available on Builder, PHPStan doesn't detect it correctly)
+        $eloquentLeagues = $query->skip($offset)->take($perPage)->get();
+
+        // Map to domain entities
+        $leagues = [];
+        foreach ($eloquentLeagues as $eloquentLeague) {
+            $leagues[] = $this->toDomainEntity($eloquentLeague);
+        }
+
+        return [
+            'data' => $leagues,
+            'total' => $total,
+            'per_page' => $perPage,
+            'current_page' => $page,
+            'last_page' => $lastPage,
+        ];
+    }
 }

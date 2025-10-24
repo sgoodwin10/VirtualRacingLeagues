@@ -9,7 +9,6 @@ import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 import DriverTable from './DriverTable.vue';
 import DriverFormDialog from './modals/DriverFormDialog.vue';
 import ViewDriverModal from './ViewDriverModal.vue';
@@ -279,7 +278,7 @@ onMounted(() => {
     <Drawer
       :visible="visible"
       position="bottom"
-      class="!h-[60vh] bg-gray-50"
+      class="!h-[50vh] bg-gray-50"
       @update:visible="$emit('update:visible', $event)"
     >
       <template #header>
@@ -320,8 +319,6 @@ onMounted(() => {
         <!-- Driver Table -->
         <div class="flex-1 overflow-auto">
           <DriverTable
-            :drivers="driverStore.drivers"
-            :loading="driverStore.loading"
             :league-id="leagueId"
             @view="handleViewDriver"
             @edit="handleEditDriver"
@@ -359,9 +356,6 @@ onMounted(() => {
 
     <!-- Toast for notifications -->
     <Toast />
-
-    <!-- Confirm Dialog -->
-    <ConfirmDialog />
   </div>
 </template>
 

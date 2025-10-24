@@ -81,6 +81,11 @@ const statusLabel = computed(() => {
               label="Team Championship"
               icon="pi pi-users"
             />
+            <Chip
+              v-if="season.race_divisions_enabled"
+              label="Race Divisions"
+              icon="pi pi-trophy"
+            />
           </div>
 
           <!-- Description -->

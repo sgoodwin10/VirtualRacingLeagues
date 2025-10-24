@@ -20,6 +20,7 @@ class UpdateSeasonData extends Data
         public ?UploadedFile $logo = null,
         public ?UploadedFile $banner = null,
         public ?bool $team_championship_enabled = null,
+        public ?bool $race_divisions_enabled = null,
         public ?bool $remove_logo = null,
         public ?bool $remove_banner = null,
     ) {
@@ -40,6 +41,7 @@ class UpdateSeasonData extends Data
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'banner' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:4096'],
             'team_championship_enabled' => ['nullable', 'boolean'],
+            'race_divisions_enabled' => ['nullable', 'boolean'],
             'remove_logo' => ['nullable', 'boolean'],
             'remove_banner' => ['nullable', 'boolean'],
         ];

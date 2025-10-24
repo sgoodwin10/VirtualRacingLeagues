@@ -20,14 +20,12 @@ import type { Competition } from '@user/types/competition';
 import HTag from '@user/components/common/HTag.vue';
 import Tag from 'primevue/tag';
 import BasePanel from '@user/components/common/panels/BasePanel.vue';
-import { useDriverStore } from '@user/stores/driverStore';
 import FormLabel from '@user/components/common/forms/FormLabel.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadcrumbs.vue';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
-const driverStore = useDriverStore();
 
 const league = ref<League | null>(null);
 const isLoading = ref(true);
@@ -51,7 +49,7 @@ const headerImage = computed(() => useImageUrl(() => league.value?.header_image_
 
 onMounted(async () => {
   await loadLeague();
-  await loadDrivers();
+  // Note: drivers are now loaded by ReadOnlyDriverTable component itself
 });
 
 async function loadLeague(): Promise<void> {
@@ -80,23 +78,7 @@ async function loadLeague(): Promise<void> {
   }
 }
 
-async function loadDrivers(): Promise<void> {
-  if (!leagueIdNumber.value) {
-    return;
-  }
-
-  try {
-    await driverStore.fetchLeagueDrivers(leagueIdNumber.value);
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to load drivers';
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: errorMessage,
-      life: 3000,
-    });
-  }
-}
+// Note: loadDrivers function removed - drivers are now loaded by ReadOnlyDriverTable component
 
 function handleCreateCompetitions(): void {
   showCreateCompetitionDrawer.value = true;
@@ -530,12 +512,7 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
             <span class="font-semibold">Drivers</span>
           </div>
         </template>
-        <ReadOnlyDriverTable
-          :drivers="driverStore.drivers"
-          :loading="driverStore.loading"
-          :league-id="leagueIdNumber"
-          @driver-updated="handleDriverUpdated"
-        />
+        <ReadOnlyDriverTable :league-id="leagueIdNumber" @driver-updated="handleDriverUpdated" />
       </BasePanel>
     </div>
 

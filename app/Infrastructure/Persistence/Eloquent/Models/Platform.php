@@ -33,7 +33,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform whereSortOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform whereUpdatedAt($value)
- * @mixin \Eloquent
  */
 class Platform extends Model
 {
