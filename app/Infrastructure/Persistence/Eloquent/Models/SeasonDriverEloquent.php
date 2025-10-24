@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * SeasonDriver Eloquent Model (Anemic).
- * 
+ *
  * This is a thin persistence model with NO business logic.
  * Business logic belongs in the SeasonDriver domain entity.
  *

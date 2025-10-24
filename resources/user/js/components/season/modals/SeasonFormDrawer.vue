@@ -235,7 +235,7 @@ async function submitForm(): Promise<void> {
   try {
     if (props.isEditMode && props.season) {
       const updated = await seasonStore.updateExistingSeason(props.season.id, {
-        name: form.name !== originalName.value ? form.name : undefined,
+        name: form.name,
         car_class: form.car_class || null,
         description: form.description || null,
         technical_specs: form.technical_specs || null,

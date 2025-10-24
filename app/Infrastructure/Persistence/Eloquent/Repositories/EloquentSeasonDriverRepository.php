@@ -240,6 +240,16 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     }
 
     /**
+     * Update the team_id for a season driver.
+     */
+    public function updateTeamId(int $seasonDriverId, ?int $teamId): void
+    {
+        SeasonDriverEloquent::where('id', $seasonDriverId)->update([
+            'team_id' => $teamId,
+        ]);
+    }
+
+    /**
      * Map domain entity to Eloquent data array.
      *
      * @return array<string, mixed>

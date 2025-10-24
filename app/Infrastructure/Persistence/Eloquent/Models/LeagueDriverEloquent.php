@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * LeagueDriver Eloquent Model (Anemic).
- * 
+ *
  * This is a thin persistence model with NO business logic.
  * Business logic belongs in the LeagueDriver domain entity.
  *

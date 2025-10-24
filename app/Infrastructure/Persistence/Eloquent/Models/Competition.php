@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Anemic Eloquent Model for Competition.
- * 
+ *
  * Data container only - no business logic.
  *
  * @property int $id

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useSeasonStore } from '@user/stores/seasonStore';
 import { useSeasonDriverStore } from '@user/stores/seasonDriverStore';
+import { useTeamStore } from '@user/stores/teamStore';
 import type { Season } from '@user/types/season';
 import type { SeasonDriver } from '@user/types/seasonDriver';
 
@@ -22,6 +23,7 @@ import SeasonFormDrawer from '@user/components/season/modals/SeasonFormDrawer.vu
 import SeasonDriversTable from '@user/components/season/SeasonDriversTable.vue';
 import SeasonDriverManagementDrawer from '@user/components/season/modals/SeasonDriverManagementDrawer.vue';
 import SeasonDriverFormDialog from '@user/components/season/modals/SeasonDriverFormDialog.vue';
+import TeamsPanel from '@user/components/season/teams/TeamsPanel.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadcrumbs.vue';
 import BasePanel from '@user/components/common/panels/BasePanel.vue';
 
@@ -30,6 +32,7 @@ const router = useRouter();
 const toast = useToast();
 const seasonStore = useSeasonStore();
 const seasonDriverStore = useSeasonDriverStore();
+const teamStore = useTeamStore();
 
 const season = ref<Season | null>(null);
 const isLoading = ref(true);
@@ -45,10 +48,18 @@ const competitionId = computed(() => parseInt(route.params.competitionId as stri
 const seasonId = computed(() => parseInt(route.params.seasonId as string, 10));
 
 const stats = computed(() => seasonDriverStore.stats);
+const teams = computed(() => teamStore.teams);
 
 onMounted(async () => {
   await loadSeason();
   await loadDrivers();
+});
+
+// Watch active tab and load teams when Drivers tab becomes active
+watch(activeTab, async (newTab) => {
+  if (newTab === 'drivers' && season.value?.team_championship_enabled) {
+    await loadTeams();
+  }
 });
 
 async function loadSeason(): Promise<void> {
@@ -86,6 +97,14 @@ async function loadDrivers(): Promise<void> {
     ]);
   } catch (error) {
     console.error('Failed to load drivers:', error);
+  }
+}
+
+async function loadTeams(): Promise<void> {
+  try {
+    await teamStore.fetchTeams(seasonId.value);
+  } catch (error) {
+    console.error('Failed to load teams:', error);
   }
 }
 
@@ -241,7 +260,7 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
       <Tabs v-model:value="activeTab">
         <TabList>
           <Tab value="overview">Overview</Tab>
-          <Tab value="drivers">Drivers</Tab>
+          <Tab value="drivers">Drivers & Teams</Tab>
           <Tab value="settings">Settings</Tab>
         </TabList>
 
@@ -327,13 +346,28 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                 />
               </div>
 
-              <!-- Drivers Table -->
-              <SeasonDriversTable
-                :season-id="seasonId"
-                :platform-id="season.competition?.platform_id"
-                :loading="seasonDriverStore.loading"
-                @edit="handleEditDriver"
-              />
+              <!-- 75/25 Layout: Drivers Table + Teams Panel -->
+              <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Drivers Table (75% - 3 columns) -->
+                <div class="lg:col-span-3">
+                  <SeasonDriversTable
+                    :season-id="seasonId"
+                    :platform-id="season.competition?.platform_id"
+                    :loading="seasonDriverStore.loading"
+                    :team-championship-enabled="season.team_championship_enabled"
+                    :teams="teams"
+                    @view="handleEditDriver"
+                  />
+                </div>
+
+                <!-- Teams Panel (25% - 1 column) -->
+                <div class="lg:col-span-1">
+                  <TeamsPanel
+                    :season-id="seasonId"
+                    :team-championship-enabled="season.team_championship_enabled"
+                  />
+                </div>
+              </div>
             </div>
           </TabPanel>
 

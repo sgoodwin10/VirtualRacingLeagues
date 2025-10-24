@@ -10,6 +10,7 @@ use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Repositories\AdminReadModelService;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentAdminRepository;
@@ -18,6 +19,7 @@ use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDriverRepositor
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentLeagueRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonDriverRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentTeamRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserRepository;
 use Illuminate\Support\ServiceProvider;
 
@@ -71,6 +73,12 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             SeasonDriverRepositoryInterface::class,
             EloquentSeasonDriverRepository::class
+        );
+
+        // Bind Team Repository
+        $this->app->bind(
+            TeamRepositoryInterface::class,
+            EloquentTeamRepository::class
         );
 
         // Bind Admin Read Model Service (singleton for better performance)

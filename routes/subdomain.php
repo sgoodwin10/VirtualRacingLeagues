@@ -20,6 +20,7 @@ use App\Http\Controllers\User\PlatformController;
 use App\Http\Controllers\User\SeasonController;
 use App\Http\Controllers\User\SeasonDriverController;
 use App\Http\Controllers\User\SiteConfigController as UserSiteConfigController;
+use App\Http\Controllers\User\TeamController;
 use App\Http\Controllers\User\TimezoneController;
 use App\Http\Middleware\AdminOrSuperAdminOnly;
 use App\Http\Middleware\AdminSessionMiddleware;
@@ -199,6 +200,13 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             Route::post('/seasons/{seasonId}/drivers/bulk', [SeasonDriverController::class, 'bulk'])->name('seasons.drivers.bulk');
             Route::put('/seasons/{seasonId}/drivers/{leagueDriverId}', [SeasonDriverController::class, 'update'])->name('seasons.drivers.update');
             Route::delete('/seasons/{seasonId}/drivers/{leagueDriverId}', [SeasonDriverController::class, 'destroy'])->name('seasons.drivers.destroy');
+
+            // Teams
+            Route::get('/seasons/{seasonId}/teams', [TeamController::class, 'index'])->name('seasons.teams.index');
+            Route::post('/seasons/{seasonId}/teams', [TeamController::class, 'store'])->name('seasons.teams.store');
+            Route::put('/seasons/{seasonId}/teams/{teamId}', [TeamController::class, 'update'])->name('seasons.teams.update');
+            Route::delete('/seasons/{seasonId}/teams/{teamId}', [TeamController::class, 'destroy'])->name('seasons.teams.destroy');
+            Route::put('/seasons/{seasonId}/drivers/{seasonDriverId}/team', [TeamController::class, 'assignDriver'])->name('seasons.drivers.team.assign');
         });
     });
 

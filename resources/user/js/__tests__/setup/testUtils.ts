@@ -81,7 +81,7 @@ export function mountWithStubs<T extends ComponentPublicInstance>(
   const customPlugins = options.global?.plugins || [];
 
   // Extract PrimeVue plugins from defaults
-  const primevuePlugins = [
+  const primevuePlugins: Array<any> = [
     [
       PrimeVue,
       {
@@ -97,7 +97,7 @@ export function mountWithStubs<T extends ComponentPublicInstance>(
           },
         },
       },
-    ],
+    ] as const,
     ToastService,
   ];
 
@@ -119,7 +119,7 @@ export function mountWithStubs<T extends ComponentPublicInstance>(
   );
 
   // Add default Pinia and Router only if not provided in custom plugins
-  const defaultDataPlugins = [];
+  const defaultDataPlugins: Array<any> = [];
   if (!hasPinia) {
     defaultDataPlugins.push(createTestPinia());
   }
@@ -128,7 +128,7 @@ export function mountWithStubs<T extends ComponentPublicInstance>(
   }
 
   // Merge plugins
-  const plugins = [...customPlugins, ...defaultDataPlugins, ...primevuePlugins];
+  const plugins: Array<any> = [...customPlugins, ...defaultDataPlugins, ...primevuePlugins];
 
   // Add directives stubs
   const directives = {

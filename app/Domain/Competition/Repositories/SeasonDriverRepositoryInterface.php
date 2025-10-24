@@ -94,4 +94,13 @@ interface SeasonDriverRepositoryInterface
      * @return array{data: array<SeasonDriver>, total: int, per_page: int, current_page: int}
      */
     public function findBySeasonPaginated(int $seasonId, int $page, int $perPage, array $filters = []): array;
+
+    /**
+     * Update the team_id for a season driver.
+     * Used when assigning/unassigning drivers to teams.
+     *
+     * @param int $seasonDriverId
+     * @param int|null $teamId Null for "Privateer" (no team)
+     */
+    public function updateTeamId(int $seasonDriverId, ?int $teamId): void;
 }

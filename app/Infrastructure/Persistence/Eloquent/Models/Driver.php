@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Anemic Eloquent model for Driver.
- * 
+ *
  * Business logic resides in App\Domain\Driver\Entities\Driver.
  *
  * @property int $id

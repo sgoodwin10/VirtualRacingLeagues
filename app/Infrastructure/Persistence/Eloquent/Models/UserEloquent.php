@@ -19,9 +19,9 @@ use Spatie\Activitylog\Models\Activity;
 
 /**
  * Anemic Eloquent Model for User persistence.
- * 
+ *
  * Contains only persistence concerns, no business logic.
- * 
+ *
  * Note: This class is not final to allow the App\Models\User proxy class
  * to extend it for Laravel framework features (Gates, Policies, Activity Logs).
  *

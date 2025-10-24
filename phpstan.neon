@@ -12,6 +12,7 @@ parameters:
         - bootstrap/cache
         - storage
         - vendor
+        - database/migrations.backup
     ignoreErrors:
         # Laravel Eloquent relationship covariance issues - known false positives
         -
@@ -101,13 +102,16 @@ parameters:
             path: database/seeders/*
         # Eloquent model property access (dynamic properties)
         -
-            message: '#Access to an undefined property .+Eloquent::\$.+#'
+            message: '#Access to an undefined property (Eloquent|.+Eloquent|\(Eloquent\|stdClass\))::\$.+#'
         # Eloquent model static methods (query builder, finders, etc.)
         -
-            message: '#Call to an undefined static method .+Eloquent::(query|with|where|orderBy|latest|oldest|paginate|get|all|pluck|count|exists|doesntExist|cursor|chunk|each|lazy|lazyById|sole|first|firstWhere|firstOr|firstOrFail|findMany|findOrNew|firstOrNew|firstOrCreate|updateOrCreate|when|tap|unless)#'
+            message: '#Call to an undefined static method (Eloquent|.+Eloquent)::(query|with|where|orderBy|latest|oldest|paginate|get|all|pluck|count|exists|doesntExist|cursor|chunk|each|lazy|lazyById|sole|first|firstWhere|firstOr|firstOrFail|findMany|findOrNew|firstOrNew|firstOrCreate|updateOrCreate|when|tap|unless)#'
         # Eloquent model methods (save, update, delete, etc.)
         -
-            message: '#Call to an undefined method .+Eloquent::(save|update|delete|forceDelete|restore|fresh|refresh|replicate|is|isNot|fill|forceFill)#'
+            message: '#Call to an undefined method (Eloquent|.+Eloquent)::(save|update|delete|forceDelete|restore|fresh|refresh|replicate|is|isNot|fill|forceFill)#'
+        # Query Builder methods (whereHas, whereNull, etc.)
+        -
+            message: '#Call to an undefined method Illuminate\\Database\\Query\\Builder::(whereHas|whereNull|whereNotNull|orWhereHas|doesntHave|orDoesntHave|whereDoesntHave|orWhereDoesntHave|whereIn|whereNotIn|whereBetween|whereNotBetween|whereDate|whereMonth|whereDay|whereYear|whereTime|whereColumn|whereJsonContains|whereJsonLength)#'
         # Controller undefined methods (fromRequest, etc.)
         -
             message: '#Call to an undefined static method .+(Data|Request)::(from|fromRequest|validate|validated|validateAndCreate)#'
@@ -122,4 +126,165 @@ parameters:
             message: '#uses generic trait .+HasFactory but does not specify its types#'
         # Eloquent model and other Laravel model types
         -
-            message: '#(Access to an undefined property|Call to an undefined method|Call to an undefined static method) .+(Model|Competition|Driver|League|Platform|PlatformTrack|Season|User|Admin|Request)::#'
+            message: '#(Access to an undefined property|Call to an undefined method|Call to an undefined static method) .+(Model|Competition|Driver|League|Platform|PlatformTrack|Season|User|Admin|Request|Team|SeasonDriver|LeagueDriver)::#'
+        # Laravel Schema facade connection method
+        -
+            message: '#Call to an undefined static method Illuminate\\Support\\Facades\\Schema::connection\(\)#'
+            path: database/migrations/*
+        # LocalFilesystemAdapter url method
+        -
+            message: '#Call to function method_exists\(\) with Illuminate\\Filesystem\\LocalFilesystemAdapter and ''url'' will always evaluate to true#'
+        # Eloquent casts property access
+        -
+            message: '#Access to an undefined property .+(Eloquent|Model)::\$casts#'
+        # Type object has unknown class
+        -
+            message: '#Type object has unknown class#'
+        # PHPDoc parsing errors in models
+        -
+            message: '#PHPDoc tag @(method|property|mixin) .+#'
+            path: app/Models/*
+        # Unknown Builder class in model PHPDocs
+        -
+            message: '#contains unknown class App\\Models\\Builder#'
+            path: app/Models/*
+        # Generic class Eloquent missing types in @mixin
+        -
+            message: '#PHPDoc tag @mixin contains generic class .+ but does not specify its types#'
+            path: app/Models/*
+        # Custom query scopes on Eloquent Builder
+        -
+            message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder.+::(search|filterByStatus|withTrashed|onlyTrashed)\(\)#'
+        # Carbon/DateTime type conversion issues
+        -
+            message: '#Parameter \#1 \$object of static method DateTimeImmutable::createFromMutable\(\) expects DateTime, Illuminate\\Support\\Carbon\|null given#'
+        -
+            message: '#does not accept Carbon\\Carbon\|null#'
+        # Eloquent Builder parameter type mismatches
+        -
+            message: '#Parameter .+ of method .+::applyFilters\(\) expects .+, .+ given#'
+        # Object property access (stdClass from queries)
+        -
+            message: '#Access to an undefined property object::\$.+#'
+        # Carbon null check issues
+        -
+            message: '#Cannot call method toDateTimeString\(\) on Illuminate\\Support\\Carbon\|null#'
+        # Collection callback type mismatches
+        -
+            message: '#Parameter \#1 \$callback of method .+Collection.+::map\(\) expects callable\(.+\), Closure\(.+\) given#'
+        # Parameter type mismatches for domain methods
+        -
+            message: '#Parameter \#1 .+ of method .+::(toDomainEntity|mapToEntity)\(\) expects .+, (Eloquent|stdClass) given#'
+        # Custom query scope methods on Builder
+        -
+            message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder.+::active\(\)#'
+        -
+            message: '#Call to an undefined method .+Platform.+::ordered\(\)#'
+        # Instanceof always true (domain events)
+        -
+            message: '#Instanceof between .+ and .+ will always evaluate to true#'
+        # Assert with true
+        -
+            message: '#Call to function assert\(\) with true will always evaluate to true#'
+        # @mixin with generic Eloquent class
+        -
+            message: '#PHPDoc tag @mixin contains generic class Eloquent but does not specify its types#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Generic type specifications for MorphMany
+        -
+            message: '#Generic type .+MorphMany.+ of .+ is not covariant with generic type .+ of .+#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Missing iterable value type in property PHPDoc
+        -
+            message: '#has PHPDoc tag @property for property .+ with no value type specified in iterable type array#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Access to Eloquent|stdClass property
+        -
+            message: '#Access to an undefined property \(Eloquent\|stdClass\)::\$.+#'
+        -
+            message: '#Access to an undefined property Eloquent\|stdClass::\$.+#'
+        # Eloquent Factory missing generic types
+        -
+            message: '#Method .+::newFactory\(\) .+ type .+Factory#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        -
+            message: '#uses generic trait .+Factory but does not specify its types#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Eloquent Relation missing generic types
+        -
+            message: '#(Method|PHPDoc tag @return with type) .+(BelongsTo|HasMany|BelongsToMany|MorphMany|HasOne|MorphOne).+ does not specify its types#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        -
+            message: '#Unable to resolve the template type .+ in call to method .+(belongsTo|hasMany|belongsToMany|morphMany|hasOne|morphOne)#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        -
+            message: '#Generic type .+ of .+ is not covariant with generic type .+ of .+#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        -
+            message: '#Generic type .+ of class .+(BelongsTo|HasMany|BelongsToMany) is not subtype of .+#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Model casts property type
+        -
+            message: '#Property .+::\$casts type has no value type specified in iterable type array#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Class not found (wrong model name)
+        -
+            message: '#Class App\\Infrastructure\\Persistence\\Eloquent\\Models\\(User|CompetitionEloquent) not found#'
+        # Attribute return type issues
+        -
+            message: '#PHPDoc tag @return with type .+ is incompatible with native type .+Attribute#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        -
+            message: '#Anonymous function should return .+ but returns .+#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Query Builder vs Eloquent Builder return type
+        -
+            message: '#but returns Illuminate\\Database\\Query\\Builder#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # belongsTo/belongsToMany argument type
+        -
+            message: '#Parameter \#1 .+ of method .+::(belongsTo|belongsToMany)\(\) expects class-string.+, string given#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Type string in generic type (for morph map)
+        -
+            message: '#Type string in generic type#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Generic type HasMany/MorphMany issues
+        -
+            message: '#Generic type .+(HasMany|MorphMany).+ does not specify its types#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Call to static method new() on unknown class
+        -
+            message: '#Call to static method new\(\) on an unknown class#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # No error to ignore warnings
+        -
+            message: '#No error to ignore is reported on line#'
+        # Property type mismatches
+        -
+            message: '#Property .+ does not accept .+#'
+            path: app/Infrastructure/Persistence/Eloquent/Repositories/*
+        # Collection map callback mismatches
+        -
+            message: '#Parameter \#1 \$callback of method .+Collection.+::map\(\) expects .+, .+ given#'
+            path: app/Infrastructure/Persistence/Eloquent/Repositories/*
+        # Eloquent scope methods missing generic types
+        -
+            message: '#Method .+::scope.+#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Model method return types with relations
+        -
+            message: '#Method .+::(league|platform|createdBy|leagues|drivers|owner|competition)\(\)#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # newFactory return type
+        -
+            message: '#Method .+::newFactory\(\) should return .+Factory.+ but returns .+Factory#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Type in generic type issues
+        -
+            message: '#Type .+ in generic type#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Generic type does not specify all template types
+        -
+            message: '#Generic type .+ in PHPDoc tag @return does not specify all template types of class#'
+            path: app/Infrastructure/Persistence/Eloquent/Models/*

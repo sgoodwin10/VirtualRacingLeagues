@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useSeasonDriverStore } from '@user/stores/seasonDriverStore';
+import { useTeamStore } from '@user/stores/teamStore';
 import type { SeasonDriver } from '@user/types/seasonDriver';
+import type { Team } from '@user/types/team';
 import { usesPsnId, usesIracingId } from '@user/constants/platforms';
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import Select from 'primevue/select';
 import ConfirmDialog from 'primevue/confirmdialog';
 
 interface Props {
@@ -16,14 +19,16 @@ interface Props {
   loading?: boolean;
   platformId?: number;
   showNumberColumn?: boolean;
-  showTeamColumn?: boolean;
+  teamChampionshipEnabled?: boolean;
+  teams?: Team[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   platformId: undefined,
   showNumberColumn: true,
-  showTeamColumn: true,
+  teamChampionshipEnabled: false,
+  teams: () => [],
 });
 
 interface Emits {
@@ -35,6 +40,9 @@ const emit = defineEmits<Emits>();
 const confirm = useConfirm();
 const toast = useToast();
 const seasonDriverStore = useSeasonDriverStore();
+const teamStore = useTeamStore();
+
+const updatingTeam = ref<{ [key: number]: boolean }>({});
 
 const drivers = computed(() => seasonDriverStore.seasonDrivers);
 
@@ -101,6 +109,72 @@ function handleRemove(driver: SeasonDriver): void {
     },
   });
 }
+
+// Team selection options
+interface TeamOption {
+  label: string;
+  value: number | null;
+  logo_url?: string | null;
+}
+
+const teamOptions = computed((): TeamOption[] => {
+  const options: TeamOption[] = [
+    {
+      label: 'Privateer',
+      value: null,
+    },
+  ];
+
+  props.teams.forEach((team) => {
+    options.push({
+      label: team.name,
+      value: team.id,
+      logo_url: team.logo_url,
+    });
+  });
+
+  return options;
+});
+
+function getDriverTeamId(driver: SeasonDriver): number | null {
+  // Find the team by name (backend returns team_name string)
+  const team = props.teams.find((t) => t.name === driver.team_name);
+  return team?.id || null;
+}
+
+async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null): Promise<void> {
+  updatingTeam.value[driver.id] = true;
+
+  try {
+    await teamStore.assignDriverToTeam(props.seasonId, driver.id, {
+      team_id: newTeamId,
+    });
+
+    // Refresh drivers to get updated team assignment
+    await seasonDriverStore.fetchSeasonDrivers(props.seasonId);
+
+    const teamName = newTeamId
+      ? props.teams.find((t) => t.id === newTeamId)?.name || 'team'
+      : 'Privateer';
+
+    toast.add({
+      severity: 'success',
+      summary: 'Team Updated',
+      detail: `Driver assigned to ${teamName}`,
+      life: 3000,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update team';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  } finally {
+    updatingTeam.value[driver.id] = false;
+  }
+}
 </script>
 
 <template>
@@ -156,9 +230,46 @@ function handleRemove(driver: SeasonDriver): void {
         </template>
       </Column>
 
-      <Column v-if="showTeamColumn" field="team_name" header="Team">
+      <Column v-if="teamChampionshipEnabled" field="team_name" header="Team">
         <template #body="{ data }">
-          <span class="text-sm text-gray-600">{{ data.team_name || '-' }}</span>
+          <Select
+            :model-value="getDriverTeamId(data)"
+            :options="teamOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Select team"
+            :loading="updatingTeam[data.id]"
+            :disabled="updatingTeam[data.id]"
+            class="w-full min-w-[150px]"
+            @change="(event) => handleTeamChange(data, event.value)"
+          >
+            <template #value="slotProps">
+              <div
+                v-if="slotProps.value !== null && slotProps.value !== undefined"
+                class="flex items-center gap-2"
+              >
+                <img
+                  v-if="teamOptions.find((opt) => opt.value === slotProps.value)?.logo_url"
+                  :src="teamOptions.find((opt) => opt.value === slotProps.value)!.logo_url!"
+                  :alt="teamOptions.find((opt) => opt.value === slotProps.value)?.label"
+                  class="w-5 h-5 rounded object-cover"
+                />
+                <span>{{ teamOptions.find((opt) => opt.value === slotProps.value)?.label }}</span>
+              </div>
+              <span v-else>Privateer</span>
+            </template>
+            <template #option="slotProps">
+              <div class="flex items-center gap-2">
+                <img
+                  v-if="slotProps.option.logo_url"
+                  :src="slotProps.option.logo_url"
+                  :alt="slotProps.option.label"
+                  class="w-5 h-5 rounded object-cover"
+                />
+                <span>{{ slotProps.option.label }}</span>
+              </div>
+            </template>
+          </Select>
         </template>
       </Column>
 

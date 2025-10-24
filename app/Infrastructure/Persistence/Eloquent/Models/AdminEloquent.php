@@ -14,9 +14,9 @@ use Spatie\Activitylog\Models\Activity;
 
 /**
  * Anemic Eloquent Model for Admin persistence.
- * 
+ *
  * Contains NO business logic - only database mapping.
- * 
+ *
  * Note: This class is not final to allow the App\Models\Admin proxy class
  * to extend it for Laravel framework features (Gates, Policies, Activity Logs).
  *
