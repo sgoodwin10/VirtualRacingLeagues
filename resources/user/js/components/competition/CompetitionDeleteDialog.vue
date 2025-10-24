@@ -60,11 +60,12 @@ async function handleArchive(): Promise<void> {
     });
 
     localVisible.value = false;
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to archive competition';
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: error.message || 'Failed to archive competition',
+      detail: errorMessage,
       life: 5000,
     });
   }
@@ -91,11 +92,12 @@ async function handleConfirmDelete(): Promise<void> {
 
     emit('confirmed', props.competition.id);
     localVisible.value = false;
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete competition';
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: error.message || 'Failed to delete competition',
+      detail: errorMessage,
       life: 5000,
     });
   } finally {

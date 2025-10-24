@@ -5,7 +5,6 @@ import { useToast } from 'primevue/usetoast';
 import { useCompetitionStore } from '@user/stores/competitionStore';
 import type { Competition } from '@user/types/competition';
 
-import Button from 'primevue/button';
 import Skeleton from 'primevue/skeleton';
 import Message from 'primevue/message';
 import Tabs from 'primevue/tabs';
@@ -13,11 +12,11 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
-import Card from 'primevue/card';
 
 import CompetitionHeader from '@user/components/competition/CompetitionHeader.vue';
 import CompetitionSettings from '@user/components/competition/CompetitionSettings.vue';
 import CompetitionFormDrawer from '@user/components/competition/CompetitionFormDrawer.vue';
+import SeasonList from '@user/components/season/SeasonList.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadcrumbs.vue';
 
 const route = useRoute();
@@ -144,24 +143,9 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
         </TabList>
 
         <TabPanels>
-
           <TabPanel value="seasons">
-            <Message severity="info">Season management coming in next update</Message>
-            <Card>
-              <template #content>
-                <div class="text-center py-8">
-                  <i class="pi pi-flag text-6xl text-gray-400 mb-4"></i>
-                  <h3 class="text-xl font-semibold mb-2">Ready to Race?</h3>
-                  <p class="text-gray-600 mb-4">
-                    Create your first season to start organizing races.
-                  </p>
-                  <Button label="Create First Season" disabled />
-                  <p class="text-sm text-gray-500 mt-2">(Season feature coming soon)</p>
-                </div>
-              </template>
-            </Card>
+            <SeasonList :competition-id="competitionId" :league-id="leagueId" />
           </TabPanel>
-
 
           <TabPanel value="settings">
             <CompetitionSettings

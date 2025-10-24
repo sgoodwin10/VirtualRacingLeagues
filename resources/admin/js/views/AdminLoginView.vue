@@ -92,7 +92,7 @@ const handleSubmit = async (): Promise<void> => {
     // Redirect to dashboard on success
     // Use replace to avoid adding to browser history
     await router.replace({ name: 'dashboard' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle different types of errors with user-friendly messages
     if (isAxiosError(error)) {
       if (hasValidationErrors(error)) {

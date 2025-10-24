@@ -18,6 +18,7 @@ class AdminAuthenticate
      */
     public function handle(Request $request, Closure $next): Response
     {
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
         $admin = Auth::guard('admin')->user();
 
         // Check if admin is authenticated

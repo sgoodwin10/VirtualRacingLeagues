@@ -42,10 +42,10 @@ describe('ImageUpload', () => {
       props: {
         modelValue: null,
         label: 'Upload Logo',
+        maxFileSize: 2000000, // 2MB
       },
       global: {
         stubs: commonStubs,
-        maxFileSize: 2000000, // 2MB
       },
     });
 

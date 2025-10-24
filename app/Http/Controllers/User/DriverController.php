@@ -47,12 +47,36 @@ final class DriverController extends Controller
             perPage: (int) ($validated['per_page'] ?? 15)
         );
 
-        return ApiResponse::paginated($result->data, [
-            'total' => $result->total,
-            'per_page' => $result->per_page,
-            'current_page' => $result->current_page,
-            'last_page' => $result->last_page,
-        ]);
+        // Build pagination links
+        $baseUrl = $request->url();
+        $queryParams = $request->except('page');
+        $lastPage = $result->last_page;
+        $currentPage = $result->current_page;
+
+        $firstPage = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1]));
+        $lastPageUrl = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $lastPage]));
+        $prevPage = $currentPage > 1
+            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))
+            : null;
+        $nextPage = $currentPage < $lastPage
+            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))
+            : null;
+
+        return ApiResponse::paginated(
+            $result->data,
+            [
+                'total' => $result->total,
+                'per_page' => $result->per_page,
+                'current_page' => $result->current_page,
+                'last_page' => $result->last_page,
+            ],
+            [
+                'first' => $firstPage,
+                'last' => $lastPageUrl,
+                'prev' => $prevPage,
+                'next' => $nextPage,
+            ]
+        );
     }
 
     /**

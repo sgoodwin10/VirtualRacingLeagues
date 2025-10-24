@@ -44,7 +44,6 @@ final class UserImpersonationController extends Controller
             $user = $result['user'];
 
             // Get Eloquent model for authentication
-            /** @phpstan-ignore-next-line */
             $eloquentUser = UserEloquent::find($user->id());
 
             if (!$eloquentUser) {
@@ -52,7 +51,6 @@ final class UserImpersonationController extends Controller
             }
 
             // Log in the user
-            /** @phpstan-ignore-next-line */
             Auth::guard('web')->login($eloquentUser);
 
             // Regenerate session for security
@@ -99,7 +97,6 @@ final class UserImpersonationController extends Controller
             $user = $result['user'];
 
             // Get Eloquent model for authentication
-            /** @phpstan-ignore-next-line */
             $eloquentUser = UserEloquent::find($user->id());
 
             if (!$eloquentUser) {
@@ -107,7 +104,6 @@ final class UserImpersonationController extends Controller
             }
 
             // Log in the user
-            /** @phpstan-ignore-next-line */
             Auth::guard('web')->login($eloquentUser);
 
             // Regenerate session for security

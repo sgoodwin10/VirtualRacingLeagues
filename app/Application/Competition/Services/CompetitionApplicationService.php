@@ -367,12 +367,10 @@ final class CompetitionApplicationService
     private function resolveLogoUrl(Competition $competition, string $leagueLogoPath): string
     {
         if ($competition->logoPath()) {
-            // @phpstan-ignore-next-line (url() method exists on LocalFilesystemAdapter)
             return Storage::disk('public')->url($competition->logoPath());
         }
 
         // Fallback to league logo
-        // @phpstan-ignore-next-line (url() method exists on LocalFilesystemAdapter)
         return Storage::disk('public')->url($leagueLogoPath);
     }
 }

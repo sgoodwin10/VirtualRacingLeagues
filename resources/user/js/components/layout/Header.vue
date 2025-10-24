@@ -10,10 +10,6 @@ const router = useRouter();
 const userStore = useUserStore();
 const userMenu = ref();
 
-const siteName = computed(() => {
-  return import.meta.env.VITE_APP_NAME || 'Your App';
-});
-
 const menuItems = computed<MenuItem[]>(() => [
   {
     label: 'Profile',

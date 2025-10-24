@@ -14,8 +14,9 @@ use Spatie\Activitylog\Models\Activity;
 
 /**
  * Anemic Eloquent Model for Admin persistence.
+ * 
  * Contains NO business logic - only database mapping.
- *
+ * 
  * Note: This class is not final to allow the App\Models\Admin proxy class
  * to extend it for Laravel framework features (Gates, Policies, Activity Logs).
  *
@@ -27,9 +28,35 @@ use Spatie\Activitylog\Models\Activity;
  * @property string $role
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $last_login_at
+ * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read string $name
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @method static \Database\Factories\AdminFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereFirstName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereLastLoginAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereLastName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereRole($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent withoutTrashed()
+ * @mixin \Eloquent
  */
 class AdminEloquent extends Authenticatable
 {
@@ -129,6 +156,21 @@ class AdminEloquent extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    /**
+     * Check if admin has any of the given roles.
+     *
+     * Helper method for middleware.
+     * NOTE: This method exists in the Eloquent model (instead of only in domain entity)
+     * because Laravel's middleware works with Eloquent models, not domain entities.
+     * This is an acceptable infrastructure concern to support Laravel's authentication system.
+     *
+     * @param array<string> $roles
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles, true);
     }
 
     /**

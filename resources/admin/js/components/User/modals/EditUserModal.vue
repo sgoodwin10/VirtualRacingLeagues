@@ -6,7 +6,7 @@ import Select from 'primevue/select';
 import InputSwitch from 'primevue/inputswitch';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
-import type { User } from '@admin/types/user';
+import type { User, UpdateUserPayload } from '@admin/types/user';
 import { userService } from '@admin/services/userService';
 import { getValidationErrors, hasValidationErrors } from '@admin/types/errors';
 
@@ -82,12 +82,12 @@ const handleSubmit = async () => {
   fieldErrors.value = {};
 
   try {
-    const updateData: any = {
+    const updateData: UpdateUserPayload = {
       first_name: form.value.first_name,
       last_name: form.value.last_name,
       email: form.value.email,
       alias: form.value.alias || null,
-      status: form.value.status,
+      status: form.value.status as 'active' | 'inactive' | 'suspended',
     };
 
     if (form.value.password) {

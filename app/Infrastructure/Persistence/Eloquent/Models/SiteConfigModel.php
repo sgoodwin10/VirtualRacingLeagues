@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, SiteConfigFileModel> $files
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\SiteConfigFileModel> $files
  * @property-read int|null $files_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel newModelQuery()

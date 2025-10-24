@@ -57,6 +57,13 @@ export default [
     },
   },
   {
+    // Allow 'any' types in test files and test setup files where it's often necessary for mocks/stubs
+    files: ['**/__tests__/**/*.{ts,tsx,vue}', '**/*.{spec,test}.{ts,tsx,vue}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
     ignores: [
       'node_modules/**',
       'vendor/**',

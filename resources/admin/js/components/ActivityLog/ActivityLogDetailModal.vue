@@ -341,7 +341,7 @@ const getChanges = (): ActivityChanges[] => {
 /**
  * Get additional properties (excluding attributes and old)
  */
-const getAdditionalProperties = (): Record<string, any> => {
+const getAdditionalProperties = (): Record<string, unknown> => {
   if (!props.activity?.properties) return {};
 
   const properties = { ...props.activity.properties };
@@ -364,7 +364,7 @@ const formatFieldName = (field: string): string => {
 /**
  * Format value for display
  */
-const formatValue = (value: any): string => {
+const formatValue = (value: unknown): string => {
   if (value === null || value === undefined) {
     return '-';
   }
@@ -380,7 +380,7 @@ const formatValue = (value: any): string => {
 /**
  * Format JSON for display
  */
-const formatJSON = (obj: any): string => {
+const formatJSON = (obj: unknown): string => {
   return JSON.stringify(obj, null, 2);
 };
 

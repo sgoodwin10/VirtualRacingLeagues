@@ -91,7 +91,7 @@ export interface DataTableSortEvent {
  * };
  * ```
  */
-export interface DataTableFilterEvent {
+export interface DataTableFilterEvent<T = unknown> {
   /**
    * Object containing filter configurations for each field
    */
@@ -100,7 +100,7 @@ export interface DataTableFilterEvent {
   /**
    * Array of filtered data
    */
-  filteredValue: any[];
+  filteredValue: T[];
 }
 
 /**
@@ -110,7 +110,7 @@ export interface DataTableFilterMeta {
   /**
    * Filter value
    */
-  value: any;
+  value: unknown;
 
   /**
    * Match mode (e.g., 'contains', 'equals', 'startsWith')
@@ -130,7 +130,7 @@ export interface DataTableFilterMeta {
  * };
  * ```
  */
-export interface DataTableRowClickEvent<T = any> {
+export interface DataTableRowClickEvent<T = unknown> {
   /**
    * Original browser event
    */
@@ -159,7 +159,7 @@ export interface DataTableRowClickEvent<T = any> {
  * };
  * ```
  */
-export interface DataTableRowSelectEvent<T = any> {
+export interface DataTableRowSelectEvent<T = unknown> {
   /**
    * Original browser event
    */
@@ -186,7 +186,7 @@ export interface DataTableRowSelectEvent<T = any> {
  *
  * Emitted when one or more rows are unselected
  */
-export interface DataTableRowUnselectEvent<T = any> {
+export interface DataTableRowUnselectEvent<T = unknown> {
   /**
    * Original browser event
    */
@@ -220,7 +220,7 @@ export interface DataTableRowUnselectEvent<T = any> {
  * };
  * ```
  */
-export interface DropdownChangeEvent<T = any> {
+export interface DropdownChangeEvent<T = unknown> {
   /**
    * Original browser event
    */
@@ -453,7 +453,7 @@ export interface CheckboxChangeEvent {
   /**
    * Value of the checkbox (if using value attribute)
    */
-  value?: any;
+  value?: unknown;
 }
 
 /**
@@ -470,7 +470,7 @@ export interface RadioButtonChangeEvent {
   /**
    * Selected value
    */
-  value: any;
+  value: unknown;
 }
 
 /**
@@ -502,6 +502,19 @@ export interface InputSwitchChangeEvent {
  *
  * Emitted when a menu item is clicked
  */
+export interface MenuItem {
+  label?: string;
+  icon?: string;
+  command?: (event: MenuItemClickEvent) => void;
+  url?: string;
+  items?: MenuItem[];
+  disabled?: boolean;
+  visible?: boolean;
+  target?: string;
+  separator?: boolean;
+  [key: string]: unknown;
+}
+
 export interface MenuItemClickEvent {
   /**
    * Original browser event
@@ -511,18 +524,7 @@ export interface MenuItemClickEvent {
   /**
    * Clicked menu item
    */
-  item: {
-    label?: string;
-    icon?: string;
-    command?: (event: MenuItemClickEvent) => void;
-    url?: string;
-    items?: any[];
-    disabled?: boolean;
-    visible?: boolean;
-    target?: string;
-    separator?: boolean;
-    [key: string]: any;
-  };
+  item: MenuItem;
 }
 
 /**
@@ -537,7 +539,7 @@ export interface MenuItemClickEvent {
  * };
  * ```
  */
-export interface PrimeVueChangeEvent<T = any> {
+export interface PrimeVueChangeEvent<T = unknown> {
   /**
    * Original browser event
    */

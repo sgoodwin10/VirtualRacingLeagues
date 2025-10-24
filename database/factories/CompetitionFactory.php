@@ -30,11 +30,14 @@ class CompetitionFactory extends Factory
      */
     public function definition(): array
     {
+        /** @var string $name */
         $name = fake()->words(3, true);
+
+        $platformFirst = Platform::inRandomOrder()->first();
 
         return [
             'league_id' => League::factory(),
-            'platform_id' => Platform::inRandomOrder()->first()?->id ?? Platform::factory(),
+            'platform_id' => $platformFirst !== null ? $platformFirst->id : Platform::factory(),
             'created_by_user_id' => User::factory(),
             'name' => ucwords($name),
             'slug' => Str::slug($name),
@@ -76,4 +79,3 @@ class CompetitionFactory extends Factory
         ]);
     }
 }
-

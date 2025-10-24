@@ -113,6 +113,8 @@ class AdminUserController extends Controller
 
         try {
             $adminData = $this->adminService->createAdmin($data, $currentAdmin);
+            // After creation, ID is guaranteed to be set
+            assert($adminData->id !== null, 'Admin ID must be set after creation');
             $admin = $this->adminService->getAdminEntityById($adminData->id);
             $detailedData = $this->adminService->toDetailedAdminData($admin);
 
@@ -184,6 +186,8 @@ class AdminUserController extends Controller
 
         try {
             $adminData = $this->adminService->updateAdmin($id, $updateData, $currentAdmin);
+            // After update, ID is guaranteed to be set
+            assert($adminData->id !== null, 'Admin ID must be set after update');
             $admin = $this->adminService->getAdminEntityById($adminData->id);
             $detailedData = $this->adminService->toDetailedAdminData($admin);
 
@@ -220,13 +224,22 @@ class AdminUserController extends Controller
 
         // Check authorization using policy (use repository to get Eloquent model)
         $eloquentAdmin = $this->adminRepository->getEloquentModelById($id);
+        if ($eloquentAdmin === null) {
+            return ApiResponse::notFound('Admin user not found.');
+        }
         Gate::forUser(\Auth::guard('admin')->user())->authorize('delete', $eloquentAdmin);
 
         try {
             $this->adminService->deactivateAdmin($id, $currentAdmin);
 
             // Manual activity logging for the delete action
-            $currentAdminEloquent = $this->adminRepository->getEloquentModelById($currentAdmin->id());
+            $currentAdminId = $currentAdmin->id();
+            assert($currentAdminId !== null, 'Current admin ID must be set');
+            $currentAdminEloquent = $this->adminRepository->getEloquentModelById($currentAdminId);
+            if ($currentAdminEloquent === null) {
+                return ApiResponse::unauthorized();
+            }
+
             activity('admin')
                 ->causedBy($currentAdminEloquent)
                 ->performedOn($eloquentAdmin)
@@ -271,6 +284,8 @@ class AdminUserController extends Controller
 
         try {
             $adminData = $this->adminService->activateAdmin($id, $currentAdmin);
+            // After activation, ID is guaranteed to be set
+            assert($adminData->id !== null, 'Admin ID must be set after activation');
             $admin = $this->adminService->getAdminEntityById($adminData->id);
             $detailedData = $this->adminService->toDetailedAdminData($admin);
 

@@ -18,6 +18,7 @@ class SuperAdminOnly
      */
     public function handle(Request $request, Closure $next): Response
     {
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
         $admin = Auth::guard('admin')->user();
 
         if (! $admin || ! $admin->isSuperAdmin()) {

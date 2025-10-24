@@ -22,6 +22,7 @@ final class UpdateDriverData extends Data
         public readonly ?string $psn_id,
         public readonly ?string $iracing_id,
         public readonly ?int $iracing_customer_id,
+        public readonly ?string $discord_id,
         // League-specific fields
         public readonly ?int $driver_number,
         public readonly string $status,
@@ -46,6 +47,7 @@ final class UpdateDriverData extends Data
             'psn_id' => ['nullable', 'string', 'max:255'],
             'iracing_id' => ['nullable', 'string', 'max:255'],
             'iracing_customer_id' => ['nullable', 'integer', 'min:1'],
+            'discord_id' => ['nullable', 'string', 'max:255'],
             // League-specific fields
             'driver_number' => ['nullable', 'integer', 'min:1', 'max:999'],
             'status' => ['required', 'in:active,inactive,banned'],

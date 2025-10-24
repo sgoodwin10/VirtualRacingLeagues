@@ -41,10 +41,13 @@ final class DriverApplicationService
      */
     public function createDriverForLeague(CreateDriverData $data, int $leagueId): LeagueDriverData
     {
-        // Validate at least one name field
+        // Get effective nickname (auto-generated from Discord ID if needed)
+        $effectiveNickname = $data->getEffectiveNickname();
+
+        // Validate at least one name field (including effective nickname)
         $hasName = ($data->first_name !== null && trim($data->first_name) !== '')
             || ($data->last_name !== null && trim($data->last_name) !== '')
-            || ($data->nickname !== null && trim($data->nickname) !== '');
+            || ($effectiveNickname !== null && trim($effectiveNickname) !== '');
 
         if (! $hasName) {
             throw InvalidDriverDataException::missingNameFields();
@@ -53,7 +56,8 @@ final class DriverApplicationService
         // Validate at least one platform ID
         $hasPlatformId = ($data->psn_id !== null && trim($data->psn_id) !== '')
             || ($data->iracing_id !== null && trim($data->iracing_id) !== '')
-            || $data->iracing_customer_id !== null;
+            || $data->iracing_customer_id !== null
+            || ($data->discord_id !== null && trim($data->discord_id) !== '');
 
         if (! $hasPlatformId) {
             throw InvalidDriverDataException::missingPlatformIds();
@@ -67,6 +71,7 @@ final class DriverApplicationService
             'psn_id' => $data->psn_id,
             'iracing_id' => $data->iracing_id,
             'iracing_customer_id' => $data->iracing_customer_id,
+            'discord_id' => $data->discord_id,
         ];
 
         if (! PlatformMappingService::hasValidPlatformForLeague($leaguePlatformIds, $driverData)) {
@@ -79,30 +84,34 @@ final class DriverApplicationService
                 $leagueId,
                 $data->psn_id,
                 $data->iracing_id,
-                $data->iracing_customer_id
+                $data->iracing_customer_id,
+                $data->discord_id
             )
         ) {
-            throw DriverAlreadyInLeagueException::withPlatformId(
-                'platform',
-                $data->psn_id ?? $data->iracing_id ?? (string) $data->iracing_customer_id,
-                $leagueId
-            );
+            $platformId = $data->psn_id
+                ?? $data->iracing_id
+                ?? ($data->iracing_customer_id !== null ? (string) $data->iracing_customer_id : $data->discord_id)
+                ?? 'unknown';
+
+            throw DriverAlreadyInLeagueException::withPlatformId('platform', $platformId, $leagueId);
         }
 
-        return DB::transaction(function () use ($data, $leagueId) {
-            // Create domain entities
-            $driverName = DriverName::from($data->first_name, $data->last_name, $data->nickname);
+        return DB::transaction(function () use ($data, $leagueId, $effectiveNickname) {
+            // Create domain entities with effective nickname (auto-generated from Discord ID if needed)
+            $driverName = DriverName::from($data->first_name, $data->last_name, $effectiveNickname);
             $platformIds = PlatformIdentifiers::from(
                 $data->psn_id,
                 $data->iracing_id,
-                $data->iracing_customer_id
+                $data->iracing_customer_id,
+                $data->discord_id
             );
 
             // Check if driver already exists globally (by platform IDs)
             $existingDriver = $this->driverRepository->findByPlatformId(
                 $data->psn_id,
                 $data->iracing_id,
-                $data->iracing_customer_id
+                $data->iracing_customer_id,
+                $data->discord_id
             );
 
             if ($existingDriver !== null) {
@@ -253,13 +262,15 @@ final class DriverApplicationService
 
             // Update platform IDs if provided
             $hasPlatformUpdate = $data->psn_id !== null
-                || $data->iracing_id !== null || $data->iracing_customer_id !== null;
+                || $data->iracing_id !== null || $data->iracing_customer_id !== null
+                || $data->discord_id !== null;
             if ($hasPlatformUpdate) {
                 $driver->updatePlatformIds(
                     PlatformIdentifiers::from(
                         $data->psn_id ?? $driver->platformIds()->psnId(),
                         $data->iracing_id ?? $driver->platformIds()->iracingId(),
-                        $data->iracing_customer_id ?? $driver->platformIds()->iracingCustomerId()
+                        $data->iracing_customer_id ?? $driver->platformIds()->iracingCustomerId(),
+                        $data->discord_id ?? $driver->platformIds()->discordId()
                     )
                 );
                 $driverUpdated = true;
@@ -366,6 +377,7 @@ final class DriverApplicationService
                     $rowData,
                     ['iRacing_ID', 'iracing_id', 'iracinid']
                 );
+                $discordId = $this->getCaseInsensitiveValue($rowData, ['Discord_ID', 'discord_id', 'discordid']);
                 $email = $this->getCaseInsensitiveValue($rowData, ['Email', 'email']);
                 $phone = $this->getCaseInsensitiveValue($rowData, ['Phone', 'phone']);
                 $driverNumber = $this->getCaseInsensitiveValue(
@@ -374,10 +386,17 @@ final class DriverApplicationService
                 );
                 $driverNumber = $driverNumber !== null ? (int) $driverNumber : null;
 
-                // Validate: at least one name field
+                // Validate: at least one name field (or Discord ID if no names provided)
                 $hasName = ($firstName !== null && $firstName !== '')
                     || ($lastName !== null && $lastName !== '')
                     || ($nickname !== null && $nickname !== '');
+
+                // If no name fields, check if Discord ID can be used as nickname
+                $effectiveNickname = $nickname;
+                if (! $hasName && ($discordId !== null && $discordId !== '')) {
+                    $effectiveNickname = $discordId;
+                    $hasName = true; // Discord ID will be used as nickname
+                }
 
                 if (! $hasName) {
                     $errors[] = [
@@ -390,7 +409,8 @@ final class DriverApplicationService
 
                 // Validate: at least one platform ID
                 $hasPlatformId = ($psnId !== null && $psnId !== '')
-                    || ($iracingId !== null && $iracingId !== '');
+                    || ($iracingId !== null && $iracingId !== '')
+                    || ($discordId !== null && $discordId !== '');
 
                 if (! $hasPlatformId) {
                     $errors[] = [
@@ -407,10 +427,11 @@ final class DriverApplicationService
                         $leagueId,
                         $psnId,
                         $iracingId,
-                        null
+                        null,
+                        $discordId
                     )
                 ) {
-                    $platformStr = $psnId ?? $iracingId ?? 'unknown';
+                    $platformStr = $psnId ?? $iracingId ?? $discordId ?? 'unknown';
                     $message = "Row {$rowNumber}: Driver with platform ID '{$platformStr}' ";
                     $message .= 'already exists in this league';
                     $errors[] = [
@@ -421,16 +442,17 @@ final class DriverApplicationService
                     continue;
                 }
 
-                // Create driver data
+                // Create driver data (use effective nickname if auto-generated from Discord ID)
                 $createData = new CreateDriverData(
                     first_name: $firstName,
                     last_name: $lastName,
-                    nickname: $nickname,
+                    nickname: $effectiveNickname,
                     email: $email,
                     phone: $phone,
                     psn_id: $psnId,
                     iracing_id: $iracingId,
                     iracing_customer_id: null,
+                    discord_id: $discordId,
                     driver_number: $driverNumber,
                     status: 'active',
                     league_notes: null

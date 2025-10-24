@@ -21,7 +21,7 @@ claude mcp add playwright npx @playwright/mcp@latest
 ## need to login as root
 sudo npx playwright install-deps 
 
-## need to login as normal
+## need to login as normal - probably from local machine
 npx playwright install
 npm run test:e2e
 
@@ -29,6 +29,10 @@ npm run test:e2e
 ```bash
 docker exec -it -u root virtualracingleagues-app bash
 ```
+
+## Enable zsh
+zsh -v
+
 
 ## Force Rebuild
 `docker compose up --build --force-recreate -d`
@@ -44,6 +48,11 @@ npm run build
 ```
 
 `docker exec -it -u root virtualracingleagues-app bash`
+
+
+# Or run only the driver seeder
+  php artisan db:seed --class=DriverSeeder
+  
 
 # URLS
 http://virtualracingleagues.localhost

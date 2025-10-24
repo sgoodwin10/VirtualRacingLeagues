@@ -21,7 +21,7 @@ describe('ActivityLogTable', () => {
     },
   ];
 
-  const createWrapper = (props: Partial<typeof mockProps> = {}) => {
+  const createWrapper = (props: Partial<{ activities: Activity[]; loading: boolean }> = {}) => {
     return mount(ActivityLogTable, {
       props: {
         activities: mockActivities,
@@ -44,11 +44,6 @@ describe('ActivityLogTable', () => {
         },
       },
     });
-  };
-
-  const _mockProps = {
-    activities: mockActivities,
-    loading: false,
   };
 
   it('renders without errors', () => {

@@ -115,18 +115,21 @@ describe('DriverFormDialog', () => {
 
     mockDriver = {
       id: 1,
+      league_id: 1,
+      driver_id: 101,
       driver: {
         id: 101,
         first_name: 'John',
         last_name: 'Smith',
         nickname: 'JSmith',
+        discord_id: 'john#1234',
         email: 'john@example.com',
         phone: '+1234567890',
         psn_id: 'JohnSmith77',
         iracing_id: null,
         iracing_customer_id: null,
         display_name: 'John Smith',
-        slug: 'john-smith',
+        primary_platform_id: null,
         created_at: '2025-10-18T10:00:00Z',
         updated_at: '2025-10-18T10:00:00Z',
       },
@@ -134,8 +137,6 @@ describe('DriverFormDialog', () => {
       status: 'active',
       league_notes: 'Top performer',
       added_to_league_at: '2025-10-18T10:00:00Z',
-      created_at: '2025-10-18T10:00:00Z',
-      updated_at: '2025-10-18T10:00:00Z',
     };
 
     mockPlatformFormFields = [
@@ -171,10 +172,12 @@ describe('DriverFormDialog', () => {
     const component = wrapper.vm as any;
     expect(component.formData.first_name).toBe('John');
     expect(component.formData.last_name).toBe('Smith');
+    expect(component.formData.nickname).toBe('JSmith');
+    expect(component.formData.discord_id).toBe('john#1234');
     expect(component.formData.driver_number).toBe(5);
   });
 
-  it('should validate that at least one name is required', async () => {
+  it('should validate that at least one of nickname or discord_id is required', async () => {
     const wrapper = mount(DriverFormDialog, {
       props: {
         visible: true,
@@ -189,7 +192,74 @@ describe('DriverFormDialog', () => {
     const isValid = component.validateForm();
 
     expect(isValid).toBe(false);
-    expect(component.errors.name).toBeDefined();
+    expect(component.errors.identifier).toBeDefined();
+  });
+
+  it('should pass validation with only nickname', async () => {
+    // Set up platform fields in mock
+    mockPlatformFormFieldsValue = mockPlatformFormFields;
+
+    const wrapper = mount(DriverFormDialog, {
+      props: {
+        visible: true,
+        mode: 'create',
+        leagueId: 1,
+      },
+    });
+
+    const component = wrapper.vm as any;
+    component.formData.nickname = 'JSmith';
+    component.formData.psn_id = 'TestID';
+
+    const isValid = component.validateForm();
+
+    expect(isValid).toBe(true);
+    expect(component.errors.identifier).toBeUndefined();
+  });
+
+  it('should pass validation with only discord_id', async () => {
+    // Set up platform fields in mock
+    mockPlatformFormFieldsValue = mockPlatformFormFields;
+
+    const wrapper = mount(DriverFormDialog, {
+      props: {
+        visible: true,
+        mode: 'create',
+        leagueId: 1,
+      },
+    });
+
+    const component = wrapper.vm as any;
+    component.formData.discord_id = 'user#1234';
+    component.formData.psn_id = 'TestID';
+
+    const isValid = component.validateForm();
+
+    expect(isValid).toBe(true);
+    expect(component.errors.identifier).toBeUndefined();
+  });
+
+  it('should pass validation with both nickname and discord_id', async () => {
+    // Set up platform fields in mock
+    mockPlatformFormFieldsValue = mockPlatformFormFields;
+
+    const wrapper = mount(DriverFormDialog, {
+      props: {
+        visible: true,
+        mode: 'create',
+        leagueId: 1,
+      },
+    });
+
+    const component = wrapper.vm as any;
+    component.formData.nickname = 'JSmith';
+    component.formData.discord_id = 'user#1234';
+    component.formData.psn_id = 'TestID';
+
+    const isValid = component.validateForm();
+
+    expect(isValid).toBe(true);
+    expect(component.errors.identifier).toBeUndefined();
   });
 
   it('should validate that at least one platform ID is required', async () => {
@@ -205,7 +275,7 @@ describe('DriverFormDialog', () => {
     });
 
     const component = wrapper.vm as any;
-    component.formData.first_name = 'John';
+    component.formData.nickname = 'JSmith';
 
     const isValid = component.validateForm();
 
@@ -223,7 +293,7 @@ describe('DriverFormDialog', () => {
     });
 
     const component = wrapper.vm as any;
-    component.formData.first_name = 'John';
+    component.formData.nickname = 'JSmith';
     component.formData.psn_id = 'TestID';
     component.formData.email = 'invalid-email';
 
@@ -243,7 +313,7 @@ describe('DriverFormDialog', () => {
     });
 
     const component = wrapper.vm as any;
-    component.formData.first_name = 'John';
+    component.formData.nickname = 'JSmith';
     component.formData.psn_id = 'TestID';
     component.formData.driver_number = 1000;
 
@@ -268,6 +338,7 @@ describe('DriverFormDialog', () => {
     const component = wrapper.vm as any;
     component.formData.first_name = 'John';
     component.formData.last_name = 'Smith';
+    component.formData.nickname = 'JSmith'; // Required: at least one of nickname or discord_id
     component.formData.psn_id = 'JohnSmith77';
     component.formData.driver_number = 5;
 
@@ -278,6 +349,7 @@ describe('DriverFormDialog', () => {
     expect(wrapper.emitted('save')).toBeTruthy();
     const emittedData = wrapper.emitted('save')?.[0]?.[0] as any;
     expect(emittedData.first_name).toBe('John');
+    expect(emittedData.nickname).toBe('JSmith');
     expect(emittedData.psn_id).toBe('JohnSmith77');
   });
 

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Anemic Eloquent Model for Competition.
+ * 
  * Data container only - no business logic.
  *
  * @property int $id
@@ -26,9 +27,36 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $logo_path
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $archived_at
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read string|null $logo_url
+ * @property-read \App\Infrastructure\Persistence\Eloquent\Models\League $league
+ * @property-read \App\Infrastructure\Persistence\Eloquent\Models\Platform $platform
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition archived()
+ * @method static \Database\Factories\CompetitionFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition forLeague(int $leagueId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereArchivedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereCreatedByUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereLeagueId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereLogoPath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition wherePlatformId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition withoutTrashed()
+ * @mixin \Eloquent
  */
 class Competition extends Model
 {

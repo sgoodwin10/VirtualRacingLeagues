@@ -163,3 +163,9 @@ body {
 .p-inputtext:focus, .p-inputnumber-input:focus, .p-textarea:focus {
   /* border-color: var(--user-primary); */
 }
+
+
+/* PrimeVue DataTable Styling */
+.p-datatable-tbody > tr > td {
+  padding: 0.5rem 1rem;
+}

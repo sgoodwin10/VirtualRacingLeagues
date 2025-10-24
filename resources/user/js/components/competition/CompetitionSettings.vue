@@ -44,11 +44,12 @@ async function handleArchive(): Promise<void> {
     });
 
     emit('archived');
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to archive competition';
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: error.message || 'Failed to archive competition',
+      detail: errorMessage,
       life: 5000,
     });
   } finally {

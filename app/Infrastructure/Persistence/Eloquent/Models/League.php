@@ -13,6 +13,64 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $tagline
+ * @property string|null $description
+ * @property string $logo_path
+ * @property string|null $header_image_path
+ * @property array $platform_ids
+ * @property string|null $discord_url
+ * @property string|null $website_url
+ * @property string|null $twitter_handle
+ * @property string|null $instagram_handle
+ * @property string|null $youtube_url
+ * @property string|null $twitch_url
+ * @property string $visibility
+ * @property string|null $timezone
+ * @property int $owner_user_id
+ * @property string|null $contact_email
+ * @property string|null $organizer_name
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\Driver> $drivers
+ * @property-read int|null $drivers_count
+ * @method static \Database\Factories\LeagueFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereContactEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereDiscordUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereHeaderImagePath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereInstagramHandle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereLogoPath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereOrganizerName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereOwnerUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League wherePlatformIds($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereTagline($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereTimezone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereTwitchUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereTwitterHandle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereVisibility($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereWebsiteUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League whereYoutubeUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|League withoutTrashed()
+ * @mixin \Eloquent
+ */
 class League extends Model
 {
     use HasFactory;

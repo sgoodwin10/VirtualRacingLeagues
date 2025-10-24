@@ -54,7 +54,9 @@ final class AdminAuthApplicationService
         }
 
         // Log in the admin using Laravel's auth
-        Auth::guard('admin')->login(
+        /** @var \Illuminate\Contracts\Auth\StatefulGuard $guard */
+        $guard = Auth::guard('admin');
+        $guard->login(
             $this->convertToEloquentAdmin($admin),
             $remember
         );
@@ -70,7 +72,9 @@ final class AdminAuthApplicationService
      */
     public function logout(): void
     {
-        Auth::guard('admin')->logout();
+        /** @var \Illuminate\Contracts\Auth\StatefulGuard $guard */
+        $guard = Auth::guard('admin');
+        $guard->logout();
     }
 
     /**
@@ -80,6 +84,7 @@ final class AdminAuthApplicationService
      */
     public function getCurrentAdmin(): AdminData
     {
+        /** @var AdminEloquent|null $eloquentAdmin */
         $eloquentAdmin = Auth::guard('admin')->user();
 
         if (!$eloquentAdmin) {
@@ -97,8 +102,6 @@ final class AdminAuthApplicationService
 
     /**
      * Update the current admin's password.
-     *
-     * @throws AdminNotFoundException
      */
     public function updatePassword(int $adminId, string $currentPassword, string $newPassword): AdminData
     {
@@ -129,8 +132,6 @@ final class AdminAuthApplicationService
 
     /**
      * Update the current admin's profile.
-     *
-     * @throws AdminNotFoundException
      */
     public function updateProfile(int $adminId, string $firstName, string $lastName, string $email): AdminData
     {
@@ -167,9 +168,9 @@ final class AdminAuthApplicationService
      * Convert domain Admin to Eloquent Admin for Auth.
      * This is a temporary helper until we have the infrastructure layer.
      *
-     * @return object Eloquent admin model
+     * @return \Illuminate\Contracts\Auth\Authenticatable Eloquent admin model
      */
-    private function convertToEloquentAdmin(Admin $admin): object
+    private function convertToEloquentAdmin(Admin $admin): \Illuminate\Contracts\Auth\Authenticatable
     {
         // This will be replaced when we have EloquentAdminRepository
         $eloquentModel = AdminEloquent::find($admin->id());

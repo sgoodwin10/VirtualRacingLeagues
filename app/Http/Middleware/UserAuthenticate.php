@@ -18,6 +18,7 @@ class UserAuthenticate
      */
     public function handle(Request $request, Closure $next): Response
     {
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
         $user = Auth::guard('web')->user();
 
         // Check if user is authenticated

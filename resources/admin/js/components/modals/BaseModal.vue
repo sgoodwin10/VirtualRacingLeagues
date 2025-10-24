@@ -79,7 +79,7 @@ export interface BaseModalProps {
   /**
    * Pass-through options for PrimeVue Dialog
    */
-  ptOptions?: any;
+  ptOptions?: Record<string, unknown>;
 }
 
 /**
@@ -104,6 +104,8 @@ const props = withDefaults(defineProps<BaseModalProps>(), {
   closable: true,
   draggable: false,
   width: '600px',
+  pt: undefined,
+  ptOptions: undefined,
 });
 
 // Emits

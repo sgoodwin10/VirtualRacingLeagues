@@ -46,9 +46,19 @@ final class LogAdminActivity
 
     private function logAdminCreated(AdminCreated $event): void
     {
+        $adminId = $event->admin->id();
+        if ($adminId === null) {
+            return;
+        }
+
+        $admin = $this->getAdmin($adminId);
+        if ($admin === null) {
+            return;
+        }
+
         activity('admin')
             ->causedBy($this->getCurrentAdmin())
-            ->performedOn($this->getAdmin($event->admin->id()))
+            ->performedOn($admin)
             ->withProperties([
                 'created_by' => $this->getCurrentAdminName(),
                 'admin_email' => $event->admin->email()->toString(),
@@ -61,39 +71,89 @@ final class LogAdminActivity
 
     private function logAdminAuthenticated(AdminAuthenticated $event): void
     {
+        $adminId = $event->admin->id();
+        if ($adminId === null) {
+            return;
+        }
+
+        $admin = $this->getAdmin($adminId);
+        if ($admin === null) {
+            return;
+        }
+
         activity('admin')
-            ->performedOn($this->getAdmin($event->admin->id()))
-            ->causedBy($this->getAdmin($event->admin->id()))
+            ->performedOn($admin)
+            ->causedBy($admin)
             ->log('Admin authenticated');
     }
 
     private function logAdminPasswordChanged(AdminPasswordChanged $event): void
     {
+        $adminId = $event->admin->id();
+        if ($adminId === null) {
+            return;
+        }
+
+        $admin = $this->getAdmin($adminId);
+        if ($admin === null) {
+            return;
+        }
+
         activity('admin')
-            ->performedOn($this->getAdmin($event->admin->id()))
-            ->causedBy($this->getAdmin($event->admin->id()))
+            ->performedOn($admin)
+            ->causedBy($admin)
             ->log('Admin password changed');
     }
 
     private function logAdminActivated(AdminActivated $event): void
     {
+        $adminId = $event->admin->id();
+        if ($adminId === null) {
+            return;
+        }
+
+        $admin = $this->getAdmin($adminId);
+        if ($admin === null) {
+            return;
+        }
+
         activity('admin')
-            ->performedOn($this->getAdmin($event->admin->id()))
+            ->performedOn($admin)
             ->log('Admin account activated');
     }
 
     private function logAdminDeactivated(AdminDeactivated $event): void
     {
+        $adminId = $event->admin->id();
+        if ($adminId === null) {
+            return;
+        }
+
+        $admin = $this->getAdmin($adminId);
+        if ($admin === null) {
+            return;
+        }
+
         activity('admin')
-            ->performedOn($this->getAdmin($event->admin->id()))
+            ->performedOn($admin)
             ->log('Admin account deactivated');
     }
 
     private function logAdminDeleted(AdminDeleted $event): void
     {
+        $adminId = $event->admin->id();
+        if ($adminId === null) {
+            return;
+        }
+
+        $admin = $this->getAdminWithTrashed($adminId);
+        if ($admin === null) {
+            return;
+        }
+
         activity('admin')
             ->causedBy($this->getCurrentAdmin())
-            ->performedOn($this->getAdminWithTrashed($event->admin->id()))
+            ->performedOn($admin)
             ->withProperties([
                 'deleted_by' => $this->getCurrentAdminName(),
                 'admin_email' => $event->admin->email()->toString(),
@@ -104,13 +164,33 @@ final class LogAdminActivity
 
     private function logAdminRestored(AdminRestored $event): void
     {
+        $adminId = $event->admin->id();
+        if ($adminId === null) {
+            return;
+        }
+
+        $admin = $this->getAdmin($adminId);
+        if ($admin === null) {
+            return;
+        }
+
         activity('admin')
-            ->performedOn($this->getAdmin($event->admin->id()))
+            ->performedOn($admin)
             ->log('Admin account restored');
     }
 
     private function logAdminProfileUpdated(AdminProfileUpdated $event): void
     {
+        $adminId = $event->admin->id();
+        if ($adminId === null) {
+            return;
+        }
+
+        $admin = $this->getAdmin($adminId);
+        if ($admin === null) {
+            return;
+        }
+
         // Extract original and new values from changed attributes
         $updatedFields = array_keys($event->changedAttributes);
         $originalValues = [];
@@ -123,7 +203,7 @@ final class LogAdminActivity
 
         activity('admin')
             ->causedBy($this->getCurrentAdmin())
-            ->performedOn($this->getAdmin($event->admin->id()))
+            ->performedOn($admin)
             ->withProperties([
                 'updated_by' => $this->getCurrentAdminName(),
                 'updated_fields' => $updatedFields,
@@ -135,9 +215,19 @@ final class LogAdminActivity
 
     private function logAdminRoleChanged(AdminRoleChanged $event): void
     {
+        $adminId = $event->admin->id();
+        if ($adminId === null) {
+            return;
+        }
+
+        $admin = $this->getAdmin($adminId);
+        if ($admin === null) {
+            return;
+        }
+
         activity('admin')
             ->causedBy($this->getCurrentAdmin())
-            ->performedOn($this->getAdmin($event->admin->id()))
+            ->performedOn($admin)
             ->withProperties([
                 'updated_by' => $this->getCurrentAdminName(),
                 'old_role' => $event->oldRole->value,
@@ -175,7 +265,9 @@ final class LogAdminActivity
      */
     private function getCurrentAdmin(): ?\Illuminate\Database\Eloquent\Model
     {
-        return auth('admin')->user();
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
+        $admin = auth('admin')->user();
+        return $admin;
     }
 
     /**
@@ -183,6 +275,7 @@ final class LogAdminActivity
      */
     private function getCurrentAdminName(): string
     {
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
         $admin = auth('admin')->user();
         return $admin ? "{$admin->first_name} {$admin->last_name}" : 'System';
     }

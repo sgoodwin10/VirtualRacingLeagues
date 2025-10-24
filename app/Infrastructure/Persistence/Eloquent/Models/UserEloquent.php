@@ -19,8 +19,9 @@ use Spatie\Activitylog\Models\Activity;
 
 /**
  * Anemic Eloquent Model for User persistence.
+ * 
  * Contains only persistence concerns, no business logic.
- *
+ * 
  * Note: This class is not final to allow the App\Models\User proxy class
  * to extend it for Laravel framework features (Gates, Policies, Activity Logs).
  *
@@ -37,10 +38,12 @@ use Spatie\Activitylog\Models\Activity;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Activity> $activities
+ * @property-read int|null $activities_count
  * @property-read string $name
- * @property-read bool $is_active
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection $notifications
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static Builder<static>|UserEloquent filterByStatus(?string $status)
  * @method static Builder<static>|UserEloquent newModelQuery()
  * @method static Builder<static>|UserEloquent newQuery()

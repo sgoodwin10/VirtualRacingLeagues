@@ -70,9 +70,9 @@ final class DriverFactory extends Factory
     private function slugify(string $value): string
     {
         $slug = mb_strtolower($value, 'UTF-8');
-        $slug = preg_replace('/[\s_]+/', '-', $slug);
-        $slug = preg_replace('/[^\p{L}\p{N}\-]/u', '', $slug);
-        $slug = preg_replace('/-+/', '-', $slug);
+        $slug = preg_replace('/[\s_]+/', '-', $slug) ?? $slug;
+        $slug = preg_replace('/[^\p{L}\p{N}\-]/u', '', $slug) ?? $slug;
+        $slug = preg_replace('/-+/', '-', $slug) ?? $slug;
         $slug = trim($slug, '-');
 
         return $slug;

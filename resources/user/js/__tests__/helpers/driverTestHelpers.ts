@@ -13,6 +13,7 @@ export function createMockDriver(overrides?: Partial<Driver>): Driver {
     first_name: 'John',
     last_name: 'Doe',
     nickname: 'JDoe',
+    discord_id: null,
     display_name: 'John Doe',
     email: 'john@example.com',
     phone: '+1234567890',

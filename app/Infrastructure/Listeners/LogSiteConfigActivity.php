@@ -32,9 +32,14 @@ final class LogSiteConfigActivity
 
     private function logIdentityUpdated(SiteConfigIdentityUpdated $event): void
     {
+        $siteConfig = $this->getSiteConfig($event->siteConfigId);
+        if ($siteConfig === null) {
+            return;
+        }
+
         activity('site_config')
             ->causedBy($this->getCurrentAdmin())
-            ->performedOn($this->getSiteConfig($event->siteConfigId))
+            ->performedOn($siteConfig)
             ->withProperties([
                 'updated_by' => $this->getCurrentAdminName(),
                 'site_name' => $event->siteName,
@@ -45,9 +50,14 @@ final class LogSiteConfigActivity
 
     private function logTrackingUpdated(SiteConfigTrackingUpdated $event): void
     {
+        $siteConfig = $this->getSiteConfig($event->siteConfigId);
+        if ($siteConfig === null) {
+            return;
+        }
+
         activity('site_config')
             ->causedBy($this->getCurrentAdmin())
-            ->performedOn($this->getSiteConfig($event->siteConfigId))
+            ->performedOn($siteConfig)
             ->withProperties([
                 'updated_by' => $this->getCurrentAdminName(),
                 'google_tag_manager_id' => $event->googleTagManagerId,
@@ -59,9 +69,14 @@ final class LogSiteConfigActivity
 
     private function logApplicationSettingsUpdated(SiteConfigApplicationSettingsUpdated $event): void
     {
+        $siteConfig = $this->getSiteConfig($event->siteConfigId);
+        if ($siteConfig === null) {
+            return;
+        }
+
         activity('site_config')
             ->causedBy($this->getCurrentAdmin())
-            ->performedOn($this->getSiteConfig($event->siteConfigId))
+            ->performedOn($siteConfig)
             ->withProperties([
                 'updated_by' => $this->getCurrentAdminName(),
                 'maintenance_mode' => $event->maintenanceMode,
@@ -84,7 +99,9 @@ final class LogSiteConfigActivity
      */
     private function getCurrentAdmin(): ?\Illuminate\Database\Eloquent\Model
     {
-        return auth('admin')->user();
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
+        $admin = auth('admin')->user();
+        return $admin;
     }
 
     /**
@@ -92,6 +109,7 @@ final class LogSiteConfigActivity
      */
     private function getCurrentAdminName(): string
     {
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
         $admin = auth('admin')->user();
         return $admin ? "{$admin->first_name} {$admin->last_name}" : 'System';
     }

@@ -42,6 +42,7 @@ const formData = ref<CreateDriverRequest & Record<string, unknown>>({
   first_name: '',
   last_name: '',
   nickname: '',
+  discord_id: '',
   email: '',
   phone: '',
   driver_number: undefined,
@@ -82,6 +83,7 @@ watch(
         first_name: driver?.first_name || '',
         last_name: driver?.last_name || '',
         nickname: driver?.nickname || '',
+        discord_id: driver?.discord_id || '',
         email: driver?.email || '',
         phone: driver?.phone || '',
         driver_number: leagueDriver.driver_number || undefined,
@@ -117,10 +119,10 @@ watch(
 const validateForm = (): boolean => {
   errors.value = {};
 
-  // At least one name field is required
-  const hasName = formData.value.first_name || formData.value.last_name || formData.value.nickname;
-  if (!hasName) {
-    errors.value.name = 'At least one name field (First Name, Last Name, or Nickname) is required';
+  // At least one of nickname or discord_id is required
+  const hasIdentifier = formData.value.nickname || formData.value.discord_id;
+  if (!hasIdentifier) {
+    errors.value.identifier = 'At least one of Nickname or Discord ID is required';
   }
 
   // At least one platform ID is required (check dynamic platform fields)
@@ -166,6 +168,7 @@ const handleSubmit = (): void => {
     first_name: formData.value.first_name || undefined,
     last_name: formData.value.last_name || undefined,
     nickname: formData.value.nickname || undefined,
+    discord_id: formData.value.discord_id || undefined,
     email: formData.value.email || undefined,
     phone: formData.value.phone || undefined,
     driver_number: formData.value.driver_number,
@@ -201,6 +204,7 @@ const resetForm = (): void => {
     first_name: '',
     last_name: '',
     nickname: '',
+    discord_id: '',
     email: '',
     phone: '',
     driver_number: undefined,
@@ -244,17 +248,33 @@ onMounted(async () => {
     <form class="space-y-3" @submit.prevent="handleSubmit">
       <!-- Primary Fields Section -->
       <div class="space-y-3">
-        <!-- Nickname (Most Important) -->
-        <FormInputGroup>
-          <FormLabel for="nickname" text="Nickname" required />
-          <InputText
-            id="nickname"
-            v-model="formData.nickname"
-            placeholder="JSmith"
-            class="w-full"
-          />
-          <FormHelper text="Primary identifier for the driver" />
-        </FormInputGroup>
+        <!-- Nickname and Discord ID - At least one required -->
+        <div class="grid grid-cols-2 gap-3">
+          <FormInputGroup>
+            <FormLabel for="nickname" text="Nickname" />
+            <InputText
+              id="nickname"
+              v-model="formData.nickname"
+              placeholder="JSmith"
+              class="w-full"
+            />
+          </FormInputGroup>
+
+          <FormInputGroup>
+            <FormLabel for="discord_id" text="Discord ID" />
+            <InputText
+              id="discord_id"
+              v-model="formData.discord_id"
+              placeholder="Discord username or ID"
+              class="w-full"
+            />
+          </FormInputGroup>
+        </div>
+
+        <!-- Validation Message for Identifier -->
+        <div v-if="errors.identifier">
+          <FormError :error="errors.identifier" />
+        </div>
 
         <!-- Status and Dynamic Platform Fields in Grid -->
         <div class="grid grid-cols-2 gap-3">
@@ -294,9 +314,8 @@ onMounted(async () => {
           </FormInputGroup>
         </div>
 
-        <!-- Validation Messages -->
-        <div v-if="errors.name || errors.platform" class="space-y-1">
-          <FormError :error="errors.name" />
+        <!-- Platform Validation Message -->
+        <div v-if="errors.platform">
           <FormError :error="errors.platform" />
         </div>
       </div>

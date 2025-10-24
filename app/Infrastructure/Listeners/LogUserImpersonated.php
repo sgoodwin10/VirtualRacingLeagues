@@ -21,7 +21,6 @@ final class LogUserImpersonated
         // Log activity on the user's model
         activity()
             ->causedBy($event->adminId)
-            /** @phpstan-ignore-next-line */
             ->performedOn(\App\Models\User::find($event->userId))
             ->withProperties([
                 'admin_id' => $event->adminId,

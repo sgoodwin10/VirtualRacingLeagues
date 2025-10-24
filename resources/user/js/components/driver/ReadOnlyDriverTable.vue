@@ -58,6 +58,13 @@ const getDriverNickname = (leagueDriver: LeagueDriver): string | null => {
 };
 
 /**
+ * Get driver's Discord ID
+ */
+const getDriverDiscordId = (leagueDriver: LeagueDriver): string => {
+  return leagueDriver.driver?.discord_id || '-';
+};
+
+/**
  * Get the value for a dynamic platform column
  */
 const getPlatformValue = (leagueDriver: LeagueDriver, field: string): string => {
@@ -179,6 +186,12 @@ onMounted(async () => {
             "{{ getDriverNickname(data) }}"
           </div>
         </div>
+      </template>
+    </Column>
+
+    <Column field="discord_id" header="Discord ID" style="min-width: 80px">
+      <template #body="{ data }">
+        <span class="text-sm">{{ getDriverDiscordId(data) }}</span>
       </template>
     </Column>
 

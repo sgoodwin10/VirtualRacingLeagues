@@ -30,7 +30,6 @@ final class SendEmailVerification
 
         // Find the Eloquent model to send notification
         // Note: PHPStan doesn't recognize Eloquent's dynamic find() method
-        // @phpstan-ignore-next-line
         $eloquentUser = User::find($userId);
 
         if ($eloquentUser === null) {

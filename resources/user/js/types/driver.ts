@@ -15,6 +15,7 @@ export interface Driver {
   first_name: string | null;
   last_name: string | null;
   nickname: string | null;
+  discord_id: string | null;
   display_name: string;
   email: string | null;
   phone: string | null;
@@ -45,10 +46,11 @@ export interface LeagueDriver {
  * Request payload for creating a new driver and adding to league
  */
 export interface CreateDriverRequest {
-  // Names (at least one required)
+  // Names (at least one of nickname or discord_id required)
   first_name?: string;
   last_name?: string;
   nickname?: string;
+  discord_id?: string;
 
   // Contact info (optional)
   email?: string;
@@ -82,6 +84,7 @@ export interface UpdateDriverRequest {
   first_name?: string;
   last_name?: string;
   nickname?: string;
+  discord_id?: string;
   email?: string;
   phone?: string;
   psn_id?: string;

@@ -20,7 +20,6 @@ const emit = defineEmits<Emits>();
 
 <template>
   <div class="competition-header bg-white shadow-sm rounded-lg p-6 mb-6">
-
     <div class="flex items-start gap-6">
       <!-- Competition Logo -->
       <img

@@ -53,6 +53,15 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+    {
+      path: '/leagues/:leagueId/competitions/:competitionId/seasons/:seasonId',
+      name: 'season-detail',
+      component: () => import('@user/views/SeasonDetail.vue'),
+      meta: {
+        title: 'Season Details',
+        requiresAuth: true,
+      },
+    },
   ],
 });
 

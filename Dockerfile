@@ -44,6 +44,9 @@ RUN mkdir -p /home/laravel/.composer && \
 # Install oh-my-zsh for laravel user (FIXED)
 RUN su - laravel -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
 
+# Change the default shell to zsh
+RUN chsh -s $(which zsh)
+
 # Set user
 USER laravel
 

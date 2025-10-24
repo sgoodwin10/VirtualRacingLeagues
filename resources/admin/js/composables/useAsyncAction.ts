@@ -185,7 +185,7 @@ export function useAsyncAction<T = unknown>(): UseAsyncActionReturn<T> {
       const result = await asyncFn();
 
       // Store the result
-      data.value = result as any;
+      data.value = result as T;
 
       // Execute success callback if provided
       if (onSuccess) {
@@ -309,6 +309,7 @@ export function useAsyncActionGroup<
  * @param actions - Record of action names to useAsyncAction instances
  * @returns The same record with full type information
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createAsyncActions<T extends Record<string, UseAsyncActionReturn<any>>>(
   actions: T,
 ): T {

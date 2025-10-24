@@ -5,8 +5,11 @@ import BaseModal from '@user/components/common/modals/BaseModal.vue';
 /**
  * Helper function to get props from a Vue wrapper with proper typing
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getProps = (wrapper: any) => wrapper.props() as Record<string, any>;
+import type { VueWrapper } from '@vue/test-utils';
+import type { ComponentPublicInstance } from 'vue';
+
+const getProps = (wrapper: VueWrapper<ComponentPublicInstance>) =>
+  wrapper.props() as Record<string, unknown>;
 
 describe('BaseModal', () => {
   describe('Rendering', () => {

@@ -57,6 +57,10 @@ class AdminAuthController extends Controller
             $request->session()->regenerate();
 
             // Re-fetch AdminData with updated last_login_at
+            if ($adminData->id === null) {
+                throw new AdminNotFoundException('Admin ID is null after login');
+            }
+
             $admin = $this->adminService->getAdminEntityById($adminData->id);
             $adminDataWithLogin = $this->adminService->toAdminData($admin);
 
@@ -91,6 +95,13 @@ class AdminAuthController extends Controller
     {
         try {
             $adminData = $this->authService->getCurrentAdmin();
+
+            if ($adminData->id === null) {
+                return ApiResponse::success([
+                    'authenticated' => false,
+                ]);
+            }
+
             $admin = $this->adminService->getAdminEntityById($adminData->id);
 
             if (!$admin->isActive()) {
@@ -119,6 +130,11 @@ class AdminAuthController extends Controller
     {
         try {
             $adminData = $this->authService->getCurrentAdmin();
+
+            if ($adminData->id === null) {
+                return ApiResponse::unauthorized('Unauthenticated.');
+            }
+
             $admin = $this->adminService->getAdminEntityById($adminData->id);
             $adminDataWithLogin = $this->adminService->toAdminData($admin);
 
@@ -137,6 +153,11 @@ class AdminAuthController extends Controller
     {
         try {
             $adminData = $this->authService->getCurrentAdmin();
+
+            if ($adminData->id === null) {
+                return ApiResponse::unauthorized();
+            }
+
             $admin = $this->adminService->getAdminEntityById($adminData->id);
             $detailedData = $this->adminService->toDetailedAdminData($admin);
 
@@ -159,10 +180,15 @@ class AdminAuthController extends Controller
             return ApiResponse::unauthorized();
         }
 
+        $adminId = $currentAdmin->id();
+        if ($adminId === null) {
+            return ApiResponse::unauthorized('Admin ID is null');
+        }
+
         $validated = $request->validate([
             'first_name' => ['sometimes', 'required', 'string', 'max:255'],
             'last_name' => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:admins,email,' . $currentAdmin->id()],
+            'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:admins,email,' . $adminId],
             'current_password' => ['required_with:password', 'string'],
             'password' => ['sometimes', 'required', 'string', 'min:8', 'confirmed'],
         ]);
@@ -171,7 +197,7 @@ class AdminAuthController extends Controller
             // Handle password update separately if provided
             if (isset($validated['password'])) {
                 $adminData = $this->authService->updatePassword(
-                    $currentAdmin->id(),
+                    $adminId,
                     $validated['current_password'],
                     $validated['password']
                 );
@@ -180,7 +206,7 @@ class AdminAuthController extends Controller
             // Handle profile update if any profile fields are provided
             if (isset($validated['first_name']) || isset($validated['last_name']) || isset($validated['email'])) {
                 $adminData = $this->authService->updateProfile(
-                    $currentAdmin->id(),
+                    $adminId,
                     $validated['first_name'] ?? $currentAdmin->name()->firstName(),
                     $validated['last_name'] ?? $currentAdmin->name()->lastName(),
                     $validated['email'] ?? (string) $currentAdmin->email()
@@ -188,7 +214,7 @@ class AdminAuthController extends Controller
             }
 
             // Get updated admin with last_login_at
-            $admin = $this->adminService->getAdminEntityById($currentAdmin->id());
+            $admin = $this->adminService->getAdminEntityById($adminId);
             $adminDataWithLogin = $this->adminService->toAdminData($admin);
 
             return ApiResponse::success(

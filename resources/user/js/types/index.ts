@@ -8,6 +8,9 @@
  * - Site Config types: @user/types/siteConfig
  * - League types: @user/types/league
  * - Driver types: @user/types/driver
+ * - Competition types: @user/types/competition
+ * - Season types: @user/types/season
+ * - SeasonDriver types: @user/types/seasonDriver
  */
 
 // This file is intentionally minimal. Import specific types from their domain files.

@@ -17,6 +17,8 @@ use App\Http\Controllers\User\CompetitionController;
 use App\Http\Controllers\User\DriverController;
 use App\Http\Controllers\User\LeagueController;
 use App\Http\Controllers\User\PlatformController;
+use App\Http\Controllers\User\SeasonController;
+use App\Http\Controllers\User\SeasonDriverController;
 use App\Http\Controllers\User\SiteConfigController as UserSiteConfigController;
 use App\Http\Controllers\User\TimezoneController;
 use App\Http\Middleware\AdminOrSuperAdminOnly;
@@ -174,6 +176,29 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             Route::put('/competitions/{id}', [CompetitionController::class, 'update'])->name('competitions.update');
             Route::delete('/competitions/{id}', [CompetitionController::class, 'destroy'])->name('competitions.destroy');
             Route::post('/competitions/{id}/archive', [CompetitionController::class, 'archive'])->name('competitions.archive');
+
+            // Competition Seasons
+            Route::get('/competitions/{competitionId}/seasons', [SeasonController::class, 'index'])->name('competitions.seasons.index');
+            Route::post('/competitions/{competitionId}/seasons', [SeasonController::class, 'store'])->name('competitions.seasons.store');
+            Route::post('/competitions/{competitionId}/seasons/check-slug', [SeasonController::class, 'checkSlug'])->name('competitions.seasons.check-slug');
+
+            // Seasons
+            Route::get('/seasons/{id}', [SeasonController::class, 'show'])->name('seasons.show');
+            Route::put('/seasons/{id}', [SeasonController::class, 'update'])->name('seasons.update');
+            Route::delete('/seasons/{id}', [SeasonController::class, 'destroy'])->name('seasons.destroy');
+            Route::post('/seasons/{id}/archive', [SeasonController::class, 'archive'])->name('seasons.archive');
+            Route::post('/seasons/{id}/activate', [SeasonController::class, 'activate'])->name('seasons.activate');
+            Route::post('/seasons/{id}/complete', [SeasonController::class, 'complete'])->name('seasons.complete');
+            Route::post('/seasons/{id}/restore', [SeasonController::class, 'restore'])->name('seasons.restore');
+
+            // Season Drivers
+            Route::get('/seasons/{seasonId}/drivers', [SeasonDriverController::class, 'index'])->name('seasons.drivers.index');
+            Route::post('/seasons/{seasonId}/drivers', [SeasonDriverController::class, 'store'])->name('seasons.drivers.store');
+            Route::get('/seasons/{seasonId}/available-drivers', [SeasonDriverController::class, 'available'])->name('seasons.drivers.available');
+            Route::get('/seasons/{seasonId}/drivers/stats', [SeasonDriverController::class, 'stats'])->name('seasons.drivers.stats');
+            Route::post('/seasons/{seasonId}/drivers/bulk', [SeasonDriverController::class, 'bulk'])->name('seasons.drivers.bulk');
+            Route::put('/seasons/{seasonId}/drivers/{leagueDriverId}', [SeasonDriverController::class, 'update'])->name('seasons.drivers.update');
+            Route::delete('/seasons/{seasonId}/drivers/{leagueDriverId}', [SeasonDriverController::class, 'destroy'])->name('seasons.drivers.destroy');
         });
     });
 

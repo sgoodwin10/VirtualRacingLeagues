@@ -79,6 +79,21 @@ final class UserController extends Controller
         // Convert Data objects to arrays
         $data = array_map(fn($item) => $item->toArray(), $result['data']);
 
+        // Build pagination links
+        $baseUrl = $request->url();
+        $queryParams = $request->except('page');
+        $lastPage = $result['last_page'];
+        $currentPage = $result['current_page'];
+
+        $firstPage = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1]));
+        $lastPageUrl = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $lastPage]));
+        $prevPage = $currentPage > 1
+            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))
+            : null;
+        $nextPage = $currentPage < $lastPage
+            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))
+            : null;
+
         // Return paginated response with proper structure
         return ApiResponse::paginated(
             data: $data,
@@ -87,6 +102,12 @@ final class UserController extends Controller
                 'per_page' => $result['per_page'],
                 'current_page' => $result['current_page'],
                 'last_page' => $result['last_page'],
+            ],
+            links: [
+                'first' => $firstPage,
+                'last' => $lastPageUrl,
+                'prev' => $prevPage,
+                'next' => $nextPage,
             ]
         );
     }

@@ -6,7 +6,7 @@
 
 import { mount, type VueWrapper, type MountingOptions } from '@vue/test-utils';
 import { createPinia } from 'pinia';
-import { createRouter, createMemoryHistory } from 'vue-router';
+import { createRouter, createMemoryHistory, type RouteRecordRaw } from 'vue-router';
 import { vi } from 'vitest';
 import { primevueStubs } from './primevueStubs';
 import type { Component, ComponentPublicInstance } from 'vue';
@@ -24,7 +24,7 @@ export function createTestPinia() {
 /**
  * Creates a test router instance with memory history
  */
-export function createTestRouter(routes: any[] = []) {
+export function createTestRouter(routes: RouteRecordRaw[] = []) {
   return createRouter({
     history: createMemoryHistory(),
     routes:
@@ -69,7 +69,7 @@ export function createTestRouter(routes: any[] = []) {
  */
 export function mountWithStubs<T extends ComponentPublicInstance>(
   component: Component,
-  options: MountingOptions<any> = {},
+  options: MountingOptions<Record<string, unknown>> = {},
 ): VueWrapper<T> {
   // Merge PrimeVue stubs with any additional stubs provided
   const stubs = {
@@ -97,7 +97,7 @@ export function mountWithStubs<T extends ComponentPublicInstance>(
           },
         },
       },
-    ] as [typeof PrimeVue, any],
+    ],
     ToastService,
   ];
 
@@ -227,7 +227,15 @@ export function createMockApiResponse<T>(data: T, status = 200) {
  * Creates a mock API error
  */
 export function createMockApiError(message: string, status = 500) {
-  const error = new Error(message) as any;
+  const error = new Error(message) as Error & {
+    response: {
+      data: { message: string };
+      status: number;
+      statusText: string;
+      headers: Record<string, unknown>;
+      config: Record<string, unknown>;
+    };
+  };
   error.response = {
     data: { message },
     status,
@@ -260,7 +268,7 @@ export async function waitFor(
  * Finds a component by name (useful for stubbed PrimeVue components)
  */
 export function findComponentByName<T extends ComponentPublicInstance>(
-  wrapper: VueWrapper<any>,
+  wrapper: VueWrapper<ComponentPublicInstance>,
   name: string,
 ): VueWrapper<T> | undefined {
   return wrapper.findComponent({ name }) as VueWrapper<T> | undefined;
@@ -270,7 +278,7 @@ export function findComponentByName<T extends ComponentPublicInstance>(
  * Finds all components by name
  */
 export function findAllComponentsByName<T extends ComponentPublicInstance>(
-  wrapper: VueWrapper<any>,
+  wrapper: VueWrapper<ComponentPublicInstance>,
   name: string,
 ): VueWrapper<T>[] {
   return wrapper.findAllComponents({ name }) as VueWrapper<T>[];
@@ -282,7 +290,7 @@ export function findAllComponentsByName<T extends ComponentPublicInstance>(
 export async function triggerNativeEvent(
   element: Element,
   eventType: string,
-  eventData: any = {},
+  eventData: Record<string, unknown> = {},
 ): Promise<void> {
   const event = new Event(eventType, { bubbles: true, cancelable: true });
   Object.assign(event, eventData);

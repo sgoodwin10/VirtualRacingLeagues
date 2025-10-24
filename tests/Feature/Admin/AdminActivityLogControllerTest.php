@@ -238,12 +238,20 @@ class AdminActivityLogControllerTest extends TestCase
         }
 
         $response = $this->actingAs($this->superAdmin, 'admin')
-            ->getJson('/api/admin/activities?limit=5');
+            ->getJson('/api/admin/activities?per_page=5');
 
         $response->assertStatus(200);
 
         $data = $response->json('data');
         $this->assertCount(5, $data);
+
+        // Verify pagination meta and links are present
+        $response->assertJsonStructure([
+            'success',
+            'data',
+            'meta' => ['total', 'per_page', 'current_page', 'last_page'],
+            'links' => ['first', 'last', 'prev', 'next'],
+        ]);
     }
 
     public function test_can_filter_activities_by_log_name(): void

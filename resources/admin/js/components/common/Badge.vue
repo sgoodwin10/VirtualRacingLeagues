@@ -55,6 +55,7 @@ export interface BadgeProps {
 // Props with defaults
 const props = withDefaults(defineProps<BadgeProps>(), {
   variant: 'secondary',
+  icon: undefined,
   size: 'md',
 });
 

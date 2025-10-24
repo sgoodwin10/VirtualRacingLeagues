@@ -20,7 +20,15 @@ describe('AdminUsersTable', () => {
     },
   ];
 
-  const createWrapper = (props: Partial<typeof mockProps> = {}) => {
+  const createWrapper = (
+    props: Partial<{
+      adminUsers: Admin[];
+      totalRecords: number;
+      rowsPerPage: number;
+      currentRoleLevel: number;
+      loading: boolean;
+    }> = {},
+  ) => {
     return mount(AdminUsersTable, {
       props: {
         adminUsers: mockAdmins,
@@ -54,14 +62,6 @@ describe('AdminUsersTable', () => {
         },
       },
     });
-  };
-
-  const _mockProps = {
-    adminUsers: mockAdmins,
-    totalRecords: 1,
-    rowsPerPage: 10,
-    currentRoleLevel: 3,
-    loading: false,
   };
 
   it('renders without errors', () => {

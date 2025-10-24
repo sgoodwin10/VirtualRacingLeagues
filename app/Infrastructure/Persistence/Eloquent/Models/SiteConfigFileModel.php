@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $file_size File size in bytes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read SiteConfigModel $siteConfig
+ * @property-read \App\Infrastructure\Persistence\Eloquent\Models\SiteConfigModel $siteConfig
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigFileModel newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigFileModel newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigFileModel query()

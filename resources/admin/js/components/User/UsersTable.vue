@@ -2,9 +2,9 @@
   <DataTable
     :value="users"
     :loading="loading"
-    :rows="10"
+    :rows="15"
     :paginator="true"
-    :rows-per-page-options="[10, 25, 50]"
+    :rows-per-page-options="[15, 25, 50]"
     paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
     current-page-report-template="Showing {first} to {last} of {totalRecords} users"
     striped-rows
@@ -140,7 +140,7 @@ export interface UsersTableProps {
   /**
    * Array of users to display
    */
-  users: User[];
+  users?: User[];
 
   /**
    * Whether the table is loading

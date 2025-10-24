@@ -22,6 +22,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   drivers: () => [],
   loading: false,
+  leagueId: undefined,
 });
 const emit = defineEmits<Emits>();
 
@@ -46,6 +47,13 @@ const getDriverNickname = (leagueDriver: LeagueDriver): string | null => {
     return driver.nickname;
   }
   return null;
+};
+
+/**
+ * Get driver's Discord ID
+ */
+const getDriverDiscordId = (leagueDriver: LeagueDriver): string => {
+  return leagueDriver.driver?.discord_id || '-';
 };
 
 /**
@@ -101,8 +109,8 @@ onMounted(async () => {
     :loading="props.loading"
     striped-rows
     paginator
-    :rows="15"
-    :rows-per-page-options="[15, 25, 50]"
+    :rows="10"
+    :rows-per-page-options="[10, 25, 50]"
     data-key="id"
     responsive-layout="scroll"
     class="driver-table"
@@ -129,6 +137,12 @@ onMounted(async () => {
             "{{ getDriverNickname(data) }}"
           </div>
         </div>
+      </template>
+    </Column>
+
+    <Column field="discord_id" header="Discord ID" style="width: 180px">
+      <template #body="{ data }">
+        <span class="text-sm">{{ getDriverDiscordId(data) }}</span>
       </template>
     </Column>
 

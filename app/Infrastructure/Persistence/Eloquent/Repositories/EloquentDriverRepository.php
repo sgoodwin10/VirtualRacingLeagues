@@ -32,12 +32,13 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
     public function findByPlatformId(
         ?string $psnId,
         ?string $iracingId,
-        ?int $iracingCustomerId
+        ?int $iracingCustomerId,
+        ?string $discordId = null
     ): ?DriverEntity {
         $query = DriverEloquent::query();
 
         // Build OR conditions for platform IDs
-        $query->where(function ($q) use ($psnId, $iracingId, $iracingCustomerId) {
+        $query->where(function ($q) use ($psnId, $iracingId, $iracingCustomerId, $discordId) {
             if ($psnId !== null) {
                 $q->orWhere('psn_id', $psnId);
             }
@@ -46,6 +47,9 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             }
             if ($iracingCustomerId !== null) {
                 $q->orWhere('iracing_customer_id', $iracingCustomerId);
+            }
+            if ($discordId !== null) {
+                $q->orWhere('discord_id', $discordId);
             }
         });
 
@@ -69,6 +73,7 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         $eloquent->psn_id = $driver->platformIds()->psnId();
         $eloquent->iracing_id = $driver->platformIds()->iracingId();
         $eloquent->iracing_customer_id = $driver->platformIds()->iracingCustomerId();
+        $eloquent->discord_id = $driver->platformIds()->discordId();
         $eloquent->deleted_at = $driver->deletedAt()?->format('Y-m-d H:i:s');
 
         $eloquent->save();
@@ -93,14 +98,15 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         int $leagueId,
         ?string $psnId,
         ?string $iracingId,
-        ?int $iracingCustomerId
+        ?int $iracingCustomerId,
+        ?string $discordId = null
     ): bool {
         $query = DriverEloquent::query()
             ->whereHas('leagues', function ($q) use ($leagueId) {
                 $q->where('leagues.id', $leagueId);
             });
 
-        $query->where(function ($q) use ($psnId, $iracingId, $iracingCustomerId) {
+        $query->where(function ($q) use ($psnId, $iracingId, $iracingCustomerId, $discordId) {
             if ($psnId !== null) {
                 $q->orWhere('psn_id', $psnId);
             }
@@ -109,6 +115,9 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             }
             if ($iracingCustomerId !== null) {
                 $q->orWhere('iracing_customer_id', $iracingCustomerId);
+            }
+            if ($discordId !== null) {
+                $q->orWhere('discord_id', $discordId);
             }
         });
 
@@ -135,7 +144,8 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
                     ->orWhere('drivers.nickname', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.slug', 'LIKE', "%{$search}%")
                     ->orWhere('drivers.psn_id', 'LIKE', "%{$search}%")
-                    ->orWhere('drivers.iracing_id', 'LIKE', "%{$search}%");
+                    ->orWhere('drivers.iracing_id', 'LIKE', "%{$search}%")
+                    ->orWhere('drivers.discord_id', 'LIKE', "%{$search}%");
             });
         }
 
@@ -193,7 +203,8 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
                 platformIds: PlatformIdentifiers::from(
                     $row->psn_id,
                     $row->iracing_id,
-                    $row->iracing_customer_id
+                    $row->iracing_customer_id,
+                    $row->discord_id
                 ),
                 email: $row->email,
                 phone: $row->phone,
@@ -257,7 +268,8 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             platformIds: PlatformIdentifiers::from(
                 $row->psn_id,
                 $row->iracing_id,
-                $row->iracing_customer_id
+                $row->iracing_customer_id,
+                $row->discord_id
             ),
             email: $row->email,
             phone: $row->phone,
@@ -363,7 +375,8 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             platformIds: PlatformIdentifiers::from(
                 $eloquent->psn_id,
                 $eloquent->iracing_id,
-                $eloquent->iracing_customer_id
+                $eloquent->iracing_customer_id,
+                $eloquent->discord_id
             ),
             email: $eloquent->email,
             phone: $eloquent->phone,

@@ -100,9 +100,14 @@ final class LogUserActivity
             }
         }
 
+        $user = $this->getUser($event->userId);
+        if ($user === null) {
+            return;
+        }
+
         activity('user')
             ->causedBy($this->getCausedBy())
-            ->performedOn($this->getUser($event->userId))
+            ->performedOn($user)
             ->withProperties([
                 'old' => $old,
                 'attributes' => $attributes,
@@ -112,31 +117,51 @@ final class LogUserActivity
 
     private function logUserActivated(UserActivated $event): void
     {
+        $user = $this->getUser($event->userId);
+        if ($user === null) {
+            return;
+        }
+
         activity('user')
-            ->performedOn($this->getUser($event->userId))
+            ->performedOn($user)
             ->log('User account activated');
     }
 
     private function logUserDeactivated(UserDeactivated $event): void
     {
+        $user = $this->getUser($event->userId);
+        if ($user === null) {
+            return;
+        }
+
         activity('user')
-            ->performedOn($this->getUser($event->userId))
+            ->performedOn($user)
             ->log('User account deactivated');
     }
 
     private function logUserDeleted(UserDeleted $event): void
     {
+        $user = $this->getUserWithTrashed($event->userId);
+        if ($user === null) {
+            return;
+        }
+
         activity('user')
             ->causedBy($this->getCausedBy())
-            ->performedOn($this->getUserWithTrashed($event->userId))
+            ->performedOn($user)
             ->log('deactivated user');
     }
 
     private function logUserRestored(UserRestored $event): void
     {
+        $user = $this->getUser($event->userId);
+        if ($user === null) {
+            return;
+        }
+
         activity('user')
             ->causedBy($this->getCausedBy())
-            ->performedOn($this->getUser($event->userId))
+            ->performedOn($user)
             ->log('reactivated user');
     }
 
@@ -299,12 +324,14 @@ final class LogUserActivity
     private function getCausedBy(): ?\Illuminate\Database\Eloquent\Model
     {
         // Check admin guard first (admin actions take precedence)
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
         $admin = auth('admin')->user();
         if ($admin) {
             return $admin;
         }
 
         // Check web guard (user actions)
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
         $user = auth('web')->user();
         if ($user) {
             return $user;

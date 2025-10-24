@@ -15,6 +15,11 @@
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/bootstrap/*</exclude-pattern>
     <exclude-pattern>*.blade.php</exclude-pattern>
+    <!-- Exclude old-style migrations without namespaces (from packages) -->
+    <exclude-pattern>database/migrations/2025_10_14_085708_create_activity_log_table.php</exclude-pattern>
+    <exclude-pattern>database/migrations/2025_10_14_085709_add_event_column_to_activity_log_table.php</exclude-pattern>
+    <exclude-pattern>database/migrations/2025_10_14_085710_add_batch_uuid_column_to_activity_log_table.php</exclude-pattern>
+    <exclude-pattern>database/migrations.backup/*</exclude-pattern>
 
     <!-- Use PSR-12 as base standard -->
     <rule ref="PSR12"/>

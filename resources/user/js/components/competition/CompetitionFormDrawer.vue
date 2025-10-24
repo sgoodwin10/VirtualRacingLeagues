@@ -266,13 +266,14 @@ async function submitForm(): Promise<void> {
 
     localVisible.value = false;
     resetForm();
-  } catch (error: any) {
+  } catch (error) {
     console.error('Failed to save competition:', error);
 
+    const errorMessage = error instanceof Error ? error.message : 'Failed to save competition';
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: error.message || 'Failed to save competition',
+      detail: errorMessage,
       life: 5000,
     });
   } finally {
@@ -291,7 +292,7 @@ function cancelNameChange(): void {
 </script>
 
 <template>
-  <Drawer v-model:visible="localVisible" position="bottom" class="!h-[60vh] w-full bg-gray-50">
+  <Drawer v-model:visible="localVisible" position="bottom" class="!h-[50vh] w-full bg-gray-50">
     <template #header>
       <DrawerHeader :title="drawerTitle" :subtitle="drawerSubtitle" />
     </template>

@@ -54,7 +54,6 @@ vi.mock('primevue/button', () => ({
 
 describe('DriverTable', () => {
   let mockDrivers: LeagueDriver[];
-  let mockPlatformColumns: PlatformColumn[];
 
   beforeEach(() => {
     // Set up Pinia
@@ -67,18 +66,21 @@ describe('DriverTable', () => {
     mockDrivers = [
       {
         id: 1,
+        league_id: 1,
+        driver_id: 101,
         driver: {
           id: 101,
           first_name: 'John',
           last_name: 'Smith',
           nickname: 'JSmith',
+          discord_id: 'john#1234',
           email: 'john@example.com',
           phone: null,
           psn_id: 'JohnSmith77',
           iracing_id: null,
           iracing_customer_id: null,
           display_name: 'John Smith',
-          slug: 'john-smith',
+          primary_platform_id: null,
           created_at: '2025-10-18T10:00:00Z',
           updated_at: '2025-10-18T10:00:00Z',
         },
@@ -86,23 +88,24 @@ describe('DriverTable', () => {
         status: 'active',
         league_notes: null,
         added_to_league_at: '2025-10-18T10:00:00Z',
-        created_at: '2025-10-18T10:00:00Z',
-        updated_at: '2025-10-18T10:00:00Z',
       },
       {
         id: 2,
+        league_id: 1,
+        driver_id: 102,
         driver: {
           id: 102,
           first_name: null,
           last_name: null,
           nickname: 'FastRacer',
+          discord_id: null,
           email: null,
           phone: null,
           psn_id: null,
           iracing_id: 'FastRacer99',
           iracing_customer_id: null,
           display_name: 'FastRacer',
-          slug: 'fastracer',
+          primary_platform_id: null,
           created_at: '2025-10-18T11:00:00Z',
           updated_at: '2025-10-18T11:00:00Z',
         },
@@ -110,14 +113,7 @@ describe('DriverTable', () => {
         status: 'inactive',
         league_notes: 'On break',
         added_to_league_at: '2025-10-18T11:00:00Z',
-        created_at: '2025-10-18T11:00:00Z',
-        updated_at: '2025-10-18T11:00:00Z',
       },
-    ];
-
-    mockPlatformColumns = [
-      { field: 'psn_id', label: 'PSN ID' },
-      { field: 'iracing_id', label: 'iRacing ID' },
     ];
   });
 
@@ -218,9 +214,9 @@ describe('DriverTable', () => {
 
     const component = wrapper.vm as any;
     const driverNoPlatform: LeagueDriver = {
-      ...mockDrivers[0],
+      ...mockDrivers[0]!,
       driver: {
-        ...mockDrivers[0].driver,
+        ...mockDrivers[0]!.driver,
         psn_id: null,
         iracing_id: null,
         iracing_customer_id: null,
@@ -253,5 +249,47 @@ describe('DriverTable', () => {
     });
 
     expect(wrapper.props('drivers')).toEqual([]);
+  });
+
+  it('should display Discord ID correctly', () => {
+    const wrapper = mount(DriverTable, {
+      props: {
+        drivers: mockDrivers,
+        loading: false,
+        leagueId: 1,
+      },
+    });
+
+    const component = wrapper.vm as any;
+
+    // Test Discord ID present
+    const discordId1 = component.getDriverDiscordId(mockDrivers[0]);
+    expect(discordId1).toBe('john#1234');
+
+    // Test Discord ID absent
+    const discordId2 = component.getDriverDiscordId(mockDrivers[1]);
+    expect(discordId2).toBe('-');
+  });
+
+  it('should handle driver with no Discord ID', () => {
+    const wrapper = mount(DriverTable, {
+      props: {
+        drivers: [],
+        loading: false,
+        leagueId: 1,
+      },
+    });
+
+    const component = wrapper.vm as any;
+    const driverNoDiscord: LeagueDriver = {
+      ...mockDrivers[0]!,
+      driver: {
+        ...mockDrivers[0]!.driver,
+        discord_id: null,
+      },
+    } as LeagueDriver;
+
+    const discordId = component.getDriverDiscordId(driverNoDiscord);
+    expect(discordId).toBe('-');
   });
 });

@@ -10,6 +10,7 @@ use App\Application\User\Services\UserAuthService;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ResetPasswordRequest;
+use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -35,7 +36,7 @@ final class PasswordResetController extends Controller
             RequestPasswordResetData::from($request->only('email'))
         );
 
-        return $status === Password::RESET_LINK_SENT
+        return $status === PasswordBroker::RESET_LINK_SENT
             ? ApiResponse::success(['message' => 'Password reset link sent to your email'])
             : ApiResponse::error('Unable to send reset link. Please try again.', null, 422);
     }
@@ -49,7 +50,7 @@ final class PasswordResetController extends Controller
             ResetPasswordData::from($request->validated())
         );
 
-        return $status === Password::PASSWORD_RESET
+        return $status === PasswordBroker::PASSWORD_RESET
             ? ApiResponse::success(['message' => 'Password reset successfully'])
             : ApiResponse::error('Unable to reset password. The link may be invalid or expired.', null, 422);
     }

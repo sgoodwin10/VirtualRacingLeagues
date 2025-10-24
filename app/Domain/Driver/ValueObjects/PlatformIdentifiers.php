@@ -11,7 +11,8 @@ final readonly class PlatformIdentifiers
     private function __construct(
         private ?string $psnId,
         private ?string $iracingId,
-        private ?int $iracingCustomerId
+        private ?int $iracingCustomerId,
+        private ?string $discordId
     ) {
         $this->validate();
     }
@@ -19,9 +20,10 @@ final readonly class PlatformIdentifiers
     public static function from(
         ?string $psnId,
         ?string $iracingId,
-        ?int $iracingCustomerId
+        ?int $iracingCustomerId,
+        ?string $discordId = null
     ): self {
-        return new self($psnId, $iracingId, $iracingCustomerId);
+        return new self($psnId, $iracingId, $iracingCustomerId, $discordId);
     }
 
     private function validate(): void
@@ -30,8 +32,9 @@ final readonly class PlatformIdentifiers
         $hasPsn = $this->psnId !== null && trim($this->psnId) !== '';
         $hasIracing = $this->iracingId !== null && trim($this->iracingId) !== '';
         $hasIracingCustomer = $this->iracingCustomerId !== null;
+        $hasDiscord = $this->discordId !== null && trim($this->discordId) !== '';
 
-        if (!$hasPsn && !$hasIracing && !$hasIracingCustomer) {
+        if (!$hasPsn && !$hasIracing && !$hasIracingCustomer && !$hasDiscord) {
             throw new InvalidArgumentException('At least one platform identifier is required');
         }
 
@@ -42,6 +45,10 @@ final readonly class PlatformIdentifiers
 
         if ($this->iracingId !== null && mb_strlen($this->iracingId) > 255) {
             throw new InvalidArgumentException('iRacing ID cannot exceed 255 characters');
+        }
+
+        if ($this->discordId !== null && mb_strlen($this->discordId) > 255) {
+            throw new InvalidArgumentException('Discord ID cannot exceed 255 characters');
         }
 
         // Validate iRacing customer ID is positive
@@ -65,6 +72,11 @@ final readonly class PlatformIdentifiers
         return $this->iracingCustomerId;
     }
 
+    public function discordId(): ?string
+    {
+        return $this->discordId;
+    }
+
     /**
      * Get the primary platform identifier for display purposes.
      */
@@ -80,6 +92,10 @@ final readonly class PlatformIdentifiers
 
         if ($this->iracingCustomerId !== null) {
             return 'iRacing Customer: ' . $this->iracingCustomerId;
+        }
+
+        if ($this->discordId !== null && trim($this->discordId) !== '') {
+            return 'Discord: ' . $this->discordId;
         }
 
         // Should never reach here due to validation
@@ -103,6 +119,10 @@ final readonly class PlatformIdentifiers
             return true;
         }
 
+        if ($this->discordId !== null && $this->discordId === $other->discordId) {
+            return true;
+        }
+
         return false;
     }
 
@@ -110,6 +130,7 @@ final readonly class PlatformIdentifiers
     {
         return $this->psnId === $other->psnId
             && $this->iracingId === $other->iracingId
-            && $this->iracingCustomerId === $other->iracingCustomerId;
+            && $this->iracingCustomerId === $other->iracingCustomerId
+            && $this->discordId === $other->discordId;
     }
 }

@@ -549,6 +549,156 @@ final class DriverControllerTest extends UserControllerTestCase
         $this->assertDatabaseHas('drivers', ['nickname' => 'speedster', 'psn_id' => 'speedster99']);
     }
 
+    public function test_automatically_generates_nickname_from_discord_id_when_no_nickname_provided(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'first_name' => null,
+                'last_name' => null,
+                'nickname' => null,
+                'psn_id' => 'PSNRacer123', // Required for league platform validation
+                'discord_id' => 'DiscordRacer123',
+                'driver_number' => 42,
+                'status' => 'active',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'driver' => [
+                        'nickname' => 'DiscordRacer123',
+                        'display_name' => 'DiscordRacer123',
+                    ],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('drivers', [
+            'nickname' => 'DiscordRacer123',
+            'discord_id' => 'DiscordRacer123',
+            'first_name' => null,
+            'last_name' => null,
+        ]);
+    }
+
+    public function test_automatically_generates_nickname_from_discord_id_when_empty_nickname_provided(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'first_name' => null,
+                'last_name' => null,
+                'nickname' => '',
+                'psn_id' => 'PSNRacer456', // Required for league platform validation
+                'discord_id' => 'DiscordRacer456',
+                'driver_number' => 43,
+                'status' => 'active',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'driver' => [
+                        'nickname' => 'DiscordRacer456',
+                    ],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('drivers', [
+            'nickname' => 'DiscordRacer456',
+            'discord_id' => 'DiscordRacer456',
+        ]);
+    }
+
+    public function test_does_not_auto_generate_nickname_when_first_name_exists(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'first_name' => 'John',
+                'last_name' => null,
+                'nickname' => null,
+                'psn_id' => 'PSNRacer789', // Required for league platform validation
+                'discord_id' => 'DiscordRacer789',
+                'driver_number' => 44,
+                'status' => 'active',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'driver' => [
+                        'first_name' => 'John',
+                        'nickname' => null,
+                        'display_name' => 'John',
+                    ],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('drivers', [
+            'first_name' => 'John',
+            'nickname' => null,
+            'discord_id' => 'DiscordRacer789',
+        ]);
+    }
+
+    public function test_uses_provided_nickname_over_discord_id(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'first_name' => null,
+                'last_name' => null,
+                'nickname' => 'ProRacer',
+                'psn_id' => 'PSNRacer999', // Required for league platform validation
+                'discord_id' => 'DiscordRacer999',
+                'driver_number' => 45,
+                'status' => 'active',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'driver' => [
+                        'nickname' => 'ProRacer',
+                        'display_name' => 'ProRacer',
+                    ],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('drivers', [
+            'nickname' => 'ProRacer',
+            'discord_id' => 'DiscordRacer999',
+        ]);
+    }
+
+    public function test_csv_import_auto_generates_nickname_from_discord_id(): void
+    {
+        $csvData = "FirstName,LastName,Nickname,PSN_ID,iRacing_ID,Discord_ID,Email,Phone,DriverNumber\n";
+        $csvData .= ",,,PSNAutoUser,,AutoDiscord123,autoimport@example.com,,15";
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
+                'csv_data' => $csvData,
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'success_count' => 1,
+                    'errors' => [],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('drivers', [
+            'nickname' => 'AutoDiscord123',
+            'discord_id' => 'AutoDiscord123',
+            'first_name' => null,
+            'last_name' => null,
+        ]);
+    }
+
     public function test_requires_authentication(): void
     {
         $response = $this->getJson("/api/leagues/{$this->league->id}/drivers");

@@ -13,6 +13,34 @@ import type {
 // Mock the driver service
 vi.mock('@user/services/driverService');
 
+// Helper function to create mock LeagueDriver objects
+function createMockLeagueDriver(overrides: Partial<LeagueDriver> = {}): LeagueDriver {
+  return {
+    id: 1,
+    league_id: 1,
+    driver_id: 1,
+    driver_number: null,
+    status: 'active',
+    league_notes: null,
+    added_to_league_at: '2024-01-01T00:00:00.000000Z',
+    driver: {
+      id: 1,
+      first_name: 'John',
+      last_name: 'Doe',
+      nickname: null,
+      discord_id: null,
+      display_name: 'John Doe',
+      email: null,
+      phone: null,
+      psn_id: null,
+      iracing_id: null,
+      iracing_customer_id: null,
+      primary_platform_id: null,
+    },
+    ...overrides,
+  };
+}
+
 describe('driverStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -38,30 +66,78 @@ describe('driverStore', () => {
 
   describe('getters', () => {
     const mockDrivers: LeagueDriver[] = [
-      {
+      createMockLeagueDriver({
         id: 1,
-        first_name: 'John',
-        last_name: 'Smith',
+        driver: {
+          id: 1,
+          first_name: 'John',
+          last_name: 'Smith',
+          nickname: null,
+          discord_id: null,
+          display_name: 'John Smith',
+          email: null,
+          phone: null,
+          psn_id: null,
+          iracing_id: null,
+          iracing_customer_id: null,
+          primary_platform_id: null,
+        },
         status: 'active',
-      } as LeagueDriver,
-      {
+      }),
+      createMockLeagueDriver({
         id: 2,
-        first_name: 'Jane',
-        last_name: 'Doe',
+        driver: {
+          id: 2,
+          first_name: 'Jane',
+          last_name: 'Doe',
+          nickname: null,
+          discord_id: null,
+          display_name: 'Jane Doe',
+          email: null,
+          phone: null,
+          psn_id: null,
+          iracing_id: null,
+          iracing_customer_id: null,
+          primary_platform_id: null,
+        },
         status: 'inactive',
-      } as LeagueDriver,
-      {
+      }),
+      createMockLeagueDriver({
         id: 3,
-        first_name: 'Mike',
-        last_name: 'Ross',
+        driver: {
+          id: 3,
+          first_name: 'Mike',
+          last_name: 'Ross',
+          nickname: null,
+          discord_id: null,
+          display_name: 'Mike Ross',
+          email: null,
+          phone: null,
+          psn_id: null,
+          iracing_id: null,
+          iracing_customer_id: null,
+          primary_platform_id: null,
+        },
         status: 'banned',
-      } as LeagueDriver,
-      {
+      }),
+      createMockLeagueDriver({
         id: 4,
-        first_name: 'Sarah',
-        last_name: 'Connor',
+        driver: {
+          id: 4,
+          first_name: 'Sarah',
+          last_name: 'Connor',
+          nickname: null,
+          discord_id: null,
+          display_name: 'Sarah Connor',
+          email: null,
+          phone: null,
+          psn_id: null,
+          iracing_id: null,
+          iracing_customer_id: null,
+          primary_platform_id: null,
+        },
         status: 'active',
-      } as LeagueDriver,
+      }),
     ];
 
     it('activeDrivers should return only active drivers', () => {
@@ -136,12 +212,24 @@ describe('driverStore', () => {
     it('should fetch league drivers successfully', async () => {
       const mockResponse: PaginatedDriversResponse = {
         data: [
-          {
+          createMockLeagueDriver({
             id: 1,
-            first_name: 'John',
-            last_name: 'Smith',
+            driver: {
+              id: 1,
+              first_name: 'John',
+              last_name: 'Smith',
+              nickname: null,
+              discord_id: null,
+              display_name: 'John Smith',
+              email: null,
+              phone: null,
+              psn_id: null,
+              iracing_id: null,
+              iracing_customer_id: null,
+              primary_platform_id: null,
+            },
             status: 'active',
-          } as LeagueDriver,
+          }),
         ],
         meta: {
           current_page: 1,
@@ -245,14 +333,25 @@ describe('driverStore', () => {
         driver_number: 5,
       };
 
-      const mockDriver: LeagueDriver = {
+      const mockDriver: LeagueDriver = createMockLeagueDriver({
         id: 1,
-        first_name: 'John',
-        last_name: 'Smith',
-        psn_id: 'JohnSmith77',
+        driver: {
+          id: 1,
+          first_name: 'John',
+          last_name: 'Smith',
+          nickname: null,
+          discord_id: null,
+          display_name: 'John Smith',
+          email: null,
+          phone: null,
+          psn_id: 'JohnSmith77',
+          iracing_id: null,
+          iracing_customer_id: null,
+          primary_platform_id: null,
+        },
         driver_number: 5,
         status: 'active',
-      } as LeagueDriver;
+      });
 
       const mockResponse: PaginatedDriversResponse = {
         data: [mockDriver],
@@ -291,12 +390,24 @@ describe('driverStore', () => {
 
   describe('fetchLeagueDriver', () => {
     it('should fetch a specific driver', async () => {
-      const mockDriver: LeagueDriver = {
+      const mockDriver: LeagueDriver = createMockLeagueDriver({
         id: 1,
-        first_name: 'John',
-        last_name: 'Smith',
+        driver: {
+          id: 1,
+          first_name: 'John',
+          last_name: 'Smith',
+          nickname: null,
+          discord_id: null,
+          display_name: 'John Smith',
+          email: null,
+          phone: null,
+          psn_id: null,
+          iracing_id: null,
+          iracing_customer_id: null,
+          primary_platform_id: null,
+        },
         status: 'active',
-      } as LeagueDriver;
+      });
 
       vi.mocked(driverService.getLeagueDriver).mockResolvedValue(mockDriver);
 
@@ -332,6 +443,7 @@ describe('driverStore', () => {
           first_name: 'John',
           last_name: 'Smith',
           nickname: null,
+          discord_id: null,
           display_name: 'John Smith',
           email: 'john@example.com',
           phone: null,
@@ -355,6 +467,7 @@ describe('driverStore', () => {
           first_name: 'Jonathan',
           last_name: 'Smith',
           nickname: null,
+          discord_id: null,
           display_name: 'Jonathan Smith',
           email: 'jonathan@example.com',
           phone: null,
@@ -397,6 +510,7 @@ describe('driverStore', () => {
           first_name: 'John',
           last_name: 'Smith',
           nickname: null,
+          discord_id: null,
           display_name: 'John Smith',
           email: null,
           phone: null,
@@ -439,6 +553,7 @@ describe('driverStore', () => {
           first_name: 'John',
           last_name: null,
           nickname: null,
+          discord_id: null,
           display_name: 'John',
           email: null,
           phone: null,
@@ -465,6 +580,7 @@ describe('driverStore', () => {
           first_name: 'John',
           last_name: null,
           nickname: null,
+          discord_id: null,
           display_name: 'John',
           email: null,
           phone: null,
@@ -496,8 +612,8 @@ describe('driverStore', () => {
 
       const store = useDriverStore();
       store.drivers = [
-        { id: 1, driver_id: 1, first_name: 'John' } as LeagueDriver,
-        { id: 2, driver_id: 2, first_name: 'Jane' } as LeagueDriver,
+        createMockLeagueDriver({ id: 1, driver_id: 1 }),
+        createMockLeagueDriver({ id: 2, driver_id: 2 }),
       ];
       store.totalDrivers = 2;
 
@@ -512,8 +628,8 @@ describe('driverStore', () => {
       vi.mocked(driverService.removeDriverFromLeague).mockResolvedValue();
 
       const store = useDriverStore();
-      store.currentDriver = { id: 1, driver_id: 1, first_name: 'John' } as LeagueDriver;
-      store.drivers = [{ id: 1, driver_id: 1, first_name: 'John' } as LeagueDriver];
+      store.currentDriver = createMockLeagueDriver({ id: 1, driver_id: 1 });
+      store.drivers = [createMockLeagueDriver({ id: 1, driver_id: 1 })];
 
       await store.removeDriver(1, 1);
 
@@ -531,7 +647,7 @@ describe('driverStore', () => {
       };
 
       const mockDriversResponse: PaginatedDriversResponse = {
-        data: [{ id: 1, first_name: 'John' } as LeagueDriver],
+        data: [createMockLeagueDriver({ id: 1 })],
         meta: {
           current_page: 1,
           per_page: 15,
@@ -658,8 +774,8 @@ describe('driverStore', () => {
 
     it('should reset store to initial state', () => {
       const store = useDriverStore();
-      store.drivers = [{ id: 1 } as LeagueDriver];
-      store.currentDriver = { id: 1 } as LeagueDriver;
+      store.drivers = [createMockLeagueDriver({ id: 1 })];
+      store.currentDriver = createMockLeagueDriver({ id: 1 });
       store.loading = true;
       store.error = 'Error';
       store.currentPage = 3;

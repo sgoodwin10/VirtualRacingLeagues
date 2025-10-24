@@ -7,6 +7,42 @@ namespace App\Infrastructure\Persistence\Eloquent\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $platform_id
+ * @property int $platform_track_location_id
+ * @property string $name
+ * @property string $slug
+ * @property bool $is_reverse
+ * @property string|null $image_path
+ * @property int|null $length_meters
+ * @property bool $is_active
+ * @property int $sort_order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Infrastructure\Persistence\Eloquent\Models\PlatformTrackLocation $location
+ * @property-read \App\Infrastructure\Persistence\Eloquent\Models\Platform $platform
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack forLocation(int $locationId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack forPlatform(int $platformId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereImagePath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereIsReverse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereLengthMeters($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack wherePlatformId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack wherePlatformTrackLocationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereSortOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class PlatformTrack extends Model
 {
     /**

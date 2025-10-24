@@ -42,7 +42,7 @@ final class CompetitionController extends Controller
         $validated['league_id'] = $leagueId;
 
         $data = CreateCompetitionData::from($validated);
-        $competition = $this->competitionService->createCompetition($data, Auth::id() ?? 0);
+        $competition = $this->competitionService->createCompetition($data, (int) (Auth::id() ?? 0));
 
         return ApiResponse::created($competition->toArray(), 'Competition created successfully');
     }
@@ -64,7 +64,7 @@ final class CompetitionController extends Controller
         $validated = $request->validate(UpdateCompetitionData::rules());
 
         $data = UpdateCompetitionData::from($validated);
-        $competition = $this->competitionService->updateCompetition($id, $data, Auth::id() ?? 0);
+        $competition = $this->competitionService->updateCompetition($id, $data, (int) (Auth::id() ?? 0));
 
         return ApiResponse::success($competition->toArray(), 'Competition updated successfully');
     }
@@ -74,7 +74,7 @@ final class CompetitionController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $this->competitionService->deleteCompetition($id, Auth::id() ?? 0);
+        $this->competitionService->deleteCompetition($id, (int) (Auth::id() ?? 0));
         return ApiResponse::success(null, 'Competition deleted successfully');
     }
 
@@ -83,7 +83,7 @@ final class CompetitionController extends Controller
      */
     public function archive(int $id): JsonResponse
     {
-        $this->competitionService->archiveCompetition($id, Auth::id() ?? 0);
+        $this->competitionService->archiveCompetition($id, (int) (Auth::id() ?? 0));
         return ApiResponse::success(null, 'Competition archived successfully');
     }
 

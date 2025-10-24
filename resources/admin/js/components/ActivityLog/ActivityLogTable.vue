@@ -4,7 +4,7 @@
     :loading="loading"
     :rows="rowsPerPage"
     :paginator="paginator"
-    :rows-per-page-options="[10, 25, 50, 100]"
+    :rows-per-page-options="[15, 25, 50, 100]"
     paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
     current-page-report-template="Showing {first} to {last} of {totalRecords} activities"
     striped-rows
@@ -173,7 +173,7 @@ withDefaults(defineProps<ActivityLogTableProps>(), {
   showEvent: true,
   showSubject: true,
   paginator: true,
-  rowsPerPage: 10,
+  rowsPerPage: 15,
 });
 
 // Emits

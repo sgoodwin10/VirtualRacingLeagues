@@ -87,7 +87,6 @@ final class AdminApplicationService
      * Update an existing admin.
      *
      * @param Admin|null $performedBy Admin performing the action (for permission checks)
-     * @throws AdminNotFoundException if admin not found
      */
     public function updateAdmin(int $adminId, UpdateAdminData $data, ?Admin $performedBy = null): AdminData
     {
@@ -269,7 +268,10 @@ final class AdminApplicationService
 
         // Fetch infrastructure fields (last_login_at) using read model service
         $adminIds = array_map(fn($adminData) => $adminData->id, $result['data']);
-        $lastLoginTimestamps = $this->readModelService->getLastLoginTimestamps($adminIds);
+        /** @var array<int> $cleanAdminIds */
+        $cleanAdminIds = array_filter($adminIds, fn($id) => $id !== null);
+        /** @var array<int, string|null> $lastLoginTimestamps */
+        $lastLoginTimestamps = $this->readModelService->getLastLoginTimestamps(array_values($cleanAdminIds));
 
         // Convert AdminData to DetailedAdminData with last_login_at
         $data = [];
@@ -327,7 +329,6 @@ final class AdminApplicationService
      * Activate an admin.
      *
      * @param Admin|null $performedBy Admin performing the action
-     * @throws AdminNotFoundException if admin not found
      */
     public function activateAdmin(int $adminId, ?Admin $performedBy = null): AdminData
     {
@@ -352,7 +353,6 @@ final class AdminApplicationService
      * Deactivate an admin.
      *
      * @param Admin|null $performedBy Admin performing the action
-     * @throws AdminNotFoundException if admin not found
      */
     public function deactivateAdmin(int $adminId, ?Admin $performedBy = null): AdminData
     {
@@ -377,8 +377,6 @@ final class AdminApplicationService
      * Delete an admin (soft delete).
      *
      * @param Admin|null $performedBy Admin performing the action
-     * @throws AdminNotFoundException if admin not found
-     * @throws CannotDeleteSelfException if trying to delete yourself
      */
     public function deleteAdmin(int $adminId, ?Admin $performedBy = null): void
     {
@@ -406,7 +404,6 @@ final class AdminApplicationService
      * Restore a soft-deleted admin.
      *
      * @param Admin|null $performedBy Admin performing the action
-     * @throws AdminNotFoundException if admin not found
      */
     public function restoreAdmin(int $adminId, ?Admin $performedBy = null): AdminData
     {
@@ -431,7 +428,6 @@ final class AdminApplicationService
      * Change an admin's role.
      *
      * @param Admin $performedBy Admin performing the action (required)
-     * @throws AdminNotFoundException if admin not found
      */
     public function changeAdminRole(int $adminId, string $newRole, Admin $performedBy): AdminData
     {
@@ -456,6 +452,7 @@ final class AdminApplicationService
      */
     public function getCurrentAuthenticatedAdmin(): Admin
     {
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $eloquentAdmin */
         $eloquentAdmin = \Illuminate\Support\Facades\Auth::guard('admin')->user();
 
         if (!$eloquentAdmin) {
@@ -471,7 +468,12 @@ final class AdminApplicationService
      */
     public function toAdminData(Admin $admin): AdminData
     {
-        $lastLoginAt = $this->readModelService->getLastLoginTimestamp($admin->id());
+        $adminId = $admin->id();
+        if ($adminId === null) {
+            return AdminData::fromEntity($admin);
+        }
+
+        $lastLoginAt = $this->readModelService->getLastLoginTimestamp($adminId);
 
         return AdminData::fromEntity($admin, $lastLoginAt);
     }
@@ -482,7 +484,12 @@ final class AdminApplicationService
      */
     public function toDetailedAdminData(Admin $admin): DetailedAdminData
     {
-        $lastLoginAt = $this->readModelService->getLastLoginTimestamp($admin->id());
+        $adminId = $admin->id();
+        if ($adminId === null) {
+            return DetailedAdminData::fromEntity($admin);
+        }
+
+        $lastLoginAt = $this->readModelService->getLastLoginTimestamp($adminId);
 
         return DetailedAdminData::fromEntity($admin, $lastLoginAt);
     }

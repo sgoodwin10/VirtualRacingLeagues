@@ -38,20 +38,20 @@ const csvExample = computed(() => {
 
   if (platformHeaders.length === 0) {
     // Fallback example if headers not loaded yet
-    return `Nickname,DriverNumber
-John Smith,5
-Jane Doe,7
-Mike Ross,3`;
+    return `Nickname,DiscordID,DriverNumber
+John Smith,john#1234,5
+Jane Doe,jane#5678,7
+Mike Ross,,3`;
   }
 
-  // Build headers: Nickname + platform ID columns + DriverNumber (optional)
-  const headers = ['Nickname', ...platformHeaders.map((h) => h.field), 'DriverNumber'];
+  // Build headers: Nickname, DiscordID + platform ID columns + DriverNumber (optional)
+  const headers = ['Nickname', 'DiscordID', ...platformHeaders.map((h) => h.field), 'DriverNumber'];
 
   // Generate example data rows based on the platform columns
   const exampleRows: string[][] = [];
 
-  // Example 1: Full data
-  const row1 = ['John Smith'];
+  // Example 1: Full data with both nickname and Discord ID
+  const row1 = ['John Smith', 'john#1234'];
   platformHeaders.forEach((header) => {
     if (header.field === 'psn_id') {
       row1.push('john_psn_123');
@@ -66,8 +66,8 @@ Mike Ross,3`;
   row1.push('5'); // DriverNumber
   exampleRows.push(row1);
 
-  // Example 2: Different driver with optional empty driver number
-  const row2 = ['Jane Doe'];
+  // Example 2: Driver with Discord ID only (no nickname)
+  const row2 = ['', 'jane#5678'];
   platformHeaders.forEach((header) => {
     if (header.field === 'psn_id') {
       row2.push('jane_psn_456');
@@ -82,8 +82,8 @@ Mike Ross,3`;
   row2.push('7'); // DriverNumber
   exampleRows.push(row2);
 
-  // Example 3: Driver with empty driver number to show optional field
-  const row3 = ['Mike Ross'];
+  // Example 3: Driver with nickname only (no Discord ID)
+  const row3 = ['Mike Ross', ''];
   platformHeaders.forEach((header) => {
     if (header.field === 'psn_id') {
       row3.push('mike_psn_789');
@@ -116,6 +116,59 @@ watch(
 );
 
 /**
+ * Process CSV data to handle missing nicknames
+ * If nickname is empty, use Discord ID as fallback
+ */
+const processCSVData = (csvData: string): string => {
+  const lines = csvData.trim().split('\n');
+  if (lines.length === 0) {
+    return csvData;
+  }
+
+  // Get header row
+  const headerRow = lines[0];
+  if (!headerRow) {
+    return csvData;
+  }
+
+  const headers = headerRow.split(',').map((h) => h.trim());
+
+  // Find nickname and Discord ID column indices
+  const nicknameIndex = headers.findIndex(
+    (h) => h.toLowerCase() === 'nickname' || h.toLowerCase() === 'name',
+  );
+  const discordIdIndex = headers.findIndex(
+    (h) => h.toLowerCase() === 'discordid' || h.toLowerCase() === 'discord_id',
+  );
+
+  // If we can't find either column, return original data
+  if (nicknameIndex === -1 || discordIdIndex === -1) {
+    return csvData;
+  }
+
+  // Process data rows
+  const processedLines = [headerRow]; // Keep header as-is
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line || !line.trim()) continue; // Skip empty lines
+
+    const columns = line.split(',').map((col) => col.trim());
+
+    // If nickname is empty but Discord ID is present, use Discord ID as nickname
+    const nicknameValue = columns[nicknameIndex];
+    const discordIdValue = columns[discordIdIndex];
+
+    if (!nicknameValue && discordIdValue) {
+      columns[nicknameIndex] = discordIdValue;
+    }
+
+    processedLines.push(columns.join(','));
+  }
+
+  return processedLines.join('\n');
+};
+
+/**
  * Handle CSV import submission
  */
 const handleImport = async (): Promise<void> => {
@@ -129,7 +182,10 @@ const handleImport = async (): Promise<void> => {
   importResult.value = null;
 
   try {
-    const result = await props.onImport(csvData.value);
+    // Process CSV to handle missing nicknames
+    const processedCSV = processCSVData(csvData.value);
+
+    const result = await props.onImport(processedCSV);
     importResult.value = result;
 
     // If all successful, close dialog after a short delay
@@ -182,6 +238,7 @@ const downloadTemplate = (): void => {
   }
 
   const csvContent = headers.map((h) => h.field).join(',');
+  // eslint-disable-next-line no-undef
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
@@ -224,9 +281,12 @@ onMounted(async () => {
           class="text-blue-800"
         />
         <ul class="text-sm text-blue-800 space-y-1 my-3">
-          <li><strong>Required:</strong> At least one name (FirstName, LastName, or Nickname)</li>
+          <li><strong>Required:</strong> At least one of Nickname or DiscordID</li>
+          <li class="text-xs italic ml-4">
+            Note: If Nickname is empty, Discord ID will be used as the nickname
+          </li>
           <li><strong>Required:</strong> At least one platform ID for this league's platforms</li>
-          <li><strong>Optional:</strong> DriverNumber</li>
+          <li><strong>Optional:</strong> FirstName, LastName, DriverNumber</li>
         </ul>
         <div class="flex items-center gap-2 mb-2">
           <p class="text-sm font-medium text-blue-900 hidden">CSV Template:</p>

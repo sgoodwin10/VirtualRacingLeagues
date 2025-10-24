@@ -55,9 +55,7 @@ final class LeagueData extends Data
             slug: $league->slug()->value(),
             tagline: $league->tagline()?->value(),
             description: $league->description(),
-            // @phpstan-ignore-next-line (url() method exists on LocalFilesystemAdapter)
             logo_url: Storage::disk('public')->url($league->logoPath()),
-            // @phpstan-ignore-next-line (url() method exists on LocalFilesystemAdapter)
             header_image_url: $league->headerImagePath()
                 ? Storage::disk('public')->url($league->headerImagePath())
                 : null,

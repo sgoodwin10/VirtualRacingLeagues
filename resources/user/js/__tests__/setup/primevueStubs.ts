@@ -10,6 +10,8 @@
  * - Is queryable by component name
  */
 
+/* eslint-disable vue/one-component-per-file */
+
 import { defineComponent, type PropType } from 'vue';
 
 /**
@@ -17,7 +19,7 @@ import { defineComponent, type PropType } from 'vue';
  * Supports: label, icon, severity, loading, click events
  */
 export const PrimeButtonStub = defineComponent({
-  name: 'Button',
+  name: 'PrimeButton',
   props: {
     label: {
       type: String,
@@ -162,22 +164,24 @@ export const CheckboxStub = defineComponent({
   name: 'Checkbox',
   props: {
     modelValue: {
-      type: [Boolean, Array, String, Number] as PropType<boolean | any[] | string | number>,
+      type: [Boolean, Array, String, Number] as PropType<boolean | unknown[] | string | number>,
       default: false,
     },
     value: {
-      type: [String, Number, Boolean, Object] as PropType<any>,
+      type: [String, Number, Boolean, Object] as PropType<
+        string | number | boolean | Record<string, unknown>
+      >,
       default: null,
     },
     binary: Boolean,
     disabled: Boolean,
     invalid: Boolean,
     trueValue: {
-      type: [String, Number, Boolean] as PropType<any>,
+      type: [String, Number, Boolean] as PropType<string | number | boolean>,
       default: true,
     },
     falseValue: {
-      type: [String, Number, Boolean] as PropType<any>,
+      type: [String, Number, Boolean] as PropType<string | number | boolean>,
       default: false,
     },
   },
@@ -196,7 +200,7 @@ export const CheckboxStub = defineComponent({
   methods: {
     handleChange(event: Event): void {
       const target = event.target as HTMLInputElement;
-      let newValue: any;
+      let newValue: boolean | unknown[] | string | number;
 
       if (this.binary) {
         newValue = target.checked ? this.trueValue : this.falseValue;
@@ -204,7 +208,7 @@ export const CheckboxStub = defineComponent({
         if (target.checked) {
           newValue = [...this.modelValue, this.value];
         } else {
-          newValue = this.modelValue.filter((v: any) => v !== this.value);
+          newValue = this.modelValue.filter((v) => v !== this.value);
         }
       } else {
         newValue = target.checked;
@@ -310,7 +314,7 @@ export const MenubarStub = defineComponent({
   name: 'Menubar',
   props: {
     model: {
-      type: Array as PropType<any[]>,
+      type: Array as PropType<Record<string, unknown>[]>,
       default: () => [],
     },
   },
@@ -375,7 +379,7 @@ export const MenuStub = defineComponent({
   name: 'PrimeMenu',
   props: {
     model: {
-      type: Array as PropType<any[]>,
+      type: Array as PropType<Record<string, unknown>[]>,
       default: () => [],
     },
     popup: {
@@ -529,22 +533,24 @@ export const FileUploadStub = defineComponent({
  * Select dropdown component
  */
 export const SelectStub = defineComponent({
-  name: 'Select',
+  name: 'PrimeSelect',
   props: {
     modelValue: {
-      type: [String, Number, Boolean, Object, null] as PropType<any>,
+      type: [String, Number, Boolean, Object, null] as PropType<
+        string | number | boolean | Record<string, unknown> | null
+      >,
       default: null,
     },
     options: {
-      type: Array as PropType<any[]>,
+      type: Array as PropType<unknown[]>,
       default: () => [],
     },
     optionLabel: {
-      type: [String, Function] as PropType<string | ((option: any) => string)>,
+      type: [String, Function] as PropType<string | ((option: unknown) => string)>,
       default: undefined,
     },
     optionValue: {
-      type: [String, Function] as PropType<string | ((option: any) => any)>,
+      type: [String, Function] as PropType<string | ((option: unknown) => unknown)>,
       default: undefined,
     },
     placeholder: {
@@ -586,19 +592,19 @@ export const MultiSelectStub = defineComponent({
   name: 'MultiSelect',
   props: {
     modelValue: {
-      type: Array as PropType<any[]>,
+      type: Array as PropType<unknown[]>,
       default: () => [],
     },
     options: {
-      type: Array as PropType<any[]>,
+      type: Array as PropType<unknown[]>,
       default: () => [],
     },
     optionLabel: {
-      type: [String, Function] as PropType<string | ((option: any) => string)>,
+      type: [String, Function] as PropType<string | ((option: unknown) => string)>,
       default: undefined,
     },
     optionValue: {
-      type: [String, Function] as PropType<string | ((option: any) => any)>,
+      type: [String, Function] as PropType<string | ((option: unknown) => unknown)>,
       default: undefined,
     },
     placeholder: {
@@ -636,7 +642,7 @@ export const DataViewStub = defineComponent({
   name: 'DataView',
   props: {
     value: {
-      type: Array as PropType<any[]>,
+      type: Array as PropType<unknown[]>,
       default: () => [],
     },
     layout: {

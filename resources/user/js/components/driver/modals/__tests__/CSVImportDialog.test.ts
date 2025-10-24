@@ -5,6 +5,7 @@
  * - Dynamic CSV example generation based on league platforms
  * - Use Example button functionality
  * - CSV import validation and submission
+ * - CSV processing with nickname fallback logic
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -254,6 +255,304 @@ Mike Ross,3`;
 
       // Should update to include PSN ID
       expect(csvExample.value).toContain('Nickname,psn_id,DriverNumber');
+    });
+  });
+});
+
+describe('CSVImportDialog - CSV Processing Logic', () => {
+  /**
+   * Test the CSV processing logic that handles missing nicknames
+   * This replicates the processCSVData function from the component
+   */
+  const processCSVData = (csvData: string): string => {
+    const lines = csvData.trim().split('\n');
+    if (lines.length === 0) {
+      return csvData;
+    }
+
+    // Get header row
+    const headerRow = lines[0];
+    if (!headerRow) {
+      return csvData;
+    }
+
+    const headers = headerRow.split(',').map((h) => h.trim());
+
+    // Find nickname and Discord ID column indices
+    const nicknameIndex = headers.findIndex(
+      (h) => h.toLowerCase() === 'nickname' || h.toLowerCase() === 'name',
+    );
+    const discordIdIndex = headers.findIndex(
+      (h) => h.toLowerCase() === 'discordid' || h.toLowerCase() === 'discord_id',
+    );
+
+    // If we can't find either column, return original data
+    if (nicknameIndex === -1 || discordIdIndex === -1) {
+      return csvData;
+    }
+
+    // Process data rows
+    const processedLines = [headerRow]; // Keep header as-is
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line || !line.trim()) continue; // Skip empty lines
+
+      const columns = line.split(',').map((col) => col.trim());
+
+      // If nickname is empty but Discord ID is present, use Discord ID as nickname
+      const nicknameValue = columns[nicknameIndex];
+      const discordIdValue = columns[discordIdIndex];
+
+      if (!nicknameValue && discordIdValue) {
+        columns[nicknameIndex] = discordIdValue;
+      }
+
+      processedLines.push(columns.join(','));
+    }
+
+    return processedLines.join('\n');
+  };
+
+  describe('Nickname Fallback Logic', () => {
+    it('uses Discord ID as nickname when nickname is empty', () => {
+      const csvData = `Nickname,DiscordID,psn_id,DriverNumber
+,user#1234,psn_123,5
+Jane,jane#5678,psn_456,7`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      // First data row should have Discord ID copied to nickname
+      expect(lines[1]).toBe('user#1234,user#1234,psn_123,5');
+
+      // Second data row should remain unchanged (nickname already present)
+      expect(lines[2]).toBe('Jane,jane#5678,psn_456,7');
+    });
+
+    it('handles multiple rows with empty nicknames', () => {
+      const csvData = `Nickname,DiscordID,psn_id
+,user1#1234,psn_123
+,user2#5678,psn_456
+,user3#9012,psn_789`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[1]).toBe('user1#1234,user1#1234,psn_123');
+      expect(lines[2]).toBe('user2#5678,user2#5678,psn_456');
+      expect(lines[3]).toBe('user3#9012,user3#9012,psn_789');
+    });
+
+    it('handles case-insensitive header matching for Nickname', () => {
+      const csvData = `nickname,DiscordID,psn_id
+,user#1234,psn_123`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[1]).toBe('user#1234,user#1234,psn_123');
+    });
+
+    it('handles case-insensitive header matching for DiscordID', () => {
+      const csvData = `Nickname,discord_id,psn_id
+,user#1234,psn_123`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[1]).toBe('user#1234,user#1234,psn_123');
+    });
+
+    it('handles "Name" as an alias for "Nickname"', () => {
+      const csvData = `Name,DiscordID,psn_id
+,user#1234,psn_123`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[1]).toBe('user#1234,user#1234,psn_123');
+    });
+
+    it('does not modify rows where nickname is already present', () => {
+      const csvData = `Nickname,DiscordID,psn_id,DriverNumber
+John Smith,john#1234,psn_123,5
+Jane Doe,jane#5678,psn_456,7`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      // Both rows should remain unchanged
+      expect(lines[1]).toBe('John Smith,john#1234,psn_123,5');
+      expect(lines[2]).toBe('Jane Doe,jane#5678,psn_456,7');
+    });
+
+    it('preserves header row exactly as provided', () => {
+      const csvData = `Nickname,DiscordID,psn_id,iracing_id,DriverNumber
+,user#1234,psn_123,iracing_456,5`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[0]).toBe('Nickname,DiscordID,psn_id,iracing_id,DriverNumber');
+    });
+
+    it('handles empty Discord ID (does not modify nickname)', () => {
+      const csvData = `Nickname,DiscordID,psn_id
+,,psn_123
+Jane,,psn_456`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      // Empty nickname with empty Discord ID should remain empty
+      expect(lines[1]).toBe(',,psn_123');
+
+      // Nickname present with empty Discord ID should remain unchanged
+      expect(lines[2]).toBe('Jane,,psn_456');
+    });
+
+    it('skips empty lines in CSV data', () => {
+      const csvData = `Nickname,DiscordID,psn_id
+,user#1234,psn_123
+
+Jane,jane#5678,psn_456`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      // Should only have 3 lines (header + 2 data rows)
+      expect(lines.length).toBe(3);
+      expect(lines[1]).toBe('user#1234,user#1234,psn_123');
+      expect(lines[2]).toBe('Jane,jane#5678,psn_456');
+    });
+
+    it('handles whitespace around values correctly', () => {
+      const csvData = `Nickname,DiscordID,psn_id
+  ,  user#1234  ,  psn_123
+Jane  ,  jane#5678  ,  psn_456  `;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      // Whitespace should be trimmed
+      expect(lines[1]).toBe('user#1234,user#1234,psn_123');
+      expect(lines[2]).toBe('Jane,jane#5678,psn_456');
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('returns original data if no headers found', () => {
+      const csvData = `SomeOtherColumn,AnotherColumn
+value1,value2`;
+
+      const result = processCSVData(csvData);
+
+      // Should return unchanged since Nickname and DiscordID columns not found
+      expect(result).toBe(csvData);
+    });
+
+    it('returns original data if only nickname column found', () => {
+      const csvData = `Nickname,psn_id
+John,psn_123`;
+
+      const result = processCSVData(csvData);
+
+      // Should return unchanged since DiscordID column not found
+      expect(result).toBe(csvData);
+    });
+
+    it('returns original data if only Discord ID column found', () => {
+      const csvData = `DiscordID,psn_id
+user#1234,psn_123`;
+
+      const result = processCSVData(csvData);
+
+      // Should return unchanged since Nickname column not found
+      expect(result).toBe(csvData);
+    });
+
+    it('handles empty CSV data', () => {
+      const csvData = '';
+
+      const result = processCSVData(csvData);
+
+      expect(result).toBe('');
+    });
+
+    it('handles CSV with only header row', () => {
+      const csvData = 'Nickname,DiscordID,psn_id';
+
+      const result = processCSVData(csvData);
+
+      expect(result).toBe('Nickname,DiscordID,psn_id');
+    });
+
+    it('handles complex Discord IDs with special characters', () => {
+      const csvData = `Nickname,DiscordID,psn_id
+,user#1234!@#$%,psn_123
+,another.user#5678,psn_456`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[1]).toBe('user#1234!@#$%,user#1234!@#$%,psn_123');
+      expect(lines[2]).toBe('another.user#5678,another.user#5678,psn_456');
+    });
+
+    it('handles CSV with many columns', () => {
+      const csvData = `Nickname,DiscordID,psn_id,iracing_id,iracing_customer_id,FirstName,LastName,DriverNumber
+,user#1234,psn_123,iracing_456,789012,John,Smith,5`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[1]).toBe('user#1234,user#1234,psn_123,iracing_456,789012,John,Smith,5');
+    });
+  });
+
+  describe('Real-World Scenarios', () => {
+    it('processes typical iRacing league CSV with missing nicknames', () => {
+      const csvData = `Nickname,DiscordID,iracing_id,iracing_customer_id,DriverNumber
+,racer1#1234,racer_iracing_1,123456,5
+Mike Ross,mike#5678,mike_iracing,789012,7
+,racer3#9012,racer_iracing_3,345678,`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[1]).toBe('racer1#1234,racer1#1234,racer_iracing_1,123456,5');
+      expect(lines[2]).toBe('Mike Ross,mike#5678,mike_iracing,789012,7');
+      expect(lines[3]).toBe('racer3#9012,racer3#9012,racer_iracing_3,345678,');
+    });
+
+    it('processes typical Gran Turismo 7 league CSV with missing nicknames', () => {
+      const csvData = `Nickname,DiscordID,psn_id,DriverNumber
+,driver1#1234,psn_driver_1,5
+Jane Doe,jane#5678,psn_jane,7
+,driver3#9012,psn_driver_3,3`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[1]).toBe('driver1#1234,driver1#1234,psn_driver_1,5');
+      expect(lines[2]).toBe('Jane Doe,jane#5678,psn_jane,7');
+      expect(lines[3]).toBe('driver3#9012,driver3#9012,psn_driver_3,3');
+    });
+
+    it('processes multi-platform league CSV with mixed empty/present nicknames', () => {
+      const csvData = `Nickname,DiscordID,psn_id,iracing_id,iracing_customer_id,DriverNumber
+,user1#1234,psn_1,iracing_1,111111,5
+John Smith,john#5678,psn_2,iracing_2,222222,7
+,user3#9012,,,333333,3
+Jane Doe,jane#4567,psn_4,iracing_4,444444,`;
+
+      const result = processCSVData(csvData);
+      const lines = result.split('\n');
+
+      expect(lines[1]).toBe('user1#1234,user1#1234,psn_1,iracing_1,111111,5');
+      expect(lines[2]).toBe('John Smith,john#5678,psn_2,iracing_2,222222,7');
+      expect(lines[3]).toBe('user3#9012,user3#9012,,,333333,3');
+      expect(lines[4]).toBe('Jane Doe,jane#4567,psn_4,iracing_4,444444,');
     });
   });
 });

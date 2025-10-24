@@ -7,12 +7,19 @@ import FormLabel from '@user/components/common/forms/FormLabel.vue';
 import FormError from '@user/components/common/forms/FormError.vue';
 import FormHelper from '@user/components/common/forms/FormHelper.vue';
 
+interface Dimensions {
+  width: number;
+  height: number;
+}
+
 interface Props {
   modelValue: File | null;
   existingImageUrl?: string | null;
   label: string;
   accept?: string;
   maxFileSize?: number;
+  minDimensions?: Dimensions;
+  recommendedDimensions?: Dimensions;
   required?: boolean;
   error?: string;
   previewSize?: 'small' | 'medium' | 'large';
@@ -24,6 +31,8 @@ const props = withDefaults(defineProps<Props>(), {
   existingImageUrl: null,
   accept: 'image/*',
   maxFileSize: 2000000, // 2MB default
+  minDimensions: undefined,
+  recommendedDimensions: undefined,
   required: false,
   error: '',
   previewSize: 'small',
@@ -93,7 +102,7 @@ function clearPreview(): void {
   }
 }
 
-function onSelect(event: FileUploadSelectEvent): void {
+async function onSelect(event: FileUploadSelectEvent): Promise<void> {
   uploadError.value = '';
 
   const files = event.files;
@@ -116,7 +125,43 @@ function onSelect(event: FileUploadSelectEvent): void {
     return;
   }
 
+  // Validate dimensions if minDimensions specified
+  if (props.minDimensions) {
+    try {
+      const dimensions = await getImageDimensions(file);
+      if (
+        dimensions.width < props.minDimensions.width ||
+        dimensions.height < props.minDimensions.height
+      ) {
+        uploadError.value = `Image must be at least ${props.minDimensions.width}x${props.minDimensions.height}px`;
+        return;
+      }
+    } catch {
+      uploadError.value = 'Failed to validate image dimensions';
+      return;
+    }
+  }
+
   emit('update:modelValue', file);
+}
+
+function getImageDimensions(file: File): Promise<Dimensions> {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement('img');
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+
+    img.src = url;
+  });
 }
 
 function onClear(): void {

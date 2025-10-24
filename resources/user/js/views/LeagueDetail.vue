@@ -14,6 +14,7 @@ import DriverManagementDrawer from '@user/components/driver/DriverManagementDraw
 import ReadOnlyDriverTable from '@user/components/driver/ReadOnlyDriverTable.vue';
 import LeagueWizardDrawer from '@user/components/league/modals/LeagueWizardDrawer.vue';
 import CompetitionList from '@user/components/competition/CompetitionList.vue';
+import CompetitionFormDrawer from '@user/components/competition/CompetitionFormDrawer.vue';
 import type { League } from '@user/types/league';
 import type { Competition } from '@user/types/competition';
 import HTag from '@user/components/common/HTag.vue';
@@ -33,6 +34,7 @@ const isLoading = ref(true);
 const error = ref<string | null>(null);
 const showDriverDrawer = ref(false);
 const showEditDrawer = ref(false);
+const showCreateCompetitionDrawer = ref(false);
 
 const { formatDate } = useDateFormatter();
 
@@ -97,16 +99,14 @@ async function loadDrivers(): Promise<void> {
 }
 
 function handleCreateCompetitions(): void {
-  toast.add({
-    severity: 'info',
-    summary: 'Coming Soon',
-    detail: 'Create Competitions feature is coming soon',
-    life: 3000,
-  });
+  showCreateCompetitionDrawer.value = true;
 }
 
 function handleCompetitionCreated(competition: Competition): void {
-  // Competition created successfully - toast shown in CompetitionList
+  // Competition created successfully - toast shown by CompetitionFormDrawer
+  // Close the drawer
+  showCreateCompetitionDrawer.value = false;
+  // Emit to CompetitionList to refresh
   console.log('Competition created:', competition);
 }
 
@@ -555,6 +555,13 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
       :is-edit-mode="true"
       :league-id="leagueIdNumber"
       @league-saved="handleLeagueSaved"
+    />
+
+    <!-- Create Competition Drawer -->
+    <CompetitionFormDrawer
+      v-model:visible="showCreateCompetitionDrawer"
+      :league-id="leagueIdNumber"
+      @competition-saved="handleCompetitionCreated"
     />
   </div>
 </template>

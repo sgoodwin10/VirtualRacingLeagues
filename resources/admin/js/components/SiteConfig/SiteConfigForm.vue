@@ -79,8 +79,8 @@ const emit = defineEmits<Emits>();
 // State
 const activeTab = ref('0');
 
-// Combined form data for Identity & Settings tab
-const combinedFormData = ref<{
+// Form data types
+interface CombinedFormData {
   site_name: string;
   timezone: string;
   discord_link: string | null;
@@ -95,7 +95,16 @@ const combinedFormData = ref<{
   remove_logo: boolean;
   remove_favicon: boolean;
   remove_og_image: boolean;
-}>({
+}
+
+interface TrackingFormData {
+  google_analytics_id: string | null;
+  google_tag_manager_id: string | null;
+  google_search_console_code: string | null;
+}
+
+// Combined form data for Identity & Settings tab
+const combinedFormData = ref<CombinedFormData>({
   site_name: props.config?.site_name || '',
   timezone: props.config?.timezone || 'UTC',
   discord_link: props.config?.discord_link || null,
@@ -112,7 +121,7 @@ const combinedFormData = ref<{
   remove_og_image: false,
 });
 
-const trackingFormData = ref({
+const trackingFormData = ref<TrackingFormData>({
   google_tag_manager_id: props.config?.google_tag_manager_id || null,
   google_analytics_id: props.config?.google_analytics_id || null,
   google_search_console_code: props.config?.google_search_console_code || null,
@@ -161,14 +170,14 @@ const isFormValid = computed(() => {
 /**
  * Update combined data
  */
-const updateCombinedData = (data: any): void => {
+const updateCombinedData = (data: Partial<CombinedFormData>): void => {
   combinedFormData.value = { ...combinedFormData.value, ...data };
 };
 
 /**
  * Update tracking data
  */
-const updateTrackingData = (data: any): void => {
+const updateTrackingData = (data: Partial<TrackingFormData>): void => {
   trackingFormData.value = { ...trackingFormData.value, ...data };
 };
 
