@@ -6,9 +6,11 @@ import { useRoute } from 'vue-router';
 import { useSeasonDriverStore } from '@user/stores/seasonDriverStore';
 import { useDriverStore } from '@user/stores/driverStore';
 import { useTeamStore } from '@user/stores/teamStore';
+import { useDivisionStore } from '@user/stores/divisionStore';
 import type { SeasonDriver } from '@user/types/seasonDriver';
 import type { LeagueDriver } from '@user/types/driver';
 import type { Team } from '@user/types/team';
+import type { Division } from '@user/types/division';
 import { usesPsnId, usesIracingId } from '@user/constants/platforms';
 
 import DataTable from 'primevue/datatable';
@@ -24,6 +26,8 @@ interface Props {
   showNumberColumn?: boolean;
   teamChampionshipEnabled?: boolean;
   teams?: Team[];
+  raceDivisionsEnabled?: boolean;
+  divisions?: Division[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -32,6 +36,8 @@ const props = withDefaults(defineProps<Props>(), {
   showNumberColumn: true,
   teamChampionshipEnabled: false,
   teams: () => [],
+  raceDivisionsEnabled: false,
+  divisions: () => [],
 });
 
 interface Emits {
@@ -46,6 +52,7 @@ const toast = useToast();
 const seasonDriverStore = useSeasonDriverStore();
 const driverStore = useDriverStore();
 const teamStore = useTeamStore();
+const divisionStore = useDivisionStore();
 
 // Modal state
 const showViewDriverModal = ref(false);
@@ -53,6 +60,7 @@ const selectedDriver = ref<LeagueDriver | null>(null);
 const loadingDriver = ref(false);
 
 const updatingTeam = ref<{ [key: number]: boolean }>({});
+const updatingDivision = ref<{ [key: number]: boolean }>({});
 
 const drivers = computed(() => seasonDriverStore.seasonDrivers);
 
@@ -253,6 +261,75 @@ async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null):
     updatingTeam.value[driver.id] = false;
   }
 }
+
+// Division selection options
+interface DivisionOption {
+  label: string;
+  value: number | null;
+  logo_url?: string | null;
+}
+
+const divisionOptions = computed((): DivisionOption[] => {
+  const options: DivisionOption[] = [
+    {
+      label: 'No Division',
+      value: null,
+    },
+  ];
+
+  props.divisions.forEach((division) => {
+    options.push({
+      label: division.name,
+      value: division.id,
+      logo_url: division.logo_url,
+    });
+  });
+
+  return options;
+});
+
+function getDriverDivisionId(driver: SeasonDriver): number | null {
+  // Find the division by name (backend returns division_name string)
+  const division = props.divisions.find((d) => d.name === driver.division_name);
+  return division?.id || null;
+}
+
+async function handleDivisionChange(
+  driver: SeasonDriver,
+  newDivisionId: number | null,
+): Promise<void> {
+  updatingDivision.value[driver.id] = true;
+
+  try {
+    await divisionStore.assignDriverDivision(props.seasonId, driver.id, {
+      division_id: newDivisionId,
+    });
+
+    // Refresh drivers to get updated division assignment
+    await seasonDriverStore.fetchSeasonDrivers(props.seasonId);
+
+    const divisionName = newDivisionId
+      ? props.divisions.find((d) => d.id === newDivisionId)?.name || 'division'
+      : 'No Division';
+
+    toast.add({
+      severity: 'success',
+      summary: 'Division Updated',
+      detail: `Driver assigned to ${divisionName}`,
+      life: 3000,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update division';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  } finally {
+    updatingDivision.value[driver.id] = false;
+  }
+}
 </script>
 
 <template>
@@ -313,6 +390,51 @@ async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null):
       <Column v-if="showNumberColumn" field="driver_number" header="#" class="text-center">
         <template #body="{ data }">
           <span class="text-sm text-gray-600">{{ data.driver_number || '-' }}</span>
+        </template>
+      </Column>
+
+      <Column v-if="raceDivisionsEnabled" field="division_name" header="Division">
+        <template #body="{ data }">
+          <Select
+            :model-value="getDriverDivisionId(data)"
+            :options="divisionOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Select division"
+            :loading="updatingDivision[data.id]"
+            :disabled="updatingDivision[data.id]"
+            class="w-full min-w-[150px]"
+            @change="(event) => handleDivisionChange(data, event.value)"
+          >
+            <template #value="slotProps">
+              <div
+                v-if="slotProps.value !== null && slotProps.value !== undefined"
+                class="flex items-center gap-2"
+              >
+                <img
+                  v-if="divisionOptions.find((opt) => opt.value === slotProps.value)?.logo_url"
+                  :src="divisionOptions.find((opt) => opt.value === slotProps.value)!.logo_url!"
+                  :alt="divisionOptions.find((opt) => opt.value === slotProps.value)?.label"
+                  class="w-5 h-5 rounded object-cover"
+                />
+                <span>{{
+                  divisionOptions.find((opt) => opt.value === slotProps.value)?.label
+                }}</span>
+              </div>
+              <span v-else>No Division</span>
+            </template>
+            <template #option="slotProps">
+              <div class="flex items-center gap-2">
+                <img
+                  v-if="slotProps.option.logo_url"
+                  :src="slotProps.option.logo_url"
+                  :alt="slotProps.option.label"
+                  class="w-5 h-5 rounded object-cover"
+                />
+                <span>{{ slotProps.option.label }}</span>
+              </div>
+            </template>
+          </Select>
         </template>
       </Column>
 

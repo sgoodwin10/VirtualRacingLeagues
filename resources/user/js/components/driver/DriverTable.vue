@@ -3,7 +3,6 @@ import { onMounted, computed } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
-import DriverStatusBadge from './DriverStatusBadge.vue';
 import { useLeagueStore } from '@user/stores/leagueStore';
 import { useDriverStore } from '@user/stores/driverStore';
 import type { LeagueDriver } from '@user/types/driver';

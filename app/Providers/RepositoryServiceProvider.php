@@ -6,8 +6,10 @@ namespace App\Providers;
 
 use App\Domain\Admin\Repositories\AdminRepositoryInterface;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
+use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
+use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
@@ -15,8 +17,10 @@ use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Repositories\AdminReadModelService;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentAdminRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetitionRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDivisionRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDriverRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentLeagueRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRaceRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonDriverRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentTeamRepository;
@@ -79,6 +83,24 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             TeamRepositoryInterface::class,
             EloquentTeamRepository::class
+        );
+
+        // Bind Division Repository
+        $this->app->bind(
+            DivisionRepositoryInterface::class,
+            EloquentDivisionRepository::class
+        );
+
+        // Bind Round Repository
+        $this->app->bind(
+            \App\Domain\Competition\Repositories\RoundRepositoryInterface::class,
+            \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoundRepository::class
+        );
+
+        // Bind Race Repository
+        $this->app->bind(
+            RaceRepositoryInterface::class,
+            EloquentRaceRepository::class
         );
 
         // Bind Admin Read Model Service (singleton for better performance)

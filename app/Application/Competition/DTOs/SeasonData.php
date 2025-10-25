@@ -83,6 +83,8 @@ class SeasonData extends Data
                 active_drivers: $aggregates['active_drivers'] ?? 0,
                 total_races: $aggregates['total_races'] ?? 0,
                 completed_races: $aggregates['completed_races'] ?? 0,
+                total_divisions: $aggregates['total_divisions'] ?? 0,
+                total_teams: $aggregates['total_teams'] ?? 0,
             ),
         );
     }

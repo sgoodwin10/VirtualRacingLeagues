@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use Database\Factories\PlatformFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -36,6 +38,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Platform extends Model
 {
+    use HasFactory;
+
     /**
      * @var array<string>
      */
@@ -76,6 +80,16 @@ class Platform extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     *
+     * @return PlatformFactory
+     */
+    protected static function newFactory(): PlatformFactory
+    {
+        return PlatformFactory::new();
     }
 
     /**

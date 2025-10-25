@@ -1,22 +1,39 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import { PhUsers, PhFlagCheckered } from '@phosphor-icons/vue';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Chip from 'primevue/chip';
 import Skeleton from 'primevue/skeleton';
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import InputText from 'primevue/inputtext';
+import Select from 'primevue/select';
+import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
 import { getLeagueById } from '@user/services/leagueService';
 import { useImageUrl } from '@user/composables/useImageUrl';
 import { useDateFormatter } from '@user/composables/useDateFormatter';
+import { useDriverStore } from '@user/stores/driverStore';
 import DriverManagementDrawer from '@user/components/driver/DriverManagementDrawer.vue';
-import ReadOnlyDriverTable from '@user/components/driver/ReadOnlyDriverTable.vue';
+import DriverTable from '@user/components/driver/DriverTable.vue';
+import DriverFormDialog from '@user/components/driver/modals/DriverFormDialog.vue';
+import ViewDriverModal from '@user/components/driver/ViewDriverModal.vue';
+import CSVImportDialog from '@user/components/driver/modals/CSVImportDialog.vue';
 import LeagueWizardDrawer from '@user/components/league/modals/LeagueWizardDrawer.vue';
 import CompetitionList from '@user/components/competition/CompetitionList.vue';
 import CompetitionFormDrawer from '@user/components/competition/CompetitionFormDrawer.vue';
 import type { League } from '@user/types/league';
 import type { Competition } from '@user/types/competition';
+import type { LeagueDriver, CreateDriverRequest } from '@user/types/driver';
 import HTag from '@user/components/common/HTag.vue';
 import Tag from 'primevue/tag';
 import BasePanel from '@user/components/common/panels/BasePanel.vue';
@@ -26,13 +43,32 @@ import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadc
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const confirm = useConfirm();
+const driverStore = useDriverStore();
 
 const league = ref<League | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
+const activeTab = ref('competitions');
 const showDriverDrawer = ref(false);
 const showEditDrawer = ref(false);
 const showCreateCompetitionDrawer = ref(false);
+
+// Driver dialog states
+const showDriverForm = ref(false);
+const showViewModal = ref(false);
+const showCSVImport = ref(false);
+const formMode = ref<'create' | 'edit'>('create');
+const selectedDriver = ref<LeagueDriver | null>(null);
+
+// Search and filter
+const searchInput = ref('');
+const statusFilterOptions = [
+  { label: 'All Drivers', value: 'all' },
+  { label: 'Active Only', value: 'active' },
+  { label: 'Inactive Only', value: 'inactive' },
+  { label: 'Banned Only', value: 'banned' },
+];
 
 const { formatDate } = useDateFormatter();
 
@@ -47,9 +83,49 @@ const logo = computed(() =>
 
 const headerImage = computed(() => useImageUrl(() => league.value?.header_image_url));
 
+// Watch for active tab changes
+watch(activeTab, async (newTab) => {
+  if (newTab === 'drivers') {
+    await loadDrivers();
+  }
+});
+
+// Watch for search input changes (debounced)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+watch(searchInput, (newValue) => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+  searchTimeout = setTimeout(() => {
+    driverStore.setSearchQuery(newValue);
+    if (activeTab.value === 'drivers') {
+      loadDrivers();
+    }
+  }, 300);
+});
+
+// Watch for status filter changes
+watch(
+  () => driverStore.statusFilter,
+  () => {
+    if (activeTab.value === 'drivers') {
+      loadDrivers();
+    }
+  },
+);
+
+// Watch for page changes
+watch(
+  () => driverStore.currentPage,
+  () => {
+    if (activeTab.value === 'drivers') {
+      loadDrivers();
+    }
+  },
+);
+
 onMounted(async () => {
   await loadLeague();
-  // Note: drivers are now loaded by ReadOnlyDriverTable component itself
 });
 
 async function loadLeague(): Promise<void> {
@@ -78,7 +154,21 @@ async function loadLeague(): Promise<void> {
   }
 }
 
-// Note: loadDrivers function removed - drivers are now loaded by ReadOnlyDriverTable component
+/**
+ * Load drivers for the league
+ */
+async function loadDrivers(): Promise<void> {
+  try {
+    await driverStore.fetchLeagueDrivers(leagueIdNumber.value);
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load drivers',
+      life: 3000,
+    });
+  }
+}
 
 function handleCreateCompetitions(): void {
   showCreateCompetitionDrawer.value = true;
@@ -113,13 +203,154 @@ function handleLeagueSaved(): void {
   loadLeague();
 }
 
-function handleDriverUpdated(): void {
-  toast.add({
-    severity: 'success',
-    summary: 'Success',
-    detail: 'Driver updated successfully',
-    life: 3000,
+/**
+ * Handle add driver button click
+ */
+function handleAddDriver(): void {
+  formMode.value = 'create';
+  selectedDriver.value = null;
+  showDriverForm.value = true;
+}
+
+/**
+ * Handle view driver button click
+ */
+function handleViewDriver(driver: LeagueDriver): void {
+  selectedDriver.value = driver;
+  showViewModal.value = true;
+}
+
+/**
+ * Handle edit driver button click
+ */
+function handleEditDriver(driver: LeagueDriver): void {
+  formMode.value = 'edit';
+  selectedDriver.value = driver;
+  showDriverForm.value = true;
+}
+
+/**
+ * Handle edit from view modal
+ */
+function handleEditFromView(): void {
+  showViewModal.value = false;
+  if (selectedDriver.value) {
+    handleEditDriver(selectedDriver.value);
+  }
+}
+
+/**
+ * Handle driver form save
+ */
+async function handleSaveDriver(data: CreateDriverRequest): Promise<void> {
+  try {
+    if (formMode.value === 'create') {
+      await driverStore.createNewDriver(leagueIdNumber.value, data);
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Driver added successfully',
+        life: 3000,
+      });
+    } else if (selectedDriver.value) {
+      // In edit mode, update both driver fields and league-specific settings
+      // Use driver_id (the actual driver ID), not id (the league_driver pivot ID)
+      await driverStore.updateDriver(leagueIdNumber.value, selectedDriver.value.driver_id, data);
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Driver updated successfully',
+        life: 3000,
+      });
+    }
+    showDriverForm.value = false;
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error instanceof Error ? error.message : 'Failed to save driver',
+      life: 5000,
+    });
+  }
+}
+
+/**
+ * Handle remove driver button click
+ */
+function handleRemoveDriver(driver: LeagueDriver): void {
+  confirm.require({
+    message: `Are you sure you want to remove ${getDriverName(driver)} from this league?`,
+    header: 'Confirm Removal',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Remove',
+    rejectLabel: 'Cancel',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        // Use driver_id (the actual driver ID), not id (the league_driver pivot ID)
+        await driverStore.removeDriver(leagueIdNumber.value, driver.driver_id);
+        toast.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Driver removed from league',
+          life: 3000,
+        });
+      } catch {
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to remove driver',
+          life: 3000,
+        });
+      }
+    },
   });
+}
+
+/**
+ * Handle import CSV button click
+ */
+function handleImportCSV(): void {
+  showCSVImport.value = true;
+}
+
+/**
+ * Handle CSV import
+ */
+async function handleCSVImport(csvData: string) {
+  const result = await driverStore.importCSV(leagueIdNumber.value, csvData);
+
+  if (result.errors.length === 0) {
+    const message =
+      result.success_count === 1
+        ? 'Successfully imported 1 driver'
+        : `Successfully imported ${result.success_count} drivers`;
+
+    toast.add({
+      severity: 'success',
+      summary: 'Import Successful',
+      detail: message,
+      life: 3000,
+    });
+  } else if (result.success_count > 0) {
+    const message = `Imported ${result.success_count} driver${result.success_count === 1 ? '' : 's'} with ${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`;
+
+    toast.add({
+      severity: 'warn',
+      summary: 'Partial Import',
+      detail: message,
+      life: 5000,
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Get driver's display name
+ */
+function getDriverName(leagueDriver: LeagueDriver): string {
+  return leagueDriver.driver?.display_name || 'Unknown';
 }
 
 const breadcrumbItems = computed((): BreadcrumbItem[] => [
@@ -478,43 +709,112 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
       </Card>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
-      <BasePanel class="md:col-span-3" header="Competitions">
-        <template #header>
-          <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
-            <PhFlagCheckered size="24" />
-            <span class="font-semibold">Competitions</span>
+    <!-- Tabs -->
+    <Tabs v-model:value="activeTab" class="mt-6">
+      <TabList>
+        <Tab value="competitions">
+          <div class="flex items-center gap-2">
+            <PhFlagCheckered :size="20" />
+            <span>Competitions</span>
           </div>
-        </template>
-        <template #icons>
-          <Button
-            size="small"
-            icon="pi pi-plus"
-            class="whitespace-nowrap"
-            label="New Competition"
-            severity="secondary"
-            outlined
-            @click="handleCreateCompetitions"
-          />
-        </template>
-        <CompetitionList
-          :league-id="leagueIdNumber"
-          @competition-created="handleCompetitionCreated"
-          @competition-updated="handleCompetitionUpdated"
-          @competition-deleted="handleCompetitionDeleted"
-        />
-      </BasePanel>
+        </Tab>
+        <Tab value="drivers">
+          <div class="flex items-center gap-2">
+            <PhUsers :size="20" />
+            <span>Drivers</span>
+          </div>
+        </Tab>
+      </TabList>
 
-      <BasePanel class="md:col-span-2">
-        <template #header>
-          <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
-            <PhUsers size="24" />
-            <span class="font-semibold">Drivers</span>
-          </div>
-        </template>
-        <ReadOnlyDriverTable :league-id="leagueIdNumber" @driver-updated="handleDriverUpdated" />
-      </BasePanel>
-    </div>
+      <TabPanels>
+        <!-- Competitions Tab -->
+        <TabPanel value="competitions">
+          <BasePanel>
+            <template #header>
+              <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
+                <PhFlagCheckered size="24" />
+                <span class="font-semibold">Competitions</span>
+              </div>
+            </template>
+            <template #icons>
+              <Button
+                size="small"
+                icon="pi pi-plus"
+                class="whitespace-nowrap"
+                label="New Competition"
+                severity="secondary"
+                outlined
+                @click="handleCreateCompetitions"
+              />
+            </template>
+            <CompetitionList
+              :league-id="leagueIdNumber"
+              @competition-created="handleCompetitionCreated"
+              @competition-updated="handleCompetitionUpdated"
+              @competition-deleted="handleCompetitionDeleted"
+            />
+          </BasePanel>
+        </TabPanel>
+
+        <!-- Drivers Tab -->
+        <TabPanel value="drivers">
+          <BasePanel>
+            <template #header>
+              <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
+                <PhUsers size="24" />
+                <span class="font-semibold">League Drivers</span>
+              </div>
+            </template>
+
+            <div class="space-y-4">
+              <!-- Toolbar -->
+              <div class="flex flex-wrap gap-4 items-center justify-between">
+                <!-- Search and Filter -->
+                <div class="flex gap-2 flex-1">
+                  <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText
+                      v-model="searchInput"
+                      placeholder="Search drivers..."
+                      class="w-full"
+                    />
+                  </IconField>
+                  <Select
+                    v-model="driverStore.statusFilter"
+                    :options="statusFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    placeholder="Filter by status"
+                    class="w-48"
+                  />
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-2">
+                  <Button
+                    label="Import CSV"
+                    icon="pi pi-upload"
+                    severity="secondary"
+                    @click="handleImportCSV"
+                  />
+                  <Button label="Add Driver" icon="pi pi-plus" @click="handleAddDriver" />
+                </div>
+              </div>
+
+              <!-- Driver Table -->
+              <div class="overflow-auto">
+                <DriverTable
+                  :league-id="leagueIdNumber"
+                  @view="handleViewDriver"
+                  @edit="handleEditDriver"
+                  @remove="handleRemoveDriver"
+                />
+              </div>
+            </div>
+          </BasePanel>
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
 
     <!-- Driver Management Drawer -->
     <DriverManagementDrawer
@@ -540,5 +840,38 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
       :league-id="leagueIdNumber"
       @competition-saved="handleCompetitionCreated"
     />
+
+    <!-- View Driver Modal -->
+    <ViewDriverModal
+      v-model:visible="showViewModal"
+      :driver="selectedDriver"
+      @close="showViewModal = false"
+      @edit="handleEditFromView"
+    />
+
+    <!-- Driver Form Dialog -->
+    <DriverFormDialog
+      v-if="league"
+      v-model:visible="showDriverForm"
+      :mode="formMode"
+      :driver="selectedDriver"
+      :league-id="leagueIdNumber"
+      @save="handleSaveDriver"
+      @cancel="showDriverForm = false"
+    />
+
+    <!-- CSV Import Dialog -->
+    <CSVImportDialog
+      v-model:visible="showCSVImport"
+      :league-id="leagueIdNumber"
+      :on-import="handleCSVImport"
+      @close="showCSVImport = false"
+    />
+
+    <!-- Toast for notifications -->
+    <Toast />
+
+    <!-- Confirm Dialog -->
+    <ConfirmDialog />
   </div>
 </template>

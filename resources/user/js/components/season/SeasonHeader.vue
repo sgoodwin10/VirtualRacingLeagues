@@ -81,11 +81,7 @@ const statusLabel = computed(() => {
               label="Team Championship"
               icon="pi pi-users"
             />
-            <Chip
-              v-if="season.race_divisions_enabled"
-              label="Race Divisions"
-              icon="pi pi-trophy"
-            />
+            <Chip v-if="season.race_divisions_enabled" label="Race Divisions" icon="pi pi-trophy" />
           </div>
 
           <!-- Description -->
@@ -110,6 +106,10 @@ const statusLabel = computed(() => {
               <p class="text-xl font-bold">
                 {{ season.stats.completed_rounds ?? season.stats.completed_races ?? 0 }}
               </p>
+            </div>
+            <div v-if="season.race_divisions_enabled">
+              <span class="text-sm text-gray-500">Divisions</span>
+              <p class="text-xl font-bold">{{ season.stats.total_divisions ?? 0 }}</p>
             </div>
             <div v-if="season.team_championship_enabled">
               <span class="text-sm text-gray-500">Teams</span>

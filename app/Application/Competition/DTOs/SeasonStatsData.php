@@ -16,6 +16,8 @@ class SeasonStatsData extends Data
         public int $active_drivers,
         public int $total_races,
         public int $completed_races,
+        public int $total_divisions,
+        public int $total_teams,
     ) {
     }
 }

@@ -25,6 +25,7 @@ class SeasonDriverData extends Data
         public ?string $iracing_id,
         public ?string $discord_id,
         public ?string $team_name,
+        public ?string $division_name,
         public string $status,
         public bool $is_active,
         public bool $is_reserve,
@@ -47,7 +48,8 @@ class SeasonDriverData extends Data
      *     psn_id: string|null,
      *     iracing_id: string|null,
      *     discord_id: string|null,
-     *     team_name: string|null
+     *     team_name: string|null,
+     *     division_name: string|null
      * } $driverData
      */
     public static function fromEntity(
@@ -68,6 +70,7 @@ class SeasonDriverData extends Data
             iracing_id: $driverData['iracing_id'] ?? null,
             discord_id: $driverData['discord_id'] ?? null,
             team_name: $driverData['team_name'] ?? null,
+            division_name: $driverData['division_name'] ?? null,
             status: $seasonDriver->status()->value,
             is_active: $seasonDriver->isActive(),
             is_reserve: $seasonDriver->isReserve(),

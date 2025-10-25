@@ -105,6 +105,15 @@ interface SeasonDriverRepositoryInterface
     public function updateTeamId(int $seasonDriverId, ?int $teamId): void;
 
     /**
+     * Update the division_id for a season driver.
+     * Used when assigning/unassigning drivers to divisions.
+     *
+     * @param int $seasonDriverId
+     * @param int|null $divisionId Null to remove division assignment
+     */
+    public function updateDivisionId(int $seasonDriverId, ?int $divisionId): void;
+
+    /**
      * Find season driver by ID with all relationships loaded.
      * Used after team assignment to return complete driver data.
      *

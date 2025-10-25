@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use Database\Factories\PlatformTrackFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -44,6 +46,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class PlatformTrack extends Model
 {
+    use HasFactory;
+
     /**
      * @var array<string>
      */
@@ -70,6 +74,16 @@ class PlatformTrack extends Model
         'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    /**
+     * Create a new factory instance for the model.
+     *
+     * @return PlatformTrackFactory
+     */
+    protected static function newFactory(): PlatformTrackFactory
+    {
+        return PlatformTrackFactory::new();
+    }
 
     /**
      * Get the platform that owns the track.

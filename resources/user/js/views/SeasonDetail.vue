@@ -5,8 +5,10 @@ import { useToast } from 'primevue/usetoast';
 import { useSeasonStore } from '@user/stores/seasonStore';
 import { useSeasonDriverStore } from '@user/stores/seasonDriverStore';
 import { useTeamStore } from '@user/stores/teamStore';
+import { useDivisionStore } from '@user/stores/divisionStore';
 import type { Season } from '@user/types/season';
 import type { SeasonDriver } from '@user/types/seasonDriver';
+import { PhGauge, PhCalendar, PhUsers, PhFlagCheckered, PhGear } from '@phosphor-icons/vue';
 
 import Button from 'primevue/button';
 import Skeleton from 'primevue/skeleton';
@@ -24,6 +26,8 @@ import SeasonDriversTable from '@user/components/season/SeasonDriversTable.vue';
 import SeasonDriverManagementDrawer from '@user/components/season/modals/SeasonDriverManagementDrawer.vue';
 import SeasonDriverFormDialog from '@user/components/season/modals/SeasonDriverFormDialog.vue';
 import TeamsPanel from '@user/components/season/teams/TeamsPanel.vue';
+import DivisionsPanel from '@user/components/season/divisions/DivisionsPanel.vue';
+import RoundsPanel from '@user/components/round/RoundsPanel.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadcrumbs.vue';
 import BasePanel from '@user/components/common/panels/BasePanel.vue';
 
@@ -33,6 +37,7 @@ const toast = useToast();
 const seasonStore = useSeasonStore();
 const seasonDriverStore = useSeasonDriverStore();
 const teamStore = useTeamStore();
+const divisionStore = useDivisionStore();
 
 const season = ref<Season | null>(null);
 const isLoading = ref(true);
@@ -49,16 +54,22 @@ const seasonId = computed(() => parseInt(route.params.seasonId as string, 10));
 
 const stats = computed(() => seasonDriverStore.stats);
 const teams = computed(() => teamStore.teams);
+const divisions = computed(() => divisionStore.divisions);
 
 onMounted(async () => {
   await loadSeason();
   await loadDrivers();
 });
 
-// Watch active tab and load teams when Drivers tab becomes active
+// Watch active tab and load teams/divisions when Drivers tab becomes active
 watch(activeTab, async (newTab) => {
-  if (newTab === 'drivers' && season.value?.team_championship_enabled) {
-    await loadTeams();
+  if (newTab === 'drivers') {
+    if (season.value?.team_championship_enabled) {
+      await loadTeams();
+    }
+    if (season.value?.race_divisions_enabled) {
+      await loadDivisions();
+    }
   }
 });
 
@@ -105,6 +116,14 @@ async function loadTeams(): Promise<void> {
     await teamStore.fetchTeams(seasonId.value);
   } catch (error) {
     console.error('Failed to load teams:', error);
+  }
+}
+
+async function loadDivisions(): Promise<void> {
+  try {
+    await divisionStore.fetchDivisions(seasonId.value);
+  } catch (error) {
+    console.error('Failed to load divisions:', error);
   }
 }
 
@@ -259,9 +278,36 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
       <!-- Tabs -->
       <Tabs v-model:value="activeTab">
         <TabList>
-          <Tab value="overview">Overview</Tab>
-          <Tab value="drivers">Drivers & Teams</Tab>
-          <Tab value="settings">Settings</Tab>
+          <Tab value="overview">
+            <div class="flex items-center gap-2">
+              <PhGauge :size="20" />
+              <span>Overview</span>
+            </div>
+          </Tab>
+          <Tab value="rounds">
+            <div class="flex items-center gap-2">
+              <PhCalendar :size="20" />
+              <span>Rounds</span>
+            </div>
+          </Tab>
+          <Tab value="drivers">
+            <div class="flex items-center gap-2">
+              <PhUsers :size="20" />
+              <span>Drivers</span>
+            </div>
+          </Tab>
+          <Tab value="divisions-teams">
+            <div class="flex items-center gap-2">
+              <PhFlagCheckered :size="20" />
+              <span>Divisions & Teams</span>
+            </div>
+          </Tab>
+          <Tab value="settings">
+            <div class="flex items-center gap-2">
+              <PhGear :size="20" />
+              <span>Settings</span>
+            </div>
+          </Tab>
         </TabList>
 
         <TabPanels>
@@ -336,6 +382,26 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
             </div>
           </TabPanel>
 
+          <!-- Divisions & Teams Tab -->
+          <TabPanel value="divisions-teams">
+            <div class="space-y-6">
+              <!-- Divisions & Teams Panel (25% - 1 column) -->
+              <div class="lg:col-span-1 space-y-6">
+                <!-- Divisions Panel -->
+                <DivisionsPanel
+                  :season-id="seasonId"
+                  :race-divisions-enabled="season.race_divisions_enabled"
+                />
+
+                <!-- Teams Panel -->
+                <TeamsPanel
+                  :season-id="seasonId"
+                  :team-championship-enabled="season.team_championship_enabled"
+                />
+              </div>
+            </div>
+          </TabPanel>
+
           <!-- Drivers Tab -->
           <TabPanel value="drivers">
             <div class="space-y-6">
@@ -350,7 +416,7 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                 />
               </div>
 
-              <!-- 75/25 Layout: Drivers Table + Teams Panel -->
+              <!-- 75/25 Layout: Drivers Table + Divisions/Teams Panel -->
               <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <!-- Drivers Table (75% - 3 columns) -->
                 <div class="lg:col-span-3">
@@ -360,15 +426,9 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                     :loading="seasonDriverStore.loading"
                     :team-championship-enabled="season.team_championship_enabled"
                     :teams="teams"
+                    :race-divisions-enabled="season.race_divisions_enabled"
+                    :divisions="divisions"
                     @view="handleEditDriver"
-                  />
-                </div>
-
-                <!-- Teams Panel (25% - 1 column) -->
-                <div class="lg:col-span-1">
-                  <TeamsPanel
-                    :season-id="seasonId"
-                    :team-championship-enabled="season.team_championship_enabled"
                   />
                 </div>
               </div>
@@ -382,6 +442,15 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
               @updated="loadSeason"
               @archived="handleArchived"
               @deleted="handleDeleted"
+            />
+          </TabPanel>
+
+          <!-- Rounds Tab -->
+          <TabPanel value="rounds">
+            <RoundsPanel
+              v-if="season && season.competition?.platform_id"
+              :season-id="seasonId"
+              :platform-id="season.competition.platform_id"
             />
           </TabPanel>
         </TabPanels>

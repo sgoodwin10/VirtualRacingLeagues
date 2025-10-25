@@ -51,6 +51,7 @@ export interface SeasonDriver {
   iracing_id: string | null;
   discord_id: string | null;
   team_name: string | null;
+  division_name: string | null;
 
   // Season-specific metadata
   status: SeasonDriverStatus;

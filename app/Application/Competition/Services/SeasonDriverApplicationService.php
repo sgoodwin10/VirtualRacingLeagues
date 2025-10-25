@@ -194,10 +194,10 @@ final class SeasonDriverApplicationService
             ->get()
             ->keyBy('id');
 
-        // Eager load SeasonDriverEloquent models to get team information
+        // Eager load SeasonDriverEloquent models to get team and division information
         $seasonDriverIds = array_map(fn(SeasonDriver $sd) => $sd->id(), $seasonDrivers);
         /** @var \Illuminate\Support\Collection<int, SeasonDriverEloquent> $seasonDriverModels */
-        $seasonDriverModels = SeasonDriverEloquent::with('team')
+        $seasonDriverModels = SeasonDriverEloquent::with(['team', 'division'])
             ->whereIn('id', $seasonDriverIds)
             ->get()
             ->keyBy('id');
@@ -260,10 +260,10 @@ final class SeasonDriverApplicationService
             ->get()
             ->keyBy('id');
 
-        // Eager load SeasonDriverEloquent models to get team information
+        // Eager load SeasonDriverEloquent models to get team and division information
         $seasonDriverIds = array_map(fn(SeasonDriver $sd) => $sd->id(), $result['data']);
         /** @var \Illuminate\Support\Collection<int, SeasonDriverEloquent> $seasonDriverModels */
-        $seasonDriverModels = SeasonDriverEloquent::with('team')
+        $seasonDriverModels = SeasonDriverEloquent::with(['team', 'division'])
             ->whereIn('id', $seasonDriverIds)
             ->get()
             ->keyBy('id');
@@ -504,20 +504,31 @@ final class SeasonDriverApplicationService
             throw new \RuntimeException("League driver not found");
         }
 
-        // Get team name from season driver's team relationship if assigned
+        // Get team name and division name from season driver's relationships if assigned
         $teamName = null;
+        $divisionName = null;
 
         if ($seasonDriverModels !== null && $seasonDriver->id() !== null) {
             $seasonDriverModel = $seasonDriverModels->get($seasonDriver->id());
-            if ($seasonDriverModel && $seasonDriverModel->team) {
-                $teamName = $seasonDriverModel->team->name;
+            if ($seasonDriverModel) {
+                if ($seasonDriverModel->team) {
+                    $teamName = $seasonDriverModel->team->name;
+                }
+                if ($seasonDriverModel->division) {
+                    $divisionName = $seasonDriverModel->division->name;
+                }
             }
         } elseif ($seasonDriver->id() !== null) {
-            // Fallback: fetch the season driver model to get team info
-            $seasonDriverModel = SeasonDriverEloquent::with('team')
+            // Fallback: fetch the season driver model to get team and division info
+            $seasonDriverModel = SeasonDriverEloquent::with(['team', 'division'])
                 ->find($seasonDriver->id());
-            if ($seasonDriverModel && $seasonDriverModel->team) {
-                $teamName = $seasonDriverModel->team->name;
+            if ($seasonDriverModel) {
+                if ($seasonDriverModel->team) {
+                    $teamName = $seasonDriverModel->team->name;
+                }
+                if ($seasonDriverModel->division) {
+                    $divisionName = $seasonDriverModel->division->name;
+                }
             }
         }
 
@@ -534,6 +545,7 @@ final class SeasonDriverApplicationService
                 'iracing_id' => $leagueDriver->driver->iracing_id ?? null,
                 'discord_id' => $leagueDriver->driver->discord_id ?? null,
                 'team_name' => $teamName,
+                'division_name' => $divisionName,
             ]
         );
     }

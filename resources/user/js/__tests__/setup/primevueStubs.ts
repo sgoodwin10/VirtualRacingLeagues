@@ -822,6 +822,120 @@ export const DrawerStub = defineComponent({
 });
 
 /**
+ * Dialog Component Stub
+ * Modal dialog component
+ */
+/* eslint-disable vue/no-reserved-component-names */
+export const DialogStub = defineComponent({
+  name: 'Dialog',
+  props: {
+    visible: Boolean,
+    header: {
+      type: String,
+      default: undefined,
+    },
+    modal: {
+      type: Boolean,
+      default: true,
+    },
+    closable: {
+      type: Boolean,
+      default: true,
+    },
+    draggable: {
+      type: Boolean,
+      default: false,
+    },
+    dismissableMask: Boolean,
+    maximizable: Boolean,
+    position: {
+      type: String as PropType<
+        | 'center'
+        | 'top'
+        | 'bottom'
+        | 'left'
+        | 'right'
+        | 'topleft'
+        | 'topright'
+        | 'bottomleft'
+        | 'bottomright'
+      >,
+      default: 'center',
+    },
+    blockScroll: {
+      type: Boolean,
+      default: true,
+    },
+    contentClass: {
+      type: String,
+      default: undefined,
+    },
+    contentStyle: {
+      type: Object,
+      default: undefined,
+    },
+    showHeader: {
+      type: Boolean,
+      default: true,
+    },
+    unstyled: Boolean,
+    pt: {
+      type: Object,
+      default: undefined,
+    },
+  },
+  emits: ['update:visible', 'show', 'hide', 'maximize', 'unmaximize'],
+  template: `
+    <div v-if="visible" class="p-dialog" :class="$attrs.class" :style="contentStyle">
+      <div v-if="showHeader" class="p-dialog-header">
+        <slot name="header">{{ header }}</slot>
+        <button v-if="closable" class="p-dialog-close p-dialog-header-close" @click="$emit('update:visible', false)">×</button>
+      </div>
+      <div class="p-dialog-content" :class="contentClass">
+        <slot></slot>
+      </div>
+      <div v-if="$slots.footer" class="p-dialog-footer">
+        <slot name="footer"></slot>
+      </div>
+    </div>
+  `,
+});
+
+/**
+ * Chip Component Stub
+ * Chip/badge component for displaying small pieces of information
+ */
+export const ChipStub = defineComponent({
+  name: 'Chip',
+  props: {
+    label: {
+      type: String,
+      default: undefined,
+    },
+    icon: {
+      type: String,
+      default: undefined,
+    },
+    image: {
+      type: String,
+      default: undefined,
+    },
+    removable: Boolean,
+  },
+  emits: ['remove'],
+  template: `
+    <div class="p-chip" :class="$attrs.class">
+      <img v-if="image" :src="image" class="p-chip-image" />
+      <span v-if="icon" :class="['p-chip-icon', icon]"></span>
+      <span class="p-chip-label">
+        <slot>{{ label }}</slot>
+      </span>
+      <span v-if="removable" class="p-chip-remove-icon" @click="$emit('remove')">×</span>
+    </div>
+  `,
+});
+
+/**
  * Complete stub mappings for all PrimeVue components
  */
 export const primevueStubs = {
@@ -848,4 +962,6 @@ export const primevueStubs = {
   StepPanels: StepPanelsStub,
   StepPanel: StepPanelStub,
   Drawer: DrawerStub,
+  Dialog: DialogStub,
+  Chip: ChipStub,
 };

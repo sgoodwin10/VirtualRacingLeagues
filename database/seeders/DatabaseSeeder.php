@@ -16,9 +16,11 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SiteConfigSeeder::class,
             AdminSeeder::class,
+            UserSeeder::class,
             PlatformSeeder::class,
             PlatformTrackLocationSeeder::class,
             PlatformTrackSeeder::class,
+            LeagueSeeder::class,
             DriverSeeder::class,
         ]);
     }

@@ -18,8 +18,10 @@ use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\ValueObjects\SeasonName;
 use App\Domain\Competition\ValueObjects\SeasonSlug;
 use App\Domain\Competition\ValueObjects\SeasonStatus;
+use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
+use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -42,6 +44,8 @@ final class SeasonApplicationService
         private readonly SeasonDriverRepositoryInterface $seasonDriverRepository,
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
+        private readonly DivisionRepositoryInterface $divisionRepository,
+        private readonly TeamRepositoryInterface $teamRepository,
     ) {
     }
 
@@ -418,6 +422,10 @@ final class SeasonApplicationService
         $totalDrivers = $this->seasonDriverRepository->countDriversInSeason($season->id() ?? 0);
         $activeDrivers = $this->seasonDriverRepository->countActiveDriversInSeason($season->id() ?? 0);
 
+        // Get division and team counts
+        $totalDivisions = count($this->divisionRepository->findBySeasonId($season->id() ?? 0));
+        $totalTeams = count($this->teamRepository->findBySeasonId($season->id() ?? 0));
+
         // Build nested competition data with league
         $competitionData = new SeasonCompetitionData(
             id: $competition->id() ?? 0,
@@ -441,6 +449,8 @@ final class SeasonApplicationService
                 'active_drivers' => $activeDrivers,
                 'total_races' => 0, // TODO: Implement when races are added
                 'completed_races' => 0, // TODO: Implement when races are added
+                'total_divisions' => $totalDivisions,
+                'total_teams' => $totalTeams,
             ]
         );
     }

@@ -37,15 +37,15 @@ Season
 
 ### Entry Points
 
-1. **Season Dashboard → Calendar tab:** [+ Create Round] button
+1. **Season Dashboard → Rouns tab:** [+ Create Round] button
 2. **Season Dashboard → Overview:** "Create Rounds" button in empty state
-3. **Calendar view:** [+ Add Round] button
 
 ---
 
 ## Round Creation Form
 
 ### Single-Page Form
+Use Drawer slide up from bottom.
 
 ```
 ═══════════════════════════════════════════════════
@@ -95,6 +95,15 @@ Layout/Configuration (optional)
 Track Conditions (optional text)
 [________________________________________________]
 Example: "Wet track, 15°C ambient"
+
+```
+**If** Divisions enabled for season
+```
+DIVISONS CONFIGURATION
+───────────────────────────────────────────────────
+
+Separate Divisions for each race?
+yes / no
 
 
 RACE CONFIGURATION
@@ -165,7 +174,7 @@ On save, a `slug` will be created for the season and saved in the database and w
 └─────────────────────────────────────────────────┘
 ```
 
-**After creation, redirect to:** Round Dashboard → Race Configuration
+**After creation:** Refresh rounds tab and show new round.
 
 ---
 
@@ -240,6 +249,13 @@ CONFIGURE RACE
 Round 5 - Race 1
 ═══════════════════════════════════════════════════
 
+```
+**If** Divisions enabled for season
+```
+Note: Each division will have its own results section for each races.
+Current divisions are: Division 1, Division 2, Division 3
+
+
 RACE DETAILS
 ───────────────────────────────────────────────────
 
@@ -267,7 +283,7 @@ Qualifying Format* (required)
   • No Qualifying (grid determined by other method)
   • Previous Race Result (uses Race X finish order)
 
-If "Standard Qualifying" or "Time Trial":
+If "Standard Qualifying" or "Time Trial": (optional)
   Session Length: [10] minutes
   Tire Compound: [Any ▼] (Soft, Medium, Hard, Any)
 
@@ -303,7 +319,7 @@ Starting Grid Source* (required)
 RACE LENGTH
 ───────────────────────────────────────────────────
 
-Race Length Type* (required)
+Race Length Type* (optional)
 ○ Laps
 ○ Time Duration
 
@@ -318,14 +334,16 @@ If Time:
 RACE SETTINGS
 ───────────────────────────────────────────────────
 
-Weather Conditions
+### IMPORTANT: The dropdown Race Setting Options below are Gran Turismo 7 specific. i want a composable or ts config file to which i can manage this. NO DATABASE TABLES for this.
+
+Weather Conditions (optional)
 [Dropdown ▼]
   • Clear/Dry
   • Wet/Rain
   • Dynamic Weather (starts clear, may rain)
   • Custom: [_________________________]
 
-Tire Restrictions
+Tire Restrictions (optional)
 [Dropdown ▼]
   • Any Compound
   • Soft Only
@@ -334,14 +352,14 @@ Tire Restrictions
   • Multiple Compounds Required
   • Custom: [_________________________]
 
-Fuel Usage
+Fuel Usage (optional)
 [Dropdown ▼]
   • Standard
   • Limited Fuel (specify strategy)
   • Unlimited
   • Custom: [_________________________]
 
-Damage Model
+Damage Model (optional)
 [Dropdown ▼]
   • Off (no damage)
   • Visual Only
@@ -349,7 +367,7 @@ Damage Model
   • Full Damage
   • Simulation (realistic)
 
-Penalties
+Penalties (optional)
 ☑ Track Limits Enforced
 ☑ False Start Detection
 ☑ Collision Penalties
@@ -474,81 +492,13 @@ Note: Tie breaking rules will be configured during
 
 ---
 
-## Track Database Schema
-
-### tracks Table
-
-```sql
-tracks {
-  id: integer (primary key)
-  
-  -- Basic Info
-  name: string (required)
-  location: string (country/region)
-  circuit_type: enum ('road', 'street', 'oval', 'mixed')
-  
-  -- Track Details
-  length_km: decimal (nullable)
-  length_miles: decimal (nullable)
-  corners: integer (nullable)
-  
-  -- Layout/Configuration
-  default_layout: string (nullable)
-  layouts: json (array of available layouts)
-  
-  -- Platform Availability
-  platforms: json (array of platforms where track exists)
-  
-  -- Additional Info
-  description: text (nullable)
-  website_url: string (nullable)
-  image_url: string (nullable)
-  
-  -- Metadata
-  created_at: timestamp
-  updated_at: timestamp
-}
-```
-
-### Example Track Records
-
-```javascript
-// Brands Hatch
-{
-  id: 1,
-  name: "Brands Hatch Circuit",
-  location: "United Kingdom",
-  circuit_type: "road",
-  length_km: 3.908,
-  length_miles: 2.428,
-  corners: 9,
-  default_layout: "GP Circuit",
-  layouts: ["GP Circuit", "Indy Circuit"],
-  platforms: ["Gran Turismo 7", "iRacing", "Assetto Corsa Competizione"],
-  description: "Historic British racing circuit...",
-  image_url: "https://..."
-}
-
-// Spa-Francorchamps
-{
-  id: 2,
-  name: "Circuit de Spa-Francorchamps",
-  location: "Belgium",
-  circuit_type: "road",
-  length_km: 7.004,
-  length_miles: 4.352,
-  corners: 19,
-  default_layout: "Full Circuit",
-  layouts: ["Full Circuit"],
-  platforms: ["Gran Turismo 7", "iRacing", "Assetto Corsa Competizione", "F1 24"],
-  description: "Legendary Belgian circuit...",
-  image_url: "https://..."
-}
-```
 
 ---
 
 ## Database Schema
+
+### Track Table.
+this already exists.
 
 ### rounds Table
 
@@ -630,6 +580,9 @@ races {
   
   -- Assists
   assists_restrictions: text (nullable)
+
+  -- Divisions
+  race_divisions: integer (seconds, nullable)
   
   -- Points System (for this race)
   points_system: json (position → points mapping)
@@ -720,16 +673,11 @@ Race Format
 Number of Races: 1
 Total Estimated Duration: ~45 minutes
 
-Registration Status
-Division 1: 16/16 drivers confirmed
-Division 2: 15/16 drivers confirmed
-Division 3: 14/16 drivers confirmed
 
 Quick Actions
 ───────────────────────────────────────────────────
 [View Entry Lists]
 [Race Control Dashboard]
-[Send Race Reminder]
 [Edit Round Details]
 
 Technical Notes
@@ -785,10 +733,3 @@ https://twitch.tv/yourleague
 - Split qualifying by division
 
 ---
-
-## Related Documentation
-
-- `05-Season-Creation.md` - Parent season setup
-- `04-Dashboard-Layouts.md` - Round dashboard layouts
-- `07-Result-Entry.md` - Entering race results (next)
-- `Track-Database-Seeder.md` - Track database structure (to be created)

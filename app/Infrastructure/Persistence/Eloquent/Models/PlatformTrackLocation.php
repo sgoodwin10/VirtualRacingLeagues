@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use Database\Factories\PlatformTrackLocationFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -34,6 +36,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class PlatformTrackLocation extends Model
 {
+    use HasFactory;
+
     /**
      * @var array<string>
      */
@@ -52,6 +56,16 @@ class PlatformTrackLocation extends Model
         'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    /**
+     * Create a new factory instance for the model.
+     *
+     * @return PlatformTrackLocationFactory
+     */
+    protected static function newFactory(): PlatformTrackLocationFactory
+    {
+        return PlatformTrackLocationFactory::new();
+    }
 
     /**
      * Get the tracks for this location.

@@ -15,14 +15,19 @@ use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UserImpersonationController;
 use App\Http\Controllers\User\CompetitionController;
+use App\Http\Controllers\User\DivisionController;
 use App\Http\Controllers\User\DriverController;
 use App\Http\Controllers\User\LeagueController;
 use App\Http\Controllers\User\PlatformController;
+use App\Http\Controllers\User\PlatformSettingsController;
+use App\Http\Controllers\User\QualifierController;
+use App\Http\Controllers\User\RaceController;
 use App\Http\Controllers\User\SeasonController;
 use App\Http\Controllers\User\SeasonDriverController;
 use App\Http\Controllers\User\SiteConfigController as UserSiteConfigController;
 use App\Http\Controllers\User\TeamController;
 use App\Http\Controllers\User\TimezoneController;
+use App\Http\Controllers\User\TrackController;
 use App\Http\Middleware\AdminOrSuperAdminOnly;
 use App\Http\Middleware\AdminSessionMiddleware;
 use App\Http\Middleware\SuperAdminOnly;
@@ -216,6 +221,42 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             Route::put('/seasons/{seasonId}/teams/{teamId}', [TeamController::class, 'update'])->name('seasons.teams.update');
             Route::delete('/seasons/{seasonId}/teams/{teamId}', [TeamController::class, 'destroy'])->name('seasons.teams.destroy');
             Route::put('/seasons/{seasonId}/drivers/{seasonDriverId}/team', [TeamController::class, 'assignDriver'])->name('seasons.drivers.team.assign');
+
+            // Divisions
+            Route::get('/seasons/{seasonId}/divisions', [DivisionController::class, 'index'])->name('seasons.divisions.index');
+            Route::post('/seasons/{seasonId}/divisions', [DivisionController::class, 'store'])->name('seasons.divisions.store');
+            Route::put('/seasons/{seasonId}/divisions/{divisionId}', [DivisionController::class, 'update'])->name('seasons.divisions.update');
+            Route::delete('/seasons/{seasonId}/divisions/{divisionId}', [DivisionController::class, 'destroy'])->name('seasons.divisions.destroy');
+            Route::get('/seasons/{seasonId}/divisions/{divisionId}/driver-count', [DivisionController::class, 'driverCount'])->name('seasons.divisions.driver-count');
+            Route::put('/seasons/{seasonId}/drivers/{seasonDriverId}/division', [DivisionController::class, 'assignDriver'])->name('seasons.drivers.division.assign');
+
+            // Rounds
+            Route::get('/seasons/{seasonId}/rounds', [\App\Http\Controllers\User\RoundController::class, 'index'])->name('seasons.rounds.index');
+            Route::post('/seasons/{seasonId}/rounds', [\App\Http\Controllers\User\RoundController::class, 'store'])->name('seasons.rounds.store');
+            Route::get('/seasons/{seasonId}/rounds/next-number', [\App\Http\Controllers\User\RoundController::class, 'nextRoundNumber'])->name('seasons.rounds.next-number');
+            Route::get('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'show'])->name('rounds.show');
+            Route::put('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'update'])->name('rounds.update');
+            Route::delete('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'destroy'])->name('rounds.destroy');
+
+            // Races
+            Route::get('/rounds/{roundId}/races', [RaceController::class, 'index'])->name('rounds.races.index');
+            Route::post('/rounds/{roundId}/races', [RaceController::class, 'store'])->name('rounds.races.store');
+            Route::get('/races/{raceId}', [RaceController::class, 'show'])->name('races.show');
+            Route::put('/races/{raceId}', [RaceController::class, 'update'])->name('races.update');
+            Route::delete('/races/{raceId}', [RaceController::class, 'destroy'])->name('races.destroy');
+
+            // Qualifiers
+            Route::get('/rounds/{roundId}/qualifier', [QualifierController::class, 'show'])->name('rounds.qualifier.show');
+            Route::post('/rounds/{roundId}/qualifier', [QualifierController::class, 'store'])->name('rounds.qualifier.store');
+            Route::put('/qualifiers/{qualifierId}', [QualifierController::class, 'update'])->name('qualifiers.update');
+            Route::delete('/qualifiers/{qualifierId}', [QualifierController::class, 'destroy'])->name('qualifiers.destroy');
+
+            // Platform Settings
+            Route::get('/platforms/{platformId}/race-settings', [PlatformSettingsController::class, 'getRaceSettings'])->name('platforms.race-settings');
+
+            // Tracks
+            Route::get('/tracks', [TrackController::class, 'index'])->name('tracks.index');
+            Route::get('/tracks/{id}', [TrackController::class, 'show'])->name('tracks.show');
         });
     });
 

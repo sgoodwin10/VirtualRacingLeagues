@@ -181,10 +181,6 @@ parameters:
         -
             message: '#Type string in generic type#'
             path: app/Infrastructure/Persistence/Eloquent/Models/*
-        # Call to static method new() on unknown class
-        -
-            message: '#Call to static method new\(\) on an unknown class#'
-            path: app/Infrastructure/Persistence/Eloquent/Models/*
         # Property type mismatches
         -
             message: '#Property .+ does not accept .+#'
