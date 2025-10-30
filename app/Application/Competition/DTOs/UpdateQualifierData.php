@@ -22,51 +22,37 @@ final class UpdateQualifierData extends Data
         // Basic
         #[Nullable, StringType, Between(3, 100)]
         public string|Optional|null $name = new Optional(),
-
         // Qualifying Configuration
         #[Nullable, StringType, In(['standard', 'time_trial', 'previous_race'])]
         public string|Optional|null $qualifying_format = new Optional(),
-
         #[Nullable, IntegerType, Min(1)]
         public int|Optional|null $qualifying_length = new Optional(),
-
         #[Nullable, StringType, Max(50)]
         public string|Optional|null $qualifying_tire = new Optional(),
-
         // Platform Settings
         #[Nullable, StringType, Max(100)]
         public string|Optional|null $weather = new Optional(),
-
         #[Nullable, StringType, Max(100)]
         public string|Optional|null $tire_restrictions = new Optional(),
-
         #[Nullable, StringType, Max(100)]
         public string|Optional|null $fuel_usage = new Optional(),
-
         #[Nullable, StringType, Max(100)]
         public string|Optional|null $damage_model = new Optional(),
-
         // Penalties & Rules
         #[Nullable, BooleanType]
         public bool|Optional|null $track_limits_enforced = new Optional(),
-
         #[Nullable, BooleanType]
         public bool|Optional|null $false_start_detection = new Optional(),
-
         #[Nullable, BooleanType]
         public bool|Optional|null $collision_penalties = new Optional(),
-
         #[Nullable, StringType]
         public string|Optional|null $assists_restrictions = new Optional(),
-
         // Division Support
         #[Nullable, BooleanType]
         public bool|Optional|null $race_divisions = new Optional(),
-
         // Bonus Points
         #[Nullable, ArrayType]
         public array|Optional|null $bonus_points = new Optional(),
-
         // Notes
         #[Nullable, StringType]
         public string|Optional|null $race_notes = new Optional(),

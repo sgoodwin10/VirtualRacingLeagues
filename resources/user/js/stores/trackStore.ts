@@ -20,6 +20,11 @@ export const useTrackStore = defineStore('track', () => {
     return (trackId: number) => tracks.value.find((track) => track.id === trackId);
   });
 
+  const trackLocationById = computed(() => {
+    return (trackLocationId: number) =>
+      trackLocations.value.find((location) => location.id === trackLocationId);
+  });
+
   const isLoading = computed(() => loading.value);
   const hasError = computed(() => error.value !== null);
 
@@ -29,6 +34,16 @@ export const useTrackStore = defineStore('track', () => {
     error.value = null;
     try {
       const locationGroups = await trackService.getTracks(params);
+
+      // Ensure locationGroups is an array
+      if (!Array.isArray(locationGroups)) {
+        console.error(
+          'Expected locationGroups to be an array, got:',
+          typeof locationGroups,
+          locationGroups,
+        );
+        throw new Error('Invalid response format from tracks API');
+      }
 
       // Flatten all tracks from location groups
       const allTracks = locationGroups.flatMap((group) => group.tracks);
@@ -108,6 +123,7 @@ export const useTrackStore = defineStore('track', () => {
     // Getters
     tracksByPlatformId,
     getTrackById,
+    trackLocationById,
     isLoading,
     hasError,
     // Actions

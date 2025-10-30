@@ -22,51 +22,37 @@ final class CreateQualifierData extends Data
         // Basic
         #[Nullable, StringType, Between(3, 100)]
         public ?string $name,
-
         // Qualifying Configuration
         #[Required, StringType, In(['standard', 'time_trial', 'previous_race'])]
         public string $qualifying_format,
-
         #[Required, IntegerType, Min(1)]
         public int $qualifying_length,
-
         #[Nullable, StringType, Max(50)]
         public ?string $qualifying_tire,
-
         // Platform Settings
         #[Nullable, StringType, Max(100)]
         public ?string $weather,
-
         #[Nullable, StringType, Max(100)]
         public ?string $tire_restrictions,
-
         #[Nullable, StringType, Max(100)]
         public ?string $fuel_usage,
-
         #[Nullable, StringType, Max(100)]
         public ?string $damage_model,
-
         // Penalties & Rules
         #[Required, BooleanType]
         public bool $track_limits_enforced,
-
         #[Required, BooleanType]
         public bool $false_start_detection,
-
         #[Required, BooleanType]
         public bool $collision_penalties,
-
         #[Nullable, StringType]
         public ?string $assists_restrictions,
-
         // Division Support
         #[Required, BooleanType]
         public bool $race_divisions,
-
         // Bonus Points (ONLY pole position allowed)
         #[Nullable, ArrayType]
         public ?array $bonus_points,
-
         // Notes
         #[Nullable, StringType]
         public ?string $race_notes,

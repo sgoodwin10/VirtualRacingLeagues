@@ -114,6 +114,10 @@ parameters:
         # Custom query scopes on Eloquent Builder
         -
             message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder.+::(search|filterByStatus|withTrashed|onlyTrashed)\(\)#'
+        # Eloquent withCount method on Models
+        -
+            message: '#Call to an undefined method .+::withCount\(\)#'
+            path: app/Infrastructure/Persistence/Eloquent/Repositories/*
         # Carbon/DateTime type conversion issues
         -
             message: '#Parameter \#1 \$object of static method DateTimeImmutable::createFromMutable\(\) expects DateTime, Illuminate\\Support\\Carbon\|null given#'

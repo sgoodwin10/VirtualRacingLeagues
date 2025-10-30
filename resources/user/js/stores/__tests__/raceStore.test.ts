@@ -43,6 +43,7 @@ describe('raceStore', () => {
     dnf_points: 0,
     dns_points: 0,
     race_notes: 'Test notes',
+    is_qualifier: false,
     created_at: '2025-01-01 10:00:00',
     updated_at: '2025-01-01 10:00:00',
   };

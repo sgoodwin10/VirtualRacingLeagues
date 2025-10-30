@@ -7,12 +7,25 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-// GET all races for a round
+// GET all races for a round (excludes qualifier)
 export async function getRaces(roundId: number): Promise<Race[]> {
   const response: AxiosResponse<ApiResponse<Race[]>> = await apiClient.get(
     `/rounds/${roundId}/races`,
   );
   return response.data.data;
+}
+
+// GET qualifier for a round
+export async function getQualifier(roundId: number): Promise<Race | null> {
+  try {
+    const response: AxiosResponse<ApiResponse<Race>> = await apiClient.get(
+      `/rounds/${roundId}/qualifier`,
+    );
+    return response.data.data;
+  } catch {
+    // If 404, no qualifier exists for this round
+    return null;
+  }
 }
 
 // GET single race

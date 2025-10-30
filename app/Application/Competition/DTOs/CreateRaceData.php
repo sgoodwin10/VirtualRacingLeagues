@@ -20,7 +20,7 @@ final class CreateRaceData extends Data
 {
     public function __construct(
         // Basic
-        #[Required, IntegerType, Min(1)]
+        #[Required, IntegerType, Min(0)]
         public int $race_number,
         #[Nullable, StringType, Between(3, 100)]
         public ?string $name,
@@ -34,7 +34,8 @@ final class CreateRaceData extends Data
         #[Nullable, StringType, Max(50)]
         public ?string $qualifying_tire,
         // Grid
-        #[Required, StringType, In(['qualifying', 'previous_race', 'reverse_previous', 'championship', 'reverse_championship', 'manual'])]
+        #[Required, StringType]
+        #[In(['qualifying', 'previous_race', 'reverse_previous', 'championship', 'reverse_championship', 'manual'])]
         public string $grid_source,
         #[Nullable, IntegerType, Min(1)]
         public ?int $grid_source_race_id,

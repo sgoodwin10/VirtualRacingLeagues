@@ -4,13 +4,19 @@ import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import Card from 'primevue/card';
-import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import ButtonGroup from 'primevue/buttongroup';
+import SpeedDial from 'primevue/speeddial';
+import type { MenuItem } from 'primevue/menuitem';
+import BasePanel from '@user/components/common/panels/BasePanel.vue';
+import InfoItem from '@user/components/common/InfoItem.vue';
+import LeagueVisibilityTag from '@user/components/league/partials/LeagueVisibilityTag.vue';
 import { useLeagueStore } from '@user/stores/leagueStore';
 import { useUserStore } from '@user/stores/userStore';
 import { useImageUrl } from '@user/composables/useImageUrl';
 import type { League } from '@user/types/league';
+import { PhGameController, PhMapPinArea, PhSteeringWheel, PhTrophy } from '@phosphor-icons/vue';
+import HTag from '@user/components/common/HTag.vue';
 
 interface Props {
   league: League;
@@ -41,19 +47,6 @@ const logo = useImageUrl(() => props.league.logo_url, '/images/default-league-lo
 // Use composable for header image
 const headerImage = useImageUrl(() => props.league.header_image_url);
 
-function getVisibilitySeverity(visibility: string): 'success' | 'info' | 'warning' {
-  switch (visibility) {
-    case 'public':
-      return 'success';
-    case 'private':
-      return 'warning';
-    case 'unlisted':
-      return 'info';
-    default:
-      return 'info';
-  }
-}
-
 function getPlatformNames(league: League): string {
   if (!league.platforms || league.platforms.length === 0) {
     return 'No platforms';
@@ -72,6 +65,31 @@ function getPlatformNames(league: League): string {
 
   return `${first.name}, ${second.name} +${league.platforms.length - 2} more`;
 }
+
+const competitionsText = computed(() => {
+  const count = props.league.competitions_count;
+  return count === 1 ? '1 Competition' : `${count} Competitions`;
+});
+
+const driversText = computed(() => {
+  const count = props.league.drivers_count;
+  return count === 1 ? '1 Driver' : `${count} Drivers`;
+});
+
+const speedDialActions = computed<MenuItem[]>(() => [
+  {
+    label: 'Edit',
+    icon: 'pi pi-pencil',
+    command: handleEdit,
+    severity: 'warn',
+  },
+  {
+    label: 'Delete',
+    icon: 'pi pi-trash',
+    command: confirmDelete,
+    severity: 'danger',
+  },
+]);
 
 function handleView(): void {
   emit('view', props.league.id);
@@ -116,7 +134,7 @@ async function deleteLeague(): Promise<void> {
 </script>
 
 <template>
-  <Card class="hover:shadow-lg transition-shadow duration-300">
+  <Card class="transition-shadow duration-300 hover:shadow-lg border-blue-100 border">
     <template #header>
       <div class="relative">
         <!-- Header Image with Error Handling -->
@@ -128,7 +146,7 @@ async function deleteLeague(): Promise<void> {
           @load="headerImage.handleLoad"
           @error="headerImage.handleError"
         />
-        <div v-else class="w-full h-40 bg-gradient-to-br from-blue-500 to-purple-600"></div>
+        <div v-else class="w-full h-40 bg-linear-to-br from-blue-500 to-purple-600"></div>
 
         <!-- Logo with Error Handling and Fallback -->
         <img
@@ -139,53 +157,56 @@ async function deleteLeague(): Promise<void> {
           @error="logo.handleError"
         />
 
-        <div class="absolute top-0 right-0 p-2">
-          <Tag
-            :value="league.visibility.toUpperCase()"
-            :severity="getVisibilitySeverity(league.visibility)"
-            class="text-xs uppercase border"
-          />
+        <div class="absolute top-0 left-0 p-2">
+          <LeagueVisibilityTag :visibility="league.visibility" />
         </div>
+
+        <SpeedDial
+          v-if="isOwner"
+          :model="speedDialActions"
+          direction="down"
+          :button-props="{ size: 'small', rounded: true, severity: 'primary' }"
+          show-icon="pi pi-bars"
+          hide-icon="pi pi-times"
+          style="position: absolute; right: 4px; top: 4px"
+          class="speeddial-right"
+        />
       </div>
     </template>
 
     <template #title>
-      <div class="mt-6">
-        <h3 class="text-xl font-bold mb-1">{{ league.name }}</h3>
+      <div class="py-2 pl-22 pr-4 border-b border-slate-200 flex items-center justify-between">
+        <HTag :level="3">{{ league.name }}</HTag>
       </div>
     </template>
 
     <template #content>
-      <div class="space-y-3 pb-2">
-        <p v-if="league.tagline" class="">
-          {{ league.tagline }}
-        </p>
-
-        <div class="flex items-center gap-2">
-          <i class="pi pi-desktop"></i>
-          <span>{{ getPlatformNames(league) }}</span>
+      <BasePanel>
+        <template #header>
+          <p
+            v-if="league.tagline"
+            class="italic text-sm w-full text-primary-400 text-center p-1 bg-primary-50 border-b border-slate-200 hidden"
+          >
+            {{ league.tagline }}
+          </p>
+        </template>
+        <div class="grid grid-cols-2 gap-px w-full bg-surface-200">
+          <InfoItem :icon="PhGameController" title="Platforms" :text="getPlatformNames(league)" />
+          <InfoItem :icon="PhMapPinArea" title="Timezone" :text="league.timezone" />
+          <InfoItem :icon="PhTrophy" title="Competitions" :text="competitionsText" />
+          <InfoItem :icon="PhSteeringWheel" title="Drivers" :text="driversText" />
         </div>
-
-        <div v-if="league.timezone" class="flex items-center gap-2">
-          <i class="pi pi-clock"></i>
-          <span>{{ league.timezone }}</span>
-        </div>
-
-        <div v-if="league.organizer_name" class="flex items-center gap-2">
-          <i class="pi pi-user"></i>
-          <span>{{ league.organizer_name }}</span>
-        </div>
-      </div>
+      </BasePanel>
     </template>
 
     <template #footer>
-      <div class="flex w-full space-x-4 border-t border-gray-200 pt-4">
-        <ButtonGroup class="w-1/2">
+      <div class="flex w-full p-2">
+        <ButtonGroup class="w-1/2 hidden">
           <Button
             v-if="isOwner"
             icon="pi pi-trash"
             severity="danger"
-            class="w-1/2"
+            class="w-1/2 hidden"
             variant="outlined"
             @click="confirmDelete"
           />
@@ -193,17 +214,17 @@ async function deleteLeague(): Promise<void> {
             v-if="isOwner"
             icon="pi pi-pencil"
             severity="warn"
-            class="w-1/2"
+            class="w-1/2 hidden"
             variant="outlined"
             @click="handleEdit"
           />
         </ButtonGroup>
         <Button
           label="View"
-          severity="info"
+          severity="primary"
           icon="pi pi-eye"
-          class="w-1/2"
-          variant="outlined"
+          class="w-full"
+          variant=""
           @click="handleView"
         />
       </div>

@@ -6,8 +6,6 @@ namespace App\Http\Controllers\User;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\PlatformTrackLocationResource;
-use App\Http\Resources\TrackResource;
 use App\Infrastructure\Persistence\Eloquent\Models\PlatformTrack;
 use App\Infrastructure\Persistence\Eloquent\Models\PlatformTrackLocation;
 use Illuminate\Http\JsonResponse;
@@ -60,9 +58,35 @@ class TrackController extends Controller
             return $location->tracks->isNotEmpty();
         });
 
-        return ApiResponse::success(
-            PlatformTrackLocationResource::collection($locations)->toArray($request)
-        );
+        // Transform the collection to array format without the extra 'data' wrapper
+        $transformedLocations = $locations->map(function ($location) {
+            return [
+                'id' => $location->id,
+                'name' => $location->name,
+                'slug' => $location->slug,
+                'country' => $location->country,
+                'is_active' => $location->is_active,
+                'sort_order' => $location->sort_order,
+                'tracks' => $location->tracks->map(function ($track) {
+                    return [
+                        'id' => $track->id,
+                        'platform_id' => $track->platform_id,
+                        'platform_track_location_id' => $track->platform_track_location_id,
+                        'name' => $track->name,
+                        'slug' => $track->slug,
+                        'is_reverse' => $track->is_reverse,
+                        'image_path' => $track->image_path,
+                        'length_meters' => $track->length_meters,
+                        'is_active' => $track->is_active,
+                        'sort_order' => $track->sort_order,
+                        'created_at' => $track->created_at?->toIso8601String(),
+                        'updated_at' => $track->updated_at?->toIso8601String(),
+                    ];
+                })->toArray(),
+            ];
+        })->values()->toArray();
+
+        return ApiResponse::success($transformedLocations);
     }
 
     /**
@@ -76,8 +100,29 @@ class TrackController extends Controller
             return ApiResponse::error('Track not found', null, 404);
         }
 
-        return ApiResponse::success(
-            (new TrackResource($track))->toArray(request())
-        );
+        $transformedTrack = [
+            'id' => $track->id,
+            'platform_id' => $track->platform_id,
+            'platform_track_location_id' => $track->platform_track_location_id,
+            'name' => $track->name,
+            'slug' => $track->slug,
+            'is_reverse' => $track->is_reverse,
+            'image_path' => $track->image_path,
+            'length_meters' => $track->length_meters,
+            'is_active' => $track->is_active,
+            'sort_order' => $track->sort_order,
+            'created_at' => $track->created_at?->toIso8601String(),
+            'updated_at' => $track->updated_at?->toIso8601String(),
+            'location' => [
+                'id' => $track->location->id,
+                'name' => $track->location->name,
+                'slug' => $track->location->slug,
+                'country' => $track->location->country,
+                'is_active' => $track->location->is_active,
+                'sort_order' => $track->location->sort_order,
+            ],
+        ];
+
+        return ApiResponse::success($transformedTrack);
     }
 }

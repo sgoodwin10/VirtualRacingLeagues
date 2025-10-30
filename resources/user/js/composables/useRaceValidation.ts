@@ -1,12 +1,17 @@
-import { reactive } from 'vue';
+import { reactive, type Ref, unref } from 'vue';
 import type { RaceForm, RaceFormErrors } from '@user/types/race';
 
-export function useRaceValidation(form: RaceForm, isQualifier = false) {
+export function useRaceValidation(form: RaceForm, isQualifier: Ref<boolean> | boolean = false) {
   const errors = reactive<RaceFormErrors>({});
+
+  // Helper to get the current value of isQualifier (whether it's a ref or boolean)
+  const getIsQualifier = (): boolean => {
+    return unref(isQualifier);
+  };
 
   function validateRaceNumber(): string | undefined {
     // Skip validation for qualifiers (always 0)
-    if (isQualifier) {
+    if (getIsQualifier()) {
       return undefined;
     }
 
@@ -50,6 +55,11 @@ export function useRaceValidation(form: RaceForm, isQualifier = false) {
   }
 
   function validateLengthValue(): string | undefined {
+    // Skip validation for qualifiers (they use qualifying_length instead)
+    if (getIsQualifier()) {
+      return undefined;
+    }
+
     if (!form.length_value || form.length_value <= 0) {
       return 'Race length must be a positive number';
     }
@@ -67,7 +77,7 @@ export function useRaceValidation(form: RaceForm, isQualifier = false) {
 
   function validateMinimumPitTime(): string | undefined {
     // Skip validation for qualifiers (no pit stops)
-    if (isQualifier) {
+    if (getIsQualifier()) {
       return undefined;
     }
 

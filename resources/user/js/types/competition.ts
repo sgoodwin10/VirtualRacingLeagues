@@ -47,6 +47,7 @@ export interface Competition {
 export interface CompetitionStats {
   total_seasons: number;
   active_seasons: number;
+  total_rounds: number;
   total_drivers: number;
   total_races: number;
   next_race_date: string | null;

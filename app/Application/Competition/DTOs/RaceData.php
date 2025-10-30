@@ -12,9 +12,10 @@ final class RaceData extends Data
     public function __construct(
         public int $id,
         public int $round_id,
-        public ?int $race_number,
+        public bool $is_qualifier,
+        public int $race_number,
         public ?string $name,
-        public ?string $race_type,
+        public string $race_type,
         // Qualifying
         public string $qualifying_format,
         public ?int $qualifying_length,
@@ -55,12 +56,15 @@ final class RaceData extends Data
 
     public static function fromEntity(Race $race): self
     {
+        $isQualifier = $race->isQualifier();
+
         return new self(
             id: $race->id() ?? 0,
             round_id: $race->roundId(),
-            race_number: $race->raceNumber(),
+            is_qualifier: $isQualifier,
+            race_number: $isQualifier ? 0 : ($race->raceNumber() ?? 0),
             name: $race->name()?->value(),
-            race_type: $race->type()?->value,
+            race_type: $isQualifier ? 'qualifying' : ($race->type()->value ?? 'feature'),
             qualifying_format: $race->qualifyingFormat()->value,
             qualifying_length: $race->qualifyingLength(),
             qualifying_tire: $race->qualifyingTire(),

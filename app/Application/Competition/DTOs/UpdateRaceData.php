@@ -32,7 +32,8 @@ final class UpdateRaceData extends Data
         #[Nullable, StringType, Max(50)]
         public string|Optional|null $qualifying_tire = new Optional(),
         // Grid
-        #[Nullable, StringType, In(['qualifying', 'previous_race', 'reverse_previous', 'championship', 'reverse_championship', 'manual'])]
+        #[Nullable, StringType]
+        #[In(['qualifying', 'previous_race', 'reverse_previous', 'championship', 'reverse_championship', 'manual'])]
         public string|Optional|null $grid_source = new Optional(),
         #[Nullable, IntegerType, Min(1)]
         public int|Optional|null $grid_source_race_id = new Optional(),

@@ -87,7 +87,7 @@ const separatorDisplay = computed(() => {
 </script>
 
 <template>
-  <nav aria-label="Breadcrumb" class="flex items-center gap-2">
+  <nav aria-label="Breadcrumb" class="flex items-center gap-2 w-full">
     <ol class="flex items-center gap-2 list-none m-0 p-0">
       <li
         v-for="(item, index) in validatedItems"
@@ -98,7 +98,7 @@ const separatorDisplay = computed(() => {
         <router-link
           v-if="isClickable(item, index)"
           :to="item.to!"
-          class="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 no-underline"
+          class="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors duration-200 no-underline"
           :aria-current="index === validatedItems.length - 1 ? 'page' : undefined"
         >
           <i v-if="item.icon" :class="`pi ${item.icon}`" class="text-sm" aria-hidden="true"></i>
@@ -108,7 +108,7 @@ const separatorDisplay = computed(() => {
         <!-- Non-clickable Breadcrumb (current page or no route) -->
         <span
           v-else
-          class="flex items-center gap-2 text-gray-900"
+          class="flex items-center gap-2 text-gray-700"
           :aria-current="index === validatedItems.length - 1 ? 'page' : undefined"
         >
           <i v-if="item.icon" :class="`pi ${item.icon}`" class="text-sm" aria-hidden="true"></i>

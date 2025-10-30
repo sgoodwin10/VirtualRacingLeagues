@@ -6,6 +6,7 @@ namespace App\Application\Competition\Services;
 
 use App\Application\Competition\DTOs\CreateQualifierData;
 use App\Application\Competition\DTOs\QualifierData;
+use App\Application\Competition\DTOs\RaceData;
 use App\Application\Competition\DTOs\UpdateQualifierData;
 use App\Domain\Competition\Entities\Race;
 use App\Domain\Competition\Events\QualifierDeleted;
@@ -156,7 +157,7 @@ final class QualifierApplicationService
         return QualifierData::fromEntity($qualifier);
     }
 
-    public function getQualifierByRound(int $roundId): ?QualifierData
+    public function getQualifierByRound(int $roundId): ?RaceData
     {
         $qualifier = $this->raceRepository->findQualifierByRoundId($roundId);
 
@@ -164,7 +165,7 @@ final class QualifierApplicationService
             return null;
         }
 
-        return QualifierData::fromEntity($qualifier);
+        return RaceData::fromEntity($qualifier);
     }
 
     public function deleteQualifier(int $qualifierId): void

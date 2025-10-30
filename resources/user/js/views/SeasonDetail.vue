@@ -417,9 +417,9 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
               </div>
 
               <!-- 75/25 Layout: Drivers Table + Divisions/Teams Panel -->
-              <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div class="flex">
                 <!-- Drivers Table (75% - 3 columns) -->
-                <div class="lg:col-span-3">
+                <div class="w-full">
                   <SeasonDriversTable
                     :season-id="seasonId"
                     :platform-id="season.competition?.platform_id"

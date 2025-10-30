@@ -8,7 +8,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\Competition;
 use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
-use App\Infrastructure\Persistence\Eloquent\Models\Season;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent as Season;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -25,7 +25,7 @@ final class RaceApiTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
-        $league = League::factory()->create(['user_id' => $this->user->id]);
+        $league = League::factory()->create(['owner_user_id' => $this->user->id]);
         $competition = Competition::factory()->create(['league_id' => $league->id]);
         $season = Season::factory()->create(['competition_id' => $competition->id]);
         $this->round = Round::factory()->create(['season_id' => $season->id]);
@@ -64,7 +64,7 @@ final class RaceApiTest extends TestCase
         ];
 
         $response = $this->actingAs($this->user)
-            ->postJson("/api/rounds/{$this->round->id}/races", $data);
+            ->withHeader("Host", "app.virtualracingleagues.localhost")->postJson("/api/rounds/{$this->round->id}/races", $data);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
@@ -97,7 +97,7 @@ final class RaceApiTest extends TestCase
         Race::factory()->count(3)->create(['round_id' => $this->round->id]);
 
         $response = $this->actingAs($this->user)
-            ->getJson("/api/rounds/{$this->round->id}/races");
+            ->withHeader("Host", "app.virtualracingleagues.localhost")->getJson("/api/rounds/{$this->round->id}/races");
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -123,7 +123,7 @@ final class RaceApiTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->user)
-            ->getJson("/api/races/{$race->id}");
+            ->withHeader("Host", "app.virtualracingleagues.localhost")->getJson("/api/races/{$race->id}");
 
         $response->assertStatus(200)
             ->assertJson([
@@ -150,7 +150,7 @@ final class RaceApiTest extends TestCase
         ];
 
         $response = $this->actingAs($this->user)
-            ->putJson("/api/races/{$race->id}", $updateData);
+            ->withHeader("Host", "app.virtualracingleagues.localhost")->putJson("/api/races/{$race->id}", $updateData);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -175,7 +175,7 @@ final class RaceApiTest extends TestCase
         $race = Race::factory()->create(['round_id' => $this->round->id]);
 
         $response = $this->actingAs($this->user)
-            ->deleteJson("/api/races/{$race->id}");
+            ->withHeader("Host", "app.virtualracingleagues.localhost")->deleteJson("/api/races/{$race->id}");
 
         $response->assertStatus(200);
 
@@ -184,24 +184,116 @@ final class RaceApiTest extends TestCase
         ]);
     }
 
+    public function test_can_create_qualifier(): void
+    {
+        $data = [
+            'race_number' => 0, // 0 indicates this is a qualifier
+            'name' => 'Qualifying Session',
+            'race_type' => null,
+            'qualifying_format' => 'standard',
+            'qualifying_length' => 20,
+            'qualifying_tire' => 'soft',
+            'grid_source' => 'qualifying',
+            'grid_source_race_id' => null,
+            'length_type' => 'time',
+            'length_value' => 20,
+            'extra_lap_after_time' => false,
+            'weather' => 'clear',
+            'tire_restrictions' => null,
+            'fuel_usage' => null,
+            'damage_model' => 'full',
+            'track_limits_enforced' => true,
+            'false_start_detection' => true,
+            'collision_penalties' => true,
+            'mandatory_pit_stop' => false,
+            'minimum_pit_time' => null,
+            'assists_restrictions' => null,
+            'race_divisions' => false,
+            'points_system' => [1 => 0],
+            'bonus_points' => ['pole' => 1],
+            'dnf_points' => 0,
+            'dns_points' => 0,
+            'race_notes' => 'Qualifying session',
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->withHeader("Host", "app.virtualracingleagues.localhost")->postJson("/api/rounds/{$this->round->id}/races", $data);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'status',
+                'data' => [
+                    'id',
+                    'round_id',
+                    'is_qualifier',
+                    'qualifying_format',
+                    'qualifying_length',
+                ],
+            ]);
+
+        $this->assertDatabaseHas('races', [
+            'round_id' => $this->round->id,
+            'is_qualifier' => true,
+            'race_number' => null,
+            'qualifying_format' => 'standard',
+        ]);
+    }
+
+    public function test_cannot_create_qualifier_with_none_qualifying_format(): void
+    {
+        $data = [
+            'race_number' => 0, // 0 indicates this is a qualifier
+            'name' => 'Invalid Qualifying',
+            'qualifying_format' => 'none', // Invalid for qualifiers
+            'qualifying_length' => 20,
+            'qualifying_tire' => null,
+            'grid_source' => 'qualifying',
+            'grid_source_race_id' => null,
+            'length_type' => 'time',
+            'length_value' => 20,
+            'extra_lap_after_time' => false,
+            'weather' => null,
+            'tire_restrictions' => null,
+            'fuel_usage' => null,
+            'damage_model' => null,
+            'track_limits_enforced' => true,
+            'false_start_detection' => true,
+            'collision_penalties' => true,
+            'mandatory_pit_stop' => false,
+            'minimum_pit_time' => null,
+            'assists_restrictions' => null,
+            'race_divisions' => false,
+            'points_system' => [1 => 0],
+            'bonus_points' => null,
+            'dnf_points' => 0,
+            'dns_points' => 0,
+            'race_notes' => null,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->withHeader("Host", "app.virtualracingleagues.localhost")->postJson("/api/rounds/{$this->round->id}/races", $data);
+
+        $response->assertStatus(422);
+    }
+
     public function test_cannot_create_race_with_invalid_data(): void
     {
         $data = [
-            'race_number' => 0, // Invalid: must be at least 1
+            'race_number' => -1, // Invalid: must be at least 0
             'qualifying_format' => 'invalid_format',
             'grid_source' => 'invalid_source',
             'length_type' => 'invalid_type',
         ];
 
         $response = $this->actingAs($this->user)
-            ->postJson("/api/rounds/{$this->round->id}/races", $data);
+            ->withHeader("Host", "app.virtualracingleagues.localhost")->postJson("/api/rounds/{$this->round->id}/races", $data);
 
         $response->assertStatus(422);
     }
 
     public function test_unauthenticated_user_cannot_access_races(): void
     {
-        $response = $this->getJson("/api/rounds/{$this->round->id}/races");
+        $response = $this->withHeader("Host", "app.virtualracingleagues.localhost")->getJson("/api/rounds/{$this->round->id}/races");
 
         $response->assertStatus(401);
     }

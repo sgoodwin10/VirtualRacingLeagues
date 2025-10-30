@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: development  # Use development stage with Node.js
-    container_name: virtualracingleagues-app
+    container_name: ${DOCKER_CONTAINER_NAME}-app
     restart: unless-stopped
     working_dir: /var/www
     volumes:
@@ -14,19 +14,19 @@ services:
     ports:
       - "5173:5173"  # Vite dev server
     networks:
-      - virtualracingleagues
+      - ${DOCKER_NETWORK_NAME}
     depends_on:
       - mariadb
       - redis
     extra_hosts:
-      - "virtualracingleagues.localhost:host-gateway"
-      - "app.virtualracingleagues.localhost:host-gateway"
-      - "admin.virtualracingleagues.localhost:host-gateway"
+      - "${APP_ROOT_DOMAIN}:host-gateway"
+      - "app.${APP_ROOT_DOMAIN}:host-gateway"
+      - "admin.${APP_ROOT_DOMAIN}:host-gateway"
 
   # Nginx Service
   nginx:
     image: nginx:alpine
-    container_name: virtualracingleagues-nginx
+    container_name: ${DOCKER_CONTAINER_NAME}-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -34,14 +34,14 @@ services:
       - ./:/var/www
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
     networks:
-      - virtualracingleagues
+      - ${DOCKER_NETWORK_NAME}
     depends_on:
       - app
 
   # MariaDB Service
   mariadb:
     image: mariadb:10.11
-    container_name: virtualracingleagues-mariadb
+    container_name: ${DOCKER_CONTAINER_NAME}-mariadb
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-laravel}
@@ -53,24 +53,24 @@ services:
     ports:
       - "3307:3306"
     networks:
-      - virtualracingleagues
+      - ${DOCKER_NETWORK_NAME}
 
   # Redis Service
   redis:
     image: redis:7-alpine
-    container_name: virtualracingleagues-redis
+    container_name: ${DOCKER_CONTAINER_NAME}-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - virtualracingleagues
+      - ${DOCKER_NETWORK_NAME}
 
   # Elasticsearch Service (for future use)
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: virtualracingleagues-elasticsearch
+    container_name: ${DOCKER_CONTAINER_NAME}-elasticsearch
     restart: unless-stopped
     environment:
       - discovery.type=single-node
@@ -82,18 +82,18 @@ services:
       - "9200:9200"
       - "9300:9300"
     networks:
-      - virtualracingleagues
+      - ${DOCKER_NETWORK_NAME}
 
   # Mailpit Service (Email testing)
   mailpit:
     image: axllent/mailpit:latest
-    container_name: virtualracingleagues-mailpit
+    container_name: ${DOCKER_CONTAINER_NAME}-mailpit
     restart: unless-stopped
     ports:
       - "8025:8025"  # Web UI
       - "1025:1025"  # SMTP server
     networks:
-      - virtualracingleagues
+      - ${DOCKER_NETWORK_NAME}
 
 networks:
   virtualracingleagues:

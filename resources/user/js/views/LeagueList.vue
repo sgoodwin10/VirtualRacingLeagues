@@ -8,6 +8,7 @@ import { useLeagueStore } from '@user/stores/leagueStore';
 import LeagueWizardDrawer from '@user/components/league/modals/LeagueWizardDrawer.vue';
 import LeagueCard from '@user/components/league/LeagueCard.vue';
 import PageHeader from '@user/components/common/PageHeader.vue';
+import BasePanel from '@user/components/common/panels/BasePanel.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadcrumbs.vue';
 
 const toast = useToast();
@@ -111,12 +112,20 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
     <!-- Breadcrumbs -->
     <Breadcrumbs :items="breadcrumbItems" />
 
-    <div class="flex justify-between items-center mb-8 mt-4">
-      <PageHeader title="My Leagues" description="Manage your racing leagues" />
+    <div
+      class="mt-3 flex justify-between items-center mb-6 bg-white p-4 rounded-lg border border-blue-100"
+    >
+      <div class="w-1/2">
+        <PageHeader
+          title="Your Leagues"
+          description="Manage your racing leagues and competitions"
+        />
+      </div>
 
       <Button
         label="Create League"
         icon="pi pi-plus"
+        :severity="canCreateLeague ? 'primary' : 'secondary'"
         :disabled="!canCreateLeague"
         :title="createButtonTooltip"
         @click="openCreateDrawer"
@@ -124,7 +133,7 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
     </div>
 
     <!-- Free Tier Notice -->
-    <div v-if="leagueStore.hasReachedFreeLimit" class="mb-6">
+    <div v-if="leagueStore.hasReachedFreeLimit" class="my-6 hidden">
       <Card class="bg-yellow-50 border border-yellow-200">
         <template #content>
           <div class="flex items-start gap-3">

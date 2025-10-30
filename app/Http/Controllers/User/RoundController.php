@@ -10,6 +10,7 @@ use App\Application\Competition\Services\RoundApplicationService;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Round Controller.
@@ -58,10 +59,10 @@ final class RoundController extends Controller
     /**
      * Update a round.
      */
-    public function update(UpdateRoundData $data, int $roundId): JsonResponse
+    public function update(Request $request, UpdateRoundData $data, int $roundId): JsonResponse
     {
         // TODO: Authorize user owns league
-        $round = $this->roundService->updateRound($roundId, $data);
+        $round = $this->roundService->updateRound($roundId, $data, $request->all());
         return ApiResponse::success($round->toArray(), 'Round updated successfully');
     }
 

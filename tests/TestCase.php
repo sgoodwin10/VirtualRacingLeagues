@@ -15,9 +15,6 @@ abstract class TestCase extends BaseTestCase
 
         // Disable CSRF for easier testing
         $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
-
-        // Set default HTTP_HOST for all test requests to main domain
-        $_SERVER['HTTP_HOST'] = 'virtualracingleagues.localhost';
     }
 
     /**
@@ -25,7 +22,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function onAppDomain(): static
     {
-        $_SERVER['HTTP_HOST'] = 'app.virtualracingleagues.localhost';
+        $this->withServerVariables(['HTTP_HOST' => 'app.virtualracingleagues.localhost']);
         return $this;
     }
 
@@ -34,7 +31,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function onAdminDomain(): static
     {
-        $_SERVER['HTTP_HOST'] = 'admin.virtualracingleagues.localhost';
+        $this->withServerVariables(['HTTP_HOST' => 'admin.virtualracingleagues.localhost']);
         return $this;
     }
 
@@ -43,7 +40,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function onMainDomain(): static
     {
-        $_SERVER['HTTP_HOST'] = 'virtualracingleagues.localhost';
+        $this->withServerVariables(['HTTP_HOST' => 'virtualracingleagues.localhost']);
         return $this;
     }
 

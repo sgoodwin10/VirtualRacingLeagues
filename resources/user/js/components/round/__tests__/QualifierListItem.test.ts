@@ -39,6 +39,7 @@ describe('QualifierListItem', () => {
     dnf_points: 0,
     dns_points: 0,
     race_notes: null,
+    is_qualifier: true,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
   };
@@ -167,7 +168,7 @@ describe('QualifierListItem', () => {
     const buttons = wrapper.findAll('button');
     expect(buttons.length).toBeGreaterThanOrEqual(2);
 
-    await buttons[0].trigger('click');
+    await buttons[0]?.trigger('click');
 
     expect(wrapper.emitted('edit')).toBeTruthy();
     expect(wrapper.emitted('edit')?.[0]).toEqual([mockQualifier]);
@@ -177,7 +178,7 @@ describe('QualifierListItem', () => {
     const buttons = wrapper.findAll('button');
     expect(buttons.length).toBeGreaterThanOrEqual(2);
 
-    await buttons[1].trigger('click');
+    await buttons[1]?.trigger('click');
 
     expect(wrapper.emitted('delete')).toBeTruthy();
     expect(wrapper.emitted('delete')?.[0]).toEqual([mockQualifier]);

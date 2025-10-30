@@ -45,6 +45,16 @@ final class Round extends Model
     protected $table = 'rounds';
 
     /**
+     * Create a new factory instance for the model.
+     *
+     * @return \Database\Factories\RoundFactory
+     */
+    protected static function newFactory(): \Database\Factories\RoundFactory
+    {
+        return \Database\Factories\RoundFactory::new();
+    }
+
+    /**
      * @var array<string>
      */
     protected $fillable = [
@@ -102,5 +112,15 @@ final class Round extends Model
     public function createdByUser(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'created_by_user_id');
+    }
+
+    /**
+     * Get the races in this round.
+     *
+     * @return HasMany<Race>
+     */
+    public function races(): HasMany
+    {
+        return $this->hasMany(Race::class, 'round_id');
     }
 }

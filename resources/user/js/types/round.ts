@@ -5,9 +5,9 @@ export interface Round {
   round_number: number;
   name: string | null;
   slug: string;
-  scheduled_at: string; // ISO 8601
+  scheduled_at: string | null; // ISO 8601
   timezone: string;
-  platform_track_id: number;
+  platform_track_id: number | null;
   track_layout: string | null;
   track_conditions: string | null;
   technical_notes: string | null;
@@ -26,8 +26,8 @@ export type RoundStatus = 'scheduled' | 'pre_race' | 'in_progress' | 'completed'
 export interface CreateRoundRequest {
   round_number: number;
   name?: string;
-  scheduled_at?: string; // 'YYYY-MM-DD HH:mm:ss'
-  platform_track_id?: number;
+  scheduled_at?: string | null; // 'YYYY-MM-DD HH:mm:ss'
+  platform_track_id?: number | null;
   track_layout?: string;
   track_conditions?: string;
   technical_notes?: string;
@@ -38,8 +38,8 @@ export interface CreateRoundRequest {
 export interface UpdateRoundRequest {
   round_number?: number;
   name?: string;
-  scheduled_at?: string;
-  platform_track_id?: number;
+  scheduled_at?: string | null;
+  platform_track_id?: number | null;
   track_layout?: string;
   track_conditions?: string;
   technical_notes?: string;

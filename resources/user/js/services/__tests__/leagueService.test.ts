@@ -257,6 +257,8 @@ describe('leagueService', () => {
       timezone: 'UTC',
       owner_user_id: 1,
       contact_email: 'original@example.com',
+      competitions_count: 0,
+      drivers_count: 0,
       organizer_name: 'Original Organizer',
       status: 'active',
       created_at: '2024-01-01',

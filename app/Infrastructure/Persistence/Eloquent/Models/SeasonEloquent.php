@@ -108,6 +108,16 @@ final class SeasonEloquent extends Model
     }
 
     /**
+     * Get the rounds in this season.
+     *
+     * @return HasMany<Round>
+     */
+    public function rounds(): HasMany
+    {
+        return $this->hasMany(Round::class, 'season_id');
+    }
+
+    /**
      * Create a new factory instance for the model.
      */
     protected static function newFactory(): SeasonFactory

@@ -16,6 +16,7 @@ class CompetitionStatsData extends Data
         public int $total_seasons = 0,
         public int $active_seasons = 0,
         public int $total_drivers = 0,
+        public int $total_rounds = 0,
         public int $total_races = 0,
         public ?string $next_race_date = null,
     ) {

@@ -30,36 +30,72 @@ final class RaceApplicationService
     public function createRace(CreateRaceData $data, int $roundId): RaceData
     {
         return DB::transaction(function () use ($data, $roundId) {
-            $race = Race::create(
-                roundId: $roundId,
-                raceNumber: $data->race_number,
-                name: $data->name !== null ? RaceName::from($data->name) : null,
-                type: $data->race_type !== null ? RaceType::from($data->race_type) : null,
-                qualifyingFormat: QualifyingFormat::from($data->qualifying_format),
-                qualifyingLength: $data->qualifying_length,
-                qualifyingTire: $data->qualifying_tire,
-                gridSource: GridSource::from($data->grid_source),
-                gridSourceRaceId: $data->grid_source_race_id,
-                lengthType: RaceLengthType::from($data->length_type),
-                lengthValue: $data->length_value,
-                extraLapAfterTime: $data->extra_lap_after_time,
-                weather: $data->weather,
-                tireRestrictions: $data->tire_restrictions,
-                fuelUsage: $data->fuel_usage,
-                damageModel: $data->damage_model,
-                trackLimitsEnforced: $data->track_limits_enforced,
-                falseStartDetection: $data->false_start_detection,
-                collisionPenalties: $data->collision_penalties,
-                mandatoryPitStop: $data->mandatory_pit_stop,
-                minimumPitTime: $data->minimum_pit_time,
-                assistsRestrictions: $data->assists_restrictions,
-                raceDivisions: $data->race_divisions,
-                pointsSystem: PointsSystem::from($data->points_system),
-                bonusPoints: $data->bonus_points,
-                dnfPoints: $data->dnf_points,
-                dnsPoints: $data->dns_points,
-                raceNotes: $data->race_notes,
-            );
+            // Detect if this is a qualifier (race_number === 0)
+            $isQualifier = $data->race_number === 0;
+
+            if ($isQualifier) {
+                // Validate qualifying_format is not 'none' for qualifiers
+                if ($data->qualifying_format === 'none') {
+                    throw new \InvalidArgumentException('Qualifiers must have a qualifying format (cannot be "none")');
+                }
+
+                // Validate qualifying_length is required for qualifiers
+                if ($data->qualifying_length === null || $data->qualifying_length < 1) {
+                    throw new \InvalidArgumentException('Qualifiers must have a valid qualifying length');
+                }
+
+                // Create qualifier using the dedicated factory method
+                $race = Race::createQualifier(
+                    roundId: $roundId,
+                    name: $data->name !== null ? RaceName::from($data->name) : null,
+                    qualifyingFormat: QualifyingFormat::from($data->qualifying_format),
+                    qualifyingLength: $data->qualifying_length,
+                    qualifyingTire: $data->qualifying_tire,
+                    weather: $data->weather,
+                    tireRestrictions: $data->tire_restrictions,
+                    fuelUsage: $data->fuel_usage,
+                    damageModel: $data->damage_model,
+                    trackLimitsEnforced: $data->track_limits_enforced,
+                    falseStartDetection: $data->false_start_detection,
+                    collisionPenalties: $data->collision_penalties,
+                    assistsRestrictions: $data->assists_restrictions,
+                    raceDivisions: $data->race_divisions,
+                    bonusPoints: $data->bonus_points,
+                    raceNotes: $data->race_notes,
+                );
+            } else {
+                // Create regular race
+                $race = Race::create(
+                    roundId: $roundId,
+                    raceNumber: $data->race_number,
+                    name: $data->name !== null ? RaceName::from($data->name) : null,
+                    type: $data->race_type !== null ? RaceType::from($data->race_type) : null,
+                    qualifyingFormat: QualifyingFormat::from($data->qualifying_format),
+                    qualifyingLength: $data->qualifying_length,
+                    qualifyingTire: $data->qualifying_tire,
+                    gridSource: GridSource::from($data->grid_source),
+                    gridSourceRaceId: $data->grid_source_race_id,
+                    lengthType: RaceLengthType::from($data->length_type),
+                    lengthValue: $data->length_value,
+                    extraLapAfterTime: $data->extra_lap_after_time,
+                    weather: $data->weather,
+                    tireRestrictions: $data->tire_restrictions,
+                    fuelUsage: $data->fuel_usage,
+                    damageModel: $data->damage_model,
+                    trackLimitsEnforced: $data->track_limits_enforced,
+                    falseStartDetection: $data->false_start_detection,
+                    collisionPenalties: $data->collision_penalties,
+                    mandatoryPitStop: $data->mandatory_pit_stop,
+                    minimumPitTime: $data->minimum_pit_time,
+                    assistsRestrictions: $data->assists_restrictions,
+                    raceDivisions: $data->race_divisions,
+                    pointsSystem: PointsSystem::from($data->points_system),
+                    bonusPoints: $data->bonus_points,
+                    dnfPoints: $data->dnf_points,
+                    dnsPoints: $data->dns_points,
+                    raceNotes: $data->race_notes,
+                );
+            }
 
             $this->raceRepository->save($race);
             $this->dispatchEvents($race);
@@ -73,139 +109,230 @@ final class RaceApplicationService
         return DB::transaction(function () use ($raceId, $data) {
             $race = $this->raceRepository->findById($raceId);
 
-            // Get current values for fields not being updated
-            $name = !($data->name instanceof Optional)
-                ? ($data->name !== null ? RaceName::from($data->name) : null)
-                : $race->name();
+            // Check if this is a qualifier
+            if ($race->isQualifier()) {
+                // Use qualifier-specific update method
+                $name = !($data->name instanceof Optional)
+                    ? ($data->name !== null ? RaceName::from($data->name) : null)
+                    : $race->name();
 
-            $type = !($data->race_type instanceof Optional)
-                ? ($data->race_type !== null ? RaceType::from($data->race_type) : null)
-                : $race->type();
+                $qualifyingFormat = !($data->qualifying_format instanceof Optional)
+                    ? ($data->qualifying_format !== null
+                        ? QualifyingFormat::from($data->qualifying_format)
+                        : $race->qualifyingFormat())
+                    : $race->qualifyingFormat();
 
-            $qualifyingFormat = !($data->qualifying_format instanceof Optional)
-                ? ($data->qualifying_format !== null ? QualifyingFormat::from($data->qualifying_format) : $race->qualifyingFormat())
-                : $race->qualifyingFormat();
+                $qualifyingLength = !($data->qualifying_length instanceof Optional)
+                    ? ($data->qualifying_length ?? $race->qualifyingLength())
+                    : $race->qualifyingLength();
 
-            $qualifyingLength = !($data->qualifying_length instanceof Optional)
-                ? $data->qualifying_length
-                : $race->qualifyingLength();
+                // Validate qualifying_length for qualifiers
+                if ($qualifyingLength === null || $qualifyingLength < 1) {
+                    throw new \InvalidArgumentException('Qualifiers must have a valid qualifying length');
+                }
 
-            $qualifyingTire = !($data->qualifying_tire instanceof Optional)
-                ? $data->qualifying_tire
-                : $race->qualifyingTire();
+                $qualifyingTire = !($data->qualifying_tire instanceof Optional)
+                    ? $data->qualifying_tire
+                    : $race->qualifyingTire();
 
-            $gridSource = !($data->grid_source instanceof Optional)
-                ? ($data->grid_source !== null ? GridSource::from($data->grid_source) : $race->gridSource())
-                : $race->gridSource();
+                $weather = !($data->weather instanceof Optional)
+                    ? $data->weather
+                    : $race->weather();
 
-            $gridSourceRaceId = !($data->grid_source_race_id instanceof Optional)
-                ? $data->grid_source_race_id
-                : $race->gridSourceRaceId();
+                $tireRestrictions = !($data->tire_restrictions instanceof Optional)
+                    ? $data->tire_restrictions
+                    : $race->tireRestrictions();
 
-            $lengthType = !($data->length_type instanceof Optional)
-                ? ($data->length_type !== null ? RaceLengthType::from($data->length_type) : $race->lengthType())
-                : $race->lengthType();
+                $fuelUsage = !($data->fuel_usage instanceof Optional)
+                    ? $data->fuel_usage
+                    : $race->fuelUsage();
 
-            $lengthValue = !($data->length_value instanceof Optional)
-                ? ($data->length_value ?? $race->lengthValue())
-                : $race->lengthValue();
+                $damageModel = !($data->damage_model instanceof Optional)
+                    ? $data->damage_model
+                    : $race->damageModel();
 
-            $extraLapAfterTime = !($data->extra_lap_after_time instanceof Optional)
-                ? ($data->extra_lap_after_time ?? $race->extraLapAfterTime())
-                : $race->extraLapAfterTime();
+                $trackLimitsEnforced = !($data->track_limits_enforced instanceof Optional)
+                    ? ($data->track_limits_enforced ?? $race->trackLimitsEnforced())
+                    : $race->trackLimitsEnforced();
 
-            $weather = !($data->weather instanceof Optional)
-                ? $data->weather
-                : $race->weather();
+                $falseStartDetection = !($data->false_start_detection instanceof Optional)
+                    ? ($data->false_start_detection ?? $race->falseStartDetection())
+                    : $race->falseStartDetection();
 
-            $tireRestrictions = !($data->tire_restrictions instanceof Optional)
-                ? $data->tire_restrictions
-                : $race->tireRestrictions();
+                $collisionPenalties = !($data->collision_penalties instanceof Optional)
+                    ? ($data->collision_penalties ?? $race->collisionPenalties())
+                    : $race->collisionPenalties();
 
-            $fuelUsage = !($data->fuel_usage instanceof Optional)
-                ? $data->fuel_usage
-                : $race->fuelUsage();
+                $assistsRestrictions = !($data->assists_restrictions instanceof Optional)
+                    ? $data->assists_restrictions
+                    : $race->assistsRestrictions();
 
-            $damageModel = !($data->damage_model instanceof Optional)
-                ? $data->damage_model
-                : $race->damageModel();
+                $raceDivisions = !($data->race_divisions instanceof Optional)
+                    ? ($data->race_divisions ?? $race->raceDivisions())
+                    : $race->raceDivisions();
 
-            $trackLimitsEnforced = !($data->track_limits_enforced instanceof Optional)
-                ? ($data->track_limits_enforced ?? $race->trackLimitsEnforced())
-                : $race->trackLimitsEnforced();
+                $bonusPoints = !($data->bonus_points instanceof Optional)
+                    ? $data->bonus_points
+                    : $race->bonusPoints();
 
-            $falseStartDetection = !($data->false_start_detection instanceof Optional)
-                ? ($data->false_start_detection ?? $race->falseStartDetection())
-                : $race->falseStartDetection();
+                $raceNotes = !($data->race_notes instanceof Optional)
+                    ? $data->race_notes
+                    : $race->raceNotes();
 
-            $collisionPenalties = !($data->collision_penalties instanceof Optional)
-                ? ($data->collision_penalties ?? $race->collisionPenalties())
-                : $race->collisionPenalties();
+                $race->updateQualifierConfiguration(
+                    name: $name,
+                    qualifyingFormat: $qualifyingFormat,
+                    qualifyingLength: $qualifyingLength,
+                    qualifyingTire: $qualifyingTire,
+                    weather: $weather,
+                    tireRestrictions: $tireRestrictions,
+                    fuelUsage: $fuelUsage,
+                    damageModel: $damageModel,
+                    trackLimitsEnforced: $trackLimitsEnforced,
+                    falseStartDetection: $falseStartDetection,
+                    collisionPenalties: $collisionPenalties,
+                    assistsRestrictions: $assistsRestrictions,
+                    raceDivisions: $raceDivisions,
+                    bonusPoints: $bonusPoints,
+                    raceNotes: $raceNotes,
+                );
+            } else {
+                // Use regular race update method
+                $name = !($data->name instanceof Optional)
+                    ? ($data->name !== null ? RaceName::from($data->name) : null)
+                    : $race->name();
 
-            $mandatoryPitStop = !($data->mandatory_pit_stop instanceof Optional)
-                ? ($data->mandatory_pit_stop ?? $race->mandatoryPitStop())
-                : $race->mandatoryPitStop();
+                $type = !($data->race_type instanceof Optional)
+                    ? ($data->race_type !== null ? RaceType::from($data->race_type) : null)
+                    : $race->type();
 
-            $minimumPitTime = !($data->minimum_pit_time instanceof Optional)
-                ? $data->minimum_pit_time
-                : $race->minimumPitTime();
+                $qualifyingFormat = !($data->qualifying_format instanceof Optional)
+                    ? ($data->qualifying_format !== null
+                        ? QualifyingFormat::from($data->qualifying_format)
+                        : $race->qualifyingFormat())
+                    : $race->qualifyingFormat();
 
-            $assistsRestrictions = !($data->assists_restrictions instanceof Optional)
-                ? $data->assists_restrictions
-                : $race->assistsRestrictions();
+                $qualifyingLength = !($data->qualifying_length instanceof Optional)
+                    ? $data->qualifying_length
+                    : $race->qualifyingLength();
 
-            $raceDivisions = !($data->race_divisions instanceof Optional)
-                ? ($data->race_divisions ?? $race->raceDivisions())
-                : $race->raceDivisions();
+                $qualifyingTire = !($data->qualifying_tire instanceof Optional)
+                    ? $data->qualifying_tire
+                    : $race->qualifyingTire();
 
-            $pointsSystem = !($data->points_system instanceof Optional)
-                ? ($data->points_system !== null ? PointsSystem::from($data->points_system) : $race->pointsSystem())
-                : $race->pointsSystem();
+                $gridSource = !($data->grid_source instanceof Optional)
+                    ? ($data->grid_source !== null ? GridSource::from($data->grid_source) : $race->gridSource())
+                    : $race->gridSource();
 
-            $bonusPoints = !($data->bonus_points instanceof Optional)
-                ? $data->bonus_points
-                : $race->bonusPoints();
+                $gridSourceRaceId = !($data->grid_source_race_id instanceof Optional)
+                    ? $data->grid_source_race_id
+                    : $race->gridSourceRaceId();
 
-            $dnfPoints = !($data->dnf_points instanceof Optional)
-                ? ($data->dnf_points ?? $race->dnfPoints())
-                : $race->dnfPoints();
+                $lengthType = !($data->length_type instanceof Optional)
+                    ? ($data->length_type !== null ? RaceLengthType::from($data->length_type) : $race->lengthType())
+                    : $race->lengthType();
 
-            $dnsPoints = !($data->dns_points instanceof Optional)
-                ? ($data->dns_points ?? $race->dnsPoints())
-                : $race->dnsPoints();
+                $lengthValue = !($data->length_value instanceof Optional)
+                    ? ($data->length_value ?? $race->lengthValue())
+                    : $race->lengthValue();
 
-            $raceNotes = !($data->race_notes instanceof Optional)
-                ? $data->race_notes
-                : $race->raceNotes();
+                $extraLapAfterTime = !($data->extra_lap_after_time instanceof Optional)
+                    ? ($data->extra_lap_after_time ?? $race->extraLapAfterTime())
+                    : $race->extraLapAfterTime();
 
-            $race->updateConfiguration(
-                name: $name,
-                type: $type,
-                qualifyingFormat: $qualifyingFormat,
-                qualifyingLength: $qualifyingLength,
-                qualifyingTire: $qualifyingTire,
-                gridSource: $gridSource,
-                gridSourceRaceId: $gridSourceRaceId,
-                lengthType: $lengthType,
-                lengthValue: $lengthValue,
-                extraLapAfterTime: $extraLapAfterTime,
-                weather: $weather,
-                tireRestrictions: $tireRestrictions,
-                fuelUsage: $fuelUsage,
-                damageModel: $damageModel,
-                trackLimitsEnforced: $trackLimitsEnforced,
-                falseStartDetection: $falseStartDetection,
-                collisionPenalties: $collisionPenalties,
-                mandatoryPitStop: $mandatoryPitStop,
-                minimumPitTime: $minimumPitTime,
-                assistsRestrictions: $assistsRestrictions,
-                raceDivisions: $raceDivisions,
-                pointsSystem: $pointsSystem,
-                bonusPoints: $bonusPoints,
-                dnfPoints: $dnfPoints,
-                dnsPoints: $dnsPoints,
-                raceNotes: $raceNotes,
-            );
+                $weather = !($data->weather instanceof Optional)
+                    ? $data->weather
+                    : $race->weather();
+
+                $tireRestrictions = !($data->tire_restrictions instanceof Optional)
+                    ? $data->tire_restrictions
+                    : $race->tireRestrictions();
+
+                $fuelUsage = !($data->fuel_usage instanceof Optional)
+                    ? $data->fuel_usage
+                    : $race->fuelUsage();
+
+                $damageModel = !($data->damage_model instanceof Optional)
+                    ? $data->damage_model
+                    : $race->damageModel();
+
+                $trackLimitsEnforced = !($data->track_limits_enforced instanceof Optional)
+                    ? ($data->track_limits_enforced ?? $race->trackLimitsEnforced())
+                    : $race->trackLimitsEnforced();
+
+                $falseStartDetection = !($data->false_start_detection instanceof Optional)
+                    ? ($data->false_start_detection ?? $race->falseStartDetection())
+                    : $race->falseStartDetection();
+
+                $collisionPenalties = !($data->collision_penalties instanceof Optional)
+                    ? ($data->collision_penalties ?? $race->collisionPenalties())
+                    : $race->collisionPenalties();
+
+                $mandatoryPitStop = !($data->mandatory_pit_stop instanceof Optional)
+                    ? ($data->mandatory_pit_stop ?? $race->mandatoryPitStop())
+                    : $race->mandatoryPitStop();
+
+                $minimumPitTime = !($data->minimum_pit_time instanceof Optional)
+                    ? $data->minimum_pit_time
+                    : $race->minimumPitTime();
+
+                $assistsRestrictions = !($data->assists_restrictions instanceof Optional)
+                    ? $data->assists_restrictions
+                    : $race->assistsRestrictions();
+
+                $raceDivisions = !($data->race_divisions instanceof Optional)
+                    ? ($data->race_divisions ?? $race->raceDivisions())
+                    : $race->raceDivisions();
+
+                $pointsSystem = !($data->points_system instanceof Optional)
+                    ? ($data->points_system !== null ? PointsSystem::from($data->points_system) : $race->pointsSystem())
+                    : $race->pointsSystem();
+
+                $bonusPoints = !($data->bonus_points instanceof Optional)
+                    ? $data->bonus_points
+                    : $race->bonusPoints();
+
+                $dnfPoints = !($data->dnf_points instanceof Optional)
+                    ? ($data->dnf_points ?? $race->dnfPoints())
+                    : $race->dnfPoints();
+
+                $dnsPoints = !($data->dns_points instanceof Optional)
+                    ? ($data->dns_points ?? $race->dnsPoints())
+                    : $race->dnsPoints();
+
+                $raceNotes = !($data->race_notes instanceof Optional)
+                    ? $data->race_notes
+                    : $race->raceNotes();
+
+                $race->updateConfiguration(
+                    name: $name,
+                    type: $type,
+                    qualifyingFormat: $qualifyingFormat,
+                    qualifyingLength: $qualifyingLength,
+                    qualifyingTire: $qualifyingTire,
+                    gridSource: $gridSource,
+                    gridSourceRaceId: $gridSourceRaceId,
+                    lengthType: $lengthType,
+                    lengthValue: $lengthValue,
+                    extraLapAfterTime: $extraLapAfterTime,
+                    weather: $weather,
+                    tireRestrictions: $tireRestrictions,
+                    fuelUsage: $fuelUsage,
+                    damageModel: $damageModel,
+                    trackLimitsEnforced: $trackLimitsEnforced,
+                    falseStartDetection: $falseStartDetection,
+                    collisionPenalties: $collisionPenalties,
+                    mandatoryPitStop: $mandatoryPitStop,
+                    minimumPitTime: $minimumPitTime,
+                    assistsRestrictions: $assistsRestrictions,
+                    raceDivisions: $raceDivisions,
+                    pointsSystem: $pointsSystem,
+                    bonusPoints: $bonusPoints,
+                    dnfPoints: $dnfPoints,
+                    dnsPoints: $dnsPoints,
+                    raceNotes: $raceNotes,
+                );
+            }
 
             $this->raceRepository->save($race);
             $this->dispatchEvents($race);

@@ -13,6 +13,7 @@ use App\Domain\Competition\Entities\Season;
 use App\Domain\Competition\Exceptions\CompetitionNotFoundException;
 use App\Domain\Competition\Exceptions\SeasonNotFoundException;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
+use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\ValueObjects\SeasonName;
@@ -46,6 +47,7 @@ final class SeasonApplicationService
         private readonly LeagueRepositoryInterface $leagueRepository,
         private readonly DivisionRepositoryInterface $divisionRepository,
         private readonly TeamRepositoryInterface $teamRepository,
+        private readonly RoundRepositoryInterface $roundRepository,
     ) {
     }
 
@@ -426,6 +428,11 @@ final class SeasonApplicationService
         $totalDivisions = count($this->divisionRepository->findBySeasonId($season->id() ?? 0));
         $totalTeams = count($this->teamRepository->findBySeasonId($season->id() ?? 0));
 
+        // Get round counts
+        $rounds = $this->roundRepository->findBySeasonId($season->id() ?? 0);
+        $totalRounds = count($rounds);
+        $completedRounds = count(array_filter($rounds, fn($round) => $round->status()->isCompleted()));
+
         // Build nested competition data with league
         $competitionData = new SeasonCompetitionData(
             id: $competition->id() ?? 0,
@@ -447,10 +454,12 @@ final class SeasonApplicationService
             aggregates: [
                 'total_drivers' => $totalDrivers,
                 'active_drivers' => $activeDrivers,
-                'total_races' => 0, // TODO: Implement when races are added
-                'completed_races' => 0, // TODO: Implement when races are added
+                'total_races' => 0, // Races are part of rounds, count rounds instead
+                'completed_races' => 0, // Races are part of rounds, count rounds instead
                 'total_divisions' => $totalDivisions,
                 'total_teams' => $totalTeams,
+                'total_rounds' => $totalRounds,
+                'completed_rounds' => $completedRounds,
             ]
         );
     }

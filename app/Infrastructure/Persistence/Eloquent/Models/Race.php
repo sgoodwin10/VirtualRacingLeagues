@@ -52,6 +52,16 @@ final class Race extends Model
 
     protected $table = 'races';
 
+    /**
+     * Create a new factory instance for the model.
+     *
+     * @return \Database\Factories\RaceFactory
+     */
+    protected static function newFactory(): \Database\Factories\RaceFactory
+    {
+        return \Database\Factories\RaceFactory::new();
+    }
+
     protected $fillable = [
         'round_id',
         'is_qualifier',

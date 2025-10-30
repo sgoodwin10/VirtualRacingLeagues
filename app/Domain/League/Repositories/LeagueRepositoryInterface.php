@@ -26,6 +26,14 @@ interface LeagueRepositoryInterface
     public function findByIdOrNull(int $id): ?League;
 
     /**
+     * Get a league by ID with counts.
+     *
+     * @throws LeagueNotFoundException
+     * @return array{league: League, competitions_count: int, drivers_count: int}
+     */
+    public function findByIdWithCounts(int $id): array;
+
+    /**
      * Find a league by slug.
      *
      * @throws LeagueNotFoundException
@@ -51,6 +59,13 @@ interface LeagueRepositoryInterface
      * @return array<int, League>
      */
     public function findByUserId(int $userId): array;
+
+    /**
+     * Get all leagues for a specific user with counts.
+     *
+     * @return array<int, array{league: League, competitions_count: int, drivers_count: int}>
+     */
+    public function findByUserIdWithCounts(int $userId): array;
 
     /**
      * Count leagues owned by a user.
@@ -104,7 +119,7 @@ interface LeagueRepositoryInterface
      * @param int $page
      * @param int $perPage
      * @param array<string, mixed> $filters
-     * @return array{data: array<int, League>, total: int, per_page: int, current_page: int, last_page: int}
+     * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
      */
     public function getPaginatedForAdmin(int $page, int $perPage, array $filters = []): array;
 }

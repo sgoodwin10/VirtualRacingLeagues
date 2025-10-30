@@ -110,7 +110,8 @@ final class LeagueApplicationService
             // Fetch platform data for response
             $platforms = $this->fetchPlatformData($league->platformIds());
 
-            return LeagueData::fromEntity($league, $platforms);
+            // New leagues have 0 competitions and 0 drivers
+            return LeagueData::fromEntity($league, $platforms, null, 0, 0);
         });
     }
 
@@ -140,14 +141,21 @@ final class LeagueApplicationService
      */
     public function getUserLeagues(int $userId): array
     {
-        $leagues = $this->leagueRepository->findByUserId($userId);
+        $leaguesWithCounts = $this->leagueRepository->findByUserIdWithCounts($userId);
 
         return array_map(
-            function (League $league) {
+            function (array $item) {
+                $league = $item['league'];
                 $platforms = $this->fetchPlatformData($league->platformIds());
-                return LeagueData::fromEntity($league, $platforms);
+                return LeagueData::fromEntity(
+                    $league,
+                    $platforms,
+                    null,
+                    $item['competitions_count'],
+                    $item['drivers_count']
+                );
             },
-            $leagues
+            $leaguesWithCounts
         );
     }
 
@@ -158,10 +166,17 @@ final class LeagueApplicationService
      */
     public function getLeagueById(int $leagueId): LeagueData
     {
-        $league = $this->leagueRepository->findById($leagueId);
+        $result = $this->leagueRepository->findByIdWithCounts($leagueId);
+        $league = $result['league'];
         $platforms = $this->fetchPlatformData($league->platformIds());
 
-        return LeagueData::fromEntity($league, $platforms);
+        return LeagueData::fromEntity(
+            $league,
+            $platforms,
+            null,
+            $result['competitions_count'],
+            $result['drivers_count']
+        );
     }
 
     /**
@@ -267,10 +282,17 @@ final class LeagueApplicationService
             // Dispatch domain events
             $this->dispatchEvents($league);
 
-            // Fetch platform data for response
+            // Fetch updated counts and platform data for response
+            $result = $this->leagueRepository->findByIdWithCounts($leagueId);
             $platforms = $this->fetchPlatformData($league->platformIds());
 
-            return LeagueData::fromEntity($league, $platforms);
+            return LeagueData::fromEntity(
+                $league,
+                $platforms,
+                null,
+                $result['competitions_count'],
+                $result['drivers_count']
+            );
         });
     }
 
@@ -445,28 +467,38 @@ final class LeagueApplicationService
     public function getAllLeaguesForAdmin(int $page, int $perPage, array $filters = []): array
     {
         return DB::transaction(function () use ($page, $perPage, $filters) {
-            // Get paginated leagues from repository
+            // Get paginated leagues from repository (now includes counts)
             $result = $this->leagueRepository->getPaginatedForAdmin($page, $perPage, $filters);
 
             // Fetch owner data for all leagues
-            $ownerUserIds = array_map(fn(League $league) => $league->ownerUserId(), $result['data']);
+            /** @var array<int, int> $ownerUserIds */
+            $ownerUserIds = array_map(fn(array $item) => $item['league']->ownerUserId(), $result['data']);
             $owners = UserEloquent::whereIn('id', $ownerUserIds)
                 ->get()
                 ->keyBy('id');
 
-            // Convert to DTOs with platform and owner data
+            // Convert to DTOs with platform, owner data, and counts
             $leagueDTOs = array_map(
-                function (League $league) use ($owners) {
+                function (array $item) use ($owners) {
+                    $league = $item['league'];
                     $platforms = $this->fetchPlatformData($league->platformIds());
 
                     // Get owner data
                     $owner = $owners->get($league->ownerUserId());
                     $ownerData = $owner ? [
-                        'name' => trim($owner->first_name . ' ' . $owner->last_name),
+                        'id' => $owner->id,
+                        'first_name' => $owner->first_name,
+                        'last_name' => $owner->last_name,
                         'email' => $owner->email,
                     ] : null;
 
-                    return LeagueData::fromEntity($league, $platforms, $ownerData);
+                    return LeagueData::fromEntity(
+                        $league,
+                        $platforms,
+                        $ownerData,
+                        $item['competitions_count'],
+                        $item['drivers_count']
+                    );
                 },
                 $result['data']
             );
@@ -488,17 +520,26 @@ final class LeagueApplicationService
      */
     public function getLeagueForAdmin(int $leagueId): LeagueData
     {
-        $league = $this->leagueRepository->findById($leagueId);
+        $result = $this->leagueRepository->findByIdWithCounts($leagueId);
+        $league = $result['league'];
         $platforms = $this->fetchPlatformData($league->platformIds());
 
         // Fetch owner data
         $owner = UserEloquent::find($league->ownerUserId());
         $ownerData = $owner ? [
-            'name' => trim($owner->first_name . ' ' . $owner->last_name),
+            'id' => $owner->id,
+            'first_name' => $owner->first_name,
+            'last_name' => $owner->last_name,
             'email' => $owner->email,
         ] : null;
 
-        return LeagueData::fromEntity($league, $platforms, $ownerData);
+        return LeagueData::fromEntity(
+            $league,
+            $platforms,
+            $ownerData,
+            $result['competitions_count'],
+            $result['drivers_count']
+        );
     }
 
     /**
@@ -521,15 +562,24 @@ final class LeagueApplicationService
             // Dispatch domain events
             $this->dispatchEvents($league);
 
-            // Fetch platform and owner data for response
+            // Fetch updated counts, platform, and owner data for response
+            $result = $this->leagueRepository->findByIdWithCounts($leagueId);
             $platforms = $this->fetchPlatformData($league->platformIds());
             $owner = UserEloquent::find($league->ownerUserId());
             $ownerData = $owner ? [
-                'name' => trim($owner->first_name . ' ' . $owner->last_name),
+                'id' => $owner->id,
+                'first_name' => $owner->first_name,
+                'last_name' => $owner->last_name,
                 'email' => $owner->email,
             ] : null;
 
-            return LeagueData::fromEntity($league, $platforms, $ownerData);
+            return LeagueData::fromEntity(
+                $league,
+                $platforms,
+                $ownerData,
+                $result['competitions_count'],
+                $result['drivers_count']
+            );
         });
     }
 

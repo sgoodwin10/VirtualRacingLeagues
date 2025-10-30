@@ -85,6 +85,8 @@ class SeasonData extends Data
                 completed_races: $aggregates['completed_races'] ?? 0,
                 total_divisions: $aggregates['total_divisions'] ?? 0,
                 total_teams: $aggregates['total_teams'] ?? 0,
+                total_rounds: $aggregates['total_rounds'] ?? 0,
+                completed_rounds: $aggregates['completed_rounds'] ?? 0,
             ),
         );
     }

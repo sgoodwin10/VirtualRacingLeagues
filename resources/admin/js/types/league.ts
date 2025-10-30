@@ -21,10 +21,9 @@ export interface League {
   timezone: string | null;
   owner_user_id: number;
   owner?: {
-    id: string;
+    id: number;
     first_name: string;
     last_name: string;
-    name?: string;
     email: string;
   };
   contact_email: string | null;

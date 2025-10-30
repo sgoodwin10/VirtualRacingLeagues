@@ -3,10 +3,9 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import { PhUsers, PhFlagCheckered } from '@phosphor-icons/vue';
+import { PhUsers, PhFlagCheckered, PhUser, PhEnvelope } from '@phosphor-icons/vue';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
-import Chip from 'primevue/chip';
 import Skeleton from 'primevue/skeleton';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
@@ -35,10 +34,12 @@ import type { League } from '@user/types/league';
 import type { Competition } from '@user/types/competition';
 import type { LeagueDriver, CreateDriverRequest } from '@user/types/driver';
 import HTag from '@user/components/common/HTag.vue';
-import Tag from 'primevue/tag';
 import BasePanel from '@user/components/common/panels/BasePanel.vue';
 import FormLabel from '@user/components/common/forms/FormLabel.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@user/components/common/Breadcrumbs.vue';
+import LeagueVisibilityTag from '@user/components/league/partials/LeagueVisibilityTag.vue';
+import InfoItem from '@user/components/common/InfoItem.vue';
+import { PhGameController, PhMapPinArea, PhSteeringWheel, PhTrophy } from '@phosphor-icons/vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -188,10 +189,6 @@ function handleCompetitionUpdated(competition: Competition): void {
 
 function handleCompetitionDeleted(competitionId: number): void {
   console.log('Competition deleted:', competitionId);
-}
-
-function handleCreateDrivers(): void {
-  showDriverDrawer.value = true;
 }
 
 function handleEditLeague(): void {
@@ -368,33 +365,17 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
   },
 ]);
 
-const visibilitySeverity = computed((): 'success' | 'info' | 'warning' => {
-  if (!league.value) return 'info';
-
-  switch (league.value.visibility) {
-    case 'public':
-      return 'info';
-    case 'private':
-      return 'warning';
-    case 'unlisted':
-      return 'info';
-    default:
-      return 'info';
+function getPlatformNames(league: League): string {
+  if (!league.platforms || league.platforms.length === 0) {
+    return 'No platforms';
   }
-});
 
-const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' => {
-  if (!league.value) return 'info';
-
-  switch (league.value.status) {
-    case 'active':
-      return 'success';
-    case 'archived':
-      return 'danger';
-    default:
-      return 'info';
+  if (league.platforms.length <= 2) {
+    return league.platforms.map((p) => p.name).join(', ');
   }
-});
+
+  return league.platforms.map((p) => p.name).join(', ');
+}
 </script>
 
 <template>
@@ -455,38 +436,18 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
               @error="logo.handleError"
             />
 
-            <div class="absolute top-0 right-0 flex flex-col items-center gap-3 p-2">
-              <Tag
-                icon="pi pi-eye"
-                :value="league.visibility.toUpperCase()"
-                :severity="visibilitySeverity"
-              />
+            <div class="absolute top-0 left-0 flex flex-col items-center gap-3 p-2">
+              <LeagueVisibilityTag :visibility="league.visibility" />
             </div>
           </div>
           <!-- Title and Visibility -->
           <div
             class="flex flex-wrap items-start justify-between gap-4 bg-slate-100 border-b border-gray-200 p-3 shadow-lg"
           >
-            <HTag additional-classes="ml-32">{{ league.name }}</HTag>
+            <HTag additional-classes="ml-32" :level="2">{{ league.name }}</HTag>
 
             <!-- Action Buttons -->
             <div class="flex gap-3">
-              <Button
-                label="Create Competitions"
-                icon="pi pi-trophy"
-                severity="help"
-                size="small"
-                class="bg-white"
-                outlined
-                @click="handleCreateCompetitions"
-              />
-              <Button
-                label="Manage Drivers"
-                icon="pi pi-users"
-                severity="info"
-                size="small"
-                @click="handleCreateDrivers"
-              />
               <Button
                 label="Edit League"
                 icon="pi pi-pencil"
@@ -501,6 +462,28 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
         </template>
 
         <template #content>
+          <div class="grid grid-cols-4 border-b border-gray-200 gap-px bg-surface-200">
+            <InfoItem :icon="PhGameController" :text="getPlatformNames(league)" centered />
+            <InfoItem :icon="PhMapPinArea" :text="league.timezone" centered />
+            <InfoItem
+              :icon="PhTrophy"
+              :text="
+                league.competitions_count.toString() +
+                ' Competition' +
+                (league.competitions_count === 1 ? '' : 's')
+              "
+              centered
+            />
+            <InfoItem
+              :icon="PhSteeringWheel"
+              :text="
+                league.drivers_count.toString() +
+                ' Driver' +
+                (league.drivers_count === 1 ? '' : 's')
+              "
+              centered
+            />
+          </div>
           <div class="space-y-6">
             <!-- Hero Section: Tagline -->
             <div v-if="league.tagline" class="text-center py-4 hidden">
@@ -508,40 +491,120 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
             </div>
 
             <!-- Main Content: Two-Column Layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
               <!-- Left Column: Description (2/3 width) -->
-              <div class="lg:col-span-2 space-y-4">
+              <div class="lg:col-span-3 space-y-4">
                 <BasePanel>
                   <template #header>
-                    <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
-                      <i class="pi pi-info-circle text-lg"></i>
-                      <span class="font-semibold">About {{ league.name }}</span>
+                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
+                      <span class="font-medium text-surface-700">About {{ league.name }}</span>
                     </div>
                   </template>
-
-                  <div v-if="league.description" class="prose max-w-none pt-4">
+                  <div v-if="league.description" class="prose max-w-none p-4">
                     <!-- eslint-disable-next-line vue/no-v-html -->
                     <div class="text-gray-700 leading-relaxed" v-html="league.description"></div>
                   </div>
                   <div v-else class="text-gray-500 italic pt-4">No description provided</div>
                 </BasePanel>
                 <BasePanel>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Organizer -->
-                    <div>
-                      <FormLabel text="Contact Name" />
-                      <p class="text-gray-700 mt-1">{{ league.organizer_name }}</p>
+                  <template #header>
+                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
+                      <span class="font-medium text-surface-700">Contact Information</span>
+                    </div>
+                  </template>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
+                    <!-- Organizer Name -->
+                    <div
+                      class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors group"
+                    >
+                      <div
+                        class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors"
+                      >
+                        <PhUser :size="20" class="text-blue-600" />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Organizer
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900 truncate mt-0.5">
+                          {{ league.organizer_name }}
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Contact Email -->
-                    <div v-if="league.contact_email">
-                      <FormLabel text="Contact Email" />
-                      <a
-                        :href="`mailto:${league.contact_email}`"
-                        class="text-blue-600 hover:underline block mt-1"
+                    <a
+                      v-if="league.contact_email"
+                      :href="`mailto:${league.contact_email}`"
+                      class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-blue-50 transition-colors group"
+                    >
+                      <div
+                        class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 group-hover:bg-green-200 transition-colors"
                       >
-                        {{ league.contact_email }}
-                      </a>
+                        <PhEnvelope :size="20" class="text-green-600" />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Contact Email
+                        </div>
+                        <div
+                          class="text-sm font-semibold text-blue-600 group-hover:text-blue-700 truncate mt-0.5"
+                        >
+                          {{ league.contact_email }}
+                        </div>
+                      </div>
+                    </a>
+
+                    <!-- Placeholder if no email -->
+                    <div
+                      v-else
+                      class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 opacity-50"
+                    >
+                      <div
+                        class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100"
+                      >
+                        <PhEnvelope :size="20" class="text-gray-400" />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Contact Email
+                        </div>
+                        <div class="text-sm text-gray-400 italic mt-0.5">Not provided</div>
+                      </div>
+                    </div>
+                  </div>
+                </BasePanel>
+              </div>
+
+              <!-- Right Column: Basic Info & Metadata (1/3 width) -->
+              <div class="lg:col-span-2 space-y-4">
+                <BasePanel>
+                  <template #header>
+                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
+                      <span class="font-medium text-surface-700">Social Media & Links</span>
+                    </div>
+                  </template>
+
+                  <!-- Metadata Section -->
+                  <div
+                    v-if="league.created_at || league.updated_at"
+                    class="pt-4 border-t border-gray-200 space-y-3"
+                  >
+                    <!-- Created Date -->
+                    <div v-if="league.created_at">
+                      <FormLabel text="Created" />
+                      <p class="text-gray-600 text-sm mt-1">
+                        {{ formatDate(league.created_at) }}
+                      </p>
+                    </div>
+
+                    <!-- Last Updated -->
+                    <div v-if="league.updated_at">
+                      <FormLabel text="Last Updated" />
+                      <p class="text-gray-600 text-sm mt-1">
+                        {{ formatDate(league.updated_at) }}
+                      </p>
                     </div>
                   </div>
                 </BasePanel>
@@ -557,144 +620,124 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
                     league.twitch_url
                   "
                 >
-                  <div class="flex flex-wrap gap-3">
-                    <Button
+                  <div class="grid grid-cols-2 gap-2 px-2">
+                    <!-- Discord -->
+                    <a
                       v-if="league.discord_url"
-                      v-tooltip.top="'Discord'"
-                      icon="pi pi-discord"
-                      size="small"
-                      class="bg-indigo-600 hover:bg-indigo-700 text-white border-0"
                       :href="league.discord_url"
                       target="_blank"
                       rel="noopener noreferrer"
-                      as="a"
-                    />
-                    <Button
+                      class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <div
+                        class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-100 group-hover:bg-indigo-200 transition-colors"
+                      >
+                        <i class="pi pi-discord text-indigo-600"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900">Discord</div>
+                        <div class="text-xs text-gray-500 truncate">{{ league.discord_url }}</div>
+                      </div>
+                    </a>
+
+                    <!-- Website -->
+                    <a
                       v-if="league.website_url"
-                      v-tooltip.top="'Website'"
-                      icon="pi pi-globe"
-                      size="small"
-                      class="bg-blue-600 hover:bg-blue-700 text-white border-0"
                       :href="league.website_url"
                       target="_blank"
                       rel="noopener noreferrer"
-                      as="a"
-                    />
-                    <Button
+                      class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <div
+                        class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors"
+                      >
+                        <i class="pi pi-globe text-blue-600"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900">Website</div>
+                        <div class="text-xs text-gray-500 truncate">{{ league.website_url }}</div>
+                      </div>
+                    </a>
+
+                    <!-- Twitter -->
+                    <a
                       v-if="league.twitter_handle"
-                      v-tooltip.top="'Twitter'"
-                      icon="pi pi-twitter"
-                      size="small"
-                      class="bg-black hover:bg-gray-900 text-white border-0"
-                      :href="`https://twitter.com/${league.twitter_handle}`"
+                      :href="`https://twitter.com/${league.twitter_handle.replace('@', '')}`"
                       target="_blank"
                       rel="noopener noreferrer"
-                      as="a"
-                    />
-                    <Button
+                      class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <div
+                        class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 group-hover:bg-gray-200 transition-colors"
+                      >
+                        <i class="pi pi-twitter text-gray-900"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900">Twitter</div>
+                        <div class="text-xs text-gray-500 truncate">
+                          @{{ league.twitter_handle.replace('@', '') }}
+                        </div>
+                      </div>
+                    </a>
+
+                    <!-- Instagram -->
+                    <a
                       v-if="league.instagram_handle"
-                      v-tooltip.top="'Instagram'"
-                      icon="pi pi-instagram"
-                      size="small"
-                      class="bg-pink-600 hover:bg-pink-700 text-white border-0"
-                      :href="`https://instagram.com/${league.instagram_handle}`"
+                      :href="`https://instagram.com/${league.instagram_handle.replace('@', '')}`"
                       target="_blank"
                       rel="noopener noreferrer"
-                      as="a"
-                    />
-                    <Button
+                      class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <div
+                        class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-pink-100 group-hover:bg-pink-200 transition-colors"
+                      >
+                        <i class="pi pi-instagram text-pink-600"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900">Instagram</div>
+                        <div class="text-xs text-gray-500 truncate">
+                          @{{ league.instagram_handle.replace('@', '') }}
+                        </div>
+                      </div>
+                    </a>
+
+                    <!-- YouTube -->
+                    <a
                       v-if="league.youtube_url"
-                      v-tooltip.top="'YouTube'"
-                      icon="pi pi-youtube"
-                      size="small"
-                      class="bg-red-600 hover:bg-red-700 text-white border-0"
                       :href="league.youtube_url"
                       target="_blank"
                       rel="noopener noreferrer"
-                      as="a"
-                    />
-                    <Button
+                      class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <div
+                        class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-red-100 group-hover:bg-red-200 transition-colors"
+                      >
+                        <i class="pi pi-youtube text-red-600"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900">YouTube</div>
+                        <div class="text-xs text-gray-500 truncate">{{ league.youtube_url }}</div>
+                      </div>
+                    </a>
+
+                    <!-- Twitch -->
+                    <a
                       v-if="league.twitch_url"
-                      v-tooltip.top="'Twitch'"
-                      icon="pi pi-twitch"
-                      size="small"
-                      class="bg-purple-600 hover:bg-purple-700 text-white border-0"
                       :href="league.twitch_url"
                       target="_blank"
                       rel="noopener noreferrer"
-                      as="a"
-                    />
-                  </div>
-                </BasePanel>
-              </div>
-
-              <!-- Right Column: Basic Info & Metadata (1/3 width) -->
-              <div class="lg:col-span-1">
-                <BasePanel>
-                  <template #header>
-                    <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
-                      <i class="pi pi-list text-lg"></i>
-                      <span class="font-semibold">League Information</span>
-                    </div>
-                  </template>
-
-                  <div class="space-y-6 pt-4">
-                    <!-- Platforms -->
-                    <div>
-                      <FormLabel text="Platforms" />
-                      <div
-                        v-if="league.platforms && league.platforms.length > 0"
-                        class="flex flex-wrap gap-2 mt-1"
-                      >
-                        <Chip
-                          v-for="platform in league.platforms"
-                          :key="platform.id"
-                          :label="platform.name"
-                          class="bg-blue-100 text-blue-800"
-                        />
-                      </div>
-                      <p v-else class="text-gray-500 text-sm mt-1">No platforms specified</p>
-                    </div>
-
-                    <!-- Timezone -->
-                    <div>
-                      <FormLabel text="Timezone" />
-                      <p class="text-gray-700 mt-1">{{ league.timezone }}</p>
-                    </div>
-
-                    <!-- Status -->
-                    <div>
-                      <FormLabel text="Status" />
-                      <div class="mt-1">
-                        <Tag
-                          :value="league.status.toUpperCase()"
-                          :severity="statusSeverity"
-                          class="font-medium"
-                        />
-                      </div>
-                    </div>
-
-                    <!-- Metadata Section -->
-                    <div
-                      v-if="league.created_at || league.updated_at"
-                      class="pt-4 border-t border-gray-200 space-y-3"
+                      class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
                     >
-                      <!-- Created Date -->
-                      <div v-if="league.created_at">
-                        <FormLabel text="Created" />
-                        <p class="text-gray-600 text-sm mt-1">
-                          {{ formatDate(league.created_at) }}
-                        </p>
+                      <div
+                        class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-purple-100 group-hover:bg-purple-200 transition-colors"
+                      >
+                        <i class="pi pi-twitch text-purple-600"></i>
                       </div>
-
-                      <!-- Last Updated -->
-                      <div v-if="league.updated_at">
-                        <FormLabel text="Last Updated" />
-                        <p class="text-gray-600 text-sm mt-1">
-                          {{ formatDate(league.updated_at) }}
-                        </p>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900">Twitch</div>
+                        <div class="text-xs text-gray-500 truncate">{{ league.twitch_url }}</div>
                       </div>
-                    </div>
+                    </a>
                   </div>
                 </BasePanel>
               </div>
@@ -729,44 +772,28 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
       <TabPanels>
         <!-- Competitions Tab -->
         <TabPanel value="competitions">
-          <BasePanel>
-            <template #header>
-              <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
-                <PhFlagCheckered size="24" />
-                <span class="font-semibold">Competitions</span>
-              </div>
-            </template>
-            <template #icons>
-              <Button
-                size="small"
-                icon="pi pi-plus"
-                class="whitespace-nowrap"
-                label="New Competition"
-                severity="secondary"
-                outlined
-                @click="handleCreateCompetitions"
-              />
-            </template>
-            <CompetitionList
-              :league-id="leagueIdNumber"
-              @competition-created="handleCompetitionCreated"
-              @competition-updated="handleCompetitionUpdated"
-              @competition-deleted="handleCompetitionDeleted"
-            />
-          </BasePanel>
+          <CompetitionList
+            :league-id="leagueIdNumber"
+            @competition-created="handleCompetitionCreated"
+            @competition-updated="handleCompetitionUpdated"
+            @competition-deleted="handleCompetitionDeleted"
+          />
+
+          <Button
+            label="Create Competitions"
+            icon="pi pi-trophy"
+            severity="help"
+            size="small"
+            class="bg-white"
+            outlined
+            @click="handleCreateCompetitions"
+          />
         </TabPanel>
 
         <!-- Drivers Tab -->
         <TabPanel value="drivers">
           <BasePanel>
-            <template #header>
-              <div class="flex items-center gap-2 border-b border-gray-200 pb-2 w-full">
-                <PhUsers size="24" />
-                <span class="font-semibold">League Drivers</span>
-              </div>
-            </template>
-
-            <div class="space-y-4">
+            <div class="space-y-4 p-4">
               <!-- Toolbar -->
               <div class="flex flex-wrap gap-4 items-center justify-between">
                 <!-- Search and Filter -->
@@ -792,12 +819,20 @@ const statusSeverity = computed((): 'success' | 'info' | 'warning' | 'danger' =>
                 <!-- Action Buttons -->
                 <div class="flex gap-2">
                   <Button
-                    label="Import CSV"
+                    label="Import Drivers"
                     icon="pi pi-upload"
                     severity="secondary"
+                    size="small"
+                    outlined
                     @click="handleImportCSV"
                   />
-                  <Button label="Add Driver" icon="pi pi-plus" @click="handleAddDriver" />
+                  <Button
+                    label="Add Driver"
+                    outlined
+                    icon="pi pi-plus"
+                    size="small"
+                    @click="handleAddDriver"
+                  />
                 </div>
               </div>
 

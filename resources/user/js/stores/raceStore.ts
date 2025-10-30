@@ -27,9 +27,18 @@ export const useRaceStore = defineStore('race', () => {
     loading.value = true;
     error.value = null;
     try {
-      const data = await raceService.getRaces(roundId);
+      // Fetch both regular races and qualifier
+      const [regularRaces, qualifier] = await Promise.all([
+        raceService.getRaces(roundId),
+        raceService.getQualifier(roundId),
+      ]);
+
+      // Combine races and qualifier (if exists)
+      const allRaces = qualifier ? [...regularRaces, qualifier] : regularRaces;
+
       // Replace races for this round
-      races.value = [...races.value.filter((r) => r.round_id !== roundId), ...data];
+      const existingRaces = races.value.filter((r) => r.round_id !== roundId);
+      races.value = [...existingRaces, ...allRaces];
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch races';
       throw err;

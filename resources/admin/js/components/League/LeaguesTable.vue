@@ -31,12 +31,7 @@
     <!-- Logo Column -->
     <Column field="logo_url" header="Logo" style="min-width: 80px">
       <template #body="{ data }">
-        <img
-          v-if="data.logo_url"
-          :src="data.logo_url"
-          :alt="`${data.name} logo`"
-          class="w-8 h-8 rounded object-cover"
-        />
+        <img v-if="data.logo_url" :src="data.logo_url" class="w-8 h-8 rounded object-cover" />
         <div v-else class="w-8 h-8 rounded bg-gray-200 flex items-center justify-center">
           <span class="text-gray-400 text-xs">N/A</span>
         </div>
@@ -102,7 +97,7 @@
     </Column>
 
     <!-- Actions Column -->
-    <Column header="Actions" :exportable="false" style="min-width: 120px">
+    <Column header="Actions" :exportable="false" style="min-width: 160px">
       <template #body="{ data }">
         <div class="flex gap-2">
           <Button
@@ -113,6 +108,17 @@
             severity="secondary"
             size="small"
             @click="handleView(data)"
+          />
+          <Button
+            v-if="data.owner"
+            v-tooltip.top="'Login As Manager'"
+            icon="pi pi-sign-in"
+            text
+            rounded
+            severity="warning"
+            size="small"
+            :loading="loggingInAsManager.get(data.id) || false"
+            @click="handleLoginAsManager(data)"
           />
           <Button
             v-if="data.status === 'active'"
@@ -141,12 +147,17 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import { useToast } from 'primevue/usetoast';
 import Badge from '@admin/components/common/Badge.vue';
 import EmptyState from '@admin/components/common/EmptyState.vue';
 import LoadingState from '@admin/components/common/LoadingState.vue';
+import { useNameHelpers } from '@admin/composables/useNameHelpers';
+import userService from '@admin/services/userService';
+import { logger } from '@admin/utils/logger';
 import type { League, LeagueVisibility, LeagueStatus } from '@admin/types/league';
 
 /**
@@ -192,6 +203,13 @@ withDefaults(defineProps<LeaguesTableProps>(), {
 
 // Emits
 const emit = defineEmits<LeaguesTableEmits>();
+
+// Composables
+const toast = useToast();
+const { getFullName } = useNameHelpers();
+
+// State
+const loggingInAsManager = ref<Map<number, boolean>>(new Map());
 
 /**
  * Get visibility label
@@ -278,6 +296,42 @@ const handleArchive = (league: League): void => {
  */
 const handleDelete = (league: League): void => {
   emit('delete', league);
+};
+
+/**
+ * Handle login as manager click
+ */
+const handleLoginAsManager = async (league: League): Promise<void> => {
+  if (!league.owner || !league.owner_user_id) return;
+
+  loggingInAsManager.value.set(league.id, true);
+  try {
+    const { token } = await userService.loginAsUser(String(league.owner_user_id));
+
+    // Get app domain from environment
+    const protocol = window.location.protocol;
+    const loginUrl = `${protocol}//${import.meta.env.VITE_APP_DOMAIN}/login-as?token=${token}`;
+
+    // Open in new tab
+    window.open(loginUrl, '_blank');
+
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: `Opening user dashboard for ${getFullName(league.owner)}`,
+      life: 3000,
+    });
+  } catch (error) {
+    logger.error('Failed to login as manager', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to login as manager',
+      life: 3000,
+    });
+  } finally {
+    loggingInAsManager.value.set(league.id, false);
+  }
 };
 </script>
 

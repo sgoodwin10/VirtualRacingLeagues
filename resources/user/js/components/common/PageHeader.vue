@@ -20,8 +20,8 @@ defineProps<Props>();
 </script>
 
 <template>
-  <div>
+  <div class="w-full">
     <HTag additional-classes="mb-2">{{ title }}</HTag>
-    <p v-if="description" class="text-gray-600">{{ description }}</p>
+    <div v-if="description" class="text-gray-600">{{ description }}</div>
   </div>
 </template>

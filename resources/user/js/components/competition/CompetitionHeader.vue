@@ -61,6 +61,10 @@ const emit = defineEmits<Emits>();
             <p class="text-xl font-bold">{{ competition.stats.total_seasons }}</p>
           </div>
           <div>
+            <span class="text-sm text-gray-500">Rounds</span>
+            <p class="text-xl font-bold">{{ competition.stats.total_rounds }}</p>
+          </div>
+          <div>
             <span class="text-sm text-gray-500">Drivers</span>
             <p class="text-xl font-bold">{{ competition.stats.total_drivers }}</p>
           </div>

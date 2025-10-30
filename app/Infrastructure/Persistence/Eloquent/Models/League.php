@@ -164,4 +164,31 @@ class League extends Model
             ->withPivot('id', 'driver_number', 'status', 'league_notes', 'added_to_league_at', 'updated_at')
             ->withTimestamps();
     }
+
+    /**
+     * Get the competitions (seasons) for this league.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough<SeasonEloquent>
+     */
+    public function seasons(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            SeasonEloquent::class,
+            Competition::class,
+            'league_id',
+            'competition_id',
+            'id',
+            'id'
+        );
+    }
+
+    /**
+     * Get the competitions for this league.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Competition>
+     */
+    public function competitions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Competition::class, 'league_id');
+    }
 }

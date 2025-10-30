@@ -76,10 +76,12 @@ final class RoundApplicationService
 
     /**
      * Update an existing round.
+     *
+     * @param array<string, mixed> $requestData Raw request data to check field presence
      */
-    public function updateRound(int $roundId, UpdateRoundData $data): RoundData
+    public function updateRound(int $roundId, UpdateRoundData $data, array $requestData = []): RoundData
     {
-        return DB::transaction(function () use ($roundId, $data) {
+        return DB::transaction(function () use ($roundId, $data, $requestData) {
             $round = $this->roundRepository->findById($roundId);
 
             // Determine round number (use existing if not provided)
@@ -100,11 +102,19 @@ final class RoundApplicationService
                 )
             );
 
+            // Determine scheduled_at: if field provided in request, update it (even to null); otherwise keep existing
+            $scheduledAt = $round->scheduledAt();
+            if (array_key_exists('scheduled_at', $requestData)) {
+                $scheduledAt = $data->scheduled_at ? new DateTimeImmutable($data->scheduled_at) : null;
+            }
+
             $round->updateDetails(
-                roundNumber: $data->round_number !== null ? RoundNumber::from($data->round_number) : $round->roundNumber(),
+                roundNumber: $data->round_number !== null
+                    ? RoundNumber::from($data->round_number)
+                    : $round->roundNumber(),
                 name: $data->name !== null ? RoundName::from($data->name) : $round->name(),
                 slug: $uniqueSlug,
-                scheduledAt: $data->scheduled_at !== null ? new DateTimeImmutable($data->scheduled_at) : $round->scheduledAt(),
+                scheduledAt: $scheduledAt,
                 platformTrackId: $data->platform_track_id ?? $round->platformTrackId(),
                 trackLayout: $data->track_layout !== null ? $data->track_layout : $round->trackLayout(),
                 trackConditions: $data->track_conditions !== null ? $data->track_conditions : $round->trackConditions(),

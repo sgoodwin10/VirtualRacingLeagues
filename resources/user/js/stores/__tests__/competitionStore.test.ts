@@ -39,6 +39,7 @@ describe('competitionStore', () => {
     stats: {
       total_seasons: 2,
       active_seasons: 1,
+      total_rounds: 10,
       total_drivers: 20,
       total_races: 15,
       next_race_date: '2025-02-01T00:00:00Z',

@@ -41,7 +41,16 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
 
     public function findById(int $id): Competition
     {
-        $model = CompetitionModel::withTrashed()->find($id);
+        /** @var CompetitionModel|null $model */
+        $model = CompetitionModel::withTrashed()
+            ->withCount([
+                'seasons as total_seasons',
+                'seasons as active_seasons' => function ($query): void {
+                    $query->where('status', 'active');
+                },
+                'seasonDrivers as total_drivers',
+            ])
+            ->find($id);
 
         if (!$model) {
             throw CompetitionNotFoundException::withId($id);
@@ -54,6 +63,13 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
     {
         $model = CompetitionModel::where('slug', $slug)
             ->where('league_id', $leagueId)
+            ->withCount([
+                'seasons as total_seasons',
+                'seasons as active_seasons' => function ($query): void {
+                    $query->where('status', 'active');
+                },
+                'seasonDrivers as total_drivers',
+            ])
             ->first();
 
         if (!$model) {
@@ -69,6 +85,13 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
     public function findByLeagueId(int $leagueId): array
     {
         return CompetitionModel::where('league_id', $leagueId)
+            ->withCount([
+                'seasons as total_seasons',
+                'seasons as active_seasons' => function ($query): void {
+                    $query->where('status', 'active');
+                },
+                'seasonDrivers as total_drivers',
+            ])
             ->get()
             ->map(fn(CompetitionModel $model) => $this->mapToEntity($model))
             ->all();
@@ -101,6 +124,140 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
         return CompetitionModel::where('league_id', $leagueId)
             ->where('status', 'active')
             ->count();
+    }
+
+    /**
+     * Get stats for a competition entity.
+     *
+     * @return array<string, int|string|null>
+     */
+    public function getStatsForEntity(Competition $competition): array
+    {
+        $competitionId = $competition->id();
+        if ($competitionId === null) {
+            return [
+                'total_seasons' => 0,
+                'active_seasons' => 0,
+                'total_drivers' => 0,
+                'total_rounds' => 0,
+                'total_races' => 0,
+                'next_race_date' => null,
+            ];
+        }
+
+        $model = CompetitionModel::query()
+            ->withCount([
+                'seasons as total_seasons',
+                'seasons as active_seasons' => function ($query): void {
+                    $query->where('status', 'active');
+                },
+                'seasonDrivers as total_drivers',
+            ])
+            ->find($competitionId);
+
+        if (!$model) {
+            return [
+                'total_seasons' => 0,
+                'active_seasons' => 0,
+                'total_drivers' => 0,
+                'total_rounds' => 0,
+                'total_races' => 0,
+                'next_race_date' => null,
+            ];
+        }
+
+        // Count rounds through seasons -> rounds
+        $totalRounds = \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
+            ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
+            ->where('seasons.competition_id', $competitionId)
+            ->whereNull('rounds.deleted_at')
+            ->whereNull('seasons.deleted_at')
+            ->count();
+
+        // Count races through seasons -> rounds -> races
+        $totalRaces = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
+            ->where('seasons.competition_id', $competitionId)
+            ->whereNull('rounds.deleted_at')
+            ->whereNull('seasons.deleted_at')
+            ->count();
+
+        return [
+            'total_seasons' => (int) ($model->total_seasons ?? 0),
+            'active_seasons' => (int) ($model->active_seasons ?? 0),
+            'total_drivers' => (int) ($model->total_drivers ?? 0),
+            'total_rounds' => $totalRounds,
+            'total_races' => $totalRaces,
+            'next_race_date' => null, // TODO: Implement next race date calculation
+        ];
+    }
+
+    /**
+     * Get stats for multiple competition entities.
+     *
+     * @param array<Competition> $competitions
+     * @return array<int, array<string, int|string|null>> Keyed by competition ID
+     */
+    public function getStatsForEntities(array $competitions): array
+    {
+        $competitionIds = array_filter(
+            array_map(fn(Competition $c) => $c->id(), $competitions),
+            fn($id) => $id !== null
+        );
+
+        if (empty($competitionIds)) {
+            return [];
+        }
+
+        $models = CompetitionModel::whereIn('id', $competitionIds)
+            ->withCount([
+                'seasons as total_seasons',
+                'seasons as active_seasons' => function ($query): void {
+                    $query->where('status', 'active');
+                },
+                'seasonDrivers as total_drivers',
+            ])
+            ->get()
+            ->keyBy('id');
+
+        // Count rounds for all competitions
+        $roundCounts = \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
+            ->select('seasons.competition_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
+            ->whereIn('seasons.competition_id', $competitionIds)
+            ->whereNull('rounds.deleted_at')
+            ->whereNull('seasons.deleted_at')
+            ->groupBy('seasons.competition_id')
+            ->pluck('total', 'competition_id')
+            ->toArray();
+
+        // Count races for all competitions
+        $raceCounts = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+            ->select('seasons.competition_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
+            ->whereIn('seasons.competition_id', $competitionIds)
+            ->whereNull('rounds.deleted_at')
+            ->whereNull('seasons.deleted_at')
+            ->groupBy('seasons.competition_id')
+            ->pluck('total', 'competition_id')
+            ->toArray();
+
+        $stats = [];
+        foreach ($competitionIds as $id) {
+            $model = $models->get($id);
+            $stats[$id] = [
+                'total_seasons' => (int) ($model->total_seasons ?? 0),
+                'active_seasons' => (int) ($model->active_seasons ?? 0),
+                'total_drivers' => (int) ($model->total_drivers ?? 0),
+                'total_rounds' => (int) ($roundCounts[$id] ?? 0),
+                'total_races' => (int) ($raceCounts[$id] ?? 0),
+                'next_race_date' => null, // TODO: Implement next race date calculation
+            ];
+        }
+
+        return $stats;
     }
 
     /**

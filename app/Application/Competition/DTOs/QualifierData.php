@@ -14,33 +14,26 @@ final class QualifierData extends Data
         public int $id,
         public int $round_id,
         public ?string $name,
-
         // Qualifying Configuration
         public string $qualifying_format,
         public int $qualifying_length,
         public ?string $qualifying_tire,
-
         // Platform Settings
         public ?string $weather,
         public ?string $tire_restrictions,
         public ?string $fuel_usage,
         public ?string $damage_model,
-
         // Penalties & Rules
         public bool $track_limits_enforced,
         public bool $false_start_detection,
         public bool $collision_penalties,
         public ?string $assists_restrictions,
-
         // Division Support
         public bool $race_divisions,
-
         // Bonus Points
         public ?array $bonus_points,
-
         // Notes
         public ?string $race_notes,
-
         // Timestamps
         public string $created_at,
         public string $updated_at,

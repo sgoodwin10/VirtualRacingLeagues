@@ -87,6 +87,8 @@ describe('LeagueCard', () => {
       contact_email: 'test@example.com',
       organizer_name: 'Test Organizer',
       status: 'active',
+      competitions_count: 5,
+      drivers_count: 42,
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
     };
@@ -219,5 +221,33 @@ describe('LeagueCard', () => {
       expect(wrapper.emitted('view')).toBeTruthy();
       expect(wrapper.emitted('view')?.[0]).toEqual([1]);
     }
+  });
+
+  it('should display competitions count with correct pluralization', () => {
+    wrapper = mountComponent(mockLeague, 2);
+    expect(wrapper.text()).toContain('5 Competitions');
+
+    // Test singular
+    const singleCompetitionLeague = { ...mockLeague, competitions_count: 1 };
+    wrapper = mountComponent(singleCompetitionLeague, 2);
+    expect(wrapper.text()).toContain('1 Competition');
+  });
+
+  it('should display drivers count with correct pluralization', () => {
+    wrapper = mountComponent(mockLeague, 2);
+    expect(wrapper.text()).toContain('42 Drivers');
+
+    // Test singular
+    const singleDriverLeague = { ...mockLeague, drivers_count: 1 };
+    wrapper = mountComponent(singleDriverLeague, 2);
+    expect(wrapper.text()).toContain('1 Driver');
+  });
+
+  it('should display zero counts correctly', () => {
+    const emptyLeague = { ...mockLeague, competitions_count: 0, drivers_count: 0 };
+    wrapper = mountComponent(emptyLeague, 2);
+
+    expect(wrapper.text()).toContain('0 Competitions');
+    expect(wrapper.text()).toContain('0 Drivers');
   });
 });

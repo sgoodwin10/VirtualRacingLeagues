@@ -165,7 +165,7 @@ onMounted(async () => {
       </template>
     </Column>
 
-    <Column field="discord_id" header="Discord ID" style="width: 180px">
+    <Column field="discord_id" header="Discord ID">
       <template #body="{ data }">
         <span class="text-sm">{{ getDriverDiscordId(data) }}</span>
       </template>
@@ -177,7 +177,6 @@ onMounted(async () => {
       :key="column.field"
       :field="`driver.${column.field}`"
       :header="column.label"
-      style="width: 150px"
     >
       <template #body="{ data }">
         <span class="text-sm">{{ getPlatformValue(data, column.field) }}</span>

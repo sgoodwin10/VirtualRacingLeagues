@@ -33,8 +33,8 @@
 
       <!-- Rounds List -->
       <Accordion v-else :multiple="true" :active-index="activeIndexes">
-        <AccordionTab v-for="round in rounds" :key="round.id">
-          <template #header>
+        <AccordionPanel v-for="round in rounds" :key="round.id" :value="round.id">
+          <AccordionHeader>
             <div class="flex items-center justify-between w-full pr-4">
               <div class="flex items-center gap-3">
                 <Tag :value="`Round ${round.round_number}`" severity="info" />
@@ -65,124 +65,126 @@
                 />
               </div>
             </div>
-          </template>
+          </AccordionHeader>
 
-          <div class="space-y-4">
-            <!-- Round Details -->
-            <div class="grid grid-cols-2 gap-4">
+          <AccordionContent>
+            <div class="space-y-4">
+              <!-- Round Details -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <div class="font-medium text-sm text-gray-600">Track</div>
+                  <div>{{ getTrackAndLocation(round.platform_track_id) }}</div>
+                </div>
+                <div v-if="round.track_layout">
+                  <div class="font-medium text-sm text-gray-600">Layout</div>
+                  <div>{{ round.track_layout }}</div>
+                </div>
+                <div v-if="round.track_conditions">
+                  <div class="font-medium text-sm text-gray-600">Conditions</div>
+                  <div>{{ round.track_conditions }}</div>
+                </div>
+                <div>
+                  <div class="font-medium text-sm text-gray-600">Timezone</div>
+                  <div>{{ round.timezone }}</div>
+                </div>
+              </div>
+
+              <div v-if="round.technical_notes">
+                <div class="font-medium text-sm text-gray-600">Technical Notes</div>
+                <div class="whitespace-pre-wrap">{{ round.technical_notes }}</div>
+              </div>
+
+              <div v-if="round.stream_url">
+                <div class="font-medium text-sm text-gray-600">Stream URL</div>
+                <a :href="round.stream_url" target="_blank" class="text-blue-600 hover:underline">
+                  {{ round.stream_url }}
+                </a>
+              </div>
+
+              <div v-if="round.internal_notes">
+                <div class="font-medium text-sm text-gray-600">Internal Notes</div>
+                <div class="whitespace-pre-wrap">{{ round.internal_notes }}</div>
+              </div>
+
+              <!-- Qualifier Section -->
               <div>
-                <div class="font-medium text-sm text-gray-600">Track</div>
-                <div>{{ getTrackName(round.platform_track_id) }}</div>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="font-semibold flex items-center gap-2">
+                    <i class="pi pi-stopwatch text-blue-600"></i>
+                    Qualifying
+                  </h3>
+                  <Button
+                    v-if="!getQualifier(round.id)"
+                    label="Add Qualifying"
+                    icon="pi pi-plus"
+                    size="small"
+                    outlined
+                    severity="info"
+                    @click="handleCreateQualifier(round.id)"
+                  />
+                </div>
+
+                <div v-if="loadingRaces" class="mb-4">
+                  <Skeleton height="4rem" />
+                </div>
+
+                <div
+                  v-else-if="!getQualifier(round.id)"
+                  class="text-sm text-gray-500 text-center py-4 mb-4 bg-blue-50 rounded-lg border border-blue-200"
+                >
+                  <i class="pi pi-info-circle mr-2"></i>
+                  No qualifying session configured
+                </div>
+
+                <div v-else class="mb-4">
+                  <QualifierListItem
+                    :race="getQualifier(round.id)!"
+                    @edit="handleEditQualifier"
+                    @delete="handleDeleteQualifier"
+                  />
+                </div>
               </div>
-              <div v-if="round.track_layout">
-                <div class="font-medium text-sm text-gray-600">Layout</div>
-                <div>{{ round.track_layout }}</div>
-              </div>
-              <div v-if="round.track_conditions">
-                <div class="font-medium text-sm text-gray-600">Conditions</div>
-                <div>{{ round.track_conditions }}</div>
-              </div>
+
+              <Divider />
+
+              <!-- Races Section -->
               <div>
-                <div class="font-medium text-sm text-gray-600">Timezone</div>
-                <div>{{ round.timezone }}</div>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="font-semibold">Races</h3>
+                  <Button
+                    label="Add Race"
+                    icon="pi pi-plus"
+                    size="small"
+                    outlined
+                    @click="handleCreateRace(round.id)"
+                  />
+                </div>
+
+                <div v-if="loadingRaces" class="space-y-2">
+                  <Skeleton height="4rem" />
+                  <Skeleton height="4rem" />
+                </div>
+
+                <div
+                  v-else-if="getRaces(round.id).length === 0"
+                  class="text-sm text-gray-500 text-center py-4"
+                >
+                  No races added yet
+                </div>
+
+                <div v-else class="space-y-2">
+                  <RaceListItem
+                    v-for="race in getRaces(round.id)"
+                    :key="race.id"
+                    :race="race"
+                    @edit="handleEditRace"
+                    @delete="handleDeleteRace"
+                  />
+                </div>
               </div>
             </div>
-
-            <div v-if="round.technical_notes">
-              <div class="font-medium text-sm text-gray-600">Technical Notes</div>
-              <div class="whitespace-pre-wrap">{{ round.technical_notes }}</div>
-            </div>
-
-            <div v-if="round.stream_url">
-              <div class="font-medium text-sm text-gray-600">Stream URL</div>
-              <a :href="round.stream_url" target="_blank" class="text-blue-600 hover:underline">
-                {{ round.stream_url }}
-              </a>
-            </div>
-
-            <div v-if="round.internal_notes">
-              <div class="font-medium text-sm text-gray-600">Internal Notes</div>
-              <div class="whitespace-pre-wrap">{{ round.internal_notes }}</div>
-            </div>
-
-            <!-- Qualifier Section -->
-            <div>
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="font-semibold flex items-center gap-2">
-                  <i class="pi pi-stopwatch text-blue-600"></i>
-                  Qualifying
-                </h3>
-                <Button
-                  v-if="!getQualifier(round.id)"
-                  label="Add Qualifying"
-                  icon="pi pi-plus"
-                  size="small"
-                  outlined
-                  severity="info"
-                  @click="handleCreateQualifier(round.id)"
-                />
-              </div>
-
-              <div v-if="loadingRaces" class="mb-4">
-                <Skeleton height="4rem" />
-              </div>
-
-              <div
-                v-else-if="!getQualifier(round.id)"
-                class="text-sm text-gray-500 text-center py-4 mb-4 bg-blue-50 rounded-lg border border-blue-200"
-              >
-                <i class="pi pi-info-circle mr-2"></i>
-                No qualifying session configured
-              </div>
-
-              <div v-else class="mb-4">
-                <QualifierListItem
-                  :race="getQualifier(round.id)!"
-                  @edit="handleEditQualifier"
-                  @delete="handleDeleteQualifier"
-                />
-              </div>
-            </div>
-
-            <Divider />
-
-            <!-- Races Section -->
-            <div>
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="font-semibold">Races</h3>
-                <Button
-                  label="Add Race"
-                  icon="pi pi-plus"
-                  size="small"
-                  outlined
-                  @click="handleCreateRace(round.id)"
-                />
-              </div>
-
-              <div v-if="loadingRaces" class="space-y-2">
-                <Skeleton height="4rem" />
-                <Skeleton height="4rem" />
-              </div>
-
-              <div
-                v-else-if="getRaces(round.id).length === 0"
-                class="text-sm text-gray-500 text-center py-4"
-              >
-                No races added yet
-              </div>
-
-              <div v-else class="space-y-2">
-                <RaceListItem
-                  v-for="race in getRaces(round.id)"
-                  :key="race.id"
-                  :race="race"
-                  @edit="handleEditRace"
-                  @delete="handleDeleteRace"
-                />
-              </div>
-            </div>
-          </div>
-        </AccordionTab>
+          </AccordionContent>
+        </AccordionPanel>
       </Accordion>
     </template>
   </BasePanel>
@@ -220,13 +222,15 @@ import { format, parseISO } from 'date-fns';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import BasePanel from '@user/components/common/panels/BasePanel.vue';
-import RoundFormDrawer from './modals/RoundFormDrawer.vue';
-import RaceFormDrawer from './modals/RaceFormDrawer.vue';
-import RaceListItem from './RaceListItem.vue';
-import QualifierListItem from './QualifierListItem.vue';
+import RoundFormDrawer from '@user/components/round/modals/RoundFormDrawer.vue';
+import RaceFormDrawer from '@user/components/round/modals/RaceFormDrawer.vue';
+import RaceListItem from '@user/components/round/RaceListItem.vue';
+import QualifierListItem from '@user/components/round/QualifierListItem.vue';
 import Button from 'primevue/button';
 import Accordion from 'primevue/accordion';
-import AccordionTab from 'primevue/accordiontab';
+import AccordionPanel from 'primevue/accordionpanel';
+import AccordionHeader from 'primevue/accordionheader';
+import AccordionContent from 'primevue/accordioncontent';
 import Tag from 'primevue/tag';
 import Skeleton from 'primevue/skeleton';
 import Divider from 'primevue/divider';
@@ -236,6 +240,7 @@ import { useRaceStore } from '@user/stores/raceStore';
 import { useTrackStore } from '@user/stores/trackStore';
 import type { Round, RoundStatus } from '@user/types/round';
 import type { Race } from '@user/types/race';
+import { isQualifier } from '@user/types/race';
 
 interface Props {
   seasonId: number;
@@ -268,22 +273,66 @@ const rounds = computed(() => {
     .sort((a, b) => a.round_number - b.round_number);
 });
 
+// Computed getters for races to ensure proper reactivity
+const racesByRound = computed(() => {
+  const raceMap = new Map<number, Race[]>();
+  rounds.value.forEach((round) => {
+    const roundRaces = raceStore
+      .racesByRoundId(round.id)
+      .filter((race) => !isQualifier(race))
+      .sort((a, b) => a.race_number - b.race_number);
+    raceMap.set(round.id, roundRaces);
+  });
+  return raceMap;
+});
+
+const qualifiersByRound = computed(() => {
+  const qualifierMap = new Map<number, Race | null>();
+  rounds.value.forEach((round) => {
+    const qualifier = raceStore.racesByRoundId(round.id).find((race) => isQualifier(race)) || null;
+    qualifierMap.set(round.id, qualifier);
+  });
+  return qualifierMap;
+});
+
 onMounted(async () => {
   try {
+    // First, fetch rounds
     await roundStore.fetchRounds(props.seasonId);
-    // Also fetch tracks for this platform to display track names
-    await trackStore.fetchTracks({ platform_id: props.platformId, is_active: true });
-  } catch {
+
+    // Also fetch tracks for this platform to display track names (non-blocking)
+    try {
+      await trackStore.fetchTracks({ platform_id: props.platformId, is_active: true });
+    } catch (trackError) {
+      console.error('[RoundsPanel] Error loading tracks:', trackError);
+      // Continue anyway - tracks are just for display names
+    }
+
+    // Then fetch races for all rounds
+    loadingRaces.value = true;
+    const fetchedRounds = roundStore.roundsBySeasonId(props.seasonId);
+
+    for (const round of fetchedRounds) {
+      await raceStore.fetchRaces(round.id);
+    }
+
+    loadingRaces.value = false;
+  } catch (error) {
+    console.error('[RoundsPanel] Error loading rounds and races:', error);
+    loadingRaces.value = false;
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: 'Failed to load rounds',
+      detail: 'Failed to load rounds and races',
       life: 5000,
     });
   }
 });
 
-function formatScheduledDate(dateString: string): string {
+function formatScheduledDate(dateString: string | null): string {
+  if (!dateString) {
+    return 'Not scheduled';
+  }
   try {
     return format(parseISO(dateString), 'MMM dd, yyyy HH:mm');
   } catch {
@@ -304,9 +353,18 @@ function getStatusSeverity(
   return severityMap[status] || 'info';
 }
 
-function getTrackName(trackId: number): string {
+function getTrackAndLocation(trackId: number | null): string {
+  if (!trackId) {
+    return 'No track selected';
+  }
   const track = trackStore.getTrackById(trackId);
-  return track ? track.name : `Track #${trackId}`;
+  if (!track) {
+    return `Track #${trackId}`;
+  }
+  const trackLocation = trackStore.trackLocationById(track.platform_track_location_id);
+  return trackLocation
+    ? `${track.name} - ${trackLocation.name} (${trackLocation.country})`
+    : `${track.name} (${track.location?.country})`;
 }
 
 function handleCreateRound(): void {
@@ -358,15 +416,11 @@ function handleRoundSaved(): void {
 }
 
 function getQualifier(roundId: number): Race | null {
-  const races = raceStore.racesByRoundId(roundId);
-  return races.find((race) => race.race_number === 0 && race.race_type === 'qualifying') || null;
+  return qualifiersByRound.value.get(roundId) || null;
 }
 
 function getRaces(roundId: number): Race[] {
-  return raceStore
-    .racesByRoundId(roundId)
-    .filter((race) => race.race_number !== 0) // Exclude qualifiers
-    .sort((a, b) => a.race_number - b.race_number);
+  return racesByRound.value.get(roundId) || [];
 }
 
 function handleCreateQualifier(roundId: number): void {
@@ -464,12 +518,23 @@ function handleDeleteRace(race: Race): void {
 }
 
 async function handleRaceSaved(): Promise<void> {
+  const roundId = selectedRoundId.value;
+
   showRaceFormDrawer.value = false;
   selectedRace.value = null;
   selectedRoundId.value = null;
 
   const entityType = raceFormType.value === 'qualifier' ? 'Qualifying session' : 'Race';
   const action = raceFormMode.value === 'edit' ? 'updated' : 'created';
+
+  // Reload races for this round to ensure proper display
+  if (roundId) {
+    try {
+      await raceStore.fetchRaces(roundId);
+    } catch (error) {
+      console.error('Failed to reload races:', error);
+    }
+  }
 
   toast.add({
     severity: 'success',

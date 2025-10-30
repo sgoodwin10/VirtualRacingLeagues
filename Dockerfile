@@ -4,6 +4,10 @@ FROM php:8.2-fpm AS base
 # Set working directory
 WORKDIR /var/www
 
+ENV HOMEDIR="/home/laravel"
+
+ARG CLAUDE_CODE_VERSION=latest
+
 # Install system dependencies (without Node.js)
 RUN apt-get update && apt-get install -y \
     git \
@@ -87,3 +91,21 @@ ENV PATH=/home/laravel/.npm-global/bin:$PATH
 # Install Playwright browsers
 # This downloads and installs chromium, firefox, and webkit browsers
 RUN npx -y playwright@latest install
+
+# Install Claude
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
+
+# Create Claude settings file
+RUN touch $HOMEDIR/.claude/settings.json
+
+# Install CCStatusline
+RUN npm install -g ccstatusline@latest \
+    && mkdir -p $HOMEDIR/.config/ccstatusline \
+    && cp /var/www/docker/ccstatusline/settings.json $HOMEDIR/.config/ccstatusline/settings.json
+
+
+# Install Context7
+RUN npm install -g @upstash/context7-mcp@latest
+
+# Install Playwright MCP
+RUN claude mcp add playwright npx '@playwright/mcp@latest'

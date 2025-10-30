@@ -37,4 +37,19 @@ interface CompetitionRepositoryInterface
     public function countByLeagueId(int $leagueId): int;
 
     public function countActiveByLeagueId(int $leagueId): int;
+
+    /**
+     * Get stats for a competition entity.
+     *
+     * @return array<string, int|string|null>
+     */
+    public function getStatsForEntity(Competition $competition): array;
+
+    /**
+     * Get stats for multiple competition entities.
+     *
+     * @param array<Competition> $competitions
+     * @return array<int, array<string, int|string|null>> Keyed by competition ID
+     */
+    public function getStatsForEntities(array $competitions): array;
 }

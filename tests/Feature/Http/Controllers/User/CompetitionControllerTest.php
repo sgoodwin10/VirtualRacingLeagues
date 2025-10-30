@@ -252,6 +252,7 @@ class CompetitionControllerTest extends UserControllerTestCase
                         'total_seasons',
                         'active_seasons',
                         'total_drivers',
+                        'total_rounds',
                         'total_races',
                         'next_race_date',
                     ],

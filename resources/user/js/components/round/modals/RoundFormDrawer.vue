@@ -308,7 +308,7 @@ async function initializeForm(): Promise<void> {
     form.value = {
       round_number: props.round.round_number,
       name: props.round.name || '',
-      scheduled_at: new Date(props.round.scheduled_at),
+      scheduled_at: props.round.scheduled_at ? new Date(props.round.scheduled_at) : null,
       platform_track_id: props.round.platform_track_id,
       track_layout: props.round.track_layout || '',
       track_conditions: props.round.track_conditions || '',
@@ -318,11 +318,13 @@ async function initializeForm(): Promise<void> {
     };
 
     // Load selected track
-    try {
-      const track = await trackStore.fetchTrack(props.round.platform_track_id);
-      selectedTrack.value = track;
-    } catch (error) {
-      console.error('Failed to load track:', error);
+    if (props.round.platform_track_id) {
+      try {
+        const track = await trackStore.fetchTrack(props.round.platform_track_id);
+        selectedTrack.value = track;
+      } catch (error) {
+        console.error('Failed to load track:', error);
+      }
     }
   }
 }
@@ -389,11 +391,14 @@ async function handleSubmit(): Promise<void> {
       if ((form.value.name || '').trim() !== (props.round.name || '')) {
         requestData.name = form.value.name.trim() || undefined;
       }
-      if (form.value.scheduled_at) {
-        const formattedDate = format(form.value.scheduled_at, 'yyyy-MM-dd HH:mm:ss');
-        if (formattedDate !== props.round.scheduled_at) {
-          requestData.scheduled_at = formattedDate;
-        }
+      // Handle scheduled_at changes including null
+      const currentScheduledAt = form.value.scheduled_at
+        ? format(form.value.scheduled_at, 'yyyy-MM-dd HH:mm:ss')
+        : null;
+      const originalScheduledAt = props.round.scheduled_at || null;
+
+      if (currentScheduledAt !== originalScheduledAt) {
+        requestData.scheduled_at = currentScheduledAt;
       }
       if (form.value.platform_track_id !== props.round.platform_track_id) {
         requestData.platform_track_id = form.value.platform_track_id ?? undefined;

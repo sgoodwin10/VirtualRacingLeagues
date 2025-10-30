@@ -34,13 +34,15 @@ final class LeagueData extends Data
         public readonly string $visibility,
         public readonly ?string $timezone,
         public readonly int $owner_user_id,
-        public readonly ?string $owner_name,
-        public readonly ?string $owner_email,
+        /** @var array{id: int, first_name: string, last_name: string, email: string}|null */
+        public readonly ?array $owner,
         public readonly ?string $contact_email,
         public readonly ?string $organizer_name,
         public readonly string $status,
         public readonly bool $is_active,
         public readonly bool $is_archived,
+        public readonly int $competitions_count,
+        public readonly int $drivers_count,
     ) {
     }
 
@@ -48,9 +50,9 @@ final class LeagueData extends Data
      * Create from domain entity with platform data.
      *
      * @param array<array{id: int, name: string, slug: string}> $platforms
-     * @param array{name: string, email: string}|null $owner
+     * @param array{id: int, first_name: string, last_name: string, email: string}|null $owner
      */
-    public static function fromEntity(League $league, array $platforms = [], ?array $owner = null): self
+    public static function fromEntity(League $league, array $platforms = [], ?array $owner = null, int $competitionsCount = 0, int $driversCount = 0): self
     {
         return new self(
             id: $league->id(),
@@ -73,13 +75,14 @@ final class LeagueData extends Data
             visibility: $league->visibility()->value,
             timezone: $league->timezone(),
             owner_user_id: $league->ownerUserId(),
-            owner_name: $owner['name'] ?? null,
-            owner_email: $owner['email'] ?? null,
+            owner: $owner,
             contact_email: $league->contactEmail()?->value(),
             organizer_name: $league->organizerName(),
             status: $league->status(),
             is_active: $league->isActive(),
             is_archived: $league->isArchived(),
+            competitions_count: $competitionsCount,
+            drivers_count: $driversCount,
         );
     }
 }

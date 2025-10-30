@@ -24,7 +24,7 @@ final class UpdateRoundData extends Data
         public readonly ?int $round_number = null,
         #[Sometimes, Nullable, StringType, Min(3), Max(100)]
         public readonly ?string $name = null,
-        #[Sometimes, DateFormat('Y-m-d H:i:s')]
+        #[Sometimes, Nullable, DateFormat('Y-m-d H:i:s')]
         public readonly ?string $scheduled_at = null,
         #[Sometimes, IntegerType]
         public readonly ?int $platform_track_id = null,

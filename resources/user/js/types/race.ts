@@ -29,6 +29,7 @@ export interface Race {
   dnf_points: number;
   dns_points: number;
   race_notes: string | null;
+  is_qualifier: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -57,18 +58,23 @@ export interface BonusPoints {
 }
 
 // Create payload
+// Note: For qualifiers (race_number === 0):
+// - length_type and length_value are automatically set to 'time' and qualifying_length
+// - grid_source is always 'qualifying'
+// - mandatory_pit_stop is always false
+// - race_type is always 'qualifying'
 export interface CreateRaceRequest {
-  race_number: number;
+  race_number: number; // 0 for qualifiers, 1+ for races
   name?: string;
-  race_type?: RaceType;
+  race_type?: RaceType; // 'qualifying' for qualifiers
   qualifying_format: QualifyingFormat;
-  qualifying_length?: number;
+  qualifying_length?: number; // Required when qualifying_format is 'standard' or 'time_trial'
   qualifying_tire?: string;
-  grid_source: GridSource;
-  grid_source_race_id?: number;
-  length_type: RaceLengthType;
-  length_value: number;
-  extra_lap_after_time: boolean;
+  grid_source: GridSource; // 'qualifying' for qualifiers
+  grid_source_race_id?: number; // Required when grid_source is 'previous_race' or 'reverse_previous'
+  length_type: RaceLengthType; // For qualifiers: 'time' (uses qualifying_length)
+  length_value: number; // For qualifiers: same as qualifying_length
+  extra_lap_after_time: boolean; // Always false for qualifiers
   weather?: string;
   tire_restrictions?: string;
   fuel_usage?: string;
@@ -76,12 +82,12 @@ export interface CreateRaceRequest {
   track_limits_enforced: boolean;
   false_start_detection: boolean;
   collision_penalties: boolean;
-  mandatory_pit_stop: boolean;
-  minimum_pit_time?: number;
+  mandatory_pit_stop: boolean; // Always false for qualifiers
+  minimum_pit_time?: number; // Only for races when mandatory_pit_stop is true
   assists_restrictions?: string;
   race_divisions: boolean;
   points_system: PointsSystemMap;
-  bonus_points?: BonusPoints;
+  bonus_points?: BonusPoints; // For qualifiers: only 'pole' is applicable
   dnf_points: number;
   dns_points: number;
   race_notes?: string;
@@ -199,8 +205,8 @@ export const F1_STANDARD_POINTS: PointsSystemMap = {
 
 /**
  * Check if a race is a qualifier
- * Qualifiers have race_number === 0 and race_type === 'qualifying'
+ * Uses the explicit is_qualifier field from the backend
  */
 export function isQualifier(race: Race): boolean {
-  return race.race_number === 0 && race.race_type === 'qualifying';
+  return race.is_qualifier;
 }

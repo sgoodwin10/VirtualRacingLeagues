@@ -5,10 +5,14 @@ import { useUserStore } from '@user/stores/userStore';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 import type { MenuItem } from 'primevue/menuitem';
+import { useSiteConfigStore } from '@user/stores/siteConfigStore';
+import { PhFlagCheckered, PhQuestion, PhSignOut, PhUser } from '@phosphor-icons/vue';
 
 const router = useRouter();
 const userStore = useUserStore();
 const userMenu = ref();
+
+const siteConfig = useSiteConfigStore();
 
 const menuItems = computed<MenuItem[]>(() => [
   {
@@ -34,40 +38,41 @@ async function handleLogout() {
   await userStore.logout();
   // Note: logout() will redirect to public site, no need to push route
 }
+
+const linkStyles =
+  'text-slate-500 hover:text-slate-800 text-sm bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-between gap-2';
 </script>
 
 <template>
-  <header class="bg-white shadow-sm">
-    <div class="container w-full xl:mx-auto px-4">
-      <div class="flex items-center justify-between h-16">
-        <!-- Logo -->
-        <router-link to="/" class="flex items-center">
-          <span class="text-xl font-bold text-blue-600">User Dashboard</span>
+  <header class="container w-full lg:mx-auto px-4 max-w-7xl mx-auto">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <router-link to="/" class="flex items-center">
+        <span class="text-xl font-bold text-slate-600">{{ siteConfig.siteName }}</span>
+      </router-link>
+
+      <!-- Navigation -->
+      <nav class="flex items-center gap-4">
+        <!-- Leagues Link -->
+        <router-link to="/leagues" :class="linkStyles" active-class="text-slate-900">
+          <PhFlagCheckered :size="16" />
+          Your Leagues
         </router-link>
 
-        <!-- Navigation -->
-        <nav class="flex items-center gap-4">
-          <!-- Leagues Link -->
-          <router-link
-            to="/leagues"
-            class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            active-class="text-blue-600 bg-blue-50"
-          >
-            Leagues
-          </router-link>
+        <router-link to="/leagues" :class="linkStyles" active-class="text-slate-900">
+          <PhUser :size="16" />
+          Profile
+        </router-link>
 
-          <!-- User Menu (always visible on authenticated dashboard) -->
-          <Button
-            type="button"
-            :label="userStore.userName"
-            icon="pi pi-user"
-            severity="secondary"
-            outlined
-            @click="toggleUserMenu"
-          />
-          <Menu ref="userMenu" :model="menuItems" :popup="true" />
-        </nav>
-      </div>
+        <router-link to="/leagues" :class="linkStyles" active-class="text-slate-900">
+          <PhSignOut :size="16" />
+          Logout
+        </router-link>
+
+        <div class="flex items-center justify-center bg-slate-100 px-2 py-2 rounded-full">
+          <PhQuestion :size="20" class="text-slate-500 hover:text-slate-800" />
+        </div>
+      </nav>
     </div>
   </header>
 </template>

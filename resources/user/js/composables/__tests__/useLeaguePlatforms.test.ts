@@ -38,6 +38,8 @@ describe('useLeaguePlatforms', () => {
     contact_email: 'test@example.com',
     organizer_name: 'Test Organizer',
     status: 'active',
+    competitions_count: 0,
+    drivers_count: 0,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
   };

@@ -16,7 +16,7 @@
 
     <div class="space-y-6 pb-20">
       <!-- Section 1: Basic Details -->
-      <Accordion :value="['basic']" :multiple="true">
+      <Accordion v-if="!isQualifier" :value="['basic']" :multiple="true">
         <AccordionPanel value="basic">
           <AccordionHeader>
             <span class="font-medium">Basic Details</span>
@@ -24,7 +24,7 @@
           <AccordionContent>
             <div class="space-y-4">
               <!-- Race Number -->
-              <div>
+              <div v-if="!isQualifier">
                 <FormLabel for="race_number" text="Race Number" :required="true" />
                 <InputNumber
                   id="race_number"
@@ -38,7 +38,7 @@
               </div>
 
               <!-- Race Name -->
-              <div>
+              <div v-if="!isQualifier">
                 <FormLabel for="name" text="Race Name (optional)" />
                 <InputText
                   id="name"
@@ -109,7 +109,11 @@
               </div>
 
               <!-- Qualifying Tire -->
-              <div>
+              <div
+                v-if="
+                  form.qualifying_format !== 'none' && form.qualifying_format !== 'previous_race'
+                "
+              >
                 <FormLabel for="qualifying_tire" text="Qualifying Tire (optional)" />
                 <InputText
                   id="qualifying_tire"
@@ -315,7 +319,7 @@
       </Accordion>
 
       <!-- Section 6: Penalties & Rules -->
-      <Accordion :value="['penalties']" :multiple="true">
+      <Accordion v-if="!isQualifier" :value="['penalties']" :multiple="true">
         <AccordionPanel value="penalties">
           <AccordionHeader>
             <span class="font-medium">Penalties & Rules</span>
@@ -404,7 +408,7 @@
       </Accordion>
 
       <!-- Section 8: Points System -->
-      <Accordion :value="['points']" :multiple="true">
+      <Accordion v-if="!isQualifier" :value="['points']" :multiple="true">
         <AccordionPanel value="points">
           <AccordionHeader>
             <span class="font-medium">Points System</span>
@@ -545,7 +549,7 @@
       </Accordion>
 
       <!-- Section 10: DNF/DNS -->
-      <Accordion :value="['dnf']" :multiple="true">
+      <Accordion v-if="!isQualifier" :value="['dnf']" :multiple="true">
         <AccordionPanel value="dnf">
           <AccordionHeader>
             <span class="font-medium">DNF/DNS Points</span>
@@ -583,7 +587,7 @@
       </Accordion>
 
       <!-- Section 11: Notes -->
-      <Accordion :value="['notes']" :multiple="true">
+      <Accordion v-if="!isQualifier" :value="['notes']" :multiple="true">
         <AccordionPanel value="notes">
           <AccordionHeader>
             <span class="font-medium">Race Notes</span>
@@ -727,7 +731,8 @@ const form = reactive<RaceForm>({
 
 const isQualifier = computed(() => props.raceType === 'qualifier');
 
-const { errors, validateAll, clearErrors } = useRaceValidation(form, isQualifier.value);
+// Pass the reactive computed ref to useRaceValidation so validation adapts dynamically
+const { errors, validateAll, clearErrors } = useRaceValidation(form, isQualifier);
 
 const saving = ref(false);
 const platformSettings = ref<PlatformRaceSettings | null>(null);
@@ -790,6 +795,17 @@ watch(
       }
     }
   },
+);
+
+// Watch for changes to the race prop (e.g., when switching between edit races)
+watch(
+  () => props.race,
+  (newRace) => {
+    if (newRace && props.visible) {
+      loadRaceIntoForm(newRace);
+    }
+  },
+  { deep: true },
 );
 
 async function loadPlatformSettings(): Promise<void> {
@@ -930,9 +946,10 @@ async function handleSave(): Promise<void> {
         !isQualifier.value && requiresGridSourceRace.value
           ? form.grid_source_race_id || undefined
           : undefined,
-      length_type: form.length_type,
-      length_value: form.length_value,
-      extra_lap_after_time: form.extra_lap_after_time,
+      // For qualifiers, use sensible defaults for length fields (backend expects them)
+      length_type: isQualifier.value ? 'time' : form.length_type,
+      length_value: isQualifier.value ? form.qualifying_length : form.length_value,
+      extra_lap_after_time: isQualifier.value ? false : form.extra_lap_after_time,
       weather: form.weather || undefined,
       tire_restrictions: form.tire_restrictions || undefined,
       fuel_usage: form.fuel_usage || undefined,

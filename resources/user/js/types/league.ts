@@ -54,6 +54,8 @@ export interface League {
   contact_email: string;
   organizer_name: string;
   status: LeagueStatus;
+  competitions_count: number;
+  drivers_count: number;
   created_at: string;
   updated_at: string;
 }

@@ -90,8 +90,9 @@ final class CompetitionApplicationService
             $competition->recordCreationEvent();
             $this->dispatchEvents($competition);
 
-            // 8. Return CompetitionData DTO
-            return $this->toCompetitionData($competition, $league->logoPath());
+            // 8. Get stats and return CompetitionData DTO
+            $stats = $this->competitionRepository->getStatsForEntity($competition);
+            return $this->toCompetitionData($competition, $league->logoPath(), $stats);
         });
     }
 
@@ -151,8 +152,9 @@ final class CompetitionApplicationService
             // 6. Get league for logo fallback
             $league = $this->leagueRepository->findById($competition->leagueId());
 
-            // 7. Return DTO
-            return $this->toCompetitionData($competition, $league->logoPath());
+            // 7. Get stats and return DTO
+            $stats = $this->competitionRepository->getStatsForEntity($competition);
+            return $this->toCompetitionData($competition, $league->logoPath(), $stats);
         });
     }
 
@@ -165,8 +167,9 @@ final class CompetitionApplicationService
     {
         $competition = $this->competitionRepository->findById($id);
         $league = $this->leagueRepository->findById($competition->leagueId());
+        $stats = $this->competitionRepository->getStatsForEntity($competition);
 
-        return $this->toCompetitionData($competition, $league->logoPath());
+        return $this->toCompetitionData($competition, $league->logoPath(), $stats);
     }
 
     /**
@@ -178,8 +181,9 @@ final class CompetitionApplicationService
     {
         $competition = $this->competitionRepository->findBySlug($slug, $leagueId);
         $league = $this->leagueRepository->findById($competition->leagueId());
+        $stats = $this->competitionRepository->getStatsForEntity($competition);
 
-        return $this->toCompetitionData($competition, $league->logoPath());
+        return $this->toCompetitionData($competition, $league->logoPath(), $stats);
     }
 
     /**
@@ -191,9 +195,13 @@ final class CompetitionApplicationService
     {
         $competitions = $this->competitionRepository->findByLeagueId($leagueId);
         $league = $this->leagueRepository->findById($leagueId);
+        $statsMap = $this->competitionRepository->getStatsForEntities($competitions);
 
         return array_map(
-            fn(Competition $competition) => $this->toCompetitionData($competition, $league->logoPath()),
+            function (Competition $competition) use ($league, $statsMap) {
+                $stats = $statsMap[$competition->id() ?? 0] ?? [];
+                return $this->toCompetitionData($competition, $league->logoPath(), $stats);
+            },
             $competitions
         );
     }
@@ -329,8 +337,10 @@ final class CompetitionApplicationService
     /**
      * Convert Competition entity to CompetitionData DTO.
      * Accepts league logo path to avoid re-fetching the league entity when already available.
+     *
+     * @param array<string, int|string|null> $aggregates
      */
-    private function toCompetitionData(Competition $competition, string $leagueLogoPath): CompetitionData
+    private function toCompetitionData(Competition $competition, string $leagueLogoPath, array $aggregates = []): CompetitionData
     {
         // Fetch league for additional data (we need more than just logo path now)
         $league = $this->leagueRepository->findById($competition->leagueId());
@@ -358,6 +368,7 @@ final class CompetitionApplicationService
             platformData: $platformData,
             logoUrl: $logoUrl,
             leagueData: $leagueData,
+            aggregates: $aggregates,
         );
     }
 

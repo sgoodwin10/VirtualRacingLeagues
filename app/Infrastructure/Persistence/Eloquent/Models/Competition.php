@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
@@ -110,6 +112,26 @@ class Competition extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    /**
+     * @return HasMany<SeasonEloquent>
+     */
+    public function seasons(): HasMany
+    {
+        return $this->hasMany(SeasonEloquent::class, 'competition_id');
+    }
+
+    public function seasonDrivers(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            SeasonDriverEloquent::class,
+            SeasonEloquent::class,
+            'competition_id',
+            'season_id',
+            'id',
+            'id'
+        );
     }
 
     // Scopes

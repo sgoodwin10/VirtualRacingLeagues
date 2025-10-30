@@ -18,6 +18,8 @@ class SeasonStatsData extends Data
         public int $completed_races,
         public int $total_divisions,
         public int $total_teams,
+        public int $total_rounds,
+        public int $completed_rounds,
     ) {
     }
 }
