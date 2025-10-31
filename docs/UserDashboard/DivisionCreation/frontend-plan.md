@@ -23,11 +23,11 @@ This plan follows the Vue 3 + TypeScript patterns established in this project. A
 
 ## Step 1: TypeScript Types
 
-**File:** `resources/user/js/types/division.ts`
+**File:** `resources/app/js/types/division.ts`
 
 [See complete types implementation in agent output, including Division, CreateDivisionRequest, UpdateDivisionRequest, DivisionForm, DivisionFormErrors, DivisionOption, DivisionDriverCountResponse]
 
-**Update:** `resources/user/js/types/seasonDriver.ts`
+**Update:** `resources/app/js/types/seasonDriver.ts`
 
 Add to SeasonDriver interface:
 ```typescript
@@ -43,7 +43,7 @@ export interface SeasonDriver {
 
 ## Step 2: API Service
 
-**File:** `resources/user/js/services/divisionService.ts`
+**File:** `resources/app/js/services/divisionService.ts`
 
 [See complete service implementation in agent output]
 
@@ -51,7 +51,7 @@ export interface SeasonDriver {
 
 ## Step 3: Pinia Store
 
-**File:** `resources/user/js/stores/divisionStore.ts`
+**File:** `resources/app/js/stores/divisionStore.ts`
 
 [See complete store implementation in agent output, including all state, getters, and actions]
 
@@ -61,7 +61,7 @@ export interface SeasonDriver {
 
 ### 4.1 DivisionFormModal Component
 
-**File:** `resources/user/js/components/season/divisions/DivisionFormModal.vue`
+**File:** `resources/app/js/components/season/divisions/DivisionFormModal.vue`
 
 [See complete component implementation in agent output - includes name field, **description textarea**, and logo upload with validation]
 
@@ -75,7 +75,7 @@ export interface SeasonDriver {
 
 ### 4.2 DivisionsPanel Component
 
-**File:** `resources/user/js/components/season/divisions/DivisionsPanel.vue`
+**File:** `resources/app/js/components/season/divisions/DivisionsPanel.vue`
 
 [See complete component implementation in agent output]
 
@@ -88,7 +88,7 @@ export interface SeasonDriver {
 
 ### 4.3 Update SeasonDriversTable Component
 
-**File:** `resources/user/js/components/season/SeasonDriversTable.vue` (updates)
+**File:** `resources/app/js/components/season/SeasonDriversTable.vue` (updates)
 
 [See complete updates in agent output]
 
@@ -103,7 +103,7 @@ export interface SeasonDriver {
 
 ## Step 5: Update SeasonDetail View
 
-**File:** `resources/user/js/views/SeasonDetail.vue` (updates)
+**File:** `resources/app/js/views/SeasonDetail.vue` (updates)
 
 **Option 1: 75/25 Layout (Recommended)**
 
@@ -119,7 +119,7 @@ export interface SeasonDriver {
 
 ## Step 6: Update SeasonHeader Component
 
-**File:** `resources/user/js/components/season/SeasonHeader.vue` (updates)
+**File:** `resources/app/js/components/season/SeasonHeader.vue` (updates)
 
 [See stats update in agent output]
 
@@ -157,18 +157,18 @@ export interface SeasonDriver {
 ## Step 8: Implementation Checklist
 
 ### Types
-- [ ] Create `resources/user/js/types/division.ts`
-- [ ] Update `resources/user/js/types/seasonDriver.ts` (add division fields)
-- [ ] Update `resources/user/js/types/season.ts` (add `total_divisions` to SeasonStats)
+- [ ] Create `resources/app/js/types/division.ts`
+- [ ] Update `resources/app/js/types/seasonDriver.ts` (add division fields)
+- [ ] Update `resources/app/js/types/season.ts` (add `total_divisions` to SeasonStats)
 
 ### Services
-- [ ] Create `resources/user/js/services/divisionService.ts`
+- [ ] Create `resources/app/js/services/divisionService.ts`
 
 ### Store
-- [ ] Create `resources/user/js/stores/divisionStore.ts`
+- [ ] Create `resources/app/js/stores/divisionStore.ts`
 
 ### Components
-- [ ] Create `resources/user/js/components/season/divisions/` directory
+- [ ] Create `resources/app/js/components/season/divisions/` directory
 - [ ] Create `DivisionFormModal.vue`
 - [ ] Create `DivisionsPanel.vue`
 - [ ] Update `SeasonDriversTable.vue` (inline division editor)
@@ -178,10 +178,10 @@ export interface SeasonDriver {
 - [ ] Update `SeasonDetail.vue` (75/25 layout, load divisions)
 
 ### Tests
-- [ ] Create `resources/user/js/components/season/divisions/__tests__/` directory
+- [ ] Create `resources/app/js/components/season/divisions/__tests__/` directory
 - [ ] Create `DivisionFormModal.test.ts`
 - [ ] Create `DivisionsPanel.test.ts`
-- [ ] Create `resources/user/js/stores/__tests__/divisionStore.test.ts`
+- [ ] Create `resources/app/js/stores/__tests__/divisionStore.test.ts`
 - [ ] Run all tests: `npm run test:user`
 
 ### Quality Checks
@@ -281,10 +281,10 @@ Display division name + logo in first column, with description as a truncated pr
 ## References
 
 - Teams Frontend Plan: `docs/UserDashboard/TeamsCreation/frontend-plan.md`
-- Season Form Drawer: `resources/user/js/components/season/modals/SeasonFormDrawer.vue`
-- Base Modal: `resources/user/js/components/common/modals/BaseModal.vue`
-- Season Drivers Table: `resources/user/js/components/season/SeasonDriversTable.vue`
-- Season Header: `resources/user/js/components/season/SeasonHeader.vue`
+- Season Form Drawer: `resources/app/js/components/season/modals/SeasonFormDrawer.vue`
+- Base Modal: `resources/app/js/components/common/modals/BaseModal.vue`
+- Season Drivers Table: `resources/app/js/components/season/SeasonDriversTable.vue`
+- Season Header: `resources/app/js/components/season/SeasonHeader.vue`
 - Admin Frontend Guide: `.claude/guides/frontend/admin-dashboard-development-guide.md`
 - PrimeVue Select (v4): Use Context7 for latest docs
 - PrimeVue Textarea (v4): Use Context7 for latest docs

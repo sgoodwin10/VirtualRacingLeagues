@@ -1562,7 +1562,7 @@ Route::domain('app.virtualracingleagues.localhost')->group(function () {
 
 #### Task 7.1: Create Types
 
-**File:** `resources/user/js/types/league.ts`
+**File:** `resources/app/js/types/league.ts`
 
 ```typescript
 export interface League {
@@ -1681,11 +1681,11 @@ export const VISIBILITY_OPTIONS = [
 
 #### Task 8.1: Create League API Service
 
-**File:** `resources/user/js/services/leagueService.ts`
+**File:** `resources/app/js/services/leagueService.ts`
 
 ```typescript
 import axios, { AxiosError } from 'axios';
-import type { League, CreateLeagueFormData, SlugCheckResult } from '@user/types/league';
+import type { League, CreateLeagueFormData, SlugCheckResult } from '@app/types/league';
 
 const BASE_URL = '/api/leagues';
 
@@ -1800,11 +1800,11 @@ export default new LeagueService();
 
 #### Task 8.2: Create Platform API Service
 
-**File:** `resources/user/js/services/platformService.ts`
+**File:** `resources/app/js/services/platformService.ts`
 
 ```typescript
 import axios from 'axios';
-import type { Platform } from '@user/types/league';
+import type { Platform } from '@app/types/league';
 
 const BASE_URL = '/api/platforms';
 
@@ -1820,11 +1820,11 @@ export default new PlatformService();
 
 #### Task 8.3: Create Timezone API Service
 
-**File:** `resources/user/js/services/timezoneService.ts`
+**File:** `resources/app/js/services/timezoneService.ts`
 
 ```typescript
 import axios from 'axios';
-import type { TimezoneGroup } from '@user/types/league';
+import type { TimezoneGroup } from '@app/types/league';
 
 const BASE_URL = '/api/timezones';
 
@@ -1846,16 +1846,16 @@ export default new TimezoneService();
 
 #### Task 9.1: Create League Store
 
-**File:** `resources/user/js/stores/leagueStore.ts`
+**File:** `resources/app/js/stores/leagueStore.ts`
 
 ```typescript
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import leagueService from '@user/services/leagueService';
-import platformService from '@user/services/platformService';
-import timezoneService from '@user/services/timezoneService';
-import type { League, CreateLeagueFormData, Platform, TimezoneGroup } from '@user/types/league';
-import type { ApiError } from '@user/services/leagueService';
+import leagueService from '@app/services/leagueService';
+import platformService from '@app/services/platformService';
+import timezoneService from '@app/services/timezoneService';
+import type { League, CreateLeagueFormData, Platform, TimezoneGroup } from '@app/types/league';
+import type { ApiError } from '@app/services/leagueService';
 
 export const useLeagueStore = defineStore('league', () => {
   // State
@@ -2012,7 +2012,7 @@ export const useLeagueStore = defineStore('league', () => {
 
 #### Task 10.1: Add League Routes
 
-**File:** `resources/user/js/router/index.ts`
+**File:** `resources/app/js/router/index.ts`
 
 Add these routes:
 
@@ -2020,19 +2020,19 @@ Add these routes:
 {
   path: '/leagues',
   name: 'leagues',
-  component: () => import('@user/views/Leagues/LeaguesIndex.vue'),
+  component: () => import('@app/views/Leagues/LeaguesIndex.vue'),
   meta: { requiresAuth: true, title: 'My Leagues' },
 },
 {
   path: '/leagues/create',
   name: 'leagues-create',
-  component: () => import('@user/views/Leagues/LeagueCreateWizard.vue'),
+  component: () => import('@app/views/Leagues/LeagueCreateWizard.vue'),
   meta: { requiresAuth: true, title: 'Create League' },
 },
 {
   path: '/leagues/:id',
   name: 'league-detail',
-  component: () => import('@user/views/Leagues/LeagueDetail.vue'),
+  component: () => import('@app/views/Leagues/LeagueDetail.vue'),
   meta: { requiresAuth: true, title: 'League Details' },
 },
 ```
@@ -2047,7 +2047,7 @@ Add these routes:
 
 #### Task 11.1: Create Common Form Components
 
-**File:** `resources/user/js/components/common/FormLabel.vue`
+**File:** `resources/app/js/components/common/FormLabel.vue`
 
 ```vue
 <script setup lang="ts">
@@ -2080,7 +2080,7 @@ const labelClasses = computed(() => {
 </template>
 ```
 
-**File:** `resources/user/js/components/common/FormError.vue`
+**File:** `resources/app/js/components/common/FormError.vue`
 
 ```vue
 <script setup lang="ts">
@@ -2114,7 +2114,7 @@ const errorClasses = computed(() => {
 </template>
 ```
 
-**File:** `resources/user/js/components/common/FormHelper.vue`
+**File:** `resources/app/js/components/common/FormHelper.vue`
 
 ```vue
 <script setup lang="ts">
@@ -2153,23 +2153,23 @@ const helperClasses = computed(() => {
 
 #### Task 12.1: Create Wizard Container Component
 
-**File:** `resources/user/js/views/Leagues/LeagueCreateWizard.vue`
+**File:** `resources/app/js/views/Leagues/LeagueCreateWizard.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useLeagueStore } from '@user/stores/leagueStore';
+import { useLeagueStore } from '@app/stores/leagueStore';
 import { useToast } from 'primevue/usetoast';
-import type { CreateLeagueFormData } from '@user/types/league';
+import type { CreateLeagueFormData } from '@app/types/league';
 
 import Stepper from 'primevue/stepper';
 import StepperPanel from 'primevue/stepperpanel';
 import Button from 'primevue/button';
 
-import Step1Essentials from '@user/components/leagues/Step1Essentials.vue';
-import Step2Branding from '@user/components/leagues/Step2Branding.vue';
-import Step3Community from '@user/components/leagues/Step3Community.vue';
+import Step1Essentials from '@app/components/leagues/Step1Essentials.vue';
+import Step2Branding from '@app/components/leagues/Step2Branding.vue';
+import Step3Community from '@app/components/leagues/Step3Community.vue';
 
 const router = useRouter();
 const leagueStore = useLeagueStore();
@@ -2360,13 +2360,13 @@ function handleCancel() {
 
 #### Task 12.2: Create Step 1 (Essentials) Component
 
-**File:** `resources/user/js/components/leagues/Step1Essentials.vue`
+**File:** `resources/app/js/components/leagues/Step1Essentials.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useLeagueStore } from '@user/stores/leagueStore';
-import type { CreateLeagueFormData } from '@user/types/league';
+import { useLeagueStore } from '@app/stores/leagueStore';
+import type { CreateLeagueFormData } from '@app/types/league';
 
 import InputText from 'primevue/inputtext';
 import MultiSelect from 'primevue/multiselect';
@@ -2375,10 +2375,10 @@ import RadioButton from 'primevue/radiobutton';
 import FileUpload from 'primevue/fileupload';
 import Message from 'primevue/message';
 
-import FormLabel from '@user/components/common/FormLabel.vue';
-import FormError from '@user/components/common/FormError.vue';
-import FormHelper from '@user/components/common/FormHelper.vue';
-import { VISIBILITY_OPTIONS } from '@user/types/league';
+import FormLabel from '@app/components/common/FormLabel.vue';
+import FormError from '@app/components/common/FormError.vue';
+import FormHelper from '@app/components/common/FormHelper.vue';
+import { VISIBILITY_OPTIONS } from '@app/types/league';
 
 interface Props {
   modelValue: CreateLeagueFormData;
@@ -2561,20 +2561,20 @@ defineExpose({ validate });
 
 #### Task 12.3: Create Step 2 (Branding) Component
 
-**File:** `resources/user/js/components/leagues/Step2Branding.vue`
+**File:** `resources/app/js/components/leagues/Step2Branding.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { CreateLeagueFormData } from '@user/types/league';
+import type { CreateLeagueFormData } from '@app/types/league';
 
 import InputText from 'primevue/inputtext';
 import Editor from 'primevue/editor';
 import FileUpload from 'primevue/fileupload';
 
-import FormLabel from '@user/components/common/FormLabel.vue';
-import FormError from '@user/components/common/FormError.vue';
-import FormHelper from '@user/components/common/FormHelper.vue';
+import FormLabel from '@app/components/common/FormLabel.vue';
+import FormError from '@app/components/common/FormError.vue';
+import FormHelper from '@app/components/common/FormHelper.vue';
 
 interface Props {
   modelValue: CreateLeagueFormData;
@@ -2672,19 +2672,19 @@ defineExpose({ validate });
 
 #### Task 12.4: Create Step 3 (Community) Component
 
-**File:** `resources/user/js/components/leagues/Step3Community.vue`
+**File:** `resources/app/js/components/leagues/Step3Community.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { CreateLeagueFormData } from '@user/types/league';
+import type { CreateLeagueFormData } from '@app/types/league';
 
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 
-import FormLabel from '@user/components/common/FormLabel.vue';
-import FormError from '@user/components/common/FormError.vue';
-import FormHelper from '@user/components/common/FormHelper.vue';
+import FormLabel from '@app/components/common/FormLabel.vue';
+import FormError from '@app/components/common/FormError.vue';
+import FormHelper from '@app/components/common/FormHelper.vue';
 
 interface Props {
   modelValue: CreateLeagueFormData;
@@ -2845,13 +2845,13 @@ defineExpose({ validate });
 
 #### Task 12.5: Update Leagues List View
 
-**File:** `resources/user/js/views/Leagues/LeaguesIndex.vue`
+**File:** `resources/app/js/views/Leagues/LeaguesIndex.vue`
 
 ```vue
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useLeagueStore } from '@user/stores/leagueStore';
+import { useLeagueStore } from '@app/stores/leagueStore';
 
 import Button from 'primevue/button';
 import Tooltip from 'primevue/tooltip';

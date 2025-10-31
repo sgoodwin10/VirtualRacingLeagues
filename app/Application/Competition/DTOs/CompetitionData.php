@@ -34,6 +34,8 @@ class CompetitionData extends Data
         public ?string $deleted_at,
         public int $created_by_user_id,
         public CompetitionStatsData $stats,
+        /** @var array<CompetitionSeasonData> */
+        public array $seasons = [],
     ) {
     }
 
@@ -43,13 +45,15 @@ class CompetitionData extends Data
      * @param array{id: int, name: string, slug: string} $platformData
      * @param array{id: int, name: string, slug: string}|null $leagueData
      * @param array<string, int|string|null> $aggregates
+     * @param array<CompetitionSeasonData> $seasons
      */
     public static function fromEntity(
         Competition $competition,
         array $platformData,
         string $logoUrl,
         ?array $leagueData = null,
-        array $aggregates = []
+        array $aggregates = [],
+        array $seasons = []
     ): self {
         return new self(
             id: $competition->id() ?? 0,
@@ -87,6 +91,7 @@ class CompetitionData extends Data
                     ? (string) $aggregates['next_race_date']
                     : null,
             ),
+            seasons: $seasons,
         );
     }
 }

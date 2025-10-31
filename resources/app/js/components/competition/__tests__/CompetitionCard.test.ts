@@ -1,0 +1,413 @@
+import { describe, it, expect, vi } from 'vitest';
+import { mount } from '@vue/test-utils';
+import { createRouter, createMemoryHistory } from 'vue-router';
+import CompetitionCard from '../CompetitionCard.vue';
+import type { Competition } from '@app/types/competition';
+
+// Mock router
+const router = createRouter({
+  history: createMemoryHistory(),
+  routes: [
+    {
+      path: '/leagues/:leagueId/competitions/:competitionId/seasons/:seasonId',
+      name: 'season-detail',
+      component: { template: '<div>Season Detail</div>' },
+    },
+  ],
+});
+
+// Helper function to create a mock competition
+function createMockCompetition(overrides: Partial<Competition> = {}): Competition {
+  return {
+    id: 1,
+    league_id: 1,
+    name: 'GT3 Championship',
+    slug: 'gt3-championship',
+    description: 'Premier GT3 racing series',
+    platform_id: 1,
+    platform_name: 'iRacing',
+    platform_slug: 'iracing',
+    platform: {
+      id: 1,
+      name: 'iRacing',
+      slug: 'iracing',
+    },
+    league: {
+      id: 1,
+      name: 'Pro Racing League',
+      slug: 'pro-racing-league',
+    },
+    logo_url: 'https://example.com/logo.png',
+    has_own_logo: true,
+    status: 'active',
+    is_active: true,
+    is_archived: false,
+    is_deleted: false,
+    archived_at: null,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    deleted_at: null,
+    created_by_user_id: 1,
+    stats: {
+      total_seasons: 3,
+      active_seasons: 1,
+      total_rounds: 12,
+      total_drivers: 25,
+      total_races: 36,
+      next_race_date: null,
+    },
+    seasons: [
+      {
+        id: 1,
+        name: 'Season 1',
+        slug: 'season-1',
+        status: 'completed',
+        is_active: false,
+        is_archived: false,
+        created_at: '2024-01-01T00:00:00Z',
+        stats: {
+          driver_count: 20,
+          round_count: 10,
+          race_count: 30,
+        },
+      },
+      {
+        id: 2,
+        name: 'Season 2',
+        slug: 'season-2',
+        status: 'active',
+        is_active: true,
+        is_archived: false,
+        created_at: '2024-03-01T00:00:00Z',
+        stats: {
+          driver_count: 25,
+          round_count: 12,
+          race_count: 36,
+        },
+      },
+      {
+        id: 3,
+        name: 'Season 3',
+        slug: 'season-3',
+        status: 'archived',
+        is_active: false,
+        is_archived: true,
+        created_at: '2024-02-01T00:00:00Z',
+        stats: {
+          driver_count: 18,
+          round_count: 8,
+          race_count: 24,
+        },
+      },
+    ],
+    ...overrides,
+  };
+}
+
+describe('CompetitionCard', () => {
+  it('renders competition basic information', () => {
+    const competition = createMockCompetition();
+    const wrapper = mount(CompetitionCard, {
+      props: { competition },
+      global: { plugins: [router] },
+    });
+
+    expect(wrapper.text()).toContain('GT3 Championship');
+    expect(wrapper.text()).toContain('Premier GT3 racing series');
+    expect(wrapper.find('img').attributes('src')).toBe('https://example.com/logo.png');
+    expect(wrapper.find('img').attributes('alt')).toBe('GT3 Championship');
+  });
+
+  it('displays platform name correctly', () => {
+    const competition = createMockCompetition();
+    const wrapper = mount(CompetitionCard, {
+      props: { competition },
+      global: { plugins: [router] },
+    });
+
+    expect(wrapper.text()).toContain('iRacing');
+  });
+
+  it('displays competition stats correctly', () => {
+    const competition = createMockCompetition();
+    const wrapper = mount(CompetitionCard, {
+      props: { competition },
+      global: { plugins: [router] },
+    });
+
+    expect(wrapper.text()).toContain('Seasons 3');
+    expect(wrapper.text()).toContain('Drivers 25');
+  });
+
+  it('shows archived chip when competition is archived', () => {
+    const competition = createMockCompetition({
+      is_archived: true,
+      status: 'archived',
+    });
+    const wrapper = mount(CompetitionCard, {
+      props: { competition },
+      global: { plugins: [router] },
+    });
+
+    expect(wrapper.text()).toContain('Archived');
+    expect(wrapper.find('.competition-card').classes()).toContain('opacity-60');
+  });
+
+  it('does not show archived chip when competition is active', () => {
+    const competition = createMockCompetition();
+    const wrapper = mount(CompetitionCard, {
+      props: { competition },
+      global: { plugins: [router] },
+    });
+
+    // Check that competition-level archived chip is not shown (but season archived chips may exist)
+    const headerSection = wrapper.find('.rounded-t-md');
+    expect(headerSection.text()).not.toContain('Archived');
+  });
+
+  describe('Seasons List', () => {
+    it('displays seasons sorted by most recent first', () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      // Find the seasons container first, then find season items within it
+      const seasonsContainer = wrapper.find('.overflow-y-auto');
+      const seasonElements = seasonsContainer.findAll('.border-slate-200');
+      expect(seasonElements).toHaveLength(3);
+
+      // Most recent first (Season 2 - 2024-03-01)
+      expect(seasonElements[0]?.text()).toContain('Season 2');
+      // Second (Season 3 - 2024-02-01)
+      expect(seasonElements[1]?.text()).toContain('Season 3');
+      // Oldest (Season 1 - 2024-01-01)
+      expect(seasonElements[2]?.text()).toContain('Season 1');
+    });
+
+    it('displays season names', () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      expect(wrapper.text()).toContain('Season 1');
+      expect(wrapper.text()).toContain('Season 2');
+      expect(wrapper.text()).toContain('Season 3');
+    });
+
+    it('displays season stats for drivers, rounds, and races', () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const seasonsContainer = wrapper.find('.overflow-y-auto');
+      const seasonElements = seasonsContainer.findAll('.border-slate-200');
+      const season2 = seasonElements[0]; // Most recent (Season 2)
+
+      // Check that stats are displayed
+      expect(season2?.text()).toContain('25'); // total_drivers
+      expect(season2?.text()).toContain('12'); // total_rounds
+      expect(season2?.text()).toContain('36'); // total_races
+    });
+
+    it('shows active chip for active season', () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const seasonsContainer = wrapper.find('.overflow-y-auto');
+      const seasonElements = seasonsContainer.findAll('.border-slate-200');
+      const season2 = seasonElements[0]; // Active season
+
+      expect(season2?.text()).toContain('Active');
+    });
+
+    it('shows archived chip for archived season', () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const seasonsContainer = wrapper.find('.overflow-y-auto');
+      const seasonElements = seasonsContainer.findAll('.border-slate-200');
+      const season3 = seasonElements[1]; // Archived season
+
+      expect(season3?.text()).toContain('Archived');
+    });
+
+    it('shows empty state when competition has no seasons', () => {
+      const competition = createMockCompetition({
+        seasons: [],
+        stats: {
+          total_seasons: 0,
+          active_seasons: 0,
+          total_rounds: 0,
+          total_drivers: 0,
+          total_races: 0,
+          next_race_date: null,
+        },
+      });
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      expect(wrapper.text()).toContain('No seasons yet');
+    });
+
+    it('shows empty state when seasons is undefined', () => {
+      const competition = createMockCompetition({
+        seasons: undefined,
+      });
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      expect(wrapper.text()).toContain('No seasons yet');
+    });
+  });
+
+  describe('User Interactions', () => {
+    it('emits edit event when edit button is clicked', async () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const editButton = wrapper.findComponent({ name: 'Button' });
+      await editButton.trigger('click');
+
+      expect(wrapper.emitted('edit')).toHaveLength(1);
+    });
+
+    it('navigates to season detail when season item is clicked', async () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const pushSpy = vi.spyOn(router, 'push');
+
+      const seasonsContainer = wrapper.find('.overflow-y-auto');
+      const seasonElements = seasonsContainer.findAll('.border-slate-200');
+      await seasonElements[0]?.trigger('click'); // Click first season (Season 2)
+
+      expect(pushSpy).toHaveBeenCalledWith({
+        name: 'season-detail',
+        params: {
+          leagueId: 1,
+          competitionId: 1,
+          seasonId: 2,
+        },
+      });
+    });
+
+    it('card itself is clickable', async () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const card = wrapper.find('.competition-card');
+      expect(card.classes()).toContain('cursor-pointer');
+    });
+
+    it('does not navigate when edit button is clicked', async () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const pushSpy = vi.spyOn(router, 'push');
+      const editButton = wrapper.findComponent({ name: 'Button' });
+
+      await editButton.trigger('click');
+
+      expect(pushSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Visual States', () => {
+    it('applies hover and cursor styles to season items', () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const seasonsContainer = wrapper.find('.overflow-y-auto');
+      const seasonElements = seasonsContainer.findAll('.border-slate-200');
+      seasonElements.forEach((season) => {
+        expect(season.classes()).toContain('hover:border-primary-200');
+        expect(season.classes()).toContain('hover:bg-primary-50/30');
+        expect(season.classes()).toContain('cursor-pointer');
+      });
+    });
+
+    it('makes seasons list scrollable', () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const seasonsContainer = wrapper.find('.overflow-y-auto');
+      expect(seasonsContainer.exists()).toBe(true);
+      expect(seasonsContainer.classes()).toContain('overflow-y-auto');
+    });
+  });
+
+  describe('Responsive Layout', () => {
+    it('uses full width for seasons display', () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const seasonsContainer = wrapper.find('.flex-1.overflow-y-auto');
+      expect(seasonsContainer.exists()).toBe(true);
+    });
+
+    it('truncates long season names', () => {
+      const competition = createMockCompetition({
+        seasons: [
+          {
+            id: 1,
+            name: 'This is a very long season name that should be truncated',
+            slug: 'long-season',
+            status: 'active',
+            is_active: true,
+            is_archived: false,
+            created_at: '2024-01-01T00:00:00Z',
+            stats: {
+              driver_count: 20,
+              round_count: 10,
+              race_count: 30,
+            },
+          },
+        ],
+      });
+      const wrapper = mount(CompetitionCard, {
+        props: { competition },
+        global: { plugins: [router] },
+      });
+
+      const seasonName = wrapper.find('.truncate');
+      expect(seasonName.exists()).toBe(true);
+    });
+  });
+});

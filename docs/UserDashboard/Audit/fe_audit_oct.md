@@ -1,7 +1,7 @@
 # Frontend Audit Report - User Dashboard
 **Date:** October 24, 2025
 **Auditor:** Claude Code
-**Scope:** `/var/www/resources/user` directory
+**Scope:** `/var/www/resources/app` directory
 **Total Files Analyzed:** 132 TypeScript/Vue files
 
 ---
@@ -31,7 +31,7 @@ The codebase is **generally healthy** with good test coverage and well-organized
 
 #### 1.1 Example/Demo Files (SAFE TO REMOVE)
 
-##### `resources/user/js/examples/UsingSiteConfigStore.vue`
+##### `resources/app/js/examples/UsingSiteConfigStore.vue`
 - **File Type:** Example/documentation component
 - **Status:** NOT imported or referenced anywhere in production code
 - **Usage:** `0` references found
@@ -41,7 +41,7 @@ The codebase is **generally healthy** with good test coverage and well-organized
 - **Notes:** The siteConfigStore itself is actively used throughout the application
 
 ```typescript
-// Location: resources/user/js/examples/UsingSiteConfigStore.vue
+// Location: resources/app/js/examples/UsingSiteConfigStore.vue
 // Referenced: 0 times
 // Can be safely deleted
 ```
@@ -52,7 +52,7 @@ The codebase is **generally healthy** with good test coverage and well-organized
 
 These files appear in `git status` as deleted but need to be staged for commit:
 
-##### `resources/user/js/components/driver/ReadOnlyDriverTable.vue`
+##### `resources/app/js/components/driver/ReadOnlyDriverTable.vue`
 - **Status:** Already deleted (pending commit)
 - **Test File:** `ReadOnlyDriverTable.test.ts` also deleted
 - **Action Needed:** Stage deletion with `git add`
@@ -66,13 +66,13 @@ These files appear in `git status` as deleted but need to be staged for commit:
 
 These files provide valuable developer documentation and should be **KEPT**:
 
-##### `resources/user/js/components/common/modals/BaseModal.md`
+##### `resources/app/js/components/common/modals/BaseModal.md`
 - **Purpose:** Comprehensive documentation for BaseModal component
 - **Lines:** 609 lines of examples, API docs, and usage patterns
 - **Status:** KEEP - Valuable developer reference
 - **Usage:** Not imported (it's documentation), but BaseModal.vue is used in 7+ files
 
-##### `resources/user/js/components/common/modals/BaseModalHeader.md`
+##### `resources/app/js/components/common/modals/BaseModalHeader.md`
 - **Purpose:** Documentation for BaseModalHeader component
 - **Lines:** 220 lines of examples and API docs
 - **Status:** KEEP - Valuable developer reference
@@ -85,7 +85,7 @@ These files provide valuable developer documentation and should be **KEPT**:
 ### 3. Component Usage Analysis
 
 #### 3.1 BaseModal Component
-- **File:** `resources/user/js/components/common/modals/BaseModal.vue`
+- **File:** `resources/app/js/components/common/modals/BaseModal.vue`
 - **Direct Imports:** 0 (concerning but explained below)
 - **Context:** This is a well-designed wrapper around PrimeVue Dialog
 - **Issue:** Not directly imported via `from './BaseModal.vue'` pattern
@@ -104,14 +104,14 @@ These files provide valuable developer documentation and should be **KEPT**:
 - **Recommendation:** **KEEP** - This is a valuable abstraction used in dialogs
 
 #### 3.2 BaseModalHeader Component
-- **File:** `resources/user/js/components/common/modals/BaseModalHeader.vue`
+- **File:** `resources/app/js/components/common/modals/BaseModalHeader.vue`
 - **Direct Imports:** Used in 4+ files
 - **Status:** ACTIVELY USED
 - **Test Coverage:** YES - `BaseModalHeader.test.ts` exists
 - **Recommendation:** **KEEP**
 
 #### 3.3 ViewDriverModal Component
-- **File:** `resources/user/js/components/driver/ViewDriverModal.vue`
+- **File:** `resources/app/js/components/driver/ViewDriverModal.vue`
 - **Imports:** 4 files
   - `LeagueDetail.vue`
   - `DriverManagementDrawer.vue`
@@ -127,20 +127,20 @@ These files provide valuable developer documentation and should be **KEPT**:
 
 #### 4.1 Test Helper Files (KEEP)
 
-##### `resources/user/js/__tests__/helpers/driverTestHelpers.ts`
+##### `resources/app/js/__tests__/helpers/driverTestHelpers.ts`
 - **Purpose:** Mock factories for Driver and LeagueDriver
 - **Exports:** `createMockDriver()`, `createMockLeagueDriver()`
 - **Usage:** Used in `driverService.test.ts`
 - **Status:** ACTIVELY USED
 - **Recommendation:** **KEEP**
 
-##### `resources/user/js/__tests__/setup/primevueStubs.ts`
+##### `resources/app/js/__tests__/setup/primevueStubs.ts`
 - **Purpose:** PrimeVue component stubs for testing
 - **Usage:** Imported in `testUtils.ts` and exported in `index.ts`
 - **Status:** ACTIVELY USED in test setup
 - **Recommendation:** **KEEP**
 
-##### `resources/user/js/__tests__/setup/testUtils.ts`
+##### `resources/app/js/__tests__/setup/testUtils.ts`
 - **Purpose:** Shared test utilities
 - **Usage:** Exported via `__tests__/setup/index.ts`
 - **Status:** Part of test infrastructure
@@ -148,7 +148,7 @@ These files provide valuable developer documentation and should be **KEPT**:
 
 #### 4.2 Snapshot Files
 
-##### `resources/user/js/components/common/__tests__/__snapshots__/PageHeader.spec.ts.snap`
+##### `resources/app/js/components/common/__tests__/__snapshots__/PageHeader.spec.ts.snap`
 - **Purpose:** Vitest snapshots for PageHeader component
 - **Status:** Used by `PageHeader.spec.ts`
 - **Recommendation:** **KEEP** - Active test artifact
@@ -346,13 +346,13 @@ The codebase has a `BaseModal` wrapper component with excellent documentation, a
 
 1. **Remove Example File**
    ```bash
-   rm resources/user/js/examples/UsingSiteConfigStore.vue
+   rm resources/app/js/examples/UsingSiteConfigStore.vue
    ```
 
 2. **Commit Already-Deleted Files**
    ```bash
-   git add resources/user/js/components/driver/ReadOnlyDriverTable.vue
-   git add resources/user/js/components/driver/__tests__/ReadOnlyDriverTable.test.ts
+   git add resources/app/js/components/driver/ReadOnlyDriverTable.vue
+   git add resources/app/js/components/driver/__tests__/ReadOnlyDriverTable.test.ts
    ```
 
 ### Medium Priority (Verify Then Act)
@@ -415,11 +415,11 @@ Before deleting ANY component, verify:
 
 ```bash
 # 1. Remove example file
-rm resources/user/js/examples/UsingSiteConfigStore.vue
+rm resources/app/js/examples/UsingSiteConfigStore.vue
 
 # 2. Stage deleted files for commit
-git add resources/user/js/components/driver/ReadOnlyDriverTable.vue
-git add resources/user/js/components/driver/__tests__/ReadOnlyDriverTable.test.ts
+git add resources/app/js/components/driver/ReadOnlyDriverTable.vue
+git add resources/app/js/components/driver/__tests__/ReadOnlyDriverTable.test.ts
 
 # 3. Verify TypeScript compilation
 npm run type-check

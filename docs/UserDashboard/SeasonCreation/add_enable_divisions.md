@@ -4,7 +4,7 @@ field name `race_divisions_enabled`.
 
 it will act the same way as the `team_championship_enabled` featue.
 
-it will be managed in resources/user/js/components/season/modals/SeasonFormDrawer.vue - the same as team championship
+it will be managed in resources/app/js/components/season/modals/SeasonFormDrawer.vue - the same as team championship
 
 check all dtos, responses, pinia stores, etc include this new field.
 

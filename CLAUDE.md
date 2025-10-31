@@ -79,9 +79,9 @@ resources/
 **Key implications:**
 - Components and code are NOT shared between applications
 - Each application has its own Pinia store instance
-- Path aliases: `@public` → `resources/public/js`, `@user` → `resources/user/js`, `@admin` → `resources/admin/js`
+- Path aliases: `@public` → `resources/public/js`, `@app` → `resources/app/js`, `@admin` → `resources/admin/js`
 - Vite builds all three applications separately (see `vite.config.ts`)
-- Tests are separated by application: `npm run test:user` and `npm run test:admin`
+- Tests are separated by application: `npm run test:app` and `npm run test:admin`
 - Use agent `dev-fe-public` for the public site
 - Use agent `dev-fe-user` for the user dashboard
 - Use agent `dev-fe-admin` for the admin dashboard
@@ -218,7 +218,7 @@ Route::domain('admin.virtualracingleagues.localhost')->group(function () {
 
 **Frontend (Vue Router):**
 - Public routes: `resources/public/js/router/index.ts` (handles `/`, `/login`, `/register`, `/forgot-password`, `/reset-password`)
-- User routes: `resources/user/js/router/index.ts` (handles `/`, `/profile` - all authenticated)
+- User routes: `resources/app/js/router/index.ts` (handles `/`, `/profile` - all authenticated)
 - Admin routes: `resources/admin/js/router/index.ts` (handles `/admin`, `/admin/users`, `/admin/settings`, etc.)
 
 **Session Sharing:**
@@ -235,8 +235,8 @@ Vite is configured with **triple entry points** for all three applications:
 input: [
     'resources/public/css/app.css',
     'resources/public/js/app.ts',
-    'resources/user/css/app.css',
-    'resources/user/js/app.ts',
+    'resources/app/css/app.css',
+    'resources/app/js/app.ts',
     'resources/admin/css/app.css',
     'resources/admin/js/app.ts',
 ]
@@ -275,7 +275,7 @@ npm run type-check         # TypeScript type checking only
 
 # Testing
 npm test                   # Run all tests (Vitest)
-npm run test:user          # Test user dashboard only
+npm run test:app           # Test app dashboard only
 npm run test:admin         # Test admin dashboard only
 npm run test:ui            # Run tests with UI
 npm run test:coverage      # Generate coverage report
@@ -285,10 +285,10 @@ npm run test:e2e:ui        # Run Playwright with UI
 # Linting/Formatting
 npm run lint               # Lint all (ESLint)
 npm run lint:fix           # Fix all linting issues
-npm run lint:user          # Lint user dashboard only
+npm run lint:app           # Lint app dashboard only
 npm run lint:admin         # Lint admin dashboard only
 npm run format             # Format all (Prettier)
-npm run format:user        # Format user dashboard only
+npm run format:app         # Format app dashboard only
 npm run format:admin       # Format admin dashboard only
 
 # Access to MariaDB when in container
@@ -374,7 +374,7 @@ import InputText from 'primevue/inputtext';
 Create tests alongside the code they test:
 
 ```typescript
-// resources/user/js/components/MyComponent.test.ts
+// resources/app/js/components/MyComponent.test.ts
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import MyComponent from './MyComponent.vue';
@@ -469,10 +469,10 @@ SANCTUM_STATEFUL_DOMAINS=virtualracingleagues.localhost,app.virtualracingleagues
 
 ### Adding a New User Dashboard View
 
-1. Create view: `resources/user/js/views/MyView.vue`
-2. Add route: `resources/user/js/router/index.ts` with `requiresAuth: true` meta
-3. Import using `@user/views/MyView.vue`
-4. Add tests: `resources/user/js/views/MyView.test.ts`
+1. Create view: `resources/app/js/views/MyView.vue`
+2. Add route: `resources/app/js/router/index.ts` with `requiresAuth: true` meta
+3. Import using `@app/views/MyView.vue`
+4. Add tests: `resources/app/js/views/MyView.test.ts`
 5. Remember: User dashboard is authenticated-only
 
 ### Adding a New Admin Dashboard View
@@ -522,7 +522,7 @@ public function store(CreateUserData $data): JsonResponse
 - **Never commit `.env`** - It contains secrets
 - **Run tests before committing** - `npm test && composer test`
 - **Type check TypeScript** - `npm run type-check` before building
-- **Use path aliases** - Import with `@public/`, `@user/`, or `@admin/`, not relative paths
+- **Use path aliases** - Import with `@public/`, `@app/`, or `@admin/`, not relative paths
 - **Separate concerns** - Keep public, user, and admin code completely separate
 - **Subdomain routing** - All routes must be in `routes/subdomain.php`, not `routes/web.php`
 - **HMR configuration** - Check `vite.config.ts` line 45 for the correct HMR host (should match your `.env` domain)

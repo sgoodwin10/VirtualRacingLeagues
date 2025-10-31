@@ -26,12 +26,12 @@ This architecture provides flexibility, consistency, and type-safe customization
 ## Current Color System Architecture
 
 ### Layer 1: Custom CSS Variables
-**File**: `resources/user/css/app.css` (lines 9-26)
+**File**: `resources/app/css/app.css` (lines 9-26)
 
 Custom variables for brand colors, backgrounds, borders, and text colors. These have the highest priority for custom styling.
 
 ### Layer 2: PrimeVue Aura Theme
-**File**: `resources/user/js/app.ts` (lines 25-37)
+**File**: `resources/app/js/app.ts` (lines 25-37)
 
 PrimeVue components use CSS variables prefixed with `--p-*`. Currently configured with:
 - **Primary**: Emerald palette
@@ -73,7 +73,7 @@ Tailwind utilities extended with PrimeVue color tokens via the `tailwindcss-prim
 
 ### 1. Custom CSS Variables
 
-**File**: `resources/user/css/app.css` (lines 9-26)
+**File**: `resources/app/css/app.css` (lines 9-26)
 
 ```css
 :root {
@@ -149,11 +149,11 @@ Components typically use a mix of:
 
 **Best for**: Changing brand colors quickly without affecting component library
 
-**File**: `resources/user/css/app.css`
+**File**: `resources/app/css/app.css`
 **Lines**: 9-26
 
 **Steps**:
-1. Open `resources/user/css/app.css`
+1. Open `resources/app/css/app.css`
 2. Find the `:root` block (lines 9-26)
 3. Change hex values for your colors
 4. Save - Vite HMR will auto-refresh
@@ -190,7 +190,7 @@ Components typically use a mix of:
 
 **Best for**: Comprehensive theme changes affecting all PrimeVue components
 
-**File**: `resources/user/js/app.ts`
+**File**: `resources/app/js/app.ts`
 **Lines**: 25-37
 
 **Steps**:
@@ -258,7 +258,7 @@ app.use(PrimeVue, {
 
 **Best for**: Brand-specific colors that don't match built-in palettes
 
-**File**: `resources/user/js/app.ts`
+**File**: `resources/app/js/app.ts`
 
 **Steps**:
 1. Define your complete color scale (50-950)
@@ -326,7 +326,7 @@ app.use(PrimeVue, {
 
 **Best for**: Adding new color utilities beyond primary/secondary
 
-**File**: `resources/user/css/app.css`
+**File**: `resources/app/css/app.css`
 
 **Steps**:
 1. Add `@theme` directive with custom colors
@@ -371,7 +371,7 @@ app.use(PrimeVue, {
 
 The application is configured for dark mode but not currently active.
 
-**Configuration** (`resources/user/js/app.ts` line 30):
+**Configuration** (`resources/app/js/app.ts` line 30):
 ```typescript
 darkModeSelector: '.dark'
 ```
@@ -387,7 +387,7 @@ Add the `dark` class to the root element:
 
 **Option B: Define Dark Mode Variables**
 
-Add dark mode color overrides in `resources/user/css/app.css`:
+Add dark mode color overrides in `resources/app/css/app.css`:
 
 ```css
 :root.dark {
@@ -451,12 +451,12 @@ PrimeVue Aura theme automatically provides dark mode variants for all components
 
 | Goal | File | Location | What to Change |
 |------|------|----------|----------------|
-| **Change custom brand colors** | `resources/user/css/app.css` | Lines 9-26 | CSS variables in `:root` block |
-| **Change PrimeVue component colors** | `resources/user/js/app.ts` | Lines 25-37 | Theme preset configuration |
-| **Add custom Tailwind colors** | `resources/user/css/app.css` | Add new section | `@theme` directive with `--color-*` variables |
-| **Customize component styles** | `resources/user/css/app.css` | Lines 86-170 | PrimeVue component overrides |
-| **Enable dark mode** | `resources/user/css/app.css` | Add new section | `:root.dark` block with dark colors |
-| **Change font** | `resources/user/css/app.css` | Lines 2, 46 | Google Fonts import and body font-family |
+| **Change custom brand colors** | `resources/app/css/app.css` | Lines 9-26 | CSS variables in `:root` block |
+| **Change PrimeVue component colors** | `resources/app/js/app.ts` | Lines 25-37 | Theme preset configuration |
+| **Add custom Tailwind colors** | `resources/app/css/app.css` | Add new section | `@theme` directive with `--color-*` variables |
+| **Customize component styles** | `resources/app/css/app.css` | Lines 86-170 | PrimeVue component overrides |
+| **Enable dark mode** | `resources/app/css/app.css` | Add new section | `:root.dark` block with dark colors |
+| **Change font** | `resources/app/css/app.css` | Lines 2, 46 | Google Fonts import and body font-family |
 
 ### Color Variable Usage
 
@@ -481,7 +481,7 @@ PrimeVue Aura theme automatically provides dark mode variants for all components
 ### Quick Brand Color Update (5-10 minutes)
 
 1. **Update CSS Variables**
-   - Open `resources/user/css/app.css`
+   - Open `resources/app/css/app.css`
    - Modify `:root` variables (lines 9-26)
    - Change `--user-primary`, `--user-secondary`, `--user-accent`
 
@@ -502,13 +502,13 @@ PrimeVue Aura theme automatically provides dark mode variants for all components
    - Ensure WCAG 2.1 AA contrast ratios
 
 2. **Update PrimeVue Theme**
-   - Open `resources/user/js/app.ts`
+   - Open `resources/app/js/app.ts`
    - Create custom preset with `definePreset()`
    - Set primary colors to your palette
    - Test with PrimeVue components
 
 3. **Update CSS Variables**
-   - Open `resources/user/css/app.css`
+   - Open `resources/app/css/app.css`
    - Align custom variables with your palette
    - Update background, border, text colors
    - Add dark mode variables if needed
@@ -571,7 +571,7 @@ Use [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) to 
 
 ### Font Customization
 The application currently uses **Zalando Sans** from Google Fonts. To change:
-1. Update `@import` on line 2 of `resources/user/css/app.css`
+1. Update `@import` on line 2 of `resources/app/css/app.css`
 2. Update `font-family` on line 46
 
 Example:

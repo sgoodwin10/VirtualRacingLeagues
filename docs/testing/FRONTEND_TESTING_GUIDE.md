@@ -57,7 +57,7 @@ npm run test:ui
 npm run test:coverage
 
 # Specific file
-npm test resources/user/js/components/MyComponent.test.ts
+npm test resources/app/js/components/MyComponent.test.ts
 
 # Filter by test name
 npm test -- -t "renders correctly"
@@ -184,7 +184,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import { createPinia, setActivePinia } from 'pinia';
 import UserProfile from './UserProfile.vue';
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 
 describe('UserProfile', () => {
   beforeEach(() => {
@@ -222,7 +222,7 @@ import { render, screen } from '@testing-library/vue';
 import UserProfile from './UserProfile.vue';
 
 // Mock the store module
-vi.mock('@user/stores/userStore', () => ({
+vi.mock('@app/stores/userStore', () => ({
   useUserStore: vi.fn(() => ({
     user: {
       id: 1,
@@ -929,7 +929,7 @@ describe('Public Site - LoginForm', () => {
 });
 ```
 
-### User Dashboard Tests (`resources/user/js`)
+### User Dashboard Tests (`resources/app/js`)
 
 Focus on:
 - Authenticated user features
@@ -937,9 +937,9 @@ Focus on:
 - User-specific data and actions
 
 ```typescript
-// resources/user/js/tests/Profile.test.ts
+// resources/app/js/tests/Profile.test.ts
 import { render, screen } from '@testing-library/vue';
-import ProfileView from '@user/views/ProfileView.vue';
+import ProfileView from '@app/views/ProfileView.vue';
 
 describe('User Dashboard - ProfileView', () => {
   it('displays user profile information', () => {
@@ -1036,7 +1036,7 @@ it('validates maximum file size', () => {});
 
 ```bash
 # Run single test file
-npm test resources/user/js/components/MyComponent.test.ts
+npm test resources/app/js/components/MyComponent.test.ts
 
 # Run tests matching pattern
 npm test -- -t "renders correctly"

@@ -13,7 +13,7 @@ Always use context7 when I need code generation, setup or configuration steps, o
 ## Configuration
 
 PrimeVue is configured in both dashboard entry points:
-- `resources/user/js/app.ts`
+- `resources/app/js/app.ts`
 - `resources/admin/js/app.ts`
 
 ### Current Configuration
@@ -251,10 +251,10 @@ app.use(PrimeVue, {
 
 Both dashboards have PrimeVue configured and ready to use:
 
-**User Dashboard** (`resources/user/`):
+**User Dashboard** (`resources/app/`):
 - Aura theme preset
 - Light mode by default
-- Configured in `resources/user/js/app.ts`
+- Configured in `resources/app/js/app.ts`
 
 **Admin Dashboard** (`resources/admin/`):
 - Aura theme preset

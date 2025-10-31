@@ -256,7 +256,7 @@ routes/subdomain.php (app subdomain routes)
 
 #### Component Structure
 ```
-resources/user/js/
+resources/app/js/
   ├── components/round/
   │   ├── RoundsPanel.vue (main panel with accordion)
   │   ├── RoundAccordionItem.vue (single round in list)

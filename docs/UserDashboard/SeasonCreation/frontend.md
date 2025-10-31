@@ -137,7 +137,7 @@ LeagueDetail View
 ### 1. Season Creation Components
 
 #### `SeasonFormDrawer.vue`
-**Location:** `resources/user/js/components/season/SeasonFormDrawer.vue`
+**Location:** `resources/app/js/components/season/SeasonFormDrawer.vue`
 
 **Purpose:** Create and edit seasons (uses the same drawer for both operations)
 
@@ -180,7 +180,7 @@ interface Emits {
 ---
 
 #### `SeasonHeader.vue`
-**Location:** `resources/user/js/components/season/SeasonHeader.vue`
+**Location:** `resources/app/js/components/season/SeasonHeader.vue`
 
 **Purpose:** Display season header with logo, banner, and action buttons
 
@@ -213,7 +213,7 @@ interface Emits {
 ---
 
 #### `SeasonSettings.vue`
-**Location:** `resources/user/js/components/season/SeasonSettings.vue`
+**Location:** `resources/app/js/components/season/SeasonSettings.vue`
 
 **Purpose:** Manage season settings and dangerous operations
 
@@ -247,7 +247,7 @@ interface Emits {
 ### 2. Season-Driver Management Components
 
 #### `SeasonDriverManagementDrawer.vue`
-**Location:** `resources/user/js/components/season/SeasonDriverManagementDrawer.vue`
+**Location:** `resources/app/js/components/season/SeasonDriverManagementDrawer.vue`
 
 **Purpose:** Manage drivers assigned to a season (separate drawer, not inline UI)
 
@@ -290,7 +290,7 @@ interface Emits {
 ---
 
 #### `AvailableDriversTable.vue`
-**Location:** `resources/user/js/components/season/AvailableDriversTable.vue`
+**Location:** `resources/app/js/components/season/AvailableDriversTable.vue`
 
 **Purpose:** Display league drivers that are NOT in the season
 
@@ -320,7 +320,7 @@ interface Emits {
 ---
 
 #### `SeasonDriversTable.vue`
-**Location:** `resources/user/js/components/season/SeasonDriversTable.vue`
+**Location:** `resources/app/js/components/season/SeasonDriversTable.vue`
 
 **Purpose:** Display drivers assigned to the season with season-specific data
 
@@ -350,7 +350,7 @@ interface Emits {
 ---
 
 #### `SeasonDriverFormDialog.vue`
-**Location:** `resources/user/js/components/season/modals/SeasonDriverFormDialog.vue`
+**Location:** `resources/app/js/components/season/modals/SeasonDriverFormDialog.vue`
 
 **Purpose:** Add driver to season or edit season-specific driver metadata
 
@@ -390,7 +390,7 @@ interface Emits {
 ---
 
 #### `ReadOnlySeasonDriverTable.vue`
-**Location:** `resources/user/js/components/season/ReadOnlySeasonDriverTable.vue`
+**Location:** `resources/app/js/components/season/ReadOnlySeasonDriverTable.vue`
 
 **Purpose:** Display season drivers in read-only mode (for Season Overview tab)
 
@@ -430,7 +430,7 @@ interface Props {
 ## Views
 
 ### 1. `SeasonDetail.vue`
-**Location:** `resources/user/js/views/SeasonDetail.vue`
+**Location:** `resources/app/js/views/SeasonDetail.vue`
 
 **Route:** `/leagues/:leagueId/competitions/:competitionId/seasons/:seasonId`
 
@@ -510,7 +510,7 @@ const showDriverDrawer = ref(false);
 ## Services
 
 ### 1. `seasonService.ts`
-**Location:** `resources/user/js/services/seasonService.ts`
+**Location:** `resources/app/js/services/seasonService.ts`
 
 **API Endpoints:**
 
@@ -587,7 +587,7 @@ export async function checkSeasonSlugAvailability(
 ---
 
 ### 2. `seasonDriverService.ts`
-**Location:** `resources/user/js/services/seasonDriverService.ts`
+**Location:** `resources/app/js/services/seasonDriverService.ts`
 
 **API Endpoints:**
 
@@ -655,7 +655,7 @@ export async function getSeasonDriverStats(
 ## Stores (Pinia)
 
 ### 1. `seasonStore.ts`
-**Location:** `resources/user/js/stores/seasonStore.ts`
+**Location:** `resources/app/js/stores/seasonStore.ts`
 
 **State:**
 ```typescript
@@ -720,7 +720,7 @@ export async function getSeasonDriverStats(
 ---
 
 ### 2. `seasonDriverStore.ts`
-**Location:** `resources/user/js/stores/seasonDriverStore.ts`
+**Location:** `resources/app/js/stores/seasonDriverStore.ts`
 
 **State:**
 ```typescript
@@ -815,7 +815,7 @@ export async function getSeasonDriverStats(
 ## Types (TypeScript)
 
 ### 1. `season.ts`
-**Location:** `resources/user/js/types/season.ts`
+**Location:** `resources/app/js/types/season.ts`
 
 ```typescript
 /**
@@ -992,7 +992,7 @@ export interface PaginatedSeasonsResponse {
 ---
 
 ### 2. `seasonDriver.ts`
-**Location:** `resources/user/js/types/seasonDriver.ts`
+**Location:** `resources/app/js/types/seasonDriver.ts`
 
 ```typescript
 import type { Driver } from './driver';
@@ -1101,7 +1101,7 @@ export interface PaginatedSeasonDriversResponse {
 ## Composables
 
 ### 1. `useSeasonValidation.ts`
-**Location:** `resources/user/js/composables/useSeasonValidation.ts`
+**Location:** `resources/app/js/composables/useSeasonValidation.ts`
 
 **Purpose:** Validate season form fields
 
@@ -1212,7 +1212,7 @@ export function useSeasonValidation(form: SeasonForm) {
 ---
 
 ### 2. `useSeasonDriverValidation.ts`
-**Location:** `resources/user/js/composables/useSeasonDriverValidation.ts`
+**Location:** `resources/app/js/composables/useSeasonDriverValidation.ts`
 
 **Purpose:** Validate season-driver form fields
 
@@ -1264,13 +1264,13 @@ export function useSeasonDriverValidation(form: SeasonDriverForm) {
 
 ## Router Routes
 
-**Add to:** `resources/user/js/router/index.ts`
+**Add to:** `resources/app/js/router/index.ts`
 
 ```typescript
 {
   path: '/leagues/:leagueId/competitions/:competitionId/seasons/:seasonId',
   name: 'season-detail',
-  component: () => import('@user/views/SeasonDetail.vue'),
+  component: () => import('@app/views/SeasonDetail.vue'),
   meta: {
     title: 'Season Details',
     requiresAuth: true,
@@ -1459,7 +1459,7 @@ const driverStatusSeverity = (status: SeasonDriverStatus) => {
 
 ### 1. CompetitionDetail View
 
-**Add to:** `resources/user/js/views/CompetitionDetail.vue`
+**Add to:** `resources/app/js/views/CompetitionDetail.vue`
 
 **Changes:**
 - Add "Create Season" button in multiple locations:

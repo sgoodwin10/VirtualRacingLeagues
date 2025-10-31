@@ -28,7 +28,7 @@
 ### File Structure
 
 ```
-resources/user/
+resources/app/
 ├── css/
 │   └── app.css
 └── js/
@@ -85,14 +85,14 @@ resources/user/
 
 ### 2.1 Create User Store
 
-**File:** `resources/user/js/stores/userStore.ts`
+**File:** `resources/app/js/stores/userStore.ts`
 
 ```typescript
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { User } from '@user/types/user';
-import type { LoginCredentials, RegisterData } from '@user/types/auth';
-import { authService } from '@user/services/authService';
+import type { User } from '@app/types/user';
+import type { LoginCredentials, RegisterData } from '@app/types/auth';
+import { authService } from '@app/services/authService';
 
 export const useUserStore = defineStore('user', () => {
   // State
@@ -228,7 +228,7 @@ export const useUserStore = defineStore('user', () => {
 
 ### 3.1 Update API Service
 
-**File:** `resources/user/js/services/api.ts`
+**File:** `resources/app/js/services/api.ts`
 
 Add CSRF token handling and auth interceptors (similar to admin):
 
@@ -311,12 +311,12 @@ export const apiClient = apiService.getClient();
 
 ### 3.2 Create Auth Service
 
-**File:** `resources/user/js/services/authService.ts`
+**File:** `resources/app/js/services/authService.ts`
 
 ```typescript
 import { apiClient, apiService } from './api';
-import type { User } from '@user/types/user';
-import type { LoginCredentials, RegisterData } from '@user/types/auth';
+import type { User } from '@app/types/user';
+import type { LoginCredentials, RegisterData } from '@app/types/auth';
 
 class AuthService {
   async register(data: RegisterData, signal?: AbortSignal): Promise<void> {
@@ -403,7 +403,7 @@ export const authService = new AuthService();
 
 ### 4.1 User Type
 
-**File:** `resources/user/js/types/user.ts`
+**File:** `resources/app/js/types/user.ts`
 
 ```typescript
 export interface User {
@@ -418,7 +418,7 @@ export interface User {
 
 ### 4.2 Auth Types
 
-**File:** `resources/user/js/types/auth.ts`
+**File:** `resources/app/js/types/auth.ts`
 
 ```typescript
 export interface LoginCredentials {
@@ -448,15 +448,15 @@ export interface ResetPasswordData {
 
 ### 5.1 Register View
 
-**File:** `resources/user/js/views/Register.vue`
+**File:** `resources/app/js/views/Register.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 import { useToast } from 'primevue/usetoast';
-import { isAxiosError, hasValidationErrors, getErrorMessage } from '@user/types/errors';
+import { isAxiosError, hasValidationErrors, getErrorMessage } from '@app/types/errors';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
@@ -703,14 +703,14 @@ const handleSubmit = async (): Promise<void> => {
 
 ### 5.2 Login View
 
-**File:** `resources/user/js/views/Login.vue`
+**File:** `resources/app/js/views/Login.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useUserStore } from '@user/stores/userStore';
-import { isAxiosError, hasValidationErrors, getErrorMessage } from '@user/types/errors';
+import { useUserStore } from '@app/stores/userStore';
+import { isAxiosError, hasValidationErrors, getErrorMessage } from '@app/types/errors';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Checkbox from 'primevue/checkbox';
@@ -922,12 +922,12 @@ const handleSubmit = async (): Promise<void> => {
 
 ### 5.3 Email Verification View
 
-**File:** `resources/user/js/views/VerifyEmail.vue`
+**File:** `resources/app/js/views/VerifyEmail.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
@@ -1013,12 +1013,12 @@ const resendVerification = async (): Promise<void> => {
 
 ### 5.4 Forgot Password View
 
-**File:** `resources/user/js/views/ForgotPassword.vue`
+**File:** `resources/app/js/views/ForgotPassword.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { authService } from '@user/services/authService';
+import { authService } from '@app/services/authService';
 import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
@@ -1153,13 +1153,13 @@ const handleSubmit = async (): Promise<void> => {
 
 ### 5.5 Reset Password View
 
-**File:** `resources/user/js/views/ResetPassword.vue`
+**File:** `resources/app/js/views/ResetPassword.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { authService } from '@user/services/authService';
+import { authService } from '@app/services/authService';
 import { useToast } from 'primevue/usetoast';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
@@ -1330,14 +1330,14 @@ const handleSubmit = async (): Promise<void> => {
 
 ### 5.6 Profile View
 
-**File:** `resources/user/js/views/Profile.vue`
+**File:** `resources/app/js/views/Profile.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 import { useToast } from 'primevue/usetoast';
-import { isAxiosError, hasValidationErrors } from '@user/types/errors';
+import { isAxiosError, hasValidationErrors } from '@app/types/errors';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
@@ -1596,13 +1596,13 @@ const handleSubmit = async (): Promise<void> => {
 
 ### 6.1 Update Header Component
 
-**File:** `resources/user/js/components/layout/Header.vue`
+**File:** `resources/app/js/components/layout/Header.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 import type { MenuItem } from 'primevue/menuitem';
@@ -1690,18 +1690,18 @@ async function handleLogout() {
 
 ### 7.1 Update Router with Guards
 
-**File:** `resources/user/js/router/index.ts`
+**File:** `resources/app/js/router/index.ts`
 
 ```typescript
 import { createRouter, createWebHistory } from 'vue-router';
-import { useUserStore } from '@user/stores/userStore';
-import HomeView from '@user/views/HomeView.vue';
-import Login from '@user/views/auth/Login.vue';
-import Register from '@user/views/auth/Register.vue';
-import VerifyEmail from '@user/views/auth/VerifyEmail.vue';
-import ForgotPassword from '@user/views/auth/ForgotPassword.vue';
-import ResetPassword from '@user/views/auth/ResetPassword.vue';
-import Profile from '@user/views/auth/Profile.vue';
+import { useUserStore } from '@app/stores/userStore';
+import HomeView from '@app/views/HomeView.vue';
+import Login from '@app/views/auth/Login.vue';
+import Register from '@app/views/auth/Register.vue';
+import VerifyEmail from '@app/views/auth/VerifyEmail.vue';
+import ForgotPassword from '@app/views/auth/ForgotPassword.vue';
+import ResetPassword from '@app/views/auth/ResetPassword.vue';
+import Profile from '@app/views/auth/Profile.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -1820,12 +1820,12 @@ export default router;
 
 ### 8.1 Auth Guard Composable
 
-**File:** `resources/user/js/composables/useAuthGuard.ts`
+**File:** `resources/app/js/composables/useAuthGuard.ts`
 
 ```typescript
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 
 export function useAuthGuard() {
   const router = useRouter();
@@ -1878,15 +1878,15 @@ export function useAuthGuard() {
 
 ### 9.1 User Store Tests
 
-**File:** `resources/user/js/__tests__/stores/userStore.test.ts`
+**File:** `resources/app/js/__tests__/stores/userStore.test.ts`
 
 ```typescript
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
-import { useUserStore } from '@user/stores/userStore';
-import { authService } from '@user/services/authService';
+import { useUserStore } from '@app/stores/userStore';
+import { authService } from '@app/services/authService';
 
-vi.mock('@user/services/authService');
+vi.mock('@app/services/authService');
 
 describe('useUserStore', () => {
   beforeEach(() => {
@@ -1941,14 +1941,14 @@ describe('useUserStore', () => {
 
 ### 9.2 Login View Tests
 
-**File:** `resources/user/js/__tests__/views/auth/Login.test.ts`
+**File:** `resources/app/js/__tests__/views/auth/Login.test.ts`
 
 ```typescript
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
-import Login from '@user/views/auth/Login.vue';
+import Login from '@app/views/auth/Login.vue';
 import PrimeVue from 'primevue/config';
 
 const router = createRouter({

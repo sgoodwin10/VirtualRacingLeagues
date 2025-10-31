@@ -83,4 +83,12 @@ interface SeasonRepositoryInterface
      * Handles conflict resolution by appending -01, -02, etc.
      */
     public function generateUniqueSlug(string $baseSlug, int $competitionId, ?int $excludeSeasonId = null): string;
+
+    /**
+     * Get all seasons for a competition with statistics.
+     * Returns seasons ordered by most recent first (latest created_at).
+     *
+     * @return array<array{season: Season, stats: array{driver_count: int, round_count: int, race_count: int}}>
+     */
+    public function getSeasonsWithStatsForCompetition(int $competitionId): array;
 }

@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Application\Competition\Services;
 
 use App\Application\Competition\DTOs\CompetitionData;
+use App\Application\Competition\DTOs\CompetitionSeasonData;
+use App\Application\Competition\DTOs\CompetitionSeasonStatsData;
 use App\Application\Competition\DTOs\CreateCompetitionData;
 use App\Application\Competition\DTOs\UpdateCompetitionData;
 use App\Domain\Competition\Entities\Competition;
 use App\Domain\Competition\Exceptions\CompetitionNotFoundException;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
+use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\ValueObjects\CompetitionName;
 use App\Domain\Competition\ValueObjects\CompetitionSlug;
 use App\Domain\League\Exceptions\InvalidPlatformException;
@@ -37,6 +40,7 @@ final class CompetitionApplicationService
     public function __construct(
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
+        private readonly SeasonRepositoryInterface $seasonRepository,
     ) {
     }
 
@@ -362,6 +366,9 @@ final class CompetitionApplicationService
         // Resolve logo URL with fallback to league logo
         $logoUrl = $this->resolveLogoUrl($competition, $leagueLogoPath);
 
+        // Get seasons with stats for this competition
+        $seasonsData = $this->getSeasonsForCompetition($competition->id() ?? 0);
+
         // Return DTO
         return CompetitionData::fromEntity(
             competition: $competition,
@@ -369,6 +376,44 @@ final class CompetitionApplicationService
             logoUrl: $logoUrl,
             leagueData: $leagueData,
             aggregates: $aggregates,
+            seasons: $seasonsData,
+        );
+    }
+
+    /**
+     * Get seasons with stats for a competition.
+     *
+     * @return array<CompetitionSeasonData>
+     */
+    private function getSeasonsForCompetition(int $competitionId): array
+    {
+        if ($competitionId === 0) {
+            return [];
+        }
+
+        $seasonsWithStats = $this->seasonRepository->getSeasonsWithStatsForCompetition($competitionId);
+
+        return array_map(
+            function (array $item): CompetitionSeasonData {
+                $season = $item['season'];
+                $stats = $item['stats'];
+
+                return new CompetitionSeasonData(
+                    id: $season->id() ?? 0,
+                    name: $season->name()->value(),
+                    slug: $season->slug()->value(),
+                    status: $season->status()->value,
+                    is_active: $season->isActive(),
+                    is_archived: $season->isArchived(),
+                    created_at: $season->createdAt()->format('Y-m-d H:i:s'),
+                    stats: new CompetitionSeasonStatsData(
+                        driver_count: $stats['driver_count'],
+                        round_count: $stats['round_count'],
+                        race_count: $stats['race_count'],
+                    ),
+                );
+            },
+            $seasonsWithStats
         );
     }
 

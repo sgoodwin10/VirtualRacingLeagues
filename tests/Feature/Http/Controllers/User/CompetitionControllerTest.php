@@ -705,4 +705,170 @@ class CompetitionControllerTest extends UserControllerTestCase
 
         $response->assertStatus(422);
     }
+
+    public function test_competition_response_includes_seasons_with_stats(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        $competition = Competition::factory()->create([
+            'league_id' => $this->league->id,
+            'platform_id' => $this->platform->id,
+            'name' => 'GT3 Championship',
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Create seasons with different creation dates to test ordering
+        $season1 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::factory()->create([
+            'competition_id' => $competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'status' => 'active',
+            'created_by_user_id' => $this->user->id,
+            'created_at' => now()->subMonths(2),
+        ]);
+
+        $season2 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::factory()->create([
+            'competition_id' => $competition->id,
+            'name' => 'Season 2',
+            'slug' => 'season-2',
+            'status' => 'active',
+            'created_by_user_id' => $this->user->id,
+            'created_at' => now()->subMonth(),
+        ]);
+
+        $season3 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::factory()->create([
+            'competition_id' => $competition->id,
+            'name' => 'Season 3',
+            'slug' => 'season-3',
+            'status' => 'setup',
+            'created_by_user_id' => $this->user->id,
+            'created_at' => now(),
+        ]);
+
+        // Add drivers to season 2
+        // First create league drivers (they need a driver_id and league_id)
+        $driver1 = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+        $driver2 = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+        $driver3 = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+
+        $leagueDriver1 = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+            'league_id' => $this->league->id,
+            'driver_id' => $driver1->id,
+            'status' => 'active',
+        ]);
+
+        $leagueDriver2 = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+            'league_id' => $this->league->id,
+            'driver_id' => $driver2->id,
+            'status' => 'active',
+        ]);
+
+        $leagueDriver3 = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+            'league_id' => $this->league->id,
+            'driver_id' => $driver3->id,
+            'status' => 'active',
+        ]);
+
+        // Now create season drivers
+        \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+            'season_id' => $season2->id,
+            'league_driver_id' => $leagueDriver1->id,
+            'status' => 'active',
+        ]);
+
+        \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+            'season_id' => $season2->id,
+            'league_driver_id' => $leagueDriver2->id,
+            'status' => 'active',
+        ]);
+
+        \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+            'season_id' => $season2->id,
+            'league_driver_id' => $leagueDriver3->id,
+            'status' => 'active',
+        ]);
+
+        // Add rounds to season 2
+        // Create a platform track to avoid platform conflicts
+        $platformTrack = \App\Infrastructure\Persistence\Eloquent\Models\PlatformTrack::factory()->create([
+            'platform_id' => $this->platform->id,
+        ]);
+
+        $round1 = \App\Infrastructure\Persistence\Eloquent\Models\Round::factory()->create([
+            'season_id' => $season2->id,
+            'platform_track_id' => $platformTrack->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        $round2 = \App\Infrastructure\Persistence\Eloquent\Models\Round::factory()->create([
+            'season_id' => $season2->id,
+            'platform_track_id' => $platformTrack->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Add races to rounds
+        \App\Infrastructure\Persistence\Eloquent\Models\Race::factory()->count(2)->create([
+            'round_id' => $round1->id,
+        ]);
+
+        \App\Infrastructure\Persistence\Eloquent\Models\Race::factory()->create([
+            'round_id' => $round2->id,
+        ]);
+
+        $response = $this->getJson("/api/competitions/{$competition->id}");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'name',
+                    'seasons' => [
+                        '*' => [
+                            'id',
+                            'name',
+                            'slug',
+                            'status',
+                            'is_active',
+                            'created_at',
+                            'stats' => [
+                                'driver_count',
+                                'round_count',
+                                'race_count',
+                            ],
+                        ],
+                    ],
+                ],
+            ]);
+
+        $seasons = $response->json('data.seasons');
+
+        // Verify we have 3 seasons
+        $this->assertCount(3, $seasons);
+
+        // Verify seasons are ordered by most recent first (Season 3, 2, 1)
+        $this->assertEquals('Season 3', $seasons[0]['name']);
+        $this->assertEquals('Season 2', $seasons[1]['name']);
+        $this->assertEquals('Season 1', $seasons[2]['name']);
+
+        // Verify Season 2 has correct stats
+        $season2Data = collect($seasons)->firstWhere('name', 'Season 2');
+        $this->assertEquals(3, $season2Data['stats']['driver_count']);
+        $this->assertEquals(2, $season2Data['stats']['round_count']);
+        $this->assertEquals(3, $season2Data['stats']['race_count']);
+
+        // Verify Season 1 and 3 have zero stats
+        $season1Data = collect($seasons)->firstWhere('name', 'Season 1');
+        $this->assertEquals(0, $season1Data['stats']['driver_count']);
+        $this->assertEquals(0, $season1Data['stats']['round_count']);
+        $this->assertEquals(0, $season1Data['stats']['race_count']);
+
+        $season3Data = collect($seasons)->firstWhere('name', 'Season 3');
+        $this->assertEquals(0, $season3Data['stats']['driver_count']);
+        $this->assertEquals(0, $season3Data['stats']['round_count']);
+        $this->assertEquals(0, $season3Data['stats']['race_count']);
+
+        // Verify is_active status
+        $this->assertTrue($season2Data['is_active']);
+        $this->assertFalse($season3Data['is_active']); // status is 'setup'
+    }
 }

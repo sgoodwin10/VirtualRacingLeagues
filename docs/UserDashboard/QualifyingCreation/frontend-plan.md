@@ -51,7 +51,7 @@ Add support for creating and managing qualifying sessions for rounds in the user
 
 ## Type System Updates
 
-### File: `/var/www/resources/user/js/types/race.ts`
+### File: `/var/www/resources/app/js/types/race.ts`
 
 #### 1. Add `is_qualifier` Computed Helper
 
@@ -118,7 +118,7 @@ RoundsPanel.vue
 
 ## QualifierListItem Component
 
-### File: `/var/www/resources/user/js/components/round/QualifierListItem.vue`
+### File: `/var/www/resources/app/js/components/round/QualifierListItem.vue`
 
 ### Purpose
 
@@ -226,8 +226,8 @@ interface Emits {
 import { computed } from 'vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
-import type { Race } from '@user/types/race';
-import { QUALIFYING_FORMAT_OPTIONS } from '@user/types/race';
+import type { Race } from '@app/types/race';
+import { QUALIFYING_FORMAT_OPTIONS } from '@app/types/race';
 
 interface Props {
   race: Race;
@@ -264,7 +264,7 @@ function handleDelete(): void {
 
 ## RaceFormDrawer Modifications
 
-### File: `/var/www/resources/user/js/components/round/modals/RaceFormDrawer.vue`
+### File: `/var/www/resources/app/js/components/round/modals/RaceFormDrawer.vue`
 
 ### 1. Add `raceType` Prop
 
@@ -568,7 +568,7 @@ async function handleSave(): Promise<void> {
 
 ## RoundsPanel Modifications
 
-### File: `/var/www/resources/user/js/components/round/RoundsPanel.vue`
+### File: `/var/www/resources/app/js/components/round/RoundsPanel.vue`
 
 ### 1. Add QualifierListItem Import
 
@@ -777,7 +777,7 @@ async function handleRaceSaved(): Promise<void> {
 
 ## Validation Updates
 
-### File: `/var/www/resources/user/js/composables/useRaceValidation.ts`
+### File: `/var/www/resources/app/js/composables/useRaceValidation.ts`
 
 ### 1. Add `isQualifier` Parameter
 
@@ -843,7 +843,7 @@ function validateMinimumPitTime(): string | undefined {
 
 ## Store Integration
 
-### File: `/var/www/resources/user/js/stores/raceStore.ts`
+### File: `/var/www/resources/app/js/stores/raceStore.ts`
 
 **No changes needed**. The existing raceStore handles both races and qualifiers since they use the same `Race` type and API endpoints. The only difference is:
 
@@ -1082,13 +1082,13 @@ All components use the existing grid system:
 
 #### 1. QualifierListItem Component Tests
 
-**File**: `/var/www/resources/user/js/components/round/__tests__/QualifierListItem.test.ts`
+**File**: `/var/www/resources/app/js/components/round/__tests__/QualifierListItem.test.ts`
 
 ```typescript
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import QualifierListItem from '../QualifierListItem.vue';
-import type { Race } from '@user/types/race';
+import type { Race } from '@app/types/race';
 
 const mockQualifier: Race = {
   id: 1,
@@ -1168,7 +1168,7 @@ describe('QualifierListItem', () => {
 
 #### 2. RaceFormDrawer Tests (Qualifier Mode)
 
-**File**: `/var/www/resources/user/js/components/round/modals/__tests__/RaceFormDrawer.test.ts`
+**File**: `/var/www/resources/app/js/components/round/modals/__tests__/RaceFormDrawer.test.ts`
 
 Add new test cases:
 
@@ -1252,7 +1252,7 @@ describe('RaceFormDrawer - Qualifier Mode', () => {
 
 #### 3. RoundsPanel Tests (Qualifier Integration)
 
-**File**: `/var/www/resources/user/js/components/round/__tests__/RoundsPanel.test.ts`
+**File**: `/var/www/resources/app/js/components/round/__tests__/RoundsPanel.test.ts`
 
 ```typescript
 describe('RoundsPanel - Qualifier Support', () => {
@@ -1292,7 +1292,7 @@ describe('RoundsPanel - Qualifier Support', () => {
 
 #### 4. Validation Tests
 
-**File**: `/var/www/resources/user/js/composables/__tests__/useRaceValidation.test.ts`
+**File**: `/var/www/resources/app/js/composables/__tests__/useRaceValidation.test.ts`
 
 ```typescript
 describe('useRaceValidation - Qualifier Mode', () => {
@@ -1400,25 +1400,25 @@ test.describe('Qualifying Session Workflow', () => {
 
 ### Phase 1: Type System & Infrastructure
 
-- [ ] Update `/var/www/resources/user/js/types/race.ts`
+- [ ] Update `/var/www/resources/app/js/types/race.ts`
   - [ ] Add `isQualifier()` helper function
   - [ ] (Optional) Add `_isQualifier` to `RaceForm` interface
 
 ### Phase 2: Create QualifierListItem Component
 
-- [ ] Create `/var/www/resources/user/js/components/round/QualifierListItem.vue`
+- [ ] Create `/var/www/resources/app/js/components/round/QualifierListItem.vue`
   - [ ] Implement template with blue theme styling
   - [ ] Add props and emits
   - [ ] Add computed properties (`hasPoleBonus`, `formatQualifying`)
   - [ ] Add event handlers
-- [ ] Create test file `/var/www/resources/user/js/components/round/__tests__/QualifierListItem.test.ts`
+- [ ] Create test file `/var/www/resources/app/js/components/round/__tests__/QualifierListItem.test.ts`
   - [ ] Test rendering
   - [ ] Test event emissions
   - [ ] Test computed properties
 
 ### Phase 3: Modify RaceFormDrawer
 
-- [ ] Update `/var/www/resources/user/js/components/round/modals/RaceFormDrawer.vue`
+- [ ] Update `/var/www/resources/app/js/components/round/modals/RaceFormDrawer.vue`
   - [ ] Add `raceType` prop to Props interface
   - [ ] Add `isQualifier` computed property
   - [ ] Update header title (conditional text)
@@ -1438,7 +1438,7 @@ test.describe('Qualifying Session Workflow', () => {
 
 ### Phase 4: Modify RoundsPanel
 
-- [ ] Update `/var/www/resources/user/js/components/round/RoundsPanel.vue`
+- [ ] Update `/var/www/resources/app/js/components/round/RoundsPanel.vue`
   - [ ] Import QualifierListItem
   - [ ] Add `raceFormType` state
   - [ ] Add `getQualifier()` helper function
@@ -1456,7 +1456,7 @@ test.describe('Qualifying Session Workflow', () => {
 
 ### Phase 5: Update Validation
 
-- [ ] Update `/var/www/resources/user/js/composables/useRaceValidation.ts`
+- [ ] Update `/var/www/resources/app/js/composables/useRaceValidation.ts`
   - [ ] Add `isQualifier` parameter
   - [ ] Update `validateRaceNumber()` to skip for qualifiers
   - [ ] Update `validateMinimumPitTime()` to skip for qualifiers
@@ -1466,7 +1466,7 @@ test.describe('Qualifying Session Workflow', () => {
 
 ### Phase 6: (Optional) Store Enhancements
 
-- [ ] Update `/var/www/resources/user/js/stores/raceStore.ts`
+- [ ] Update `/var/www/resources/app/js/stores/raceStore.ts`
   - [ ] Add `qualifierByRoundId` computed getter
   - [ ] Add `racesByRoundIdExcludingQualifier` computed getter
 - [ ] Update store tests

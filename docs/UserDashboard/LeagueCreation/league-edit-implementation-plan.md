@@ -511,7 +511,7 @@ Test entity update methods:
 ### Phase 2: Frontend Development (use `dev-fe-user` agent)
 
 #### Step 2.1: Update TypeScript Types
-**File**: `resources/user/js/types/league.ts`
+**File**: `resources/app/js/types/league.ts`
 
 **Add**:
 ```typescript
@@ -543,12 +543,12 @@ export interface UpdateLeagueForm {
 }
 ```
 
-**Location**: `resources/user/js/types/league.ts`
+**Location**: `resources/app/js/types/league.ts`
 
 ---
 
 #### Step 2.2: Add Service Method
-**File**: `resources/user/js/services/leagueService.ts`
+**File**: `resources/app/js/services/leagueService.ts`
 
 **New Methods**:
 ```typescript
@@ -653,12 +653,12 @@ export function buildUpdateLeagueFormData(
 }
 ```
 
-**Location**: `resources/user/js/services/leagueService.ts`
+**Location**: `resources/app/js/services/leagueService.ts`
 
 ---
 
 #### Step 2.3: Add Store Action
-**File**: `resources/user/js/stores/leagueStore.ts`
+**File**: `resources/app/js/stores/leagueStore.ts`
 
 **New Action**:
 ```typescript
@@ -711,18 +711,18 @@ return {
 };
 ```
 
-**Location**: `resources/user/js/stores/leagueStore.ts`
+**Location**: `resources/app/js/stores/leagueStore.ts`
 
 ---
 
 #### Step 2.4: Update LeagueCard Component
-**File**: `resources/user/js/components/league/LeagueCard.vue`
+**File**: `resources/app/js/components/league/LeagueCard.vue`
 
 **Changes**:
 
 1. **Add `isOwner` prop/computed**:
 ```typescript
-import { useAuthStore } from '@user/stores/authStore';
+import { useAuthStore } from '@app/stores/authStore';
 
 const authStore = useAuthStore();
 
@@ -779,12 +779,12 @@ function handleEdit(): void {
 </template>
 ```
 
-**Location**: `resources/user/js/components/league/LeagueCard.vue`
+**Location**: `resources/app/js/components/league/LeagueCard.vue`
 
 ---
 
 #### Step 2.5: Create LeagueEdit View
-**File**: `resources/user/js/views/LeagueEdit.vue`
+**File**: `resources/app/js/views/LeagueEdit.vue`
 
 **Requirements**:
 - Reuse wizard step components from league creation
@@ -800,9 +800,9 @@ function handleEdit(): void {
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useLeagueStore } from '@user/stores/leagueStore';
+import { useLeagueStore } from '@app/stores/leagueStore';
 import { useToast } from 'primevue/usetoast';
-import type { UpdateLeagueForm } from '@user/types/league';
+import type { UpdateLeagueForm } from '@app/types/league';
 
 // Components
 import Card from 'primevue/card';
@@ -811,9 +811,9 @@ import Steps from 'primevue/steps';
 import ProgressSpinner from 'primevue/progressspinner';
 
 // Wizard steps (reuse from create)
-import LeagueEssentials from '@user/components/league/steps/LeagueEssentials.vue';
-import LeagueBranding from '@user/components/league/steps/LeagueBranding.vue';
-import LeagueCommunity from '@user/components/league/steps/LeagueCommunity.vue';
+import LeagueEssentials from '@app/components/league/steps/LeagueEssentials.vue';
+import LeagueBranding from '@app/components/league/steps/LeagueBranding.vue';
+import LeagueCommunity from '@app/components/league/steps/LeagueCommunity.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -984,7 +984,7 @@ function previousStep() {
 </template>
 ```
 
-**Location**: `resources/user/js/views/LeagueEdit.vue`
+**Location**: `resources/app/js/views/LeagueEdit.vue`
 
 ---
 
@@ -993,9 +993,9 @@ function previousStep() {
 The existing wizard step components need minor modifications to support edit mode:
 
 **Files to update**:
-- `resources/user/js/components/league/steps/LeagueEssentials.vue`
-- `resources/user/js/components/league/steps/LeagueBranding.vue`
-- `resources/user/js/components/league/steps/LeagueCommunity.vue`
+- `resources/app/js/components/league/steps/LeagueEssentials.vue`
+- `resources/app/js/components/league/steps/LeagueBranding.vue`
+- `resources/app/js/components/league/steps/LeagueCommunity.vue`
 
 **Changes needed**:
 
@@ -1025,32 +1025,32 @@ const props = withDefaults(defineProps<Props>(), {
 ```
 
 **Locations**:
-- `resources/user/js/components/league/steps/LeagueEssentials.vue`
-- `resources/user/js/components/league/steps/LeagueBranding.vue`
-- `resources/user/js/components/league/steps/LeagueCommunity.vue`
+- `resources/app/js/components/league/steps/LeagueEssentials.vue`
+- `resources/app/js/components/league/steps/LeagueBranding.vue`
+- `resources/app/js/components/league/steps/LeagueCommunity.vue`
 
 ---
 
 #### Step 2.7: Add Router Route
-**File**: `resources/user/js/router/index.ts`
+**File**: `resources/app/js/router/index.ts`
 
 **Add route**:
 ```typescript
 {
   path: '/leagues/:id/edit',
   name: 'league-edit',
-  component: () => import('@user/views/LeagueEdit.vue'),
+  component: () => import('@app/views/LeagueEdit.vue'),
   meta: { requiresAuth: true },
 },
 ```
 
-**Location**: `resources/user/js/router/index.ts`
+**Location**: `resources/app/js/router/index.ts`
 
 ---
 
 #### Step 2.8: Frontend Testing
 
-**Component Test**: `resources/user/js/components/league/LeagueCard.test.ts`
+**Component Test**: `resources/app/js/components/league/LeagueCard.test.ts`
 
 Test cases:
 - ✅ Edit button shown for owner
@@ -1058,7 +1058,7 @@ Test cases:
 - ✅ Edit button emits 'edit' event with league ID
 - ✅ Edit button navigates to edit route
 
-**View Test**: `resources/user/js/views/LeagueEdit.test.ts`
+**View Test**: `resources/app/js/views/LeagueEdit.test.ts`
 
 Test cases:
 - ✅ Loads league data on mount
@@ -1070,7 +1070,7 @@ Test cases:
 - ✅ Error shows toast message
 - ✅ Loading state displayed during update
 
-**Service Test**: `resources/user/js/services/leagueService.test.ts`
+**Service Test**: `resources/app/js/services/leagueService.test.ts`
 
 Test cases:
 - ✅ updateLeague calls PUT /api/leagues/{id}
@@ -1078,7 +1078,7 @@ Test cases:
 - ✅ File uploads included in FormData
 - ✅ Platform IDs formatted correctly
 
-**Store Test**: `resources/user/js/stores/leagueStore.test.ts`
+**Store Test**: `resources/app/js/stores/leagueStore.test.ts`
 
 Test cases:
 - ✅ updateExistingLeague calls service method
@@ -1201,8 +1201,8 @@ Test cases:
 - [ ] `tests/Unit/Domain/League/LeagueUpdateTest.php`
 
 ### Frontend
-- [ ] `resources/user/js/views/LeagueEdit.vue`
-- [ ] `resources/user/js/views/LeagueEdit.test.ts`
+- [ ] `resources/app/js/views/LeagueEdit.vue`
+- [ ] `resources/app/js/views/LeagueEdit.test.ts`
 
 ## Files to Modify
 
@@ -1215,17 +1215,17 @@ Test cases:
 - [ ] `routes/subdomain.php`
 
 ### Frontend
-- [ ] `resources/user/js/types/league.ts`
-- [ ] `resources/user/js/services/leagueService.ts`
-- [ ] `resources/user/js/services/leagueService.test.ts`
-- [ ] `resources/user/js/stores/leagueStore.ts`
-- [ ] `resources/user/js/stores/leagueStore.test.ts`
-- [ ] `resources/user/js/components/league/LeagueCard.vue`
-- [ ] `resources/user/js/components/league/LeagueCard.test.ts`
-- [ ] `resources/user/js/components/league/steps/LeagueEssentials.vue`
-- [ ] `resources/user/js/components/league/steps/LeagueBranding.vue`
-- [ ] `resources/user/js/components/league/steps/LeagueCommunity.vue`
-- [ ] `resources/user/js/router/index.ts`
+- [ ] `resources/app/js/types/league.ts`
+- [ ] `resources/app/js/services/leagueService.ts`
+- [ ] `resources/app/js/services/leagueService.test.ts`
+- [ ] `resources/app/js/stores/leagueStore.ts`
+- [ ] `resources/app/js/stores/leagueStore.test.ts`
+- [ ] `resources/app/js/components/league/LeagueCard.vue`
+- [ ] `resources/app/js/components/league/LeagueCard.test.ts`
+- [ ] `resources/app/js/components/league/steps/LeagueEssentials.vue`
+- [ ] `resources/app/js/components/league/steps/LeagueBranding.vue`
+- [ ] `resources/app/js/components/league/steps/LeagueCommunity.vue`
+- [ ] `resources/app/js/router/index.ts`
 
 ---
 

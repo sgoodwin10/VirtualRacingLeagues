@@ -119,7 +119,7 @@ router.push({
 
 Comprehensive tests are available in:
 ```
-resources/user/js/views/auth/__tests__/VerifyEmailResultView.spec.ts
+resources/app/js/views/auth/__tests__/VerifyEmailResultView.spec.ts
 ```
 
 Run tests:

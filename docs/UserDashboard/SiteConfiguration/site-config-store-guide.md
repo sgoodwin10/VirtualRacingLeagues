@@ -9,7 +9,7 @@ The Site Configuration Store provides centralized access to site-wide configurat
 ### File Structure
 
 ```
-resources/user/js/
+resources/app/js/
 ├── types/
 │   └── siteConfig.ts                        # TypeScript interfaces
 ├── services/
@@ -145,7 +145,7 @@ const isReady = computed(() => initialized.value && !loading.value && error.valu
 The store is initialized before the Vue app mounts:
 
 ```typescript
-import { useSiteConfigStore } from '@user/stores/siteConfigStore';
+import { useSiteConfigStore } from '@app/stores/siteConfigStore';
 
 // ... app setup ...
 
@@ -168,7 +168,7 @@ siteConfigStore.fetchConfig().finally(() => {
 
 ```vue
 <script setup lang="ts">
-import { useSiteConfigStore } from '@user/stores/siteConfigStore';
+import { useSiteConfigStore } from '@app/stores/siteConfigStore';
 
 const siteConfig = useSiteConfigStore();
 </script>
@@ -186,7 +186,7 @@ const siteConfig = useSiteConfigStore();
 ```vue
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useSiteConfigStore } from '@user/stores/siteConfigStore';
+import { useSiteConfigStore } from '@app/stores/siteConfigStore';
 
 const siteConfig = useSiteConfigStore();
 
@@ -212,7 +212,7 @@ const featureFlags = computed(() =>
 
 ```vue
 <script setup lang="ts">
-import { useSiteConfigStore } from '@user/stores/siteConfigStore';
+import { useSiteConfigStore } from '@app/stores/siteConfigStore';
 
 const siteConfig = useSiteConfigStore();
 
@@ -252,7 +252,7 @@ async function handleRefresh() {
 ```typescript
 // composables/useFeatureFlags.ts
 import { computed } from 'vue';
-import { useSiteConfigStore } from '@user/stores/siteConfigStore';
+import { useSiteConfigStore } from '@app/stores/siteConfigStore';
 
 export function useFeatureFlags() {
   const siteConfig = useSiteConfigStore();
@@ -282,7 +282,7 @@ export function useFeatureFlags() {
 ```typescript
 // composables/useDocumentTitle.ts
 import { watch, onMounted } from 'vue';
-import { useSiteConfigStore } from '@user/stores/siteConfigStore';
+import { useSiteConfigStore } from '@app/stores/siteConfigStore';
 
 export function useDocumentTitle(pageTitle?: string) {
   const siteConfig = useSiteConfigStore();
@@ -385,13 +385,13 @@ Potential improvements for the future:
 
 ## Related Files
 
-- `/var/www/resources/user/js/types/siteConfig.ts`
-- `/var/www/resources/user/js/services/siteConfigService.ts`
-- `/var/www/resources/user/js/stores/siteConfigStore.ts`
-- `/var/www/resources/user/js/app.ts`
-- `/var/www/resources/user/js/examples/UsingSiteConfigStore.vue`
-- `/var/www/resources/user/js/stores/__tests__/siteConfigStore.test.ts`
-- `/var/www/resources/user/js/services/__tests__/siteConfigService.test.ts`
+- `/var/www/resources/app/js/types/siteConfig.ts`
+- `/var/www/resources/app/js/services/siteConfigService.ts`
+- `/var/www/resources/app/js/stores/siteConfigStore.ts`
+- `/var/www/resources/app/js/app.ts`
+- `/var/www/resources/app/js/examples/UsingSiteConfigStore.vue`
+- `/var/www/resources/app/js/stores/__tests__/siteConfigStore.test.ts`
+- `/var/www/resources/app/js/services/__tests__/siteConfigService.test.ts`
 
 ## Support
 

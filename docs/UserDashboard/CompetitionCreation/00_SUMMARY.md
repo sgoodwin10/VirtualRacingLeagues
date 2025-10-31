@@ -122,7 +122,7 @@ app/Http/
 
 **Core Architecture**:
 ```
-resources/user/js/
+resources/app/js/
 ├── types/competition.ts
 ├── services/competitionService.ts
 ├── stores/competitionStore.ts

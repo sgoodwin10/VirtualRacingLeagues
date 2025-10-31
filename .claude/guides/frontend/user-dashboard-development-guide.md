@@ -2,7 +2,7 @@
 
 **Last Updated**: January 2025
 **Application**: User Dashboard (`app.virtualracingleagues.localhost`)
-**Path**: `resources/user/`
+**Path**: `resources/app/`
 
 ## Table of Contents
 
@@ -100,7 +100,7 @@ The **User Dashboard** is an **authenticated-only** Single Page Application (SPA
 ## Architecture Overview
 
 ```
-resources/user/
+resources/app/
 ├── css/
 │   └── app.css                    # Tailwind CSS entry point
 └── js/
@@ -136,12 +136,12 @@ resources/user/
 
 ### Path Alias
 
-Use `@user` to import from `resources/user/js/`:
+Use `@user` to import from `resources/app/js/`:
 
 ```typescript
 // Good
-import { useUserStore } from '@user/stores/userStore';
-import HomeView from '@user/views/HomeView.vue';
+import { useUserStore } from '@app/stores/userStore';
+import HomeView from '@app/views/HomeView.vue';
 
 // Bad - Don't use relative paths
 import { useUserStore } from '../../stores/userStore';
@@ -153,7 +153,7 @@ import { useUserStore } from '../../stores/userStore';
 
 ### User Store (`userStore.ts`)
 
-**Location**: `resources/user/js/stores/userStore.ts`
+**Location**: `resources/app/js/stores/userStore.ts`
 
 The user store manages all user-related state and authentication logic.
 
@@ -213,7 +213,7 @@ This ensures users remain authenticated across page refreshes.
 
 ```vue
 <script setup lang="ts">
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 
 const userStore = useUserStore();
 
@@ -280,7 +280,7 @@ SESSION_SAME_SITE=lax
 
 ### Navigation Guards
 
-**Location**: `resources/user/js/router/index.ts:39-60`
+**Location**: `resources/app/js/router/index.ts:39-60`
 
 All routes in the user dashboard require authentication:
 
@@ -315,7 +315,7 @@ router.beforeEach(async (to, _from, next) => {
 
 ### Update Profile Feature
 
-**View**: `resources/user/js/views/ProfileView.vue`
+**View**: `resources/app/js/views/ProfileView.vue`
 
 Users can update their profile information including:
 - First name
@@ -349,7 +349,7 @@ Users can update their profile information including:
 ```vue
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 import { useToast } from 'primevue/usetoast';
 
 const userStore = useUserStore();
@@ -405,7 +405,7 @@ const handleSubmit = async () => {
 
 ### Current Routes
 
-**Location**: `resources/user/js/router/index.ts`
+**Location**: `resources/app/js/router/index.ts`
 
 | Path | Name | Component | Description |
 |------|------|-----------|-------------|
@@ -418,7 +418,7 @@ const handleSubmit = async () => {
 
 1. Create the view component:
 ```vue
-<!-- resources/user/js/views/MyNewView.vue -->
+<!-- resources/app/js/views/MyNewView.vue -->
 <script setup lang="ts">
 // Component logic
 </script>
@@ -432,8 +432,8 @@ const handleSubmit = async () => {
 
 2. Add route to router:
 ```typescript
-// resources/user/js/router/index.ts
-import MyNewView from '@user/views/MyNewView.vue';
+// resources/app/js/router/index.ts
+import MyNewView from '@app/views/MyNewView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -466,7 +466,7 @@ const router = createRouter({
 
 ### API Service (`api.ts`)
 
-**Location**: `resources/user/js/services/api.ts`
+**Location**: `resources/app/js/services/api.ts`
 
 Centralized Axios client with CSRF protection and error handling.
 
@@ -481,7 +481,7 @@ Centralized Axios client with CSRF protection and error handling.
 #### Usage
 
 ```typescript
-import { apiClient } from '@user/services/api';
+import { apiClient } from '@app/services/api';
 
 // GET request
 const response = await apiClient.get<{ data: { user: User } }>('/me');
@@ -502,7 +502,7 @@ await apiClient.delete('/resource/1');
 
 ### Auth Service (`authService.ts`)
 
-**Location**: `resources/user/js/services/authService.ts`
+**Location**: `resources/app/js/services/authService.ts`
 
 Handles all authentication-related API calls.
 
@@ -530,7 +530,7 @@ class AuthService {
 #### Usage Example
 
 ```typescript
-import { authService } from '@user/services/authService';
+import { authService } from '@app/services/authService';
 
 // Check if user is authenticated
 const user = await authService.checkAuth();
@@ -555,7 +555,7 @@ await authService.logout();
 
 ### Root Component (`App.vue`)
 
-**Location**: `resources/user/js/components/App.vue`
+**Location**: `resources/app/js/components/App.vue`
 
 The root component that wraps the entire application.
 
@@ -572,7 +572,7 @@ The root component that wraps the entire application.
 
 ### Header Component (`Header.vue`)
 
-**Location**: `resources/user/js/components/layout/Header.vue`
+**Location**: `resources/app/js/components/layout/Header.vue`
 
 Application header with user menu and logout functionality.
 
@@ -587,7 +587,7 @@ Application header with user menu and logout functionality.
 
 ```vue
 <script setup lang="ts">
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 import { useRouter } from 'vue-router';
 
 const userStore = useUserStore();
@@ -645,7 +645,7 @@ async function handleLogout() {
 
 ### HomeView (`HomeView.vue`)
 
-**Location**: `resources/user/js/views/HomeView.vue`
+**Location**: `resources/app/js/views/HomeView.vue`
 **Route**: `/` (home)
 
 Dashboard landing page with:
@@ -656,7 +656,7 @@ Dashboard landing page with:
 
 ### ProfileView (`ProfileView.vue`)
 
-**Location**: `resources/user/js/views/ProfileView.vue`
+**Location**: `resources/app/js/views/ProfileView.vue`
 **Route**: `/profile` (profile)
 
 Profile management page with:
@@ -688,7 +688,7 @@ npm run test:coverage
 
 ### Test Setup
 
-**Location**: `resources/user/js/__tests__/setup/`
+**Location**: `resources/app/js/__tests__/setup/`
 
 - `index.ts` - Vitest configuration
 - `testUtils.ts` - Custom test utilities (mount helpers, mock router, etc.)
@@ -701,7 +701,7 @@ npm run test:coverage
 #### Component Test Example
 
 ```typescript
-// resources/user/js/components/MyComponent.test.ts
+// resources/app/js/components/MyComponent.test.ts
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
@@ -731,7 +731,7 @@ describe('MyComponent', () => {
 #### Store Test Example
 
 ```typescript
-// resources/user/js/stores/__tests__/userStore.test.ts
+// resources/app/js/stores/__tests__/userStore.test.ts
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useUserStore } from '../userStore';
@@ -770,7 +770,7 @@ describe('User Store', () => {
 #### Service Test Example
 
 ```typescript
-// resources/user/js/services/__tests__/authService.test.ts
+// resources/app/js/services/__tests__/authService.test.ts
 import { describe, it, expect, vi } from 'vitest';
 import { authService } from '../authService';
 import { apiClient } from '../api';
@@ -832,7 +832,7 @@ Follow the [User Backend Guide](../backend/user-backend-guide.md) for backend de
 Define TypeScript types for your data:
 
 ```typescript
-// resources/user/js/types/myFeature.ts
+// resources/app/js/types/myFeature.ts
 export interface MyFeatureData {
   id: number;
   name: string;
@@ -851,9 +851,9 @@ export interface CreateMyFeatureData {
 Create a service for API calls:
 
 ```typescript
-// resources/user/js/services/myFeatureService.ts
+// resources/app/js/services/myFeatureService.ts
 import { apiClient } from './api';
-import type { MyFeatureData, CreateMyFeatureData } from '@user/types/myFeature';
+import type { MyFeatureData, CreateMyFeatureData } from '@app/types/myFeature';
 
 class MyFeatureService {
   async getAll(signal?: AbortSignal): Promise<MyFeatureData[]> {
@@ -879,11 +879,11 @@ export const myFeatureService = new MyFeatureService();
 Create a Pinia store for state management:
 
 ```typescript
-// resources/user/js/stores/myFeatureStore.ts
+// resources/app/js/stores/myFeatureStore.ts
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { MyFeatureData } from '@user/types/myFeature';
-import { myFeatureService } from '@user/services/myFeatureService';
+import type { MyFeatureData } from '@app/types/myFeature';
+import { myFeatureService } from '@app/services/myFeatureService';
 
 export const useMyFeatureStore = defineStore('myFeature', () => {
   // State
@@ -923,10 +923,10 @@ export const useMyFeatureStore = defineStore('myFeature', () => {
 #### 6. Create View Component
 
 ```vue
-<!-- resources/user/js/views/MyFeatureView.vue -->
+<!-- resources/app/js/views/MyFeatureView.vue -->
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useMyFeatureStore } from '@user/stores/myFeatureStore';
+import { useMyFeatureStore } from '@app/stores/myFeatureStore';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 
@@ -954,8 +954,8 @@ onMounted(async () => {
 #### 7. Add Route
 
 ```typescript
-// resources/user/js/router/index.ts
-import MyFeatureView from '@user/views/MyFeatureView.vue';
+// resources/app/js/router/index.ts
+import MyFeatureView from '@app/views/MyFeatureView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -1020,7 +1020,7 @@ Follow Vue 3 Composition API patterns with `<script setup>`:
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '@user/stores/userStore';
+import { useUserStore } from '@app/stores/userStore';
 
 // Composables
 const router = useRouter();

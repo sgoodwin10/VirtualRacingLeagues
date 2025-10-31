@@ -3,7 +3,7 @@
 **Version:** 1.0 MVP
 **Last Updated:** October 18, 2025
 **Application:** User Dashboard (`app.virtualracingleagues.localhost`)
-**Base Path:** `resources/user/js/`
+**Base Path:** `resources/app/js/`
 
 ---
 
@@ -48,7 +48,7 @@ This plan details the **simplified MVP frontend** for league-level driver manage
 
 ## Type Definitions
 
-### File: `resources/user/js/types/driver.ts`
+### File: `resources/app/js/types/driver.ts`
 
 ```typescript
 /**
@@ -170,7 +170,7 @@ export interface DriverListResponse {
 
 ## Services Layer
 
-### File: `resources/user/js/services/driverService.ts`
+### File: `resources/app/js/services/driverService.ts`
 
 ```typescript
 /**
@@ -185,7 +185,7 @@ import type {
   UpdateLeagueDriverData,
   CSVImportData,
   CSVImportResult,
-} from '@user/types/driver';
+} from '@app/types/driver';
 import type { AxiosResponse } from 'axios';
 
 interface ApiResponse<T> {
@@ -261,7 +261,7 @@ export async function importDriversFromCSV(
 
 ## State Management
 
-### File: `resources/user/js/stores/driverStore.ts`
+### File: `resources/app/js/stores/driverStore.ts`
 
 ```typescript
 /**
@@ -278,8 +278,8 @@ import type {
   UpdateLeagueDriverData,
   CSVImportData,
   CSVImportResult,
-} from '@user/types/driver';
-import * as driverService from '@user/services/driverService';
+} from '@app/types/driver';
+import * as driverService from '@app/services/driverService';
 
 export const useDriverStore = defineStore('driver', () => {
   // State
@@ -575,7 +575,7 @@ LeagueDetail.vue (existing)
 
 ### 1. DriverManagementDrawer.vue
 
-**Path:** `resources/user/js/components/driver/DriverManagementDrawer.vue`
+**Path:** `resources/app/js/components/driver/DriverManagementDrawer.vue`
 
 **Purpose:** Main container - bottom drawer with driver list and actions
 
@@ -646,7 +646,7 @@ LeagueDetail.vue (existing)
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useDriverStore } from '@user/stores/driverStore';
+import { useDriverStore } from '@app/stores/driverStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import Drawer from 'primevue/drawer';
@@ -655,7 +655,7 @@ import DriverStatsCard from './DriverStatsCard.vue';
 import DriverTable from './DriverTable.vue';
 import DriverFormDialog from './DriverFormDialog.vue';
 import CSVImportDialog from './CSVImportDialog.vue';
-import type { LeagueDriver, CreateDriverData, UpdateLeagueDriverData, CSVImportData } from '@user/types/driver';
+import type { LeagueDriver, CreateDriverData, UpdateLeagueDriverData, CSVImportData } from '@app/types/driver';
 
 interface Props {
   visible: boolean;
@@ -808,7 +808,7 @@ function close() {
 
 ### 2. DriverTable.vue
 
-**Path:** `resources/user/js/components/driver/DriverTable.vue`
+**Path:** `resources/app/js/components/driver/DriverTable.vue`
 
 **Purpose:** DataTable with search, filter, and inline actions
 
@@ -930,7 +930,7 @@ function close() {
 </template>
 
 <script setup lang="ts">
-import { useDriverStore } from '@user/stores/driverStore';
+import { useDriverStore } from '@app/stores/driverStore';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
@@ -938,7 +938,7 @@ import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
 import Skeleton from 'primevue/skeleton';
 import DriverStatusBadge from './DriverStatusBadge.vue';
-import type { LeagueDriver } from '@user/types/driver';
+import type { LeagueDriver } from '@app/types/driver';
 
 interface Props {
   drivers: LeagueDriver[];
@@ -968,7 +968,7 @@ const statusOptions = [
 
 ### 3. DriverFormDialog.vue
 
-**Path:** `resources/user/js/components/driver/DriverFormDialog.vue`
+**Path:** `resources/app/js/components/driver/DriverFormDialog.vue`
 
 **Purpose:** Add/Edit driver form (single mode - creates new or updates league-specific)
 
@@ -1018,7 +1018,7 @@ const statusOptions = [
 
 ### 4. CSVImportDialog.vue (Simplified)
 
-**Path:** `resources/user/js/components/driver/CSVImportDialog.vue`
+**Path:** `resources/app/js/components/driver/CSVImportDialog.vue`
 
 **Purpose:** Simple CSV import via textarea paste
 
@@ -1085,7 +1085,7 @@ import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import Message from 'primevue/message';
-import type { CSVImportData } from '@user/types/driver';
+import type { CSVImportData } from '@app/types/driver';
 
 interface Props {
   visible: boolean;
@@ -1131,7 +1131,7 @@ function close() {
 
 ### 5. DriverStatusBadge.vue
 
-**Path:** `resources/user/js/components/driver/DriverStatusBadge.vue`
+**Path:** `resources/app/js/components/driver/DriverStatusBadge.vue`
 
 ```vue
 <template>
@@ -1141,7 +1141,7 @@ function close() {
 <script setup lang="ts">
 import { computed } from 'vue';
 import Chip from 'primevue/chip';
-import type { DriverStatus } from '@user/types/driver';
+import type { DriverStatus } from '@app/types/driver';
 
 interface Props {
   status: DriverStatus;
@@ -1173,7 +1173,7 @@ const statusClass = computed(() => {
 
 ### 6. DriverStatsCard.vue
 
-**Path:** `resources/user/js/components/driver/DriverStatsCard.vue`
+**Path:** `resources/app/js/components/driver/DriverStatsCard.vue`
 
 ```vue
 <template>
@@ -1203,7 +1203,7 @@ const statusClass = computed(() => {
 
 <script setup lang="ts">
 import Card from 'primevue/card';
-import type { DriverStatistics } from '@user/types/driver';
+import type { DriverStatistics } from '@app/types/driver';
 
 interface Props {
   statistics: DriverStatistics | null;

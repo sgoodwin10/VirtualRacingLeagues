@@ -38,7 +38,7 @@ This document provides complete frontend implementation details following Vue 3 
 ### File Organization
 
 ```
-resources/user/js/
+resources/app/js/
 ├── components/
 │   └── round/
 │       ├── RoundsPanel.vue                 # Main panel with rounds list
@@ -75,7 +75,7 @@ resources/user/js/
 
 ### 1. Round Types
 
-**Location:** `resources/user/js/types/round.ts`
+**Location:** `resources/app/js/types/round.ts`
 
 ```typescript
 // Main entity (matches backend RoundData DTO)
@@ -165,7 +165,7 @@ export interface NextRoundNumberResponse {
 
 ### 2. Race Types
 
-**Location:** `resources/user/js/types/race.ts`
+**Location:** `resources/app/js/types/race.ts`
 
 ```typescript
 // Main entity (matches backend RaceData DTO)
@@ -319,7 +319,7 @@ export interface PlatformRaceSettings {
 
 ### 3. Track Types
 
-**Location:** `resources/user/js/types/track.ts`
+**Location:** `resources/app/js/types/track.ts`
 
 ```typescript
 export interface Track {
@@ -363,7 +363,7 @@ export interface TrackSearchParams {
 
 ### 1. Round Service
 
-**Location:** `resources/user/js/services/roundService.ts`
+**Location:** `resources/app/js/services/roundService.ts`
 
 ```typescript
 import { apiClient } from './api';
@@ -373,7 +373,7 @@ import type {
   CreateRoundRequest,
   UpdateRoundRequest,
   NextRoundNumberResponse,
-} from '@user/types/round';
+} from '@app/types/round';
 
 interface ApiResponse<T> {
   data: T;
@@ -438,12 +438,12 @@ export async function getNextRoundNumber(seasonId: number): Promise<number> {
 
 ### 2. Race Service
 
-**Location:** `resources/user/js/services/raceService.ts`
+**Location:** `resources/app/js/services/raceService.ts`
 
 ```typescript
 import { apiClient } from './api';
 import type { AxiosResponse } from 'axios';
-import type { Race, CreateRaceRequest, UpdateRaceRequest } from '@user/types/race';
+import type { Race, CreateRaceRequest, UpdateRaceRequest } from '@app/types/race';
 
 interface ApiResponse<T> {
   data: T;
@@ -500,12 +500,12 @@ export async function deleteRace(raceId: number): Promise<void> {
 
 ### 3. Track Service
 
-**Location:** `resources/user/js/services/trackService.ts`
+**Location:** `resources/app/js/services/trackService.ts`
 
 ```typescript
 import { apiClient } from './api';
 import type { AxiosResponse } from 'axios';
-import type { Track, TrackSearchParams } from '@user/types/track';
+import type { Track, TrackSearchParams } from '@app/types/track';
 
 interface ApiResponse<T> {
   data: T;
@@ -533,12 +533,12 @@ export async function getTrack(trackId: number): Promise<Track> {
 
 ### 4. Race Settings Service
 
-**Location:** `resources/user/js/services/raceSettingsService.ts`
+**Location:** `resources/app/js/services/raceSettingsService.ts`
 
 ```typescript
 import { apiClient } from './api';
 import type { AxiosResponse } from 'axios';
-import type { PlatformRaceSettings } from '@user/types/race';
+import type { PlatformRaceSettings } from '@app/types/race';
 
 interface ApiResponse<T> {
   data: T;
@@ -560,12 +560,12 @@ export async function getRaceSettings(platformId: number): Promise<PlatformRaceS
 
 ### 1. Round Store
 
-**Location:** `resources/user/js/stores/roundStore.ts`
+**Location:** `resources/app/js/stores/roundStore.ts`
 
 ```typescript
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Round, CreateRoundRequest, UpdateRoundRequest } from '@user/types/round';
+import type { Round, CreateRoundRequest, UpdateRoundRequest } from '@app/types/round';
 import {
   getRounds,
   getRound,
@@ -573,7 +573,7 @@ import {
   updateRound,
   deleteRound,
   getNextRoundNumber,
-} from '@user/services/roundService';
+} from '@app/services/roundService';
 
 export const useRoundStore = defineStore('round', () => {
   // State
@@ -745,15 +745,15 @@ export const useRoundStore = defineStore('round', () => {
 
 ### 2. Race Store
 
-**Location:** `resources/user/js/stores/raceStore.ts`
+**Location:** `resources/app/js/stores/raceStore.ts`
 
 Similar pattern to roundStore, manages race state.
 
 ```typescript
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Race, CreateRaceRequest, UpdateRaceRequest } from '@user/types/race';
-import { getRaces, getRace, createRace, updateRace, deleteRace } from '@user/services/raceService';
+import type { Race, CreateRaceRequest, UpdateRaceRequest } from '@app/types/race';
+import { getRaces, getRace, createRace, updateRace, deleteRace } from '@app/services/raceService';
 
 export const useRaceStore = defineStore('race', () => {
   const races = ref<Race[]>([]);
@@ -817,13 +817,13 @@ export const useRaceStore = defineStore('race', () => {
 
 ### 3. Track Store
 
-**Location:** `resources/user/js/stores/trackStore.ts`
+**Location:** `resources/app/js/stores/trackStore.ts`
 
 ```typescript
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Track, TrackSearchParams } from '@user/types/track';
-import { getTracks, getTrack } from '@user/services/trackService';
+import type { Track, TrackSearchParams } from '@app/types/track';
+import { getTracks, getTrack } from '@app/services/trackService';
 
 export const useTrackStore = defineStore('track', () => {
   const tracks = ref<Track[]>([]);
@@ -876,13 +876,13 @@ export const useTrackStore = defineStore('track', () => {
 
 ### 4. Race Settings Store
 
-**Location:** `resources/user/js/stores/raceSettingsStore.ts`
+**Location:** `resources/app/js/stores/raceSettingsStore.ts`
 
 ```typescript
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { PlatformRaceSettings } from '@user/types/race';
-import { getRaceSettings } from '@user/services/raceSettingsService';
+import type { PlatformRaceSettings } from '@app/types/race';
+import { getRaceSettings } from '@app/services/raceSettingsService';
 
 export const useRaceSettingsStore = defineStore('raceSettings', () => {
   // Cache settings by platform ID
@@ -930,11 +930,11 @@ export const useRaceSettingsStore = defineStore('raceSettings', () => {
 
 ### 1. Round Validation
 
-**Location:** `resources/user/js/composables/useRoundValidation.ts`
+**Location:** `resources/app/js/composables/useRoundValidation.ts`
 
 ```typescript
 import { reactive } from 'vue';
-import type { RoundForm, RoundFormErrors } from '@user/types/round';
+import type { RoundForm, RoundFormErrors } from '@app/types/round';
 
 export function useRoundValidation(form: RoundForm) {
   const errors = reactive<RoundFormErrors>({});
@@ -1031,7 +1031,7 @@ export function useRoundValidation(form: RoundForm) {
 
 ### 2. Race Validation
 
-**Location:** `resources/user/js/composables/useRaceValidation.ts`
+**Location:** `resources/app/js/composables/useRaceValidation.ts`
 
 Similar pattern for race form validation.
 
@@ -1039,12 +1039,12 @@ Similar pattern for race form validation.
 
 ### 3. Track Search
 
-**Location:** `resources/user/js/composables/useTrackSearch.ts`
+**Location:** `resources/app/js/composables/useTrackSearch.ts`
 
 ```typescript
 import { ref, computed } from 'vue';
-import { useTrackStore } from '@user/stores/trackStore';
-import type { Track } from '@user/types/track';
+import { useTrackStore } from '@app/stores/trackStore';
+import type { Track } from '@app/types/track';
 import { debounce } from 'lodash-es';
 
 export function useTrackSearch(platformId: number) {
@@ -1096,18 +1096,18 @@ export function useTrackSearch(platformId: number) {
 
 ### 1. RoundsPanel Component
 
-**Location:** `resources/user/js/components/round/RoundsPanel.vue`
+**Location:** `resources/app/js/components/round/RoundsPanel.vue`
 
 **Purpose:** Display rounds list in accordion format on Season Detail page
 
 ```vue
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useRoundStore } from '@user/stores/roundStore';
-import { useRaceStore } from '@user/stores/raceStore';
+import { useRoundStore } from '@app/stores/roundStore';
+import { useRaceStore } from '@app/stores/raceStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import BasePanel from '@user/components/common/panels/BasePanel.vue';
+import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import RoundFormDrawer from './modals/RoundFormDrawer.vue';
 import RaceFormDrawer from './modals/RaceFormDrawer.vue';
 import Button from 'primevue/button';
@@ -1117,7 +1117,7 @@ import AccordionHeader from 'primevue/accordionheader';
 import AccordionContent from 'primevue/accordioncontent';
 import Skeleton from 'primevue/skeleton';
 import Message from 'primevue/message';
-import type { Round } from '@user/types/round';
+import type { Round } from '@app/types/round';
 
 interface Props {
   seasonId: number;
@@ -1372,16 +1372,16 @@ function getRaces(roundId: number) {
 
 ### 2. RoundFormDrawer Component
 
-**Location:** `resources/user/js/components/round/modals/RoundFormDrawer.vue`
+**Location:** `resources/app/js/components/round/modals/RoundFormDrawer.vue`
 
 **Purpose:** Create/edit round form in bottom drawer
 
 ```vue
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted, computed } from 'vue';
-import { useRoundStore } from '@user/stores/roundStore';
-import { useTrackStore } from '@user/stores/trackStore';
-import { useRoundValidation } from '@user/composables/useRoundValidation';
+import { useRoundStore } from '@app/stores/roundStore';
+import { useTrackStore } from '@app/stores/trackStore';
+import { useRoundValidation } from '@app/composables/useRoundValidation';
 import { format } from 'date-fns';
 import Drawer from 'primevue/drawer';
 import Button from 'primevue/button';
@@ -1390,10 +1390,10 @@ import InputNumber from 'primevue/inputnumber';
 import DatePicker from 'primevue/datepicker';
 import Textarea from 'primevue/textarea';
 import AutoComplete from 'primevue/autocomplete';
-import FormLabel from '@user/components/common/forms/FormLabel.vue';
-import FormError from '@user/components/common/forms/FormError.vue';
-import type { Round, RoundForm, CreateRoundRequest, UpdateRoundRequest } from '@user/types/round';
-import type { Track } from '@user/types/track';
+import FormLabel from '@app/components/common/forms/FormLabel.vue';
+import FormError from '@app/components/common/forms/FormError.vue';
+import type { Round, RoundForm, CreateRoundRequest, UpdateRoundRequest } from '@app/types/round';
+import type { Track } from '@app/types/track';
 
 interface Props {
   visible: boolean;
@@ -1696,7 +1696,7 @@ function handleCancel(): void {
 
 ### 3. RaceFormDrawer Component
 
-**Location:** `resources/user/js/components/round/modals/RaceFormDrawer.vue`
+**Location:** `resources/app/js/components/round/modals/RaceFormDrawer.vue`
 
 **Purpose:** Create/edit race configuration in bottom drawer
 
@@ -1717,7 +1717,7 @@ This will be the most complex form component. Use PrimeVue Accordion to group se
 
 ### Integration with SeasonDetail View
 
-**Location:** `resources/user/js/views/SeasonDetail.vue`
+**Location:** `resources/app/js/views/SeasonDetail.vue`
 
 Add new tab for Rounds:
 
@@ -1741,15 +1741,15 @@ No new routes required - rounds management happens within SeasonDetail view.
 
 ### 1. Store Tests
 
-**Location:** `resources/user/js/stores/__tests__/roundStore.test.ts`
+**Location:** `resources/app/js/stores/__tests__/roundStore.test.ts`
 
 ```typescript
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useRoundStore } from '../roundStore';
-import * as roundService from '@user/services/roundService';
+import * as roundService from '@app/services/roundService';
 
-vi.mock('@user/services/roundService');
+vi.mock('@app/services/roundService');
 
 describe('roundStore', () => {
   let store: ReturnType<typeof useRoundStore>;
@@ -1804,7 +1804,7 @@ describe('roundStore', () => {
 
 ### 2. Component Tests
 
-**Location:** `resources/user/js/components/round/__tests__/RoundsPanel.test.ts`
+**Location:** `resources/app/js/components/round/__tests__/RoundsPanel.test.ts`
 
 ```typescript
 import { describe, it, expect, vi, beforeEach } from 'vitest';

@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PageHeader > Snapshot > matches snapshot with title and description 1`] = `
+"<div class="w-full">
+  <h1 class="text-3xl font-bold mb-2">Test Title</h1>
+  <div class="text-gray-600">Test description text</div>
+</div>"
+`;
+
+exports[`PageHeader > Snapshot > matches snapshot with title only 1`] = `
+"<div class="w-full">
+  <h1 class="text-3xl font-bold mb-2">Test Title</h1>
+  <!--v-if-->
+</div>"
+`;

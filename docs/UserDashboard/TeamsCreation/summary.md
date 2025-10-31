@@ -127,26 +127,26 @@ PUT    /api/seasons/{seasonId}/drivers/{driverId}/team  - Assign/change driver's
 
 ### Frontend (Vue 3 + TypeScript)
 **Types:**
-- `resources/user/js/types/team.ts`
+- `resources/app/js/types/team.ts`
 
 **API Service:**
-- `resources/user/js/services/teamService.ts`
+- `resources/app/js/services/teamService.ts`
 
 **Pinia Store:**
-- `resources/user/js/stores/teamStore.ts`
+- `resources/app/js/stores/teamStore.ts`
 
 **Components:**
-- `resources/user/js/components/season/teams/TeamFormModal.vue` (Add/Edit)
-- `resources/user/js/components/season/teams/TeamsPanel.vue` (25% sidebar)
-- Update: `resources/user/js/components/season/SeasonDriversTable.vue` (inline team editor)
+- `resources/app/js/components/season/teams/TeamFormModal.vue` (Add/Edit)
+- `resources/app/js/components/season/teams/TeamsPanel.vue` (25% sidebar)
+- Update: `resources/app/js/components/season/SeasonDriversTable.vue` (inline team editor)
 
 **Views:**
-- Update: `resources/user/js/views/SeasonDetail.vue` (new 75/25 layout)
+- Update: `resources/app/js/views/SeasonDetail.vue` (new 75/25 layout)
 
 **Tests:**
-- `resources/user/js/components/season/teams/__tests__/TeamFormModal.test.ts`
-- `resources/user/js/components/season/teams/__tests__/TeamsPanel.test.ts`
-- `resources/user/js/stores/__tests__/teamStore.test.ts`
+- `resources/app/js/components/season/teams/__tests__/TeamFormModal.test.ts`
+- `resources/app/js/components/season/teams/__tests__/TeamsPanel.test.ts`
+- `resources/app/js/stores/__tests__/teamStore.test.ts`
 
 ## MVP Scope
 This is an MVP implementation focused on core functionality:
@@ -170,8 +170,8 @@ This is an MVP implementation focused on core functionality:
 8. ✅ Comprehensive test coverage
 
 ## References
-- Season Form Drawer: `resources/user/js/components/season/modals/SeasonFormDrawer.vue`
-- Base Modal: `resources/user/js/components/common/modals/BaseModal.vue`
-- Season Drivers Table: `resources/user/js/components/season/SeasonDriversTable.vue`
+- Season Form Drawer: `resources/app/js/components/season/modals/SeasonFormDrawer.vue`
+- Base Modal: `resources/app/js/components/common/modals/BaseModal.vue`
+- Season Drivers Table: `resources/app/js/components/season/SeasonDriversTable.vue`
 - Admin Backend Guide: `.claude/guides/backend/admin-backend-guide.md` (DDD patterns)
 - Admin Frontend Guide: `.claude/guides/frontend/admin-dashboard-development-guide.md` (component patterns)

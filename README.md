@@ -197,9 +197,9 @@ touch resources/public/js/views/MyView.vue
 **User Dashboard:**
 ```bash
 # Create view
-touch resources/user/js/views/MyView.vue
+touch resources/app/js/views/MyView.vue
 # Add route with requiresAuth: true
-# Import with @user/views/MyView.vue
+# Import with @app/views/MyView.vue
 ```
 
 **Admin Dashboard:**

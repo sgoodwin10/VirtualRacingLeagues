@@ -175,6 +175,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             ->count();
 
         // Count races through seasons -> rounds -> races
+        // Note: races table does not have soft deletes or deleted_at column
         $totalRaces = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
@@ -233,6 +234,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             ->toArray();
 
         // Count races for all competitions
+        // Note: races table does not have soft deletes or deleted_at column
         $raceCounts = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
             ->select('seasons.competition_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
             ->join('rounds', 'races.round_id', '=', 'rounds.id')

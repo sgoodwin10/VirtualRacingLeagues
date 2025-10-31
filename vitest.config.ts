@@ -42,7 +42,7 @@ export default defineConfig({
       reporter: ['text', 'json', 'html', 'lcov'],
       include: [
         'resources/public/js/**/*.{js,ts,vue}',
-        'resources/user/js/**/*.{js,ts,vue}',
+        'resources/app/js/**/*.{js,ts,vue}',
         'resources/admin/js/**/*.{js,ts,vue}',
       ],
       exclude: [
@@ -64,7 +64,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@public': fileURLToPath(new URL('./resources/public/js', import.meta.url)),
-      '@user': fileURLToPath(new URL('./resources/user/js', import.meta.url)),
+      '@app': fileURLToPath(new URL('./resources/app/js', import.meta.url)),
       '@admin': fileURLToPath(new URL('./resources/admin/js', import.meta.url)),
       vue: 'vue/dist/vue.esm-bundler.js',
     },

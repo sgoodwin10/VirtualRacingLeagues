@@ -87,7 +87,7 @@ CompetitionDetail.vue (new view)
 ### File Structure
 
 ```
-resources/user/js/
+resources/app/js/
 ├── types/
 │   └── competition.ts                    # TypeScript types
 ├── services/
@@ -130,7 +130,7 @@ resources/user/js/
 
 ## Type Definitions
 
-### Location: `resources/user/js/types/competition.ts`
+### Location: `resources/app/js/types/competition.ts`
 
 ```typescript
 /**
@@ -260,7 +260,7 @@ export interface CompetitionSlugCheckResponse {
 
 ### Integration with Existing Types
 
-Update `resources/user/js/types/league.ts` to include competitions:
+Update `resources/app/js/types/league.ts` to include competitions:
 
 ```typescript
 /**
@@ -276,7 +276,7 @@ export interface League {
 
 ## Service Layer
 
-### Location: `resources/user/js/services/competitionService.ts`
+### Location: `resources/app/js/services/competitionService.ts`
 
 ```typescript
 /**
@@ -292,7 +292,7 @@ import type {
   ArchiveCompetitionRequest,
   DeleteCompetitionConfirmation,
   CompetitionFilters,
-} from '@user/types/competition';
+} from '@app/types/competition';
 import type { AxiosResponse } from 'axios';
 
 /**
@@ -466,7 +466,7 @@ export function buildUpdateCompetitionFormData(form: {
 
 ## Store Management
 
-### Location: `resources/user/js/stores/competitionStore.ts`
+### Location: `resources/app/js/stores/competitionStore.ts`
 
 ```typescript
 /**
@@ -480,7 +480,7 @@ import type {
   Competition,
   CompetitionFilters,
   CompetitionForm,
-} from '@user/types/competition';
+} from '@app/types/competition';
 import {
   getLeagueCompetitions,
   getCompetition,
@@ -490,7 +490,7 @@ import {
   deleteCompetition,
   buildCompetitionFormData,
   buildUpdateCompetitionFormData,
-} from '@user/services/competitionService';
+} from '@app/services/competitionService';
 
 export const useCompetitionStore = defineStore('competition', () => {
   // State
@@ -759,7 +759,7 @@ export const useCompetitionStore = defineStore('competition', () => {
 
 **Purpose**: Display a list of competitions for a league with create/edit/delete actions.
 
-**Location**: `resources/user/js/components/competition/CompetitionList.vue`
+**Location**: `resources/app/js/components/competition/CompetitionList.vue`
 
 **Props**:
 ```typescript
@@ -856,7 +856,7 @@ interface Emits {
 
 **Purpose**: Display a single competition card with quick actions.
 
-**Location**: `resources/user/js/components/competition/CompetitionCard.vue`
+**Location**: `resources/app/js/components/competition/CompetitionCard.vue`
 
 **Props**:
 ```typescript
@@ -939,7 +939,7 @@ interface Emits {
 
 **Purpose**: Drawer form for creating or editing competitions.
 
-**Location**: `resources/user/js/components/competition/CompetitionFormDrawer.vue`
+**Location**: `resources/app/js/components/competition/CompetitionFormDrawer.vue`
 
 **Props**:
 ```typescript
@@ -1121,7 +1121,7 @@ watch(() => props.visible, async (visible) => {
 
 **Purpose**: Empty state when league has no competitions.
 
-**Location**: `resources/user/js/components/competition/EmptyCompetitionState.vue`
+**Location**: `resources/app/js/components/competition/EmptyCompetitionState.vue`
 
 **Props**:
 ```typescript
@@ -1166,7 +1166,7 @@ interface Emits {
 
 **Purpose**: Success screen shown after competition creation with CTA to create first season.
 
-**Location**: `resources/user/js/components/competition/CompetitionSuccessModal.vue`
+**Location**: `resources/app/js/components/competition/CompetitionSuccessModal.vue`
 
 **Props**:
 ```typescript
@@ -1258,7 +1258,7 @@ interface Emits {
 
 **Purpose**: Confirmation dialog for competition deletion with "DELETE" text input.
 
-**Location**: `resources/user/js/components/competition/CompetitionDeleteDialog.vue`
+**Location**: `resources/app/js/components/competition/CompetitionDeleteDialog.vue`
 
 **Props**:
 ```typescript
@@ -1354,7 +1354,7 @@ const canDelete = computed(() => confirmationText.value === 'DELETE');
 
 **Purpose**: Header section for competition detail view.
 
-**Location**: `resources/user/js/components/competition/CompetitionHeader.vue`
+**Location**: `resources/app/js/components/competition/CompetitionHeader.vue`
 
 **Props**:
 ```typescript
@@ -1442,7 +1442,7 @@ interface Emits {
 
 **Purpose**: Main view for competition detail page with tabs.
 
-**Location**: `resources/user/js/views/CompetitionDetail.vue`
+**Location**: `resources/app/js/views/CompetitionDetail.vue`
 
 **Route**: `/leagues/:leagueId/competitions/:competitionId`
 
@@ -1569,7 +1569,7 @@ async function loadCompetition() {
 
 **Purpose**: Add competitions section/tab to existing league detail view.
 
-**Location**: `resources/user/js/views/LeagueDetail.vue` (update existing)
+**Location**: `resources/app/js/views/LeagueDetail.vue` (update existing)
 
 **Changes**:
 1. Add "Competitions" tab alongside existing tabs
@@ -1614,14 +1614,14 @@ function handleCreateSeason() {
 
 ### 3. Router Configuration
 
-**Location**: `resources/user/js/router/index.ts`
+**Location**: `resources/app/js/router/index.ts`
 
 **New Routes**:
 ```typescript
 {
   path: '/leagues/:leagueId/competitions/:competitionId',
   name: 'competition-detail',
-  component: () => import('@user/views/CompetitionDetail.vue'),
+  component: () => import('@app/views/CompetitionDetail.vue'),
   meta: {
     title: 'Competition Details',
     requiresAuth: true,
@@ -1731,11 +1731,11 @@ function handleCreateSeason() {
 
 Use a composable for reusable validation logic.
 
-**Location**: `resources/user/js/composables/useCompetitionValidation.ts`
+**Location**: `resources/app/js/composables/useCompetitionValidation.ts`
 
 ```typescript
 import { reactive, computed } from 'vue';
-import type { CompetitionForm, CompetitionFormErrors } from '@user/types/competition';
+import type { CompetitionForm, CompetitionFormErrors } from '@app/types/competition';
 
 export function useCompetitionValidation(form: CompetitionForm) {
   const errors = reactive<CompetitionFormErrors>({});
@@ -1905,13 +1905,13 @@ Frontend will map these errors to the `errors` reactive object.
 
 **Example Test (Store)**:
 ```typescript
-// resources/user/js/stores/__tests__/competitionStore.test.ts
+// resources/app/js/stores/__tests__/competitionStore.test.ts
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useCompetitionStore } from '../competitionStore';
-import * as competitionService from '@user/services/competitionService';
+import * as competitionService from '@app/services/competitionService';
 
-vi.mock('@user/services/competitionService');
+vi.mock('@app/services/competitionService');
 
 describe('Competition Store', () => {
   beforeEach(() => {
@@ -1984,11 +1984,11 @@ describe('Competition Store', () => {
 
 **Example Test (Component)**:
 ```typescript
-// resources/user/js/components/competition/__tests__/CompetitionCard.test.ts
+// resources/app/js/components/competition/__tests__/CompetitionCard.test.ts
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import CompetitionCard from '../CompetitionCard.vue';
-import type { Competition } from '@user/types/competition';
+import type { Competition } from '@app/types/competition';
 
 describe('CompetitionCard', () => {
   const mockCompetition: Competition = {
@@ -2312,7 +2312,7 @@ Implement both:
 
 **Question**: Can we reuse the existing `ImageUpload` component from league creation?
 
-**Answer**: Yes! The `ImageUpload` component in `resources/user/js/components/common/forms/ImageUpload.vue` is already designed to be reusable. Just pass different props:
+**Answer**: Yes! The `ImageUpload` component in `resources/app/js/components/common/forms/ImageUpload.vue` is already designed to be reusable. Just pass different props:
 
 ```vue
 <ImageUpload
@@ -2337,7 +2337,7 @@ Implement both:
 League Dashboard > [League Name] > Competitions > [Competition Name]
 ```
 
-Use existing `Breadcrumbs.vue` component from `resources/user/js/components/common/Breadcrumbs.vue`.
+Use existing `Breadcrumbs.vue` component from `resources/app/js/components/common/Breadcrumbs.vue`.
 
 ---
 

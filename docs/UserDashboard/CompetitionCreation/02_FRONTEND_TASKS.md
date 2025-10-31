@@ -17,7 +17,7 @@ This document provides step-by-step tasks for implementing the Competition front
 ### Day 1: Type Definitions (3 hours)
 
 #### Task 1.1: Create Competition Types
-**File**: `resources/user/js/types/competition.ts`
+**File**: `resources/app/js/types/competition.ts`
 
 ```typescript
 /**
@@ -123,7 +123,7 @@ export interface CompetitionFilters {
 ### Day 2: Service Layer (4 hours)
 
 #### Task 2.1: Create Competition Service
-**File**: `resources/user/js/services/competitionService.ts`
+**File**: `resources/app/js/services/competitionService.ts`
 
 ```typescript
 /**
@@ -138,7 +138,7 @@ import type {
   UpdateCompetitionRequest,
   CompetitionFilters,
   SlugCheckResponse,
-} from '@user/types/competition';
+} from '@app/types/competition';
 import type { AxiosResponse } from 'axios';
 
 // API response wrapper
@@ -292,7 +292,7 @@ export function buildUpdateCompetitionFormData(form: {
 }
 ```
 
-**Unit Test**: `resources/user/js/services/__tests__/competitionService.test.ts`
+**Unit Test**: `resources/app/js/services/__tests__/competitionService.test.ts`
 
 **Test Cases**:
 - ✅ Mock apiClient calls
@@ -305,7 +305,7 @@ export function buildUpdateCompetitionFormData(form: {
 ### Day 3: State Management (4 hours)
 
 #### Task 3.1: Create Competition Store
-**File**: `resources/user/js/stores/competitionStore.ts`
+**File**: `resources/app/js/stores/competitionStore.ts`
 
 ```typescript
 /**
@@ -315,7 +315,7 @@ export function buildUpdateCompetitionFormData(form: {
 
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Competition, CompetitionForm, CompetitionFilters } from '@user/types/competition';
+import type { Competition, CompetitionForm, CompetitionFilters } from '@app/types/competition';
 import {
   getLeagueCompetitions,
   getCompetition,
@@ -325,7 +325,7 @@ import {
   deleteCompetition,
   buildCompetitionFormData,
   buildUpdateCompetitionFormData,
-} from '@user/services/competitionService';
+} from '@app/services/competitionService';
 
 export const useCompetitionStore = defineStore('competition', () => {
   // State
@@ -569,7 +569,7 @@ export const useCompetitionStore = defineStore('competition', () => {
 });
 ```
 
-**Unit Test**: `resources/user/js/stores/__tests__/competitionStore.test.ts`
+**Unit Test**: `resources/app/js/stores/__tests__/competitionStore.test.ts`
 
 **Test Cases**:
 - ✅ Initial state
@@ -586,7 +586,7 @@ export const useCompetitionStore = defineStore('competition', () => {
 ### Day 4: Composables - Part 1 (3 hours)
 
 #### Task 4.1: Platform Filtering Composable ⚠️ HIGH PRIORITY
-**File**: `resources/user/js/composables/useLeaguePlatforms.ts`
+**File**: `resources/app/js/composables/useLeaguePlatforms.ts`
 
 ```typescript
 /**
@@ -596,8 +596,8 @@ export const useCompetitionStore = defineStore('competition', () => {
  */
 
 import { computed } from 'vue';
-import { useLeagueStore } from '@user/stores/leagueStore';
-import type { Platform } from '@user/types/platform';
+import { useLeagueStore } from '@app/stores/leagueStore';
+import type { Platform } from '@app/types/platform';
 
 export interface PlatformOption {
   id: number;
@@ -655,7 +655,7 @@ export function useLeaguePlatforms(leagueId: number) {
 }
 ```
 
-**Unit Test**: `resources/user/js/composables/__tests__/useLeaguePlatforms.test.ts`
+**Unit Test**: `resources/app/js/composables/__tests__/useLeaguePlatforms.test.ts`
 
 **Test Cases**:
 - ✅ Returns empty array if league not found
@@ -669,7 +669,7 @@ export function useLeaguePlatforms(leagueId: number) {
 ---
 
 #### Task 4.2: Validation Composable
-**File**: `resources/user/js/composables/useCompetitionValidation.ts`
+**File**: `resources/app/js/composables/useCompetitionValidation.ts`
 
 ```typescript
 /**
@@ -678,7 +678,7 @@ export function useLeaguePlatforms(leagueId: number) {
  */
 
 import { reactive, computed } from 'vue';
-import type { CompetitionForm, CompetitionFormErrors } from '@user/types/competition';
+import type { CompetitionForm, CompetitionFormErrors } from '@app/types/competition';
 
 export function useCompetitionValidation(form: CompetitionForm) {
   const errors = reactive<CompetitionFormErrors>({});
@@ -794,14 +794,14 @@ export function useCompetitionValidation(form: CompetitionForm) {
 }
 ```
 
-**Unit Test**: `resources/user/js/composables/__tests__/useCompetitionValidation.test.ts`
+**Unit Test**: `resources/app/js/composables/__tests__/useCompetitionValidation.test.ts`
 
 ---
 
 ### Days 5-6: Competition Form Drawer (12 hours)
 
 #### Task 5.1: CompetitionFormDrawer Component
-**File**: `resources/user/js/components/competition/CompetitionFormDrawer.vue`
+**File**: `resources/app/js/components/competition/CompetitionFormDrawer.vue`
 
 **Pattern Reference**: `DriverFormDialog.vue` for structure, `LeagueWizardDrawer.vue` for footer styling
 
@@ -818,11 +818,11 @@ export function useCompetitionValidation(form: CompetitionForm) {
 import { ref, reactive, computed, watch } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
-import { useCompetitionStore } from '@user/stores/competitionStore';
-import { useLeaguePlatforms } from '@user/composables/useLeaguePlatforms';
-import { useCompetitionValidation } from '@user/composables/useCompetitionValidation';
-import { checkSlugAvailability } from '@user/services/competitionService';
-import type { Competition, CompetitionForm, SlugCheckResponse } from '@user/types/competition';
+import { useCompetitionStore } from '@app/stores/competitionStore';
+import { useLeaguePlatforms } from '@app/composables/useLeaguePlatforms';
+import { useCompetitionValidation } from '@app/composables/useCompetitionValidation';
+import { checkSlugAvailability } from '@app/services/competitionService';
+import type { Competition, CompetitionForm, SlugCheckResponse } from '@app/types/competition';
 
 // PrimeVue Components
 import Drawer from 'primevue/drawer';
@@ -834,12 +834,12 @@ import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 
 // Common Components
-import DrawerHeader from '@user/components/common/DrawerHeader.vue';
-import DrawerLoading from '@user/components/common/DrawerLoading.vue';
-import FormLabel from '@user/components/common/forms/FormLabel.vue';
-import FormError from '@user/components/common/forms/FormError.vue';
-import FormInputGroup from '@user/components/common/forms/FormInputGroup.vue';
-import ImageUpload from '@user/components/common/forms/ImageUpload.vue';
+import DrawerHeader from '@app/components/common/DrawerHeader.vue';
+import DrawerLoading from '@app/components/common/DrawerLoading.vue';
+import FormLabel from '@app/components/common/forms/FormLabel.vue';
+import FormError from '@app/components/common/forms/FormError.vue';
+import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
+import ImageUpload from '@app/components/common/forms/ImageUpload.vue';
 
 // Props
 interface Props {
@@ -1259,20 +1259,20 @@ function cancelNameChange(): void {
 - ✅ Validation works
 - ✅ Toast notifications show
 
-**Component Test**: `resources/user/js/components/competition/__tests__/CompetitionFormDrawer.test.ts`
+**Component Test**: `resources/app/js/components/competition/__tests__/CompetitionFormDrawer.test.ts`
 
 ---
 
 ### Day 7: Display Components (4 hours)
 
 #### Task 7.1: CompetitionCard Component
-**File**: `resources/user/js/components/competition/CompetitionCard.vue`
+**File**: `resources/app/js/components/competition/CompetitionCard.vue`
 
 ```vue
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import type { Competition } from '@user/types/competition';
+import type { Competition } from '@app/types/competition';
 
 import Card from 'primevue/card';
 import Chip from 'primevue/chip';
@@ -1384,14 +1384,14 @@ function handleView(): void {
 ---
 
 #### Task 7.2: CompetitionList Component
-**File**: `resources/user/js/components/competition/CompetitionList.vue`
+**File**: `resources/app/js/components/competition/CompetitionList.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useCompetitionStore } from '@user/stores/competitionStore';
-import type { Competition } from '@user/types/competition';
+import { useCompetitionStore } from '@app/stores/competitionStore';
+import type { Competition } from '@app/types/competition';
 
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -1550,21 +1550,21 @@ function handleCompetitionDeleted(competitionId: number): void {
 ### Day 8: 2-Step Delete Dialog (4 hours)
 
 #### Task 8.1: CompetitionDeleteDialog Component
-**File**: `resources/user/js/components/competition/CompetitionDeleteDialog.vue`
+**File**: `resources/app/js/components/competition/CompetitionDeleteDialog.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useCompetitionStore } from '@user/stores/competitionStore';
+import { useCompetitionStore } from '@app/stores/competitionStore';
 import { useToast } from 'primevue/usetoast';
-import type { Competition } from '@user/types/competition';
+import type { Competition } from '@app/types/competition';
 
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import InputText from 'primevue/inputtext';
-import FormInputGroup from '@user/components/common/forms/FormInputGroup.vue';
-import FormLabel from '@user/components/common/forms/FormLabel.vue';
+import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
+import FormLabel from '@app/components/common/forms/FormLabel.vue';
 
 interface Props {
   visible: boolean;
@@ -1790,7 +1790,7 @@ function handleCancel(): void {
 ### Days 9-10: Integration with LeagueDetail (6 hours)
 
 #### Task 9.1: Add Competitions Tab to LeagueDetail
-**File**: `resources/user/js/views/LeagueDetail.vue`
+**File**: `resources/app/js/views/LeagueDetail.vue`
 
 **Changes Required**:
 
@@ -1801,8 +1801,8 @@ function handleCancel(): void {
 ```vue
 <script setup lang="ts">
 // ... existing imports
-import CompetitionList from '@user/components/competition/CompetitionList.vue';
-import type { Competition } from '@user/types/competition';
+import CompetitionList from '@app/components/competition/CompetitionList.vue';
+import type { Competition } from '@app/types/competition';
 
 // ... existing code
 
@@ -1856,13 +1856,13 @@ function handleCompetitionCreated(competition: Competition): void {
 ### Day 11: Routing + Detail View Structure (4 hours)
 
 #### Task 11.1: Add Competition Detail Route
-**File**: `resources/user/js/router/index.ts`
+**File**: `resources/app/js/router/index.ts`
 
 ```typescript
 {
   path: '/leagues/:leagueId/competitions/:competitionId',
   name: 'competition-detail',
-  component: () => import('@user/views/CompetitionDetail.vue'),
+  component: () => import('@app/views/CompetitionDetail.vue'),
   meta: {
     title: 'Competition Details',
     requiresAuth: true,
@@ -1873,15 +1873,15 @@ function handleCompetitionCreated(competition: Competition): void {
 ---
 
 #### Task 11.2: CompetitionDetail View (Basic)
-**File**: `resources/user/js/views/CompetitionDetail.vue`
+**File**: `resources/app/js/views/CompetitionDetail.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { useCompetitionStore } from '@user/stores/competitionStore';
-import type { Competition } from '@user/types/competition';
+import { useCompetitionStore } from '@app/stores/competitionStore';
+import type { Competition } from '@app/types/competition';
 
 import Button from 'primevue/button';
 import Skeleton from 'primevue/skeleton';
@@ -1892,9 +1892,9 @@ import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 
-import CompetitionHeader from '@user/components/competition/CompetitionHeader.vue';
-import CompetitionSettings from '@user/components/competition/CompetitionSettings.vue';
-import CompetitionFormDrawer from '@user/components/competition/CompetitionFormDrawer.vue';
+import CompetitionHeader from '@app/components/competition/CompetitionHeader.vue';
+import CompetitionSettings from '@app/components/competition/CompetitionSettings.vue';
+import CompetitionFormDrawer from '@app/components/competition/CompetitionFormDrawer.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -2063,11 +2063,11 @@ function handleDeleted(): void {
 ### Day 12: CompetitionHeader Component (3 hours)
 
 #### Task 12.1: CompetitionHeader
-**File**: `resources/user/js/components/competition/CompetitionHeader.vue`
+**File**: `resources/app/js/components/competition/CompetitionHeader.vue`
 
 ```vue
 <script setup lang="ts">
-import type { Competition } from '@user/types/competition';
+import type { Competition } from '@app/types/competition';
 
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';
@@ -2157,14 +2157,14 @@ const emit = defineEmits<Emits>();
 ### Day 13: CompetitionSettings Component (4 hours)
 
 #### Task 13.1: CompetitionSettings
-**File**: `resources/user/js/components/competition/CompetitionSettings.vue`
+**File**: `resources/app/js/components/competition/CompetitionSettings.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useCompetitionStore } from '@user/stores/competitionStore';
+import { useCompetitionStore } from '@app/stores/competitionStore';
 import { useToast } from 'primevue/usetoast';
-import type { Competition } from '@user/types/competition';
+import type { Competition } from '@app/types/competition';
 
 import Card from 'primevue/card';
 import Button from 'primevue/button';

@@ -12,8 +12,8 @@ export default defineConfig({
         'resources/public/css/app.css',
         'resources/public/js/app.ts',
         // User Dashboard
-        'resources/user/css/app.css',
-        'resources/user/js/app.ts',
+        'resources/app/css/app.css',
+        'resources/app/js/app.ts',
         // Admin Dashboard
         'resources/admin/css/app.css',
         'resources/admin/js/app.ts',
@@ -35,7 +35,7 @@ export default defineConfig({
     alias: {
       vue: 'vue/dist/vue.esm-bundler.js',
       '@public': fileURLToPath(new URL('./resources/public/js', import.meta.url)),
-      '@user': fileURLToPath(new URL('./resources/user/js', import.meta.url)),
+      '@app': fileURLToPath(new URL('./resources/app/js', import.meta.url)),
       '@admin': fileURLToPath(new URL('./resources/admin/js', import.meta.url)),
     },
   },

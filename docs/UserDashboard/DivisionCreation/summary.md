@@ -151,27 +151,27 @@ PUT    /api/seasons/{seasonId}/drivers/{driverId}/division  - Assign/change driv
 
 ### Frontend (Vue 3 + TypeScript)
 **Types:**
-- `resources/user/js/types/division.ts`
+- `resources/app/js/types/division.ts`
 
 **API Service:**
-- `resources/user/js/services/divisionService.ts`
+- `resources/app/js/services/divisionService.ts`
 
 **Pinia Store:**
-- `resources/user/js/stores/divisionStore.ts`
+- `resources/app/js/stores/divisionStore.ts`
 
 **Components:**
-- `resources/user/js/components/season/divisions/DivisionFormModal.vue` (Add/Edit with description field)
-- `resources/user/js/components/season/divisions/DivisionsPanel.vue` (25% sidebar)
-- Update: `resources/user/js/components/season/SeasonDriversTable.vue` (inline division editor)
-- Update: `resources/user/js/components/season/SeasonHeader.vue` (add divisions stat)
+- `resources/app/js/components/season/divisions/DivisionFormModal.vue` (Add/Edit with description field)
+- `resources/app/js/components/season/divisions/DivisionsPanel.vue` (25% sidebar)
+- Update: `resources/app/js/components/season/SeasonDriversTable.vue` (inline division editor)
+- Update: `resources/app/js/components/season/SeasonHeader.vue` (add divisions stat)
 
 **Views:**
-- Update: `resources/user/js/views/SeasonDetail.vue` (new 75/25 layout)
+- Update: `resources/app/js/views/SeasonDetail.vue` (new 75/25 layout)
 
 **Tests:**
-- `resources/user/js/components/season/divisions/__tests__/DivisionFormModal.test.ts`
-- `resources/user/js/components/season/divisions/__tests__/DivisionsPanel.test.ts`
-- `resources/user/js/stores/__tests__/divisionStore.test.ts`
+- `resources/app/js/components/season/divisions/__tests__/DivisionFormModal.test.ts`
+- `resources/app/js/components/season/divisions/__tests__/DivisionsPanel.test.ts`
+- `resources/app/js/stores/__tests__/divisionStore.test.ts`
 
 ## Key Differences from Teams
 
@@ -243,9 +243,9 @@ This is an MVP implementation focused on core functionality:
 - Teams Creation Docs: `docs/UserDashboard/TeamsCreation/`
 - Backend Plan: `docs/UserDashboard/DivisionCreation/backend-plan.md`
 - Frontend Plan: `docs/UserDashboard/DivisionCreation/frontend-plan.md`
-- Season Form Drawer: `resources/user/js/components/season/modals/SeasonFormDrawer.vue`
-- Base Modal: `resources/user/js/components/common/modals/BaseModal.vue`
-- Season Drivers Table: `resources/user/js/components/season/SeasonDriversTable.vue`
+- Season Form Drawer: `resources/app/js/components/season/modals/SeasonFormDrawer.vue`
+- Base Modal: `resources/app/js/components/common/modals/BaseModal.vue`
+- Season Drivers Table: `resources/app/js/components/season/SeasonDriversTable.vue`
 - Admin Backend Guide: `.claude/guides/backend/admin-backend-guide.md`
 - Admin Frontend Guide: `.claude/guides/frontend/admin-dashboard-development-guide.md`
 

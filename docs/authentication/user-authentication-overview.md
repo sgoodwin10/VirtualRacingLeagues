@@ -32,11 +32,11 @@ This plan outlines the complete implementation of a user authentication system f
 - **Session Storage:** Database sessions with optional "Remember Me" cookie
 
 ### Frontend (Vue 3)
-- **Dashboard:** User Dashboard (`resources/user/`)
+- **Dashboard:** User Dashboard (`resources/app/`)
 - **Router:** Vue Router 4 with route guards
 - **State Management:** Pinia store (`userStore`)
 - **UI Components:** PrimeVue 4 with Aura theme
-- **Path Alias:** `@user/`
+- **Path Alias:** `@app/`
 
 ---
 

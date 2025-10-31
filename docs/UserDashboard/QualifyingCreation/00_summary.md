@@ -247,7 +247,7 @@ WHERE is_qualifier = TRUE;
 
 ### **Phase 4: Frontend Types** (1 hour)
 
-14. Update `/var/www/resources/user/js/types/race.ts`
+14. Update `/var/www/resources/app/js/types/race.ts`
 15. Add `is_qualifier` field to interfaces
 16. Create helper functions for type guards
 
@@ -355,9 +355,9 @@ tests/Feature/User/QualifierControllerTest.php
 ### Frontend (3 files)
 
 ```
-resources/user/js/components/round/QualifierListItem.vue
-resources/user/js/components/round/__tests__/QualifierListItem.test.ts
-resources/user/js/services/qualifierService.ts (optional - can reuse raceService)
+resources/app/js/components/round/QualifierListItem.vue
+resources/app/js/components/round/__tests__/QualifierListItem.test.ts
+resources/app/js/services/qualifierService.ts (optional - can reuse raceService)
 ```
 
 ---
@@ -377,11 +377,11 @@ routes/subdomain.php
 ### Frontend (5 files)
 
 ```
-resources/user/js/types/race.ts
-resources/user/js/components/round/modals/RaceFormDrawer.vue
-resources/user/js/components/round/RoundsPanel.vue
-resources/user/js/composables/useRaceValidation.ts
-resources/user/js/stores/raceStore.ts (optional)
+resources/app/js/types/race.ts
+resources/app/js/components/round/modals/RaceFormDrawer.vue
+resources/app/js/components/round/RoundsPanel.vue
+resources/app/js/composables/useRaceValidation.ts
+resources/app/js/stores/raceStore.ts (optional)
 ```
 
 ---

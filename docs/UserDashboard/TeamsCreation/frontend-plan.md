@@ -17,7 +17,7 @@ This plan follows the Vue 3 + TypeScript patterns established in this project. A
 
 ## Step 1: TypeScript Types
 
-**File:** `resources/user/js/types/team.ts`
+**File:** `resources/app/js/types/team.ts`
 
 ```typescript
 /**
@@ -87,7 +87,7 @@ export interface TeamDriverCountResponse {
 }
 ```
 
-**Update:** `resources/user/js/types/seasonDriver.ts`
+**Update:** `resources/app/js/types/seasonDriver.ts`
 
 Add to SeasonDriver interface:
 ```typescript
@@ -103,7 +103,7 @@ export interface SeasonDriver {
 
 ## Step 2: API Service
 
-**File:** `resources/user/js/services/teamService.ts`
+**File:** `resources/app/js/services/teamService.ts`
 
 ```typescript
 import axios from 'axios';
@@ -112,7 +112,7 @@ import type {
   CreateTeamRequest,
   UpdateTeamRequest,
   TeamDriverCountResponse,
-} from '@user/types/team';
+} from '@app/types/team';
 
 /**
  * Team API Service
@@ -226,13 +226,13 @@ export default teamService;
 
 ## Step 3: Pinia Store
 
-**File:** `resources/user/js/stores/teamStore.ts`
+**File:** `resources/app/js/stores/teamStore.ts`
 
 ```typescript
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Team, CreateTeamRequest, UpdateTeamRequest } from '@user/types/team';
-import teamService from '@user/services/teamService';
+import type { Team, CreateTeamRequest, UpdateTeamRequest } from '@app/types/team';
+import teamService from '@app/services/teamService';
 
 export const useTeamStore = defineStore('team', () => {
   // State
@@ -401,15 +401,15 @@ export const useTeamStore = defineStore('team', () => {
 
 ### 4.1 TeamFormModal Component
 
-**File:** `resources/user/js/components/season/teams/TeamFormModal.vue`
+**File:** `resources/app/js/components/season/teams/TeamFormModal.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import type { Team, TeamForm, TeamFormErrors } from '@user/types/team';
+import type { Team, TeamForm, TeamFormErrors } from '@app/types/team';
 
-import BaseModal from '@user/components/common/modals/BaseModal.vue';
+import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import FileUpload from 'primevue/fileupload';
@@ -667,17 +667,17 @@ function handleClose(): void {
 
 ### 4.2 TeamsPanel Component
 
-**File:** `resources/user/js/components/season/teams/TeamsPanel.vue`
+**File:** `resources/app/js/components/season/teams/TeamsPanel.vue`
 
 ```vue
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
-import { useTeamStore } from '@user/stores/teamStore';
-import type { Team } from '@user/types/team';
+import { useTeamStore } from '@app/stores/teamStore';
+import type { Team } from '@app/types/team';
 
-import BasePanel from '@user/components/common/panels/BasePanel.vue';
+import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -883,12 +883,12 @@ async function handleDeleteTeam(team: Team): Promise<void> {
 
 ### 4.3 Update SeasonDriversTable Component
 
-**File:** `resources/user/js/components/season/SeasonDriversTable.vue` (updates)
+**File:** `resources/app/js/components/season/SeasonDriversTable.vue` (updates)
 
 Add to `<script setup>`:
 
 ```typescript
-import { useTeamStore } from '@user/stores/teamStore';
+import { useTeamStore } from '@app/stores/teamStore';
 import Select from 'primevue/select';
 
 // Add prop
@@ -983,13 +983,13 @@ Update template - replace the existing team column:
 
 ## Step 5: Update SeasonDetail View
 
-**File:** `resources/user/js/views/SeasonDetail.vue` (updates)
+**File:** `resources/app/js/views/SeasonDetail.vue` (updates)
 
 Add to `<script setup>`:
 
 ```typescript
-import { useTeamStore } from '@user/stores/teamStore';
-import TeamsPanel from '@user/components/season/teams/TeamsPanel.vue';
+import { useTeamStore } from '@app/stores/teamStore';
+import TeamsPanel from '@app/components/season/teams/TeamsPanel.vue';
 
 const teamStore = useTeamStore();
 
@@ -1057,7 +1057,7 @@ Update the Drivers tab template (around line 317):
 
 ### 6.1 TeamFormModal Tests
 
-**File:** `resources/user/js/components/season/teams/__tests__/TeamFormModal.test.ts`
+**File:** `resources/app/js/components/season/teams/__tests__/TeamFormModal.test.ts`
 
 ```typescript
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -1132,7 +1132,7 @@ describe('TeamFormModal', () => {
 
 ### 6.2 TeamsPanel Tests
 
-**File:** `resources/user/js/components/season/teams/__tests__/TeamsPanel.test.ts`
+**File:** `resources/app/js/components/season/teams/__tests__/TeamsPanel.test.ts`
 
 ```typescript
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -1178,15 +1178,15 @@ describe('TeamsPanel', () => {
 
 ### 6.3 Team Store Tests
 
-**File:** `resources/user/js/stores/__tests__/teamStore.test.ts`
+**File:** `resources/app/js/stores/__tests__/teamStore.test.ts`
 
 ```typescript
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useTeamStore } from '../teamStore';
-import teamService from '@user/services/teamService';
+import teamService from '@app/services/teamService';
 
-vi.mock('@user/services/teamService');
+vi.mock('@app/services/teamService');
 
 describe('Team Store', () => {
   beforeEach(() => {
@@ -1259,17 +1259,17 @@ describe('Team Store', () => {
 ## Step 7: Implementation Checklist
 
 ### Types
-- [ ] Create `resources/user/js/types/team.ts`
-- [ ] Update `resources/user/js/types/seasonDriver.ts` (add team fields)
+- [ ] Create `resources/app/js/types/team.ts`
+- [ ] Update `resources/app/js/types/seasonDriver.ts` (add team fields)
 
 ### Services
-- [ ] Create `resources/user/js/services/teamService.ts`
+- [ ] Create `resources/app/js/services/teamService.ts`
 
 ### Store
-- [ ] Create `resources/user/js/stores/teamStore.ts`
+- [ ] Create `resources/app/js/stores/teamStore.ts`
 
 ### Components
-- [ ] Create `resources/user/js/components/season/teams/` directory
+- [ ] Create `resources/app/js/components/season/teams/` directory
 - [ ] Create `TeamFormModal.vue`
 - [ ] Create `TeamsPanel.vue`
 - [ ] Update `SeasonDriversTable.vue` (inline team editor)
@@ -1278,10 +1278,10 @@ describe('Team Store', () => {
 - [ ] Update `SeasonDetail.vue` (75/25 layout, load teams)
 
 ### Tests
-- [ ] Create `resources/user/js/components/season/teams/__tests__/` directory
+- [ ] Create `resources/app/js/components/season/teams/__tests__/` directory
 - [ ] Create `TeamFormModal.test.ts`
 - [ ] Create `TeamsPanel.test.ts`
-- [ ] Create `resources/user/js/stores/__tests__/teamStore.test.ts`
+- [ ] Create `resources/app/js/stores/__tests__/teamStore.test.ts`
 - [ ] Run all tests: `npm run test:user`
 
 ### Quality Checks
@@ -1342,8 +1342,8 @@ describe('Team Store', () => {
 
 ## References
 
-- Season Form Drawer: `resources/user/js/components/season/modals/SeasonFormDrawer.vue`
-- Base Modal: `resources/user/js/components/common/modals/BaseModal.vue`
-- Season Drivers Table: `resources/user/js/components/season/SeasonDriversTable.vue`
+- Season Form Drawer: `resources/app/js/components/season/modals/SeasonFormDrawer.vue`
+- Base Modal: `resources/app/js/components/common/modals/BaseModal.vue`
+- Season Drivers Table: `resources/app/js/components/season/SeasonDriversTable.vue`
 - Admin Frontend Guide: `.claude/guides/frontend/admin-dashboard-development-guide.md`
 - PrimeVue Select (v4): Use Context7 for latest docs

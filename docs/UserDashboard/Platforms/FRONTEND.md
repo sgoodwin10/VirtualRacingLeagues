@@ -31,7 +31,7 @@ This guide details the frontend implementation for dynamic platform-based driver
 ## File Structure
 
 ```
-resources/user/js/
+resources/app/js/
 ├── config/
 │   └── platformColumnMapping.ts       # Platform-to-field mappings (fallback)
 ├── types/
@@ -57,7 +57,7 @@ resources/user/js/
 
 ## TypeScript Types
 
-### `resources/user/js/types/datatable.ts` (NEW)
+### `resources/app/js/types/datatable.ts` (NEW)
 
 ```typescript
 export interface DriverColumnConfig {
@@ -79,7 +79,7 @@ export interface DriverFormFieldConfig {
 }
 ```
 
-### `resources/user/js/types/driver.ts` (UPDATE)
+### `resources/app/js/types/driver.ts` (UPDATE)
 
 Ensure the Driver interface includes all platform fields:
 
@@ -111,12 +111,12 @@ export interface Driver {
 
 ## Config: Platform Column Mapping
 
-### `resources/user/js/config/platformColumnMapping.ts` (NEW)
+### `resources/app/js/config/platformColumnMapping.ts` (NEW)
 
 **Purpose**: Provides fallback mapping and type safety for platform fields.
 
 ```typescript
-import type { Driver } from '@user/types/driver';
+import type { Driver } from '@app/types/driver';
 
 export interface PlatformFieldMapping {
   slug: string; // Matches Platform.slug from backend
@@ -187,7 +187,7 @@ export function getFieldsForPlatforms(platformSlugs: string[]): PlatformFieldMap
 
 ## Store: League Store
 
-### `resources/user/js/stores/leagueStore.ts` (UPDATE)
+### `resources/app/js/stores/leagueStore.ts` (UPDATE)
 
 **Changes**:
 1. Add state for platform configurations
@@ -197,10 +197,10 @@ export function getFieldsForPlatforms(platformSlugs: string[]): PlatformFieldMap
 ```typescript
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { League, Platform } from '@user/types/league';
-import type { DriverColumnConfig, DriverFormFieldConfig } from '@user/types/datatable';
-import { leagueService } from '@user/services/leagueService';
-import { useErrorToast } from '@user/composables/useErrorToast';
+import type { League, Platform } from '@app/types/league';
+import type { DriverColumnConfig, DriverFormFieldConfig } from '@app/types/datatable';
+import { leagueService } from '@app/services/leagueService';
+import { useErrorToast } from '@app/composables/useErrorToast';
 
 export const useLeagueStore = defineStore('league', () => {
   // Existing state
@@ -301,13 +301,13 @@ export const useLeagueStore = defineStore('league', () => {
 
 ## Service: League Service
 
-### `resources/user/js/services/leagueService.ts` (UPDATE)
+### `resources/app/js/services/leagueService.ts` (UPDATE)
 
 Add new API methods:
 
 ```typescript
 import api from './api';
-import type { DriverColumnConfig, DriverFormFieldConfig } from '@user/types/datatable';
+import type { DriverColumnConfig, DriverFormFieldConfig } from '@app/types/datatable';
 
 export const leagueService = {
   // Existing methods...
@@ -344,7 +344,7 @@ export const leagueService = {
 
 ## Component: DriverTable
 
-### `resources/user/js/components/driver/DriverTable.vue` (UPDATE)
+### `resources/app/js/components/driver/DriverTable.vue` (UPDATE)
 
 **Changes**:
 1. Remove hardcoded platform column logic
@@ -357,8 +357,8 @@ import { computed } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
-import type { Driver } from '@user/types/driver';
-import type { DriverColumnConfig } from '@user/types/datatable';
+import type { Driver } from '@app/types/driver';
+import type { DriverColumnConfig } from '@app/types/datatable';
 
 interface Props {
   drivers: Driver[];
@@ -440,7 +440,7 @@ const emit = defineEmits<{
 
 ## Component: DriverFormDialog
 
-### `resources/user/js/components/driver/DriverFormDialog.vue` (UPDATE)
+### `resources/app/js/components/driver/DriverFormDialog.vue` (UPDATE)
 
 **Changes**:
 1. Accept `platformFormFields` prop
@@ -454,8 +454,8 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Button from 'primevue/button';
-import type { Driver } from '@user/types/driver';
-import type { DriverFormFieldConfig } from '@user/types/datatable';
+import type { Driver } from '@app/types/driver';
+import type { DriverFormFieldConfig } from '@app/types/datatable';
 
 interface Props {
   visible: boolean;
@@ -635,7 +635,7 @@ function handleCancel() {
 
 ## Component: CSVImportDialog
 
-### `resources/user/js/components/driver/CSVImportDialog.vue` (UPDATE)
+### `resources/app/js/components/driver/CSVImportDialog.vue` (UPDATE)
 
 **Changes**:
 1. Add "Download Template" button
@@ -649,7 +649,7 @@ import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import FileUpload from 'primevue/fileupload';
 import Message from 'primevue/message';
-import { useLeagueStore } from '@user/stores/leagueStore';
+import { useLeagueStore } from '@app/stores/leagueStore';
 
 interface Props {
   visible: boolean;
@@ -814,7 +814,7 @@ async function handleImport() {
 
 ## Parent View: LeagueDetail
 
-### `resources/user/js/views/LeagueDetail.vue` (UPDATE)
+### `resources/app/js/views/LeagueDetail.vue` (UPDATE)
 
 **Changes**:
 1. Fetch platform configurations on mount
@@ -824,11 +824,11 @@ async function handleImport() {
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useLeagueStore } from '@user/stores/leagueStore';
-import { useDriverStore } from '@user/stores/driverStore';
-import DriverTable from '@user/components/driver/DriverTable.vue';
-import DriverFormDialog from '@user/components/driver/DriverFormDialog.vue';
-import CSVImportDialog from '@user/components/driver/CSVImportDialog.vue';
+import { useLeagueStore } from '@app/stores/leagueStore';
+import { useDriverStore } from '@app/stores/driverStore';
+import DriverTable from '@app/components/driver/DriverTable.vue';
+import DriverFormDialog from '@app/components/driver/DriverFormDialog.vue';
+import CSVImportDialog from '@app/components/driver/CSVImportDialog.vue';
 
 const route = useRoute();
 const leagueStore = useLeagueStore();
@@ -886,15 +886,15 @@ onMounted(async () => {
 
 ### Store Tests
 
-**Location**: `resources/user/js/stores/__tests__/leagueStore.test.ts`
+**Location**: `resources/app/js/stores/__tests__/leagueStore.test.ts`
 
 ```typescript
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useLeagueStore } from '../leagueStore';
-import { leagueService } from '@user/services/leagueService';
+import { leagueService } from '@app/services/leagueService';
 
-vi.mock('@user/services/leagueService');
+vi.mock('@app/services/leagueService');
 
 describe('leagueStore - Platform Configuration', () => {
   beforeEach(() => {
@@ -953,7 +953,7 @@ describe('leagueStore - Platform Configuration', () => {
 
 ### Component Tests
 
-**Location**: `resources/user/js/components/driver/__tests__/DriverTable.spec.ts`
+**Location**: `resources/app/js/components/driver/__tests__/DriverTable.spec.ts`
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -1000,7 +1000,7 @@ describe('DriverTable', () => {
 });
 ```
 
-**Location**: `resources/user/js/components/driver/__tests__/DriverFormDialog.spec.ts`
+**Location**: `resources/app/js/components/driver/__tests__/DriverFormDialog.spec.ts`
 
 ```typescript
 import { describe, it, expect } from 'vitest';

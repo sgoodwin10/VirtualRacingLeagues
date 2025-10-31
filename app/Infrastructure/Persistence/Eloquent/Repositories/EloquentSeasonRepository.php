@@ -166,6 +166,70 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
     }
 
     /**
+     * Get all seasons for a competition with statistics.
+     * Returns seasons ordered by most recent first (latest created_at).
+     *
+     * @return array<array{season: Season, stats: array{driver_count: int, round_count: int, race_count: int}}>
+     */
+    public function getSeasonsWithStatsForCompetition(int $competitionId): array
+    {
+        // Get all seasons for the competition ordered by most recent first
+        $seasons = SeasonEloquent::where('competition_id', $competitionId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($seasons->isEmpty()) {
+            return [];
+        }
+
+        $seasonIds = $seasons->pluck('id')->toArray();
+
+        // Get driver counts for all seasons (count season_drivers)
+        // Note: season_drivers table does not have soft deletes or deleted_at column
+        $driverCounts = \Illuminate\Support\Facades\DB::table('season_drivers')
+            ->select('season_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->whereIn('season_id', $seasonIds)
+            ->groupBy('season_id')
+            ->pluck('total', 'season_id')
+            ->toArray();
+
+        // Get round counts for all seasons
+        $roundCounts = \Illuminate\Support\Facades\DB::table('rounds')
+            ->select('season_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->whereIn('season_id', $seasonIds)
+            ->whereNull('deleted_at')
+            ->groupBy('season_id')
+            ->pluck('total', 'season_id')
+            ->toArray();
+
+        // Get race counts for all seasons (races through rounds)
+        // Note: races table does not have soft deletes or deleted_at column
+        $raceCounts = \Illuminate\Support\Facades\DB::table('races')
+            ->select('rounds.season_id', \Illuminate\Support\Facades\DB::raw('COUNT(races.id) as total'))
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->whereIn('rounds.season_id', $seasonIds)
+            ->whereNull('rounds.deleted_at')
+            ->groupBy('rounds.season_id')
+            ->pluck('total', 'season_id')
+            ->toArray();
+
+        // Map to result format
+        $result = [];
+        foreach ($seasons as $seasonModel) {
+            $result[] = [
+                'season' => $this->mapToEntity($seasonModel),
+                'stats' => [
+                    'driver_count' => (int) ($driverCounts[$seasonModel->id] ?? 0),
+                    'round_count' => (int) ($roundCounts[$seasonModel->id] ?? 0),
+                    'race_count' => (int) ($raceCounts[$seasonModel->id] ?? 0),
+                ],
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * Check if slug exists, optionally excluding a specific season.
      */
     private function slugExistsExcluding(string $slug, int $competitionId, ?int $excludeSeasonId): bool
