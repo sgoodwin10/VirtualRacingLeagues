@@ -24,11 +24,11 @@ final class PlatformSettingsApiTest extends TestCase
     public function test_can_get_gt7_race_settings(): void
     {
         $response = $this->actingAs($this->user)
-            ->getJson('/api/platforms/1/race-settings');
+            ->getJson('http://app.virtualracingleagues.localhost/api/platforms/1/race-settings');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'status',
+                'success',
                 'data' => [
                     'weather_conditions',
                     'tire_restrictions',
@@ -50,11 +50,11 @@ final class PlatformSettingsApiTest extends TestCase
     public function test_can_get_acc_race_settings(): void
     {
         $response = $this->actingAs($this->user)
-            ->getJson('/api/platforms/2/race-settings');
+            ->getJson('http://app.virtualracingleagues.localhost/api/platforms/2/race-settings');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'status',
+                'success',
                 'data' => [
                     'weather_conditions',
                     'tire_restrictions',
@@ -68,11 +68,11 @@ final class PlatformSettingsApiTest extends TestCase
     public function test_can_get_iracing_race_settings(): void
     {
         $response = $this->actingAs($this->user)
-            ->getJson('/api/platforms/3/race-settings');
+            ->getJson('http://app.virtualracingleagues.localhost/api/platforms/3/race-settings');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'status',
+                'success',
                 'data' => [
                     'weather_conditions',
                     'tire_restrictions',
@@ -86,7 +86,7 @@ final class PlatformSettingsApiTest extends TestCase
     public function test_returns_gt7_for_unknown_platform(): void
     {
         $response = $this->actingAs($this->user)
-            ->getJson('/api/platforms/999/race-settings');
+            ->getJson('http://app.virtualracingleagues.localhost/api/platforms/999/race-settings');
 
         $response->assertStatus(200);
 
@@ -97,7 +97,7 @@ final class PlatformSettingsApiTest extends TestCase
 
     public function test_unauthenticated_user_cannot_access_platform_settings(): void
     {
-        $response = $this->getJson('/api/platforms/1/race-settings');
+        $response = $this->getJson('http://app.virtualracingleagues.localhost/api/platforms/1/race-settings');
 
         $response->assertStatus(401);
     }
@@ -105,7 +105,7 @@ final class PlatformSettingsApiTest extends TestCase
     public function test_weather_conditions_have_correct_structure(): void
     {
         $response = $this->actingAs($this->user)
-            ->getJson('/api/platforms/1/race-settings');
+            ->getJson('http://app.virtualracingleagues.localhost/api/platforms/1/race-settings');
 
         $response->assertStatus(200);
 

@@ -96,12 +96,15 @@ final class RoundApiTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->seasonId}/rounds", [
-            'round_number' => 5,
-            'name' => 'Season Opener',
-            'scheduled_at' => '2025-02-18 19:00:00',
-            'platform_track_id' => $this->platformTrackId,
-        ]);
+        $response = $this->postJson(
+            "http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds",
+            [
+                'round_number' => 5,
+                'name' => 'Season Opener',
+                'scheduled_at' => '2025-02-18 19:00:00',
+                'platform_track_id' => $this->platformTrackId,
+            ]
+        );
 
         $response->assertStatus(201);
         $response->assertJsonStructure([
@@ -131,11 +134,14 @@ final class RoundApiTest extends TestCase
     #[Test]
     public function round_creation_requires_authentication(): void
     {
-        $response = $this->postJson("/api/seasons/{$this->seasonId}/rounds", [
-            'round_number' => 5,
-            'scheduled_at' => '2025-02-18 19:00:00',
-            'platform_track_id' => $this->platformTrackId,
-        ]);
+        $response = $this->postJson(
+            "http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds",
+            [
+                'round_number' => 5,
+                'scheduled_at' => '2025-02-18 19:00:00',
+                'platform_track_id' => $this->platformTrackId,
+            ]
+        );
 
         $response->assertStatus(401);
     }
@@ -145,7 +151,10 @@ final class RoundApiTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->seasonId}/rounds", []);
+        $response = $this->postJson(
+            "http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds",
+            []
+        );
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['round_number']);
@@ -156,7 +165,7 @@ final class RoundApiTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->seasonId}/rounds", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds", [
             'round_number' => 100,
             'scheduled_at' => '2025-02-18 19:00:00',
             'platform_track_id' => $this->platformTrackId,
@@ -171,7 +180,7 @@ final class RoundApiTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->seasonId}/rounds", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds", [
             'round_number' => 5,
             'name' => 'AB', // Too short
             'scheduled_at' => '2025-02-18 19:00:00',
@@ -193,7 +202,7 @@ final class RoundApiTest extends TestCase
             'created_by_user_id' => $this->user->id,
         ]);
 
-        $response = $this->getJson("/api/seasons/{$this->seasonId}/rounds");
+        $response = $this->getJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds");
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -223,7 +232,7 @@ final class RoundApiTest extends TestCase
             'name' => 'Test Round',
         ]);
 
-        $response = $this->getJson("/api/rounds/{$round->id}");
+        $response = $this->getJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}");
 
         $response->assertStatus(200);
         $response->assertJsonFragment([
@@ -244,7 +253,7 @@ final class RoundApiTest extends TestCase
             'name' => 'Original Name',
         ]);
 
-        $response = $this->putJson("/api/rounds/{$round->id}", [
+        $response = $this->putJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}", [
             'name' => 'Updated Name',
         ]);
 
@@ -266,7 +275,7 @@ final class RoundApiTest extends TestCase
             'created_by_user_id' => $this->user->id,
         ]);
 
-        $response = $this->deleteJson("/api/rounds/{$round->id}");
+        $response = $this->deleteJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}");
 
         $response->assertStatus(200);
         $this->assertSoftDeleted('rounds', ['id' => $round->id]);
@@ -284,7 +293,7 @@ final class RoundApiTest extends TestCase
             'created_by_user_id' => $this->user->id,
         ]);
 
-        $response = $this->getJson("/api/seasons/{$this->seasonId}/rounds/next-number");
+        $response = $this->getJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds/next-number");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -298,7 +307,7 @@ final class RoundApiTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->getJson("/api/seasons/{$this->seasonId}/rounds/next-number");
+        $response = $this->getJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds/next-number");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -312,7 +321,7 @@ final class RoundApiTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->seasonId}/rounds", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds", [
             'round_number' => 1,
             'name' => 'Monaco Grand Prix',
             'scheduled_at' => '2025-05-25 14:00:00',
@@ -331,7 +340,7 @@ final class RoundApiTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->seasonId}/rounds", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds", [
             'round_number' => 3,
             'scheduled_at' => '2025-05-25 14:00:00',
             'platform_track_id' => $this->platformTrackId,
@@ -349,7 +358,7 @@ final class RoundApiTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->seasonId}/rounds", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->seasonId}/rounds", [
             'round_number' => 7,
             'name' => 'TBD Round',
         ]);

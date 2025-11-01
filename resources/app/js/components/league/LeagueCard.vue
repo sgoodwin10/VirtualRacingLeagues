@@ -99,7 +99,7 @@ function handleView(): void {
 
 function handleEdit(): void {
   emit('edit', props.league.id);
-  // Drawer opening handled by parent component
+  // Modal opening handled by parent component
 }
 
 function confirmDelete(): void {

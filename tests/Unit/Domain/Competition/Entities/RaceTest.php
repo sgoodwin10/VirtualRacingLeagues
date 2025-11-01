@@ -125,6 +125,7 @@ final class RaceTest extends TestCase
         $race = Race::reconstitute(
             id: 123,
             roundId: 1,
+            isQualifier: false,
             raceNumber: 2,
             name: RaceName::from('Feature Race'),
             type: RaceType::FEATURE,

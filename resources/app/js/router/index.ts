@@ -1,7 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useUserStore } from '@app/stores/userStore';
-import HomeView from '@app/views/HomeView.vue';
-import ProfileView from '@app/views/ProfileView.vue';
 import LeagueList from '@app/views/LeagueList.vue';
 import LeagueDetail from '@app/views/LeagueDetail.vue';
 
@@ -11,24 +9,6 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
-      meta: {
-        title: 'Dashboard',
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: ProfileView,
-      meta: {
-        title: 'Profile',
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/leagues',
-      name: 'leagues',
       component: LeagueList,
       meta: {
         title: 'My Leagues',

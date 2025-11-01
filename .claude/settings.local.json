@@ -41,7 +41,8 @@
       "Bash(node:*)",
       "Bash(npm run test:user:*)",
       "Bash(npm run format:app:*)",
-      "Bash(npm update:*)"
+      "Bash(npm update:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

@@ -10,22 +10,15 @@ import { checkSlugAvailability } from '@app/services/competitionService';
 import type { Competition, CompetitionForm, SlugCheckResponse } from '@app/types/competition';
 
 // PrimeVue Components
-import Drawer from 'primevue/drawer';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
 
 // Common Components
-import DrawerHeader from '@app/components/common/modals/DrawerHeader.vue';
-import DrawerLoading from '@app/components/common/modals/DrawerLoading.vue';
+import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
 import FormError from '@app/components/common/forms/FormError.vue';
 import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
@@ -61,7 +54,6 @@ const leagueStore = useLeagueStore();
 const { platformOptions } = useLeaguePlatforms(() => props.leagueId);
 
 // State
-const activeTab = ref('0');
 const form = reactive<CompetitionForm>({
   name: '',
   description: '',
@@ -89,10 +81,7 @@ const localVisible = computed({
   set: (value) => emit('update:visible', value),
 });
 
-const drawerTitle = computed(() => (props.isEditMode ? 'Edit Competition' : 'Create Competition'));
-const drawerSubtitle = computed(() =>
-  props.isEditMode ? 'Update competition details' : 'Create a new competition for your league',
-);
+const modalTitle = computed(() => (props.isEditMode ? 'Edit Competition' : 'Create Competition'));
 
 const nameChanged = computed(() => {
   return props.isEditMode && form.name !== originalName.value;
@@ -197,7 +186,6 @@ function loadCompetitionData(): void {
 }
 
 function resetForm(): void {
-  activeTab.value = '0';
   form.name = '';
   form.description = '';
   form.platform_id = null;
@@ -292,171 +280,133 @@ function cancelNameChange(): void {
 </script>
 
 <template>
-  <Drawer v-model:visible="localVisible" position="bottom" class="!h-[50vh] w-full bg-gray-50">
-    <template #header>
-      <DrawerHeader :title="drawerTitle" :subtitle="drawerSubtitle" />
+  <BaseModal
+    v-model:visible="localVisible"
+    :header="modalTitle"
+    width="3xl"
+    :closable="!isSubmitting"
+    :dismissable-mask="false"
+    :loading="isLoadingData"
+    content-class="bg-slate-50"
+  >
+    <div class="space-y-4">
+      <!-- Name and Platform Fields - Side by Side on Desktop -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Name Field (2/3 width on desktop) -->
+        <FormInputGroup class="md:col-span-2">
+          <FormLabel for="name" text="Competition Name" required />
+          <InputText
+            id="name"
+            v-model="form.name"
+            size="small"
+            placeholder="e.g., Sunday Night Racing, GT3 Championship"
+            :class="{ 'p-invalid': errors.name }"
+            :disabled="isSubmitting"
+            maxlength="100"
+            class="w-full"
+          />
+          <FormError :error="errors.name" />
+
+          <!-- Slug Preview - More Compact -->
+          <div v-if="slugPreview" class="mt-1.5 flex items-center gap-1.5">
+            <template v-if="slugStatus === 'checking'">
+              <i class="pi pi-spinner pi-spin text-xs text-blue-500"></i>
+              <small class="text-gray-600">Checking...</small>
+            </template>
+            <template v-else-if="slugStatus === 'available'">
+              <i class="pi pi-check-circle text-xs text-green-500"></i>
+              <small class="text-gray-600">
+                URL: <span class="font-mono text-green-600">{{ slugPreview }}</span>
+              </small>
+            </template>
+            <template v-else-if="slugStatus === 'taken'">
+              <i class="pi pi-info-circle text-xs text-amber-500"></i>
+              <small class="text-gray-600">
+                Will use: <span class="font-mono text-amber-700">{{ slugSuggestion }}</span>
+              </small>
+            </template>
+          </div>
+        </FormInputGroup>
+
+        <!-- Platform Selection (1/3 width on desktop) -->
+        <FormInputGroup class="md:col-span-1">
+          <FormLabel for="platform_id" text="Platform" required class="mb-0" />
+
+          <Select
+            id="platform_id"
+            v-model="form.platform_id"
+            :options="platformOptions"
+            option-label="name"
+            option-value="id"
+            placeholder="Select a platform"
+            size="small"
+            :class="{ 'p-invalid': errors.platform_id }"
+            :disabled="isEditMode || isSubmitting"
+            class="w-full"
+          />
+          <small v-if="isEditMode" class="text-gray-500 italic"
+            >Cannot be changed after creation</small
+          >
+          <FormError :error="errors.platform_id" />
+        </FormInputGroup>
+      </div>
+
+      <!-- Description -->
+      <FormInputGroup>
+        <FormLabel for="description" text="Description" />
+        <Textarea
+          id="description"
+          v-model="form.description"
+          rows="3"
+          placeholder="Describe this competition, typical race format, skill level..."
+          :class="{ 'p-invalid': errors.description }"
+          :disabled="isSubmitting"
+          maxlength="1000"
+          class="w-full"
+        />
+        <FormOptionalText text="Tell participants what this competition is all about" />
+        <FormError :error="errors.description" />
+      </FormInputGroup>
+
+      <!-- Logo Upload Section -->
+      <FormInputGroup>
+        <FormLabel text="Competition Logo" />
+        <BasePanel>
+          <div class="rounded-md border border-gray-200 content-center p-2">
+            <ImageUpload
+              v-model="form.logo"
+              :existing-image-url="form.logo_url"
+              accept="image/png,image/jpeg,image/jpg"
+              :max-file-size="2 * 1024 * 1024"
+              :min-dimensions="{ width: 200, height: 200 }"
+              :recommended-dimensions="{ width: 500, height: 500 }"
+              preview-size="small"
+              helper-text="Square logo, 500x500px recommended. League logo used if not provided."
+            />
+          </div>
+        </BasePanel>
+        <FormError :error="errors.logo" />
+      </FormInputGroup>
+    </div>
+
+    <template #footer>
+      <div class="flex gap-2 justify-end">
+        <Button
+          label="Cancel"
+          severity="secondary"
+          outlined
+          :disabled="isSubmitting"
+          @click="handleCancel"
+        />
+        <Button
+          :label="isEditMode ? 'Save Changes' : 'Create Competition'"
+          :loading="isSubmitting"
+          :disabled="!canSubmit"
+          @click="handleSubmit"
+        />
+      </div>
     </template>
-
-    <DrawerLoading v-if="isLoadingData" message="Loading competition..." />
-
-    <div v-else class="container mx-auto flex flex-col max-w-5xl px-4">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Left Column (66%) -->
-        <div class="md:col-span-2 space-y-6">
-          <!-- Name Field -->
-          <FormInputGroup>
-            <FormLabel for="name" text="Competition Name" required />
-            <InputText
-              id="name"
-              v-model="form.name"
-              size="small"
-              placeholder="e.g., Sunday Night Racing, GT3 Championship"
-              :class="{ 'p-invalid': errors.name }"
-              :disabled="isSubmitting"
-              maxlength="100"
-              class="w-full"
-            />
-            <FormError :error="errors.name" />
-
-            <!-- Slug Preview -->
-            <div v-if="slugPreview" class="mt-2">
-              <div class="flex items-center gap-2">
-                <span v-if="slugStatus === 'checking'" class="text-blue-500">
-                  <i class="pi pi-spinner pi-spin text-sm"></i>
-                  <small class="ml-2 text-gray-600">Checking availability...</small>
-                </span>
-                <span v-else-if="slugStatus === 'available'" class="flex items-center gap-2">
-                  <i class="pi pi-check-circle text-green-500 text-sm"></i>
-                  <small class="text-green-600">
-                    URL: <span class="font-mono font-semibold">{{ slugPreview }}</span>
-                  </small>
-                </span>
-                <span v-else-if="slugStatus === 'taken'" class="flex items-center gap-2">
-                  <i class="pi pi-info-circle text-amber-500 text-sm"></i>
-                  <small class="text-amber-700">
-                    Name taken. Will use URL:
-                    <span class="font-mono font-semibold">{{ slugSuggestion }}</span>
-                  </small>
-                </span>
-              </div>
-            </div>
-          </FormInputGroup>
-
-          <!-- Description -->
-          <FormInputGroup>
-            <FormLabel for="description" text="Description" />
-            <Textarea
-              id="description"
-              v-model="form.description"
-              rows="5"
-              placeholder="Describe this competition, typical race format, skill level..."
-              :class="{ 'p-invalid': errors.description }"
-              :disabled="isSubmitting"
-              maxlength="1000"
-              class="w-full"
-            />
-            <FormOptionalText text="Tell participants what this competition is all about" />
-            <FormError :error="errors.description" />
-          </FormInputGroup>
-        </div>
-
-        <!-- Right Column (33%) -->
-        <div class="space-y-6">
-          <!-- Platform Selection -->
-          <FormInputGroup>
-            <FormLabel for="platform_id" text="Platform" required />
-            <Select
-              id="platform_id"
-              v-model="form.platform_id"
-              :options="platformOptions"
-              option-label="name"
-              option-value="id"
-              placeholder="Select a platform"
-              size="small"
-              :class="{ 'p-invalid': errors.platform_id }"
-              :disabled="isEditMode || isSubmitting"
-              class="w-full"
-            />
-            <FormError :error="errors.platform_id" />
-
-            <!-- Platform locked message in edit mode -->
-            <Message v-if="isEditMode" severity="info" :closable="false" class="mt-2">
-              Platform cannot be changed after creation
-            </Message>
-          </FormInputGroup>
-
-          <!-- Info Message -->
-          <Message severity="info" :closable="false" class="mt-14">
-            <i class="pi pi-info-circle mr-2"></i>
-            Car restrictions, race types, and other details will be configured when you create
-            seasons.
-          </Message>
-        </div>
-      </div>
-
-      <!-- Tabs Section -->
-      <Tabs v-model:value="activeTab" class="flex-1 flex flex-col mt-6">
-        <TabList class="bg-gray-50">
-          <Tab value="0" class="bg-white border-r border-gray-100">Competition Logo</Tab>
-        </TabList>
-        <TabPanels class="flex-1">
-          <!-- Tab: Logo -->
-          <TabPanel value="0">
-            <div class="mt-4">
-              <div class="mb-4">
-                Upload a logo to personalise your competition. If not provided, the league logo will
-                be used.
-              </div>
-              <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Logo Upload -->
-                <BasePanel header="Competition Logo" class="lg:col-span-1">
-                  <ImageUpload
-                    v-model="form.logo"
-                    label="Competition Logo"
-                    :existing-image-url="form.logo_url"
-                    accept="image/png,image/jpeg,image/jpg"
-                    :max-file-size="2 * 1024 * 1024"
-                    :min-dimensions="{ width: 200, height: 200 }"
-                    :recommended-dimensions="{ width: 500, height: 500 }"
-                    preview-size="small"
-                    helper-text="A square logo. Recommended: 500x500px"
-                  />
-                  <FormError :error="errors.logo" />
-                </BasePanel>
-              </div>
-            </div>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
-    </div>
-
-    <!-- Footer -->
-    <div v-if="!isLoadingData" class="bg-tertiary mt-4 shadow-reverse border-t border-gray-200">
-      <div class="container mx-auto flex flex-col max-w-5xl">
-        <div class="flex justify-between p-4">
-          <div>
-            <Button
-              label="Cancel"
-              severity="danger"
-              class="bg-white"
-              outlined
-              :disabled="isSubmitting"
-              @click="handleCancel"
-            />
-          </div>
-
-          <div>
-            <Button
-              :label="isEditMode ? 'Save Changes' : 'Create Competition'"
-              :loading="isSubmitting"
-              :disabled="!canSubmit"
-              @click="handleSubmit"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  </Drawer>
+  </BaseModal>
 
   <!-- Name Change Confirmation Dialog -->
   <Dialog

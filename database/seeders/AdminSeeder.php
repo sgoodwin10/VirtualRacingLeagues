@@ -17,10 +17,10 @@ class AdminSeeder extends Seeder
     {
         // Create a super admin
         Admin::firstOrCreate(
-            ['email' => 'superadmin@example.com'],
+            ['email' => 'superadmin@virtualracingleagues.com'],
             [
-                'first_name' => 'Super',
-                'last_name' => 'Admin',
+                'first_name' => 'Samuel',
+                'last_name' => 'Goodwin',
                 'password' => Hash::make('password'),
                 'role' => 'super_admin',
                 'status' => 'active',

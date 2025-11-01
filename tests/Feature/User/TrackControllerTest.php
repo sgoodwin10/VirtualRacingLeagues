@@ -36,6 +36,7 @@ class TrackControllerTest extends TestCase
 
         // Create a track location
         $this->location = PlatformTrackLocation::create([
+            'platform_id' => $this->platform->id,
             'name' => 'Silverstone Circuit',
             'slug' => 'silverstone-circuit',
             'country' => 'United Kingdom',
@@ -133,6 +134,7 @@ class TrackControllerTest extends TestCase
     {
         // Create a second location
         $monzaLocation = PlatformTrackLocation::create([
+            'platform_id' => $this->platform->id,
             'name' => 'Autodromo Nazionale di Monza',
             'slug' => 'monza',
             'country' => 'Italy',
@@ -178,6 +180,7 @@ class TrackControllerTest extends TestCase
 
         // Create a second location
         $monzaLocation = PlatformTrackLocation::create([
+            'platform_id' => $otherPlatform->id,
             'name' => 'Autodromo Nazionale di Monza',
             'slug' => 'monza',
             'country' => 'Italy',

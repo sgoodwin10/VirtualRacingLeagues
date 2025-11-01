@@ -2385,8 +2385,8 @@ const hasRole = adminStore.hasRole('moderator');
 
 ### Related Guides
 
-- **[Admin Dashboard Development Guide](./.claude/guides/frontend/admin-dashboard-development-guide.md)** - Complete development workflow
-- **[Admin Backend Guide](./.claude/guides/backend/admin-backend-guide.md)** - Backend authentication implementation
+- **[Admin Dashboard Development Guide](./admin-dashboard-development-guide.md)** - Complete development workflow
+- **[Admin Backend Guide](../../backend/admin-backend-guide.md)** - Backend authentication implementation
 
 ---
 

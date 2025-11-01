@@ -13,15 +13,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Production-required seeders (platform data)
         $this->call([
-            SiteConfigSeeder::class,
             AdminSeeder::class,
-            UserSeeder::class,
             PlatformSeeder::class,
             PlatformTrackLocationSeeder::class,
             PlatformTrackSeeder::class,
-            LeagueSeeder::class,
-            DriverSeeder::class,
         ]);
+
+        // Development-only seeders (test data)
+        if (app()->environment('local', 'development', 'testing')) {
+            $this->call([
+                SiteConfigSeeder::class,
+                UserSeeder::class,
+                LeagueSeeder::class,
+                DriverSeeder::class,
+            ]);
+        }
     }
 }

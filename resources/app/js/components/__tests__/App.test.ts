@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTestRouter, mountWithStubs } from '@app/__tests__/setup';
 import App from '@app/components/App.vue';
-import HomeView from '@app/views/HomeView.vue';
-import ProfileView from '@app/views/ProfileView.vue';
+import LeagueList from '@app/views/LeagueList.vue';
 
 describe('User Dashboard - App Component', () => {
   const createRouter = () => {
@@ -10,12 +9,7 @@ describe('User Dashboard - App Component', () => {
       {
         path: '/',
         name: 'home',
-        component: HomeView,
-      },
-      {
-        path: '/profile',
-        name: 'profile',
-        component: ProfileView,
+        component: LeagueList,
       },
     ]);
   };

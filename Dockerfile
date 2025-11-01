@@ -1,5 +1,6 @@
 # Base stage - Production-ready PHP without Node.js
-FROM php:8.2-fpm AS base
+# Using Debian-based image (required for Playwright compatibility)
+FROM php:8.4-fpm AS base
 
 # Set working directory
 WORKDIR /var/www
@@ -24,7 +25,10 @@ RUN apt-get update && apt-get install -y \
     unzip \
     procps \
     zsh \
+    vim \
     default-mysql-client \
+    jq \
+    gosu \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions with enhanced GD support
@@ -66,16 +70,17 @@ FROM base AS development
 # Switch to root to install Node.js
 USER root
 
-# Install Node.js 22.x from NodeSource
+# Install Node.js 24.x from NodeSource
 RUN apt-get update && \
     apt-get install -y ca-certificates gnupg && \
-    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
     apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Playwright system dependencies
 # This installs the required system libraries for running browsers
-RUN npx -y playwright@latest install-deps
+# Version pinned to match package.json
+RUN npx -y playwright@1.56.0 install-deps
 
 # Configure npm to use user-writable directory for global packages
 RUN mkdir -p /home/laravel/.npm-global && \
@@ -90,7 +95,8 @@ ENV PATH=/home/laravel/.npm-global/bin:$PATH
 
 # Install Playwright browsers
 # This downloads and installs chromium, firefox, and webkit browsers
-RUN npx -y playwright@latest install
+# Version pinned to match package.json
+RUN npx -y playwright@1.56.0 install
 
 # Install Claude
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
@@ -99,9 +105,7 @@ RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 RUN touch $HOMEDIR/.claude/settings.json
 
 # Install CCStatusline
-RUN npm install -g ccstatusline@latest \
-    && mkdir -p $HOMEDIR/.config/ccstatusline \
-    && cp /var/www/docker/ccstatusline/settings.json $HOMEDIR/.config/ccstatusline/settings.json
+RUN npm install -g ccstatusline@latest
 
 
 # Install Context7
@@ -109,3 +113,16 @@ RUN npm install -g @upstash/context7-mcp@latest
 
 # Install Playwright MCP
 RUN claude mcp add playwright npx '@playwright/mcp@latest'
+
+# Switch to root to copy entrypoint
+USER root
+
+# Copy entrypoint script
+COPY docker/app/docker-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Keep running as root (entrypoint will drop to laravel user using gosu)
+# This allows the entrypoint to modify /etc/hosts for E2E testing
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

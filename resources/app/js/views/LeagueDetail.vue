@@ -52,7 +52,7 @@ const isLoading = ref(true);
 const error = ref<string | null>(null);
 const activeTab = ref('competitions');
 const showDriverDrawer = ref(false);
-const showEditDrawer = ref(false);
+const showEditModal = ref(false);
 const showCreateCompetitionDrawer = ref(false);
 
 // Driver dialog states
@@ -188,11 +188,11 @@ function handleCompetitionDeleted(competitionId: number): void {
 }
 
 function handleEditLeague(): void {
-  showEditDrawer.value = true;
+  showEditModal.value = true;
 }
 
 function handleLeagueSaved(): void {
-  showEditDrawer.value = false;
+  showEditModal.value = false;
   loadLeague();
 }
 
@@ -348,13 +348,9 @@ function getDriverName(leagueDriver: LeagueDriver): string {
 
 const breadcrumbItems = computed((): BreadcrumbItem[] => [
   {
-    label: 'Dashboard',
+    label: 'Leagues',
     to: { name: 'home' },
     icon: 'pi-home',
-  },
-  {
-    label: 'Leagues',
-    to: { name: 'leagues' },
   },
   {
     label: league.value?.name || 'League Details',
@@ -750,7 +746,7 @@ function getPlatformNames(league: League): string {
 
     <!-- Tabs -->
     <Tabs v-model:value="activeTab" class="mt-6">
-      <TabList>
+      <TabList :pt="{ tabList: { class: 'gap-2' } }">
         <Tab value="competitions">
           <div class="flex items-center gap-2">
             <PhFlagCheckered :size="20" />
@@ -768,7 +764,7 @@ function getPlatformNames(league: League): string {
       <TabPanels>
         <!-- Competitions Tab -->
         <TabPanel value="competitions">
-          <BasePanel class="px-4">
+          <BasePanel class="px-4 pb-4">
             <CompetitionList
               :league-id="leagueIdNumber"
               @competition-created="handleCompetitionCreated"
@@ -849,9 +845,9 @@ function getPlatformNames(league: League): string {
       @close="showDriverDrawer = false"
     />
 
-    <!-- Edit League Drawer -->
+    <!-- Edit League Modal -->
     <LeagueWizardDrawer
-      v-model:visible="showEditDrawer"
+      v-model:visible="showEditModal"
       :is-edit-mode="true"
       :league-id="leagueIdNumber"
       @league-saved="handleLeagueSaved"

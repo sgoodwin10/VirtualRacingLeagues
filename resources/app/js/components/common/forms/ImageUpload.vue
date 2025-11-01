@@ -185,16 +185,14 @@ function removeExistingImage(): void {
 </script>
 
 <template>
-  <div class="space-y-2">
-    <div v-if="labelText" class="flex items-baseline gap-2">
+  <div class="space-y-2 flex flex-col items-center">
+    <div v-if="label" class="flex items-baseline gap-1">
       <FormLabel :text="label" :required="required" />
       <span v-if="!required" class="text-xs text-gray-500">(optional)</span>
     </div>
 
-    <p v-if="helperText" class="text-xs text-gray-500 mt-1">{{ helperText }}</p>
-
     <!-- Show existing image if present and no new file selected -->
-    <div v-if="hasExistingImage && !hasFile" class="space-y-3">
+    <div v-if="hasExistingImage && !hasFile" class="space-y-3 flex flex-col items-center">
       <div class="relative inline-block">
         <Image :src="existingImageUrl!" :alt="label" :class="previewClasses" preview />
 
@@ -221,7 +219,7 @@ function removeExistingImage(): void {
     </div>
 
     <!-- Show file upload when no existing image or after removing existing -->
-    <div v-else-if="!hasFile" class="space-y-2">
+    <div v-else-if="!hasFile" class="space-y-2 flex flex-col items-center">
       <FileUpload
         ref="fileUpload"
         mode="basic"
@@ -232,12 +230,12 @@ function removeExistingImage(): void {
         :class="{ 'p-invalid': !!displayError }"
         @select="onSelect"
       />
-
+      <p v-if="helperText" class="text-xs text-gray-500 mt-1">{{ helperText }}</p>
       <FormHelper :text="`Maximum file size: ${(maxFileSize / 1000000).toFixed(1)}MB`" />
     </div>
 
     <!-- Show new file preview -->
-    <div v-else class="space-y-2">
+    <div v-else class="space-y-2 flex flex-col items-center">
       <div class="relative inline-block">
         <img v-if="previewUrl" :src="previewUrl" :alt="label" :class="previewClasses" />
 

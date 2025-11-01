@@ -178,13 +178,9 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
   if (isLoading.value || !season.value) {
     return [
       {
-        label: 'Dashboard',
+        label: 'Leagues',
         to: { name: 'home' },
         icon: 'pi-home',
-      },
-      {
-        label: 'Leagues',
-        to: { name: 'leagues' },
       },
       {
         label: 'Loading...',
@@ -218,13 +214,9 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
 
   return [
     {
-      label: 'Dashboard',
+      label: 'Leagues',
       to: { name: 'home' },
       icon: 'pi-home',
-    },
-    {
-      label: 'Leagues',
-      to: { name: 'leagues' },
     },
     {
       label: getLeagueName(),

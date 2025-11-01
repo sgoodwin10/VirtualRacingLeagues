@@ -92,7 +92,7 @@ resources/
 - Session cookies are shared across subdomains (via `SESSION_DOMAIN=.virtualracingleagues.localhost`)
 - The user dashboard is **authenticated-only** - unauthenticated users are redirected back to public site
 
-**📖 For admin dashboard development guidelines, see**: [Admin Dashboard Development Guide](./.claude/guides/frontend/admin-dashboard-development-guide.md)
+**📖 For admin dashboard development guidelines, see**: [Admin Dashboard Development Guide](./.claude/guides/frontend/admin/admin-dashboard-development-guide.md)
 
 ### Laravel Backend Structure
 - always use the agent `dev-be`
@@ -477,7 +477,7 @@ SANCTUM_STATEFUL_DOMAINS=virtualracingleagues.localhost,app.virtualracingleagues
 
 ### Adding a New Admin Dashboard View
 
-**IMPORTANT**: Follow the established patterns! See [Admin Dashboard Development Guide](./.claude/guides/frontend/admin-dashboard-development-guide.md) for detailed step-by-step workflow.
+**IMPORTANT**: Follow the established patterns! See [Admin Dashboard Development Guide](./.claude/guides/frontend/admin/admin-dashboard-development-guide.md) for detailed step-by-step workflow.
 
 **Quick workflow**:
 
@@ -535,11 +535,10 @@ public function store(CreateUserData $data): JsonResponse
 - **[.claude/guides/backend/user-backend-guide.md](./.claude/guides/backend/user-backend-guide.md)** - **USER FEATURES**: Complete user backend development guide (for future development)
 
 ### Frontend Development
-- **[.claude/guides/frontend/admin-dashboard-development-guide.md](./.claude/guides/frontend/admin-dashboard-development-guide.md)** - **MUST READ**: Complete admin dashboard development guide (components, composables, services, testing)
-- **[.claude/guides/frontend/admin-styling-guide.md](./.claude/guides/frontend/admin-styling-guide.md)** - **STYLING & DESIGN**: Complete styling and design system guide (typography, colors, spacing, layouts, PrimeVue, accessibility)
+- **[.claude/guides/frontend/admin/admin-dashboard-development-guide.md](./.claude/guides/frontend/admin/admin-dashboard-development-guide.md)** - **MUST READ**: Complete admin dashboard development guide (components, composables, services, testing)
+- **[.claude/guides/frontend/admin/admin-styling-guide.md](./.claude/guides/frontend/admin/admin-styling-guide.md)** - **STYLING & DESIGN**: Complete styling and design system guide (typography, colors, spacing, layouts, PrimeVue, accessibility)
 
 ### Other Guides
 - `.claude/guides/primevue-usage.md` - PrimeVue components and examples
-- `.claude/guides/docker_reference_guide.md` - Docker setup details
-- `.claude/guides/admin/admin-authentication.md` - Admin authentication implementation
+- `.claude/guides/docker/docker_reference_guide.md` - Docker setup details
 - `README.md` - Comprehensive setup guide

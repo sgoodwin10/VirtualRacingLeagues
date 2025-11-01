@@ -64,11 +64,11 @@ final class RaceApiTest extends TestCase
         ];
 
         $response = $this->actingAs($this->user)
-            ->withHeader("Host", "app.virtualracingleagues.localhost")->postJson("/api/rounds/{$this->round->id}/races", $data);
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'status',
+                'success',
                 'data' => [
                     'id',
                     'round_id',
@@ -97,11 +97,11 @@ final class RaceApiTest extends TestCase
         Race::factory()->count(3)->create(['round_id' => $this->round->id]);
 
         $response = $this->actingAs($this->user)
-            ->withHeader("Host", "app.virtualracingleagues.localhost")->getJson("/api/rounds/{$this->round->id}/races");
+            ->getJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races");
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'status',
+                'success',
                 'data' => [
                     '*' => [
                         'id',
@@ -123,7 +123,7 @@ final class RaceApiTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->user)
-            ->withHeader("Host", "app.virtualracingleagues.localhost")->getJson("/api/races/{$race->id}");
+            ->getJson("http://app.virtualracingleagues.localhost/api/races/{$race->id}");
 
         $response->assertStatus(200)
             ->assertJson([
@@ -150,7 +150,7 @@ final class RaceApiTest extends TestCase
         ];
 
         $response = $this->actingAs($this->user)
-            ->withHeader("Host", "app.virtualracingleagues.localhost")->putJson("/api/races/{$race->id}", $updateData);
+            ->putJson("http://app.virtualracingleagues.localhost/api/races/{$race->id}", $updateData);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -175,7 +175,7 @@ final class RaceApiTest extends TestCase
         $race = Race::factory()->create(['round_id' => $this->round->id]);
 
         $response = $this->actingAs($this->user)
-            ->withHeader("Host", "app.virtualracingleagues.localhost")->deleteJson("/api/races/{$race->id}");
+            ->deleteJson("http://app.virtualracingleagues.localhost/api/races/{$race->id}");
 
         $response->assertStatus(200);
 
@@ -217,11 +217,11 @@ final class RaceApiTest extends TestCase
         ];
 
         $response = $this->actingAs($this->user)
-            ->withHeader("Host", "app.virtualracingleagues.localhost")->postJson("/api/rounds/{$this->round->id}/races", $data);
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'status',
+                'success',
                 'data' => [
                     'id',
                     'round_id',
@@ -271,7 +271,7 @@ final class RaceApiTest extends TestCase
         ];
 
         $response = $this->actingAs($this->user)
-            ->withHeader("Host", "app.virtualracingleagues.localhost")->postJson("/api/rounds/{$this->round->id}/races", $data);
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
 
         $response->assertStatus(422);
     }
@@ -286,14 +286,14 @@ final class RaceApiTest extends TestCase
         ];
 
         $response = $this->actingAs($this->user)
-            ->withHeader("Host", "app.virtualracingleagues.localhost")->postJson("/api/rounds/{$this->round->id}/races", $data);
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
 
         $response->assertStatus(422);
     }
 
     public function test_unauthenticated_user_cannot_access_races(): void
     {
-        $response = $this->withHeader("Host", "app.virtualracingleagues.localhost")->getJson("/api/rounds/{$this->round->id}/races");
+        $response = $this->getJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races");
 
         $response->assertStatus(401);
     }

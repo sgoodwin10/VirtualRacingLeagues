@@ -96,7 +96,6 @@
   --p-text-hover-color: #1f2937;
   --p-text-muted-color: #6b7280;
   --p-text-hover-muted-color: #4b5563;
-  
 
   /* PrimeVue Content & Borders (optional overrides) */
   /* Uncomment to override Aura theme defaults:
@@ -227,11 +226,9 @@ textarea {
 
 /* PrimeVue Card Styling */
 .p-card {
-  
 }
 .p-card-body {
   padding: 0;
-
 }
 
 /* PrimeVue DataTable Styling */
@@ -252,9 +249,13 @@ textarea {
 
 /* PrimeVue Tabs Styling */
 .p-tab {
+  background-color: var(--bg-white);
 }
 .p-tabpanels {
   padding: 0;
+  background-color: inherit !important;
+}
+.p-tablist {
   background-color: inherit !important;
 }
 .p-tab.p-tab-active {
@@ -308,6 +309,21 @@ textarea {
 .p-inputnumber-input:focus,
 .p-textarea:focus {
   /* border-color: var(--user-primary); */
+}
+
+/* PrimeVue Password Component - Toggle Mask Icon Positioning */
+.p-password {
+  display: inline-flex;
+  position: relative;
+}
+.p-password-input {
+  padding-right: 2.5rem;
+}
+.p-password .p-icon-field {
+  width: 100%;
+}
+.p-password .p-icon-field-right > .p-inputtext {
+  padding-right: 2.5rem;
 }
 
 /* PrimeVue DataTable Styling */

@@ -462,7 +462,7 @@ const { formatDate } = useDateFormatter();
 - `Card` - Content containers
 - `Skeleton` - Loading placeholders
 
-**Documentation:** Use MCP Context7 or `.claude/guides/primevue-usage.md`
+**Documentation:** Use MCP Context7 or `../../primevue-usage.md`
 
 **Import pattern:**
 ```typescript
@@ -3459,15 +3459,15 @@ This is the main entry point. For more detailed information on specific topics, 
 
 ### Backend Guides
 
-- **[DDD Architecture Overview](../backend/ddd-overview.md)** - Domain-Driven Design principles
-- **[Admin Backend Guide](../backend/admin-backend-guide.md)** - Building admin features (backend)
-- **[User Backend Guide](../backend/user-backend-guide.md)** - Building user features (backend)
+- **[DDD Architecture Overview](../../backend/ddd-overview.md)** - Domain-Driven Design principles
+- **[Admin Backend Guide](../../backend/admin-backend-guide.md)** - Building admin features (backend)
+- **[User Backend Guide](../../backend/user-backend-guide.md)** - Building user features (backend)
 
 ### Frontend Guides
 
 - **[Admin Styling Guide](./admin-styling-guide.md)** - **COMPLETE** styling and design system guide (typography, colors, spacing, layouts, accessibility)
-- **[PrimeVue Usage Guide](../primevue-usage.md)** - PrimeVue components and patterns
-- **[Admin Authentication](../admin/admin-authentication.md)** - Authentication implementation
+- **[PrimeVue Usage Guide](../../primevue-usage.md)** - PrimeVue components and patterns
+- **[Admin Authentication](../../admin/admin-authentication-guide.md)** - Authentication implementation
 
 ### Package Documentation
 

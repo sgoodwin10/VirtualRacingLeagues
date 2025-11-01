@@ -7,7 +7,6 @@ import { useUserStore } from '@app/stores/userStore';
 describe('Header', () => {
   const router = createTestRouter([
     { path: '/', name: 'home', component: { template: '<div>Home</div>' } },
-    { path: '/profile', name: 'profile', component: { template: '<div>Profile</div>' } },
   ]);
 
   beforeEach(() => {
@@ -89,5 +88,44 @@ describe('Header', () => {
     const brandLink = wrapper.find('a[href="/"]');
     expect(brandLink.exists()).toBe(true);
     expect(brandLink.text()).toContain('Virtual Racing Leagues');
+  });
+
+  it('opens profile modal when profile button is clicked', async () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+
+    // Set up authenticated user
+    const userStore = useUserStore();
+    userStore.user = {
+      id: 1,
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      email_verified_at: null,
+    };
+    userStore.isAuthenticated = true;
+
+    const wrapper = mountWithStubs(Header, {
+      global: {
+        plugins: [router, pinia],
+      },
+    });
+
+    // Find and click the profile button
+    const profileButton = wrapper.findAll('button').find((btn) => btn.text().includes('Profile'));
+    expect(profileButton).toBeDefined();
+
+    // ProfileSettingsModal should exist in the component
+    const modal = wrapper.findComponent({ name: 'ProfileSettingsModal' });
+    expect(modal.exists()).toBe(true);
+
+    // Initially modal should not be visible
+    expect(modal.props('visible')).toBe(false);
+
+    await profileButton!.trigger('click');
+    await wrapper.vm.$nextTick();
+
+    // Modal should be visible after clicking
+    expect(modal.props('visible')).toBe(true);
   });
 });

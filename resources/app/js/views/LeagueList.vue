@@ -90,12 +90,8 @@ function handleLeagueDelete(leagueId: number): void {
 
 const breadcrumbItems = computed((): BreadcrumbItem[] => [
   {
-    label: 'Dashboard',
-    to: { name: 'home' },
-    icon: 'pi-home',
-  },
-  {
     label: 'Leagues',
+    icon: 'pi-home',
   },
 ]);
 </script>

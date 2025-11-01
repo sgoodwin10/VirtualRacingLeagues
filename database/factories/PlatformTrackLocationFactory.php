@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Infrastructure\Persistence\Eloquent\Models\Platform;
 use App\Infrastructure\Persistence\Eloquent\Models\PlatformTrackLocation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -25,6 +26,7 @@ class PlatformTrackLocationFactory extends Factory
         $name = fake()->city() . ' Circuit';
 
         return [
+            'platform_id' => Platform::factory(),
             'name' => $name,
             'slug' => Str::slug($name),
             'country' => fake()->country(),

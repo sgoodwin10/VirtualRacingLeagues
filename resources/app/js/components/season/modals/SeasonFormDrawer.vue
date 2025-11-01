@@ -8,7 +8,6 @@ import { checkSeasonSlugAvailability } from '@app/services/seasonService';
 import type { Season, SeasonForm, SlugCheckResponse } from '@app/types/season';
 
 // PrimeVue Components
-import Drawer from 'primevue/drawer';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
@@ -22,8 +21,7 @@ import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 
 // Common Components
-import DrawerHeader from '@app/components/common/modals/DrawerHeader.vue';
-import DrawerLoading from '@app/components/common/modals/DrawerLoading.vue';
+import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
 import FormError from '@app/components/common/forms/FormError.vue';
 import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
@@ -90,10 +88,7 @@ const localVisible = computed({
   set: (value) => emit('update:visible', value),
 });
 
-const drawerTitle = computed(() => (props.isEditMode ? 'Edit Season' : 'Create Season'));
-const drawerSubtitle = computed(() =>
-  props.isEditMode ? 'Update season details' : 'Create a new season for this competition',
-);
+const modalTitle = computed(() => (props.isEditMode ? 'Edit Season' : 'Create Season'));
 
 const nameChanged = computed(() => {
   return props.isEditMode && form.name !== originalName.value;
@@ -311,17 +306,20 @@ function cancelNameChange(): void {
 </script>
 
 <template>
-  <Drawer v-model:visible="localVisible" position="bottom" class="!h-[60vh] w-full bg-gray-50">
-    <template #header>
-      <DrawerHeader :title="drawerTitle" :subtitle="drawerSubtitle" />
-    </template>
-
-    <DrawerLoading v-if="isLoadingData" message="Loading season..." />
-
-    <div v-else class="container mx-auto flex flex-col max-w-5xl px-4">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Left Column (66%) -->
-        <div class="md:col-span-2 space-y-6">
+  <BaseModal
+    v-model:visible="localVisible"
+    :header="modalTitle"
+    width="4xl"
+    :closable="!isSubmitting"
+    :dismissable-mask="false"
+    :loading="isLoadingData"
+    content-class="bg-slate-50"
+  >
+    <div class="space-y-3">
+      <!-- Two-Column Layout: Main Fields (Left) + Toggles (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <!-- Left Column: Main Fields (2/3 width) -->
+        <div class="lg:col-span-2 space-y-2.5">
           <!-- Name Field -->
           <FormInputGroup>
             <FormLabel for="name" text="Season Name" required />
@@ -337,27 +335,24 @@ function cancelNameChange(): void {
             />
             <FormError :error="errors.name" />
 
-            <!-- Slug Preview -->
-            <div v-if="slugPreview" class="mt-2">
-              <div class="flex items-center gap-2">
-                <span v-if="slugStatus === 'checking'" class="text-blue-500">
-                  <i class="pi pi-spinner pi-spin text-sm"></i>
-                  <small class="ml-2 text-gray-600">Checking availability...</small>
-                </span>
-                <span v-else-if="slugStatus === 'available'" class="flex items-center gap-2">
-                  <i class="pi pi-check-circle text-green-500 text-sm"></i>
-                  <small class="text-green-600">
-                    URL: <span class="font-mono font-semibold">{{ slugPreview }}</span>
-                  </small>
-                </span>
-                <span v-else-if="slugStatus === 'taken'" class="flex items-center gap-2">
-                  <i class="pi pi-info-circle text-amber-500 text-sm"></i>
-                  <small class="text-amber-700">
-                    Name taken. Will use URL:
-                    <span class="font-mono font-semibold">{{ slugSuggestion }}</span>
-                  </small>
-                </span>
-              </div>
+            <!-- Slug Preview - Compact -->
+            <div v-if="slugPreview" class="mt-1.5 flex items-center gap-1.5">
+              <template v-if="slugStatus === 'checking'">
+                <i class="pi pi-spinner pi-spin text-xs text-blue-500"></i>
+                <small class="text-gray-600">Checking...</small>
+              </template>
+              <template v-else-if="slugStatus === 'available'">
+                <i class="pi pi-check-circle text-xs text-green-500"></i>
+                <small class="text-gray-600">
+                  URL: <span class="font-mono text-green-600">{{ slugPreview }}</span>
+                </small>
+              </template>
+              <template v-else-if="slugStatus === 'taken'">
+                <i class="pi pi-info-circle text-xs text-amber-500"></i>
+                <small class="text-gray-600">
+                  Will use: <span class="font-mono text-amber-700">{{ slugSuggestion }}</span>
+                </small>
+              </template>
             </div>
           </FormInputGroup>
 
@@ -384,7 +379,7 @@ function cancelNameChange(): void {
             <Textarea
               id="description"
               v-model="form.description"
-              rows="5"
+              rows="3"
               placeholder="Describe this season, race format, rules..."
               :class="{ 'p-invalid': errors.description }"
               :disabled="isSubmitting"
@@ -401,7 +396,7 @@ function cancelNameChange(): void {
             <Textarea
               id="technical_specs"
               v-model="form.technical_specs"
-              rows="5"
+              rows="3"
               placeholder="Car setup rules, performance restrictions, balance of performance..."
               :class="{ 'p-invalid': errors.technical_specs }"
               :disabled="isSubmitting"
@@ -413,8 +408,8 @@ function cancelNameChange(): void {
           </FormInputGroup>
         </div>
 
-        <!-- Right Column (33%) -->
-        <div class="space-y-6">
+        <!-- Right Column: Toggles & Info (1/3 width) -->
+        <div class="lg:col-span-1 space-y-2.5">
           <!-- Race Divisions Toggle -->
           <FormInputGroup>
             <div class="flex items-center gap-3">
@@ -460,85 +455,84 @@ function cancelNameChange(): void {
         </div>
       </div>
 
-      <!-- Tabs Section -->
-      <Tabs v-model:value="activeTab" class="flex-1 flex flex-col mt-6">
-        <TabList class="bg-gray-50">
-          <Tab value="0" class="bg-white border-r border-gray-100">Branding</Tab>
+      <!-- Tabs Section - Branding -->
+      <Tabs v-model:value="activeTab">
+        <TabList>
+          <Tab value="0">Branding</Tab>
         </TabList>
-        <TabPanels class="flex-1">
+        <TabPanels>
           <!-- Tab: Branding -->
           <TabPanel value="0">
-            <div class="mt-4">
-              <div class="mb-4">
-                Upload custom branding for this season. If not provided, the competition logo will
-                be used.
-              </div>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Logo Upload -->
-                <BasePanel header="Season Logo">
-                  <ImageUpload
-                    v-model="form.logo"
-                    label="Season Logo"
-                    :existing-image-url="form.logo_url"
-                    accept="image/png,image/jpeg,image/jpg"
-                    :max-file-size="2 * 1024 * 1024"
-                    :min-dimensions="{ width: 200, height: 200 }"
-                    :recommended-dimensions="{ width: 500, height: 500 }"
-                    preview-size="small"
-                    helper-text="A square logo. Recommended: 500x500px. Inherits from competition if not uploaded."
-                  />
-                  <FormError :error="errors.logo" />
-                </BasePanel>
+            <BasePanel>
+              <div class="p-4">
+                <div class="mb-3 text-sm text-gray-600">
+                  Upload custom branding for this season. If not provided, the competition logo will
+                  be used.
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <!-- Logo Upload -->
+                  <div>
+                    <FormLabel text="Season Logo" class="mb-2" />
+                    <div class="rounded-md border border-gray-200 p-2">
+                      <ImageUpload
+                        v-model="form.logo"
+                        label="Season Logo"
+                        :existing-image-url="form.logo_url"
+                        accept="image/png,image/jpeg,image/jpg"
+                        :max-file-size="2 * 1024 * 1024"
+                        :min-dimensions="{ width: 200, height: 200 }"
+                        :recommended-dimensions="{ width: 500, height: 500 }"
+                        preview-size="small"
+                        helper-text="Square logo, 500x500px recommended. Inherits from competition if not provided."
+                      />
+                    </div>
+                    <FormError :error="errors.logo" />
+                  </div>
 
-                <!-- Banner Upload -->
-                <BasePanel header="Season Banner">
-                  <ImageUpload
-                    v-model="form.banner"
-                    label="Season Banner"
-                    :existing-image-url="form.banner_url"
-                    accept="image/png,image/jpeg,image/jpg"
-                    :max-file-size="5 * 1024 * 1024"
-                    :min-dimensions="{ width: 800, height: 200 }"
-                    :recommended-dimensions="{ width: 1920, height: 400 }"
-                    preview-size="large"
-                    helper-text="A wide banner image. Recommended: 1920x400px"
-                  />
-                  <FormError :error="errors.banner" />
-                </BasePanel>
+                  <!-- Banner Upload -->
+                  <div>
+                    <FormLabel text="Season Banner" class="mb-2" />
+                    <div class="rounded-md border border-gray-200 p-2">
+                      <ImageUpload
+                        v-model="form.banner"
+                        label="Season Banner"
+                        :existing-image-url="form.banner_url"
+                        accept="image/png,image/jpeg,image/jpg"
+                        :max-file-size="5 * 1024 * 1024"
+                        :min-dimensions="{ width: 800, height: 200 }"
+                        :recommended-dimensions="{ width: 1920, height: 400 }"
+                        preview-size="large"
+                        helper-text="Wide banner image, 1920x400px recommended"
+                      />
+                    </div>
+                    <FormError :error="errors.banner" />
+                  </div>
+                </div>
               </div>
-            </div>
+            </BasePanel>
           </TabPanel>
         </TabPanels>
       </Tabs>
     </div>
 
-    <!-- Footer -->
-    <div v-if="!isLoadingData" class="bg-tertiary mt-4 shadow-reverse border-t border-gray-200">
-      <div class="container mx-auto flex flex-col max-w-5xl">
-        <div class="flex justify-between p-4">
-          <div>
-            <Button
-              label="Cancel"
-              severity="danger"
-              class="bg-white"
-              outlined
-              :disabled="isSubmitting"
-              @click="handleCancel"
-            />
-          </div>
-
-          <div>
-            <Button
-              :label="isEditMode ? 'Save Changes' : 'Create Season'"
-              :loading="isSubmitting"
-              :disabled="!canSubmit"
-              @click="handleSubmit"
-            />
-          </div>
-        </div>
+    <template #footer>
+      <div class="flex gap-2 justify-end">
+        <Button
+          label="Cancel"
+          severity="secondary"
+          outlined
+          :disabled="isSubmitting"
+          @click="handleCancel"
+        />
+        <Button
+          :label="isEditMode ? 'Save Changes' : 'Create Season'"
+          :loading="isSubmitting"
+          :disabled="!canSubmit"
+          @click="handleSubmit"
+        />
       </div>
-    </div>
-  </Drawer>
+    </template>
+  </BaseModal>
 
   <!-- Name Change Confirmation Dialog -->
   <Dialog

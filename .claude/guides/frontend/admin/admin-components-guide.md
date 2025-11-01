@@ -2183,7 +2183,7 @@ This guide covered the complete component architecture for the admin dashboard:
 ### Related Documentation
 
 - **[Admin Dashboard Development Guide](./admin-dashboard-development-guide.md)** - Complete development workflow
-- **[PrimeVue Usage Guide](../primevue-usage.md)** - PrimeVue component examples
+- **[PrimeVue Usage Guide](../../primevue-usage.md)** - PrimeVue component examples
 - **[CLAUDE.md](/var/www/CLAUDE.md)** - Project overview and architecture
 
 ---

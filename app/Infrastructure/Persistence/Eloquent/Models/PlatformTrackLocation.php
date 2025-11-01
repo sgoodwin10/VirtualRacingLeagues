@@ -7,10 +7,12 @@ namespace App\Infrastructure\Persistence\Eloquent\Models;
 use Database\Factories\PlatformTrackLocationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
+ * @property int $platform_id
  * @property string $name
  * @property string $slug
  * @property string|null $country
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $sort_order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Infrastructure\Persistence\Eloquent\Models\Platform $platform
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\PlatformTrack> $tracks
  * @property-read int|null $tracks_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation active()
@@ -30,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation whereIsActive($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation wherePlatformId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation whereSortOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation whereUpdatedAt($value)
@@ -42,6 +46,7 @@ class PlatformTrackLocation extends Model
      * @var array<string>
      */
     protected $fillable = [
+        'platform_id',
         'name',
         'slug',
         'country',
@@ -53,6 +58,7 @@ class PlatformTrackLocation extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'platform_id' => 'integer',
         'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];
@@ -65,6 +71,16 @@ class PlatformTrackLocation extends Model
     protected static function newFactory(): PlatformTrackLocationFactory
     {
         return PlatformTrackLocationFactory::new();
+    }
+
+    /**
+     * Get the platform this location belongs to.
+     *
+     * @return BelongsTo<Platform, PlatformTrackLocation>
+     */
+    public function platform(): BelongsTo
+    {
+        return $this->belongsTo(Platform::class);
     }
 
     /**

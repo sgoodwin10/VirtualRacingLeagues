@@ -1,41 +1,23 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref } from 'vue';
 import { useUserStore } from '@app/stores/userStore';
-// import Button from 'primevue/button';
-// import Menu from 'primevue/menu';
-import type { MenuItem } from 'primevue/menuitem';
 import { useSiteConfigStore } from '@app/stores/siteConfigStore';
 import { PhFlagCheckered, PhQuestion, PhSignOut, PhUser } from '@phosphor-icons/vue';
+import ProfileSettingsModal from '@app/components/profile/ProfileSettingsModal.vue';
 
-const router = useRouter();
 const userStore = useUserStore();
-const userMenu = ref();
-
 const siteConfig = useSiteConfigStore();
 
-// TODO: Uncomment when user menu is implemented
-// @ts-expect-error - Unused until user menu is implemented
-const _menuItems = computed<MenuItem[]>(() => [
-  {
-    label: 'Profile',
-    icon: 'pi pi-user',
-    command: () => router.push({ name: 'profile' }),
-  },
-  {
-    separator: true,
-  },
-  {
-    label: 'Logout',
-    icon: 'pi pi-sign-out',
-    command: handleLogout,
-  },
-]);
+// Profile modal state
+const showProfileModal = ref(false);
 
-// TODO: Uncomment when user menu is implemented
-// @ts-expect-error - Unused until user menu is implemented
-const _toggleUserMenu = (event: Event) => {
-  userMenu.value.toggle(event);
+const openProfileModal = () => {
+  showProfileModal.value = true;
+};
+
+const handleProfileUpdated = () => {
+  // Optional: Handle any additional logic after profile update
+  // The composable already handles the toast notification
 };
 
 async function handleLogout() {
@@ -58,20 +40,20 @@ const linkStyles =
       <!-- Navigation -->
       <nav class="flex items-center gap-4">
         <!-- Leagues Link -->
-        <router-link to="/leagues" :class="linkStyles" active-class="text-slate-900">
+        <router-link to="/" :class="linkStyles" active-class="text-slate-900">
           <PhFlagCheckered :size="16" />
           Your Leagues
         </router-link>
 
-        <router-link to="/leagues" :class="linkStyles" active-class="text-slate-900">
+        <button :class="linkStyles" type="button" @click="openProfileModal">
           <PhUser :size="16" />
           Profile
-        </router-link>
+        </button>
 
-        <router-link to="/leagues" :class="linkStyles" active-class="text-slate-900">
+        <button :class="linkStyles" type="button" @click="handleLogout">
           <PhSignOut :size="16" />
           Logout
-        </router-link>
+        </button>
 
         <div class="flex items-center justify-center bg-slate-100 px-2 py-2 rounded-full">
           <PhQuestion :size="20" class="text-slate-500 hover:text-slate-800" />
@@ -79,4 +61,10 @@ const linkStyles =
       </nav>
     </div>
   </header>
+
+  <!-- Profile Settings Modal -->
+  <ProfileSettingsModal
+    v-model:visible="showProfileModal"
+    @profile-updated="handleProfileUpdated"
+  />
 </template>

@@ -3368,10 +3368,10 @@ axios.create({
 
 ## Related Documentation
 
-- **[Admin Dashboard Development Guide](.claude/guides/frontend/admin-dashboard-development-guide.md)** - Complete development workflow
-- **[Backend Admin Guide](.claude/guides/backend/admin-backend-guide.md)** - Backend API implementation
+- **[Admin Dashboard Development Guide](./admin-dashboard-development-guide.md)** - Complete development workflow
+- **[Backend Admin Guide](../../backend/admin-backend-guide.md)** - Backend API implementation
 - **[Error Handling Guide](./admin-error-handling-guide.md)** - Detailed error handling patterns
-- **[PrimeVue Usage Guide](.claude/guides/primevue-usage.md)** - UI component integration
+- **[PrimeVue Usage Guide](../../primevue-usage.md)** - UI component integration
 
 ---
 

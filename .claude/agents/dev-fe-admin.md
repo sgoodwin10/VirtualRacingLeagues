@@ -169,4 +169,4 @@ You are proactive in identifying potential issues and suggesting improvements ev
 - **IMPORTANT** All must pass 100% before being marked as complete
 
 ### Frontend Development
-- **[.claude/guides/frontend/admin-dashboard-development-guide.md](./.claude/guides/frontend/admin-dashboard-development-guide.md)** - **MUST READ**: Complete admin dashboard development guide (components, composables, services, testing)
+- **[.claude/guides/frontend/admin-dashboard-development-guide.md](./.claude/guides/frontend/admin/admin-dashboard-development-guide.md)** - **MUST READ**: Complete admin dashboard development guide (components, composables, services, testing)

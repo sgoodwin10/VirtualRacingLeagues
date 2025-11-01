@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Competition, CompetitionSeason } from '@app/types/competition';
 import HTag from '@app/components/common/HTag.vue';
@@ -8,12 +8,14 @@ import Tag from 'primevue/tag';
 import Tooltip from 'primevue/tooltip';
 import Button from 'primevue/button';
 import InfoItem from '@app/components/common/InfoItem.vue';
+import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
 import {
   PhCalendarBlank,
   PhGameController,
   PhSteeringWheel,
   PhFlag,
   PhTrophy,
+  PhPlus,
 } from '@phosphor-icons/vue';
 
 interface Props {
@@ -33,6 +35,9 @@ const emit = defineEmits<Emits>();
 const router = useRouter();
 
 const vTooltip = Tooltip;
+
+// State
+const showSeasonDrawer = ref(false);
 
 const cardClasses = computed(() => ({
   'opacity-60': props.competition.is_archived,
@@ -75,12 +80,22 @@ function handleSeasonClick(seasonId: number): void {
     },
   });
 }
+
+function handleCreateSeason(): void {
+  showSeasonDrawer.value = true;
+}
+
+function handleSeasonSaved(): void {
+  // Refresh will be handled by parent component re-fetching data
+  // The drawer will close itself via v-model:visible
+  showSeasonDrawer.value = false;
+}
 </script>
 
 <template>
   <div
     :class="cardClasses"
-    class="competition-card flex flex-col w-full h-72 rounded-md border border-slate-200 bg-white hover:shadow-md transition-shadow duration-300 cursor-pointer hover:border-primary-200"
+    class="competition-card flex flex-col w-full h-72 rounded-md border border-slate-200 bg-white hover:shadow-md transition-shadow duration-300 hover:border-primary-200"
   >
     <div class="flex bg-white rounded-t-md">
       <div class="w-18 h-18 p-2">
@@ -108,7 +123,7 @@ function handleSeasonClick(seasonId: number): void {
 
       <div class="content-center justify-end pr-2">
         <Button
-          label="Edit Season"
+          label="Edit Competition"
           severity="secondary"
           icon="pi pi-pencil"
           outlined
@@ -153,6 +168,7 @@ function handleSeasonClick(seasonId: number): void {
 
       <!-- Seasons list -->
       <div v-else class="space-y-2 min-h-0">
+        <div class="px-2 font-medium text-sm text-slate-400">Seasons</div>
         <div
           v-for="season in sortedSeasons"
           :key="season.id"
@@ -209,7 +225,27 @@ function handleSeasonClick(seasonId: number): void {
           </div>
         </div>
       </div>
+
+      <!-- Create New Season Button -->
+      <div class="mt-2">
+        <button
+          type="button"
+          class="flex items-center justify-center gap-2 w-full p-2 bg-white rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
+          @click.stop="handleCreateSeason"
+        >
+          <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
+          <span class="text-sm font-medium">Create New Season</span>
+        </button>
+      </div>
     </div>
+
+    <!-- Season Form Drawer -->
+    <SeasonFormDrawer
+      v-model:visible="showSeasonDrawer"
+      :competition-id="competition.id"
+      :is-edit-mode="false"
+      @season-saved="handleSeasonSaved"
+    />
   </div>
 </template>
 

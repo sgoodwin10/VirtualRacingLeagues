@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import Drawer from 'primevue/drawer';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
@@ -12,6 +11,7 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Editor from 'primevue/editor';
 import { useLeagueStore } from '@app/stores/leagueStore';
+import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import ImageUpload from '@app/components/common/forms/ImageUpload.vue';
 import PlatformMultiSelect from '@app/components/league/partials/PlatformMultiSelect.vue';
 import SocialMediaFields from '@app/components/league/partials/SocialMediaFields.vue';
@@ -20,8 +20,6 @@ import FormError from '@app/components/common/forms/FormError.vue';
 import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
 import FormOptionalText from '@app/components/common/forms/FormOptionalText.vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
-import DrawerHeader from '@app/components/common/modals/DrawerHeader.vue';
-import DrawerLoading from '@app/components/common/modals/DrawerLoading.vue';
 import type {
   CreateLeagueForm,
   UpdateLeagueForm,
@@ -93,12 +91,13 @@ const visibilityOptions = ref([
     icon: 'pi pi-globe',
     description: 'Anyone can find and view your league',
   },
-  {
-    label: 'Private',
-    value: 'private',
-    icon: 'pi pi-lock',
-    description: 'Only invited members can access',
-  },
+  // Level this for now.
+  // {
+  //   label: 'Private',
+  //   value: 'private',
+  //   icon: 'pi pi-lock',
+  //   description: 'Only invited members can access',
+  // },
   {
     label: 'Unlisted',
     value: 'unlisted',
@@ -118,13 +117,7 @@ const canSubmit = computed(() => {
   return validateForm();
 });
 
-const drawerTitle = computed(() => (props.isEditMode ? 'Edit League' : 'Create New League'));
-
-const drawerSubtitle = computed(() =>
-  props.isEditMode
-    ? 'Update your league information'
-    : 'Complete the information below to create your racing league',
-);
+const modalTitle = computed(() => (props.isEditMode ? 'Edit League' : 'Create New League'));
 
 const submitButtonLabel = computed(() => (props.isEditMode ? 'Save Changes' : 'Create League'));
 
@@ -138,12 +131,12 @@ watch(debouncedName, async (newName) => {
   await checkSlugAvailability();
 });
 
-// Watch for drawer visibility changes
+// Watch for modal visibility changes
 watch(
   () => props.visible,
   async (newValue: boolean) => {
     if (newValue) {
-      // Load platforms and timezones when drawer opens
+      // Load platforms and timezones when modal opens
       try {
         await Promise.all([leagueStore.fetchPlatforms(), leagueStore.fetchTimezones()]);
 
@@ -158,10 +151,10 @@ watch(
           detail: 'Failed to load required data. Please try again.',
           life: 5000,
         });
-        closeDrawer();
+        closeModal();
       }
     } else {
-      // Reset form when drawer closes
+      // Reset form when modal closes
       resetForm();
     }
   },
@@ -199,7 +192,7 @@ async function loadLeagueData(leagueId: number): Promise<void> {
       detail: 'Failed to load league data',
       life: 5000,
     });
-    closeDrawer();
+    closeModal();
   } finally {
     isLoadingLeague.value = false;
   }
@@ -351,9 +344,9 @@ async function submitForm(): Promise<void> {
       });
     }
 
-    // Emit success event and close drawer
+    // Emit success event and close modal
     emit('league-saved');
-    closeDrawer();
+    closeModal();
   } catch (error) {
     const axiosError = error as AxiosError<{ message: string; errors?: Record<string, string[]> }>;
 
@@ -388,7 +381,7 @@ async function submitForm(): Promise<void> {
   }
 }
 
-function closeDrawer(): void {
+function closeModal(): void {
   emit('update:visible', false);
 }
 
@@ -427,25 +420,24 @@ function resetForm(): void {
 </script>
 
 <template>
-  <Drawer
+  <BaseModal
     :visible="visible"
-    position="bottom"
-    class="!h-[60vh] bg-gray-50"
+    :header="modalTitle"
+    width="4xl"
+    :closable="true"
+    :block-scroll="true"
+    :loading="isLoadingLeague"
+    content-class="bg-slate-50"
     @update:visible="emit('update:visible', $event)"
   >
-    <template #header>
-      <DrawerHeader :title="drawerTitle" :subtitle="drawerSubtitle" />
-    </template>
-
-    <DrawerLoading v-if="isLoadingLeague" message="Loading league data..." />
-
-    <div v-else class="container mx-auto flex flex-col max-w-5xl px-4">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Left Column (66%) -->
-        <div class="md:col-span-2 space-y-4">
-          <div class="flex space-x-2">
+    <div class="flex flex-col gap-3">
+      <!-- Two-Column Layout: Basic Information (Left) + Settings (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <!-- Left Column: Basic Information (2/3 width) -->
+        <div class="lg:col-span-2">
+          <div class="space-y-2.5">
             <!-- League Name -->
-            <FormInputGroup class="w-1/3">
+            <FormInputGroup>
               <FormLabel for="league-name" text="League Name" :required="true" />
               <InputText
                 id="league-name"
@@ -490,7 +482,7 @@ function resetForm(): void {
             </FormInputGroup>
 
             <!-- Tagline -->
-            <FormInputGroup class="w-2/3">
+            <FormInputGroup>
               <FormLabel for="tagline" text="Tagline" />
               <InputText
                 id="tagline"
@@ -504,169 +496,143 @@ function resetForm(): void {
               <FormOptionalText text="A brief one-liner about your league (max 150 characters)" />
               <FormError :error="errors.tagline" />
             </FormInputGroup>
+
+            <!-- Platforms -->
+            <PlatformMultiSelect
+              v-model="form.platform_ids"
+              :platforms="leagueStore.platforms"
+              :error="errors.platform_ids"
+              :required="true"
+            />
+
+            <!-- Description -->
+            <FormInputGroup>
+              <FormLabel for="description" text="Description" />
+              <Editor
+                id="description"
+                v-model="form.description"
+                editor-style="height: 120px"
+                :class="{ 'p-invalid': !!errors.description }"
+              >
+                <template #toolbar>
+                  <span class="ql-formats">
+                    <button class="ql-bold" type="button"></button>
+                    <button class="ql-italic" type="button"></button>
+                    <button class="ql-underline" type="button"></button>
+                  </span>
+                  <span class="ql-formats">
+                    <button class="ql-list" value="ordered" type="button"></button>
+                    <button class="ql-list" value="bullet" type="button"></button>
+                  </span>
+                  <span class="ql-formats">
+                    <button class="ql-link" type="button"></button>
+                  </span>
+                  <span class="ql-formats">
+                    <button class="ql-clean" type="button"></button>
+                  </span>
+                </template>
+              </Editor>
+              <FormOptionalText text="Tell potential members what your league is all about" />
+              <FormError :error="errors.description" />
+            </FormInputGroup>
           </div>
-
-          <!-- Platforms -->
-          <PlatformMultiSelect
-            v-model="form.platform_ids"
-            :platforms="leagueStore.platforms"
-            :error="errors.platform_ids"
-            :required="true"
-          />
-
-          <!-- Description -->
-          <FormInputGroup>
-            <FormLabel for="description" text="Description" />
-            <Editor
-              id="description"
-              v-model="form.description"
-              editor-style="height: 200px"
-              :class="{ 'p-invalid': !!errors.description }"
-            >
-              <template #toolbar>
-                <span class="ql-formats">
-                  <button class="ql-bold" type="button"></button>
-                  <button class="ql-italic" type="button"></button>
-                  <button class="ql-underline" type="button"></button>
-                </span>
-                <span class="ql-formats">
-                  <button class="ql-list" value="ordered" type="button"></button>
-                  <button class="ql-list" value="bullet" type="button"></button>
-                </span>
-                <span class="ql-formats">
-                  <button class="ql-link" type="button"></button>
-                </span>
-                <span class="ql-formats">
-                  <button class="ql-clean" type="button"></button>
-                </span>
-              </template>
-            </Editor>
-            <FormOptionalText text="Tell potential members what your league is all about" />
-            <FormError :error="errors.description" />
-          </FormInputGroup>
         </div>
 
-        <!-- Right Column (33%) -->
-        <div class="space-y-6">
-          <!-- Contact Email -->
-          <FormInputGroup>
-            <FormLabel for="contact-email" text="Contact Email" />
-            <InputText
-              id="contact-email"
-              v-model="form.contact_email"
-              type="email"
-              size="small"
-              placeholder="league@example.com"
-              :class="{ 'p-invalid': !!errors.contact_email }"
-              class="w-full"
-            />
-            <FormOptionalText text="Visible to league members for inquiries" />
-            <FormError :error="errors.contact_email" />
-          </FormInputGroup>
+        <!-- Right Column: Settings (1/3 width) -->
+        <div class="lg:col-span-1">
+          <div class="space-y-2.5">
+            <!-- Contact Email -->
+            <FormInputGroup>
+              <FormLabel for="contact-email" text="Contact Email" />
+              <InputText
+                id="contact-email"
+                v-model="form.contact_email"
+                type="email"
+                size="small"
+                placeholder="league@example.com"
+                :class="{ 'p-invalid': !!errors.contact_email }"
+                class="w-full"
+              />
+              <FormOptionalText text="Visible to league members for inquiries" />
+              <FormError :error="errors.contact_email" />
+            </FormInputGroup>
 
-          <!-- Organizer Name -->
-          <FormInputGroup>
-            <FormLabel for="organizer-name" text="Contact Name" />
-            <InputText
-              id="organizer-name"
-              v-model="form.organizer_name"
-              placeholder="Your name or organisation"
-              maxlength="100"
-              size="small"
-              :class="{ 'p-invalid': !!errors.organizer_name }"
-              class="w-full"
-            />
-            <FormOptionalText text="Displayed as the league organiser" />
-            <FormError :error="errors.organizer_name" />
-          </FormInputGroup>
+            <!-- Organizer Name -->
+            <FormInputGroup>
+              <FormLabel for="organizer-name" text="Contact Name" />
+              <InputText
+                id="organizer-name"
+                v-model="form.organizer_name"
+                placeholder="Your name or organisation"
+                maxlength="100"
+                size="small"
+                :class="{ 'p-invalid': !!errors.organizer_name }"
+                class="w-full"
+              />
+              <FormOptionalText text="Displayed as the league organiser" />
+              <FormError :error="errors.organizer_name" />
+            </FormInputGroup>
 
-          <!-- Visibility (Compact) -->
-          <FormInputGroup>
-            <FormLabel text="Visibility" />
-            <div class="flex gap-2">
-              <button
-                v-for="option in visibilityOptions"
-                :key="option.value"
-                v-tooltip.top="option.description"
-                type="button"
-                class="flex-1 px-3 py-2 border rounded-lg transition-all flex items-center justify-center gap-2"
-                :class="{
-                  'border-blue-500 bg-blue-100 text-blue-700': form.visibility === option.value,
-                  'border-gray-300 hover:border-gray-400 bg-white':
-                    form.visibility !== option.value,
-                }"
-                @click="form.visibility = option.value as LeagueVisibility"
-              >
-                <i :class="option.icon" class="text-sm"></i>
-                <span class="text-sm font-medium">{{ option.label }}</span>
-              </button>
-            </div>
-            <FormOptionalText text="Choose how your league appears in searches" />
-            <FormError :error="errors.visibility" />
-          </FormInputGroup>
+            <!-- Visibility -->
+            <FormInputGroup>
+              <FormLabel text="Visibility" />
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  v-for="option in visibilityOptions"
+                  :key="option.value"
+                  v-tooltip.right="option.description"
+                  type="button"
+                  class="px-2.5 py-2 border rounded-lg transition-all flex items-center gap-2"
+                  :class="{
+                    'border-blue-500 bg-blue-50 text-blue-700': form.visibility === option.value,
+                    'border-gray-300 hover:border-gray-400 bg-white':
+                      form.visibility !== option.value,
+                  }"
+                  @click="form.visibility = option.value as LeagueVisibility"
+                >
+                  <i :class="option.icon" class="text-base"></i>
+                  <span class="text-sm font-medium">{{ option.label }}</span>
+                </button>
+              </div>
+              <FormOptionalText text="Choose how your league appears in searches" />
+              <FormError :error="errors.visibility" />
+            </FormInputGroup>
 
-          <!-- Timezone -->
-          <FormInputGroup>
-            <FormLabel for="timezone" text="Timezone" />
-            <Select
-              id="timezone"
-              v-model="form.timezone"
-              :options="timezoneOptions"
-              option-label="label"
-              option-value="value"
-              placeholder="Select timezone"
-              :filter="true"
-              size="small"
-              :class="{ 'p-invalid': !!errors.timezone }"
-              class="w-full"
-            />
-            <FormOptionalText text="Used for scheduling events and race times" />
-            <FormError :error="errors.timezone" />
-          </FormInputGroup>
+            <!-- Timezone -->
+            <FormInputGroup>
+              <FormLabel for="timezone" text="Timezone" />
+              <Select
+                id="timezone"
+                v-model="form.timezone"
+                :options="timezoneOptions"
+                option-label="label"
+                option-value="value"
+                placeholder="Select timezone"
+                :filter="true"
+                size="small"
+                :class="{ 'p-invalid': !!errors.timezone }"
+                class="w-full"
+              />
+              <FormOptionalText text="Used for scheduling events and race times" />
+              <FormError :error="errors.timezone" />
+            </FormInputGroup>
+          </div>
         </div>
       </div>
 
-      <Tabs v-model:value="activeTab" class="flex-1 flex flex-col mt-4">
-        <TabList class="bg-gray-50">
-          <Tab value="0" class="bg-white border-r border-gray-100">Logo & Header Image</Tab>
-          <Tab value="1" class="bg-white">Social Media</Tab>
+      <!-- Media & Social Section -->
+      <Tabs v-model:value="activeTab">
+        <TabList>
+          <Tab value="0">Media</Tab>
+          <Tab value="1">Social Links</Tab>
         </TabList>
-        <TabPanels class="flex-1">
-          <!-- Tab 1: Information -->
-          <TabPanel value="1" class="flex-1">
-            <div class="">
-              <SocialMediaFields
-                :discord-url="form.discord_url"
-                :website-url="form.website_url"
-                :twitter-handle="form.twitter_handle"
-                :instagram-handle="form.instagram_handle"
-                :youtube-url="form.youtube_url"
-                :twitch-url="form.twitch_url"
-                :errors="{
-                  discord_url: errors.discord_url,
-                  website_url: errors.website_url,
-                  twitter_handle: errors.twitter_handle,
-                  instagram_handle: errors.instagram_handle,
-                  youtube_url: errors.youtube_url,
-                  twitch_url: errors.twitch_url,
-                }"
-                @update:discord-url="form.discord_url = $event"
-                @update:website-url="form.website_url = $event"
-                @update:twitter-handle="form.twitter_handle = $event"
-                @update:instagram-handle="form.instagram_handle = $event"
-                @update:youtube-url="form.youtube_url = $event"
-                @update:twitch-url="form.twitch_url = $event"
-              />
-            </div>
-          </TabPanel>
-
-          <!-- Tab 2: Media -->
+        <TabPanels>
+          <!-- Tab 0: Media -->
           <TabPanel value="0">
-            <div>
-              <div>Upload images to personalise your league.</div>
-              <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
+            <BasePanel>
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
                 <!-- Logo Upload -->
-                <BasePanel :header="'League Logo'" class="lg:col-span-1">
+                <div class="lg:col-span-1 rounded-md border border-gray-200 content-center p-2">
                   <ImageUpload
                     v-model="form.logo"
                     :existing-image-url="form.logo_url ?? null"
@@ -674,56 +640,77 @@ function resetForm(): void {
                     :required="false"
                     :error="errors.logo"
                     preview-size="small"
-                    helper-text="A square logo. Recommended: 400x400px"
+                    helper-text="Square logo (400x400px recommended)"
                     @remove-existing="form.logo_url = null"
                   />
-                </BasePanel>
+                </div>
 
                 <!-- Header Image -->
-                <BasePanel :header="'League Header Image'" class="lg:col-span-2">
+                <div class="lg:col-span-2 rounded-md border border-gray-200 content-center p-2">
                   <ImageUpload
                     v-model="form.header_image"
                     :existing-image-url="form.header_image_url ?? null"
-                    label="League Header Image"
+                    label="Header Image"
                     :required="false"
                     :error="errors.header_image"
                     preview-size="large"
-                    helper-text="A banner image for your league's profile page.Recommended: 1200x400px"
+                    helper-text="Banner image (1200x400px recommended)"
                     @remove-existing="form.header_image_url = null"
                   />
-                </BasePanel>
+                </div>
               </div>
-            </div>
+            </BasePanel>
+          </TabPanel>
+
+          <!-- Tab 1: Social Media -->
+          <TabPanel value="1">
+            <BasePanel>
+              <div class="space-y-4 p-4">
+                <SocialMediaFields
+                  :discord-url="form.discord_url"
+                  :website-url="form.website_url"
+                  :twitter-handle="form.twitter_handle"
+                  :instagram-handle="form.instagram_handle"
+                  :youtube-url="form.youtube_url"
+                  :twitch-url="form.twitch_url"
+                  :errors="{
+                    discord_url: errors.discord_url,
+                    website_url: errors.website_url,
+                    twitter_handle: errors.twitter_handle,
+                    instagram_handle: errors.instagram_handle,
+                    youtube_url: errors.youtube_url,
+                    twitch_url: errors.twitch_url,
+                  }"
+                  @update:discord-url="form.discord_url = $event"
+                  @update:website-url="form.website_url = $event"
+                  @update:twitter-handle="form.twitter_handle = $event"
+                  @update:instagram-handle="form.instagram_handle = $event"
+                  @update:youtube-url="form.youtube_url = $event"
+                  @update:twitch-url="form.twitch_url = $event"
+                />
+              </div>
+            </BasePanel>
           </TabPanel>
         </TabPanels>
       </Tabs>
     </div>
 
-    <div v-if="!isLoadingLeague" class="bg-tertiary mt-4 shadow-reverse border-t border-gray-200">
-      <!-- Action Buttons -->
-      <div class="container mx-auto flex flex-col max-w-5xl">
-        <div class="flex justify-between p-4">
-          <div>
-            <Button
-              label="Cancel"
-              severity="danger"
-              class="bg-white"
-              outlined
-              :disabled="isSubmitting"
-              @click="closeDrawer"
-            />
-          </div>
-
-          <div>
-            <Button
-              :label="submitButtonLabel"
-              :loading="isSubmitting"
-              :disabled="!canSubmit"
-              @click="submitForm"
-            />
-          </div>
-        </div>
+    <template #footer>
+      <div class="flex justify-end gap-3">
+        <Button
+          label="Cancel"
+          severity="secondary"
+          outlined
+          :disabled="isSubmitting"
+          @click="closeModal"
+        />
+        <Button
+          :label="submitButtonLabel"
+          :loading="isSubmitting"
+          :disabled="!canSubmit"
+          @click="submitForm"
+        />
       </div>
-    </div>
-  </Drawer>
+    </template>
+  </BaseModal>
 </template>

@@ -43,7 +43,7 @@ class DivisionTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->getJson("/api/seasons/{$this->season->id}/divisions");
+        $response = $this->getJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions");
 
         $response->assertStatus(200);
         $response->assertJsonCount(3, 'data');
@@ -66,7 +66,7 @@ class DivisionTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->season->id}/divisions", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions", [
             'name' => 'Pro Division',
         ]);
 
@@ -97,7 +97,7 @@ class DivisionTest extends TestCase
 
         $logo = UploadedFile::fake()->image('division-logo.png');
 
-        $response = $this->postJson("/api/seasons/{$this->season->id}/divisions", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions", [
             'name' => 'Pro Division',
             'description' => 'This is a description for the pro division',
             'logo' => $logo,
@@ -124,7 +124,7 @@ class DivisionTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->season->id}/divisions", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions", [
             'description' => 'Description without name',
         ]);
 
@@ -136,7 +136,7 @@ class DivisionTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->season->id}/divisions", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions", [
             'name' => 'A',
         ]);
 
@@ -148,7 +148,7 @@ class DivisionTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->season->id}/divisions", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions", [
             'name' => str_repeat('a', 61),
         ]);
 
@@ -160,7 +160,7 @@ class DivisionTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->season->id}/divisions", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions", [
             'name' => 'Pro Division',
             'description' => null,
         ]);
@@ -177,7 +177,7 @@ class DivisionTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->season->id}/divisions", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions", [
             'name' => 'Pro Division',
             'description' => '123456789',
         ]);
@@ -190,7 +190,7 @@ class DivisionTest extends TestCase
     {
         $this->actingAs($this->user, 'web');
 
-        $response = $this->postJson("/api/seasons/{$this->season->id}/divisions", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions", [
             'name' => 'Pro Division',
             'description' => str_repeat('a', 501),
         ]);
@@ -209,7 +209,7 @@ class DivisionTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->putJson("/api/seasons/{$this->season->id}/divisions/{$division->id}", [
+        $response = $this->putJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions/{$division->id}", [
             'name' => 'New Name',
             'description' => 'New description for the division',
         ]);
@@ -237,7 +237,7 @@ class DivisionTest extends TestCase
 
         $newLogo = UploadedFile::fake()->image('new-logo.png');
 
-        $response = $this->putJson("/api/seasons/{$this->season->id}/divisions/{$division->id}", [
+        $response = $this->putJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions/{$division->id}", [
             'logo' => $newLogo,
         ]);
 
@@ -256,7 +256,7 @@ class DivisionTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->deleteJson("/api/seasons/{$this->season->id}/divisions/{$division->id}");
+        $response = $this->deleteJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions/{$division->id}");
 
         $response->assertStatus(200);
         $response->assertJsonFragment([
@@ -281,7 +281,7 @@ class DivisionTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->deleteJson("/api/seasons/{$this->season->id}/divisions/{$division->id}");
+        $response = $this->deleteJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions/{$division->id}");
 
         $response->assertStatus(200);
 
@@ -304,7 +304,7 @@ class DivisionTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->getJson("/api/seasons/{$this->season->id}/divisions/{$division->id}/driver-count");
+        $response = $this->getJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions/{$division->id}/driver-count");
 
         $response->assertStatus(200);
         $response->assertJsonFragment([
@@ -325,7 +325,7 @@ class DivisionTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->putJson("/api/seasons/{$this->season->id}/drivers/{$seasonDriver->id}/division", [
+        $response = $this->putJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/drivers/{$seasonDriver->id}/division", [
             'division_id' => $division->id,
         ]);
 
@@ -353,7 +353,7 @@ class DivisionTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->putJson("/api/seasons/{$this->season->id}/drivers/{$seasonDriver->id}/division", [
+        $response = $this->putJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/drivers/{$seasonDriver->id}/division", [
             'division_id' => null,
         ]);
 
@@ -367,10 +367,10 @@ class DivisionTest extends TestCase
 
     public function test_unauthenticated_user_cannot_access_division_endpoints(): void
     {
-        $response = $this->getJson("/api/seasons/{$this->season->id}/divisions");
+        $response = $this->getJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions");
         $response->assertStatus(401);
 
-        $response = $this->postJson("/api/seasons/{$this->season->id}/divisions", [
+        $response = $this->postJson("http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/divisions", [
             'name' => 'Pro Division',
         ]);
         $response->assertStatus(401);
