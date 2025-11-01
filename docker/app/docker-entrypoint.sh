@@ -25,6 +25,15 @@ log_error() {
     echo -e "${RED}✗${NC} $1"
 }
 
+# Install dependencies if vendor doesn't exist (MUST happen before any artisan commands)
+if [ ! -d "vendor" ]; then
+    log_info "Installing Composer dependencies..."
+    composer install --no-interaction --prefer-dist
+    log_success "Composer dependencies installed"
+else
+    log_success "Composer dependencies already installed"
+fi
+
 # Wait for database to be ready
 log_info "Waiting for database..."
 until php artisan migrate:status &> /dev/null
@@ -34,22 +43,13 @@ do
 done
 log_success "Database is ready"
 
-# Install dependencies if vendor doesn't exist
-if [ ! -d "vendor" ]; then
-    log_info "Installing Composer dependencies..."
-    composer install --no-interaction --prefer-dist
-    log_success "Composer dependencies installed"
-else
-    log_success "Composer dependencies already installed"
-fi
-
-# Install npm dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
-    log_info "Installing npm dependencies..."
+# Check npm dependencies (fallback - should be installed during build)
+if [ ! -d "node_modules" ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then
+    log_warning "node_modules missing or empty, installing..."
     npm install
     log_success "npm dependencies installed"
 else
-    log_success "npm dependencies already installed"
+    log_success "npm dependencies available"
 fi
 
 # Run migrations with error handling
@@ -162,6 +162,19 @@ fi
 log_success "Container initialization complete!"
 log_info "Starting application..."
 
-# Switch to laravel user and execute the main command
-# This ensures PHP-FPM and other processes run as the laravel user, not root
-exec gosu laravel "$@"
+# Determine the command to execute
+if [ $# -eq 0 ]; then
+    COMMAND="php-fpm"
+else
+    COMMAND="$1"
+fi
+
+# PHP-FPM needs to run as root and will drop privileges itself
+# All other commands run as laravel user
+if [ "$COMMAND" = "php-fpm" ]; then
+    log_info "Starting PHP-FPM (as root, will drop to www-data)..."
+    exec php-fpm
+else
+    log_info "Executing command as laravel user..."
+    exec gosu laravel "$@"
+fi

@@ -70,6 +70,9 @@ FROM base AS development
 # Switch to root to install Node.js
 USER root
 
+# Ensure /var/www is owned by laravel user
+RUN chown -R laravel:laravel /var/www
+
 # Install Node.js 24.x from NodeSource
 RUN apt-get update && \
     apt-get install -y ca-certificates gnupg && \
@@ -102,7 +105,7 @@ RUN npx -y playwright@1.56.0 install
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
 # Create Claude settings file
-RUN touch $HOMEDIR/.claude/settings.json
+RUN mkdir -p $HOMEDIR/.claude && touch $HOMEDIR/.claude/settings.json
 
 # Install CCStatusline
 RUN npm install -g ccstatusline@latest
@@ -113,6 +116,12 @@ RUN npm install -g @upstash/context7-mcp@latest
 
 # Install Playwright MCP
 RUN claude mcp add playwright npx '@playwright/mcp@latest'
+
+# Copy package files for dependency installation
+COPY --chown=laravel:laravel package*.json ./
+
+# Install project npm dependencies during build
+RUN npm install && npm cache clean --force
 
 # Switch to root to copy entrypoint
 USER root
@@ -126,3 +135,6 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Set entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Set default command to start PHP-FPM
+CMD ["php-fpm"]

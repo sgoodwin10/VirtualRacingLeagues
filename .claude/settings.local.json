@@ -42,7 +42,11 @@
       "Bash(npm run test:user:*)",
       "Bash(npm run format:app:*)",
       "Bash(npm update:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(docker-compose build:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

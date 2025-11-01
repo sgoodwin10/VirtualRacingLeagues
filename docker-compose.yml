@@ -29,7 +29,7 @@ services:
     ports:
       - "5173:5173"  # Vite dev server
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - app-network
     depends_on:
       mariadb:
         condition: service_healthy
@@ -56,7 +56,7 @@ services:
       - ./:/var/www:delegated
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - app-network
     depends_on:
       - app
 
@@ -72,15 +72,17 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./docker/mariadb/conf.d:/etc/mysql/conf.d:ro
     ports:
       - "3307:3306"
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - app-network
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
   # Redis Service
   redis:
@@ -92,7 +94,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - app-network
 
   # Elasticsearch Service (for future use)
   elasticsearch:
@@ -109,7 +111,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - app-network
 
   # Mailpit Service (Email testing)
   mailpit:
@@ -120,7 +122,7 @@ services:
       - "8025:8025"  # Web UI
       - "1025:1025"  # SMTP server
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - app-network
 
 networks:
   app-network:
