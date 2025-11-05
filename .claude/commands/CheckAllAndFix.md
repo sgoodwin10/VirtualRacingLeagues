@@ -1,1 +1,0 @@
-Run phpstan, phpcs and phpcbf on all the backend files. Run all unit test. Use dev-be. Run all eslint and prettier and vitest tests using dev-fe-user, dev-fe-admin and dev-fe-public. IMPORTANT: All tests need to pass 100% before this task is considered finished.

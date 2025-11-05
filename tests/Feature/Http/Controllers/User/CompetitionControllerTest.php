@@ -390,15 +390,82 @@ class CompetitionControllerTest extends UserControllerTestCase
 
         $response = $this->deleteJson("/api/competitions/{$competition->id}");
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Competition deleted successfully',
-            ]);
+        $response->assertStatus(204);
 
         $this->assertSoftDeleted('competitions', [
             'id' => $competition->id,
         ]);
+    }
+
+    public function test_deleting_competition_cascades_to_seasons_and_rounds(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create competition
+        $competition = Competition::factory()->create([
+            'league_id' => $this->league->id,
+            'platform_id' => $this->platform->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Create seasons
+        $season1 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::factory()->create([
+            'competition_id' => $competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        $season2 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::factory()->create([
+            'competition_id' => $competition->id,
+            'name' => 'Season 2',
+            'slug' => 'season-2',
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Create rounds for season 1
+        // Use the existing platform track or create one with specific values to avoid conflicts
+        $platformTrack = \App\Infrastructure\Persistence\Eloquent\Models\PlatformTrack::factory()->create([
+            'platform_id' => $this->platform->id,
+            'name' => 'Test Track ' . uniqid(),
+            'slug' => 'test-track-' . uniqid(),
+        ]);
+
+        $round1 = \App\Infrastructure\Persistence\Eloquent\Models\Round::factory()->create([
+            'season_id' => $season1->id,
+            'platform_track_id' => $platformTrack->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        $round2 = \App\Infrastructure\Persistence\Eloquent\Models\Round::factory()->create([
+            'season_id' => $season1->id,
+            'platform_track_id' => $platformTrack->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Create round for season 2
+        $round3 = \App\Infrastructure\Persistence\Eloquent\Models\Round::factory()->create([
+            'season_id' => $season2->id,
+            'platform_track_id' => $platformTrack->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Delete competition
+        $response = $this->deleteJson("/api/competitions/{$competition->id}");
+
+        $response->assertStatus(204);
+
+        // Assert competition is soft deleted
+        $this->assertSoftDeleted('competitions', ['id' => $competition->id]);
+
+        // Assert all seasons are soft deleted
+        $this->assertSoftDeleted('seasons', ['id' => $season1->id]);
+        $this->assertSoftDeleted('seasons', ['id' => $season2->id]);
+
+        // Assert all rounds are soft deleted
+        $this->assertSoftDeleted('rounds', ['id' => $round1->id]);
+        $this->assertSoftDeleted('rounds', ['id' => $round2->id]);
+        $this->assertSoftDeleted('rounds', ['id' => $round3->id]);
     }
 
     public function test_user_can_archive_competition(): void

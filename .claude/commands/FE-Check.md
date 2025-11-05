@@ -1,0 +1,1 @@
+Run all eslint and prettier and vitest tests using @dev-fe-admin, @dev-fe-public @dev-fe-admin.  IMPORTANT: If there are any errors, only fix the tests, do not change code. All tests need to pass 100% before this task is considered finished.

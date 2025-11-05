@@ -80,10 +80,10 @@ RUN apt-get update && \
     apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright system dependencies
-# This installs the required system libraries for running browsers
+# Install Playwright system dependencies for Chromium only
+# This installs the required system libraries for running Chromium browser
 # Version pinned to match package.json
-RUN npx -y playwright@1.56.0 install-deps
+RUN npx -y playwright@1.56.0 install-deps chromium
 
 # Configure npm to use user-writable directory for global packages
 RUN mkdir -p /home/laravel/.npm-global && \
@@ -96,10 +96,10 @@ USER laravel
 ENV NPM_CONFIG_PREFIX=/home/laravel/.npm-global
 ENV PATH=/home/laravel/.npm-global/bin:$PATH
 
-# Install Playwright browsers
-# This downloads and installs chromium, firefox, and webkit browsers
+# Install Playwright Chromium browser only
+# This downloads and installs only the Chromium browser
 # Version pinned to match package.json
-RUN npx -y playwright@1.56.0 install
+RUN npx -y playwright@1.56.0 install chromium
 
 # Install Claude
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}

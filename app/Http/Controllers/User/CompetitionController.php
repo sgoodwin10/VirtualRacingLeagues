@@ -70,12 +70,12 @@ final class CompetitionController extends Controller
     }
 
     /**
-     * Delete a competition.
+     * Delete a competition (soft delete with cascade to seasons and rounds).
      */
     public function destroy(int $id): JsonResponse
     {
         $this->competitionService->deleteCompetition($id, (int) (Auth::id() ?? 0));
-        return ApiResponse::success(null, 'Competition deleted successfully');
+        return response()->json(null, 204);
     }
 
     /**

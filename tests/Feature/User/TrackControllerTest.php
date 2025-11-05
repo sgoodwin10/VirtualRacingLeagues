@@ -236,12 +236,42 @@ class TrackControllerTest extends TestCase
             ->getJson("http://app.virtualracingleagues.localhost/api/tracks/{$track->id}");
 
         $response->assertOk()
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'id',
+                    'platform_id',
+                    'platform_track_location_id',
+                    'name',
+                    'slug',
+                    'is_reverse',
+                    'image_path',
+                    'length_meters',
+                    'is_active',
+                    'sort_order',
+                    'created_at',
+                    'updated_at',
+                    'location' => [
+                        'id',
+                        'name',
+                        'slug',
+                        'country',
+                        'is_active',
+                        'sort_order',
+                    ],
+                ],
+            ])
             ->assertJson([
                 'success' => true,
                 'data' => [
                     'id' => $track->id,
                     'name' => 'Test Track',
                     'platform_id' => $this->platform->id,
+                    'location' => [
+                        'id' => $this->location->id,
+                        'name' => 'Silverstone Circuit',
+                        'country' => 'United Kingdom',
+                    ],
                 ],
             ]);
     }

@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import type { Competition, CompetitionSeason } from '@app/types/competition';
+import type { MenuItem } from 'primevue/menuitem';
 import HTag from '@app/components/common/HTag.vue';
 
 import Tag from 'primevue/tag';
 import Tooltip from 'primevue/tooltip';
-import Button from 'primevue/button';
+import SpeedDial from 'primevue/speeddial';
 import InfoItem from '@app/components/common/InfoItem.vue';
 import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
+import { useCompetitionStore } from '@app/stores/competitionStore';
 import {
   PhCalendarBlank,
   PhGameController,
@@ -26,13 +30,16 @@ const props = defineProps<Props>();
 
 interface Emits {
   (e: 'edit'): void;
-  (e: 'delete'): void;
+  (e: 'delete', competitionId: number): void;
   (e: 'archive'): void;
 }
 
 const emit = defineEmits<Emits>();
 
 const router = useRouter();
+const toast = useToast();
+const confirm = useConfirm();
+const competitionStore = useCompetitionStore();
 
 const vTooltip = Tooltip;
 
@@ -42,6 +49,22 @@ const showSeasonDrawer = ref(false);
 const cardClasses = computed(() => ({
   'opacity-60': props.competition.is_archived,
 }));
+
+// SpeedDial actions
+const speedDialActions = computed<MenuItem[]>(() => [
+  {
+    label: 'Edit',
+    icon: 'pi pi-pencil',
+    command: handleEdit,
+    severity: 'warn',
+  },
+  {
+    label: 'Delete',
+    icon: 'pi pi-trash',
+    command: confirmDelete,
+    severity: 'danger',
+  },
+]);
 
 // Sort seasons by created_at (most recent first)
 const sortedSeasons = computed(() => {
@@ -90,6 +113,40 @@ function handleSeasonSaved(): void {
   // The drawer will close itself via v-model:visible
   showSeasonDrawer.value = false;
 }
+
+function handleEdit(): void {
+  emit('edit');
+}
+
+function confirmDelete(): void {
+  confirm.require({
+    message: `Are you sure you want to delete "${props.competition.name}"? This action cannot be undone and will remove all associated seasons and data.`,
+    header: 'Delete Competition',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    accept: () => deleteCompetition(),
+  });
+}
+
+async function deleteCompetition(): Promise<void> {
+  try {
+    await competitionStore.deleteExistingCompetition(props.competition.id);
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Competition deleted successfully',
+      life: 3000,
+    });
+    emit('delete', props.competition.id);
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to delete competition',
+      life: 5000,
+    });
+  }
+}
 </script>
 
 <template>
@@ -97,7 +154,7 @@ function handleSeasonSaved(): void {
     :class="cardClasses"
     class="competition-card flex flex-col w-full h-72 rounded-md border border-slate-200 bg-white hover:shadow-md transition-shadow duration-300 hover:border-primary-200"
   >
-    <div class="flex bg-white rounded-t-md">
+    <div class="flex bg-white rounded-t-md relative">
       <div class="w-18 h-18 p-2">
         <img
           :src="competition.logo_url"
@@ -106,7 +163,7 @@ function handleSeasonSaved(): void {
         />
       </div>
 
-      <div class="flex-1 content-center pl-2">
+      <div class="flex-1 content-center pl-2 pr-2">
         <div class="flex justify-between items-start">
           <HTag :level="3">{{ competition.name }}</HTag>
           <Tag
@@ -121,16 +178,15 @@ function handleSeasonSaved(): void {
         </p>
       </div>
 
-      <div class="content-center justify-end pr-2">
-        <Button
-          label="Edit Competition"
-          severity="secondary"
-          icon="pi pi-pencil"
-          outlined
-          size="small"
-          @click.stop="emit('edit')"
-        />
-      </div>
+      <SpeedDial
+        :model="speedDialActions"
+        direction="left"
+        :button-props="{ size: 'small', rounded: true, severity: 'secondary' }"
+        show-icon="pi pi-bars"
+        hide-icon="pi pi-times"
+        style="position: absolute; right: 8px; top: 8px"
+        class="speeddial-right"
+      />
     </div>
 
     <div class="grid grid-cols-3 gap-px bg-surface-200 border-b border-t border-gray-200">

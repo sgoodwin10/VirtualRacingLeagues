@@ -1,1 +1,0 @@
-Run phpstan, phpcs and phpcbf on all the backend files. Run all unit test. Use dev-be. Run all eslint and prettier and vitest tests using dev-fe-user and dev-fe-admin. IMPORTANT: If there are any errors, only fix the tests, do not change code.

@@ -121,9 +121,12 @@ class UserService {
         `/users/${id}`,
         { signal },
       );
-      // Return the user from the response
+      // Return the user with activities merged in
       if (response.success && response.data?.user) {
-        return response.data.user;
+        return {
+          ...response.data.user,
+          activities: response.data.activities || [],
+        };
       }
       throw new Error('Failed to fetch user');
     } catch (error) {

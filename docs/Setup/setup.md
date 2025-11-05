@@ -36,6 +36,7 @@ zsh -v
 
 ## Force Rebuild
 `docker compose up --build --force-recreate -d`
+`docker-compose build --no-cache`
 
 # Access the docker container
 ```bash

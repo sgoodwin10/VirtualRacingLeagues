@@ -13,11 +13,11 @@ A reusable header component for modal dialogs that provides consistent styling w
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | `undefined` | The title text to display in the header |
-| `class` | `string` | `undefined` | Additional CSS classes to merge with defaults |
-| `overrideClass` | `boolean` | `false` | When true, uses only the provided class instead of merging |
+| Prop            | Type      | Default     | Description                                                |
+| --------------- | --------- | ----------- | ---------------------------------------------------------- |
+| `title`         | `string`  | `undefined` | The title text to display in the header                    |
+| `class`         | `string`  | `undefined` | Additional CSS classes to merge with defaults              |
+| `overrideClass` | `boolean` | `false`     | When true, uses only the provided class instead of merging |
 
 ## Basic Usage
 
@@ -28,6 +28,7 @@ A reusable header component for modal dialogs that provides consistent styling w
 ```
 
 **Output:**
+
 ```html
 <div class="text-lg font-semibold text-gray-900">Add Driver</div>
 ```
@@ -41,6 +42,7 @@ Merges your classes with the defaults:
 ```
 
 **Output:**
+
 ```html
 <div class="text-lg font-semibold text-gray-900 text-xl">Add Driver</div>
 ```
@@ -58,6 +60,7 @@ When you need full control over styling:
 ```
 
 **Output:**
+
 ```html
 <div class="text-2xl font-bold text-blue-600">Add Driver</div>
 ```
@@ -76,6 +79,7 @@ The default slot allows for complex header content:
 ```
 
 **Output:**
+
 ```html
 <div class="text-lg font-semibold text-gray-900">
   <div class="flex items-center gap-2">
@@ -117,10 +121,7 @@ const dialogTitle = computed(() => {
 <template>
   <BaseModal :visible="visible">
     <template #header>
-      <BaseModalHeader
-        title="Important Notice"
-        class="text-red-600"
-      />
+      <BaseModalHeader title="Important Notice" class="text-red-600" />
     </template>
 
     <!-- Modal content -->
@@ -158,12 +159,14 @@ const dialogTitle = computed(() => {
 ## When to Use
 
 ### Use BaseModalHeader when:
+
 - You need a consistent header style across modals
 - You want to maintain design system standards
 - You need flexibility to add icons or additional elements
 - You want to avoid repeating header markup
 
 ### Use custom header when:
+
 - The modal requires completely unique styling
 - The header needs complex interactions
 - You need absolute control over the HTML structure
@@ -171,13 +174,17 @@ const dialogTitle = computed(() => {
 ## Design Decisions
 
 ### Default Classes
+
 The component uses these default classes to match the design system:
+
 - `text-lg` - Standard header text size
 - `font-semibold` - Professional weight
 - `text-gray-900` - High contrast for readability
 
 ### Class Merging vs Override
+
 The component provides two modes:
+
 1. **Merge mode** (default): Adds your classes to the defaults
    - Use when you want to enhance the base styles
    - Example: Adding `uppercase` or `tracking-wide`
@@ -186,11 +193,13 @@ The component provides two modes:
    - Example: Different color scheme for warning modals
 
 ### Slot Priority
+
 When both `title` prop and slot content are provided, the slot takes precedence. This allows maximum flexibility while maintaining a simple API for common cases.
 
 ## Testing
 
 The component has comprehensive test coverage including:
+
 - ✅ Rendering with title prop
 - ✅ Rendering with slot content
 - ✅ Slot priority over title prop
@@ -201,6 +210,7 @@ The component has comprehensive test coverage including:
 - ✅ Edge cases (empty content, special characters)
 
 Run tests:
+
 ```bash
 npm run test:user -- BaseModalHeader.test.ts
 ```

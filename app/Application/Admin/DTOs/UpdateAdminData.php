@@ -25,7 +25,7 @@ final class UpdateAdminData extends Data
     /**
      * @return array<string, array<int, string>>
      */
-    public static function rules(\Spatie\LaravelData\Support\Validation\ValidationContext $context = null): array
+    public static function rules(?\Spatie\LaravelData\Support\Validation\ValidationContext $context = null): array
     {
         return [
             'first_name' => ['nullable', 'string', 'max:255'],

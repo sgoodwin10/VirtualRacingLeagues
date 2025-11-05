@@ -206,7 +206,8 @@ final class EloquentUserRepository implements UserRepositoryInterface
             ->latest()
             ->limit($limit)
             ->get()
-            ->toArray();
+            ->values()
+            ->all();
     }
 
     /**

@@ -46,7 +46,8 @@
       "Bash(docker-compose build:*)",
       "Bash(docker-compose up:*)",
       "Bash(docker-compose logs:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npx playwright:*)"
     ],
     "deny": [],
     "ask": []

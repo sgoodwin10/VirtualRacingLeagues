@@ -15,6 +15,7 @@ services:
       - SYS_ADMIN  # Required for Chromium sandboxing in development
     environment:
       - PLAYWRIGHT_BROWSERS_PATH=/home/laravel/.cache/playwright
+      - CLAUDE_CONTEXT7_MCP_API_KEY=${CLAUDE_CONTEXT7_MCP_API_KEY}
     volumes:
       - ./:/var/www:delegated
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
@@ -35,10 +36,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    extra_hosts:
-      - "${APP_ROOT_DOMAIN}:host-gateway"
-      - "app.${APP_ROOT_DOMAIN}:host-gateway"
-      - "admin.${APP_ROOT_DOMAIN}:host-gateway"
     healthcheck:
       test: ["CMD", "php-fpm-healthcheck"]
       interval: 30s

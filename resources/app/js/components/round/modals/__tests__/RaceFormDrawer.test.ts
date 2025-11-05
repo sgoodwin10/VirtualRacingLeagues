@@ -7,11 +7,12 @@ import { useRaceSettingsStore } from '@app/stores/raceSettingsStore';
 import type { Race } from '@app/types/race';
 import { F1_STANDARD_POINTS } from '@app/types/race';
 
-// Mock PrimeVue components
-vi.mock('primevue/drawer', () => ({
+// Mock BaseModal component
+vi.mock('@app/components/common/modals/BaseModal.vue', () => ({
   default: {
-    name: 'Drawer',
+    name: 'BaseModal',
     template: '<div><slot name="header"/><slot/><slot name="footer"/></div>',
+    props: ['visible', 'width', 'closable', 'dismissableMask', 'contentClass'],
   },
 }));
 
@@ -141,7 +142,7 @@ describe('RaceFormDrawer', () => {
       },
       global: {
         stubs: {
-          Drawer: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
+          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
           FormLabel: { template: '<label><slot/></label>' },
           FormError: { template: '<span><slot/></span>' },
         },
@@ -193,7 +194,7 @@ describe('RaceFormDrawer', () => {
       },
       global: {
         stubs: {
-          Drawer: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
+          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
           FormLabel: { template: '<label><slot/></label>' },
           FormError: { template: '<span><slot/></span>' },
         },
@@ -254,7 +255,7 @@ describe('RaceFormDrawer', () => {
       },
       global: {
         stubs: {
-          Drawer: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
+          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
           FormLabel: { template: '<label><slot/></label>' },
           FormError: { template: '<span><slot/></span>' },
         },

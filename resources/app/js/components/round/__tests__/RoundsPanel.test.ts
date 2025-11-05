@@ -171,16 +171,16 @@ describe('RoundsPanel', () => {
 
     // Get component instance to test computed properties
     const vm = wrapper.vm as unknown as {
-      racesByRound: Map<number, Race[]>;
-      qualifiersByRound: Map<number, Race | null>;
-      getRaces: (roundId: number) => Race[];
-      getQualifier: (roundId: number) => Race | null;
+      allRaceEventsByRound: Map<number, Race[]>;
+      getAllRaceEvents: (roundId: number) => Race[];
     };
 
-    // Verify races are properly organized
-    expect(vm.getRaces(1)).toHaveLength(1);
-    expect(vm.getRaces(1)[0]?.id).toBe(1);
-    expect(vm.getQualifier(1)?.id).toBe(2);
+    // Verify all race events are properly organized (unified list)
+    const allEvents = vm.getAllRaceEvents(1);
+    expect(allEvents).toHaveLength(2); // 1 race + 1 qualifier
+    expect(allEvents.find((r) => r.id === 1)).toBeDefined(); // Race
+    expect(allEvents.find((r) => r.id === 2)).toBeDefined(); // Qualifier
+    expect(allEvents.find((r) => r.is_qualifier === true)?.id).toBe(2);
 
     // Verify reactivity by adding a new race
     const newRace: Race = {
@@ -214,19 +214,20 @@ describe('RoundsPanel', () => {
       dns_points: 0,
       race_notes: null,
       is_qualifier: false,
-      created_at: '2025-01-01T10:00:00Z',
-      updated_at: '2025-01-01T10:00:00Z',
+      created_at: '2025-01-01T11:00:00Z', // Later timestamp
+      updated_at: '2025-01-01T11:00:00Z',
     };
 
     raceStore.races = [...raceStore.races, newRace];
     await wrapper.vm.$nextTick();
 
-    // Verify new race appears
-    expect(vm.getRaces(1)).toHaveLength(2);
-    expect(vm.getRaces(1).find((r) => r.id === 3)).toBeDefined();
+    // Verify new race appears in unified list
+    const updatedEvents = vm.getAllRaceEvents(1);
+    expect(updatedEvents).toHaveLength(3); // 2 races + 1 qualifier
+    expect(updatedEvents.find((r) => r.id === 3)).toBeDefined();
   });
 
-  it('should filter races and qualifiers correctly', async () => {
+  it('should sort all race events by created_at timestamp', async () => {
     const mockRound: Round = {
       id: 1,
       season_id: 1,
@@ -272,11 +273,11 @@ describe('RoundsPanel', () => {
       dnf_points: 0,
       dns_points: 0,
       race_notes: null,
-      created_at: '2025-01-01T10:00:00Z',
       updated_at: '2025-01-01T10:00:00Z',
     };
 
     roundStore.rounds = [mockRound];
+    // Create races with different created_at timestamps (not in order)
     raceStore.races = [
       {
         ...baseRaceFields,
@@ -288,6 +289,7 @@ describe('RoundsPanel', () => {
         length_type: 'laps' as const,
         length_value: 20,
         is_qualifier: false,
+        created_at: '2025-01-01T12:00:00Z', // Third (newest)
       },
       {
         ...baseRaceFields,
@@ -302,6 +304,7 @@ describe('RoundsPanel', () => {
         length_value: 15,
         points_system: {},
         is_qualifier: true,
+        created_at: '2025-01-01T10:00:00Z', // First (oldest)
       },
       {
         ...baseRaceFields,
@@ -313,6 +316,7 @@ describe('RoundsPanel', () => {
         length_type: 'laps' as const,
         length_value: 15,
         is_qualifier: false,
+        created_at: '2025-01-01T11:00:00Z', // Second
       },
     ];
 
@@ -331,7 +335,6 @@ describe('RoundsPanel', () => {
           AccordionContent: true,
           Tag: true,
           Skeleton: true,
-          Divider: true,
           ConfirmDialog: true,
           RoundFormDrawer: true,
           RaceFormDrawer: true,
@@ -344,18 +347,215 @@ describe('RoundsPanel', () => {
     await flushPromises();
 
     const vm = wrapper.vm as unknown as {
-      getRaces: (roundId: number) => Race[];
-      getQualifier: (roundId: number) => Race | null;
+      getAllRaceEvents: (roundId: number) => Race[];
     };
 
-    // Should get only races (not qualifiers)
-    const races = vm.getRaces(1);
-    expect(races).toHaveLength(2);
-    expect(races.every((r) => r.race_type !== 'qualifying')).toBe(true);
+    // Should get all events (races + qualifiers) sorted by created_at
+    const allEvents = vm.getAllRaceEvents(1);
+    expect(allEvents).toHaveLength(3);
 
-    // Should get the qualifier
-    const qualifier = vm.getQualifier(1);
+    // Verify they're sorted by created_at (ascending - oldest first)
+    expect(allEvents[0].id).toBe(2); // Qualifier (10:00)
+    expect(allEvents[1].id).toBe(3); // Race 2 (11:00)
+    expect(allEvents[2].id).toBe(1); // Race 1 (12:00)
+
+    // Verify qualifier can be identified by is_qualifier flag
+    const qualifier = allEvents.find((r) => r.is_qualifier === true);
     expect(qualifier).toBeDefined();
     expect(qualifier?.race_type).toBe('qualifying');
+    expect(qualifier?.id).toBe(2);
+  });
+
+  it('should apply progressive color gradient to round number boxes', async () => {
+    // Create multiple rounds to test gradient
+    const mockRounds: Round[] = [
+      {
+        id: 1,
+        season_id: 1,
+        platform_track_id: 1,
+        round_number: 1,
+        name: 'Round 1',
+        slug: 'round-1',
+        scheduled_at: '2025-01-15T10:00:00Z',
+        timezone: 'UTC',
+        track_layout: null,
+        track_conditions: null,
+        technical_notes: null,
+        stream_url: null,
+        internal_notes: null,
+        status: 'scheduled',
+        status_label: 'Scheduled',
+        created_by_user_id: 1,
+        created_at: '2025-01-01T10:00:00Z',
+        updated_at: '2025-01-01T10:00:00Z',
+        deleted_at: null,
+      },
+      {
+        id: 2,
+        season_id: 1,
+        platform_track_id: 1,
+        round_number: 2,
+        name: 'Round 2',
+        slug: 'round-2',
+        scheduled_at: '2025-01-22T10:00:00Z',
+        timezone: 'UTC',
+        track_layout: null,
+        track_conditions: null,
+        technical_notes: null,
+        stream_url: null,
+        internal_notes: null,
+        status: 'scheduled',
+        status_label: 'Scheduled',
+        created_by_user_id: 1,
+        created_at: '2025-01-01T10:00:00Z',
+        updated_at: '2025-01-01T10:00:00Z',
+        deleted_at: null,
+      },
+      {
+        id: 3,
+        season_id: 1,
+        platform_track_id: 1,
+        round_number: 3,
+        name: 'Round 3',
+        slug: 'round-3',
+        scheduled_at: '2025-01-29T10:00:00Z',
+        timezone: 'UTC',
+        track_layout: null,
+        track_conditions: null,
+        technical_notes: null,
+        stream_url: null,
+        internal_notes: null,
+        status: 'scheduled',
+        status_label: 'Scheduled',
+        created_by_user_id: 1,
+        created_at: '2025-01-01T10:00:00Z',
+        updated_at: '2025-01-01T10:00:00Z',
+        deleted_at: null,
+      },
+    ];
+
+    roundStore.rounds = mockRounds;
+
+    const wrapper = mount(RoundsPanel, {
+      props: {
+        seasonId: 1,
+        platformId: 1,
+      },
+      global: {
+        stubs: {
+          BasePanel: true,
+          Button: true,
+          Accordion: true,
+          AccordionPanel: true,
+          AccordionHeader: true,
+          AccordionContent: true,
+          Tag: true,
+          Skeleton: true,
+          ConfirmDialog: true,
+          RoundFormDrawer: true,
+          RaceFormDrawer: true,
+          RaceListItem: true,
+          QualifierListItem: true,
+        },
+      },
+    });
+
+    await flushPromises();
+
+    const vm = wrapper.vm as unknown as {
+      getRoundBackgroundColor: (index: number) => string;
+    };
+
+    // Test base color (index 0) - should be slate-300 (#cbd5e1 = rgb(203, 213, 225))
+    const color0 = vm.getRoundBackgroundColor(0);
+    expect(color0).toBe('rgb(203, 213, 225)');
+
+    // Test first darker round (index 1) - 10% darker (multiply by 0.9)
+    const color1 = vm.getRoundBackgroundColor(1);
+    expect(color1).toBe('rgb(183, 192, 203)'); // 203*0.9=182.7, 213*0.9=191.7, 225*0.9=202.5
+
+    // Test second darker round (index 2) - 19% darker (multiply by 0.9^2 = 0.81)
+    const color2 = vm.getRoundBackgroundColor(2);
+    expect(color2).toBe('rgb(164, 173, 182)'); // 203*0.81=164.43, 213*0.81=172.53, 225*0.81=182.25
+
+    // Verify colors get progressively darker
+    const rgb0 = color0.match(/\d+/g)?.map(Number) || [];
+    const rgb1 = color1.match(/\d+/g)?.map(Number) || [];
+    const rgb2 = color2.match(/\d+/g)?.map(Number) || [];
+
+    // Each channel should be darker
+    expect(rgb1[0]!).toBeLessThan(rgb0[0]!); // Red
+    expect(rgb1[1]!).toBeLessThan(rgb0[1]!); // Green
+    expect(rgb1[2]!).toBeLessThan(rgb0[2]!); // Blue
+
+    expect(rgb2[0]!).toBeLessThan(rgb1[0]!); // Red
+    expect(rgb2[1]!).toBeLessThan(rgb1[1]!); // Green
+    expect(rgb2[2]!).toBeLessThan(rgb1[2]!); // Blue
+  });
+
+  it('should reload tracks after saving a round to prevent track display issues', async () => {
+    const mockRound: Round = {
+      id: 1,
+      season_id: 1,
+      platform_track_id: 1,
+      round_number: 1,
+      name: 'Test Round',
+      slug: 'test-round',
+      scheduled_at: '2025-01-15T10:00:00Z',
+      timezone: 'UTC',
+      track_layout: null,
+      track_conditions: null,
+      technical_notes: null,
+      stream_url: null,
+      internal_notes: null,
+      status: 'scheduled',
+      status_label: 'Scheduled',
+      created_by_user_id: 1,
+      created_at: '2025-01-01T10:00:00Z',
+      updated_at: '2025-01-01T10:00:00Z',
+      deleted_at: null,
+    };
+
+    roundStore.rounds = [mockRound];
+
+    const wrapper = mount(RoundsPanel, {
+      props: {
+        seasonId: 1,
+        platformId: 1,
+      },
+      global: {
+        stubs: {
+          BasePanel: true,
+          Button: true,
+          Accordion: true,
+          AccordionPanel: true,
+          AccordionHeader: true,
+          AccordionContent: true,
+          Tag: true,
+          Skeleton: true,
+          ConfirmDialog: true,
+          RoundFormDrawer: true,
+          RaceFormDrawer: true,
+          RaceListItem: true,
+          QualifierListItem: true,
+        },
+      },
+    });
+
+    await flushPromises();
+
+    // Clear the initial calls
+    vi.clearAllMocks();
+
+    // Get the component instance and call handleRoundSaved
+    const vm = wrapper.vm as unknown as {
+      handleRoundSaved: () => Promise<void>;
+    };
+
+    await vm.handleRoundSaved();
+
+    // Verify that both rounds and tracks are reloaded
+    expect(roundStore.fetchRounds).toHaveBeenCalledWith(1);
+    expect(trackStore.fetchTracks).toHaveBeenCalledWith({ platform_id: 1, is_active: true });
   });
 });

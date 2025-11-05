@@ -10,14 +10,16 @@
 
 // Read from environment or use defaults
 const BASE_DOMAIN = process.env.TEST_DOMAIN || 'virtualracingleagues.localhost';
+const TEST_PORT = process.env.TEST_PORT || '80';
 
 /**
  * Build URL for testing
  * Uses subdomain.localhost format
+ * Port 80 for Docker container, 8000 for host machine (set TEST_PORT env var)
  */
 function buildUrl(subdomain: string = '', path: string = '/'): string {
   const domain = subdomain ? `${subdomain}.${BASE_DOMAIN}` : BASE_DOMAIN;
-  return `http://${domain}${path}`;
+  return `http://${domain}:${TEST_PORT}${path}`;
 }
 
 /**
@@ -57,6 +59,12 @@ export const TEST_URLS = {
  * Test credentials
  */
 export const TEST_CREDENTIALS = {
+  // Regular user credentials (public site)
+  user: {
+    email: 'user@example.com',
+    password: 'password',
+  },
+  // Admin credentials
   admin: {
     email: 'admin@example.com',
     password: 'password',
@@ -69,6 +77,7 @@ export const TEST_CREDENTIALS = {
     email: 'moderator@example.com',
     password: 'password',
   },
+  // Invalid credentials for negative tests
   invalidUser: {
     email: 'wrong@example.com',
     password: 'wrongpassword',

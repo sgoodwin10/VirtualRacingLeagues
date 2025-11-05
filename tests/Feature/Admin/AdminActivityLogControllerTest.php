@@ -135,6 +135,10 @@ class AdminActivityLogControllerTest extends TestCase
 
         $data = $response->json('data');
 
+        // Verify data is an array (not an object)
+        $this->assertIsArray($data, 'Response data should be an array');
+        $this->assertNotEmpty($data, 'Should have at least one activity');
+
         // Verify all activities are from the regular admin
         foreach ($data as $activity) {
             $this->assertEquals($this->regularAdmin->id, $activity['causer_id']);
@@ -161,6 +165,10 @@ class AdminActivityLogControllerTest extends TestCase
             ]);
 
         $data = $response->json('data');
+
+        // Verify data is an array (not an object)
+        $this->assertIsArray($data, 'Response data should be an array');
+        $this->assertNotEmpty($data, 'Should have at least one activity');
 
         // Verify all activities are from user1
         foreach ($data as $activity) {

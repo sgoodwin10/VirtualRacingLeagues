@@ -199,7 +199,7 @@ class AdminActivityLogController extends Controller
         $user = User::findOrFail($userId);
         $activities = $this->activityLogService->getActivitiesForCauser($user);
 
-        return ApiResponse::success($activities);
+        return ApiResponse::success($activities->values()->all());
     }
 
     /**
@@ -211,7 +211,7 @@ class AdminActivityLogController extends Controller
         $admin = Admin::findOrFail($adminId);
         $activities = $this->activityLogService->getActivitiesForCauser($admin);
 
-        return ApiResponse::success($activities);
+        return ApiResponse::success($activities->values()->all());
     }
 
     /**

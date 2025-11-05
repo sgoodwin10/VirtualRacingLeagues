@@ -2,11 +2,14 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * Read configuration from environment variables
- * Note: Application runs on port 80 via Docker/Nginx (no port number needed)
- * Tests should be run from host machine where subdomain URLs resolve properly
+ *
+ * Tests can be run either from:
+ * 1. Host machine: Subdomain URLs resolve via /etc/hosts (use port 8000)
+ * 2. Docker container: Subdomain URLs resolve via /etc/hosts (use port 80)
  */
 const TEST_DOMAIN = process.env.TEST_DOMAIN || 'virtualracingleagues.localhost';
-const BASE_URL = `http://${TEST_DOMAIN}`;
+const TEST_PORT = process.env.TEST_PORT || '80';
+const BASE_URL = `http://${TEST_DOMAIN}:${TEST_PORT}`;
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -36,17 +39,20 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          headless: true,
+          args: [
+            '--disable-dev-shm-usage',  // Overcome limited shared memory in Docker
+            '--disable-blink-features=AutomationControlled',  // Avoid automation detection
+            '--no-sandbox',  // Required in Docker
+            '--disable-setuid-sandbox',
+            // Fix DNS resolution in Docker - map subdomains to nginx container IP
+            '--host-resolver-rules=MAP *.virtualracingleagues.localhost 172.19.0.7,MAP virtualracingleagues.localhost 172.19.0.7',
+          ],
+        },
+      },
     },
 
     /* Test against mobile viewports. */

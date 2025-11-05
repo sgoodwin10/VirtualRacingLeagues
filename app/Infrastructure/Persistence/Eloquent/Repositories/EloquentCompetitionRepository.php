@@ -36,7 +36,25 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
 
     public function delete(Competition $competition): void
     {
-        CompetitionModel::where('id', $competition->id())->delete();
+        $competitionId = $competition->id();
+
+        // Cascade soft delete: First delete all seasons, which will cascade to rounds
+        $seasons = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
+            ->where('competition_id', $competitionId)
+            ->get();
+
+        foreach ($seasons as $season) {
+            // Soft delete all rounds for this season
+            \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
+                ->where('season_id', $season->id)
+                ->delete();
+
+            // Soft delete the season
+            $season->delete();
+        }
+
+        // Finally, soft delete the competition itself
+        CompetitionModel::where('id', $competitionId)->delete();
     }
 
     public function findById(int $id): Competition

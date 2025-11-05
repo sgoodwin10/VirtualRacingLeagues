@@ -52,6 +52,22 @@ else
     log_success "npm dependencies available"
 fi
 
+# Ensure Playwright Chromium is installed (fallback safety check)
+log_info "Checking Playwright Chromium browser..."
+if ! gosu laravel npx playwright@1.56.0 --version &> /dev/null; then
+    log_warning "Playwright not available, installing..."
+    gosu laravel npm install --save-dev @playwright/test@^1.56.0
+fi
+
+# Check if Chromium browser is installed
+if [ ! -d "/home/laravel/.cache/playwright/chromium-*" ]; then
+    log_warning "Playwright Chromium browser missing, installing..."
+    gosu laravel npx playwright@1.56.0 install chromium --with-deps
+    log_success "Playwright Chromium browser installed"
+else
+    log_success "Playwright Chromium browser available"
+fi
+
 # Run migrations with error handling
 log_info "Running migrations..."
 if [ "${SKIP_MIGRATIONS:-false}" = "true" ]; then
@@ -95,62 +111,76 @@ log_info "Setting up E2E testing subdomain resolution..."
 NGINX_IP=$(getent hosts nginx | awk '{ print $1 }')
 
 if [ -n "$NGINX_IP" ]; then
-    # Check if entries already exist to avoid duplicates
-    if ! grep -q "virtualracingleagues.localhost" /etc/hosts 2>/dev/null; then
-        log_info "Adding subdomain entries to /etc/hosts..."
-        # Use a temporary file for atomic update
-        {
-            echo "# Playwright E2E Testing - Added by docker-entrypoint.sh"
-            echo "${NGINX_IP} virtualracingleagues.localhost"
-            echo "${NGINX_IP} app.virtualracingleagues.localhost"
-            echo "${NGINX_IP} admin.virtualracingleagues.localhost"
-        } >> /etc/hosts
-        log_success "Added subdomain entries to /etc/hosts pointing to nginx (${NGINX_IP})"
+    log_info "Detected nginx container at ${NGINX_IP}"
+
+    # Remove any existing entries (including those from extra_hosts)
+    if grep -q "virtualracingleagues.localhost" /etc/hosts 2>/dev/null; then
+        log_info "Removing existing virtualracingleagues.localhost entries..."
+        sed -i '/virtualracingleagues\.localhost/d' /etc/hosts
+    fi
+
+    # Add subdomain entries with correct nginx IP
+    log_info "Adding subdomain entries to /etc/hosts..."
+    {
+        echo "# Playwright E2E Testing - Added by docker-entrypoint.sh"
+        echo "${NGINX_IP} virtualracingleagues.localhost"
+        echo "${NGINX_IP} app.virtualracingleagues.localhost"
+        echo "${NGINX_IP} admin.virtualracingleagues.localhost"
+    } >> /etc/hosts
+
+    log_success "Added subdomain entries to /etc/hosts pointing to nginx (${NGINX_IP})"
+
+    # Verify the entries
+    if grep "^${NGINX_IP}.*virtualracingleagues.localhost" /etc/hosts > /dev/null; then
+        log_success "/etc/hosts configuration verified"
     else
-        log_success "Subdomain entries already exist in /etc/hosts"
+        log_error "Failed to verify /etc/hosts configuration"
     fi
 else
     log_warning "Could not resolve nginx container IP, skipping /etc/hosts setup"
 fi
 
-# Configure CCStatusline for Claude Code
+# Configure CCStatusline for Claude Code (as laravel user)
 log_info "Configuring CCStatusline..."
 if [ -f "docker/ccstatusline/settings.json" ]; then
-    mkdir -p ~/.config/ccstatusline
-    mkdir -p ~/.claude
+    # Run as laravel user using gosu
+    gosu laravel mkdir -p /home/laravel/.config/ccstatusline
+    gosu laravel mkdir -p /home/laravel/.claude
 
     # Copy ccstatusline settings to config directory
-    cp docker/ccstatusline/settings.json ~/.config/ccstatusline/settings.json
+    gosu laravel cp docker/ccstatusline/settings.json /home/laravel/.config/ccstatusline/settings.json
     log_success "CCStatusline configuration copied"
 
     # Merge ccstatusline settings into Claude Code settings
-    if [ -f ~/.claude/settings.json ]; then
-        # Merge with existing settings
+    if [ -f /home/laravel/.claude/settings.json ] && [ -s /home/laravel/.claude/settings.json ]; then
+        # Merge with existing settings (only if file is not empty)
         TEMP_FILE=$(mktemp)
-        jq -s '.[0] * .[1]' ~/.claude/settings.json docker/ccstatusline/settings.json > "$TEMP_FILE" && mv "$TEMP_FILE" ~/.claude/settings.json
+        jq -s '.[0] * .[1]' /home/laravel/.claude/settings.json docker/ccstatusline/settings.json > "$TEMP_FILE" && \
+        gosu laravel cp "$TEMP_FILE" /home/laravel/.claude/settings.json && \
+        rm "$TEMP_FILE"
         log_success "CCStatusline settings merged into Claude Code"
     else
         # Create new settings file
-        cp docker/ccstatusline/settings.json ~/.claude/settings.json
+        gosu laravel cp docker/ccstatusline/settings.json /home/laravel/.claude/settings.json
         log_success "CCStatusline settings created in Claude Code"
     fi
 else
     log_warning "CCStatusline settings file not found at docker/ccstatusline/settings.json"
 fi
 
-# Add Context7 MCP server to Claude Code if API key is present
+# Add Context7 MCP server to Claude Code if API key is present (as laravel user)
 CLAUDE_CONTEXT7_MCP_API_KEY="${CLAUDE_CONTEXT7_MCP_API_KEY:-}"
 if [ -n "${CLAUDE_CONTEXT7_MCP_API_KEY}" ]; then
     log_info "Configuring Context7 MCP server..."
 
     # Remove if context7 is already present to avoid duplicates
-    if claude mcp list 2>/dev/null | grep -q "context7"; then
+    if gosu laravel claude mcp list 2>/dev/null | grep -q "context7"; then
         log_info "Removing existing Context7 MCP configuration..."
-        claude mcp remove "context7" || true
+        gosu laravel claude mcp remove "context7" || true
     fi
 
     # Add Context7 MCP server
-    if claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key "${CLAUDE_CONTEXT7_MCP_API_KEY}"; then
+    if gosu laravel claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key "${CLAUDE_CONTEXT7_MCP_API_KEY}"; then
         log_success "Context7 MCP server configured"
     else
         log_warning "Failed to configure Context7 MCP server"

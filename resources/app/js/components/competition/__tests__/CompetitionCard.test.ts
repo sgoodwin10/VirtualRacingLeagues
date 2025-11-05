@@ -1,8 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createRouter, createMemoryHistory } from 'vue-router';
+import { createPinia, setActivePinia } from 'pinia';
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
+import ConfirmationService from 'primevue/confirmationservice';
 import CompetitionCard from '../CompetitionCard.vue';
 import type { Competition } from '@app/types/competition';
 
@@ -23,7 +25,7 @@ function createMountOptions(props: { competition: Competition }) {
   return {
     props,
     global: {
-      plugins: [router, PrimeVue, ToastService],
+      plugins: [router, PrimeVue, ToastService, ConfirmationService],
       stubs: {
         SeasonFormDrawer: {
           name: 'SeasonFormDrawer',
@@ -125,6 +127,11 @@ function createMockCompetition(overrides: Partial<Competition> = {}): Competitio
 }
 
 describe('CompetitionCard', () => {
+  beforeEach(() => {
+    // Create a fresh pinia instance for each test
+    setActivePinia(createPinia());
+  });
+
   it('renders competition basic information', () => {
     const competition = createMockCompetition();
     const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
@@ -261,14 +268,53 @@ describe('CompetitionCard', () => {
   });
 
   describe('User Interactions', () => {
-    it('emits edit event when edit button is clicked', async () => {
+    it('displays SpeedDial with edit and delete actions', () => {
       const competition = createMockCompetition();
       const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
 
-      const editButton = wrapper.findComponent({ name: 'Button' });
-      await editButton.trigger('click');
+      const speedDial = wrapper.findComponent({ name: 'SpeedDial' });
+      expect(speedDial.exists()).toBe(true);
+    });
+
+    it('emits edit event when edit action is triggered', async () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
+
+      // Get the SpeedDial component and trigger the edit action
+      const speedDial = wrapper.findComponent({ name: 'SpeedDial' });
+      const model = speedDial.props('model') as Array<{ label: string; command: () => void }>;
+      const editAction = model.find((item) => item.label === 'Edit');
+
+      expect(editAction).toBeDefined();
+      editAction?.command();
+      await wrapper.vm.$nextTick();
 
       expect(wrapper.emitted('edit')).toHaveLength(1);
+    });
+
+    it('has edit and delete actions in SpeedDial menu', () => {
+      const competition = createMockCompetition();
+      const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
+
+      const speedDial = wrapper.findComponent({ name: 'SpeedDial' });
+      const model = speedDial.props('model') as Array<{
+        label: string;
+        icon: string;
+        severity: string;
+      }>;
+
+      // Check that both edit and delete actions exist
+      expect(model).toHaveLength(2);
+
+      const editAction = model.find((item) => item.label === 'Edit');
+      expect(editAction).toBeDefined();
+      expect(editAction?.icon).toBe('pi pi-pencil');
+      expect(editAction?.severity).toBe('warn');
+
+      const deleteAction = model.find((item) => item.label === 'Delete');
+      expect(deleteAction).toBeDefined();
+      expect(deleteAction?.icon).toBe('pi pi-trash');
+      expect(deleteAction?.severity).toBe('danger');
     });
 
     it('shows create new season button', () => {
@@ -369,18 +415,6 @@ describe('CompetitionCard', () => {
 
       const card = wrapper.find('.competition-card');
       expect(card.exists()).toBe(true);
-    });
-
-    it('does not navigate when edit button is clicked', async () => {
-      const competition = createMockCompetition();
-      const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
-
-      const pushSpy = vi.spyOn(router, 'push');
-      const editButton = wrapper.findComponent({ name: 'Button' });
-
-      await editButton.trigger('click');
-
-      expect(pushSpy).not.toHaveBeenCalled();
     });
   });
 

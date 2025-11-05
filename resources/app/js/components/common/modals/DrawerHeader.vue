@@ -21,7 +21,7 @@ defineProps<Props>();
 </script>
 
 <template>
-  <div class="container mx-auto flex flex-col max-w-5xl">
+  <div class="container mx-auto flex flex-col max-w-7xl px-12">
     <HTag :level="2" additional-classes="mb-1">{{ title }}</HTag>
     <p v-if="subtitle" class="text-gray-600">{{ subtitle }}</p>
   </div>

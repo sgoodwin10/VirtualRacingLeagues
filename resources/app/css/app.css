@@ -4,6 +4,18 @@
 @import 'tailwindcss';
 @plugin 'tailwindcss-primeui';
 
+@theme {
+  /* Font size scale - Tailwind v4 @theme directive */
+  /* Note: --text-* variables generate corresponding text-* utility classes */
+  --text-base: 0.875rem; /* 14px */
+  --text-xs: 0.625rem; /* 10px */
+  --text-sm: 0.75rem; /* 12px */
+  --text-md: 0.8125rem; /* 13px */
+  --text-lg: 1rem; /* 16px */
+  --text-xl: 1.125rem; /* 18px */
+  --text-2xl: 1.5rem; /* 24px */
+}
+
 /* User Dashboard Specific Styles */
 :root {
   /* ============================================
@@ -31,7 +43,8 @@
   --text-muted: #9ca3af;
   --bg-white: #ffffff;
 
-  /* Font size scale */
+  /* Font size scale (CSS custom properties for use with var()) */
+  /* Note: Prefer using Tailwind text-* utilities instead of these variables */
   --font-size-base: 14px;
   --font-size-xs: 10px;
   --font-size-sm: 12px;
@@ -329,4 +342,14 @@ textarea {
 /* PrimeVue DataTable Styling */
 .p-datatable-tbody > tr > td {
   padding: 0.5rem 1rem;
+}
+
+/* PrimeVue SpeedDial Styling */
+.p-speeddial-item .p-button {
+  box-shadow: var(--shadow-md);
+}
+.p-speeddial-button:hover {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  box-shadow: var(--shadow-md);
 }

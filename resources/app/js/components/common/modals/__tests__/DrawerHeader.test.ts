@@ -52,7 +52,7 @@ describe('DrawerHeader', () => {
     expect(container.classes()).toContain('mx-auto');
     expect(container.classes()).toContain('flex');
     expect(container.classes()).toContain('flex-col');
-    expect(container.classes()).toContain('max-w-5xl');
+    expect(container.classes()).toContain('max-w-7xl');
   });
 
   it('uses HTag component with level 2 for the title', () => {

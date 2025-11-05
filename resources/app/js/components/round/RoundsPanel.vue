@@ -1,18 +1,5 @@
 <template>
   <BasePanel>
-    <template #header>
-      <div class="flex items-center justify-between">
-        <h2 class="font-semibold">Rounds</h2>
-        <Button
-          label="Add Round"
-          icon="pi pi-plus"
-          size="small"
-          :disabled="roundStore.isLoading"
-          @click="handleCreateRound"
-        />
-      </div>
-    </template>
-
     <template #default>
       <!-- Loading State -->
       <div v-if="roundStore.isLoading" class="space-y-4">
@@ -33,18 +20,73 @@
 
       <!-- Rounds List -->
       <Accordion v-else :multiple="true" :active-index="activeIndexes">
-        <AccordionPanel v-for="round in rounds" :key="round.id" :value="round.id">
-          <AccordionHeader>
-            <div class="flex items-center justify-between w-full pr-4">
-              <div class="flex items-center gap-3">
-                <Tag :value="`Round ${round.round_number}`" severity="info" />
-                <span class="font-medium">{{ round.name || 'Untitled Round' }}</span>
-                <span class="text-sm text-gray-600">
+        <AccordionPanel
+          v-for="(round, index) in rounds"
+          :key="round.id"
+          :value="round.id"
+          class="mb-1"
+        >
+          <AccordionHeader class="pl-0 py-0 hover:bg-blue-50">
+            <div class="flex items-center flex-row gap-2 w-full pr-4">
+              <div
+                class="h-16 w-16 flex flex-col items-center justify-center rounded-l-md"
+                :style="{ backgroundColor: getRoundBackgroundColor(index) }"
+              >
+                <span class="text-xs uppercase text-white">Round</span>
+                <span class="text-2xl font-bold text-shadow-sm text-white">{{
+                  round.round_number
+                }}</span>
+              </div>
+
+              <div v-if="round.name" class="flex flex-none items-center mr-4">
+                <span class="font-medium text-lg text-gray-700">{{
+                  round.name || 'Untitled Round'
+                }}</span>
+              </div>
+              <div class="flex flex-grow flex-row pr-4 space-y-0">
+                <div class="flex-none flex-col">
+                  <div>
+                    <span class="text-sm text-gray-400 font-medium">Track</span>
+                  </div>
+                  <span class="text-md text-gray-700 font-normal">
+                    {{ getTrackAndLocation(round.platform_track_id) }}
+                  </span>
+                </div>
+                <div
+                  v-if="round.track_layout || round.track_conditions"
+                  class="flex flex-row ml-4 gap-4"
+                >
+                  <div v-if="round.track_layout" class="flex flex-col">
+                    <div>
+                      <span class="text-sm text-gray-400 font-medium">Direction</span>
+                    </div>
+                    <span class="text-md text-gray-700 font-normal">
+                      {{ round.track_layout }}
+                    </span>
+                  </div>
+
+                  <div v-if="round.track_conditions" class="flex flex-col">
+                    <div>
+                      <span class="text-sm text-gray-400 font-medium"
+                        >Conditions / Time Of Day</span
+                      >
+                    </div>
+                    <span class="text-md text-gray-700 font-normal">
+                      {{ round.track_conditions }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="w-36 flex flex-col">
+                <div>
+                  <span class="text-sm text-gray-400 font-medium">Date</span>
+                </div>
+                <span class="text-md text-gray-700 font-normal">
                   {{ formatScheduledDate(round.scheduled_at) }}
                 </span>
               </div>
               <div class="flex items-center gap-2">
-                <Tag :value="round.status_label" :severity="getStatusSeverity(round.status)" />
                 <Button
                   v-tooltip.top="'Edit Round'"
                   icon="pi pi-pencil"
@@ -70,25 +112,6 @@
           <AccordionContent>
             <div class="space-y-4">
               <!-- Round Details -->
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <div class="font-medium text-sm text-gray-600">Track</div>
-                  <div>{{ getTrackAndLocation(round.platform_track_id) }}</div>
-                </div>
-                <div v-if="round.track_layout">
-                  <div class="font-medium text-sm text-gray-600">Layout</div>
-                  <div>{{ round.track_layout }}</div>
-                </div>
-                <div v-if="round.track_conditions">
-                  <div class="font-medium text-sm text-gray-600">Conditions</div>
-                  <div>{{ round.track_conditions }}</div>
-                </div>
-                <div>
-                  <div class="font-medium text-sm text-gray-600">Timezone</div>
-                  <div>{{ round.timezone }}</div>
-                </div>
-              </div>
-
               <div v-if="round.technical_notes">
                 <div class="font-medium text-sm text-gray-600">Technical Notes</div>
                 <div class="whitespace-pre-wrap">{{ round.technical_notes }}</div>
@@ -106,58 +129,19 @@
                 <div class="whitespace-pre-wrap">{{ round.internal_notes }}</div>
               </div>
 
-              <!-- Qualifier Section -->
+              <!-- Race Events Section (Qualifying + Races) -->
               <div>
                 <div class="flex items-center justify-between mb-3">
-                  <h3 class="font-semibold flex items-center gap-2">
-                    <i class="pi pi-stopwatch text-blue-600"></i>
-                    Qualifying
-                  </h3>
-                  <Button
-                    v-if="!getQualifier(round.id)"
-                    label="Add Qualifying"
-                    icon="pi pi-plus"
-                    size="small"
-                    outlined
-                    severity="info"
-                    @click="handleCreateQualifier(round.id)"
-                  />
-                </div>
-
-                <div v-if="loadingRaces" class="mb-4">
-                  <Skeleton height="4rem" />
-                </div>
-
-                <div
-                  v-else-if="!getQualifier(round.id)"
-                  class="text-sm text-gray-500 text-center py-4 mb-4 bg-blue-50 rounded-lg border border-blue-200"
-                >
-                  <i class="pi pi-info-circle mr-2"></i>
-                  No qualifying session configured
-                </div>
-
-                <div v-else class="mb-4">
-                  <QualifierListItem
-                    :race="getQualifier(round.id)!"
-                    @edit="handleEditQualifier"
-                    @delete="handleDeleteQualifier"
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              <!-- Races Section -->
-              <div>
-                <div class="flex items-center justify-between mb-3">
-                  <h3 class="font-semibold">Races</h3>
-                  <Button
-                    label="Add Race"
-                    icon="pi pi-plus"
-                    size="small"
-                    outlined
-                    @click="handleCreateRace(round.id)"
-                  />
+                  <h3 class="font-semibold">Race Events</h3>
+                  <div class="flex items-center gap-2">
+                    <Button
+                      label="Add Event"
+                      icon="pi pi-plus"
+                      size="small"
+                      outlined
+                      @click="handleCreateRace(round.id)"
+                    />
+                  </div>
                 </div>
 
                 <div v-if="loadingRaces" class="space-y-2">
@@ -166,26 +150,45 @@
                 </div>
 
                 <div
-                  v-else-if="getRaces(round.id).length === 0"
+                  v-else-if="getAllRaceEvents(round.id).length === 0"
                   class="text-sm text-gray-500 text-center py-4"
                 >
-                  No races added yet
+                  No race events added yet
                 </div>
 
                 <div v-else class="space-y-2">
-                  <RaceListItem
-                    v-for="race in getRaces(round.id)"
-                    :key="race.id"
-                    :race="race"
-                    @edit="handleEditRace"
-                    @delete="handleDeleteRace"
-                  />
+                  <template v-for="race in getAllRaceEvents(round.id)" :key="race.id">
+                    <QualifierListItem
+                      v-if="isQualifier(race)"
+                      :race="race"
+                      @edit="handleEditQualifier"
+                      @delete="handleDeleteQualifier"
+                    />
+                    <RaceListItem
+                      v-else
+                      :race="race"
+                      @edit="handleEditRace"
+                      @delete="handleDeleteRace"
+                    />
+                  </template>
                 </div>
               </div>
             </div>
           </AccordionContent>
         </AccordionPanel>
       </Accordion>
+
+      <!-- Add Round Button (shown when rounds exist) -->
+      <div v-if="!roundStore.isLoading && rounds.length > 0" class="mt-2">
+        <button
+          type="button"
+          class="flex items-center justify-center gap-2 w-full p-2 bg-slate-50 rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
+          @click.stop="handleCreateRound"
+        >
+          <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
+          <span class="text-sm font-medium">Add Round</span>
+        </button>
+      </div>
     </template>
   </BasePanel>
 
@@ -221,6 +224,7 @@ import { ref, computed, onMounted } from 'vue';
 import { format, parseISO } from 'date-fns';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
+import { PhPlus } from '@phosphor-icons/vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import RoundFormDrawer from '@app/components/round/modals/RoundFormDrawer.vue';
 import RaceFormDrawer from '@app/components/round/modals/RaceFormDrawer.vue';
@@ -231,14 +235,12 @@ import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import AccordionHeader from 'primevue/accordionheader';
 import AccordionContent from 'primevue/accordioncontent';
-import Tag from 'primevue/tag';
 import Skeleton from 'primevue/skeleton';
-import Divider from 'primevue/divider';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useRoundStore } from '@app/stores/roundStore';
 import { useRaceStore } from '@app/stores/raceStore';
 import { useTrackStore } from '@app/stores/trackStore';
-import type { Round, RoundStatus } from '@app/types/round';
+import type { Round } from '@app/types/round';
 import type { Race } from '@app/types/race';
 import { isQualifier } from '@app/types/race';
 
@@ -273,26 +275,19 @@ const rounds = computed(() => {
     .sort((a, b) => a.round_number - b.round_number);
 });
 
-// Computed getters for races to ensure proper reactivity
-const racesByRound = computed(() => {
+// Unified list of all race events (qualifiers + races) sorted by created_at
+const allRaceEventsByRound = computed(() => {
   const raceMap = new Map<number, Race[]>();
   rounds.value.forEach((round) => {
-    const roundRaces = raceStore
-      .racesByRoundId(round.id)
-      .filter((race) => !isQualifier(race))
-      .sort((a, b) => a.race_number - b.race_number);
-    raceMap.set(round.id, roundRaces);
+    const allRaces = raceStore.racesByRoundId(round.id).sort((a, b) => {
+      // Sort by created_at timestamp (ascending - oldest first)
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return dateA - dateB;
+    });
+    raceMap.set(round.id, allRaces);
   });
   return raceMap;
-});
-
-const qualifiersByRound = computed(() => {
-  const qualifierMap = new Map<number, Race | null>();
-  rounds.value.forEach((round) => {
-    const qualifier = raceStore.racesByRoundId(round.id).find((race) => isQualifier(race)) || null;
-    qualifierMap.set(round.id, qualifier);
-  });
-  return qualifierMap;
 });
 
 onMounted(async () => {
@@ -340,19 +335,6 @@ function formatScheduledDate(dateString: string | null): string {
   }
 }
 
-function getStatusSeverity(
-  status: RoundStatus,
-): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-  const severityMap: Record<RoundStatus, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
-    scheduled: 'info',
-    pre_race: 'warn',
-    in_progress: 'success',
-    completed: 'secondary',
-    cancelled: 'danger',
-  };
-  return severityMap[status] || 'info';
-}
-
 function getTrackAndLocation(trackId: number | null): string {
   if (!trackId) {
     return 'No track selected';
@@ -363,8 +345,24 @@ function getTrackAndLocation(trackId: number | null): string {
   }
   const trackLocation = trackStore.trackLocationById(track.platform_track_location_id);
   return trackLocation
-    ? `${track.name} - ${trackLocation.name} (${trackLocation.country})`
+    ? `${trackLocation.name} - ${track.name}`
     : `${track.name} (${track.location?.country})`;
+}
+
+function getRoundBackgroundColor(index: number): string {
+  // Base color: slate-300 (#cbd5e1 in RGB: 203, 213, 225)
+  const baseColor = { r: 203, g: 213, b: 225 };
+
+  // Calculate darkness factor (25% darker per round)
+  // Each step reduces the brightness by 25%
+  const darknessMultiplier = Math.pow(0.9, index);
+
+  // Apply darkness to each RGB channel
+  const r = Math.round(baseColor.r * darknessMultiplier);
+  const g = Math.round(baseColor.g * darknessMultiplier);
+  const b = Math.round(baseColor.b * darknessMultiplier);
+
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
 function handleCreateRound(): void {
@@ -410,25 +408,23 @@ function handleDeleteRound(round: Round): void {
   });
 }
 
-function handleRoundSaved(): void {
+async function handleRoundSaved(): Promise<void> {
   showFormDrawer.value = false;
   selectedRound.value = null;
+
+  // Reload rounds to get updated data
+  await roundStore.fetchRounds(props.seasonId);
+
+  // Ensure tracks are loaded for all rounds
+  try {
+    await trackStore.fetchTracks({ platform_id: props.platformId, is_active: true });
+  } catch (trackError) {
+    console.error('[RoundsPanel] Error reloading tracks after round saved:', trackError);
+  }
 }
 
-function getQualifier(roundId: number): Race | null {
-  return qualifiersByRound.value.get(roundId) || null;
-}
-
-function getRaces(roundId: number): Race[] {
-  return racesByRound.value.get(roundId) || [];
-}
-
-function handleCreateQualifier(roundId: number): void {
-  selectedRoundId.value = roundId;
-  selectedRace.value = null;
-  raceFormMode.value = 'create';
-  raceFormType.value = 'qualifier';
-  showRaceFormDrawer.value = true;
+function getAllRaceEvents(roundId: number): Race[] {
+  return allRaceEventsByRound.value.get(roundId) || [];
 }
 
 function handleEditQualifier(qualifier: Race): void {

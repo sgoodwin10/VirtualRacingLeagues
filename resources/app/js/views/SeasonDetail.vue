@@ -8,9 +8,18 @@ import { useTeamStore } from '@app/stores/teamStore';
 import { useDivisionStore } from '@app/stores/divisionStore';
 import type { Season } from '@app/types/season';
 import type { SeasonDriver } from '@app/types/seasonDriver';
-import { PhGauge, PhCalendar, PhUsers, PhFlagCheckered, PhGear } from '@phosphor-icons/vue';
+import {
+  PhGauge,
+  PhCalendar,
+  PhUsers,
+  PhFlagCheckered,
+  PhGear,
+  PhTrophy,
+  PhCar,
+} from '@phosphor-icons/vue';
 
 import Button from 'primevue/button';
+import Card from 'primevue/card';
 import Skeleton from 'primevue/skeleton';
 import Message from 'primevue/message';
 import Tabs from 'primevue/tabs';
@@ -18,8 +27,8 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
+import Tag from 'primevue/tag';
 
-import SeasonHeader from '@app/components/season/SeasonHeader.vue';
 import SeasonSettings from '@app/components/season/SeasonSettings.vue';
 import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
 import SeasonDriversTable from '@app/components/season/SeasonDriversTable.vue';
@@ -30,6 +39,9 @@ import DivisionsPanel from '@app/components/season/divisions/DivisionsPanel.vue'
 import RoundsPanel from '@app/components/round/RoundsPanel.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@app/components/common/Breadcrumbs.vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
+import HTag from '@app/components/common/HTag.vue';
+import InfoItem from '@app/components/common/InfoItem.vue';
+import FormLabel from '@app/components/common/forms/FormLabel.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -243,20 +255,86 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
     </Message>
 
     <!-- Season content -->
-    <div v-else-if="season">
+    <div v-else-if="season" class="space-y-6">
       <!-- Breadcrumbs -->
-      <Breadcrumbs :items="breadcrumbItems" class="mb-4" />
+      <Breadcrumbs :items="breadcrumbItems" />
 
-      <!-- Archived banner -->
-      <Message v-if="season.is_archived" severity="warn" :closable="false" class="mb-4">
-        <div class="flex items-center justify-between">
-          <span> <strong>Archived Season</strong> - This season is read-only. </span>
-          <span class="text-sm text-gray-600">(Restore coming in next update)</span>
-        </div>
-      </Message>
+      <!-- Header Card -->
+      <Card class="overflow-hidden p-0">
+        <template #header>
+          <div class="relative">
+            <!-- Gradient Header Background -->
+            <div class="w-full h-64 bg-gradient-to-br from-purple-500 to-blue-600"></div>
 
-      <!-- Header -->
-      <SeasonHeader :season="season" @edit="handleEdit" @back-to-league="handleBackToLeague" />
+            <!-- Archived Tag Overlay (top-left corner) -->
+            <div
+              v-if="season.is_archived"
+              class="absolute top-0 left-0 flex flex-col items-center gap-3 p-2"
+            >
+              <Tag severity="warn" value="ARCHIVED" class="text-xs font-semibold px-3 py-1" />
+            </div>
+
+            <!-- Season Icon/Logo Placeholder -->
+            <div
+              class="absolute -bottom-12 left-8 w-24 h-24 rounded-xl border-4 border-white shadow-xl bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center"
+            >
+              <PhTrophy :size="48" class="text-white" weight="fill" />
+            </div>
+          </div>
+
+          <!-- Title Bar with Season Name and Actions -->
+          <div
+            class="flex flex-wrap items-start justify-between gap-4 bg-slate-100 border-b border-gray-200 p-3 shadow-lg"
+          >
+            <HTag additional-classes="ml-32" :level="2">{{ season.name }}</HTag>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+              <Button
+                label="Back to League"
+                icon="pi pi-arrow-left"
+                severity="secondary"
+                class="bg-white"
+                outlined
+                size="small"
+                @click="handleBackToLeague"
+              />
+              <Button
+                label="Edit Season"
+                icon="pi pi-pencil"
+                severity="secondary"
+                class="bg-white"
+                outlined
+                size="small"
+                :disabled="season.is_archived"
+                @click="handleEdit"
+              />
+            </div>
+          </div>
+        </template>
+
+        <template #content>
+          <!-- InfoItem Grid for Key Stats -->
+          <div class="grid grid-cols-4 border-b border-gray-200 gap-px bg-surface-200">
+            <InfoItem
+              :icon="PhTrophy"
+              :text="season.competition?.name || season.competition_name || 'N/A'"
+              centered
+            />
+            <InfoItem :icon="PhCar" :text="season.car_class || 'Not specified'" centered />
+            <InfoItem
+              :icon="PhUsers"
+              :text="stats.total.toString() + ' Driver' + (stats.total === 1 ? '' : 's')"
+              centered
+            />
+            <InfoItem
+              :icon="PhCalendar"
+              :text="'Status: ' + season.status.charAt(0).toUpperCase() + season.status.slice(1)"
+              centered
+            />
+          </div>
+        </template>
+      </Card>
 
       <!-- Tabs -->
       <Tabs v-model:value="activeTab">
@@ -296,80 +374,146 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
         <TabPanels>
           <!-- Overview Tab -->
           <TabPanel value="overview">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <!-- Season Information -->
-              <BasePanel header="Season Information" class="lg:col-span-2">
-                <div class="space-y-3">
-                  <div>
-                    <span class="text-sm font-semibold text-gray-600">Competition</span>
-                    <p>{{ season.competition?.name || season.competition_name || 'N/A' }}</p>
+            <!-- Main Content: Two-Column Layout (3/5 + 2/5) -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <!-- Left Column: Main Content (3/5 width) -->
+              <div class="lg:col-span-3 space-y-4">
+                <!-- Description Panel -->
+                <BasePanel v-if="season.description">
+                  <template #header>
+                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
+                      <span class="font-medium text-surface-700">Description</span>
+                    </div>
+                  </template>
+                  <div class="p-4">
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {{ season.description }}
+                    </p>
                   </div>
-                  <div v-if="season.car_class">
-                    <span class="text-sm font-semibold text-gray-600">Car Class</span>
-                    <p>{{ season.car_class }}</p>
-                  </div>
-                  <div>
-                    <span class="text-sm font-semibold text-gray-600">Team Championship</span>
-                    <p>{{ season.team_championship_enabled ? 'Enabled' : 'Disabled' }}</p>
-                  </div>
-                  <div>
-                    <span class="text-sm font-semibold text-gray-600">Race Divisions</span>
-                    <p>{{ season.race_divisions_enabled ? 'Enabled' : 'Disabled' }}</p>
-                  </div>
-                  <div>
-                    <span class="text-sm font-semibold text-gray-600">Status</span>
-                    <p class="capitalize">{{ season.status }}</p>
-                  </div>
-                  <div>
-                    <span class="text-sm font-semibold text-gray-600">Created</span>
-                    <p>{{ new Date(season.created_at).toLocaleDateString() }}</p>
-                  </div>
-                </div>
-              </BasePanel>
+                </BasePanel>
 
-              <!-- Driver Stats -->
-              <BasePanel header="Driver Statistics">
-                <div class="space-y-3">
-                  <div>
-                    <span class="text-sm font-semibold text-gray-600">Total Drivers</span>
-                    <p class="text-2xl font-bold">{{ stats.total }}</p>
+                <!-- Technical Specifications Panel -->
+                <BasePanel v-if="season.technical_specs">
+                  <template #header>
+                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
+                      <span class="font-medium text-surface-700">Technical Specifications</span>
+                    </div>
+                  </template>
+                  <div class="p-4">
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {{ season.technical_specs }}
+                    </p>
                   </div>
-                  <div>
-                    <span class="text-sm font-semibold text-green-600">Active</span>
-                    <p class="text-xl font-bold text-green-600">{{ stats.active }}</p>
-                  </div>
-                  <div>
-                    <span class="text-sm font-semibold text-blue-600">Reserve</span>
-                    <p class="text-xl font-bold text-blue-600">{{ stats.reserve }}</p>
-                  </div>
-                  <div>
-                    <span class="text-sm font-semibold text-orange-600">Withdrawn</span>
-                    <p class="text-xl font-bold text-orange-600">{{ stats.withdrawn }}</p>
-                  </div>
-                </div>
-              </BasePanel>
+                </BasePanel>
 
-              <!-- Description -->
-              <BasePanel v-if="season.description" header="Description" class="lg:col-span-2">
-                <p class="whitespace-pre-wrap">{{ season.description }}</p>
-              </BasePanel>
+                <!-- Season Information Panel -->
+                <BasePanel>
+                  <template #header>
+                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
+                      <span class="font-medium text-surface-700">Season Information</span>
+                    </div>
+                  </template>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
+                    <div class="p-3 rounded-lg bg-slate-50">
+                      <FormLabel text="Competition" />
+                      <p class="text-gray-900 mt-1">
+                        {{ season.competition?.name || season.competition_name || 'N/A' }}
+                      </p>
+                    </div>
+                    <div v-if="season.car_class" class="p-3 rounded-lg bg-slate-50">
+                      <FormLabel text="Car Class" />
+                      <p class="text-gray-900 mt-1">{{ season.car_class }}</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-50">
+                      <FormLabel text="Team Championship" />
+                      <p class="text-gray-900 mt-1">
+                        {{ season.team_championship_enabled ? 'Enabled' : 'Disabled' }}
+                      </p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-50">
+                      <FormLabel text="Race Divisions" />
+                      <p class="text-gray-900 mt-1">
+                        {{ season.race_divisions_enabled ? 'Enabled' : 'Disabled' }}
+                      </p>
+                    </div>
+                  </div>
+                </BasePanel>
+              </div>
 
-              <!-- Technical Specs -->
-              <BasePanel
-                v-if="season.technical_specs"
-                header="Technical Specifications"
-                class="lg:col-span-3"
-              >
-                <p class="whitespace-pre-wrap">{{ season.technical_specs }}</p>
-              </BasePanel>
+              <!-- Right Column: Sidebar (2/5 width) -->
+              <div class="lg:col-span-2 space-y-4">
+                <!-- Driver Statistics Panel -->
+                <BasePanel>
+                  <template #header>
+                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
+                      <span class="font-medium text-surface-700">Driver Statistics</span>
+                    </div>
+                  </template>
+                  <div class="p-4 space-y-4">
+                    <!-- Total Drivers -->
+                    <div class="p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-600">Total Drivers</span>
+                        <span class="text-3xl font-bold text-gray-900">{{ stats.total }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Active Drivers -->
+                    <div class="p-4 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-green-700">Active</span>
+                        <span class="text-2xl font-bold text-green-600">{{ stats.active }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Reserve Drivers -->
+                    <div class="p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-blue-700">Reserve</span>
+                        <span class="text-2xl font-bold text-blue-600">{{ stats.reserve }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Withdrawn Drivers -->
+                    <div class="p-4 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-orange-700">Withdrawn</span>
+                        <span class="text-2xl font-bold text-orange-600">{{
+                          stats.withdrawn
+                        }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </BasePanel>
+
+                <!-- Metadata Panel -->
+                <BasePanel>
+                  <template #header>
+                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
+                      <span class="font-medium text-surface-700">Details</span>
+                    </div>
+                  </template>
+                  <div class="p-4 space-y-3">
+                    <div>
+                      <FormLabel text="Status" />
+                      <p class="text-gray-900 mt-1 capitalize">{{ season.status }}</p>
+                    </div>
+                    <div>
+                      <FormLabel text="Created" />
+                      <p class="text-gray-600 text-sm mt-1">
+                        {{ new Date(season.created_at).toLocaleDateString() }}
+                      </p>
+                    </div>
+                  </div>
+                </BasePanel>
+              </div>
             </div>
           </TabPanel>
 
           <!-- Divisions & Teams Tab -->
           <TabPanel value="divisions-teams">
-            <div class="space-y-6">
-              <!-- Divisions & Teams Panel (25% - 1 column) -->
-              <div class="lg:col-span-1 space-y-6">
+            <BasePanel class="p-4">
+              <div class="space-y-6">
                 <!-- Divisions Panel -->
                 <DivisionsPanel
                   :season-id="seasonId"
@@ -382,27 +526,28 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                   :team-championship-enabled="season.team_championship_enabled"
                 />
               </div>
-            </div>
+            </BasePanel>
           </TabPanel>
 
           <!-- Drivers Tab -->
           <TabPanel value="drivers">
-            <div class="space-y-6">
-              <!-- Manage Drivers Button -->
-              <div class="flex justify-between items-center">
-                <h3 class="text-xl font-semibold">Season Drivers</h3>
-                <Button
-                  label="Manage Drivers"
-                  icon="pi pi-users"
-                  :disabled="season.is_archived"
-                  @click="handleManageDrivers"
-                />
-              </div>
+            <BasePanel>
+              <div class="p-4 space-y-6">
+                <!-- Manage Drivers Button -->
+                <div class="flex justify-between items-center">
+                  <HTag :level="3">Season Drivers</HTag>
+                  <Button
+                    label="Manage Drivers"
+                    icon="pi pi-users"
+                    outlined
+                    size="small"
+                    :disabled="season.is_archived"
+                    @click="handleManageDrivers"
+                  />
+                </div>
 
-              <!-- 75/25 Layout: Drivers Table + Divisions/Teams Panel -->
-              <div class="flex">
-                <!-- Drivers Table (75% - 3 columns) -->
-                <div class="w-full">
+                <!-- Drivers Table -->
+                <div class="overflow-auto">
                   <SeasonDriversTable
                     :season-id="seasonId"
                     :platform-id="season.competition?.platform_id"
@@ -415,26 +560,30 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                   />
                 </div>
               </div>
-            </div>
+            </BasePanel>
           </TabPanel>
 
           <!-- Settings Tab -->
           <TabPanel value="settings">
-            <SeasonSettings
-              :season="season"
-              @updated="loadSeason"
-              @archived="handleArchived"
-              @deleted="handleDeleted"
-            />
+            <BasePanel class="p-4">
+              <SeasonSettings
+                :season="season"
+                @updated="loadSeason"
+                @archived="handleArchived"
+                @deleted="handleDeleted"
+              />
+            </BasePanel>
           </TabPanel>
 
           <!-- Rounds Tab -->
           <TabPanel value="rounds">
-            <RoundsPanel
-              v-if="season && season.competition?.platform_id"
-              :season-id="seasonId"
-              :platform-id="season.competition.platform_id"
-            />
+            <BasePanel class="p-4">
+              <RoundsPanel
+                v-if="season && season.competition?.platform_id"
+                :season-id="seasonId"
+                :platform-id="season.competition.platform_id"
+              />
+            </BasePanel>
           </TabPanel>
         </TabPanels>
       </Tabs>

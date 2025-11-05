@@ -1,30 +1,38 @@
 <template>
-  <Drawer v-model:visible="localVisible" position="bottom" class="h-[90vh]">
+  <BaseModal
+    v-model:visible="localVisible"
+    width="1000px"
+    :closable="!saving"
+    :dismissable-mask="false"
+    content-class="bg-slate-50"
+  >
     <template #header>
-      <h2 class="font-semibold">
-        {{
-          mode === 'edit'
-            ? isQualifier
-              ? 'Edit Qualifying'
-              : 'Edit Race'
-            : isQualifier
-              ? 'Create Qualifying'
-              : 'Create Race'
-        }}
-      </h2>
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-900">
+          {{
+            mode === 'edit'
+              ? isQualifier
+                ? 'Edit Qualifying'
+                : 'Edit Race'
+              : isQualifier
+                ? 'Create Qualifying'
+                : 'Create Race'
+          }}
+        </h2>
+      </div>
     </template>
 
-    <div class="space-y-6 pb-20">
+    <div class="space-y-3">
       <!-- Section 1: Basic Details -->
-      <Accordion v-if="!isQualifier" :value="['basic']" :multiple="true">
+      <Accordion :value="['basic']" :multiple="true">
         <AccordionPanel value="basic">
           <AccordionHeader>
-            <span class="font-medium">Basic Details</span>
+            <span class="font-semibold text-gray-900">Basic Details</span>
           </AccordionHeader>
           <AccordionContent>
-            <div class="space-y-4">
+            <div class="space-y-3 pt-2">
               <!-- Race Number -->
-              <div v-if="!isQualifier">
+              <div>
                 <FormLabel for="race_number" text="Race Number" :required="true" />
                 <InputNumber
                   id="race_number"
@@ -38,7 +46,7 @@
               </div>
 
               <!-- Race Name -->
-              <div v-if="!isQualifier">
+              <div>
                 <FormLabel for="name" text="Race Name (optional)" />
                 <InputText
                   id="name"
@@ -50,8 +58,8 @@
                 <FormError :error="errors.name" />
               </div>
 
-              <!-- Race Type (hide for qualifiers) -->
-              <div v-if="!isQualifier">
+              <!-- Race Type -->
+              <div>
                 <FormLabel for="race_type" text="Race Type" />
                 <Dropdown
                   id="race_type"
@@ -72,10 +80,10 @@
       <Accordion :value="['qualifying']" :multiple="true">
         <AccordionPanel value="qualifying">
           <AccordionHeader>
-            <span class="font-medium">Qualifying Configuration</span>
+            <span class="font-semibold text-gray-900">Qualifying Configuration</span>
           </AccordionHeader>
           <AccordionContent>
-            <div class="space-y-4">
+            <div class="space-y-3 pt-2">
               <!-- Qualifying Format -->
               <div>
                 <FormLabel for="qualifying_format" text="Qualifying Format" :required="true" />
@@ -90,12 +98,8 @@
                 />
               </div>
 
-              <!-- Qualifying Length (conditional) -->
-              <div
-                v-if="
-                  form.qualifying_format !== 'none' && form.qualifying_format !== 'previous_race'
-                "
-              >
+              <!-- Qualifying Length -->
+              <div>
                 <FormLabel for="qualifying_length" text="Qualifying Length (minutes)" />
                 <InputNumber
                   id="qualifying_length"
@@ -109,11 +113,7 @@
               </div>
 
               <!-- Qualifying Tire -->
-              <div
-                v-if="
-                  form.qualifying_format !== 'none' && form.qualifying_format !== 'previous_race'
-                "
-              >
+              <div>
                 <FormLabel for="qualifying_tire" text="Qualifying Tire (optional)" />
                 <InputText
                   id="qualifying_tire"
@@ -127,14 +127,14 @@
         </AccordionPanel>
       </Accordion>
 
-      <!-- Section 3: Starting Grid (not needed for qualifiers) -->
-      <Accordion v-if="!isQualifier" :value="['grid']" :multiple="true">
+      <!-- Section 3: Starting Grid -->
+      <Accordion :value="['grid']" :multiple="true">
         <AccordionPanel value="grid">
           <AccordionHeader>
-            <span class="font-medium">Starting Grid</span>
+            <span class="font-semibold text-gray-900">Starting Grid</span>
           </AccordionHeader>
           <AccordionContent>
-            <div class="space-y-4">
+            <div class="space-y-3 pt-2">
               <!-- Grid Source -->
               <div>
                 <FormLabel for="grid_source" text="Grid Source" :required="true" />
@@ -149,8 +149,8 @@
                 />
               </div>
 
-              <!-- Grid Source Race (conditional) -->
-              <div v-if="requiresGridSourceRace">
+              <!-- Grid Source Race -->
+              <div>
                 <FormLabel for="grid_source_race_id" text="Source Race" :required="true" />
                 <Dropdown
                   id="grid_source_race_id"
@@ -170,14 +170,14 @@
         </AccordionPanel>
       </Accordion>
 
-      <!-- Section 4: Race Length (not needed for qualifiers) -->
-      <Accordion v-if="!isQualifier" :value="['length']" :multiple="true">
+      <!-- Section 4: Race Length -->
+      <Accordion :value="['length']" :multiple="true">
         <AccordionPanel value="length">
           <AccordionHeader>
-            <span class="font-medium">Race Length</span>
+            <span class="font-semibold text-gray-900">Race Length</span>
           </AccordionHeader>
           <AccordionContent>
-            <div class="space-y-4">
+            <div class="space-y-3 pt-2">
               <!-- Length Type -->
               <div>
                 <FormLabel text="Length Type" :required="true" />
@@ -217,8 +217,8 @@
                 <FormError :error="errors.length_value" />
               </div>
 
-              <!-- Extra Lap After Time (conditional) -->
-              <div v-if="form.length_type === 'time'" class="flex items-center gap-2">
+              <!-- Extra Lap After Time -->
+              <div class="flex items-center gap-2">
                 <Checkbox
                   id="extra_lap_after_time"
                   v-model="form.extra_lap_after_time"
@@ -235,22 +235,17 @@
       <Accordion :value="['platform']" :multiple="true">
         <AccordionPanel value="platform">
           <AccordionHeader>
-            <span class="font-medium">Platform Settings</span>
+            <span class="font-semibold text-gray-900">Platform Settings</span>
           </AccordionHeader>
           <AccordionContent>
-            <div v-if="loadingSettings" class="space-y-3">
-              <Skeleton height="3rem" />
-              <Skeleton height="3rem" />
-              <Skeleton height="3rem" />
-            </div>
-            <div v-else class="space-y-4">
+            <div class="space-y-3 pt-2">
               <!-- Weather -->
-              <div v-if="platformSettings?.weather_conditions">
+              <div>
                 <FormLabel for="weather" text="Weather" />
                 <Dropdown
                   id="weather"
                   v-model="form.weather"
-                  :options="platformSettings.weather_conditions"
+                  :options="platformSettings?.weather_conditions || []"
                   option-label="label"
                   option-value="value"
                   placeholder="Select weather"
@@ -259,12 +254,12 @@
               </div>
 
               <!-- Tire Restrictions -->
-              <div v-if="platformSettings?.tire_restrictions">
+              <div>
                 <FormLabel for="tire_restrictions" text="Tire Restrictions" />
                 <Dropdown
                   id="tire_restrictions"
                   v-model="form.tire_restrictions"
-                  :options="platformSettings.tire_restrictions"
+                  :options="platformSettings?.tire_restrictions || []"
                   option-label="label"
                   option-value="value"
                   placeholder="Select tire restrictions"
@@ -273,12 +268,12 @@
               </div>
 
               <!-- Fuel Usage -->
-              <div v-if="platformSettings?.fuel_usage">
+              <div>
                 <FormLabel for="fuel_usage" text="Fuel Usage" />
                 <Dropdown
                   id="fuel_usage"
                   v-model="form.fuel_usage"
-                  :options="platformSettings.fuel_usage"
+                  :options="platformSettings?.fuel_usage || []"
                   option-label="label"
                   option-value="value"
                   placeholder="Select fuel usage"
@@ -287,12 +282,12 @@
               </div>
 
               <!-- Damage Model -->
-              <div v-if="platformSettings?.damage_model">
+              <div>
                 <FormLabel for="damage_model" text="Damage Model" />
                 <Dropdown
                   id="damage_model"
                   v-model="form.damage_model"
-                  :options="platformSettings.damage_model"
+                  :options="platformSettings?.damage_model || []"
                   option-label="label"
                   option-value="value"
                   placeholder="Select damage model"
@@ -301,12 +296,12 @@
               </div>
 
               <!-- Assists Restrictions -->
-              <div v-if="platformSettings?.assists_restrictions">
+              <div>
                 <FormLabel for="assists_restrictions" text="Assists Restrictions" />
                 <Dropdown
                   id="assists_restrictions"
                   v-model="form.assists_restrictions"
-                  :options="platformSettings.assists_restrictions"
+                  :options="platformSettings?.assists_restrictions || []"
                   option-label="label"
                   option-value="value"
                   placeholder="Select assists restrictions"
@@ -319,13 +314,13 @@
       </Accordion>
 
       <!-- Section 6: Penalties & Rules -->
-      <Accordion v-if="!isQualifier" :value="['penalties']" :multiple="true">
+      <Accordion :value="['penalties']" :multiple="true">
         <AccordionPanel value="penalties">
           <AccordionHeader>
-            <span class="font-medium">Penalties & Rules</span>
+            <span class="font-semibold text-gray-900">Penalties & Rules</span>
           </AccordionHeader>
           <AccordionContent>
-            <div class="space-y-4">
+            <div class="space-y-3 pt-2">
               <!-- Track Limits Enforced -->
               <div class="flex items-center gap-2">
                 <Checkbox
@@ -356,8 +351,8 @@
                 <label for="collision_penalties">Collision penalties</label>
               </div>
 
-              <!-- Mandatory Pit Stop (not applicable to qualifiers) -->
-              <div v-if="!isQualifier" class="flex items-center gap-2">
+              <!-- Mandatory Pit Stop -->
+              <div class="flex items-center gap-2">
                 <Checkbox
                   id="mandatory_pit_stop"
                   v-model="form.mandatory_pit_stop"
@@ -366,8 +361,8 @@
                 <label for="mandatory_pit_stop">Mandatory pit stop</label>
               </div>
 
-              <!-- Minimum Pit Time (conditional) -->
-              <div v-if="!isQualifier && form.mandatory_pit_stop">
+              <!-- Minimum Pit Time -->
+              <div>
                 <FormLabel for="minimum_pit_time" text="Minimum Pit Time (seconds)" />
                 <InputNumber
                   id="minimum_pit_time"
@@ -388,17 +383,17 @@
       <Accordion :value="['divisions']" :multiple="true">
         <AccordionPanel value="divisions">
           <AccordionHeader>
-            <span class="font-medium">Division Support</span>
+            <span class="font-semibold text-gray-900">Division Support</span>
           </AccordionHeader>
           <AccordionContent>
-            <div class="space-y-4">
+            <div class="space-y-3 pt-2">
               <!-- Race Divisions Enabled -->
               <div class="flex items-center gap-2">
                 <Checkbox id="race_divisions" v-model="form.race_divisions" :binary="true" />
                 <label for="race_divisions">Enable separate results per division</label>
               </div>
 
-              <Message v-if="form.race_divisions" severity="info" :closable="false">
+              <Message severity="info" :closable="false">
                 When enabled, race results and points will be tracked separately for each division
                 in the season.
               </Message>
@@ -408,13 +403,13 @@
       </Accordion>
 
       <!-- Section 8: Points System -->
-      <Accordion v-if="!isQualifier" :value="['points']" :multiple="true">
+      <Accordion :value="['points']" :multiple="true">
         <AccordionPanel value="points">
           <AccordionHeader>
-            <span class="font-medium">Points System</span>
+            <span class="font-semibold text-gray-900">Points System</span>
           </AccordionHeader>
           <AccordionContent>
-            <div class="space-y-4">
+            <div class="space-y-3 pt-2">
               <!-- Points Template -->
               <div>
                 <FormLabel text="Points Template" :required="true" />
@@ -440,44 +435,61 @@
               </div>
 
               <!-- Custom Points Table -->
-              <div v-if="form.points_template === 'custom'">
+              <div>
                 <FormLabel text="Custom Points Table" />
-                <DataTable :value="pointsTableData" edit-mode="cell" class="p-datatable-sm">
-                  <Column field="position" header="Position" />
-                  <Column field="points" header="Points">
-                    <template #editor="{ data }">
-                      <InputNumber v-model="data.points" :min="0" class="w-full" />
-                    </template>
-                  </Column>
-                  <Column>
-                    <template #body="{ index }">
-                      <Button
-                        v-if="index === pointsTableData.length - 1"
-                        icon="pi pi-plus"
-                        size="small"
-                        text
-                        @click="addPointsPosition"
-                      />
-                      <Button
-                        v-if="pointsTableData.length > 1"
-                        icon="pi pi-trash"
-                        size="small"
-                        severity="danger"
-                        text
-                        @click="removePointsPosition(index)"
-                      />
-                    </template>
-                  </Column>
-                </DataTable>
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <DataTable
+                    :value="pointsTableData"
+                    edit-mode="cell"
+                    class="p-datatable-sm"
+                    :pt="{
+                      root: { class: 'border-0' },
+                    }"
+                  >
+                    <Column field="position" header="Position" style="width: 40%" />
+                    <Column field="points" header="Points" style="width: 40%">
+                      <template #editor="{ data }">
+                        <InputNumber v-model="data.points" :min="0" size="small" class="w-full" />
+                      </template>
+                    </Column>
+                    <Column style="width: 20%">
+                      <template #body="{ index }">
+                        <div class="flex gap-1">
+                          <Button
+                            icon="pi pi-plus"
+                            size="small"
+                            text
+                            severity="success"
+                            @click="addPointsPosition"
+                          />
+                          <Button
+                            icon="pi pi-trash"
+                            size="small"
+                            severity="danger"
+                            text
+                            @click="removePointsPosition(index)"
+                          />
+                        </div>
+                      </template>
+                    </Column>
+                  </DataTable>
+                </div>
                 <FormError :error="errors.points_system" />
               </div>
 
               <!-- F1 Points Preview -->
-              <div v-else>
+              <div>
                 <FormLabel text="Points Breakdown" />
-                <div class="grid grid-cols-5 gap-2 text-sm">
-                  <div v-for="(points, position) in F1_STANDARD_POINTS" :key="position">
-                    <span class="font-medium">P{{ position }}:</span> {{ points }}
+                <div class="bg-white rounded-lg border border-gray-200 p-3">
+                  <div class="grid grid-cols-5 gap-2 text-sm">
+                    <div
+                      v-for="(points, position) in F1_STANDARD_POINTS"
+                      :key="position"
+                      class="flex items-center gap-1"
+                    >
+                      <span class="font-semibold text-gray-700">P{{ position }}:</span>
+                      <span class="text-gray-900">{{ points }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -490,16 +502,15 @@
       <Accordion :value="['bonus']" :multiple="true">
         <AccordionPanel value="bonus">
           <AccordionHeader>
-            <span class="font-medium">Bonus Points</span>
+            <span class="font-semibold text-gray-900">Bonus Points</span>
           </AccordionHeader>
           <AccordionContent>
-            <div class="space-y-4">
-              <!-- Pole Position Bonus (available for all types) -->
+            <div class="space-y-3 pt-2">
+              <!-- Pole Position Bonus -->
               <div class="flex items-center gap-4">
                 <Checkbox id="bonus_pole" v-model="form.bonus_pole" :binary="true" />
                 <label for="bonus_pole">Pole position bonus</label>
                 <InputNumber
-                  v-if="form.bonus_pole"
                   v-model="form.bonus_pole_points"
                   :min="1"
                   :max="99"
@@ -508,8 +519,8 @@
                 />
               </div>
 
-              <!-- Fastest Lap Bonus (ONLY for races, NOT qualifiers) -->
-              <div v-if="!isQualifier" class="space-y-2">
+              <!-- Fastest Lap Bonus -->
+              <div class="space-y-2">
                 <div class="flex items-center gap-4">
                   <Checkbox
                     id="bonus_fastest_lap"
@@ -518,7 +529,6 @@
                   />
                   <label for="bonus_fastest_lap">Fastest lap bonus</label>
                   <InputNumber
-                    v-if="form.bonus_fastest_lap"
                     v-model="form.bonus_fastest_lap_points"
                     :min="1"
                     :max="99"
@@ -526,7 +536,7 @@
                     class="w-32"
                   />
                 </div>
-                <div v-if="form.bonus_fastest_lap" class="ml-8">
+                <div class="ml-8">
                   <Checkbox
                     id="bonus_fastest_lap_top_10"
                     v-model="form.bonus_fastest_lap_top_10"
@@ -538,10 +548,10 @@
                 </div>
               </div>
 
-              <!-- Info message for qualifiers -->
-              <Message v-if="isQualifier" severity="info" :closable="false">
-                Only pole position bonus is available for qualifying sessions. Fastest lap bonus is
-                only available for races.
+              <!-- Info message -->
+              <Message severity="info" :closable="false">
+                Pole position bonus is available for qualifying sessions. Fastest lap bonus is only
+                available for races.
               </Message>
             </div>
           </AccordionContent>
@@ -549,13 +559,13 @@
       </Accordion>
 
       <!-- Section 10: DNF/DNS -->
-      <Accordion v-if="!isQualifier" :value="['dnf']" :multiple="true">
+      <Accordion :value="['dnf']" :multiple="true">
         <AccordionPanel value="dnf">
           <AccordionHeader>
-            <span class="font-medium">DNF/DNS Points</span>
+            <span class="font-semibold text-gray-900">DNF/DNS Points</span>
           </AccordionHeader>
           <AccordionContent>
-            <div class="space-y-4">
+            <div class="space-y-3 pt-2">
               <!-- DNF Points -->
               <div>
                 <FormLabel for="dnf_points" text="DNF Points" />
@@ -566,7 +576,7 @@
                   :max="99"
                   class="w-full"
                 />
-                <small class="text-gray-600">Points awarded for Did Not Finish</small>
+                <small class="text-xs text-gray-500 mt-1">Points awarded for Did Not Finish</small>
               </div>
 
               <!-- DNS Points -->
@@ -579,7 +589,7 @@
                   :max="99"
                   class="w-full"
                 />
-                <small class="text-gray-600">Points awarded for Did Not Start</small>
+                <small class="text-xs text-gray-500 mt-1">Points awarded for Did Not Start</small>
               </div>
             </div>
           </AccordionContent>
@@ -587,13 +597,13 @@
       </Accordion>
 
       <!-- Section 11: Notes -->
-      <Accordion v-if="!isQualifier" :value="['notes']" :multiple="true">
+      <Accordion :value="['notes']" :multiple="true">
         <AccordionPanel value="notes">
           <AccordionHeader>
-            <span class="font-medium">Race Notes</span>
+            <span class="font-semibold text-gray-900">Race Notes</span>
           </AccordionHeader>
           <AccordionContent>
-            <div>
+            <div class="pt-2">
               <FormLabel for="race_notes" text="Notes (optional)" />
               <Textarea
                 id="race_notes"
@@ -610,7 +620,13 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button label="Cancel" severity="secondary" :disabled="saving" @click="handleCancel" />
+        <Button
+          label="Cancel"
+          severity="secondary"
+          outlined
+          :disabled="saving"
+          @click="handleCancel"
+        />
         <Button
           :label="
             mode === 'edit'
@@ -626,7 +642,7 @@
         />
       </div>
     </template>
-  </Drawer>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -634,7 +650,7 @@ import { ref, reactive, watch, computed } from 'vue';
 import { useRaceStore } from '@app/stores/raceStore';
 import { useRaceSettingsStore } from '@app/stores/raceSettingsStore';
 import { useRaceValidation } from '@app/composables/useRaceValidation';
-import Drawer from 'primevue/drawer';
+import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
@@ -649,7 +665,6 @@ import AccordionPanel from 'primevue/accordionpanel';
 import AccordionHeader from 'primevue/accordionheader';
 import AccordionContent from 'primevue/accordioncontent';
 import Message from 'primevue/message';
-import Skeleton from 'primevue/skeleton';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
 import FormError from '@app/components/common/forms/FormError.vue';
 import type {

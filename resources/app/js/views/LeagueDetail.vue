@@ -519,7 +519,7 @@ function getPlatformNames(league: League): string {
                         <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Manager
                         </div>
-                        <div class="text-sm font-semibold text-gray-900 truncate mt-0.5">
+                        <div class="font-semibold text-gray-900 truncate mt-0.5">
                           {{ league.organizer_name }}
                         </div>
                       </div>
@@ -541,7 +541,7 @@ function getPlatformNames(league: League): string {
                           Contact Email
                         </div>
                         <div
-                          class="text-sm font-semibold text-blue-600 group-hover:text-blue-700 truncate mt-0.5"
+                          class="font-semibold text-blue-600 group-hover:text-blue-700 truncate mt-0.5"
                         >
                           {{ league.contact_email }}
                         </div>
@@ -627,8 +627,8 @@ function getPlatformNames(league: League): string {
                         <i class="pi pi-discord text-indigo-600"></i>
                       </div>
                       <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">Discord</div>
-                        <div class="text-xs text-gray-500 truncate">{{ league.discord_url }}</div>
+                        <div class="font-medium text-gray-900">Discord</div>
+                        <div class="text-md text-gray-500 truncate">{{ league.discord_url }}</div>
                       </div>
                     </a>
 
@@ -646,8 +646,8 @@ function getPlatformNames(league: League): string {
                         <i class="pi pi-globe text-blue-600"></i>
                       </div>
                       <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">Website</div>
-                        <div class="text-xs text-gray-500 truncate">{{ league.website_url }}</div>
+                        <div class="font-medium text-gray-900">Website</div>
+                        <div class="text-md text-gray-500 truncate">{{ league.website_url }}</div>
                       </div>
                     </a>
 
@@ -665,8 +665,8 @@ function getPlatformNames(league: League): string {
                         <i class="pi pi-twitter text-gray-900"></i>
                       </div>
                       <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">Twitter</div>
-                        <div class="text-xs text-gray-500 truncate">
+                        <div class="font-medium text-gray-900">Twitter</div>
+                        <div class="text-md text-gray-500 truncate">
                           @{{ league.twitter_handle.replace('@', '') }}
                         </div>
                       </div>
@@ -686,8 +686,8 @@ function getPlatformNames(league: League): string {
                         <i class="pi pi-instagram text-pink-600"></i>
                       </div>
                       <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">Instagram</div>
-                        <div class="text-xs text-gray-500 truncate">
+                        <div class="font-medium text-gray-900">Instagram</div>
+                        <div class="text-md text-gray-500 truncate">
                           @{{ league.instagram_handle.replace('@', '') }}
                         </div>
                       </div>
@@ -707,8 +707,8 @@ function getPlatformNames(league: League): string {
                         <i class="pi pi-youtube text-red-600"></i>
                       </div>
                       <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">YouTube</div>
-                        <div class="text-xs text-gray-500 truncate">{{ league.youtube_url }}</div>
+                        <div class="font-medium text-gray-900">YouTube</div>
+                        <div class="text-md text-gray-500 truncate">{{ league.youtube_url }}</div>
                       </div>
                     </a>
 
@@ -726,8 +726,8 @@ function getPlatformNames(league: League): string {
                         <i class="pi pi-twitch text-purple-600"></i>
                       </div>
                       <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">Twitch</div>
-                        <div class="text-xs text-gray-500 truncate">{{ league.twitch_url }}</div>
+                        <div class="font-medium text-gray-900">Twitch</div>
+                        <div class="text-md text-gray-500 truncate">{{ league.twitch_url }}</div>
                       </div>
                     </a>
                   </div>
