@@ -44,9 +44,6 @@ final class QualifierApplicationService
                 tireRestrictions: $data->tire_restrictions,
                 fuelUsage: $data->fuel_usage,
                 damageModel: $data->damage_model,
-                trackLimitsEnforced: $data->track_limits_enforced,
-                falseStartDetection: $data->false_start_detection,
-                collisionPenalties: $data->collision_penalties,
                 assistsRestrictions: $data->assists_restrictions,
                 raceDivisions: $data->race_divisions,
                 bonusPoints: $data->bonus_points,
@@ -98,17 +95,7 @@ final class QualifierApplicationService
                 ? $data->damage_model
                 : $qualifier->damageModel();
 
-            $trackLimitsEnforced = !($data->track_limits_enforced instanceof Optional)
-                ? ($data->track_limits_enforced ?? $qualifier->trackLimitsEnforced())
-                : $qualifier->trackLimitsEnforced();
-
-            $falseStartDetection = !($data->false_start_detection instanceof Optional)
-                ? ($data->false_start_detection ?? $qualifier->falseStartDetection())
-                : $qualifier->falseStartDetection();
-
-            $collisionPenalties = !($data->collision_penalties instanceof Optional)
-                ? ($data->collision_penalties ?? $qualifier->collisionPenalties())
-                : $qualifier->collisionPenalties();
+            // Penalty fields are not editable for qualifiers - they are ignored
 
             $assistsRestrictions = !($data->assists_restrictions instanceof Optional)
                 ? $data->assists_restrictions
@@ -135,9 +122,6 @@ final class QualifierApplicationService
                 tireRestrictions: $tireRestrictions,
                 fuelUsage: $fuelUsage,
                 damageModel: $damageModel,
-                trackLimitsEnforced: $trackLimitsEnforced,
-                falseStartDetection: $falseStartDetection,
-                collisionPenalties: $collisionPenalties,
                 assistsRestrictions: $assistsRestrictions,
                 raceDivisions: $raceDivisions,
                 bonusPoints: $bonusPoints,

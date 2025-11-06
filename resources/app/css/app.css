@@ -125,6 +125,8 @@
   --p-highlight-focus-background: #bfdbfe;
   --p-highlight-focus-color: #1e3a8a;
   */
+
+  --p-tag-font-size: 0.75rem;
 }
 
 body {
@@ -238,8 +240,6 @@ textarea {
 }
 
 /* PrimeVue Card Styling */
-.p-card {
-}
 .p-card-body {
   padding: 0;
 }
@@ -282,8 +282,6 @@ textarea {
 }
 
 /* PrimeVue Dialog Styling */
-.p-dialog {
-}
 .p-dialog-header {
   background-color: var(--bg-tertiary);
   border-radius: 1rem 1em 0 0;
@@ -352,4 +350,10 @@ textarea {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-medium);
   box-shadow: var(--shadow-md);
+}
+
+/* Tag Styling */
+.p-tag.p-component {
+  /* padding: 0rem; */
+  line-height: 12px;
 }

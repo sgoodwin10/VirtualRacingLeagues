@@ -29,6 +29,7 @@ describe('competitionStore', () => {
     },
     logo_url: 'https://example.com/logo.png',
     has_own_logo: true,
+    competition_colour: null,
     status: 'active',
     is_active: true,
     is_archived: false,
@@ -168,6 +169,7 @@ describe('competitionStore', () => {
         platform_id: 1,
         logo: null,
         logo_url: null,
+        competition_colour: null,
       };
 
       vi.mocked(competitionService.buildCompetitionFormData).mockReturnValue(new FormData());
@@ -190,6 +192,7 @@ describe('competitionStore', () => {
         platform_id: null,
         logo: null,
         logo_url: null,
+        competition_colour: null,
       };
 
       const store = useCompetitionStore();
@@ -204,6 +207,7 @@ describe('competitionStore', () => {
         platform_id: 1,
         logo: null,
         logo_url: null,
+        competition_colour: null,
       };
 
       const errorMessage = 'Creation failed';

@@ -69,6 +69,14 @@ export function useCompetitionValidation(form: CompetitionForm) {
   }
 
   /**
+   * Validate competition_colour (optional, no specific validation needed)
+   */
+  function validateCompetitionColour(): string | undefined {
+    // Colour is optional and PrimeVue ColorPicker ensures valid RGB format
+    return undefined;
+  }
+
+  /**
    * Validate all fields
    */
   function validateAll(): boolean {
@@ -76,8 +84,15 @@ export function useCompetitionValidation(form: CompetitionForm) {
     errors.platform_id = validatePlatform();
     errors.description = validateDescription();
     errors.logo = validateLogo();
+    errors.competition_colour = validateCompetitionColour();
 
-    return !errors.name && !errors.platform_id && !errors.description && !errors.logo;
+    return (
+      !errors.name &&
+      !errors.platform_id &&
+      !errors.description &&
+      !errors.logo &&
+      !errors.competition_colour
+    );
   }
 
   /**
@@ -88,6 +103,7 @@ export function useCompetitionValidation(form: CompetitionForm) {
     errors.platform_id = undefined;
     errors.description = undefined;
     errors.logo = undefined;
+    errors.competition_colour = undefined;
   }
 
   /**
@@ -98,11 +114,23 @@ export function useCompetitionValidation(form: CompetitionForm) {
   }
 
   const isValid = computed(() => {
-    return !errors.name && !errors.platform_id && !errors.description && !errors.logo;
+    return (
+      !errors.name &&
+      !errors.platform_id &&
+      !errors.description &&
+      !errors.logo &&
+      !errors.competition_colour
+    );
   });
 
   const hasErrors = computed(() => {
-    return !!(errors.name || errors.platform_id || errors.description || errors.logo);
+    return !!(
+      errors.name ||
+      errors.platform_id ||
+      errors.description ||
+      errors.logo ||
+      errors.competition_colour
+    );
   });
 
   return {
@@ -113,6 +141,7 @@ export function useCompetitionValidation(form: CompetitionForm) {
     validatePlatform,
     validateDescription,
     validateLogo,
+    validateCompetitionColour,
     validateAll,
     clearErrors,
     clearError,

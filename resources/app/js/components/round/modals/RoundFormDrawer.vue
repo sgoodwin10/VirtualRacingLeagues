@@ -58,10 +58,15 @@
       <Accordion :value="['0']">
         <AccordionPanel value="0">
           <AccordionHeader>Optional Round Information</AccordionHeader>
-          <AccordionContent>
+          <AccordionContent
+            :pt="{
+              root: { class: 'bg-inherit' },
+              content: { class: 'p-4 bg-inherit border border-slate-200 rounded-b bg-surface-50' },
+            }"
+          >
             <div class="space-y-3">
               <!-- First Section: Track and Details -->
-              <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <!-- Left Column (66% width) -->
                 <div class="lg:col-span-2 space-y-2.5">
                   <!-- Track Selection (full width) -->
@@ -159,10 +164,33 @@
                       </FormError>
                     </FormInputGroup>
                   </div>
+
+                  <hr class="border-gray-300" />
+
+                  <div>
+                    <!-- Stream URL -->
+                    <FormInputGroup>
+                      <FormLabel for="stream_url" text="Stream URL" />
+                      <InputText
+                        id="stream_url"
+                        v-model="form.stream_url"
+                        type="url"
+                        size="small"
+                        placeholder="https://..."
+                        :invalid="!!validationErrors.stream_url"
+                        class="w-full"
+                        @blur="validation.validateStreamUrl(form.stream_url)"
+                      />
+                      <FormOptionalText :show-optional="false" text="Link to live stream" />
+                      <FormError v-if="validationErrors.stream_url">
+                        {{ validationErrors.stream_url }}
+                      </FormError>
+                    </FormInputGroup>
+                  </div>
                 </div>
 
                 <!-- Right Column (33% width) -->
-                <div class="lg:col-span-1 space-y-2.5">
+                <div class="lg:col-span-1 space-y-3">
                   <!-- Scheduled Date & Time -->
                   <FormInputGroup>
                     <FormLabel for="scheduled_at" text="Scheduled Date & Time" />
@@ -188,22 +216,52 @@
                     </FormError>
                   </FormInputGroup>
 
-                  <!-- Stream URL -->
+                  <!-- Fastest Lap Bonus -->
                   <FormInputGroup>
-                    <FormLabel for="stream_url" text="Stream URL" />
-                    <InputText
-                      id="stream_url"
-                      v-model="form.stream_url"
-                      type="url"
-                      size="small"
-                      placeholder="https://..."
-                      :invalid="!!validationErrors.stream_url"
-                      class="w-full"
-                      @blur="validation.validateStreamUrl(form.stream_url)"
+                    <FormLabel text="Fastest Lap Bonus" />
+                    <div class="space-y-2">
+                      <div class="flex items-center gap-2">
+                        <Checkbox
+                          id="bonus_fastest_lap"
+                          v-model="hasFastestLapBonus"
+                          :binary="true"
+                        />
+                        <label for="bonus_fastest_lap" class="text-sm"
+                          >Enable fastest lap bonus</label
+                        >
+                        <InputNumber
+                          v-if="hasFastestLapBonus"
+                          v-model="form.fastest_lap"
+                          :min="1"
+                          :max="99"
+                          fluid
+                          :invalid="!!validationErrors.fastest_lap"
+                          placeholder="Pts"
+                          size="small"
+                          class="w-20"
+                          @blur="validation.validateFastestLap(form.fastest_lap)"
+                        />
+                      </div>
+                      <div
+                        v-if="hasFastestLapBonus && form.fastest_lap && form.fastest_lap > 0"
+                        class="ml-6"
+                      >
+                        <Checkbox
+                          id="bonus_fastest_lap_top_10"
+                          v-model="form.fastest_lap_top_10"
+                          :binary="true"
+                        />
+                        <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
+                          >Only award if driver finishes in top 10</label
+                        >
+                      </div>
+                    </div>
+                    <FormOptionalText
+                      :show-optional="false"
+                      text="Award points for fastest lap across all races in this round (excluding qualifying)"
                     />
-                    <FormOptionalText :show-optional="false" text="Link to live stream" />
-                    <FormError v-if="validationErrors.stream_url">
-                      {{ validationErrors.stream_url }}
+                    <FormError v-if="validationErrors.fastest_lap">
+                      {{ validationErrors.fastest_lap }}
                     </FormError>
                   </FormInputGroup>
                 </div>
@@ -279,7 +337,12 @@
           :disabled="saving"
           @click="handleClose"
         />
-        <Button label="Save Round" :loading="saving" :disabled="saving" @click="handleSubmit" />
+        <Button
+          :label="mode === 'create' ? 'Save Round' : 'Update Round'"
+          :loading="saving"
+          :disabled="saving"
+          @click="handleSubmit"
+        />
       </div>
     </template>
   </BaseModal>
@@ -292,6 +355,7 @@ import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
+import Checkbox from 'primevue/checkbox';
 import DatePicker from 'primevue/datepicker';
 import AutoComplete from 'primevue/autocomplete';
 import Textarea from 'primevue/textarea';
@@ -347,6 +411,8 @@ const form = ref<RoundForm>({
   technical_notes: '',
   stream_url: '',
   internal_notes: '',
+  fastest_lap: null,
+  fastest_lap_top_10: false,
 });
 
 const isVisible = computed({
@@ -355,6 +421,19 @@ const isVisible = computed({
 });
 
 const validationErrors = computed(() => validation.errors.value);
+
+// Computed property for fastest lap bonus checkbox
+const hasFastestLapBonus = computed({
+  get: () => form.value.fastest_lap !== null && form.value.fastest_lap > 0,
+  set: (enabled: boolean) => {
+    if (enabled) {
+      form.value.fastest_lap = 1; // Default to 1 point when enabling
+    } else {
+      form.value.fastest_lap = null;
+      form.value.fastest_lap_top_10 = false;
+    }
+  },
+});
 
 // Watch for drawer opening to initialize form
 watch(
@@ -381,6 +460,8 @@ async function initializeForm(): Promise<void> {
       technical_notes: '',
       stream_url: '',
       internal_notes: '',
+      fastest_lap: null,
+      fastest_lap_top_10: false,
     };
     selectedTrack.value = null;
 
@@ -403,6 +484,8 @@ async function initializeForm(): Promise<void> {
       technical_notes: props.round.technical_notes || '',
       stream_url: props.round.stream_url || '',
       internal_notes: props.round.internal_notes || '',
+      fastest_lap: props.round.fastest_lap,
+      fastest_lap_top_10: props.round.fastest_lap_top_10,
     };
 
     // Load selected track
@@ -452,15 +535,17 @@ async function handleSubmit(): Promise<void> {
       if (form.value.platform_track_id) {
         requestData.platform_track_id = form.value.platform_track_id;
       }
-      if (form.value.name.trim()) requestData.name = form.value.name.trim();
-      if (form.value.track_layout.trim()) requestData.track_layout = form.value.track_layout.trim();
-      if (form.value.track_conditions.trim())
-        requestData.track_conditions = form.value.track_conditions.trim();
-      if (form.value.technical_notes.trim())
-        requestData.technical_notes = form.value.technical_notes.trim();
-      if (form.value.stream_url.trim()) requestData.stream_url = form.value.stream_url.trim();
-      if (form.value.internal_notes.trim())
-        requestData.internal_notes = form.value.internal_notes.trim();
+      // Always include text fields (convert empty strings to null)
+      requestData.name = form.value.name.trim() || null;
+      requestData.track_layout = form.value.track_layout.trim() || null;
+      requestData.track_conditions = form.value.track_conditions.trim() || null;
+      requestData.technical_notes = form.value.technical_notes.trim() || null;
+      requestData.stream_url = form.value.stream_url.trim() || null;
+      requestData.internal_notes = form.value.internal_notes.trim() || null;
+      if (form.value.fastest_lap !== null) {
+        requestData.fastest_lap = form.value.fastest_lap;
+        requestData.fastest_lap_top_10 = form.value.fastest_lap_top_10;
+      }
 
       await roundStore.createNewRound(props.seasonId, requestData);
 
@@ -470,15 +555,21 @@ async function handleSubmit(): Promise<void> {
         detail: 'Round created successfully',
         life: 3000,
       });
+
+      emit('saved');
     } else if (props.round) {
       const requestData: UpdateRoundRequest = {};
 
       if (form.value.round_number !== props.round.round_number) {
         requestData.round_number = form.value.round_number;
       }
-      if ((form.value.name || '').trim() !== (props.round.name || '')) {
-        requestData.name = form.value.name.trim() || undefined;
+
+      const formNameTrimmed = (form.value.name || '').trim();
+      const originalName = props.round.name || '';
+      if (formNameTrimmed !== originalName) {
+        requestData.name = formNameTrimmed || null;
       }
+
       // Handle scheduled_at changes including null
       const currentScheduledAt = form.value.scheduled_at
         ? format(form.value.scheduled_at, 'yyyy-MM-dd HH:mm:ss')
@@ -488,23 +579,47 @@ async function handleSubmit(): Promise<void> {
       if (currentScheduledAt !== originalScheduledAt) {
         requestData.scheduled_at = currentScheduledAt;
       }
+
       if (form.value.platform_track_id !== props.round.platform_track_id) {
         requestData.platform_track_id = form.value.platform_track_id ?? undefined;
       }
-      if ((form.value.track_layout || '').trim() !== (props.round.track_layout || '')) {
-        requestData.track_layout = form.value.track_layout.trim() || undefined;
+
+      const formTrackLayoutTrimmed = (form.value.track_layout || '').trim();
+      const originalTrackLayout = props.round.track_layout || '';
+      if (formTrackLayoutTrimmed !== originalTrackLayout) {
+        requestData.track_layout = formTrackLayoutTrimmed || null;
       }
-      if ((form.value.track_conditions || '').trim() !== (props.round.track_conditions || '')) {
-        requestData.track_conditions = form.value.track_conditions.trim() || undefined;
+
+      const formTrackConditionsTrimmed = (form.value.track_conditions || '').trim();
+      const originalTrackConditions = props.round.track_conditions || '';
+      if (formTrackConditionsTrimmed !== originalTrackConditions) {
+        requestData.track_conditions = formTrackConditionsTrimmed || null;
       }
-      if ((form.value.technical_notes || '').trim() !== (props.round.technical_notes || '')) {
-        requestData.technical_notes = form.value.technical_notes.trim() || undefined;
+
+      const formTechnicalNotesTrimmed = (form.value.technical_notes || '').trim();
+      const originalTechnicalNotes = props.round.technical_notes || '';
+      if (formTechnicalNotesTrimmed !== originalTechnicalNotes) {
+        requestData.technical_notes = formTechnicalNotesTrimmed || null;
       }
-      if ((form.value.stream_url || '').trim() !== (props.round.stream_url || '')) {
-        requestData.stream_url = form.value.stream_url.trim() || undefined;
+
+      const formStreamUrlTrimmed = (form.value.stream_url || '').trim();
+      const originalStreamUrl = props.round.stream_url || '';
+      if (formStreamUrlTrimmed !== originalStreamUrl) {
+        requestData.stream_url = formStreamUrlTrimmed || null;
       }
-      if ((form.value.internal_notes || '').trim() !== (props.round.internal_notes || '')) {
-        requestData.internal_notes = form.value.internal_notes.trim() || undefined;
+
+      const formInternalNotesTrimmed = (form.value.internal_notes || '').trim();
+      const originalInternalNotes = props.round.internal_notes || '';
+      if (formInternalNotesTrimmed !== originalInternalNotes) {
+        requestData.internal_notes = formInternalNotesTrimmed || null;
+      }
+
+      if (form.value.fastest_lap !== props.round.fastest_lap) {
+        requestData.fastest_lap = form.value.fastest_lap;
+      }
+
+      if (form.value.fastest_lap_top_10 !== props.round.fastest_lap_top_10) {
+        requestData.fastest_lap_top_10 = form.value.fastest_lap_top_10;
       }
 
       if (Object.keys(requestData).length > 0) {
@@ -516,10 +631,20 @@ async function handleSubmit(): Promise<void> {
           detail: 'Round updated successfully',
           life: 3000,
         });
+
+        emit('saved');
+      } else {
+        // No changes detected
+        toast.add({
+          severity: 'info',
+          summary: 'No Changes',
+          detail: 'No changes were made to the round',
+          life: 3000,
+        });
+
+        isVisible.value = false;
       }
     }
-
-    emit('saved');
   } catch (error) {
     toast.add({
       severity: 'error',

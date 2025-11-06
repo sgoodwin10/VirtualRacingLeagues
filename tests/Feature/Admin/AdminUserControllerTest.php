@@ -91,7 +91,11 @@ class AdminUserControllerTest extends TestCase
      */
     public function test_can_search_admin_users(): void
     {
-        $superAdmin = Admin::factory()->create(['role' => 'super_admin']);
+        $superAdmin = Admin::factory()->create([
+            'first_name' => 'Super',
+            'last_name' => 'Admin',
+            'role' => 'super_admin',
+        ]);
         Admin::factory()->create(['first_name' => 'John', 'last_name' => 'Doe', 'role' => 'admin']);
         Admin::factory()->create(['first_name' => 'Jane', 'last_name' => 'Smith', 'role' => 'admin']);
 

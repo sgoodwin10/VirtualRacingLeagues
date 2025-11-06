@@ -103,6 +103,9 @@ export const useCompetitionStore = defineStore('competition', () => {
         description: form.description,
         platform_id: form.platform_id,
         logo: form.logo,
+        competition_colour: form.competition_colour
+          ? JSON.stringify(form.competition_colour)
+          : null,
       });
 
       const competition = await createCompetition(leagueId, formData);
@@ -133,6 +136,12 @@ export const useCompetitionStore = defineStore('competition', () => {
         name: form.name,
         description: form.description,
         logo: form.logo,
+        competition_colour:
+          form.competition_colour !== undefined
+            ? form.competition_colour
+              ? JSON.stringify(form.competition_colour)
+              : null
+            : undefined,
       });
 
       const updatedCompetition = await updateCompetition(id, formData);

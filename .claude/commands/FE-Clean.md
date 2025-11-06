@@ -1,0 +1,1 @@
+Check all vuejs, js and ts files waiting to be added to git, and look for any unused variables, files, functions , etc, and report back. use agent @dev-fe-admin, @dev-fe-app and @dev-fe-public

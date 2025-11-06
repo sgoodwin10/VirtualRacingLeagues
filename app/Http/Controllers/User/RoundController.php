@@ -62,6 +62,7 @@ final class RoundController extends Controller
     public function update(Request $request, UpdateRoundData $data, int $roundId): JsonResponse
     {
         // TODO: Authorize user owns league
+
         $round = $this->roundService->updateRound($roundId, $data, $request->all());
         return ApiResponse::success($round->toArray(), 'Round updated successfully');
     }

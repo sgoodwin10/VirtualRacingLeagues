@@ -54,6 +54,8 @@ describe('RoundsPanel', () => {
       technical_notes: null,
       stream_url: null,
       internal_notes: null,
+      fastest_lap: null,
+      fastest_lap_top_10: false,
       status: 'scheduled',
       status_label: 'Scheduled',
       created_by_user_id: 1,
@@ -242,6 +244,8 @@ describe('RoundsPanel', () => {
       technical_notes: null,
       stream_url: null,
       internal_notes: null,
+      fastest_lap: null,
+      fastest_lap_top_10: false,
       status: 'scheduled',
       status_label: 'Scheduled',
       created_by_user_id: 1,
@@ -355,9 +359,9 @@ describe('RoundsPanel', () => {
     expect(allEvents).toHaveLength(3);
 
     // Verify they're sorted by created_at (ascending - oldest first)
-    expect(allEvents[0].id).toBe(2); // Qualifier (10:00)
-    expect(allEvents[1].id).toBe(3); // Race 2 (11:00)
-    expect(allEvents[2].id).toBe(1); // Race 1 (12:00)
+    expect(allEvents[0]?.id).toBe(2); // Qualifier (10:00)
+    expect(allEvents[1]?.id).toBe(3); // Race 2 (11:00)
+    expect(allEvents[2]?.id).toBe(1); // Race 1 (12:00)
 
     // Verify qualifier can be identified by is_qualifier flag
     const qualifier = allEvents.find((r) => r.is_qualifier === true);
@@ -383,6 +387,8 @@ describe('RoundsPanel', () => {
         technical_notes: null,
         stream_url: null,
         internal_notes: null,
+        fastest_lap: null,
+        fastest_lap_top_10: false,
         status: 'scheduled',
         status_label: 'Scheduled',
         created_by_user_id: 1,
@@ -404,6 +410,8 @@ describe('RoundsPanel', () => {
         technical_notes: null,
         stream_url: null,
         internal_notes: null,
+        fastest_lap: null,
+        fastest_lap_top_10: false,
         status: 'scheduled',
         status_label: 'Scheduled',
         created_by_user_id: 1,
@@ -425,6 +433,8 @@ describe('RoundsPanel', () => {
         technical_notes: null,
         stream_url: null,
         internal_notes: null,
+        fastest_lap: null,
+        fastest_lap_top_10: false,
         status: 'scheduled',
         status_label: 'Scheduled',
         created_by_user_id: 1,
@@ -508,6 +518,8 @@ describe('RoundsPanel', () => {
       technical_notes: null,
       stream_url: null,
       internal_notes: null,
+      fastest_lap: null,
+      fastest_lap_top_10: false,
       status: 'scheduled',
       status_label: 'Scheduled',
       created_by_user_id: 1,

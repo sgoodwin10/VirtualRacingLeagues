@@ -25,8 +25,24 @@
           :key="round.id"
           :value="round.id"
           class="mb-1"
+          :pt="{
+            root: ({ context }: { context: { active: boolean } }) => ({
+              class: context.active
+                ? 'border border-slate-300 rounded-md bg-slate-50'
+                : 'border-1 border-gray-200 rounded-md',
+            }),
+          }"
         >
-          <AccordionHeader class="pl-0 py-0 hover:bg-blue-50">
+          <AccordionHeader
+            class="pl-0 py-0"
+            :pt="{
+              root: ({ context }: { context: { active: boolean } }) => ({
+                class: context.active
+                  ? 'bg-slate-100 hover:bg-blue-50 shadow-md border-b-1 border-slate-300 rounded-l-md'
+                  : 'hover:bg-blue-50 border-b-1 border-gray-200 rounded-l-md',
+              }),
+            }"
+          >
             <div class="flex items-center flex-row gap-2 w-full pr-4">
               <div
                 class="h-16 w-16 flex flex-col items-center justify-center rounded-l-md"
@@ -110,29 +126,55 @@
           </AccordionHeader>
 
           <AccordionContent>
-            <div class="space-y-4">
+            <div class="space-y-2">
               <!-- Round Details -->
-              <div v-if="round.technical_notes">
-                <div class="font-medium text-sm text-gray-600">Technical Notes</div>
-                <div class="whitespace-pre-wrap">{{ round.technical_notes }}</div>
-              </div>
+              <div
+                v-if="round.technical_notes || round.stream_url || round.internal_notes"
+                class="grid grid-cols-3 gap-4 border-b border-slate-300 pb-4"
+              >
+                <BasePanel
+                  v-if="round.technical_notes"
+                  content-class="p-4 border border-slate-300 rounded-md bg-surface-50"
+                >
+                  <template #header>
+                    <div class="flex items-center gap-2 py-2 mx-2 w-full">
+                      <span class="font-medium text-surface-700">Technical Notes</span>
+                    </div>
+                  </template>
+                  <div class="whitespace-pre-wrap">{{ round.technical_notes }}</div>
+                </BasePanel>
 
-              <div v-if="round.stream_url">
-                <div class="font-medium text-sm text-gray-600">Stream URL</div>
-                <a :href="round.stream_url" target="_blank" class="text-blue-600 hover:underline">
-                  {{ round.stream_url }}
-                </a>
-              </div>
+                <BasePanel
+                  v-if="round.stream_url"
+                  content-class="p-4 border border-slate-300 rounded-md bg-surface-50"
+                >
+                  <template #header>
+                    <div class="flex items-center gap-2 py-2 mx-2 w-full">
+                      <span class="font-medium text-surface-700">Stream URL</span>
+                    </div>
+                  </template>
+                  <a :href="round.stream_url" target="_blank" class="text-blue-600 hover:underline">
+                    {{ round.stream_url }}
+                  </a>
+                </BasePanel>
 
-              <div v-if="round.internal_notes">
-                <div class="font-medium text-sm text-gray-600">Internal Notes</div>
-                <div class="whitespace-pre-wrap">{{ round.internal_notes }}</div>
+                <BasePanel
+                  v-if="round.internal_notes"
+                  content-class="p-4 border border-slate-300 rounded-md bg-surface-50"
+                >
+                  <template #header>
+                    <div class="flex items-center gap-2 py-2 mx-2 w-full">
+                      <span class="font-medium text-surface-700">Internal Notes</span>
+                    </div>
+                  </template>
+                  <div class="whitespace-pre-wrap">{{ round.internal_notes }}</div>
+                </BasePanel>
               </div>
 
               <!-- Race Events Section (Qualifying + Races) -->
               <div>
-                <div class="flex items-center justify-between mb-3">
-                  <h3 class="font-semibold">Race Events</h3>
+                <div class="flex items-center justify-between my-3">
+                  <HTag :level="3">Race Events</HTag>
                   <div class="flex items-center gap-2">
                     <Button
                       label="Add Event"
@@ -220,7 +262,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { format, parseISO } from 'date-fns';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
@@ -243,6 +285,7 @@ import { useTrackStore } from '@app/stores/trackStore';
 import type { Round } from '@app/types/round';
 import type { Race } from '@app/types/race';
 import { isQualifier } from '@app/types/race';
+import HTag from '@app/components/common/HTag.vue';
 
 interface Props {
   seasonId: number;
@@ -312,8 +355,7 @@ onMounted(async () => {
     }
 
     loadingRaces.value = false;
-  } catch (error) {
-    console.error('[RoundsPanel] Error loading rounds and races:', error);
+  } catch {
     loadingRaces.value = false;
     toast.add({
       severity: 'error',
@@ -418,8 +460,8 @@ async function handleRoundSaved(): Promise<void> {
   // Ensure tracks are loaded for all rounds
   try {
     await trackStore.fetchTracks({ platform_id: props.platformId, is_active: true });
-  } catch (trackError) {
-    console.error('[RoundsPanel] Error reloading tracks after round saved:', trackError);
+  } catch {
+    // Silently handle track loading errors
   }
 }
 
@@ -427,11 +469,16 @@ function getAllRaceEvents(roundId: number): Race[] {
   return allRaceEventsByRound.value.get(roundId) || [];
 }
 
-function handleEditQualifier(qualifier: Race): void {
+async function handleEditQualifier(qualifier: Race): Promise<void> {
+  // Set all state FIRST, before showing the drawer
   selectedRoundId.value = qualifier.round_id;
   selectedRace.value = qualifier;
   raceFormMode.value = 'edit';
   raceFormType.value = 'qualifier';
+
+  // Use nextTick to ensure all reactive updates are completed
+  // before showing the drawer
+  await nextTick();
   showRaceFormDrawer.value = true;
 }
 
@@ -474,11 +521,16 @@ function handleCreateRace(roundId: number): void {
   showRaceFormDrawer.value = true;
 }
 
-function handleEditRace(race: Race): void {
+async function handleEditRace(race: Race): Promise<void> {
+  // Set all state FIRST, before showing the drawer
   selectedRoundId.value = race.round_id;
   selectedRace.value = race;
   raceFormMode.value = 'edit';
   raceFormType.value = 'race';
+
+  // Use nextTick to ensure all reactive updates are completed
+  // before showing the drawer
+  await nextTick();
   showRaceFormDrawer.value = true;
 }
 
@@ -527,8 +579,8 @@ async function handleRaceSaved(): Promise<void> {
   if (roundId) {
     try {
       await raceStore.fetchRaces(roundId);
-    } catch (error) {
-      console.error('Failed to reload races:', error);
+    } catch {
+      // Silently handle race reload errors
     }
   }
 

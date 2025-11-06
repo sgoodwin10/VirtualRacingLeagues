@@ -73,6 +73,7 @@ class CompetitionTest extends TestCase
             createdByUserId: 1,
             description: 'A competitive GT3 series',
             logoPath: '/path/to/logo.png',
+            competitionColour: '{"r":100,"g":102,"b":241}',
             createdAt: $now,
             updatedAt: $now,
             deletedAt: null,
@@ -81,6 +82,7 @@ class CompetitionTest extends TestCase
 
         $this->assertSame(1, $competition->id());
         $this->assertSame('GT3 Championship', $competition->name()->value());
+        $this->assertSame('{"r":100,"g":102,"b":241}', $competition->competitionColour());
     }
 
     public function test_can_update_details(): void
@@ -151,6 +153,32 @@ class CompetitionTest extends TestCase
         $this->expectException(CompetitionIsArchivedException::class);
 
         $competition->updateLogo('/new/path/logo.png');
+    }
+
+    public function test_can_update_competition_colour(): void
+    {
+        $competition = $this->createCompetition();
+        $competition->setId(1);
+
+        $competition->updateCompetitionColour('{"r":255,"g":0,"b":0}');
+
+        $this->assertSame('{"r":255,"g":0,"b":0}', $competition->competitionColour());
+        $this->assertTrue($competition->hasEvents());
+
+        $events = $competition->releaseEvents();
+        $this->assertInstanceOf(CompetitionUpdated::class, $events[0]);
+    }
+
+    public function test_cannot_update_competition_colour_when_archived(): void
+    {
+        $competition = $this->createCompetition();
+        $competition->setId(1);
+        $competition->archive();
+        $competition->clearEvents();
+
+        $this->expectException(CompetitionIsArchivedException::class);
+
+        $competition->updateCompetitionColour('{"r":255,"g":0,"b":0}');
     }
 
     public function test_can_update_slug(): void

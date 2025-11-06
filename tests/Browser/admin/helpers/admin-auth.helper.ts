@@ -38,14 +38,27 @@ export async function loginAsAdmin(
 
   // Fill in credentials
   await page.getByLabel('Email Address').fill(credentials.email);
-  await page.getByLabel('Password').fill(credentials.password);
+  await page.locator('#password input').fill(credentials.password); // PrimeVue Password component input
 
   // Submit form
   await page.getByRole('button', { name: /sign in/i }).click();
 
   if (verifyRedirect) {
+    // Wait a bit for navigation or error
+    await page.waitForTimeout(1500);
+
+    // Check if we got rate limited (429 error)
+    const errorMessage = page.locator('.p-message-error, .p-message');
+    const hasRateLimitError =
+      (await errorMessage.locator(':has-text("429"), :has-text("too many"), :has-text("Request failed")').count()) > 0;
+
+    if (hasRateLimitError) {
+      // Throw error so test can handle it
+      throw new Error('Rate limit exceeded (429)');
+    }
+
     // Wait for redirect to dashboard
-    await page.waitForURL(TEST_URLS.admin.dashboard, { timeout: 10000 });
+    await page.waitForURL(TEST_URLS.admin.dashboard, { timeout: 8000 });
 
     // Verify we're on the dashboard
     await expect(page).toHaveURL(TEST_URLS.admin.dashboard);
@@ -89,7 +102,7 @@ export async function loginAsAdminWithRememberMe(
 
   // Fill in credentials
   await page.getByLabel('Email Address').fill(credentials.email);
-  await page.getByLabel('Password').fill(credentials.password);
+  await page.locator('#password input').fill(credentials.password); // PrimeVue Password component input
 
   // Enable remember me
   await page.getByLabel(/remember me/i).check();
@@ -151,6 +164,9 @@ export async function logoutAdmin(page: Page): Promise<void> {
  */
 export async function clearAdminSession(page: Page): Promise<void> {
   await page.context().clearCookies();
+
+  // Small delay to ensure cookies are fully cleared
+  await page.waitForTimeout(500);
 }
 
 /**

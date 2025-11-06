@@ -16,10 +16,13 @@ const TEST_PORT = process.env.TEST_PORT || '80';
  * Build URL for testing
  * Uses subdomain.localhost format
  * Port 80 for Docker container, 8000 for host machine (set TEST_PORT env var)
+ * Note: Browsers normalize URLs by removing port 80, so we omit it from test URLs
  */
 function buildUrl(subdomain: string = '', path: string = '/'): string {
   const domain = subdomain ? `${subdomain}.${BASE_DOMAIN}` : BASE_DOMAIN;
-  return `http://${domain}:${TEST_PORT}${path}`;
+  // Omit port 80 since browsers normalize URLs by removing the default HTTP port
+  const port = TEST_PORT === '80' ? '' : `:${TEST_PORT}`;
+  return `http://${domain}${port}${path}`;
 }
 
 /**
@@ -70,7 +73,7 @@ export const TEST_CREDENTIALS = {
     password: 'password',
   },
   superAdmin: {
-    email: 'superadmin@example.com',
+    email: 'superadmin@virtualracingleagues.com',
     password: 'password',
   },
   moderator: {

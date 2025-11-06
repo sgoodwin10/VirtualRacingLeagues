@@ -26,6 +26,7 @@ class ApiService {
           config.headers['X-XSRF-TOKEN'] = token;
         }
       }
+
       return config;
     });
 

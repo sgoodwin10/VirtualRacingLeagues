@@ -40,6 +40,7 @@ final class Competition
         private ?string $description,
         private int $platformId, // IMMUTABLE after creation
         private ?string $logoPath,
+        private ?string $competitionColour,
         private CompetitionStatus $status,
         private int $createdByUserId,
         private \DateTimeImmutable $createdAt,
@@ -60,6 +61,7 @@ final class Competition
         int $createdByUserId,
         ?string $description = null,
         ?string $logoPath = null,
+        ?string $competitionColour = null,
     ): self {
         $now = new \DateTimeImmutable();
 
@@ -71,6 +73,7 @@ final class Competition
             description: $description,
             platformId: $platformId,
             logoPath: $logoPath,
+            competitionColour: $competitionColour,
             status: CompetitionStatus::ACTIVE,
             createdByUserId: $createdByUserId,
             createdAt: $now,
@@ -93,6 +96,7 @@ final class Competition
         int $createdByUserId,
         ?string $description,
         ?string $logoPath,
+        ?string $competitionColour,
         \DateTimeImmutable $createdAt,
         \DateTimeImmutable $updatedAt,
         ?\DateTimeImmutable $deletedAt,
@@ -106,6 +110,7 @@ final class Competition
             description: $description,
             platformId: $platformId,
             logoPath: $logoPath,
+            competitionColour: $competitionColour,
             status: $status,
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
@@ -179,6 +184,11 @@ final class Competition
     public function logoPath(): ?string
     {
         return $this->logoPath;
+    }
+
+    public function competitionColour(): ?string
+    {
+        return $this->competitionColour;
     }
 
     public function status(): CompetitionStatus
@@ -274,6 +284,37 @@ final class Competition
             ];
 
             $this->logoPath = $logoPath;
+            $this->updatedAt = new \DateTimeImmutable();
+
+            $this->recordEvent(new CompetitionUpdated(
+                competitionId: $this->id ?? 0,
+                leagueId: $this->leagueId,
+                changes: $changes,
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Update competition colour.
+     *
+     * @throws CompetitionIsArchivedException if competition is archived
+     */
+    public function updateCompetitionColour(?string $competitionColour): void
+    {
+        if ($this->status->isArchived()) {
+            throw new CompetitionIsArchivedException();
+        }
+
+        if ($this->competitionColour !== $competitionColour) {
+            $changes = [
+                'competition_colour' => [
+                    'old' => $this->competitionColour,
+                    'new' => $competitionColour,
+                ],
+            ];
+
+            $this->competitionColour = $competitionColour;
             $this->updatedAt = new \DateTimeImmutable();
 
             $this->recordEvent(new CompetitionUpdated(

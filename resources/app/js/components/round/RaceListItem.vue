@@ -1,39 +1,60 @@
 <template>
-  <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
-    <div class="flex items-center justify-between">
-      <div class="flex-1">
-        <div class="flex items-center gap-3 mb-2">
-          <Tag :value="`Race ${race.race_number}`" severity="success" />
-          <span class="font-medium">{{ race.name || 'Untitled Race' }}</span>
-          <Tag v-if="race.race_type" :value="raceTypeLabel" severity="secondary" />
+  <div
+    class="flex flex-row rounded-lg border border-amber-200 hover:border-amber-400 transition-colors"
+  >
+    <div class="flex items-center p-4 border-r rounded-l-lg border-amber-300 bg-amber-50">
+      <PhFlag size="24" class="text-amber-600" />
+    </div>
+
+    <div class="flex flex-grow items-center">
+      <div class="flex-grow flex flex-row">
+        <div class="flex items-center px-2 min-w-[256px]">
+          <div class="flex flex-col">
+            <span class="font-medium text-green-900">{{
+              race.name || `Race ${race.race_number}`
+            }}</span>
+            <span v-if="race.race_type" class="text-sm text-gray-500">{{ raceTypeLabel }}</span>
+          </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
-          <div>
-            <span class="font-medium">Length:</span>
-            {{ formatRaceLength(race) }}
+        <div class="flex flex-row gap-6 text-sm text-gray-600 mr-4 min-w-[300px]">
+          <div class="flex flex-col">
+            <div class="font-medium text-gray-500">Length</div>
+            <div class="text-gray-600 text-md">{{ formatRaceLength(race) }}</div>
           </div>
-          <div>
-            <span class="font-medium">Qualifying:</span>
-            {{ formatQualifying(race) }}
+          <div class="flex flex-col">
+            <div class="font-medium text-gray-500">Grid Source</div>
+            <div class="text-gray-600 text-md">{{ formatGridSource(race.grid_source) }}</div>
           </div>
-          <div>
-            <span class="font-medium">Grid:</span>
-            {{ formatGridSource(race.grid_source) }}
+          <div v-if="race.weather">
+            <div class="flex flex-col">
+              <div class="font-medium text-gray-500">Weather</div>
+              <div class="text-gray-600 text-md">{{ race.weather }}</div>
+            </div>
           </div>
           <div v-if="race.mandatory_pit_stop">
-            <span class="font-medium">Pit Stop:</span>
-            Mandatory
-            <span v-if="race.minimum_pit_time">({{ race.minimum_pit_time }}s min)</span>
+            <div class="flex flex-col">
+              <div class="font-medium text-gray-500">Pit Stop</div>
+              <div class="text-gray-600 text-md">
+                {{ race.minimum_pit_time ? `${race.minimum_pit_time}s min` : 'Mandatory' }}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div v-if="race.race_divisions" class="mt-2">
-          <Tag value="Divisions Enabled" severity="info" />
+        <div class="flex gap-2 mt-2 text-xs">
+          <Tag v-if="race.race_divisions" value="Divisions" severity="info" />
+          <Tag v-if="race.mandatory_pit_stop" value="Pit Stop" severity="warning" />
+          <Tag v-if="hasFastestLapBonus" value="Fastest Lap Bonus" severity="success" />
+          <Tag
+            v-if="race.track_limits_enforced"
+            value="Track Limits"
+            icon="pi pi-exclamation-triangle"
+          />
         </div>
       </div>
 
-      <div class="flex items-center gap-2 ml-4">
+      <div class="flex-none items-center gap-2 mx-4">
         <Button
           v-tooltip.top="'Edit Race'"
           icon="pi pi-pencil"
@@ -62,7 +83,8 @@ import { computed } from 'vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import type { Race, GridSource } from '@app/types/race';
-import { RACE_TYPE_OPTIONS, QUALIFYING_FORMAT_OPTIONS, GRID_SOURCE_OPTIONS } from '@app/types/race';
+import { RACE_TYPE_OPTIONS, GRID_SOURCE_OPTIONS } from '@app/types/race';
+import { PhFlag } from '@phosphor-icons/vue';
 
 interface Props {
   race: Race;
@@ -81,23 +103,16 @@ const raceTypeLabel = computed(() => {
   return option?.label || props.race.race_type;
 });
 
+const hasFastestLapBonus = computed(() => {
+  return !!props.race.bonus_points?.fastest_lap;
+});
+
 function formatRaceLength(race: Race): string {
   if (race.length_type === 'laps') {
     return `${race.length_value} laps`;
   } else {
     return `${race.length_value} minutes${race.extra_lap_after_time ? ' + lap' : ''}`;
   }
-}
-
-function formatQualifying(race: Race): string {
-  const option = QUALIFYING_FORMAT_OPTIONS.find((opt) => opt.value === race.qualifying_format);
-  const formatLabel = option?.label || race.qualifying_format;
-
-  if (race.qualifying_format === 'none' || race.qualifying_format === 'previous_race') {
-    return formatLabel;
-  }
-
-  return `${formatLabel}${race.qualifying_length ? ` (${race.qualifying_length}min)` : ''}`;
 }
 
 function formatGridSource(gridSource: GridSource): string {

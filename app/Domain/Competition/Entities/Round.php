@@ -37,6 +37,8 @@ final class Round
         private ?string $technicalNotes,
         private ?string $streamUrl,
         private ?string $internalNotes,
+        private ?int $fastestLap,
+        private bool $fastestLapTop10,
         private RoundStatus $status,
         private int $createdByUserId,
         private DateTimeImmutable $createdAt,
@@ -61,6 +63,8 @@ final class Round
         ?string $technicalNotes,
         ?string $streamUrl,
         ?string $internalNotes,
+        ?int $fastestLap,
+        bool $fastestLapTop10,
         int $createdByUserId,
     ): self {
         return new self(
@@ -77,6 +81,8 @@ final class Round
             technicalNotes: $technicalNotes,
             streamUrl: $streamUrl,
             internalNotes: $internalNotes,
+            fastestLap: $fastestLap,
+            fastestLapTop10: $fastestLapTop10,
             status: RoundStatus::SCHEDULED,
             createdByUserId: $createdByUserId,
             createdAt: new DateTimeImmutable(),
@@ -102,6 +108,8 @@ final class Round
         ?string $technicalNotes,
         ?string $streamUrl,
         ?string $internalNotes,
+        ?int $fastestLap,
+        bool $fastestLapTop10,
         RoundStatus $status,
         int $createdByUserId,
         DateTimeImmutable $createdAt,
@@ -122,6 +130,8 @@ final class Round
             technicalNotes: $technicalNotes,
             streamUrl: $streamUrl,
             internalNotes: $internalNotes,
+            fastestLap: $fastestLap,
+            fastestLapTop10: $fastestLapTop10,
             status: $status,
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
@@ -144,6 +154,8 @@ final class Round
         ?string $technicalNotes,
         ?string $streamUrl,
         ?string $internalNotes,
+        ?int $fastestLap,
+        bool $fastestLapTop10,
     ): void {
         $hasChanges = false;
 
@@ -194,6 +206,16 @@ final class Round
 
         if ($this->internalNotes !== $internalNotes) {
             $this->internalNotes = $internalNotes;
+            $hasChanges = true;
+        }
+
+        if ($this->fastestLap !== $fastestLap) {
+            $this->fastestLap = $fastestLap;
+            $hasChanges = true;
+        }
+
+        if ($this->fastestLapTop10 !== $fastestLapTop10) {
+            $this->fastestLapTop10 = $fastestLapTop10;
             $hasChanges = true;
         }
 
@@ -350,6 +372,16 @@ final class Round
     public function internalNotes(): ?string
     {
         return $this->internalNotes;
+    }
+
+    public function fastestLap(): ?int
+    {
+        return $this->fastestLap;
+    }
+
+    public function fastestLapTop10(): bool
+    {
+        return $this->fastestLapTop10;
     }
 
     public function status(): RoundStatus

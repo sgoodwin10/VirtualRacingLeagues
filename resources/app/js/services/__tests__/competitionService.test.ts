@@ -42,6 +42,7 @@ describe('competitionService', () => {
     },
     logo_url: 'https://example.com/logo.png',
     has_own_logo: true,
+    competition_colour: null,
     status: 'active',
     is_active: true,
     is_archived: false,

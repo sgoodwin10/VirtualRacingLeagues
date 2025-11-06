@@ -10,6 +10,7 @@ import HTag from '@app/components/common/HTag.vue';
 import Tag from 'primevue/tag';
 import Tooltip from 'primevue/tooltip';
 import SpeedDial from 'primevue/speeddial';
+import Button from 'primevue/button';
 import InfoItem from '@app/components/common/InfoItem.vue';
 import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
 import { useCompetitionStore } from '@app/stores/competitionStore';
@@ -216,82 +217,93 @@ async function deleteCompetition(): Promise<void> {
       <!-- Empty state -->
       <div
         v-if="!hasSeasons"
-        class="flex flex-col items-center justify-center h-full text-gray-400 gap-2"
+        class="flex flex-col items-center justify-center h-full text-gray-400 gap-3"
       >
-        <PhTrophy :size="32" weight="light" />
-        <p class="text-sm">No seasons yet</p>
+        <PhTrophy :size="48" weight="light" />
+        <div class="text-center">
+          <p class="text-sm font-medium">No seasons yet</p>
+          <p class="text-xs mt-1">Get started by creating your first season</p>
+        </div>
+        <Button
+          label="Create Season"
+          icon="pi pi-plus"
+          size="small"
+          @click.stop="handleCreateSeason"
+        />
       </div>
 
       <!-- Seasons list -->
-      <div v-else class="space-y-2 min-h-0">
+      <div v-else class="space-y-2 min-h-0 flex-1 flex flex-col">
         <div class="px-2 font-medium text-sm text-slate-400">Seasons</div>
-        <div
-          v-for="season in sortedSeasons"
-          :key="season.id"
-          class="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200 hover:border-primary-200 hover:bg-primary-50/30 transition-all cursor-pointer"
-          @click="handleSeasonClick(season.id)"
-        >
-          <!-- Season name -->
-          <div class="flex items-center gap-2 flex-1 min-w-0">
-            <span class="font-medium text-sm text-slate-700 truncate">{{ season.name }}</span>
-          </div>
-
-          <!-- Season stats and status -->
-          <div class="flex items-center gap-3 shrink-0 ml-2">
-            <!-- Status tag -->
-            <Tag
-              v-if="season.is_archived"
-              v-tooltip.top="getSeasonStatusTooltip(season)"
-              value="Archived"
-              severity="secondary"
-              class="shrink-0 text-xs"
-            />
-            <Tag
-              v-else-if="season.is_active"
-              v-tooltip.top="getSeasonStatusTooltip(season)"
-              value="Active"
-              severity="success"
-              class="shrink-0 text-xs"
-            />
-            <Tag
-              v-else-if="season.status === 'setup'"
-              v-tooltip.top="getSeasonStatusTooltip(season)"
-              value="Setup"
-              severity="warn"
-              class="shrink-0 text-xs"
-            />
-
-            <!-- Drivers -->
-            <div class="flex items-center gap-1 text-xs text-slate-600">
-              <PhSteeringWheel :size="16" weight="regular" class="text-slate-400" />
-              <span>{{ season.stats.driver_count }}</span>
+        <div class="flex-1 space-y-2 overflow-y-auto">
+          <div
+            v-for="season in sortedSeasons"
+            :key="season.id"
+            class="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200 hover:border-primary-200 hover:bg-primary-50/30 transition-all cursor-pointer"
+            @click="handleSeasonClick(season.id)"
+          >
+            <!-- Season name -->
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+              <span class="font-medium text-sm text-slate-700 truncate">{{ season.name }}</span>
             </div>
 
-            <!-- Rounds -->
-            <div class="flex items-center gap-1 text-xs text-slate-600">
-              <PhCalendarBlank :size="16" weight="regular" class="text-slate-400" />
-              <span>{{ season.stats.round_count }}</span>
-            </div>
+            <!-- Season stats and status -->
+            <div class="flex items-center gap-3 shrink-0 ml-2">
+              <!-- Status tag -->
+              <Tag
+                v-if="season.is_archived"
+                v-tooltip.top="getSeasonStatusTooltip(season)"
+                value="Archived"
+                severity="secondary"
+                class="shrink-0 text-xs"
+              />
+              <Tag
+                v-else-if="season.is_active"
+                v-tooltip.top="getSeasonStatusTooltip(season)"
+                value="Active"
+                severity="success"
+                class="shrink-0 text-xs"
+              />
+              <Tag
+                v-else-if="season.status === 'setup'"
+                v-tooltip.top="getSeasonStatusTooltip(season)"
+                value="Setup"
+                severity="warn"
+                class="shrink-0 text-xs"
+              />
 
-            <!-- Races -->
-            <div class="flex items-center gap-1 text-xs text-slate-600">
-              <PhFlag :size="16" weight="regular" class="text-slate-400" />
-              <span>{{ season.stats.race_count }}</span>
+              <!-- Drivers -->
+              <div class="flex items-center gap-1 text-xs text-slate-600">
+                <PhSteeringWheel :size="16" weight="regular" class="text-slate-400" />
+                <span>{{ season.stats.driver_count }}</span>
+              </div>
+
+              <!-- Rounds -->
+              <div class="flex items-center gap-1 text-xs text-slate-600">
+                <PhCalendarBlank :size="16" weight="regular" class="text-slate-400" />
+                <span>{{ season.stats.round_count }}</span>
+              </div>
+
+              <!-- Races -->
+              <div class="flex items-center gap-1 text-xs text-slate-600">
+                <PhFlag :size="16" weight="regular" class="text-slate-400" />
+                <span>{{ season.stats.race_count }}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Create New Season Button -->
-      <div class="mt-2">
-        <button
-          type="button"
-          class="flex items-center justify-center gap-2 w-full p-2 bg-white rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
-          @click.stop="handleCreateSeason"
-        >
-          <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
-          <span class="text-sm font-medium">Create New Season</span>
-        </button>
+        <!-- Create New Season Button (only shown when seasons exist) -->
+        <div class="mt-2">
+          <button
+            type="button"
+            class="flex items-center justify-center gap-2 w-full p-2 bg-white rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
+            @click.stop="handleCreateSeason"
+          >
+            <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
+            <span class="text-sm font-medium">Create New Season</span>
+          </button>
+        </div>
       </div>
     </div>
 

@@ -43,8 +43,10 @@ Route::domain('admin.virtualracingleagues.localhost')->middleware('web')->group(
         });
 
         // Public routes (no authentication required)
+        // Relax rate limiting in local environment for testing (60/min vs 5/min)
+        $loginThrottle = app()->environment('local') ? 'throttle:60,1' : 'throttle:5,1';
         Route::post('/login', [AdminAuthController::class, 'login'])
-            ->middleware('throttle:5,1')
+            ->middleware($loginThrottle)
             ->name('login');
 
         // Auth check routes - these check if user is authenticated but don't require auth middleware
@@ -283,8 +285,10 @@ Route::domain('virtualracingleagues.localhost')->middleware('web')->group(functi
         });
 
         // Public routes (no authentication required)
+        // Relax rate limiting in local environment for testing (60/min vs 5/min)
+        $loginThrottle = app()->environment('local') ? 'throttle:60,1' : 'throttle:5,1';
         Route::post('/login', [AdminAuthController::class, 'login'])
-            ->middleware('throttle:5,1')
+            ->middleware($loginThrottle)
             ->name('login');
 
         // Auth check routes - these check if user is authenticated but don't require auth middleware

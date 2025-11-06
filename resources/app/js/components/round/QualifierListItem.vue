@@ -1,29 +1,39 @@
 <template>
-  <div class="p-4 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors">
-    <div class="flex items-center justify-between">
-      <div class="flex-1">
-        <div class="flex items-center gap-3 mb-2">
-          <i class="pi pi-stopwatch text-blue-600"></i>
-          <Tag value="Qualifying" severity="info" />
+  <div
+    class="flex flex-row rounded-lg border border-blue-200 hover:border-blue-400 transition-colors"
+  >
+    <div class="flex items-center p-4 border-r rounded-l-lg border-blue-200 bg-blue-50">
+      <PhTimer size="24" class="text-blue-600" />
+    </div>
+
+    <div class="flex flex-grow items-center">
+      <div class="flex-grow flex flex-row">
+        <div class="flex items-center px-2 min-w-[256px]">
           <span class="font-medium text-blue-900">{{ race.name || 'Qualifying Session' }}</span>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
-          <div>
-            <span class="font-medium">Format:</span>
-            {{ formatQualifying(race) }}
+        <div class="flex flex-row gap-6 text-sm text-gray-600 mr-4">
+          <div class="flex flex-col">
+            <div class="font-medium text-gray-500">Format</div>
+            <div class="text-gray-600 text-md">{{ formatQualifying(race) }}</div>
           </div>
           <div v-if="race.qualifying_length">
-            <span class="font-medium">Duration:</span>
-            {{ race.qualifying_length }} minutes
+            <div class="flex flex-col">
+              <div class="font-medium text-gray-500">Duration</div>
+              <div class="text-gray-600 text-md">{{ race.qualifying_length }} minutes</div>
+            </div>
           </div>
           <div v-if="race.qualifying_tire">
-            <span class="font-medium">Tire:</span>
-            {{ race.qualifying_tire }}
+            <div class="flex flex-col">
+              <div class="font-medium text-gray-500">Tyre</div>
+              <div class="text-gray-600 text-md">{{ race.qualifying_tire }}</div>
+            </div>
           </div>
           <div v-if="race.weather">
-            <span class="font-medium">Weather:</span>
-            {{ race.weather }}
+            <div class="flex flex-col">
+              <div class="font-medium text-gray-500">Weather</div>
+              <div class="text-gray-600 text-md">{{ race.weather }}</div>
+            </div>
           </div>
         </div>
 
@@ -33,7 +43,7 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 ml-4">
+      <div class="flex-none items-center gap-2 mx-4">
         <Button
           v-tooltip.top="'Edit Qualifying'"
           icon="pi pi-pencil"
@@ -63,6 +73,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import type { Race } from '@app/types/race';
 import { QUALIFYING_FORMAT_OPTIONS } from '@app/types/race';
+import { PhTimer } from '@phosphor-icons/vue';
 
 interface Props {
   race: Race;

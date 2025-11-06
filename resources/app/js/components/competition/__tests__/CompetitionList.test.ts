@@ -48,6 +48,7 @@ function createMockCompetition(overrides: Partial<Competition> = {}): Competitio
     },
     logo_url: 'https://example.com/logo.png',
     has_own_logo: true,
+    competition_colour: null,
     status: 'active',
     is_active: true,
     is_archived: false,
@@ -252,6 +253,92 @@ describe('CompetitionList', () => {
       });
 
       expect(fetchSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('Competition Events', () => {
+    it('refreshes competitions list after creation', async () => {
+      const competitionStore = useCompetitionStore();
+      const fetchSpy = vi.spyOn(competitionStore, 'fetchCompetitions').mockResolvedValue(undefined);
+
+      const wrapper = mountComponent({ leagueId: 1 });
+
+      // Clear the initial mount call
+      fetchSpy.mockClear();
+
+      // Find the CompetitionFormDrawer (create drawer)
+      const createDrawer = wrapper.findAllComponents({ name: 'CompetitionFormDrawer' })[0];
+
+      // Trigger competition-saved event from the drawer
+      const newCompetition = createMockCompetition({ id: 3, name: 'New Competition' });
+      await createDrawer!.vm.$emit('competition-saved', newCompetition);
+
+      // Wait for next tick to allow async operations to complete
+      await wrapper.vm.$nextTick();
+
+      // Should have called fetchCompetitions to refresh the list
+      expect(fetchSpy).toHaveBeenCalledWith(1);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('refreshes competitions list after update', async () => {
+      const competitionStore = useCompetitionStore();
+      const fetchSpy = vi.spyOn(competitionStore, 'fetchCompetitions').mockResolvedValue(undefined);
+
+      const wrapper = mountComponent({ leagueId: 1 });
+
+      // Clear the initial mount call
+      fetchSpy.mockClear();
+
+      // Find the CompetitionFormDrawer (edit drawer - second one)
+      const editDrawer = wrapper.findAllComponents({ name: 'CompetitionFormDrawer' })[1];
+
+      // Trigger competition-saved event from the drawer
+      const updatedCompetition = createMockCompetition({ id: 1, name: 'Updated Competition' });
+      await editDrawer!.vm.$emit('competition-saved', updatedCompetition);
+
+      // Wait for next tick to allow async operations to complete
+      await wrapper.vm.$nextTick();
+
+      // Should have called fetchCompetitions to refresh the list
+      expect(fetchSpy).toHaveBeenCalledWith(1);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('emits competition-created event after refresh', async () => {
+      const wrapper = mountComponent({ leagueId: 1 });
+
+      // Find the CompetitionFormDrawer (create drawer)
+      const createDrawer = wrapper.findAllComponents({ name: 'CompetitionFormDrawer' })[0];
+
+      // Trigger competition-saved event from the drawer
+      const newCompetition = createMockCompetition({ id: 3, name: 'New Competition' });
+      await createDrawer!.vm.$emit('competition-saved', newCompetition);
+
+      // Wait for next tick to allow async operations to complete
+      await wrapper.vm.$nextTick();
+
+      // Should emit the event to parent
+      expect(wrapper.emitted('competition-created')).toBeTruthy();
+      expect(wrapper.emitted('competition-created')![0]).toEqual([newCompetition]);
+    });
+
+    it('emits competition-updated event after refresh', async () => {
+      const wrapper = mountComponent({ leagueId: 1 });
+
+      // Find the CompetitionFormDrawer (edit drawer - second one)
+      const editDrawer = wrapper.findAllComponents({ name: 'CompetitionFormDrawer' })[1];
+
+      // Trigger competition-saved event from the drawer
+      const updatedCompetition = createMockCompetition({ id: 1, name: 'Updated Competition' });
+      await editDrawer!.vm.$emit('competition-saved', updatedCompetition);
+
+      // Wait for next tick to allow async operations to complete
+      await wrapper.vm.$nextTick();
+
+      // Should emit the event to parent
+      expect(wrapper.emitted('competition-updated')).toBeTruthy();
+      expect(wrapper.emitted('competition-updated')![0]).toEqual([updatedCompetition]);
     });
   });
 });

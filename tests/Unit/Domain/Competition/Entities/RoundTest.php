@@ -38,6 +38,8 @@ final class RoundTest extends TestCase
             technicalNotes: null,
             streamUrl: null,
             internalNotes: null,
+            fastestLap: 1,
+            fastestLapTop10: false,
             createdByUserId: 1,
         );
 
@@ -49,6 +51,8 @@ final class RoundTest extends TestCase
         $this->assertEquals(RoundStatus::SCHEDULED, $round->status());
         $this->assertEquals('Australia/Sydney', $round->timezone());
         $this->assertEquals(10, $round->platformTrackId());
+        $this->assertEquals(1, $round->fastestLap());
+        $this->assertEquals(false, $round->fastestLapTop10());
         $this->assertEquals(1, $round->createdByUserId());
     }
 
@@ -69,6 +73,8 @@ final class RoundTest extends TestCase
             technicalNotes: 'BOP enabled',
             streamUrl: 'https://twitch.tv/test',
             internalNotes: 'Test notes',
+            fastestLap: null,
+            fastestLapTop10: true,
             status: RoundStatus::COMPLETED,
             createdByUserId: 1,
             createdAt: new DateTimeImmutable('2025-01-01 00:00:00'),
@@ -81,6 +87,8 @@ final class RoundTest extends TestCase
         $this->assertEquals(3, $round->roundNumber()->value());
         $this->assertEquals(RoundStatus::COMPLETED, $round->status());
         $this->assertEquals('GP', $round->trackLayout());
+        $this->assertNull($round->fastestLap());
+        $this->assertTrue($round->fastestLapTop10());
     }
 
     #[Test]
@@ -99,11 +107,15 @@ final class RoundTest extends TestCase
             technicalNotes: 'New notes',
             streamUrl: 'https://youtube.com/test',
             internalNotes: 'Internal update',
+            fastestLap: 2,
+            fastestLapTop10: true,
         );
 
         $this->assertEquals(6, $round->roundNumber()->value());
         $this->assertEquals('Updated Name', $round->name()?->value());
         $this->assertEquals('National', $round->trackLayout());
+        $this->assertEquals(2, $round->fastestLap());
+        $this->assertTrue($round->fastestLapTop10());
         $this->assertTrue($round->hasEvents());
     }
 
@@ -123,6 +135,8 @@ final class RoundTest extends TestCase
             technicalNotes: $round->technicalNotes(),
             streamUrl: $round->streamUrl(),
             internalNotes: $round->internalNotes(),
+            fastestLap: $round->fastestLap(),
+            fastestLapTop10: $round->fastestLapTop10(),
         );
 
         $this->assertFalse($round->hasEvents());
@@ -213,6 +227,8 @@ final class RoundTest extends TestCase
             technicalNotes: 'Test',
             streamUrl: null,
             internalNotes: null,
+            fastestLap: 1,
+            fastestLapTop10: false,
             createdByUserId: 1,
         );
     }

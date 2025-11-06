@@ -80,6 +80,7 @@ export const useRoundStore = defineStore('round', () => {
     error.value = null;
     try {
       const updatedRound = await roundService.updateRound(roundId, data);
+
       const index = rounds.value.findIndex((r) => r.id === roundId);
       if (index !== -1) {
         rounds.value[index] = updatedRound;

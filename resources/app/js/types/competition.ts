@@ -51,6 +51,7 @@ export interface Competition {
   league?: CompetitionLeague;
   logo_url: string; // Never null (backend resolves fallback)
   has_own_logo: boolean; // True if competition has its own logo, false if using league logo fallback
+  competition_colour: string | null; // RGB JSON string: {"r":100,"g":102,"b":241}
   status: CompetitionStatus;
   is_active: boolean;
   is_archived: boolean;
@@ -80,6 +81,7 @@ export interface CreateCompetitionRequest {
   platform_id: number;
   description?: string;
   logo?: File;
+  competition_colour?: string;
 }
 
 // Update request payload
@@ -87,6 +89,14 @@ export interface UpdateCompetitionRequest {
   name?: string;
   description?: string | null;
   logo?: File | null;
+  competition_colour?: string | null;
+}
+
+// RGB Color interface for ColorPicker
+export interface RGBColor {
+  r: number;
+  g: number;
+  b: number;
 }
 
 // Form state (internal)
@@ -96,6 +106,7 @@ export interface CompetitionForm {
   platform_id: number | null;
   logo: File | null;
   logo_url: string | null; // Existing logo URL for edit mode
+  competition_colour: RGBColor | null; // ColorPicker uses RGB object format
 }
 
 // Validation errors
@@ -104,6 +115,7 @@ export interface CompetitionFormErrors {
   description?: string;
   platform_id?: string;
   logo?: string;
+  competition_colour?: string;
 }
 
 // Slug check response (from backend)

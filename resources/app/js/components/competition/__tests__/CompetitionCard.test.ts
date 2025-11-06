@@ -61,6 +61,7 @@ function createMockCompetition(overrides: Partial<Competition> = {}): Competitio
     },
     logo_url: 'https://example.com/logo.png',
     has_own_logo: true,
+    competition_colour: null,
     status: 'active',
     is_active: true,
     is_archived: false,
@@ -255,6 +256,7 @@ describe('CompetitionCard', () => {
       const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
 
       expect(wrapper.text()).toContain('No seasons yet');
+      expect(wrapper.text()).toContain('Get started by creating your first season');
     });
 
     it('shows empty state when seasons is undefined', () => {
@@ -264,6 +266,57 @@ describe('CompetitionCard', () => {
       const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
 
       expect(wrapper.text()).toContain('No seasons yet');
+      expect(wrapper.text()).toContain('Get started by creating your first season');
+    });
+
+    it('shows Create Season button in empty state', () => {
+      const competition = createMockCompetition({
+        seasons: [],
+        stats: {
+          total_seasons: 0,
+          active_seasons: 0,
+          total_rounds: 0,
+          total_drivers: 0,
+          total_races: 0,
+          next_race_date: null,
+        },
+      });
+      const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
+
+      // Check that the button text exists in the empty state
+      expect(wrapper.text()).toContain('Create Season');
+
+      // Verify we can find a button element (PrimeVue Button renders as a button)
+      const buttons = wrapper.findAll('button');
+      const createSeasonButton = buttons.find((btn) => btn.text().includes('Create Season'));
+      expect(createSeasonButton).toBeDefined();
+    });
+
+    it('opens season form drawer when Create Season button in empty state is clicked', async () => {
+      const competition = createMockCompetition({
+        seasons: [],
+        stats: {
+          total_seasons: 0,
+          active_seasons: 0,
+          total_rounds: 0,
+          total_drivers: 0,
+          total_races: 0,
+          next_race_date: null,
+        },
+      });
+      const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
+
+      // Find and click the Create Season button in empty state
+      const buttons = wrapper.findAll('button');
+      const createSeasonButton = buttons.find((btn) => btn.text().includes('Create Season'));
+      expect(createSeasonButton).toBeDefined();
+
+      await createSeasonButton?.trigger('click');
+      await wrapper.vm.$nextTick();
+
+      // Verify the season form drawer component exists (drawer visibility is internal state)
+      const drawer = wrapper.findComponent({ name: 'SeasonFormDrawer' });
+      expect(drawer.exists()).toBe(true);
     });
   });
 
@@ -317,26 +370,30 @@ describe('CompetitionCard', () => {
       expect(deleteAction?.severity).toBe('danger');
     });
 
-    it('shows create new season button', () => {
+    it('shows create new season button when seasons exist', () => {
       const competition = createMockCompetition();
       const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
 
-      // Find the button by its text content
+      // Find the native button by its text content (shown when seasons exist)
       const buttons = wrapper.findAll('button');
       const createButton = buttons.find((btn) => btn.text().includes('Create New Season'));
       expect(createButton).toBeDefined();
       expect(createButton?.text()).toContain('Create New Season');
     });
 
-    it('shows create new season button even when no seasons exist', () => {
+    it('shows Create Season button when no seasons exist, not Create New Season', () => {
       const competition = createMockCompetition({ seasons: [] });
       const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
 
-      // Find the button by its text content
       const buttons = wrapper.findAll('button');
-      const createButton = buttons.find((btn) => btn.text().includes('Create New Season'));
-      expect(createButton).toBeDefined();
-      expect(createButton?.text()).toContain('Create New Season');
+
+      // Should show "Create Season" button in empty state
+      const createSeasonButton = buttons.find((btn) => btn.text().includes('Create Season'));
+      expect(createSeasonButton).toBeDefined();
+
+      // Native "Create New Season" button should NOT exist when no seasons
+      const createNewButton = buttons.find((btn) => btn.text().includes('Create New Season'));
+      expect(createNewButton).toBeUndefined();
     });
 
     it('opens season form drawer when create button is clicked', async () => {

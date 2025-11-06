@@ -22,7 +22,7 @@ final class PlatformFactory extends Factory
      */
     public function definition(): array
     {
-        $name = $this->faker->randomElement([
+        $name = $this->faker->unique()->randomElement([
             'Gran Turismo 7',
             'iRacing',
             'Assetto Corsa Competizione',
@@ -31,6 +31,16 @@ final class PlatformFactory extends Factory
             'F1 24',
             'Project CARS 3',
             'Forza Motorsport',
+            'RaceRoom Racing Experience',
+            'BeamNG.drive',
+            'Kartkraft',
+            'Dirt Rally 2.0',
+            'WRC 10',
+            'NASCAR 21',
+            'MotoGP 23',
+            'F1 23',
+            'F1 22',
+            'Le Mans Ultimate',
         ]);
 
         return [

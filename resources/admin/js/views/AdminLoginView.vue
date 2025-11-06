@@ -84,7 +84,7 @@ const handleSubmit = async (): Promise<void> => {
 
   try {
     await adminStore.login({
-      email: email.value,
+      email: email.value.trim(),
       password: password.value,
       remember: remember.value,
     });

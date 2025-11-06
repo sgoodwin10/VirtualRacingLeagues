@@ -30,12 +30,30 @@ final class RaceApplicationService
     public function createRace(CreateRaceData $data, int $roundId): RaceData
     {
         return DB::transaction(function () use ($data, $roundId) {
+            // Auto-increment race_number if not provided (excluding qualifiers with race_number = 0)
+            $raceNumber = $data->race_number ?? $this->raceRepository->getNextRaceNumber($roundId);
+
             // Detect if this is a qualifier (race_number === 0)
-            $isQualifier = $data->race_number === 0;
+            $isQualifier = $raceNumber === 0;
+
+            // Apply defaults
+            $qualifyingFormat = $data->qualifying_format ?? 'none';
+            $gridSource = $data->grid_source ?? 'manual';
+            $lengthType = $data->length_type ?? 'laps';
+            $lengthValue = $data->length_value ?? 20;
+            $extraLapAfterTime = $data->extra_lap_after_time ?? false;
+            $trackLimitsEnforced = $data->track_limits_enforced ?? false;
+            $falseStartDetection = $data->false_start_detection ?? false;
+            $collisionPenalties = $data->collision_penalties ?? false;
+            $mandatoryPitStop = $data->mandatory_pit_stop ?? false;
+            $raceDivisions = $data->race_divisions ?? false;
+            $pointsSystem = $data->points_system ?? [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+            $dnfPoints = $data->dnf_points ?? 0;
+            $dnsPoints = $data->dns_points ?? 0;
 
             if ($isQualifier) {
                 // Validate qualifying_format is not 'none' for qualifiers
-                if ($data->qualifying_format === 'none') {
+                if ($qualifyingFormat === 'none') {
                     throw new \InvalidArgumentException('Qualifiers must have a qualifying format (cannot be "none")');
                 }
 
@@ -45,21 +63,19 @@ final class RaceApplicationService
                 }
 
                 // Create qualifier using the dedicated factory method
+                // Note: Penalty fields are NOT passed from user input for qualifiers - they get safe defaults
                 $race = Race::createQualifier(
                     roundId: $roundId,
                     name: $data->name !== null ? RaceName::from($data->name) : null,
-                    qualifyingFormat: QualifyingFormat::from($data->qualifying_format),
+                    qualifyingFormat: QualifyingFormat::from($qualifyingFormat),
                     qualifyingLength: $data->qualifying_length,
                     qualifyingTire: $data->qualifying_tire,
                     weather: $data->weather,
                     tireRestrictions: $data->tire_restrictions,
                     fuelUsage: $data->fuel_usage,
                     damageModel: $data->damage_model,
-                    trackLimitsEnforced: $data->track_limits_enforced,
-                    falseStartDetection: $data->false_start_detection,
-                    collisionPenalties: $data->collision_penalties,
                     assistsRestrictions: $data->assists_restrictions,
-                    raceDivisions: $data->race_divisions,
+                    raceDivisions: $raceDivisions,
                     bonusPoints: $data->bonus_points,
                     raceNotes: $data->race_notes,
                 );
@@ -67,32 +83,32 @@ final class RaceApplicationService
                 // Create regular race
                 $race = Race::create(
                     roundId: $roundId,
-                    raceNumber: $data->race_number,
+                    raceNumber: $raceNumber,
                     name: $data->name !== null ? RaceName::from($data->name) : null,
                     type: $data->race_type !== null ? RaceType::from($data->race_type) : null,
-                    qualifyingFormat: QualifyingFormat::from($data->qualifying_format),
+                    qualifyingFormat: QualifyingFormat::from($qualifyingFormat),
                     qualifyingLength: $data->qualifying_length,
                     qualifyingTire: $data->qualifying_tire,
-                    gridSource: GridSource::from($data->grid_source),
+                    gridSource: GridSource::from($gridSource),
                     gridSourceRaceId: $data->grid_source_race_id,
-                    lengthType: RaceLengthType::from($data->length_type),
-                    lengthValue: $data->length_value,
-                    extraLapAfterTime: $data->extra_lap_after_time,
+                    lengthType: RaceLengthType::from($lengthType),
+                    lengthValue: $lengthValue,
+                    extraLapAfterTime: $extraLapAfterTime,
                     weather: $data->weather,
                     tireRestrictions: $data->tire_restrictions,
                     fuelUsage: $data->fuel_usage,
                     damageModel: $data->damage_model,
-                    trackLimitsEnforced: $data->track_limits_enforced,
-                    falseStartDetection: $data->false_start_detection,
-                    collisionPenalties: $data->collision_penalties,
-                    mandatoryPitStop: $data->mandatory_pit_stop,
+                    trackLimitsEnforced: $trackLimitsEnforced,
+                    falseStartDetection: $falseStartDetection,
+                    collisionPenalties: $collisionPenalties,
+                    mandatoryPitStop: $mandatoryPitStop,
                     minimumPitTime: $data->minimum_pit_time,
                     assistsRestrictions: $data->assists_restrictions,
-                    raceDivisions: $data->race_divisions,
-                    pointsSystem: PointsSystem::from($data->points_system),
+                    raceDivisions: $raceDivisions,
+                    pointsSystem: PointsSystem::from($pointsSystem),
                     bonusPoints: $data->bonus_points,
-                    dnfPoints: $data->dnf_points,
-                    dnsPoints: $data->dns_points,
+                    dnfPoints: $dnfPoints,
+                    dnsPoints: $dnsPoints,
                     raceNotes: $data->race_notes,
                 );
             }
@@ -151,17 +167,7 @@ final class RaceApplicationService
                     ? $data->damage_model
                     : $race->damageModel();
 
-                $trackLimitsEnforced = !($data->track_limits_enforced instanceof Optional)
-                    ? ($data->track_limits_enforced ?? $race->trackLimitsEnforced())
-                    : $race->trackLimitsEnforced();
-
-                $falseStartDetection = !($data->false_start_detection instanceof Optional)
-                    ? ($data->false_start_detection ?? $race->falseStartDetection())
-                    : $race->falseStartDetection();
-
-                $collisionPenalties = !($data->collision_penalties instanceof Optional)
-                    ? ($data->collision_penalties ?? $race->collisionPenalties())
-                    : $race->collisionPenalties();
+                // Penalty fields are not editable for qualifiers - they are ignored
 
                 $assistsRestrictions = !($data->assists_restrictions instanceof Optional)
                     ? $data->assists_restrictions
@@ -188,9 +194,6 @@ final class RaceApplicationService
                     tireRestrictions: $tireRestrictions,
                     fuelUsage: $fuelUsage,
                     damageModel: $damageModel,
-                    trackLimitsEnforced: $trackLimitsEnforced,
-                    falseStartDetection: $falseStartDetection,
-                    collisionPenalties: $collisionPenalties,
                     assistsRestrictions: $assistsRestrictions,
                     raceDivisions: $raceDivisions,
                     bonusPoints: $bonusPoints,

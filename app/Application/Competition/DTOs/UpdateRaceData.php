@@ -83,4 +83,36 @@ final class UpdateRaceData extends Data
         public string|Optional|null $race_notes = new Optional(),
     ) {
     }
+
+    /**
+     * Normalize empty strings to null for nullable fields.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public static function prepareForPipeline(array $payload): array
+    {
+        $nullableStringFields = [
+            'name',
+            'race_type',
+            'qualifying_format',
+            'qualifying_tire',
+            'grid_source',
+            'length_type',
+            'weather',
+            'tire_restrictions',
+            'fuel_usage',
+            'damage_model',
+            'assists_restrictions',
+            'race_notes',
+        ];
+
+        foreach ($nullableStringFields as $field) {
+            if (isset($payload[$field]) && $payload[$field] === '') {
+                $payload[$field] = null;
+            }
+        }
+
+        return $payload;
+    }
 }

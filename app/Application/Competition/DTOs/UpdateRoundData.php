@@ -12,6 +12,7 @@ use Spatie\LaravelData\Attributes\Validation\Url;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
 use Spatie\LaravelData\Attributes\Validation\Sometimes;
 use Spatie\LaravelData\Attributes\Validation\StringType;
+use Spatie\LaravelData\Attributes\Validation\BooleanType;
 use Spatie\LaravelData\Data;
 
 /**
@@ -22,7 +23,7 @@ final class UpdateRoundData extends Data
     public function __construct(
         #[Sometimes, IntegerType, Min(1), Max(99)]
         public readonly ?int $round_number = null,
-        #[Sometimes, Nullable, StringType, Min(3), Max(100)]
+        #[Sometimes, Nullable, StringType, Max(100)]
         public readonly ?string $name = null,
         #[Sometimes, Nullable, DateFormat('Y-m-d H:i:s')]
         public readonly ?string $scheduled_at = null,
@@ -38,6 +39,36 @@ final class UpdateRoundData extends Data
         public readonly ?string $stream_url = null,
         #[Sometimes, Nullable, StringType, Max(2000)]
         public readonly ?string $internal_notes = null,
+        #[Sometimes, Nullable, IntegerType, Min(0), Max(100)]
+        public readonly ?int $fastest_lap = null,
+        #[Sometimes, BooleanType]
+        public readonly ?bool $fastest_lap_top_10 = null,
     ) {
+    }
+
+    /**
+     * Normalize empty strings to null for nullable fields.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public static function prepareForPipeline(array $payload): array
+    {
+        $nullableStringFields = [
+            'name',
+            'track_layout',
+            'track_conditions',
+            'technical_notes',
+            'stream_url',
+            'internal_notes',
+        ];
+
+        foreach ($nullableStringFields as $field) {
+            if (isset($payload[$field]) && $payload[$field] === '') {
+                $payload[$field] = null;
+            }
+        }
+
+        return $payload;
     }
 }

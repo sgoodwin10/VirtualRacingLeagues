@@ -21,7 +21,7 @@ defineProps<Props>();
 
 <template>
   <div class="w-full">
-    <HTag additional-classes="mb-2">{{ title }}</HTag>
+    <HTag additional-classes="mb-2" :level="2">{{ title }}</HTag>
     <div v-if="description" class="text-gray-600">{{ description }}</div>
   </div>
 </template>

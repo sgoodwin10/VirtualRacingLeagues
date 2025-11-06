@@ -45,6 +45,7 @@ class SeasonApiTest extends TestCase
             'slug' => 'test-competition',
             'description' => null,
             'logo_path' => null,
+            'competition_colour' => '{"r":100,"g":102,"b":241}',
             'status' => 'active',
             'created_by_user_id' => $user->id,
         ]);
@@ -80,6 +81,8 @@ class SeasonApiTest extends TestCase
                     'id',
                     'name',
                     'slug',
+                    'platform_id',
+                    'competition_colour',
                     'league' => [
                         'id',
                         'name',
@@ -107,5 +110,8 @@ class SeasonApiTest extends TestCase
         $this->assertEquals('Test Competition', $data['competition']['name']);
         $this->assertEquals('test-competition', $data['competition']['slug']);
         $this->assertEquals($competition->id, $data['competition']['id']);
+
+        // 7. Assert the competition_colour is correctly populated
+        $this->assertEquals('{"r":100,"g":102,"b":241}', $data['competition']['competition_colour']);
     }
 }

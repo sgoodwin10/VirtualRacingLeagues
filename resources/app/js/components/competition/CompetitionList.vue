@@ -66,11 +66,15 @@ function handleArchiveClick(competition: Competition): void {
   });
 }
 
-function handleCompetitionCreated(competition: Competition): void {
+async function handleCompetitionCreated(competition: Competition): Promise<void> {
+  // Refresh the competitions list to ensure we have the latest data with all relationships
+  await competitionStore.fetchCompetitions(props.leagueId);
   emit('competition-created', competition);
 }
 
-function handleCompetitionUpdated(competition: Competition): void {
+async function handleCompetitionUpdated(competition: Competition): Promise<void> {
+  // Refresh the competitions list to ensure we have the latest data with all relationships
+  await competitionStore.fetchCompetitions(props.leagueId);
   emit('competition-updated', competition);
 }
 

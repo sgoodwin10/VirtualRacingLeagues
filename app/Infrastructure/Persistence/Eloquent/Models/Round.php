@@ -26,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $technical_notes
  * @property string|null $stream_url
  * @property string|null $internal_notes
+ * @property int|null $fastest_lap
+ * @property bool $fastest_lap_top_10
  * @property string $status
  * @property int $created_by_user_id
  * @property \Illuminate\Support\Carbon $created_at
@@ -70,6 +72,8 @@ final class Round extends Model
         'technical_notes',
         'stream_url',
         'internal_notes',
+        'fastest_lap',
+        'fastest_lap_top_10',
         'status',
         'created_by_user_id',
     ];
@@ -79,6 +83,7 @@ final class Round extends Model
      */
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'fastest_lap_top_10' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

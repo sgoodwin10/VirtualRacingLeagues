@@ -13,6 +13,7 @@ describe('useCompetitionValidation', () => {
       platform_id: null,
       logo: null,
       logo_url: null,
+      competition_colour: null,
     });
   });
 

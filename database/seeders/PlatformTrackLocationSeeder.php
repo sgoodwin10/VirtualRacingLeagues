@@ -19,6 +19,14 @@ class PlatformTrackLocationSeeder extends Seeder
         DB::table('platform_track_locations')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
+        // Get Gran Turismo 7 platform ID
+        $gt7Platform = DB::table('platforms')->where('slug', 'gran-turismo-7')->first();
+
+        if (!$gt7Platform) {
+            $this->command->error('Gran Turismo 7 platform not found. Please run PlatformSeeder first.');
+            return;
+        }
+
         $locations = [
             // European Tracks
             ['name' => 'Brands Hatch', 'country' => 'United Kingdom', 'sort_order' => 1],
@@ -61,6 +69,7 @@ class PlatformTrackLocationSeeder extends Seeder
 
         foreach ($locations as $location) {
             DB::table('platform_track_locations')->insert([
+                'platform_id' => $gt7Platform->id,
                 'name' => $location['name'],
                 'slug' => Str::slug($location['name']),
                 'country' => $location['country'],

@@ -13,6 +13,7 @@ use Spatie\LaravelData\Attributes\Validation\Url;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
 use Spatie\LaravelData\Attributes\Validation\Sometimes;
 use Spatie\LaravelData\Attributes\Validation\StringType;
+use Spatie\LaravelData\Attributes\Validation\BooleanType;
 use Spatie\LaravelData\Data;
 
 /**
@@ -39,6 +40,10 @@ final class CreateRoundData extends Data
         public readonly ?string $stream_url,
         #[Nullable, Sometimes, StringType, Max(2000)]
         public readonly ?string $internal_notes,
+        #[Nullable, Sometimes, IntegerType, Min(0), Max(100)]
+        public readonly ?int $fastest_lap = null,
+        #[Sometimes, BooleanType]
+        public readonly bool $fastest_lap_top_10 = false,
     ) {
     }
 }

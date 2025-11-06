@@ -439,6 +439,7 @@ final class SeasonApplicationService
             name: $competition->name()->value(),
             slug: $competition->slug()->value(),
             platform_id: $competition->platformId(),
+            competition_colour: $competition->competitionColour(),
             league: new SeasonLeagueData(
                 id: $league->id() ?? 0,
                 name: $league->name()->value(),

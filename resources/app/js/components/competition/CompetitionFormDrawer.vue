@@ -7,7 +7,12 @@ import { useLeagueStore } from '@app/stores/leagueStore';
 import { useLeaguePlatforms } from '@app/composables/useLeaguePlatforms';
 import { useCompetitionValidation } from '@app/composables/useCompetitionValidation';
 import { checkSlugAvailability } from '@app/services/competitionService';
-import type { Competition, CompetitionForm, SlugCheckResponse } from '@app/types/competition';
+import type {
+  Competition,
+  CompetitionForm,
+  SlugCheckResponse,
+  RGBColor,
+} from '@app/types/competition';
 
 // PrimeVue Components
 import InputText from 'primevue/inputtext';
@@ -16,6 +21,7 @@ import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
+import ColorPicker from 'primevue/colorpicker';
 
 // Common Components
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
@@ -60,6 +66,7 @@ const form = reactive<CompetitionForm>({
   platform_id: null,
   logo: null,
   logo_url: null,
+  competition_colour: null,
 });
 
 const originalName = ref(''); // For tracking name changes
@@ -95,7 +102,8 @@ const canSubmit = computed(() => {
     !errors.name &&
     !errors.platform_id &&
     !errors.description &&
-    !errors.logo
+    !errors.logo &&
+    !errors.competition_colour
   );
 });
 
@@ -167,6 +175,37 @@ watch(
   },
 );
 
+// Helper Functions
+function parseColourFromJson(colourJson: string | null): RGBColor | null {
+  if (!colourJson) return null;
+  try {
+    const parsed = JSON.parse(colourJson);
+    if (
+      parsed &&
+      typeof parsed.r === 'number' &&
+      typeof parsed.g === 'number' &&
+      typeof parsed.b === 'number'
+    ) {
+      return parsed as RGBColor;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function generateRandomColor(): RGBColor {
+  // Generate vibrant colors by keeping RGB values between 50-230
+  // This ensures colors are neither too dark nor too light for good visibility
+  const randomValue = () => Math.floor(Math.random() * (230 - 50 + 1)) + 50;
+
+  return {
+    r: randomValue(),
+    g: randomValue(),
+    b: randomValue(),
+  };
+}
+
 // Methods
 function loadCompetitionData(): void {
   if (!props.competition) return;
@@ -179,6 +218,7 @@ function loadCompetitionData(): void {
   form.logo = null;
   // Only set logo_url if competition has its own logo (not using league fallback)
   form.logo_url = props.competition.has_own_logo ? props.competition.logo_url : null;
+  form.competition_colour = parseColourFromJson(props.competition.competition_colour);
 
   originalName.value = props.competition.name;
 
@@ -191,6 +231,7 @@ function resetForm(): void {
   form.platform_id = null;
   form.logo = null;
   form.logo_url = null;
+  form.competition_colour = generateRandomColor();
   originalName.value = '';
   slugPreview.value = '';
   slugStatus.value = null;
@@ -199,6 +240,7 @@ function resetForm(): void {
   errors.platform_id = undefined;
   errors.description = undefined;
   errors.logo = undefined;
+  errors.competition_colour = undefined;
 }
 
 function handleCancel(): void {
@@ -225,11 +267,7 @@ async function submitForm(): Promise<void> {
 
   try {
     if (props.isEditMode && props.competition) {
-      const updated = await competitionStore.updateExistingCompetition(props.competition.id, {
-        name: form.name !== originalName.value ? form.name : undefined,
-        description: form.description,
-        logo: form.logo,
-      });
+      const updated = await competitionStore.updateExistingCompetition(props.competition.id, form);
 
       toast.add({
         severity: 'success',
@@ -290,10 +328,10 @@ function cancelNameChange(): void {
     content-class="bg-slate-50"
   >
     <div class="space-y-4">
-      <!-- Name and Platform Fields - Side by Side on Desktop -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Name Field (2/3 width on desktop) -->
-        <FormInputGroup class="md:col-span-2">
+      <!-- Name, Platform, and Colour Fields - Side by Side on Desktop -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <!-- Name Field (6/12 width on desktop) -->
+        <FormInputGroup class="md:col-span-6">
           <FormLabel for="name" text="Competition Name" required />
           <InputText
             id="name"
@@ -328,8 +366,8 @@ function cancelNameChange(): void {
           </div>
         </FormInputGroup>
 
-        <!-- Platform Selection (1/3 width on desktop) -->
-        <FormInputGroup class="md:col-span-1">
+        <!-- Platform Selection (4/12 width on desktop) -->
+        <FormInputGroup class="md:col-span-4">
           <FormLabel for="platform_id" text="Platform" required class="mb-0" />
 
           <Select
@@ -348,6 +386,20 @@ function cancelNameChange(): void {
             >Cannot be changed after creation</small
           >
           <FormError :error="errors.platform_id" />
+        </FormInputGroup>
+
+        <!-- Competition Colour (2/12 width on desktop) -->
+        <FormInputGroup class="md:col-span-2">
+          <FormLabel for="competition_colour" text="Colour" />
+          <ColorPicker
+            id="competition_colour"
+            v-model="form.competition_colour"
+            format="rgb"
+            :disabled="isSubmitting"
+            class="w-full"
+          />
+          <FormOptionalText text="Competition theme colour" />
+          <FormError :error="errors.competition_colour" />
         </FormInputGroup>
       </div>
 
@@ -375,6 +427,7 @@ function cancelNameChange(): void {
           <div class="rounded-md border border-gray-200 content-center p-2">
             <ImageUpload
               v-model="form.logo"
+              label="Competition Logo"
               :existing-image-url="form.logo_url"
               accept="image/png,image/jpeg,image/jpg"
               :max-file-size="2 * 1024 * 1024"

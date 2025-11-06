@@ -17,6 +17,7 @@ final class SeasonCompetitionData extends Data
         public string $name,
         public string $slug,
         public int $platform_id,
+        public ?string $competition_colour,
         public SeasonLeagueData $league,
     ) {
     }

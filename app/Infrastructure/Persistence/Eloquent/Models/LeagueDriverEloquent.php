@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
 use App\Domain\Driver\ValueObjects\DriverStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -40,6 +41,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 final class LeagueDriverEloquent extends Model
 {
+    use HasFactory;
+
     /**
      * The table associated with the model.
      */
@@ -114,5 +117,15 @@ final class LeagueDriverEloquent extends Model
     public function getTeamNameAttribute(): null
     {
         return null;
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory<static>
+     */
+    protected static function newFactory(): \Illuminate\Database\Eloquent\Factories\Factory
+    {
+        return \Database\Factories\LeagueDriverFactory::new();
     }
 }

@@ -71,6 +71,7 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
     public function getNextRaceNumber(int $roundId): int
     {
         $maxRaceNumber = RaceEloquent::where('round_id', $roundId)
+            ->where('race_number', '>', 0) // Exclude qualifiers (race_number = 0)
             ->max('race_number');
 
         return $maxRaceNumber !== null ? ((int) $maxRaceNumber) + 1 : 1;

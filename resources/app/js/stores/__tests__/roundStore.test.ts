@@ -26,6 +26,8 @@ describe('roundStore', () => {
     technical_notes: 'Test notes',
     stream_url: 'https://stream.example.com',
     internal_notes: 'Internal notes',
+    fastest_lap: null,
+    fastest_lap_top_10: false,
     status: 'scheduled',
     status_label: 'Scheduled',
     created_by_user_id: 1,

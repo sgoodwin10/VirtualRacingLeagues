@@ -1,0 +1,1 @@
+Check all php files waiting to be added to git, and look for any unused variables, files, functions , etc, and report back. use agent @dev-be

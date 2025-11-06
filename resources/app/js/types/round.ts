@@ -13,6 +13,8 @@ export interface Round {
   technical_notes: string | null;
   stream_url: string | null;
   internal_notes: string | null;
+  fastest_lap: number | null;
+  fastest_lap_top_10: boolean;
   status: RoundStatus;
   status_label: string;
   created_by_user_id: number;
@@ -25,26 +27,30 @@ export type RoundStatus = 'scheduled' | 'pre_race' | 'in_progress' | 'completed'
 
 export interface CreateRoundRequest {
   round_number: number;
-  name?: string;
+  name?: string | null;
   scheduled_at?: string | null; // 'YYYY-MM-DD HH:mm:ss'
   platform_track_id?: number | null;
-  track_layout?: string;
-  track_conditions?: string;
-  technical_notes?: string;
-  stream_url?: string;
-  internal_notes?: string;
+  track_layout?: string | null;
+  track_conditions?: string | null;
+  technical_notes?: string | null;
+  stream_url?: string | null;
+  internal_notes?: string | null;
+  fastest_lap?: number | null;
+  fastest_lap_top_10?: boolean;
 }
 
 export interface UpdateRoundRequest {
   round_number?: number;
-  name?: string;
+  name?: string | null;
   scheduled_at?: string | null;
   platform_track_id?: number | null;
-  track_layout?: string;
-  track_conditions?: string;
-  technical_notes?: string;
-  stream_url?: string;
-  internal_notes?: string;
+  track_layout?: string | null;
+  track_conditions?: string | null;
+  technical_notes?: string | null;
+  stream_url?: string | null;
+  internal_notes?: string | null;
+  fastest_lap?: number | null;
+  fastest_lap_top_10?: boolean;
 }
 
 export interface RoundForm {
@@ -57,6 +63,8 @@ export interface RoundForm {
   technical_notes: string;
   stream_url: string;
   internal_notes: string;
+  fastest_lap: number | null;
+  fastest_lap_top_10: boolean;
 }
 
 export interface RoundFormErrors {
@@ -69,6 +77,8 @@ export interface RoundFormErrors {
   technical_notes?: string;
   stream_url?: string;
   internal_notes?: string;
+  fastest_lap?: string;
+  fastest_lap_top_10?: string;
 }
 
 export interface NextRoundNumberResponse {

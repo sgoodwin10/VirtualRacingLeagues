@@ -59,38 +59,40 @@ export interface BonusPoints {
 
 // Create payload
 // Note: For qualifiers (race_number === 0):
+// - race_number is set to 0 to signal qualifier
+// - race_type should be omitted (backend will set to 'qualifying')
 // - length_type and length_value are automatically set to 'time' and qualifying_length
 // - grid_source is always 'qualifying'
-// - mandatory_pit_stop is always false
-// - race_type is always 'qualifying'
+// - penalty fields (track_limits_enforced, etc.) should be omitted - backend will set defaults
+// - mandatory_pit_stop should be omitted - backend will set to false
 export interface CreateRaceRequest {
-  race_number: number; // 0 for qualifiers, 1+ for races
-  name?: string;
-  race_type?: RaceType; // 'qualifying' for qualifiers
-  qualifying_format: QualifyingFormat;
+  race_number?: number; // 0 for qualifiers (explicit), omitted for races (auto-generated)
+  name?: string | null;
+  race_type?: RaceType; // Omit for qualifiers, required for races
+  qualifying_format?: QualifyingFormat;
   qualifying_length?: number; // Required when qualifying_format is 'standard' or 'time_trial'
-  qualifying_tire?: string;
+  qualifying_tire?: string | null;
   grid_source: GridSource; // 'qualifying' for qualifiers
   grid_source_race_id?: number; // Required when grid_source is 'previous_race' or 'reverse_previous'
   length_type: RaceLengthType; // For qualifiers: 'time' (uses qualifying_length)
   length_value: number; // For qualifiers: same as qualifying_length
   extra_lap_after_time: boolean; // Always false for qualifiers
-  weather?: string;
-  tire_restrictions?: string;
-  fuel_usage?: string;
-  damage_model?: string;
-  track_limits_enforced: boolean;
-  false_start_detection: boolean;
-  collision_penalties: boolean;
-  mandatory_pit_stop: boolean; // Always false for qualifiers
+  weather?: string | null;
+  tire_restrictions?: string | null;
+  fuel_usage?: string | null;
+  damage_model?: string | null;
+  track_limits_enforced?: boolean; // Omit for qualifiers
+  false_start_detection?: boolean; // Omit for qualifiers
+  collision_penalties?: boolean; // Omit for qualifiers
+  mandatory_pit_stop?: boolean; // Omit for qualifiers
   minimum_pit_time?: number; // Only for races when mandatory_pit_stop is true
-  assists_restrictions?: string;
+  assists_restrictions?: string | null;
   race_divisions: boolean;
   points_system: PointsSystemMap;
-  bonus_points?: BonusPoints; // For qualifiers: only 'pole' is applicable
+  bonus_points?: BonusPoints | null; // For qualifiers: only 'pole' is applicable. Can be null to clear bonuses
   dnf_points: number;
   dns_points: number;
-  race_notes?: string;
+  race_notes?: string | null;
 }
 
 // Update payload
@@ -134,12 +136,14 @@ export interface RaceForm {
 
 // Form errors
 export interface RaceFormErrors {
+  race_type?: string;
   race_number?: string;
   name?: string;
   qualifying_length?: string;
   length_value?: string;
   minimum_pit_time?: string;
   points_system?: string;
+  grid_source_race_id?: string;
 }
 
 // Platform settings configuration
@@ -169,8 +173,6 @@ export const RACE_TYPE_OPTIONS: { value: RaceType; label: string }[] = [
 export const QUALIFYING_FORMAT_OPTIONS: { value: QualifyingFormat; label: string }[] = [
   { value: 'standard', label: 'Standard Qualifying' },
   { value: 'time_trial', label: 'Time Trial' },
-  { value: 'none', label: 'No Qualifying' },
-  { value: 'previous_race', label: 'Previous Race Result' },
 ];
 
 // Dropdown options for grid sources
@@ -178,8 +180,6 @@ export const GRID_SOURCE_OPTIONS: { value: GridSource; label: string }[] = [
   { value: 'qualifying', label: 'Qualifying Result' },
   { value: 'previous_race', label: 'Previous Race Result' },
   { value: 'reverse_previous', label: 'Reverse Previous Race' },
-  { value: 'championship', label: 'Championship Standings' },
-  { value: 'reverse_championship', label: 'Reverse Championship' },
   { value: 'manual', label: 'Manual Grid' },
 ];
 

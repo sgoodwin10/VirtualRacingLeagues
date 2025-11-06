@@ -295,6 +295,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             createdByUserId: $model->created_by_user_id,
             description: $model->description,
             logoPath: $model->logo_path,
+            competitionColour: $model->competition_colour,
             createdAt: new \DateTimeImmutable($model->created_at->toDateTimeString()),
             updatedAt: new \DateTimeImmutable($model->updated_at->toDateTimeString()),
             deletedAt: $model->deleted_at
@@ -321,6 +322,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             'slug' => $competition->slug()->value(),
             'description' => $competition->description(),
             'logo_path' => $competition->logoPath(),
+            'competition_colour' => $competition->competitionColour(),
             'status' => $competition->status()->value,
             'archived_at' => $competition->archivedAt()?->format('Y-m-d H:i:s'),
         ];

@@ -26,9 +26,6 @@ final class QualifierTest extends TestCase
             tireRestrictions: null,
             fuelUsage: null,
             damageModel: null,
-            trackLimitsEnforced: true,
-            falseStartDetection: true,
-            collisionPenalties: true,
             assistsRestrictions: null,
             raceDivisions: false,
             bonusPoints: ['pole' => 1],
@@ -46,6 +43,10 @@ final class QualifierTest extends TestCase
         $this->assertSame(['pole' => 1], $qualifier->bonusPoints());
         $this->assertFalse($qualifier->mandatoryPitStop());
         $this->assertNull($qualifier->minimumPitTime());
+        // Verify penalty fields are disabled by default for qualifiers
+        $this->assertFalse($qualifier->trackLimitsEnforced());
+        $this->assertFalse($qualifier->falseStartDetection());
+        $this->assertFalse($qualifier->collisionPenalties());
     }
 
     public function test_creates_qualifier_created_event(): void
@@ -60,9 +61,6 @@ final class QualifierTest extends TestCase
             tireRestrictions: null,
             fuelUsage: null,
             damageModel: null,
-            trackLimitsEnforced: true,
-            falseStartDetection: true,
-            collisionPenalties: true,
             assistsRestrictions: null,
             raceDivisions: false,
             bonusPoints: null,
@@ -89,9 +87,6 @@ final class QualifierTest extends TestCase
             tireRestrictions: null,
             fuelUsage: null,
             damageModel: null,
-            trackLimitsEnforced: true,
-            falseStartDetection: true,
-            collisionPenalties: true,
             assistsRestrictions: null,
             raceDivisions: false,
             bonusPoints: null,
@@ -114,9 +109,6 @@ final class QualifierTest extends TestCase
             tireRestrictions: null,
             fuelUsage: null,
             damageModel: null,
-            trackLimitsEnforced: true,
-            falseStartDetection: true,
-            collisionPenalties: true,
             assistsRestrictions: null,
             raceDivisions: false,
             bonusPoints: ['pole' => 1, 'fastest_lap' => 1],
@@ -139,9 +131,6 @@ final class QualifierTest extends TestCase
             tireRestrictions: null,
             fuelUsage: null,
             damageModel: null,
-            trackLimitsEnforced: true,
-            falseStartDetection: true,
-            collisionPenalties: true,
             assistsRestrictions: null,
             raceDivisions: false,
             bonusPoints: null,
@@ -161,9 +150,6 @@ final class QualifierTest extends TestCase
             tireRestrictions: null,
             fuelUsage: null,
             damageModel: null,
-            trackLimitsEnforced: true,
-            falseStartDetection: true,
-            collisionPenalties: true,
             assistsRestrictions: null,
             raceDivisions: false,
             bonusPoints: null,
@@ -183,9 +169,6 @@ final class QualifierTest extends TestCase
             tireRestrictions: 'any',
             fuelUsage: 'standard',
             damageModel: 'full',
-            trackLimitsEnforced: false,
-            falseStartDetection: false,
-            collisionPenalties: false,
             assistsRestrictions: 'limited',
             raceDivisions: true,
             bonusPoints: ['pole' => 2],
@@ -198,6 +181,10 @@ final class QualifierTest extends TestCase
         $this->assertSame('medium', $qualifier->qualifyingTire());
         $this->assertTrue($qualifier->raceDivisions());
         $this->assertSame(['pole' => 2], $qualifier->bonusPoints());
+        // Verify penalty fields remain disabled even after update
+        $this->assertFalse($qualifier->trackLimitsEnforced());
+        $this->assertFalse($qualifier->falseStartDetection());
+        $this->assertFalse($qualifier->collisionPenalties());
 
         $events = $qualifier->events();
         $this->assertCount(2, $events);
@@ -251,9 +238,6 @@ final class QualifierTest extends TestCase
             tireRestrictions: null,
             fuelUsage: null,
             damageModel: null,
-            trackLimitsEnforced: true,
-            falseStartDetection: true,
-            collisionPenalties: true,
             assistsRestrictions: null,
             raceDivisions: false,
             bonusPoints: null,

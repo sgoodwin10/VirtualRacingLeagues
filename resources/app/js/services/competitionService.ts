@@ -112,6 +112,7 @@ export function buildCompetitionFormData(form: {
   description: string;
   platform_id: number;
   logo: File | null;
+  competition_colour?: string | null;
 }): FormData {
   const formData = new FormData();
 
@@ -126,6 +127,10 @@ export function buildCompetitionFormData(form: {
     formData.append('logo', form.logo);
   }
 
+  if (form.competition_colour) {
+    formData.append('competition_colour', form.competition_colour);
+  }
+
   return formData;
 }
 
@@ -136,6 +141,7 @@ export function buildUpdateCompetitionFormData(form: {
   name?: string;
   description?: string | null;
   logo?: File | null;
+  competition_colour?: string | null;
 }): FormData {
   const formData = new FormData();
 
@@ -149,6 +155,10 @@ export function buildUpdateCompetitionFormData(form: {
 
   if (form.logo !== undefined && form.logo !== null) {
     formData.append('logo', form.logo);
+  }
+
+  if (form.competition_colour !== undefined) {
+    formData.append('competition_colour', form.competition_colour || '');
   }
 
   return formData;

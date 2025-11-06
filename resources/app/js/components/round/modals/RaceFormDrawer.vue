@@ -1,7 +1,7 @@
 <template>
   <BaseModal
     v-model:visible="localVisible"
-    width="1000px"
+    width="4xl"
     :closable="!saving"
     :dismissable-mask="false"
     content-class="bg-slate-50"
@@ -11,10 +11,10 @@
         <h2 class="text-xl font-semibold text-gray-900">
           {{
             mode === 'edit'
-              ? isQualifier
+              ? isQualifying
                 ? 'Edit Qualifying'
                 : 'Edit Race'
-              : isQualifier
+              : isQualifying
                 ? 'Create Qualifying'
                 : 'Create Race'
           }}
@@ -23,472 +23,475 @@
     </template>
 
     <div class="space-y-3">
-      <!-- Section 1: Basic Details -->
-      <Accordion :value="['basic']" :multiple="true">
-        <AccordionPanel value="basic">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Basic Details</span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- Race Number -->
-              <div>
-                <FormLabel for="race_number" text="Race Number" :required="true" />
-                <InputNumber
-                  id="race_number"
-                  v-model="form.race_number"
-                  :min="1"
-                  :max="99"
-                  :invalid="!!errors.race_number"
-                  class="w-full"
-                />
-                <FormError :error="errors.race_number" />
-              </div>
+      <!-- Top Section: Race Type + Race Name -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <!-- Race Type (20% width) -->
+        <div class="md:col-span-1">
+          <FormLabel for="race_type" text="Race Type" required />
+          <Dropdown
+            id="race_type"
+            v-model="form.race_type"
+            :options="RACE_TYPE_OPTIONS"
+            option-label="label"
+            option-value="value"
+            placeholder="Select type"
+            :invalid="!!errors.race_type"
+            size="small"
+            fluid
+            class="w-full"
+          />
+          <FormError :error="errors.race_type" />
+          <small v-if="mode === 'edit'" class="text-xs text-gray-500">
+            Changing type will adjust available fields
+          </small>
+        </div>
 
-              <!-- Race Name -->
-              <div>
-                <FormLabel for="name" text="Race Name (optional)" />
-                <InputText
-                  id="name"
-                  v-model="form.name"
-                  :invalid="!!errors.name"
-                  placeholder="e.g., Sprint Race, Feature Race"
-                  class="w-full"
-                />
-                <FormError :error="errors.name" />
-              </div>
+        <!-- Race Name (80% width) -->
+        <div class="md:col-span-4 space-y-1">
+          <FormLabel for="name" text="Race Name" />
+          <InputText
+            id="name"
+            v-model="form.name"
+            :invalid="!!errors.name"
+            placeholder="e.g., Sprint Race, Feature Race"
+            size="small"
+            class="w-full"
+          />
+          <FormOptionalText :show-optional="false" text="Custom name for this race" />
+          <FormError :error="errors.name" />
+        </div>
+      </div>
 
-              <!-- Race Type -->
-              <div>
-                <FormLabel for="race_type" text="Race Type" />
-                <Dropdown
-                  id="race_type"
-                  v-model="form.race_type"
-                  :options="RACE_TYPE_OPTIONS"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select race type"
-                  class="w-full"
-                />
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
-
-      <!-- Section 2: Qualifying Configuration -->
-      <Accordion :value="['qualifying']" :multiple="true">
-        <AccordionPanel value="qualifying">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Qualifying Configuration</span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- Qualifying Format -->
-              <div>
-                <FormLabel for="qualifying_format" text="Qualifying Format" :required="true" />
+      <!-- Section: Qualifying Configuration (Only for qualifying type) -->
+      <Accordion v-if="isQualifying" :value="['0']" :multiple="true">
+        <AccordionPanel value="0">
+          <AccordionHeader>Qualifying Configuration</AccordionHeader>
+          <AccordionContent
+            :pt="{
+              root: { class: 'bg-inherit' },
+              content: { class: 'p-4 bg-inherit border border-slate-200 rounded-b bg-surface-50' },
+            }"
+          >
+            <div class="flex flex-row gap-4">
+              <div class="flex-grow">
+                <FormLabel for="qualifying_format" text="Format" required />
                 <Dropdown
                   id="qualifying_format"
                   v-model="form.qualifying_format"
                   :options="QUALIFYING_FORMAT_OPTIONS"
                   option-label="label"
                   option-value="value"
-                  placeholder="Select qualifying format"
+                  placeholder="Select format"
+                  size="small"
+                  fluid
                   class="w-full"
                 />
               </div>
 
               <!-- Qualifying Length -->
               <div>
-                <FormLabel for="qualifying_length" text="Qualifying Length (minutes)" />
+                <FormLabel for="qualifying_length" text="Length (min)" />
                 <InputNumber
                   id="qualifying_length"
                   v-model="form.qualifying_length"
                   :min="1"
                   :max="999"
                   :invalid="!!errors.qualifying_length"
-                  class="w-full"
+                  size="small"
+                  fluid
+                  class="w-24"
                 />
                 <FormError :error="errors.qualifying_length" />
               </div>
 
               <!-- Qualifying Tire -->
               <div>
-                <FormLabel for="qualifying_tire" text="Qualifying Tire (optional)" />
+                <FormLabel for="qualifying_tire" text="Tire" />
                 <InputText
                   id="qualifying_tire"
                   v-model="form.qualifying_tire"
-                  placeholder="e.g., Soft, Medium"
-                  class="w-full"
-                />
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
-
-      <!-- Section 3: Starting Grid -->
-      <Accordion :value="['grid']" :multiple="true">
-        <AccordionPanel value="grid">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Starting Grid</span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- Grid Source -->
-              <div>
-                <FormLabel for="grid_source" text="Grid Source" :required="true" />
-                <Dropdown
-                  id="grid_source"
-                  v-model="form.grid_source"
-                  :options="GRID_SOURCE_OPTIONS"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select grid source"
-                  class="w-full"
+                  placeholder="e.g., Soft"
+                  size="small"
+                  class="w-32"
                 />
               </div>
 
-              <!-- Grid Source Race -->
-              <div>
-                <FormLabel for="grid_source_race_id" text="Source Race" :required="true" />
-                <Dropdown
-                  id="grid_source_race_id"
-                  v-model="form.grid_source_race_id"
-                  :options="availableSourceRaces"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select source race"
-                  class="w-full"
-                />
-                <Message v-if="availableSourceRaces.length === 0" severity="warn" :closable="false">
-                  No previous races available in this round
-                </Message>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
-
-      <!-- Section 4: Race Length -->
-      <Accordion :value="['length']" :multiple="true">
-        <AccordionPanel value="length">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Race Length</span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- Length Type -->
-              <div>
-                <FormLabel text="Length Type" :required="true" />
-                <div class="flex gap-4">
-                  <div
-                    v-for="option in RACE_LENGTH_TYPE_OPTIONS"
-                    :key="option.value"
-                    class="flex items-center"
-                  >
-                    <RadioButton
-                      v-model="form.length_type"
-                      :input-id="`length_type_${option.value}`"
-                      :value="option.value"
-                    />
-                    <label :for="`length_type_${option.value}`" class="ml-2">{{
-                      option.label
-                    }}</label>
-                  </div>
+              <div class="space-y-2">
+                <label for="bonus_pole" class="text-sm font-medium text-gray-900"
+                  >Pole position bonus</label
+                >
+                <div class="flex items-center gap-2 pt-1">
+                  <Checkbox id="bonus_pole" v-model="form.bonus_pole" :binary="true" />
+                  <InputNumber
+                    v-if="form.bonus_pole"
+                    v-model="form.bonus_pole_points"
+                    :min="1"
+                    :max="99"
+                    placeholder="Points"
+                    size="small"
+                    fluid
+                    class="w-12"
+                  />
                 </div>
               </div>
-
-              <!-- Length Value -->
-              <div>
-                <FormLabel
-                  for="length_value"
-                  :text="form.length_type === 'laps' ? 'Number of Laps' : 'Race Duration (minutes)'"
-                  :required="true"
-                />
-                <InputNumber
-                  id="length_value"
-                  v-model="form.length_value"
-                  :min="1"
-                  :max="form.length_type === 'laps' ? 999 : 9999"
-                  :invalid="!!errors.length_value"
-                  class="w-full"
-                />
-                <FormError :error="errors.length_value" />
-              </div>
-
-              <!-- Extra Lap After Time -->
-              <div class="flex items-center gap-2">
-                <Checkbox
-                  id="extra_lap_after_time"
-                  v-model="form.extra_lap_after_time"
-                  :binary="true"
-                />
-                <label for="extra_lap_after_time">Complete current lap after time expires</label>
-              </div>
             </div>
           </AccordionContent>
         </AccordionPanel>
       </Accordion>
 
-      <!-- Section 5: Platform Settings -->
-      <Accordion :value="['platform']" :multiple="true">
-        <AccordionPanel value="platform">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Platform Settings</span>
-          </AccordionHeader>
+      <!-- Section: Race Details (Only for race types) -->
+      <Accordion v-if="!isQualifying" :value="['0']" :multiple="true">
+        <AccordionPanel value="0">
+          <AccordionHeader>Race Details</AccordionHeader>
           <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- Weather -->
-              <div>
-                <FormLabel for="weather" text="Weather" />
-                <Dropdown
-                  id="weather"
-                  v-model="form.weather"
-                  :options="platformSettings?.weather_conditions || []"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select weather"
-                  class="w-full"
-                />
-              </div>
-
-              <!-- Tire Restrictions -->
-              <div>
-                <FormLabel for="tire_restrictions" text="Tire Restrictions" />
-                <Dropdown
-                  id="tire_restrictions"
-                  v-model="form.tire_restrictions"
-                  :options="platformSettings?.tire_restrictions || []"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select tire restrictions"
-                  class="w-full"
-                />
-              </div>
-
-              <!-- Fuel Usage -->
-              <div>
-                <FormLabel for="fuel_usage" text="Fuel Usage" />
-                <Dropdown
-                  id="fuel_usage"
-                  v-model="form.fuel_usage"
-                  :options="platformSettings?.fuel_usage || []"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select fuel usage"
-                  class="w-full"
-                />
-              </div>
-
-              <!-- Damage Model -->
-              <div>
-                <FormLabel for="damage_model" text="Damage Model" />
-                <Dropdown
-                  id="damage_model"
-                  v-model="form.damage_model"
-                  :options="platformSettings?.damage_model || []"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select damage model"
-                  class="w-full"
-                />
-              </div>
-
-              <!-- Assists Restrictions -->
-              <div>
-                <FormLabel for="assists_restrictions" text="Assists Restrictions" />
-                <Dropdown
-                  id="assists_restrictions"
-                  v-model="form.assists_restrictions"
-                  :options="platformSettings?.assists_restrictions || []"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select assists restrictions"
-                  class="w-full"
-                />
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
-
-      <!-- Section 6: Penalties & Rules -->
-      <Accordion :value="['penalties']" :multiple="true">
-        <AccordionPanel value="penalties">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Penalties & Rules</span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- Track Limits Enforced -->
-              <div class="flex items-center gap-2">
-                <Checkbox
-                  id="track_limits_enforced"
-                  v-model="form.track_limits_enforced"
-                  :binary="true"
-                />
-                <label for="track_limits_enforced">Track limits enforced</label>
-              </div>
-
-              <!-- False Start Detection -->
-              <div class="flex items-center gap-2">
-                <Checkbox
-                  id="false_start_detection"
-                  v-model="form.false_start_detection"
-                  :binary="true"
-                />
-                <label for="false_start_detection">False start detection</label>
-              </div>
-
-              <!-- Collision Penalties -->
-              <div class="flex items-center gap-2">
-                <Checkbox
-                  id="collision_penalties"
-                  v-model="form.collision_penalties"
-                  :binary="true"
-                />
-                <label for="collision_penalties">Collision penalties</label>
-              </div>
-
-              <!-- Mandatory Pit Stop -->
-              <div class="flex items-center gap-2">
-                <Checkbox
-                  id="mandatory_pit_stop"
-                  v-model="form.mandatory_pit_stop"
-                  :binary="true"
-                />
-                <label for="mandatory_pit_stop">Mandatory pit stop</label>
-              </div>
-
-              <!-- Minimum Pit Time -->
-              <div>
-                <FormLabel for="minimum_pit_time" text="Minimum Pit Time (seconds)" />
-                <InputNumber
-                  id="minimum_pit_time"
-                  v-model="form.minimum_pit_time"
-                  :min="0"
-                  :max="999"
-                  :invalid="!!errors.minimum_pit_time"
-                  class="w-full"
-                />
-                <FormError :error="errors.minimum_pit_time" />
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
-
-      <!-- Section 7: Division Support -->
-      <Accordion :value="['divisions']" :multiple="true">
-        <AccordionPanel value="divisions">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Division Support</span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- Race Divisions Enabled -->
-              <div class="flex items-center gap-2">
-                <Checkbox id="race_divisions" v-model="form.race_divisions" :binary="true" />
-                <label for="race_divisions">Enable separate results per division</label>
-              </div>
-
-              <Message severity="info" :closable="false">
-                When enabled, race results and points will be tracked separately for each division
-                in the season.
-              </Message>
-            </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
-
-      <!-- Section 8: Points System -->
-      <Accordion :value="['points']" :multiple="true">
-        <AccordionPanel value="points">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Points System</span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- Points Template -->
-              <div>
-                <FormLabel text="Points Template" :required="true" />
-                <div class="flex gap-4">
-                  <div class="flex items-center">
-                    <RadioButton
-                      v-model="form.points_template"
-                      input-id="points_f1"
-                      value="f1"
-                      @change="applyF1Points"
-                    />
-                    <label for="points_f1" class="ml-2">F1 Standard (25-18-15...)</label>
-                  </div>
-                  <div class="flex items-center">
-                    <RadioButton
-                      v-model="form.points_template"
-                      input-id="points_custom"
-                      value="custom"
-                    />
-                    <label for="points_custom" class="ml-2">Custom Points</label>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <!-- Left Column (66% - 2 cols) -->
+              <div class="lg:col-span-2 space-y-3">
+                <!-- Starting Grid -->
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Starting Grid</h3>
+                  <div class="space-y-2.5">
+                    <!-- Grid Source + Source Race on SAME row (grid-cols-2) -->
+                    <div class="grid grid-cols-2 gap-3">
+                      <FormInputGroup>
+                        <FormLabel for="grid_source" text="Grid Source" required />
+                        <Dropdown
+                          id="grid_source"
+                          v-model="form.grid_source"
+                          :options="GRID_SOURCE_OPTIONS"
+                          option-label="label"
+                          option-value="value"
+                          placeholder="Select source"
+                          size="small"
+                          fluid
+                          class="w-full"
+                        />
+                      </FormInputGroup>
+                      <FormInputGroup v-if="requiresGridSourceRace">
+                        <FormLabel for="grid_source_race_id" :text="sourceRaceLabel" />
+                        <Dropdown
+                          id="grid_source_race_id"
+                          v-model="form.grid_source_race_id"
+                          :options="sourceRaceOptions"
+                          option-label="label"
+                          option-value="value"
+                          :placeholder="
+                            form.grid_source === 'qualifying' ? 'Select qualifier' : 'Select race'
+                          "
+                          :invalid="!!errors.grid_source_race_id"
+                          size="small"
+                          fluid
+                          class="w-full"
+                        />
+                        <FormError :error="errors.grid_source_race_id" />
+                        <Message
+                          v-if="sourceRaceOptions.length === 0"
+                          severity="warn"
+                          :closable="false"
+                        >
+                          {{
+                            form.grid_source === 'qualifying'
+                              ? 'No qualifiers available'
+                              : 'No previous races available'
+                          }}
+                        </Message>
+                      </FormInputGroup>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Custom Points Table -->
-              <div>
-                <FormLabel text="Custom Points Table" />
-                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <DataTable
-                    :value="pointsTableData"
-                    edit-mode="cell"
-                    class="p-datatable-sm"
-                    :pt="{
-                      root: { class: 'border-0' },
-                    }"
-                  >
-                    <Column field="position" header="Position" style="width: 40%" />
-                    <Column field="points" header="Points" style="width: 40%">
-                      <template #editor="{ data }">
-                        <InputNumber v-model="data.points" :min="0" size="small" class="w-full" />
-                      </template>
-                    </Column>
-                    <Column style="width: 20%">
-                      <template #body="{ index }">
-                        <div class="flex gap-1">
-                          <Button
-                            icon="pi pi-plus"
-                            size="small"
-                            text
-                            severity="success"
-                            @click="addPointsPosition"
-                          />
-                          <Button
-                            icon="pi pi-trash"
-                            size="small"
-                            severity="danger"
-                            text
-                            @click="removePointsPosition(index)"
-                          />
+                <!-- Race Length -->
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Race Length</h3>
+                  <div class="space-y-2.5">
+                    <!-- Length Type + Length Value on SAME row (grid-cols-2) -->
+                    <div class="grid grid-cols-2 gap-3">
+                      <FormInputGroup>
+                        <FormLabel text="Length Type" required />
+                        <div class="flex gap-4">
+                          <div
+                            v-for="option in RACE_LENGTH_TYPE_OPTIONS"
+                            :key="option.value"
+                            class="flex items-center"
+                          >
+                            <RadioButton
+                              v-model="form.length_type"
+                              :input-id="`length_type_${option.value}`"
+                              :value="option.value"
+                            />
+                            <label :for="`length_type_${option.value}`" class="ml-2">{{
+                              option.label
+                            }}</label>
+                          </div>
                         </div>
-                      </template>
-                    </Column>
-                  </DataTable>
+                      </FormInputGroup>
+                      <FormInputGroup>
+                        <FormLabel
+                          for="length_value"
+                          :text="
+                            form.length_type === 'laps' ? 'Number of Laps' : 'Duration (minutes)'
+                          "
+                          required
+                        />
+                        <InputNumber
+                          id="length_value"
+                          v-model="form.length_value"
+                          :min="1"
+                          :max="form.length_type === 'laps' ? 999 : 9999"
+                          :invalid="!!errors.length_value"
+                          size="small"
+                          fluid
+                          class="w-full"
+                        />
+                        <FormError :error="errors.length_value" />
+                      </FormInputGroup>
+                    </div>
+                    <!-- Extra lap after time checkbox -->
+                    <div class="flex items-center gap-2">
+                      <Checkbox
+                        id="extra_lap_after_time"
+                        v-model="form.extra_lap_after_time"
+                        :binary="true"
+                      />
+                      <label for="extra_lap_after_time"
+                        >Complete current lap after time expires</label
+                      >
+                    </div>
+                  </div>
                 </div>
-                <FormError :error="errors.points_system" />
               </div>
 
-              <!-- F1 Points Preview -->
-              <div>
-                <FormLabel text="Points Breakdown" />
-                <div class="bg-white rounded-lg border border-gray-200 p-3">
-                  <div class="grid grid-cols-5 gap-2 text-sm">
-                    <div
-                      v-for="(points, position) in F1_STANDARD_POINTS"
-                      :key="position"
-                      class="flex items-center gap-1"
-                    >
-                      <span class="font-semibold text-gray-700">P{{ position }}:</span>
-                      <span class="text-gray-900">{{ points }}</span>
+              <!-- Right Column (33% - 1 col) -->
+              <div class="lg:col-span-1 space-y-3">
+                <!-- Penalties & Rules -->
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Penalties & Rules</h3>
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <Checkbox
+                        id="track_limits_enforced"
+                        v-model="form.track_limits_enforced"
+                        :binary="true"
+                      />
+                      <label for="track_limits_enforced">Track limits enforced</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <Checkbox
+                        id="false_start_detection"
+                        v-model="form.false_start_detection"
+                        :binary="true"
+                      />
+                      <label for="false_start_detection">False start detection</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <Checkbox
+                        id="mandatory_pit_stop"
+                        v-model="form.mandatory_pit_stop"
+                        :binary="true"
+                      />
+                      <label for="mandatory_pit_stop">Mandatory pit stop</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Division Support -->
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Division Support</h3>
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <Checkbox id="race_divisions" v-model="form.race_divisions" :binary="true" />
+                      <label for="race_divisions">Enable separate results per division</label>
+                    </div>
+                    <Message severity="info" :closable="false">
+                      When enabled, race results and points will be tracked separately for each
+                      division in the season.
+                    </Message>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionPanel>
+      </Accordion>
+
+      <!-- Section: Points (Only for race types) -->
+      <Accordion v-if="!isQualifying" :value="['0']" :multiple="true">
+        <AccordionPanel value="0">
+          <AccordionHeader>Points</AccordionHeader>
+          <AccordionContent>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <!-- Left Column (66% - 2 cols) -->
+              <div class="lg:col-span-2 space-y-3">
+                <!-- Points System -->
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Points System</h3>
+                  <div class="space-y-3">
+                    <!-- Points Template radio buttons -->
+                    <FormInputGroup>
+                      <FormLabel text="Points Template" required />
+                      <div class="flex gap-4">
+                        <div class="flex items-center">
+                          <RadioButton
+                            v-model="form.points_template"
+                            input-id="points_f1"
+                            value="f1"
+                            @change="applyF1Points"
+                          />
+                          <label for="points_f1" class="ml-2">F1 Standard (25-18-15...)</label>
+                        </div>
+                        <div class="flex items-center">
+                          <RadioButton
+                            v-model="form.points_template"
+                            input-id="points_custom"
+                            value="custom"
+                          />
+                          <label for="points_custom" class="ml-2">Custom Points</label>
+                        </div>
+                      </div>
+                    </FormInputGroup>
+
+                    <!-- Custom Points Table -->
+                    <FormInputGroup v-if="form.points_template === 'custom'">
+                      <FormLabel text="Custom Points Table" />
+                      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <DataTable
+                          :value="pointsTableData"
+                          edit-mode="cell"
+                          class="p-datatable-sm"
+                          :pt="{
+                            root: { class: 'border-0' },
+                          }"
+                        >
+                          <Column field="position" header="Position" style="width: 40%" />
+                          <Column field="points" header="Points" style="width: 40%">
+                            <template #editor="{ data }">
+                              <InputNumber
+                                v-model="data.points"
+                                :min="0"
+                                size="small"
+                                class="w-full"
+                              />
+                            </template>
+                          </Column>
+                          <Column style="width: 20%">
+                            <template #body="{ index }">
+                              <div class="flex gap-1">
+                                <Button
+                                  icon="pi pi-plus"
+                                  size="small"
+                                  text
+                                  severity="success"
+                                  @click="addPointsPosition"
+                                />
+                                <Button
+                                  icon="pi pi-trash"
+                                  size="small"
+                                  severity="danger"
+                                  text
+                                  @click="removePointsPosition(index)"
+                                />
+                              </div>
+                            </template>
+                          </Column>
+                        </DataTable>
+                      </div>
+                      <FormError :error="errors.points_system" />
+                    </FormInputGroup>
+
+                    <!-- Points Breakdown -->
+                    <FormInputGroup>
+                      <FormLabel text="Points Breakdown" />
+                      <div class="bg-white rounded-lg border border-gray-200 p-3">
+                        <div class="grid grid-cols-5 gap-2 text-sm">
+                          <div
+                            v-for="(points, position) in form.points_system"
+                            :key="position"
+                            class="flex items-center gap-1"
+                          >
+                            <span class="font-semibold text-gray-700">P{{ position }}:</span>
+                            <span class="text-gray-900">{{ points }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </FormInputGroup>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column (33% - 1 col) -->
+              <div class="lg:col-span-1 space-y-3">
+                <!-- Bonus Points -->
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Bonus Points</h3>
+                  <div class="space-y-2">
+                    <!-- Fastest Lap Bonus -->
+                    <div v-if="showFastestLapBonus" class="space-y-2">
+                      <div class="flex items-center gap-2">
+                        <Checkbox
+                          id="bonus_fastest_lap"
+                          v-model="form.bonus_fastest_lap"
+                          :binary="true"
+                        />
+                        <label for="bonus_fastest_lap" class="text-sm">Fastest lap</label>
+                        <InputNumber
+                          v-if="form.bonus_fastest_lap"
+                          v-model="form.bonus_fastest_lap_points"
+                          :min="1"
+                          :max="99"
+                          placeholder="Pts"
+                          size="small"
+                          class="w-20"
+                        />
+                      </div>
+                      <div v-if="form.bonus_fastest_lap" class="ml-6">
+                        <Checkbox
+                          id="bonus_fastest_lap_top_10"
+                          v-model="form.bonus_fastest_lap_top_10"
+                          :binary="true"
+                        />
+                        <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
+                          >Only award if driver finishes in top 10</label
+                        >
+                      </div>
+                    </div>
+                    <!-- Message when round has fastest lap configured -->
+                    <Message v-if="roundHasFastestLap" severity="info" :closable="false">
+                      Fastest lap bonus is configured at the round level and will apply to all races
+                      in this round.
+                    </Message>
+                  </div>
+                </div>
+
+                <!-- DNF/DNS Points -->
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">DNF/DNS Points</h3>
+                  <div class="space-y-2">
+                    <!-- DNF and DNS on SAME row (grid-cols-2) -->
+                    <div class="grid grid-cols-2 gap-2">
+                      <FormInputGroup>
+                        <FormLabel for="dnf_points" text="DNF" />
+                        <InputNumber
+                          id="dnf_points"
+                          v-model="form.dnf_points"
+                          :min="0"
+                          :max="99"
+                          size="small"
+                          fluid
+                        />
+                        <small class="text-xs text-gray-500">Did Not Finish</small>
+                      </FormInputGroup>
+                      <FormInputGroup>
+                        <FormLabel for="dns_points" text="DNS" />
+                        <InputNumber
+                          id="dns_points"
+                          v-model="form.dns_points"
+                          :min="0"
+                          :max="99"
+                          size="small"
+                          fluid
+                        />
+                        <small class="text-xs text-gray-500">Did Not Start</small>
+                      </FormInputGroup>
                     </div>
                   </div>
                 </div>
@@ -498,120 +501,31 @@
         </AccordionPanel>
       </Accordion>
 
-      <!-- Section 9: Bonus Points -->
-      <Accordion :value="['bonus']" :multiple="true">
-        <AccordionPanel value="bonus">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Bonus Points</span>
-          </AccordionHeader>
+      <!-- Section: Notes (Only for race types) -->
+      <Accordion v-if="!isQualifying" :value="['0']" :multiple="true">
+        <AccordionPanel value="0">
+          <AccordionHeader>Notes</AccordionHeader>
           <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- Pole Position Bonus -->
-              <div class="flex items-center gap-4">
-                <Checkbox id="bonus_pole" v-model="form.bonus_pole" :binary="true" />
-                <label for="bonus_pole">Pole position bonus</label>
-                <InputNumber
-                  v-model="form.bonus_pole_points"
-                  :min="1"
-                  :max="99"
-                  placeholder="Points"
-                  class="w-32"
-                />
-              </div>
-
-              <!-- Fastest Lap Bonus -->
-              <div class="space-y-2">
-                <div class="flex items-center gap-4">
-                  <Checkbox
-                    id="bonus_fastest_lap"
-                    v-model="form.bonus_fastest_lap"
-                    :binary="true"
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <!-- Left Column (66% - 2 cols) -->
+              <div class="lg:col-span-2">
+                <FormInputGroup>
+                  <FormLabel for="race_notes" text="Race Notes" />
+                  <Textarea
+                    id="race_notes"
+                    v-model="form.race_notes"
+                    rows="4"
+                    placeholder="Additional race notes, special rules, etc."
+                    class="w-full"
                   />
-                  <label for="bonus_fastest_lap">Fastest lap bonus</label>
-                  <InputNumber
-                    v-model="form.bonus_fastest_lap_points"
-                    :min="1"
-                    :max="99"
-                    placeholder="Points"
-                    class="w-32"
-                  />
-                </div>
-                <div class="ml-8">
-                  <Checkbox
-                    id="bonus_fastest_lap_top_10"
-                    v-model="form.bonus_fastest_lap_top_10"
-                    :binary="true"
-                  />
-                  <label for="bonus_fastest_lap_top_10" class="ml-2"
-                    >Only award if driver finishes in top 10</label
-                  >
-                </div>
+                  <FormOptionalText text="Additional race notes, special rules, etc." />
+                </FormInputGroup>
               </div>
 
-              <!-- Info message -->
-              <Message severity="info" :closable="false">
-                Pole position bonus is available for qualifying sessions. Fastest lap bonus is only
-                available for races.
-              </Message>
-            </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
-
-      <!-- Section 10: DNF/DNS -->
-      <Accordion :value="['dnf']" :multiple="true">
-        <AccordionPanel value="dnf">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">DNF/DNS Points</span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="space-y-3 pt-2">
-              <!-- DNF Points -->
-              <div>
-                <FormLabel for="dnf_points" text="DNF Points" />
-                <InputNumber
-                  id="dnf_points"
-                  v-model="form.dnf_points"
-                  :min="0"
-                  :max="99"
-                  class="w-full"
-                />
-                <small class="text-xs text-gray-500 mt-1">Points awarded for Did Not Finish</small>
+              <!-- Right Column (33% - 1 col) -->
+              <div class="lg:col-span-1">
+                <!-- Empty -->
               </div>
-
-              <!-- DNS Points -->
-              <div>
-                <FormLabel for="dns_points" text="DNS Points" />
-                <InputNumber
-                  id="dns_points"
-                  v-model="form.dns_points"
-                  :min="0"
-                  :max="99"
-                  class="w-full"
-                />
-                <small class="text-xs text-gray-500 mt-1">Points awarded for Did Not Start</small>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
-
-      <!-- Section 11: Notes -->
-      <Accordion :value="['notes']" :multiple="true">
-        <AccordionPanel value="notes">
-          <AccordionHeader>
-            <span class="font-semibold text-gray-900">Race Notes</span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="pt-2">
-              <FormLabel for="race_notes" text="Notes (optional)" />
-              <Textarea
-                id="race_notes"
-                v-model="form.race_notes"
-                rows="4"
-                placeholder="Additional race notes, special rules, etc."
-                class="w-full"
-              />
             </div>
           </AccordionContent>
         </AccordionPanel>
@@ -630,10 +544,10 @@
         <Button
           :label="
             mode === 'edit'
-              ? isQualifier
+              ? isQualifying
                 ? 'Update Qualifying'
                 : 'Update Race'
-              : isQualifier
+              : isQualifying
                 ? 'Create Qualifying'
                 : 'Create Race'
           "
@@ -649,6 +563,7 @@
 import { ref, reactive, watch, computed } from 'vue';
 import { useRaceStore } from '@app/stores/raceStore';
 import { useRaceSettingsStore } from '@app/stores/raceSettingsStore';
+import { useRoundStore } from '@app/stores/roundStore';
 import { useRaceValidation } from '@app/composables/useRaceValidation';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import Button from 'primevue/button';
@@ -667,6 +582,8 @@ import AccordionContent from 'primevue/accordioncontent';
 import Message from 'primevue/message';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
 import FormError from '@app/components/common/forms/FormError.vue';
+import FormOptionalText from '@app/components/common/forms/FormOptionalText.vue';
+import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
 import type {
   Race,
   RaceForm,
@@ -689,7 +606,6 @@ interface Props {
   platformId: number;
   race?: Race | null;
   mode?: 'create' | 'edit';
-  raceType?: 'race' | 'qualifier';
 }
 
 interface Emits {
@@ -701,18 +617,18 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   race: null,
   mode: 'create',
-  raceType: 'race',
 });
 
 const emit = defineEmits<Emits>();
 
 const raceStore = useRaceStore();
 const raceSettingsStore = useRaceSettingsStore();
+const roundStore = useRoundStore();
 
 const form = reactive<RaceForm>({
   race_number: 1,
   name: '',
-  race_type: null,
+  race_type: 'sprint',
   qualifying_format: 'standard',
   qualifying_length: 15,
   qualifying_tire: '',
@@ -744,10 +660,43 @@ const form = reactive<RaceForm>({
   race_notes: '',
 });
 
-const isQualifier = computed(() => props.raceType === 'qualifier');
+const isQualifying = computed(() => form.race_type === 'qualifying');
 
 // Pass the reactive computed ref to useRaceValidation so validation adapts dynamically
-const { errors, validateAll, clearErrors } = useRaceValidation(form, isQualifier);
+const { errors, validateAll, clearErrors } = useRaceValidation(form, isQualifying);
+
+// Watch for race type changes and apply appropriate defaults
+watch(
+  () => form.race_type,
+  (newType, oldType) => {
+    // Only apply defaults when type changes (not on initial load)
+    if (oldType !== null && newType !== oldType) {
+      if (newType === 'qualifying') {
+        // Switching to qualifying - apply qualifying defaults
+        form.qualifying_format = 'standard';
+        form.qualifying_length = 15;
+        form.grid_source = 'qualifying';
+        form.grid_source_race_id = null;
+        form.length_type = 'time';
+        form.length_value = form.qualifying_length;
+        form.extra_lap_after_time = false;
+        form.mandatory_pit_stop = false;
+        form.minimum_pit_time = 0;
+        // Clear race-specific errors
+        clearErrors();
+      } else if (oldType === 'qualifying') {
+        // Switching from qualifying to race - apply race defaults
+        form.grid_source = 'qualifying';
+        form.grid_source_race_id = null;
+        form.length_type = 'laps';
+        form.length_value = 20;
+        form.extra_lap_after_time = false;
+        // Clear qualifying-specific errors
+        clearErrors();
+      }
+    }
+  },
+);
 
 const saving = ref(false);
 const platformSettings = ref<PlatformRaceSettings | null>(null);
@@ -759,17 +708,49 @@ const localVisible = computed({
 });
 
 const requiresGridSourceRace = computed(() => {
-  return form.grid_source === 'previous_race' || form.grid_source === 'reverse_previous';
+  return (
+    form.grid_source === 'qualifying' ||
+    form.grid_source === 'previous_race' ||
+    form.grid_source === 'reverse_previous'
+  );
 });
 
-const availableSourceRaces = computed(() => {
+const availableQualifiers = computed(() => {
   const races = raceStore.racesByRoundId(props.roundId);
   return races
-    .filter((race) => race.id !== props.race?.id)
+    .filter((race) => race.is_qualifier && race.id !== props.race?.id)
+    .map((race) => ({
+      value: race.id,
+      label: race.name ? race.name : 'Qualifying',
+    }));
+});
+
+const availableRaces = computed(() => {
+  const races = raceStore.racesByRoundId(props.roundId);
+  return races
+    .filter((race) => !race.is_qualifier && race.id !== props.race?.id)
     .map((race) => ({
       value: race.id,
       label: `Race ${race.race_number}${race.name ? ` - ${race.name}` : ''}`,
     }));
+});
+
+const sourceRaceOptions = computed(() => {
+  if (form.grid_source === 'qualifying') {
+    return availableQualifiers.value;
+  } else if (form.grid_source === 'previous_race' || form.grid_source === 'reverse_previous') {
+    return availableRaces.value;
+  }
+  return [];
+});
+
+const sourceRaceLabel = computed(() => {
+  if (form.grid_source === 'qualifying') {
+    return 'Select Qualifier';
+  } else if (form.grid_source === 'previous_race' || form.grid_source === 'reverse_previous') {
+    return 'Select Race';
+  }
+  return 'Source Race';
 });
 
 const pointsTableData = computed({
@@ -790,6 +771,17 @@ const pointsTableData = computed({
   },
 });
 
+// Check if the parent round has fastest lap bonus configured
+const roundHasFastestLap = computed(() => {
+  const round = roundStore.getRoundById(props.roundId);
+  return round && round.fastest_lap !== null && round.fastest_lap > 0;
+});
+
+// If round has fastest lap configured, hide the race-level fastest lap bonus
+const showFastestLapBonus = computed(() => {
+  return !isQualifying.value && !roundHasFastestLap.value;
+});
+
 watch(
   () => props.visible,
   async (visible) => {
@@ -800,13 +792,6 @@ watch(
         loadRaceIntoForm(props.race);
       } else {
         resetForm();
-        // Auto-calculate next race number (skip for qualifiers)
-        if (!isQualifier.value) {
-          const roundRaces = raceStore.racesByRoundId(props.roundId);
-          // Filter out qualifiers (race_number !== 0)
-          const actualRaces = roundRaces.filter((r) => r.race_number !== 0);
-          form.race_number = actualRaces.length + 1;
-        }
       }
     }
   },
@@ -835,6 +820,9 @@ async function loadPlatformSettings(): Promise<void> {
 }
 
 function loadRaceIntoForm(race: Race): void {
+  // Clear errors first to prevent stale validation messages
+  clearErrors();
+
   form.race_number = race.race_number;
   form.name = race.name || '';
   form.race_type = race.race_type;
@@ -866,7 +854,13 @@ function loadRaceIntoForm(race: Race): void {
   const isF1Standard = JSON.stringify(race.points_system) === JSON.stringify(F1_STANDARD_POINTS);
   form.points_template = isF1Standard ? 'f1' : 'custom';
 
-  // Load bonus points
+  // Load bonus points - reset first to ensure clean state
+  form.bonus_pole = false;
+  form.bonus_pole_points = 1;
+  form.bonus_fastest_lap = false;
+  form.bonus_fastest_lap_points = 1;
+  form.bonus_fastest_lap_top_10 = true;
+
   if (race.bonus_points) {
     form.bonus_pole = !!race.bonus_points.pole;
     form.bonus_pole_points = race.bonus_points.pole || 1;
@@ -877,13 +871,13 @@ function loadRaceIntoForm(race: Race): void {
 }
 
 function resetForm(): void {
-  form.race_number = isQualifier.value ? 0 : 1; // Qualifiers always have race_number 0
+  form.race_number = 1;
   form.name = '';
-  form.race_type = isQualifier.value ? 'qualifying' : null; // Set race_type for qualifiers
+  form.race_type = 'sprint';
   form.qualifying_format = 'standard';
   form.qualifying_length = 15;
   form.qualifying_tire = '';
-  form.grid_source = 'qualifying'; // Qualifiers use 'qualifying'
+  form.grid_source = 'qualifying';
   form.grid_source_race_id = null;
   form.length_type = 'laps';
   form.length_value = 20;
@@ -930,70 +924,104 @@ function removePointsPosition(index: number): void {
 }
 
 async function handleSave(): Promise<void> {
-  if (!validateAll()) {
+  const validationResult = validateAll();
+
+  if (!validationResult) {
     return;
   }
 
   saving.value = true;
   try {
     const bonusPoints: BonusPoints = {};
-    if (form.bonus_pole) {
+    if (isQualifying.value && form.bonus_pole) {
       bonusPoints.pole = form.bonus_pole_points;
     }
-    // Only include fastest lap bonus for races (not qualifiers)
-    if (!isQualifier.value && form.bonus_fastest_lap) {
+    // Only include fastest lap bonus for races (not qualifying)
+    if (!isQualifying.value && form.bonus_fastest_lap) {
       bonusPoints.fastest_lap = form.bonus_fastest_lap_points;
       bonusPoints.fastest_lap_top_10_only = form.bonus_fastest_lap_top_10;
     }
 
-    const payload: CreateRaceRequest | UpdateRaceRequest = {
-      race_number: isQualifier.value ? 0 : form.race_number,
-      name: form.name || undefined,
-      race_type: isQualifier.value ? 'qualifying' : form.race_type || undefined,
-      qualifying_format: form.qualifying_format,
-      qualifying_length:
-        form.qualifying_format !== 'none' && form.qualifying_format !== 'previous_race'
-          ? form.qualifying_length
-          : undefined,
-      qualifying_tire: form.qualifying_tire || undefined,
-      grid_source: isQualifier.value ? 'qualifying' : form.grid_source,
-      grid_source_race_id:
-        !isQualifier.value && requiresGridSourceRace.value
-          ? form.grid_source_race_id || undefined
-          : undefined,
-      // For qualifiers, use sensible defaults for length fields (backend expects them)
-      length_type: isQualifier.value ? 'time' : form.length_type,
-      length_value: isQualifier.value ? form.qualifying_length : form.length_value,
-      extra_lap_after_time: isQualifier.value ? false : form.extra_lap_after_time,
-      weather: form.weather || undefined,
-      tire_restrictions: form.tire_restrictions || undefined,
-      fuel_usage: form.fuel_usage || undefined,
-      damage_model: form.damage_model || undefined,
-      track_limits_enforced: form.track_limits_enforced,
-      false_start_detection: form.false_start_detection,
-      collision_penalties: form.collision_penalties,
-      mandatory_pit_stop: !isQualifier.value && form.mandatory_pit_stop,
-      minimum_pit_time:
-        !isQualifier.value && form.mandatory_pit_stop ? form.minimum_pit_time : undefined,
-      assists_restrictions: form.assists_restrictions || undefined,
-      race_divisions: form.race_divisions,
-      points_system: form.points_system,
-      bonus_points: Object.keys(bonusPoints).length > 0 ? bonusPoints : undefined,
-      dnf_points: form.dnf_points,
-      dns_points: form.dns_points,
-      race_notes: form.race_notes || undefined,
-    };
+    // Build payload conditionally based on whether this is a qualifier or race
+    const payload: CreateRaceRequest | UpdateRaceRequest = isQualifying.value
+      ? {
+          // Qualifier-specific payload
+          race_number: 0, // Signal to backend this is a qualifier
+          name: form.name.trim() || null,
+          // Omit race_type for qualifiers
+          qualifying_format: form.qualifying_format,
+          qualifying_length:
+            form.qualifying_format !== 'none' && form.qualifying_format !== 'previous_race'
+              ? form.qualifying_length
+              : undefined,
+          qualifying_tire: form.qualifying_tire.trim() || null,
+          // Qualifiers always use qualifying as grid source
+          grid_source: 'qualifying',
+          // Omit grid_source_race_id for qualifiers
+          length_type: 'time',
+          length_value: form.qualifying_length,
+          extra_lap_after_time: false,
+          weather: form.weather.trim() || null,
+          tire_restrictions: form.tire_restrictions.trim() || null,
+          fuel_usage: form.fuel_usage.trim() || null,
+          damage_model: form.damage_model.trim() || null,
+          // Omit penalty fields for qualifiers - they will be set to defaults in backend
+          assists_restrictions: form.assists_restrictions.trim() || null,
+          race_divisions: form.race_divisions,
+          points_system: form.points_system,
+          bonus_points: Object.keys(bonusPoints).length > 0 ? bonusPoints : null,
+          dnf_points: form.dnf_points,
+          dns_points: form.dns_points,
+          race_notes: form.race_notes.trim() || null,
+        }
+      : {
+          // Regular race payload
+          name: form.name.trim() || null,
+          race_type: form.race_type || undefined,
+          qualifying_format: undefined,
+          qualifying_length: undefined,
+          qualifying_tire: undefined,
+          grid_source: form.grid_source,
+          grid_source_race_id: requiresGridSourceRace.value
+            ? form.grid_source_race_id || undefined
+            : undefined,
+          length_type: form.length_type,
+          length_value: form.length_value,
+          extra_lap_after_time: form.extra_lap_after_time,
+          weather: form.weather.trim() || null,
+          tire_restrictions: form.tire_restrictions.trim() || null,
+          fuel_usage: form.fuel_usage.trim() || null,
+          damage_model: form.damage_model.trim() || null,
+          track_limits_enforced: form.track_limits_enforced,
+          false_start_detection: form.false_start_detection,
+          collision_penalties: form.collision_penalties,
+          mandatory_pit_stop: form.mandatory_pit_stop,
+          minimum_pit_time: form.mandatory_pit_stop ? form.minimum_pit_time : undefined,
+          assists_restrictions: form.assists_restrictions.trim() || null,
+          race_divisions: form.race_divisions,
+          points_system: form.points_system,
+          bonus_points: Object.keys(bonusPoints).length > 0 ? bonusPoints : null,
+          dnf_points: form.dnf_points,
+          dns_points: form.dns_points,
+          race_notes: form.race_notes.trim() || null,
+        };
 
     if (props.mode === 'edit' && props.race) {
-      await raceStore.updateExistingRace(props.race.id, payload);
+      // Include race_number for edit mode
+      const updatePayload = {
+        ...payload,
+        race_number: form.race_number,
+      };
+      await raceStore.updateExistingRace(props.race.id, updatePayload);
     } else {
+      // Don't include race_number for create mode - backend will auto-generate
       await raceStore.createNewRace(props.roundId, payload as CreateRaceRequest);
     }
 
     emit('saved');
     localVisible.value = false;
   } catch (error) {
-    console.error('Failed to save race:', error);
+    console.error('[RaceFormDrawer] Failed to save race:', error);
   } finally {
     saving.value = false;
   }

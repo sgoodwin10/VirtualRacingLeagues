@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Storage;
  * @property string $slug
  * @property string|null $description
  * @property string|null $logo_path
+ * @property string|null $competition_colour
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $archived_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -44,6 +45,7 @@ use Illuminate\Support\Facades\Storage;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereArchivedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereCompetitionColour($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereCreatedByUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereDeletedAt($value)
@@ -83,6 +85,7 @@ class Competition extends Model
         'slug',
         'description',
         'logo_path',
+        'competition_colour',
         'status',
         'archived_at',
     ];

@@ -96,6 +96,26 @@ export function useRoundValidation() {
     return true;
   }
 
+  function validateFastestLap(value: number | null): boolean {
+    // Optional field - allow null
+    if (value === null || value === undefined) {
+      delete errors.value.fastest_lap;
+      return true;
+    }
+    if (value < 0 || value > 99) {
+      errors.value.fastest_lap = 'Fastest lap bonus must be between 0 and 99';
+      return false;
+    }
+    delete errors.value.fastest_lap;
+    return true;
+  }
+
+  function validateFastestLapTop10(_value: boolean): boolean {
+    // Boolean field - always valid
+    delete errors.value.fastest_lap_top_10;
+    return true;
+  }
+
   function validateAll(form: RoundForm): boolean {
     const isRoundNumberValid = validateRoundNumber(form.round_number);
     const isNameValid = validateName(form.name);
@@ -106,6 +126,8 @@ export function useRoundValidation() {
     const isTrackLayoutValid = validateTrackLayout(form.track_layout);
     const isTrackConditionsValid = validateTrackConditions(form.track_conditions);
     const isInternalNotesValid = validateInternalNotes(form.internal_notes);
+    const isFastestLapValid = validateFastestLap(form.fastest_lap);
+    const isFastestLapTop10Valid = validateFastestLapTop10(form.fastest_lap_top_10);
 
     return (
       isRoundNumberValid &&
@@ -116,7 +138,9 @@ export function useRoundValidation() {
       isTechnicalNotesValid &&
       isTrackLayoutValid &&
       isTrackConditionsValid &&
-      isInternalNotesValid
+      isInternalNotesValid &&
+      isFastestLapValid &&
+      isFastestLapTop10Valid
     );
   }
 
@@ -135,6 +159,8 @@ export function useRoundValidation() {
     validateTrackLayout,
     validateTrackConditions,
     validateInternalNotes,
+    validateFastestLap,
+    validateFastestLapTop10,
     validateAll,
     clearErrors,
   };

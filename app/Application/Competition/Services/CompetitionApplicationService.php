@@ -85,6 +85,7 @@ final class CompetitionApplicationService
                 createdByUserId: $userId,
                 description: $data->description,
                 logoPath: $logoPath,
+                competitionColour: $data->competition_colour,
             );
 
             // 6. Save via repository
@@ -149,7 +150,12 @@ final class CompetitionApplicationService
                 $competition->updateLogo($logoPath);
             }
 
-            // 5. Save
+            // 5. Update competition colour if provided
+            if ($data->competition_colour !== null) {
+                $competition->updateCompetitionColour($data->competition_colour);
+            }
+
+            // 6. Save
             $this->competitionRepository->update($competition);
             $this->dispatchEvents($competition);
 

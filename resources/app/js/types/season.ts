@@ -18,6 +18,7 @@ export interface SeasonCompetition {
   slug: string;
   platform_id: number;
   logo_url: string;
+  competition_colour: string | null; // RGB JSON string: {"r":100,"g":102,"b":241}
   platform?: {
     id: number;
     name: string;

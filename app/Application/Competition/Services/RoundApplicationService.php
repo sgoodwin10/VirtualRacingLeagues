@@ -58,6 +58,8 @@ final class RoundApplicationService
                 technicalNotes: $data->technical_notes,
                 streamUrl: $data->stream_url,
                 internalNotes: $data->internal_notes,
+                fastestLap: $data->fastest_lap,
+                fastestLapTop10: $data->fastest_lap_top_10,
                 createdByUserId: $userId,
             );
 
@@ -108,19 +110,57 @@ final class RoundApplicationService
                 $scheduledAt = $data->scheduled_at ? new DateTimeImmutable($data->scheduled_at) : null;
             }
 
+            // Determine fastest_lap and fastest_lap_top_10: if field provided in request, update it; otherwise keep existing
+            $fastestLap = $round->fastestLap();
+            if (array_key_exists('fastest_lap', $requestData)) {
+                $fastestLap = $data->fastest_lap;
+            }
+
+            $fastestLapTop10 = $round->fastestLapTop10();
+            if (array_key_exists('fastest_lap_top_10', $requestData)) {
+                $fastestLapTop10 = $data->fastest_lap_top_10 ?? false;
+            }
+
+            // Determine nullable string fields: if field provided in request, update it (even to null); otherwise keep existing
+            $name = array_key_exists('name', $requestData)
+                ? ($data->name !== null ? RoundName::from($data->name) : null)
+                : $round->name();
+
+            $trackLayout = array_key_exists('track_layout', $requestData)
+                ? $data->track_layout
+                : $round->trackLayout();
+
+            $trackConditions = array_key_exists('track_conditions', $requestData)
+                ? $data->track_conditions
+                : $round->trackConditions();
+
+            $technicalNotes = array_key_exists('technical_notes', $requestData)
+                ? $data->technical_notes
+                : $round->technicalNotes();
+
+            $streamUrl = array_key_exists('stream_url', $requestData)
+                ? $data->stream_url
+                : $round->streamUrl();
+
+            $internalNotes = array_key_exists('internal_notes', $requestData)
+                ? $data->internal_notes
+                : $round->internalNotes();
+
             $round->updateDetails(
                 roundNumber: $data->round_number !== null
                     ? RoundNumber::from($data->round_number)
                     : $round->roundNumber(),
-                name: $data->name !== null ? RoundName::from($data->name) : $round->name(),
+                name: $name,
                 slug: $uniqueSlug,
                 scheduledAt: $scheduledAt,
                 platformTrackId: $data->platform_track_id ?? $round->platformTrackId(),
-                trackLayout: $data->track_layout !== null ? $data->track_layout : $round->trackLayout(),
-                trackConditions: $data->track_conditions !== null ? $data->track_conditions : $round->trackConditions(),
-                technicalNotes: $data->technical_notes !== null ? $data->technical_notes : $round->technicalNotes(),
-                streamUrl: $data->stream_url !== null ? $data->stream_url : $round->streamUrl(),
-                internalNotes: $data->internal_notes !== null ? $data->internal_notes : $round->internalNotes(),
+                trackLayout: $trackLayout,
+                trackConditions: $trackConditions,
+                technicalNotes: $technicalNotes,
+                streamUrl: $streamUrl,
+                internalNotes: $internalNotes,
+                fastestLap: $fastestLap,
+                fastestLapTop10: $fastestLapTop10,
             );
 
             $this->roundRepository->save($round);

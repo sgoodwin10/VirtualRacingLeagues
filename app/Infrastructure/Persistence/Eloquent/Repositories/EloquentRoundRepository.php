@@ -156,6 +156,8 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
         $model->technical_notes = $entity->technicalNotes();
         $model->stream_url = $entity->streamUrl();
         $model->internal_notes = $entity->internalNotes();
+        $model->fastest_lap = $entity->fastestLap();
+        $model->fastest_lap_top_10 = $entity->fastestLapTop10();
         $model->status = $entity->status()->value;
         $model->created_by_user_id = $entity->createdByUserId();
     }
@@ -179,6 +181,8 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
             technicalNotes: $model->technical_notes,
             streamUrl: $model->stream_url,
             internalNotes: $model->internal_notes,
+            fastestLap: $model->fastest_lap,
+            fastestLapTop10: $model->fastest_lap_top_10,
             status: RoundStatus::from($model->status),
             createdByUserId: $model->created_by_user_id,
             createdAt: new DateTimeImmutable($model->created_at->toDateTimeString()),

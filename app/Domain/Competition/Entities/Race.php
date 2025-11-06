@@ -398,9 +398,6 @@ final class Race
         ?string $tireRestrictions,
         ?string $fuelUsage,
         ?string $damageModel,
-        bool $trackLimitsEnforced,
-        bool $falseStartDetection,
-        bool $collisionPenalties,
         ?string $assistsRestrictions,
         bool $raceDivisions,
         ?array $bonusPoints,
@@ -441,9 +438,10 @@ final class Race
             tireRestrictions: $tireRestrictions,
             fuelUsage: $fuelUsage,
             damageModel: $damageModel,
-            trackLimitsEnforced: $trackLimitsEnforced,
-            falseStartDetection: $falseStartDetection,
-            collisionPenalties: $collisionPenalties,
+            // Penalty fields are disabled for qualifiers by default
+            trackLimitsEnforced: false,
+            falseStartDetection: false,
+            collisionPenalties: false,
             mandatoryPitStop: false,
             minimumPitTime: null,
             assistsRestrictions: $assistsRestrictions,
@@ -476,9 +474,6 @@ final class Race
         ?string $tireRestrictions,
         ?string $fuelUsage,
         ?string $damageModel,
-        bool $trackLimitsEnforced,
-        bool $falseStartDetection,
-        bool $collisionPenalties,
         ?string $assistsRestrictions,
         bool $raceDivisions,
         ?array $bonusPoints,
@@ -546,20 +541,7 @@ final class Race
             $hasChanges = true;
         }
 
-        if ($this->trackLimitsEnforced !== $trackLimitsEnforced) {
-            $this->trackLimitsEnforced = $trackLimitsEnforced;
-            $hasChanges = true;
-        }
-
-        if ($this->falseStartDetection !== $falseStartDetection) {
-            $this->falseStartDetection = $falseStartDetection;
-            $hasChanges = true;
-        }
-
-        if ($this->collisionPenalties !== $collisionPenalties) {
-            $this->collisionPenalties = $collisionPenalties;
-            $hasChanges = true;
-        }
+        // Penalty fields are not editable for qualifiers - they remain disabled
 
         if ($this->assistsRestrictions !== $assistsRestrictions) {
             $this->assistsRestrictions = $assistsRestrictions;

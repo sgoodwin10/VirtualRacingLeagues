@@ -17,6 +17,7 @@ class UpdateCompetitionData extends Data
         public ?string $name = null,
         public ?string $description = null,
         public ?UploadedFile $logo = null,
+        public ?string $competition_colour = null,
     ) {
     }
 
@@ -29,6 +30,7 @@ class UpdateCompetitionData extends Data
             'name' => ['nullable', 'string', 'min:3', 'max:100'],
             'description' => ['nullable', 'string', 'max:1000'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            'competition_colour' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

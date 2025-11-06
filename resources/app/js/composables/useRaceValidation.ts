@@ -9,9 +9,18 @@ export function useRaceValidation(form: RaceForm, isQualifier: Ref<boolean> | bo
     return unref(isQualifier);
   };
 
+  function validateRaceType(): string | undefined {
+    if (!form.race_type) {
+      return 'Race type is required';
+    }
+    return undefined;
+  }
+
   function validateRaceNumber(): string | undefined {
+    const isQualifierValue = getIsQualifier();
+
     // Skip validation for qualifiers (always 0)
-    if (getIsQualifier()) {
+    if (isQualifierValue) {
       return undefined;
     }
 
@@ -120,13 +129,35 @@ export function useRaceValidation(form: RaceForm, isQualifier: Ref<boolean> | bo
     return undefined;
   }
 
+  function validateGridSourceRaceId(): string | undefined {
+    // Skip validation for qualifiers (they always use qualifying as grid source)
+    if (getIsQualifier()) {
+      return undefined;
+    }
+
+    // Validate grid_source_race_id is provided when required
+    if (
+      form.grid_source === 'qualifying' ||
+      form.grid_source === 'previous_race' ||
+      form.grid_source === 'reverse_previous'
+    ) {
+      if (!form.grid_source_race_id) {
+        return 'Source race is required for this grid source';
+      }
+    }
+
+    return undefined;
+  }
+
   function validateAll(): boolean {
+    errors.race_type = validateRaceType();
     errors.race_number = validateRaceNumber();
     errors.name = validateName();
     errors.qualifying_length = validateQualifyingLength();
     errors.length_value = validateLengthValue();
     errors.minimum_pit_time = validateMinimumPitTime();
     errors.points_system = validatePointsSystem();
+    errors.grid_source_race_id = validateGridSourceRaceId();
 
     return !Object.values(errors).some((error) => error !== undefined);
   }
@@ -139,12 +170,14 @@ export function useRaceValidation(form: RaceForm, isQualifier: Ref<boolean> | bo
 
   return {
     errors,
+    validateRaceType,
     validateRaceNumber,
     validateName,
     validateQualifyingLength,
     validateLengthValue,
     validateMinimumPitTime,
     validatePointsSystem,
+    validateGridSourceRaceId,
     validateAll,
     clearErrors,
   };

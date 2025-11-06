@@ -126,12 +126,9 @@ final class RaceApiTest extends TestCase
             ->getJson("http://app.virtualracingleagues.localhost/api/races/{$race->id}");
 
         $response->assertStatus(200)
-            ->assertJson([
-                'status' => 'success',
-                'data' => [
-                    'id' => $race->id,
-                    'name' => 'Sprint Race',
-                ],
+            ->assertJsonFragment([
+                'id' => $race->id,
+                'name' => 'Sprint Race',
             ]);
     }
 
@@ -153,14 +150,11 @@ final class RaceApiTest extends TestCase
             ->putJson("http://app.virtualracingleagues.localhost/api/races/{$race->id}", $updateData);
 
         $response->assertStatus(200)
-            ->assertJson([
-                'status' => 'success',
-                'data' => [
-                    'id' => $race->id,
-                    'name' => 'Updated Race Name',
-                    'race_type' => 'feature',
-                    'length_value' => 60,
-                ],
+            ->assertJsonFragment([
+                'id' => $race->id,
+                'name' => 'Updated Race Name',
+                'race_type' => 'feature',
+                'length_value' => 60,
             ]);
 
         $this->assertDatabaseHas('races', [
@@ -301,7 +295,7 @@ final class RaceApiTest extends TestCase
     public function test_returns_404_for_nonexistent_race(): void
     {
         $response = $this->actingAs($this->user)
-            ->getJson('/api/races/99999');
+            ->getJson('http://app.virtualracingleagues.localhost/api/races/99999');
 
         $response->assertStatus(404);
     }

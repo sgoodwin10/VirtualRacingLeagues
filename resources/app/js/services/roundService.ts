@@ -37,6 +37,7 @@ export async function updateRound(roundId: number, data: UpdateRoundRequest): Pr
     `/rounds/${roundId}`,
     data,
   );
+
   return response.data.data;
 }
 

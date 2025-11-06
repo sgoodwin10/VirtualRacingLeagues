@@ -89,6 +89,7 @@ export const useRaceStore = defineStore('race', () => {
     error.value = null;
     try {
       const updatedRace = await raceService.updateRace(raceId, data);
+
       const index = races.value.findIndex((r) => r.id === raceId);
       if (index !== -1) {
         races.value[index] = updatedRace;
