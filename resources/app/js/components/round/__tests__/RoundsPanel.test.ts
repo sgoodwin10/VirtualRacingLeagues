@@ -370,7 +370,7 @@ describe('RoundsPanel', () => {
     expect(qualifier?.id).toBe(2);
   });
 
-  it('should apply progressive color gradient to round number boxes', async () => {
+  it('should apply progressive color gradient to round number boxes using default grayscale', async () => {
     // Create multiple rounds to test gradient
     const mockRounds: Round[] = [
       {
@@ -450,6 +450,7 @@ describe('RoundsPanel', () => {
       props: {
         seasonId: 1,
         platformId: 1,
+        competitionColour: null, // No competition color, should use grayscale
       },
       global: {
         stubs: {
@@ -501,6 +502,113 @@ describe('RoundsPanel', () => {
     expect(rgb2[0]!).toBeLessThan(rgb1[0]!); // Red
     expect(rgb2[1]!).toBeLessThan(rgb1[1]!); // Green
     expect(rgb2[2]!).toBeLessThan(rgb1[2]!); // Blue
+  });
+
+  it('should apply competition color range when competition color is provided', async () => {
+    const mockRounds: Round[] = [
+      {
+        id: 1,
+        season_id: 1,
+        platform_track_id: 1,
+        round_number: 1,
+        name: 'Round 1',
+        slug: 'round-1',
+        scheduled_at: '2025-01-15T10:00:00Z',
+        timezone: 'UTC',
+        track_layout: null,
+        track_conditions: null,
+        technical_notes: null,
+        stream_url: null,
+        internal_notes: null,
+        fastest_lap: null,
+        fastest_lap_top_10: false,
+        status: 'scheduled',
+        status_label: 'Scheduled',
+        created_by_user_id: 1,
+        created_at: '2025-01-01T10:00:00Z',
+        updated_at: '2025-01-01T10:00:00Z',
+        deleted_at: null,
+      },
+      {
+        id: 2,
+        season_id: 1,
+        platform_track_id: 1,
+        round_number: 2,
+        name: 'Round 2',
+        slug: 'round-2',
+        scheduled_at: '2025-01-22T10:00:00Z',
+        timezone: 'UTC',
+        track_layout: null,
+        track_conditions: null,
+        technical_notes: null,
+        stream_url: null,
+        internal_notes: null,
+        fastest_lap: null,
+        fastest_lap_top_10: false,
+        status: 'scheduled',
+        status_label: 'Scheduled',
+        created_by_user_id: 1,
+        created_at: '2025-01-01T10:00:00Z',
+        updated_at: '2025-01-01T10:00:00Z',
+        deleted_at: null,
+      },
+    ];
+
+    roundStore.rounds = mockRounds;
+
+    // Light orange color
+    const competitionColour = JSON.stringify({ r: 227, g: 140, b: 18 });
+
+    const wrapper = mount(RoundsPanel, {
+      props: {
+        seasonId: 1,
+        platformId: 1,
+        competitionColour,
+      },
+      global: {
+        stubs: {
+          BasePanel: true,
+          Button: true,
+          Accordion: true,
+          AccordionPanel: true,
+          AccordionHeader: true,
+          AccordionContent: true,
+          Tag: true,
+          Skeleton: true,
+          ConfirmDialog: true,
+          RoundFormDrawer: true,
+          RaceFormDrawer: true,
+          RaceListItem: true,
+          QualifierListItem: true,
+        },
+      },
+    });
+
+    await flushPromises();
+
+    const vm = wrapper.vm as unknown as {
+      getRoundBackgroundColor: (index: number) => string;
+    };
+
+    const color0 = vm.getRoundBackgroundColor(0);
+    const color1 = vm.getRoundBackgroundColor(1);
+
+    // Both should be valid RGB strings
+    expect(color0).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+    expect(color1).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+
+    // Colors should not be the grayscale default
+    expect(color0).not.toBe('rgb(203, 213, 225)');
+
+    // Extract RGB values
+    const rgb0 = color0.match(/\d+/g)?.map(Number) || [];
+    const rgb1 = color1.match(/\d+/g)?.map(Number) || [];
+
+    // All RGB values should be within valid range
+    [...rgb0, ...rgb1].forEach((value) => {
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThanOrEqual(255);
+    });
   });
 
   it('should reload tracks after saving a round to prevent track display issues', async () => {

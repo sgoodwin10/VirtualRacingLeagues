@@ -582,6 +582,7 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                 v-if="season && season.competition?.platform_id"
                 :season-id="seasonId"
                 :platform-id="season.competition.platform_id"
+                :competition-colour="season.competition.competition_colour"
               />
             </BasePanel>
           </TabPanel>

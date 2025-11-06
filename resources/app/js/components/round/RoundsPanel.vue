@@ -285,11 +285,14 @@ import { useTrackStore } from '@app/stores/trackStore';
 import type { Round } from '@app/types/round';
 import type { Race } from '@app/types/race';
 import { isQualifier } from '@app/types/race';
+import type { RGBColor } from '@app/types/competition';
 import HTag from '@app/components/common/HTag.vue';
+import { useColorRange } from '@app/composables/useColorRange';
 
 interface Props {
   seasonId: number;
   platformId: number;
+  competitionColour?: string | null;
 }
 
 const props = defineProps<Props>();
@@ -299,6 +302,32 @@ const raceStore = useRaceStore();
 const trackStore = useTrackStore();
 const toast = useToast();
 const confirm = useConfirm();
+
+// Parse competition color from JSON string
+const competitionColor = computed<RGBColor | null>(() => {
+  if (!props.competitionColour) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(props.competitionColour) as RGBColor;
+    // Validate the parsed color has r, g, b properties
+    if (
+      typeof parsed.r === 'number' &&
+      typeof parsed.g === 'number' &&
+      typeof parsed.b === 'number'
+    ) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    console.warn('[RoundsPanel] Invalid competition color format:', props.competitionColour);
+    return null;
+  }
+});
+
+// Generate color range based on competition color (pass computed ref for reactivity)
+const { getColor } = useColorRange(competitionColor, { steps: 10 });
 
 const showFormDrawer = ref(false);
 const selectedRound = ref<Round | null>(null);
@@ -392,19 +421,7 @@ function getTrackAndLocation(trackId: number | null): string {
 }
 
 function getRoundBackgroundColor(index: number): string {
-  // Base color: slate-300 (#cbd5e1 in RGB: 203, 213, 225)
-  const baseColor = { r: 203, g: 213, b: 225 };
-
-  // Calculate darkness factor (25% darker per round)
-  // Each step reduces the brightness by 25%
-  const darknessMultiplier = Math.pow(0.9, index);
-
-  // Apply darkness to each RGB channel
-  const r = Math.round(baseColor.r * darknessMultiplier);
-  const g = Math.round(baseColor.g * darknessMultiplier);
-  const b = Math.round(baseColor.b * darknessMultiplier);
-
-  return `rgb(${r}, ${g}, ${b})`;
+  return getColor(index);
 }
 
 function handleCreateRound(): void {
