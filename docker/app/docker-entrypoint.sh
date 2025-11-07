@@ -110,34 +110,60 @@ log_success "Caches cleared"
 log_info "Setting up E2E testing subdomain resolution..."
 NGINX_IP=$(getent hosts nginx | awk '{ print $1 }')
 
-if [ -n "$NGINX_IP" ]; then
+# Extract domain from .env file
+if [ -f ".env" ]; then
+    # First try APP_ROOT_DOMAIN (preferred), fall back to APP_URL
+    BASE_DOMAIN=$(grep "^APP_ROOT_DOMAIN=" .env | cut -d '=' -f2 | tr -d '"' | tr -d "'")
+
+    if [ -z "$BASE_DOMAIN" ]; then
+        # Fall back to APP_URL if APP_ROOT_DOMAIN not found
+        APP_URL=$(grep "^APP_URL=" .env | cut -d '=' -f2 | tr -d '"' | tr -d "'")
+        # Remove http:// or https://, port numbers, and any trailing slashes
+        BASE_DOMAIN=$(echo "$APP_URL" | sed -E 's#^https?://##' | sed -E 's#:[0-9]+##' | sed 's#/$##')
+    fi
+
+    if [ -n "$BASE_DOMAIN" ]; then
+        log_info "Detected domain from .env: ${BASE_DOMAIN}"
+    else
+        log_warning "Could not extract domain from .env, using default"
+        BASE_DOMAIN="localhost"
+    fi
+else
+    log_warning ".env file not found, using default domain"
+    BASE_DOMAIN="localhost"
+fi
+
+if [ -n "$NGINX_IP" ] && [ -n "$BASE_DOMAIN" ]; then
     log_info "Detected nginx container at ${NGINX_IP}"
 
+    # Escape domain for use in regex (replace dots with \.)
+    ESCAPED_DOMAIN=$(echo "$BASE_DOMAIN" | sed 's/\./\\./g')
+
     # Remove any existing entries (including those from extra_hosts)
-    if grep -q "virtualracingleagues.localhost" /etc/hosts 2>/dev/null; then
-        log_info "Removing existing virtualracingleagues.localhost entries..."
-        sed -i '/virtualracingleagues\.localhost/d' /etc/hosts
+    if grep -q "$BASE_DOMAIN" /etc/hosts 2>/dev/null; then
+        log_info "Removing existing ${BASE_DOMAIN} entries..."
+        sed -i "/${ESCAPED_DOMAIN}/d" /etc/hosts
     fi
 
     # Add subdomain entries with correct nginx IP
     log_info "Adding subdomain entries to /etc/hosts..."
     {
         echo "# Playwright E2E Testing - Added by docker-entrypoint.sh"
-        echo "${NGINX_IP} virtualracingleagues.localhost"
-        echo "${NGINX_IP} app.virtualracingleagues.localhost"
-        echo "${NGINX_IP} admin.virtualracingleagues.localhost"
+        echo "${NGINX_IP} ${BASE_DOMAIN}"
+        echo "${NGINX_IP} app.${BASE_DOMAIN}"
+        echo "${NGINX_IP} admin.${BASE_DOMAIN}"
     } >> /etc/hosts
 
     log_success "Added subdomain entries to /etc/hosts pointing to nginx (${NGINX_IP})"
 
     # Verify the entries
-    if grep "^${NGINX_IP}.*virtualracingleagues.localhost" /etc/hosts > /dev/null; then
+    if grep "^${NGINX_IP}.*${BASE_DOMAIN}" /etc/hosts > /dev/null; then
         log_success "/etc/hosts configuration verified"
     else
         log_error "Failed to verify /etc/hosts configuration"
     fi
 else
-    log_warning "Could not resolve nginx container IP, skipping /etc/hosts setup"
+    log_warning "Could not resolve nginx container IP or domain, skipping /etc/hosts setup"
 fi
 
 # Configure CCStatusline for Claude Code (as laravel user)

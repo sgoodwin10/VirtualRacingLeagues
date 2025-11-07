@@ -204,6 +204,7 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             Route::put('/seasons/{id}', [SeasonController::class, 'update'])->name('seasons.update');
             Route::delete('/seasons/{id}', [SeasonController::class, 'destroy'])->name('seasons.destroy');
             Route::post('/seasons/{id}/archive', [SeasonController::class, 'archive'])->name('seasons.archive');
+            Route::post('/seasons/{id}/unarchive', [SeasonController::class, 'unarchive'])->name('seasons.unarchive');
             Route::post('/seasons/{id}/activate', [SeasonController::class, 'activate'])->name('seasons.activate');
             Route::post('/seasons/{id}/complete', [SeasonController::class, 'complete'])->name('seasons.complete');
             Route::post('/seasons/{id}/restore', [SeasonController::class, 'restore'])->name('seasons.restore');

@@ -672,12 +672,46 @@ class CompetitionControllerTest extends UserControllerTestCase
             ->assertJsonFragment(['slug' => 'gt3-championship-1']);
     }
 
+    public function test_logo_url_is_null_when_no_logo_uploaded(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create league with no logo
+        $leagueWithoutLogo = League::factory()->create([
+            'owner_user_id' => $this->user->id,
+            'platform_ids' => [$this->platform->id],
+            'logo_path' => null,
+        ]);
+
+        $competition = Competition::factory()->create([
+            'league_id' => $leagueWithoutLogo->id,
+            'platform_id' => $this->platform->id,
+            'logo_path' => null, // No competition logo
+        ]);
+
+        $response = $this->getJson("/api/competitions/{$competition->id}");
+
+        $response->assertStatus(200);
+
+        // Should have null logo_url when neither competition nor league has a logo
+        $data = $response->json('data');
+        $this->assertNull($data['logo_url']);
+        $this->assertFalse($data['has_own_logo']);
+    }
+
     public function test_logo_falls_back_to_league_logo(): void
     {
         $this->actingAs($this->user, 'web');
 
+        // Create league with a logo
+        $leagueWithLogo = League::factory()->create([
+            'owner_user_id' => $this->user->id,
+            'platform_ids' => [$this->platform->id],
+            'logo_path' => 'leagues/logos/test-logo.png',
+        ]);
+
         $competition = Competition::factory()->create([
-            'league_id' => $this->league->id,
+            'league_id' => $leagueWithLogo->id,
             'platform_id' => $this->platform->id,
             'logo_path' => null, // No competition logo
         ]);
@@ -689,7 +723,8 @@ class CompetitionControllerTest extends UserControllerTestCase
         // Should have a logo_url that points to league logo
         $data = $response->json('data');
         $this->assertNotNull($data['logo_url']);
-        $this->assertStringContainsString($this->league->logo_path, $data['logo_url']);
+        $this->assertStringContainsString('leagues/logos/test-logo.png', $data['logo_url']);
+        $this->assertFalse($data['has_own_logo']);
     }
 
     public function test_check_slug_availability(): void

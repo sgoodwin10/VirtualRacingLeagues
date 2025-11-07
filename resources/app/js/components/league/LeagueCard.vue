@@ -169,7 +169,7 @@ async function deleteLeague(): Promise<void> {
           show-icon="pi pi-bars"
           hide-icon="pi pi-times"
           style="position: absolute; right: 4px; top: 4px"
-          class="speeddial-right"
+          class="speeddial-down"
         />
       </div>
     </template>

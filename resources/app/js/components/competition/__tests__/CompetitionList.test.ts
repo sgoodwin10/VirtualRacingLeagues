@@ -257,7 +257,7 @@ describe('CompetitionList', () => {
   });
 
   describe('Competition Events', () => {
-    it('refreshes competitions list after creation', async () => {
+    it('does not re-fetch after creation (store already updated reactively)', async () => {
       const competitionStore = useCompetitionStore();
       const fetchSpy = vi.spyOn(competitionStore, 'fetchCompetitions').mockResolvedValue(undefined);
 
@@ -276,12 +276,11 @@ describe('CompetitionList', () => {
       // Wait for next tick to allow async operations to complete
       await wrapper.vm.$nextTick();
 
-      // Should have called fetchCompetitions to refresh the list
-      expect(fetchSpy).toHaveBeenCalledWith(1);
-      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      // Should NOT call fetchCompetitions - the store already updated reactively
+      expect(fetchSpy).not.toHaveBeenCalled();
     });
 
-    it('refreshes competitions list after update', async () => {
+    it('does not re-fetch after update (store already updated reactively)', async () => {
       const competitionStore = useCompetitionStore();
       const fetchSpy = vi.spyOn(competitionStore, 'fetchCompetitions').mockResolvedValue(undefined);
 
@@ -300,12 +299,11 @@ describe('CompetitionList', () => {
       // Wait for next tick to allow async operations to complete
       await wrapper.vm.$nextTick();
 
-      // Should have called fetchCompetitions to refresh the list
-      expect(fetchSpy).toHaveBeenCalledWith(1);
-      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      // Should NOT call fetchCompetitions - the store already updated reactively
+      expect(fetchSpy).not.toHaveBeenCalled();
     });
 
-    it('emits competition-created event after refresh', async () => {
+    it('emits competition-created event immediately', async () => {
       const wrapper = mountComponent({ leagueId: 1 });
 
       // Find the CompetitionFormDrawer (create drawer)
@@ -318,12 +316,12 @@ describe('CompetitionList', () => {
       // Wait for next tick to allow async operations to complete
       await wrapper.vm.$nextTick();
 
-      // Should emit the event to parent
+      // Should emit the event to parent immediately (no waiting for fetch)
       expect(wrapper.emitted('competition-created')).toBeTruthy();
       expect(wrapper.emitted('competition-created')![0]).toEqual([newCompetition]);
     });
 
-    it('emits competition-updated event after refresh', async () => {
+    it('emits competition-updated event immediately', async () => {
       const wrapper = mountComponent({ leagueId: 1 });
 
       // Find the CompetitionFormDrawer (edit drawer - second one)
@@ -336,7 +334,7 @@ describe('CompetitionList', () => {
       // Wait for next tick to allow async operations to complete
       await wrapper.vm.$nextTick();
 
-      // Should emit the event to parent
+      // Should emit the event to parent immediately (no waiting for fetch)
       expect(wrapper.emitted('competition-updated')).toBeTruthy();
       expect(wrapper.emitted('competition-updated')![0]).toEqual([updatedCompetition]);
     });

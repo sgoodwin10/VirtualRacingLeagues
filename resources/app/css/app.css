@@ -352,6 +352,56 @@ textarea {
   box-shadow: var(--shadow-md);
 }
 
+/* SpeedDial Action Color Coding */
+/* Competition SpeedDial Colors */
+.speeddial-competition .p-speeddial-list .p-speeddial-item:nth-child(1) .p-button {
+  background-color: rgb(219, 234, 254) !important; /* blue-100 */
+  color: rgb(29, 78, 216) !important; /* blue-700 */
+  border-color: rgb(191, 219, 254) !important;
+}
+.speeddial-competition .p-speeddial-list .p-speeddial-item:nth-child(1) .p-button:hover {
+  background-color: rgb(191, 219, 254) !important; /* blue-200 */
+  border-color: rgb(147, 197, 253) !important;
+}
+.speeddial-competition .p-speeddial-list .p-speeddial-item:nth-child(2) .p-button {
+  background-color: rgb(254, 226, 226) !important; /* red-100 */
+  color: rgb(185, 28, 28) !important; /* red-700 */
+  border-color: rgb(254, 202, 202) !important;
+}
+.speeddial-competition .p-speeddial-list .p-speeddial-item:nth-child(2) .p-button:hover {
+  background-color: rgb(254, 202, 202) !important; /* red-200 */
+  border-color: rgb(252, 165, 165) !important;
+}
+
+/* Season SpeedDial Colors */
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(1) .p-button {
+  background-color: rgb(219, 234, 254) !important; /* blue-100 */
+  color: rgb(29, 78, 216) !important; /* blue-700 */
+  border-color: rgb(191, 219, 254) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(1) .p-button:hover {
+  background-color: rgb(191, 219, 254) !important; /* blue-200 */
+  border-color: rgb(147, 197, 253) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(2) .p-button {
+  background-color: rgb(254, 237, 213) !important; /* orange-100 */
+  color: rgb(194, 65, 12) !important; /* orange-700 */
+  border-color: rgb(253, 221, 181) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(2) .p-button:hover {
+  background-color: rgb(253, 221, 181) !important; /* orange-200 */
+  border-color: rgb(251, 191, 136) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(3) .p-button {
+  background-color: rgb(254, 226, 226) !important; /* red-100 */
+  color: rgb(185, 28, 28) !important; /* red-700 */
+  border-color: rgb(254, 202, 202) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(3) .p-button:hover {
+  background-color: rgb(254, 202, 202) !important; /* red-200 */
+  border-color: rgb(252, 165, 165) !important;
+}
+
 /* Tag Styling */
 .p-tag.p-component {
   /* padding: 0rem; */

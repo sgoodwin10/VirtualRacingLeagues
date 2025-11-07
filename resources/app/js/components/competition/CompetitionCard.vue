@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import type { Competition, CompetitionSeason } from '@app/types/competition';
+import type { Season } from '@app/types/season';
 import type { MenuItem } from 'primevue/menuitem';
 import HTag from '@app/components/common/HTag.vue';
 
@@ -14,6 +15,7 @@ import Button from 'primevue/button';
 import InfoItem from '@app/components/common/InfoItem.vue';
 import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
 import { useCompetitionStore } from '@app/stores/competitionStore';
+import { useSeasonStore } from '@app/stores/seasonStore';
 import {
   PhCalendarBlank,
   PhGameController,
@@ -21,6 +23,7 @@ import {
   PhFlag,
   PhTrophy,
   PhPlus,
+  PhImage,
 } from '@phosphor-icons/vue';
 
 interface Props {
@@ -41,11 +44,15 @@ const router = useRouter();
 const toast = useToast();
 const confirm = useConfirm();
 const competitionStore = useCompetitionStore();
+const seasonStore = useSeasonStore();
 
 const vTooltip = Tooltip;
 
 // State
 const showSeasonDrawer = ref(false);
+const editingSeasonId = ref<number | null>(null);
+const seasonOperations = ref<Record<number, boolean>>({});
+const isConfirmationOpen = ref(false);
 
 const cardClasses = computed(() => ({
   'opacity-60': props.competition.is_archived,
@@ -56,14 +63,12 @@ const speedDialActions = computed<MenuItem[]>(() => [
   {
     label: 'Edit',
     icon: 'pi pi-pencil',
-    command: handleEdit,
-    severity: 'warn',
+    command: () => handleEdit(),
   },
   {
     label: 'Delete',
     icon: 'pi pi-trash',
-    command: confirmDelete,
-    severity: 'danger',
+    command: () => confirmDelete(),
   },
 ]);
 
@@ -77,21 +82,85 @@ const sortedSeasons = computed(() => {
 
 const hasSeasons = computed(() => sortedSeasons.value.length > 0);
 
-function getSeasonStatusTooltip(season: CompetitionSeason): string {
-  const drivers = season.stats.driver_count;
-  const rounds = season.stats.round_count;
-  const races = season.stats.race_count;
+const hasLogo = computed(() => {
+  const url = props.competition.logo_url;
+  // Handle null, empty string, and legacy "default.png" placeholder
+  return !!url && url !== 'default.png';
+});
 
+const editingSeasonData = ref<Season | null>(null);
+
+// Convert competition_colour JSON string to CSS rgb() color
+const competitionBackgroundColor = computed(() => {
+  if (hasLogo.value) {
+    return 'transparent';
+  }
+
+  if (!props.competition.competition_colour) {
+    return 'rgb(226, 232, 240)'; // Fallback to slate-200
+  }
+
+  try {
+    const rgb = JSON.parse(props.competition.competition_colour);
+    return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  } catch {
+    return 'rgb(226, 232, 240)'; // Fallback on parse error
+  }
+});
+
+function getSeasonStatusTooltip(season: CompetitionSeason): string {
   if (season.is_archived) {
-    return `Archived Season - ${drivers} drivers, ${rounds} rounds, ${races} races`;
+    return `Archived Season`;
   }
   if (season.is_active) {
-    return `Active Season - ${drivers} drivers, ${rounds} rounds, ${races} races`;
+    return `Active Season`;
   }
   if (season.status === 'setup') {
-    return `In Setup - ${drivers} drivers, ${rounds} rounds, ${races} races`;
+    return `In Setup`;
   }
   return '';
+}
+
+/**
+ * Get SpeedDial actions for a season
+ * Dynamically shows Archive or Unarchive based on season state
+ */
+function getSeasonActions(season: CompetitionSeason): MenuItem[] {
+  const actions: MenuItem[] = [
+    {
+      label: 'Edit',
+      icon: 'pi pi-pencil',
+      command: () => handleEditSeason(season.id),
+    },
+  ];
+
+  // Show Archive or Unarchive based on current state
+  if (season.is_archived) {
+    actions.push({
+      label: 'Unarchive',
+      icon: 'pi pi-inbox',
+      command: () => confirmUnarchiveSeason(season),
+    });
+  } else {
+    actions.push({
+      label: 'Archive',
+      icon: 'pi pi-box',
+      command: () => confirmArchiveSeason(season),
+    });
+  }
+
+  // Delete is always available
+  actions.push({
+    label: 'Delete',
+    icon: 'pi pi-trash',
+    command: () => confirmDeleteSeason(season),
+  });
+
+  return actions;
+}
+
+function isSeasonLoading(seasonId: number): boolean {
+  return seasonOperations.value[seasonId] || false;
 }
 
 function handleSeasonClick(seasonId: number): void {
@@ -110,9 +179,165 @@ function handleCreateSeason(): void {
 }
 
 function handleSeasonSaved(): void {
-  // Refresh will be handled by parent component re-fetching data
-  // The drawer will close itself via v-model:visible
+  // Season automatically added to competition via reactive store updates
+  // No need to re-fetch - the UI updates automatically through Pinia reactivity
   showSeasonDrawer.value = false;
+  editingSeasonId.value = null;
+  editingSeasonData.value = null;
+}
+
+async function handleEditSeason(seasonId: number): Promise<void> {
+  try {
+    editingSeasonId.value = seasonId;
+    // Fetch full season data for editing
+    editingSeasonData.value = await seasonStore.fetchSeason(seasonId);
+    showSeasonDrawer.value = true;
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load season data',
+      life: 5000,
+    });
+  }
+}
+
+function confirmArchiveSeason(season: CompetitionSeason): void {
+  if (isConfirmationOpen.value) return;
+
+  isConfirmationOpen.value = true;
+
+  confirm.require({
+    message: `Are you sure you want to archive "${season.name}"? All associated rounds and races will also be archived.`,
+    header: 'Archive Season',
+    icon: 'pi pi-box',
+    acceptClass: 'p-button-warning',
+    accept: () => {
+      isConfirmationOpen.value = false;
+      archiveSeason(season.id);
+    },
+    reject: () => {
+      isConfirmationOpen.value = false;
+    },
+    onHide: () => {
+      isConfirmationOpen.value = false;
+    },
+  });
+}
+
+async function archiveSeason(seasonId: number): Promise<void> {
+  seasonOperations.value[seasonId] = true;
+
+  try {
+    await seasonStore.archiveExistingSeason(seasonId);
+    toast.add({
+      severity: 'success',
+      summary: 'Season Archived',
+      detail: 'Season has been archived successfully',
+      life: 3000,
+    });
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to archive season',
+      life: 5000,
+    });
+  } finally {
+    seasonOperations.value[seasonId] = false;
+  }
+}
+
+function confirmUnarchiveSeason(season: CompetitionSeason): void {
+  if (isConfirmationOpen.value) return;
+
+  isConfirmationOpen.value = true;
+
+  confirm.require({
+    message: `Are you sure you want to unarchive "${season.name}"? All associated rounds and races will also be restored.`,
+    header: 'Unarchive Season',
+    icon: 'pi pi-inbox',
+    acceptClass: 'p-button-success',
+    accept: () => {
+      isConfirmationOpen.value = false;
+      unarchiveSeason(season.id);
+    },
+    reject: () => {
+      isConfirmationOpen.value = false;
+    },
+    onHide: () => {
+      isConfirmationOpen.value = false;
+    },
+  });
+}
+
+async function unarchiveSeason(seasonId: number): Promise<void> {
+  seasonOperations.value[seasonId] = true;
+
+  try {
+    await seasonStore.unarchiveExistingSeason(seasonId);
+    toast.add({
+      severity: 'success',
+      summary: 'Season Restored',
+      detail: 'Season has been unarchived successfully',
+      life: 3000,
+    });
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to unarchive season',
+      life: 5000,
+    });
+  } finally {
+    seasonOperations.value[seasonId] = false;
+  }
+}
+
+function confirmDeleteSeason(season: CompetitionSeason): void {
+  if (isConfirmationOpen.value) return;
+
+  isConfirmationOpen.value = true;
+
+  confirm.require({
+    message: `Are you sure you want to delete "${season.name}"? This action cannot be undone and will permanently remove all associated rounds, races, and results.`,
+    header: 'Delete Season',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      isConfirmationOpen.value = false;
+      deleteSeason(season.id);
+    },
+    reject: () => {
+      isConfirmationOpen.value = false;
+    },
+    onHide: () => {
+      isConfirmationOpen.value = false;
+    },
+  });
+}
+
+async function deleteSeason(seasonId: number): Promise<void> {
+  seasonOperations.value[seasonId] = true;
+
+  try {
+    await seasonStore.deleteExistingSeason(seasonId);
+    toast.add({
+      severity: 'success',
+      summary: 'Season Deleted',
+      detail: 'Season has been deleted successfully',
+      life: 3000,
+    });
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to delete season',
+      life: 5000,
+    });
+  } finally {
+    seasonOperations.value[seasonId] = false;
+  }
 }
 
 function handleEdit(): void {
@@ -120,12 +345,25 @@ function handleEdit(): void {
 }
 
 function confirmDelete(): void {
+  if (isConfirmationOpen.value) return;
+
+  isConfirmationOpen.value = true;
+
   confirm.require({
-    message: `Are you sure you want to delete "${props.competition.name}"? This action cannot be undone and will remove all associated seasons and data.`,
+    message: `Are you sure you want to delete "${props.competition.name}"? \nThis action cannot be undone and will remove all associated seasons and data.`,
     header: 'Delete Competition',
     icon: 'pi pi-exclamation-triangle',
     acceptClass: 'p-button-danger',
-    accept: () => deleteCompetition(),
+    accept: () => {
+      isConfirmationOpen.value = false;
+      deleteCompetition();
+    },
+    reject: () => {
+      isConfirmationOpen.value = false;
+    },
+    onHide: () => {
+      isConfirmationOpen.value = false;
+    },
   });
 }
 
@@ -153,15 +391,21 @@ async function deleteCompetition(): Promise<void> {
 <template>
   <div
     :class="cardClasses"
-    class="competition-card flex flex-col w-full h-72 rounded-md border border-slate-200 bg-white hover:shadow-md transition-shadow duration-300 hover:border-primary-200"
+    class="competition-card flex flex-col w-full h-96 rounded-md border border-slate-200 bg-white hover:shadow-md transition-shadow duration-300 hover:border-primary-200"
   >
     <div class="flex bg-white rounded-t-md relative">
-      <div class="w-18 h-18 p-2">
+      <div
+        class="flex items-center justify-center rounded-tl-md overflow-hidden"
+        :style="{ backgroundColor: competitionBackgroundColor }"
+        :class="{ 'w-18 h-18 m-1 p-1': hasLogo, 'w-16 h-16 m-2': !hasLogo }"
+      >
         <img
-          :src="competition.logo_url"
+          v-if="hasLogo"
+          :src="competition.logo_url!"
           :alt="competition.name"
-          class="w-full h-full object-cover"
+          class="w-full h-full object-cover rounded-tl-md"
         />
+        <PhImage v-else :size="32" weight="light" class="text-white/50" />
       </div>
 
       <div class="flex-1 content-center pl-2 pr-2">
@@ -179,15 +423,16 @@ async function deleteCompetition(): Promise<void> {
         </p>
       </div>
 
-      <SpeedDial
-        :model="speedDialActions"
-        direction="left"
-        :button-props="{ size: 'small', rounded: true, severity: 'secondary' }"
-        show-icon="pi pi-bars"
-        hide-icon="pi pi-times"
-        style="position: absolute; right: 8px; top: 8px"
-        class="speeddial-right"
-      />
+      <div style="position: absolute; right: 8px; top: 8px" @click.stop>
+        <SpeedDial
+          :model="speedDialActions"
+          direction="left"
+          :button-props="{ size: 'small', rounded: true, severity: 'secondary' }"
+          show-icon="pi pi-bars"
+          hide-icon="pi pi-times"
+          class="speeddial-competition"
+        />
+      </div>
     </div>
 
     <div class="grid grid-cols-3 gap-px bg-surface-200 border-b border-t border-gray-200">
@@ -239,16 +484,17 @@ async function deleteCompetition(): Promise<void> {
           <div
             v-for="season in sortedSeasons"
             :key="season.id"
-            class="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200 hover:border-primary-200 hover:bg-primary-50/30 transition-all cursor-pointer"
+            class="relative flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-200 hover:border-primary-200 hover:bg-primary-50/30 transition-all cursor-pointer hover:shadow-md"
+            :class="{ 'opacity-60': isSeasonLoading(season.id) }"
             @click="handleSeasonClick(season.id)"
           >
             <!-- Season name -->
             <div class="flex items-center gap-2 flex-1 min-w-0">
-              <span class="font-medium text-sm text-slate-700 truncate">{{ season.name }}</span>
+              <span class="font-medium text-md text-slate-700 truncate">{{ season.name }}</span>
             </div>
 
             <!-- Season stats and status -->
-            <div class="flex items-center gap-3 shrink-0 ml-2">
+            <div class="flex items-center gap-3 shrink-0 ml-2 mr-8">
               <!-- Status tag -->
               <Tag
                 v-if="season.is_archived"
@@ -273,22 +519,47 @@ async function deleteCompetition(): Promise<void> {
               />
 
               <!-- Drivers -->
-              <div class="flex items-center gap-1 text-xs text-slate-600">
+              <div
+                v-tooltip.top="'Drivers: ' + season.stats.driver_count"
+                class="flex items-center gap-1 text-xs text-slate-600"
+              >
                 <PhSteeringWheel :size="16" weight="regular" class="text-slate-400" />
                 <span>{{ season.stats.driver_count }}</span>
               </div>
 
               <!-- Rounds -->
-              <div class="flex items-center gap-1 text-xs text-slate-600">
+              <div
+                v-tooltip.top="'Rounds: ' + season.stats.round_count"
+                class="flex items-center gap-1 text-xs text-slate-600"
+              >
                 <PhCalendarBlank :size="16" weight="regular" class="text-slate-400" />
                 <span>{{ season.stats.round_count }}</span>
               </div>
 
               <!-- Races -->
-              <div class="flex items-center gap-1 text-xs text-slate-600">
+              <div
+                v-tooltip.top="'Races: ' + season.stats.race_count"
+                class="flex items-center gap-1 text-xs text-slate-600"
+              >
                 <PhFlag :size="16" weight="regular" class="text-slate-400" />
                 <span>{{ season.stats.race_count }}</span>
               </div>
+            </div>
+
+            <!-- Season SpeedDial -->
+            <div
+              style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%)"
+              @click.stop
+            >
+              <SpeedDial
+                :model="getSeasonActions(season)"
+                direction="left"
+                :button-props="{ size: 'small', rounded: true, severity: 'secondary' }"
+                show-icon="pi pi-ellipsis-h"
+                hide-icon="pi pi-times"
+                :disabled="isSeasonLoading(season.id)"
+                class="speeddial-season"
+              />
             </div>
           </div>
         </div>
@@ -311,7 +582,8 @@ async function deleteCompetition(): Promise<void> {
     <SeasonFormDrawer
       v-model:visible="showSeasonDrawer"
       :competition-id="competition.id"
-      :is-edit-mode="false"
+      :season="editingSeasonData"
+      :is-edit-mode="!!editingSeasonId"
       @season-saved="handleSeasonSaved"
     />
   </div>

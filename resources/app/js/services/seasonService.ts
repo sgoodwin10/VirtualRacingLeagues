@@ -88,6 +88,16 @@ export async function archiveSeason(seasonId: number): Promise<Season> {
 }
 
 /**
+ * Unarchive season
+ */
+export async function unarchiveSeason(seasonId: number): Promise<Season> {
+  const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
+    `/seasons/${seasonId}/unarchive`,
+  );
+  return response.data.data;
+}
+
+/**
  * Activate season
  */
 export async function activateSeason(seasonId: number): Promise<Season> {

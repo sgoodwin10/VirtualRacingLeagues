@@ -27,7 +27,7 @@ final class LeagueFactory extends Factory
             'slug' => $this->faker->unique()->slug(),
             'tagline' => $this->faker->sentence(),
             'description' => $this->faker->paragraph(),
-            'logo_path' => 'leagues/logos/default.png',
+            'logo_path' => null,
             'header_image_path' => null,
             'platform_ids' => [1, 2],
             'visibility' => 'public',

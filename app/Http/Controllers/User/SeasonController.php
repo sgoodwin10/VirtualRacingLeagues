@@ -108,6 +108,20 @@ final class SeasonController extends Controller
     }
 
     /**
+     * Unarchive a season.
+     */
+    public function unarchive(int $id): JsonResponse
+    {
+        $userId = Auth::id();
+        if ($userId === null) {
+            throw new \RuntimeException('User must be authenticated');
+        }
+
+        $season = $this->seasonService->unarchiveSeason($id, (int) $userId);
+        return ApiResponse::success($season->toArray(), 'Season unarchived successfully');
+    }
+
+    /**
      * Activate a season.
      */
     public function activate(int $id): JsonResponse

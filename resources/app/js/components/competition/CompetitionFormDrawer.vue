@@ -431,7 +431,7 @@ function cancelNameChange(): void {
               :existing-image-url="form.logo_url"
               accept="image/png,image/jpeg,image/jpg"
               :max-file-size="2 * 1024 * 1024"
-              :min-dimensions="{ width: 200, height: 200 }"
+              :min-dimensions="{ width: 100, height: 100 }"
               :recommended-dimensions="{ width: 500, height: 500 }"
               preview-size="small"
               helper-text="Square logo, 500x500px recommended. League logo used if not provided."

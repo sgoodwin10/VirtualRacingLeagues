@@ -250,9 +250,10 @@ final class LeagueApplicationService
 
             // Handle logo upload
             if ($data->logo !== null) {
-                // Delete old logo
-                if (Storage::disk('public')->exists($league->logoPath())) {
-                    Storage::disk('public')->delete($league->logoPath());
+                // Delete old logo if it exists
+                $oldLogoPath = $league->logoPath();
+                if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
+                    Storage::disk('public')->delete($oldLogoPath);
                 }
 
                 $logoPath = $data->logo->store('leagues/logos', 'public');

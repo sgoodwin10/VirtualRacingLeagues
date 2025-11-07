@@ -350,7 +350,7 @@ final class CompetitionApplicationService
      *
      * @param array<string, int|string|null> $aggregates
      */
-    private function toCompetitionData(Competition $competition, string $leagueLogoPath, array $aggregates = []): CompetitionData
+    private function toCompetitionData(Competition $competition, ?string $leagueLogoPath, array $aggregates = []): CompetitionData
     {
         // Fetch league for additional data (we need more than just logo path now)
         $league = $this->leagueRepository->findById($competition->leagueId());
@@ -425,14 +425,19 @@ final class CompetitionApplicationService
 
     /**
      * Resolve logo URL with fallback to league logo.
+     * Returns null if neither competition nor league has a logo.
      */
-    private function resolveLogoUrl(Competition $competition, string $leagueLogoPath): string
+    private function resolveLogoUrl(Competition $competition, ?string $leagueLogoPath): ?string
     {
         if ($competition->logoPath()) {
             return Storage::disk('public')->url($competition->logoPath());
         }
 
-        // Fallback to league logo
-        return Storage::disk('public')->url($leagueLogoPath);
+        // Fallback to league logo if it exists
+        if ($leagueLogoPath) {
+            return Storage::disk('public')->url($leagueLogoPath);
+        }
+
+        return null;
     }
 }

@@ -317,6 +317,28 @@ final class SeasonApplicationService
     }
 
     /**
+     * Unarchive a season (restore from archived status).
+     *
+     * @throws SeasonNotFoundException
+     * @throws UnauthorizedException
+     */
+    public function unarchiveSeason(int $id, int $userId): SeasonData
+    {
+        return DB::transaction(function () use ($id, $userId) {
+            $season = $this->seasonRepository->findById($id);
+            $competition = $this->competitionRepository->findById($season->competitionId());
+
+            $this->authorizeLeagueOwner($competition, $userId);
+
+            $season->restore();
+            $this->seasonRepository->save($season);
+            $this->dispatchEvents($season);
+
+            return $this->toSeasonData($season, $competition->logoPath());
+        });
+    }
+
+    /**
      * Restore a soft-deleted season.
      *
      * @throws SeasonNotFoundException

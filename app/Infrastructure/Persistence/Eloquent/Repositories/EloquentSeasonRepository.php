@@ -292,6 +292,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             'race_divisions_enabled' => $season->raceDivisionsEnabled(),
             'status' => $season->status()->value,
             'created_by_user_id' => $season->createdByUserId(),
+            'updated_at' => $season->updatedAt()->format('Y-m-d H:i:s'),
         ];
     }
 }

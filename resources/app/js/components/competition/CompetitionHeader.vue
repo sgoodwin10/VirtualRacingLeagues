@@ -1,14 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { Competition } from '@app/types/competition';
 
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';
+import { PhImage } from '@phosphor-icons/vue';
 
 interface Props {
   competition: Competition;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 interface Emits {
   (e: 'edit'): void;
@@ -16,17 +18,44 @@ interface Emits {
 }
 
 const emit = defineEmits<Emits>();
+
+const hasLogo = computed(() => {
+  const url = props.competition.logo_url;
+  // Handle null, empty string, and legacy "default.png" placeholder
+  return !!url && url !== 'default.png';
+});
+
+// Convert competition_colour JSON string to CSS rgb() color
+const competitionBackgroundColor = computed(() => {
+  if (!props.competition.competition_colour) {
+    return 'rgb(226, 232, 240)'; // Fallback to slate-200
+  }
+
+  try {
+    const rgb = JSON.parse(props.competition.competition_colour);
+    return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  } catch {
+    return 'rgb(226, 232, 240)'; // Fallback on parse error
+  }
+});
 </script>
 
 <template>
   <div class="competition-header bg-white shadow-sm rounded-lg p-6 mb-6">
     <div class="flex items-start gap-6">
       <!-- Competition Logo -->
-      <img
-        :src="competition.logo_url"
-        :alt="competition.name"
-        class="w-24 h-24 rounded-lg object-cover"
-      />
+      <div
+        class="flex items-center justify-center w-24 h-24 rounded-lg"
+        :style="{ backgroundColor: competitionBackgroundColor }"
+      >
+        <img
+          v-if="hasLogo"
+          :src="competition.logo_url!"
+          :alt="competition.name"
+          class="w-full h-full rounded-lg object-cover"
+        />
+        <PhImage v-else :size="48" weight="light" class="text-white/50" />
+      </div>
 
       <!-- Competition Info -->
       <div class="flex-1">

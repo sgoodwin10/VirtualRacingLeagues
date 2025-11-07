@@ -12,12 +12,14 @@ import type {
   UpdateSeasonRequest,
   SeasonStatus,
 } from '@app/types/season';
+import type { CompetitionSeason } from '@app/types/competition';
 import {
   getSeasons,
   getSeasonById,
   createSeason,
   updateSeason,
   archiveSeason,
+  unarchiveSeason,
   activateSeason,
   completeSeason,
   deleteSeason,
@@ -25,6 +27,7 @@ import {
   buildCreateSeasonFormData,
   buildUpdateSeasonFormData,
 } from '@app/services/seasonService';
+import { useCompetitionStore } from '@app/stores/competitionStore';
 
 export const useSeasonStore = defineStore('season', () => {
   // State
@@ -74,6 +77,29 @@ export const useSeasonStore = defineStore('season', () => {
     const end = start + perPage.value;
     return seasons.value.slice(start, end);
   });
+
+  // Helpers
+
+  /**
+   * Convert a Season to CompetitionSeason format
+   * This is used to update the competition store when seasons change
+   */
+  function toCompetitionSeason(season: Season): CompetitionSeason {
+    return {
+      id: season.id,
+      name: season.name,
+      slug: season.slug,
+      status: season.status,
+      is_active: season.is_active,
+      is_archived: season.is_archived,
+      created_at: season.created_at,
+      stats: {
+        driver_count: season.stats?.total_drivers || 0,
+        round_count: season.stats?.total_rounds || season.stats?.total_races || 0,
+        race_count: season.stats?.total_races || 0,
+      },
+    };
+  }
 
   // Actions
 
@@ -149,6 +175,11 @@ export const useSeasonStore = defineStore('season', () => {
       const season = await createSeason(competitionId, formData);
       seasons.value.push(season);
       currentSeason.value = season;
+
+      // Update competition store with the new season
+      const competitionStore = useCompetitionStore();
+      competitionStore.addSeasonToCompetition(competitionId, toCompetitionSeason(season));
+
       return season;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create season';
@@ -183,6 +214,13 @@ export const useSeasonStore = defineStore('season', () => {
         currentSeason.value = updatedSeason;
       }
 
+      // Update competition store with the updated season
+      const competitionStore = useCompetitionStore();
+      competitionStore.updateSeasonInCompetition(
+        updatedSeason.competition_id,
+        toCompetitionSeason(updatedSeason),
+      );
+
       return updatedSeason;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update season';
@@ -212,6 +250,13 @@ export const useSeasonStore = defineStore('season', () => {
       if (currentSeason.value?.id === seasonId) {
         currentSeason.value = archivedSeason;
       }
+
+      // Update competition store with the archived season
+      const competitionStore = useCompetitionStore();
+      competitionStore.updateSeasonInCompetition(
+        archivedSeason.competition_id,
+        toCompetitionSeason(archivedSeason),
+      );
 
       return archivedSeason;
     } catch (err: unknown) {
@@ -243,6 +288,13 @@ export const useSeasonStore = defineStore('season', () => {
         currentSeason.value = activatedSeason;
       }
 
+      // Update competition store with the activated season
+      const competitionStore = useCompetitionStore();
+      competitionStore.updateSeasonInCompetition(
+        activatedSeason.competition_id,
+        toCompetitionSeason(activatedSeason),
+      );
+
       return activatedSeason;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to activate season';
@@ -273,6 +325,13 @@ export const useSeasonStore = defineStore('season', () => {
         currentSeason.value = completedSeason;
       }
 
+      // Update competition store with the completed season
+      const competitionStore = useCompetitionStore();
+      competitionStore.updateSeasonInCompetition(
+        completedSeason.competition_id,
+        toCompetitionSeason(completedSeason),
+      );
+
       return completedSeason;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to complete season';
@@ -291,6 +350,10 @@ export const useSeasonStore = defineStore('season', () => {
     error.value = null;
 
     try {
+      // Store competition_id before deletion
+      const season = seasons.value.find((s) => s.id === seasonId);
+      const competitionId = season?.competition_id;
+
       await deleteSeason(seasonId);
 
       // Remove from local state
@@ -299,8 +362,51 @@ export const useSeasonStore = defineStore('season', () => {
       if (currentSeason.value?.id === seasonId) {
         currentSeason.value = null;
       }
+
+      // Update competition store to remove the season
+      if (competitionId) {
+        const competitionStore = useCompetitionStore();
+        competitionStore.removeSeasonFromCompetition(competitionId, seasonId);
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete season';
+      error.value = errorMessage;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  /**
+   * Unarchive a season (restore from archived state)
+   */
+  async function unarchiveExistingSeason(seasonId: number): Promise<Season> {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const unarchivedSeason = await unarchiveSeason(seasonId);
+
+      // Update local state
+      const index = seasons.value.findIndex((s) => s.id === seasonId);
+      if (index !== -1) {
+        seasons.value[index] = unarchivedSeason;
+      }
+
+      if (currentSeason.value?.id === seasonId) {
+        currentSeason.value = unarchivedSeason;
+      }
+
+      // Update competition store with the unarchived season
+      const competitionStore = useCompetitionStore();
+      competitionStore.updateSeasonInCompetition(
+        unarchivedSeason.competition_id,
+        toCompetitionSeason(unarchivedSeason),
+      );
+
+      return unarchivedSeason;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to unarchive season';
       error.value = errorMessage;
       throw err;
     } finally {
@@ -320,6 +426,13 @@ export const useSeasonStore = defineStore('season', () => {
 
       // Add back to local state
       seasons.value.push(restoredSeason);
+
+      // Update competition store with the restored season
+      const competitionStore = useCompetitionStore();
+      competitionStore.addSeasonToCompetition(
+        restoredSeason.competition_id,
+        toCompetitionSeason(restoredSeason),
+      );
 
       return restoredSeason;
     } catch (err: unknown) {
@@ -411,6 +524,7 @@ export const useSeasonStore = defineStore('season', () => {
     createNewSeason,
     updateExistingSeason,
     archiveExistingSeason,
+    unarchiveExistingSeason,
     activateExistingSeason,
     completeExistingSeason,
     deleteExistingSeason,

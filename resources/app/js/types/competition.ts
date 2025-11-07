@@ -49,7 +49,7 @@ export interface Competition {
   platform_slug: string; // Flattened from platform relation
   platform?: CompetitionPlatform; // Optional full platform object (for backward compatibility)
   league?: CompetitionLeague;
-  logo_url: string; // Never null (backend resolves fallback)
+  logo_url: string | null; // Null when no logo uploaded, otherwise URL to logo image
   has_own_logo: boolean; // True if competition has its own logo, false if using league logo fallback
   competition_colour: string | null; // RGB JSON string: {"r":100,"g":102,"b":241}
   status: CompetitionStatus;

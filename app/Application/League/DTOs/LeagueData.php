@@ -19,7 +19,7 @@ final class LeagueData extends Data
         public readonly string $slug,
         public readonly ?string $tagline,
         public readonly ?string $description,
-        public readonly string $logo_url,
+        public readonly ?string $logo_url,
         public readonly ?string $header_image_url,
         /** @var array<int> */
         public readonly array $platform_ids,
@@ -60,7 +60,9 @@ final class LeagueData extends Data
             slug: $league->slug()->value(),
             tagline: $league->tagline()?->value(),
             description: $league->description(),
-            logo_url: Storage::disk('public')->url($league->logoPath()),
+            logo_url: $league->logoPath()
+                ? Storage::disk('public')->url($league->logoPath())
+                : null,
             header_image_url: $league->headerImagePath()
                 ? Storage::disk('public')->url($league->headerImagePath())
                 : null,

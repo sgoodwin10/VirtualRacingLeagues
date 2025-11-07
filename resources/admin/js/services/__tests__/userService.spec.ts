@@ -60,7 +60,7 @@ describe('userService', () => {
 
     const result = await userService.getUser(mockUser.id);
 
-    expect(result).toEqual(mockUser);
+    expect(result).toEqual({ ...mockUser, activities: [] });
     expect(apiService.get).toHaveBeenCalledWith(`/users/${mockUser.id}`, { signal: undefined });
   });
 

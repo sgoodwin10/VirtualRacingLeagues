@@ -25,7 +25,7 @@ final class League
         private ?int $id,
         private LeagueName $name,
         private LeagueSlug $slug,
-        private string $logoPath,
+        private ?string $logoPath,
         private ?string $timezone,
         private int $ownerUserId,
         private ?EmailAddress $contactEmail,
@@ -52,7 +52,7 @@ final class League
     public static function create(
         LeagueName $name,
         LeagueSlug $slug,
-        string $logoPath,
+        ?string $logoPath,
         int $ownerUserId,
         ?string $timezone = null,
         ?EmailAddress $contactEmail = null,
@@ -118,7 +118,7 @@ final class League
         int $id,
         LeagueName $name,
         LeagueSlug $slug,
-        string $logoPath,
+        ?string $logoPath,
         int $ownerUserId,
         ?string $timezone,
         ?EmailAddress $contactEmail,
@@ -182,7 +182,7 @@ final class League
         return $this->slug;
     }
 
-    public function logoPath(): string
+    public function logoPath(): ?string
     {
         return $this->logoPath;
     }

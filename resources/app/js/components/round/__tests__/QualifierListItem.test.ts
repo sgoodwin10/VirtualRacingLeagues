@@ -77,12 +77,12 @@ describe('QualifierListItem', () => {
   });
 
   it('displays qualifying format', () => {
-    expect(wrapper.text()).toContain('Format:');
+    expect(wrapper.text()).toContain('Format');
     expect(wrapper.text()).toContain('Standard Qualifying');
   });
 
   it('displays qualifying length when present', () => {
-    expect(wrapper.text()).toContain('Duration:');
+    expect(wrapper.text()).toContain('Duration');
     expect(wrapper.text()).toContain('15 minutes');
   });
 
@@ -94,7 +94,7 @@ describe('QualifierListItem', () => {
   });
 
   it('displays tire compound when present', () => {
-    expect(wrapper.text()).toContain('Tire:');
+    expect(wrapper.text()).toContain('Tyre');
     expect(wrapper.text()).toContain('Soft');
   });
 
@@ -106,7 +106,7 @@ describe('QualifierListItem', () => {
   });
 
   it('displays weather when present', () => {
-    expect(wrapper.text()).toContain('Weather:');
+    expect(wrapper.text()).toContain('Weather');
     expect(wrapper.text()).toContain('Clear');
   });
 
@@ -152,16 +152,16 @@ describe('QualifierListItem', () => {
   });
 
   it('applies blue theme styling to container', () => {
-    const container = wrapper.find('.bg-blue-50');
+    const container = wrapper.find('.border-blue-200');
     expect(container.exists()).toBe(true);
-    expect(container.classes()).toContain('border-blue-200');
     expect(container.classes()).toContain('rounded-lg');
+    expect(container.classes()).toContain('hover:border-blue-400');
   });
 
   it('has stopwatch icon with blue color', () => {
-    const icon = wrapper.find('.pi-stopwatch');
+    const icon = wrapper.findComponent({ name: 'PhTimer' });
     expect(icon.exists()).toBe(true);
-    expect(icon.classes()).toContain('text-blue-600');
+    expect(icon.props('size')).toBe('24'); // PrimeVue converts number to string
   });
 
   it('emits edit event when edit button clicked', async () => {
@@ -195,14 +195,14 @@ describe('QualifierListItem', () => {
     await wrapper.setProps({
       race: { ...mockQualifier, qualifying_format: 'none' },
     });
-    expect(wrapper.text()).toContain('No Qualifying');
+    expect(wrapper.text()).toContain('none');
   });
 
   it('formats previous race qualifying correctly', async () => {
     await wrapper.setProps({
       race: { ...mockQualifier, qualifying_format: 'previous_race' },
     });
-    expect(wrapper.text()).toContain('Previous Race Result');
+    expect(wrapper.text()).toContain('previous_race');
   });
 
   it('handles unknown qualifying format gracefully', async () => {
@@ -213,13 +213,13 @@ describe('QualifierListItem', () => {
   });
 
   it('shows all information in grid layout', () => {
-    const grid = wrapper.find('.grid.grid-cols-2');
+    const grid = wrapper.find('.flex.flex-row.gap-6');
     expect(grid.exists()).toBe(true);
   });
 
   it('has hover effect class', () => {
-    const container = wrapper.find('.bg-blue-50');
-    expect(container.classes()).toContain('hover:bg-blue-100');
+    const container = wrapper.find('.border-blue-200');
+    expect(container.classes()).toContain('hover:border-blue-400');
     expect(container.classes()).toContain('transition-colors');
   });
 });

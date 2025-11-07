@@ -22,7 +22,7 @@ class CompetitionListData extends Data
         public string $platform_name,
         public string $platform_slug,
         public ?CompetitionLeagueData $league,
-        public string $logo_url,
+        public ?string $logo_url,
         public bool $has_own_logo,
         public string $status,
         public bool $is_active,
@@ -42,7 +42,7 @@ class CompetitionListData extends Data
     public static function fromEntity(
         Competition $competition,
         array $platformData,
-        string $logoUrl,
+        ?string $logoUrl,
         ?array $leagueData = null
     ): self {
         return new self(

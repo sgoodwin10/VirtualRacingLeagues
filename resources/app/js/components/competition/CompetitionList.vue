@@ -66,15 +66,15 @@ function handleArchiveClick(competition: Competition): void {
   });
 }
 
-async function handleCompetitionCreated(competition: Competition): Promise<void> {
-  // Refresh the competitions list to ensure we have the latest data with all relationships
-  await competitionStore.fetchCompetitions(props.leagueId);
+function handleCompetitionCreated(competition: Competition): void {
+  // The store already added the competition reactively via createNewCompetition
+  // No need to re-fetch - the UI will update automatically
   emit('competition-created', competition);
 }
 
-async function handleCompetitionUpdated(competition: Competition): Promise<void> {
-  // Refresh the competitions list to ensure we have the latest data with all relationships
-  await competitionStore.fetchCompetitions(props.leagueId);
+function handleCompetitionUpdated(competition: Competition): void {
+  // The store already updated the competition reactively via updateExistingCompetition
+  // No need to re-fetch - the UI will update automatically
   emit('competition-updated', competition);
 }
 

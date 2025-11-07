@@ -17,7 +17,6 @@ import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 import { getLeagueById } from '@app/services/leagueService';
 import { useImageUrl } from '@app/composables/useImageUrl';
 import { useDateFormatter } from '@app/composables/useDateFormatter';
@@ -889,8 +888,5 @@ function getPlatformNames(league: League): string {
 
     <!-- Toast for notifications -->
     <Toast />
-
-    <!-- Confirm Dialog -->
-    <ConfirmDialog />
   </div>
 </template>

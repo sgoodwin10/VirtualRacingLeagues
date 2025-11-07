@@ -5,7 +5,12 @@
 
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Competition, CompetitionForm, CompetitionFilters } from '@app/types/competition';
+import type {
+  Competition,
+  CompetitionForm,
+  CompetitionFilters,
+  CompetitionSeason,
+} from '@app/types/competition';
 import {
   getLeagueCompetitions,
   getCompetition,
@@ -242,6 +247,77 @@ export const useCompetitionStore = defineStore('competition', () => {
     currentCompetition.value = null;
   }
 
+  /**
+   * Add a season to a specific competition (reactive update)
+   * This is called when a season is created to update the local competition state
+   */
+  function addSeasonToCompetition(competitionId: number, season: CompetitionSeason): void {
+    const competition = competitions.value.find((c) => c.id === competitionId);
+    if (competition) {
+      if (!competition.seasons) {
+        competition.seasons = [];
+      }
+      competition.seasons.push(season);
+
+      // Update stats
+      competition.stats.total_seasons += 1;
+    }
+
+    // Also update currentCompetition if it matches
+    if (currentCompetition.value?.id === competitionId) {
+      if (!currentCompetition.value.seasons) {
+        currentCompetition.value.seasons = [];
+      }
+      currentCompetition.value.seasons.push(season);
+      currentCompetition.value.stats.total_seasons += 1;
+    }
+  }
+
+  /**
+   * Update a season in a specific competition (reactive update)
+   * This is called when a season is updated to update the local competition state
+   */
+  function updateSeasonInCompetition(competitionId: number, season: CompetitionSeason): void {
+    const competition = competitions.value.find((c) => c.id === competitionId);
+    if (competition?.seasons) {
+      const index = competition.seasons.findIndex((s) => s.id === season.id);
+      if (index !== -1) {
+        competition.seasons[index] = season;
+      }
+    }
+
+    // Also update currentCompetition if it matches
+    if (currentCompetition.value?.id === competitionId && currentCompetition.value.seasons) {
+      const index = currentCompetition.value.seasons.findIndex((s) => s.id === season.id);
+      if (index !== -1) {
+        currentCompetition.value.seasons[index] = season;
+      }
+    }
+  }
+
+  /**
+   * Remove a season from a specific competition (reactive update)
+   * This is called when a season is deleted to update the local competition state
+   */
+  function removeSeasonFromCompetition(competitionId: number, seasonId: number): void {
+    const competition = competitions.value.find((c) => c.id === competitionId);
+    if (competition?.seasons) {
+      competition.seasons = competition.seasons.filter((s) => s.id !== seasonId);
+      competition.stats.total_seasons = Math.max(0, competition.stats.total_seasons - 1);
+    }
+
+    // Also update currentCompetition if it matches
+    if (currentCompetition.value?.id === competitionId && currentCompetition.value.seasons) {
+      currentCompetition.value.seasons = currentCompetition.value.seasons.filter(
+        (s) => s.id !== seasonId,
+      );
+      currentCompetition.value.stats.total_seasons = Math.max(
+        0,
+        currentCompetition.value.stats.total_seasons - 1,
+      );
+    }
+  }
+
   return {
     // State
     competitions,
@@ -263,5 +339,10 @@ export const useCompetitionStore = defineStore('competition', () => {
     deleteExistingCompetition,
     clearError,
     clearCurrentCompetition,
+
+    // Season management (for reactive updates)
+    addSeasonToCompetition,
+    updateSeasonInCompetition,
+    removeSeasonFromCompetition,
   };
 });

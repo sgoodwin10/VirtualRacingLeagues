@@ -7,7 +7,6 @@ namespace Database\Seeders;
 use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class LeagueSeeder extends Seeder
 {
@@ -31,7 +30,7 @@ class LeagueSeeder extends Seeder
                 'name' => 'Virtual Racing League',
                 'tagline' => 'Where Champions Are Made',
                 'description' => 'Welcome to the Virtual Racing League! We are a community of passionate sim racers competing in exciting championships across multiple platforms.',
-                'logo_path' => 'leagues/logos/default.png',
+                'logo_path' => null,
                 'header_image_path' => null,
                 'platform_ids' => [1], // Gran Turismo 7
                 'discord_url' => 'https://discord.gg/example',
