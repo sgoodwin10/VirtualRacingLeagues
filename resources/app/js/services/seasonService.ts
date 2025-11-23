@@ -12,6 +12,7 @@ import type {
   SlugCheckResponse,
 } from '@app/types/season';
 import type { AxiosResponse } from 'axios';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 // API response wrapper
 interface ApiResponse<T> {
@@ -28,7 +29,7 @@ export async function getSeasons(
   params?: SeasonQueryParams,
 ): Promise<Season[]> {
   const response: AxiosResponse<ApiResponse<Season[]>> = await apiClient.get(
-    `/competitions/${competitionId}/seasons`,
+    API_ENDPOINTS.competitions.seasons(competitionId),
     { params },
   );
   return response.data.data;
@@ -38,7 +39,9 @@ export async function getSeasons(
  * Get a single season by ID
  */
 export async function getSeasonById(seasonId: number): Promise<Season> {
-  const response: AxiosResponse<ApiResponse<Season>> = await apiClient.get(`/seasons/${seasonId}`);
+  const response: AxiosResponse<ApiResponse<Season>> = await apiClient.get(
+    API_ENDPOINTS.seasons.detail(seasonId),
+  );
   return response.data.data;
 }
 
@@ -47,7 +50,7 @@ export async function getSeasonById(seasonId: number): Promise<Season> {
  */
 export async function createSeason(competitionId: number, formData: FormData): Promise<Season> {
   const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
-    `/competitions/${competitionId}/seasons`,
+    API_ENDPOINTS.competitions.seasons(competitionId),
     formData,
     {
       headers: {
@@ -66,7 +69,7 @@ export async function updateSeason(seasonId: number, formData: FormData): Promis
   formData.append('_method', 'PUT');
 
   const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
-    `/seasons/${seasonId}`,
+    API_ENDPOINTS.seasons.update(seasonId),
     formData,
     {
       headers: {
@@ -82,7 +85,7 @@ export async function updateSeason(seasonId: number, formData: FormData): Promis
  */
 export async function archiveSeason(seasonId: number): Promise<Season> {
   const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
-    `/seasons/${seasonId}/archive`,
+    API_ENDPOINTS.seasons.archive(seasonId),
   );
   return response.data.data;
 }
@@ -92,7 +95,7 @@ export async function archiveSeason(seasonId: number): Promise<Season> {
  */
 export async function unarchiveSeason(seasonId: number): Promise<Season> {
   const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
-    `/seasons/${seasonId}/unarchive`,
+    API_ENDPOINTS.seasons.unarchive(seasonId),
   );
   return response.data.data;
 }
@@ -102,7 +105,7 @@ export async function unarchiveSeason(seasonId: number): Promise<Season> {
  */
 export async function activateSeason(seasonId: number): Promise<Season> {
   const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
-    `/seasons/${seasonId}/activate`,
+    API_ENDPOINTS.seasons.activate(seasonId),
   );
   return response.data.data;
 }
@@ -112,7 +115,7 @@ export async function activateSeason(seasonId: number): Promise<Season> {
  */
 export async function completeSeason(seasonId: number): Promise<Season> {
   const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
-    `/seasons/${seasonId}/complete`,
+    API_ENDPOINTS.seasons.complete(seasonId),
   );
   return response.data.data;
 }
@@ -121,7 +124,7 @@ export async function completeSeason(seasonId: number): Promise<Season> {
  * Delete season (soft delete)
  */
 export async function deleteSeason(seasonId: number): Promise<void> {
-  await apiClient.delete(`/seasons/${seasonId}`);
+  await apiClient.delete(API_ENDPOINTS.seasons.delete(seasonId));
 }
 
 /**
@@ -129,7 +132,7 @@ export async function deleteSeason(seasonId: number): Promise<void> {
  */
 export async function restoreSeason(seasonId: number): Promise<Season> {
   const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
-    `/seasons/${seasonId}/restore`,
+    API_ENDPOINTS.seasons.restore(seasonId),
   );
   return response.data.data;
 }
@@ -143,7 +146,7 @@ export async function checkSeasonSlugAvailability(
   excludeSeasonId?: number,
 ): Promise<SlugCheckResponse> {
   const response: AxiosResponse<ApiResponse<SlugCheckResponse>> = await apiClient.post(
-    `/competitions/${competitionId}/seasons/check-slug`,
+    API_ENDPOINTS.competitions.checkSeasonSlug(competitionId),
     { name, exclude_id: excludeSeasonId },
   );
   return response.data.data;

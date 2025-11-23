@@ -4,7 +4,7 @@
  */
 
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import type {
   Division,
   CreateDivisionPayload,
@@ -21,12 +21,24 @@ import {
   buildCreateDivisionFormData,
   buildUpdateDivisionFormData,
 } from '@app/services/divisionService';
+import { useCrudStore } from '@app/composables/useCrudStore';
 
 export const useDivisionStore = defineStore('division', () => {
-  // State
-  const divisions = ref<Division[]>([]);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+  // Use CRUD composable
+  const crud = useCrudStore<Division>();
+  const {
+    items: divisions,
+    loading,
+    error,
+    setLoading,
+    setError,
+    setItems,
+    addItem,
+    updateItemInList,
+    removeItemFromList,
+    clearError,
+    resetStore,
+  } = crud;
 
   // Getters
   const getDivisionById = computed(() => {
@@ -51,17 +63,18 @@ export const useDivisionStore = defineStore('division', () => {
    * Fetch all divisions for a season
    */
   async function fetchDivisions(seasonId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
-      divisions.value = await getDivisions(seasonId);
+      const fetchedDivisions = await getDivisions(seasonId);
+      setItems(fetchedDivisions);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load divisions';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -72,20 +85,20 @@ export const useDivisionStore = defineStore('division', () => {
     seasonId: number,
     payload: CreateDivisionPayload,
   ): Promise<Division> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const formData = buildCreateDivisionFormData(payload);
       const division = await createDivisionApi(seasonId, formData);
-      divisions.value.push(division);
+      addItem(division);
       return division;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create division';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -97,26 +110,20 @@ export const useDivisionStore = defineStore('division', () => {
     divisionId: number,
     payload: UpdateDivisionPayload,
   ): Promise<Division> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const formData = buildUpdateDivisionFormData(payload);
       const updatedDivision = await updateDivisionApi(seasonId, divisionId, formData);
-
-      // Update in local state
-      const index = divisions.value.findIndex((division) => division.id === divisionId);
-      if (index !== -1) {
-        divisions.value[index] = updatedDivision;
-      }
-
+      updateItemInList(updatedDivision);
       return updatedDivision;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update division';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -124,20 +131,18 @@ export const useDivisionStore = defineStore('division', () => {
    * Delete division
    */
   async function deleteDivision(seasonId: number, divisionId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       await deleteDivisionApi(seasonId, divisionId);
-
-      // Remove from local state
-      divisions.value = divisions.value.filter((division) => division.id !== divisionId);
+      removeItemFromList(divisionId);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete division';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -149,7 +154,7 @@ export const useDivisionStore = defineStore('division', () => {
       return await getDriverCountApi(seasonId, divisionId);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to get driver count';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     }
   }
@@ -162,27 +167,16 @@ export const useDivisionStore = defineStore('division', () => {
     seasonDriverId: number,
     payload: AssignDriverDivisionPayload,
   ): Promise<void> {
-    error.value = null;
+    setError(null);
 
     try {
       await assignDriverDivisionApi(seasonId, seasonDriverId, payload);
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to assign driver to division';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     }
-  }
-
-  // Utility
-  function clearError(): void {
-    error.value = null;
-  }
-
-  function resetStore(): void {
-    divisions.value = [];
-    loading.value = false;
-    error.value = null;
   }
 
   return {

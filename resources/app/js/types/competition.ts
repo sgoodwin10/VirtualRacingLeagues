@@ -75,7 +75,7 @@ export interface CompetitionStats {
   next_race_date: string | null;
 }
 
-// Create request payload
+// Create request payload (form input type - user may not provide)
 export interface CreateCompetitionRequest {
   name: string;
   platform_id: number;

@@ -6,6 +6,7 @@ import type {
   UpdateRoundRequest,
   NextRoundNumberResponse,
 } from '@app/types/round';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 interface ApiResponse<T> {
   data: T;
@@ -14,19 +15,21 @@ interface ApiResponse<T> {
 
 export async function getRounds(seasonId: number): Promise<Round[]> {
   const response: AxiosResponse<ApiResponse<Round[]>> = await apiClient.get(
-    `/seasons/${seasonId}/rounds`,
+    API_ENDPOINTS.seasons.rounds(seasonId),
   );
   return response.data.data;
 }
 
 export async function getRound(roundId: number): Promise<Round> {
-  const response: AxiosResponse<ApiResponse<Round>> = await apiClient.get(`/rounds/${roundId}`);
+  const response: AxiosResponse<ApiResponse<Round>> = await apiClient.get(
+    API_ENDPOINTS.rounds.detail(roundId),
+  );
   return response.data.data;
 }
 
 export async function createRound(seasonId: number, data: CreateRoundRequest): Promise<Round> {
   const response: AxiosResponse<ApiResponse<Round>> = await apiClient.post(
-    `/seasons/${seasonId}/rounds`,
+    API_ENDPOINTS.seasons.rounds(seasonId),
     data,
   );
   return response.data.data;
@@ -34,7 +37,7 @@ export async function createRound(seasonId: number, data: CreateRoundRequest): P
 
 export async function updateRound(roundId: number, data: UpdateRoundRequest): Promise<Round> {
   const response: AxiosResponse<ApiResponse<Round>> = await apiClient.put(
-    `/rounds/${roundId}`,
+    API_ENDPOINTS.rounds.update(roundId),
     data,
   );
 
@@ -42,12 +45,12 @@ export async function updateRound(roundId: number, data: UpdateRoundRequest): Pr
 }
 
 export async function deleteRound(roundId: number): Promise<void> {
-  await apiClient.delete(`/rounds/${roundId}`);
+  await apiClient.delete(API_ENDPOINTS.rounds.delete(roundId));
 }
 
 export async function getNextRoundNumber(seasonId: number): Promise<number> {
   const response: AxiosResponse<ApiResponse<NextRoundNumberResponse>> = await apiClient.get(
-    `/seasons/${seasonId}/rounds/next-number`,
+    API_ENDPOINTS.seasons.nextRoundNumber(seasonId),
   );
   return response.data.data.next_round_number;
 }

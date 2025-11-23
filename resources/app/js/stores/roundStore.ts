@@ -1,14 +1,26 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import type { Round, CreateRoundRequest, UpdateRoundRequest } from '@app/types/round';
 import * as roundService from '@app/services/roundService';
+import { useCrudStore } from '@app/composables/useCrudStore';
 
 export const useRoundStore = defineStore('round', () => {
-  // State
-  const rounds = ref<Round[]>([]);
-  const currentRound = ref<Round | null>(null);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+  // Use CRUD composable
+  const crud = useCrudStore<Round>();
+  const {
+    items: rounds,
+    currentItem: currentRound,
+    loading,
+    error,
+    setLoading,
+    setError,
+    setCurrentItem,
+    addItem,
+    updateItemInList,
+    removeItemFromList,
+    clearError,
+    resetStore: resetCrudStore,
+  } = crud;
 
   // Getters
   const roundsBySeasonId = computed(() => {
@@ -24,26 +36,26 @@ export const useRoundStore = defineStore('round', () => {
 
   // Actions
   async function fetchRounds(seasonId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const data = await roundService.getRounds(seasonId);
       // Replace rounds for this season
       rounds.value = [...rounds.value.filter((r) => r.season_id !== seasonId), ...data];
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch rounds';
+      setError(err instanceof Error ? err.message : 'Failed to fetch rounds');
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
   async function fetchRound(roundId: number): Promise<Round> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const data = await roundService.getRound(roundId);
-      currentRound.value = data;
+      setCurrentItem(data);
       // Update in rounds array if exists
       const index = rounds.value.findIndex((r) => r.id === roundId);
       if (index !== -1) {
@@ -53,64 +65,58 @@ export const useRoundStore = defineStore('round', () => {
       }
       return data;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch round';
+      setError(err instanceof Error ? err.message : 'Failed to fetch round');
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
   async function createNewRound(seasonId: number, data: CreateRoundRequest): Promise<Round> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const newRound = await roundService.createRound(seasonId, data);
-      rounds.value.push(newRound);
+      addItem(newRound);
       return newRound;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to create round';
+      setError(err instanceof Error ? err.message : 'Failed to create round');
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
   async function updateExistingRound(roundId: number, data: UpdateRoundRequest): Promise<Round> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const updatedRound = await roundService.updateRound(roundId, data);
-
-      const index = rounds.value.findIndex((r) => r.id === roundId);
-      if (index !== -1) {
-        rounds.value[index] = updatedRound;
-      }
-      if (currentRound.value?.id === roundId) {
-        currentRound.value = updatedRound;
-      }
+      updateItemInList(updatedRound);
       return updatedRound;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to update round';
+      setError(err instanceof Error ? err.message : 'Failed to update round');
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
   async function deleteExistingRound(roundId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       await roundService.deleteRound(roundId);
-      rounds.value = rounds.value.filter((r) => r.id !== roundId);
+      removeItemFromList(roundId);
+      // Clear current round if it's the one being deleted
       if (currentRound.value?.id === roundId) {
-        currentRound.value = null;
+        setCurrentItem(null);
       }
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to delete round';
+      setError(err instanceof Error ? err.message : 'Failed to delete round');
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -118,24 +124,17 @@ export const useRoundStore = defineStore('round', () => {
     try {
       return await roundService.getNextRoundNumber(seasonId);
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch next round number';
+      setError(err instanceof Error ? err.message : 'Failed to fetch next round number');
       throw err;
     }
   }
 
-  function clearError(): void {
-    error.value = null;
-  }
-
   function clearCurrentRound(): void {
-    currentRound.value = null;
+    setCurrentItem(null);
   }
 
   function $reset(): void {
-    rounds.value = [];
-    currentRound.value = null;
-    loading.value = false;
-    error.value = null;
+    resetCrudStore();
   }
 
   return {

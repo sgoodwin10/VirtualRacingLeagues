@@ -101,7 +101,7 @@ export interface SeasonStats {
 }
 
 /**
- * Create season request
+ * Create season request (form input type - user may not provide)
  */
 export interface CreateSeasonRequest {
   name: string;
@@ -115,7 +115,7 @@ export interface CreateSeasonRequest {
 }
 
 /**
- * Update season request
+ * Update season request (update/partial type - can be omitted, provided, or cleared)
  */
 export interface UpdateSeasonRequest {
   name?: string;

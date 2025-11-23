@@ -11,6 +11,7 @@ import type {
   AssignDriverTeamPayload,
 } from '@app/types/team';
 import type { AxiosResponse } from 'axios';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 // API response wrapper
 interface ApiResponse<T> {
@@ -23,7 +24,7 @@ interface ApiResponse<T> {
  */
 export async function getTeams(seasonId: number): Promise<Team[]> {
   const response: AxiosResponse<ApiResponse<Team[]>> = await apiClient.get(
-    `/seasons/${seasonId}/teams`,
+    API_ENDPOINTS.seasons.teams(seasonId),
   );
   return response.data.data;
 }
@@ -33,7 +34,7 @@ export async function getTeams(seasonId: number): Promise<Team[]> {
  */
 export async function createTeam(seasonId: number, formData: FormData): Promise<Team> {
   const response: AxiosResponse<ApiResponse<Team>> = await apiClient.post(
-    `/seasons/${seasonId}/teams`,
+    API_ENDPOINTS.seasons.teams(seasonId),
     formData,
     {
       headers: {
@@ -56,7 +57,7 @@ export async function updateTeam(
   formData.append('_method', 'PUT');
 
   const response: AxiosResponse<ApiResponse<Team>> = await apiClient.post(
-    `/seasons/${seasonId}/teams/${teamId}`,
+    API_ENDPOINTS.seasons.teamDetail(seasonId, teamId),
     formData,
     {
       headers: {
@@ -71,7 +72,7 @@ export async function updateTeam(
  * Delete team (hard delete)
  */
 export async function deleteTeam(seasonId: number, teamId: number): Promise<void> {
-  await apiClient.delete(`/seasons/${seasonId}/teams/${teamId}`);
+  await apiClient.delete(API_ENDPOINTS.seasons.teamDetail(seasonId, teamId));
 }
 
 /**
@@ -82,7 +83,7 @@ export async function assignDriverToTeam(
   seasonDriverId: number,
   payload: AssignDriverTeamPayload,
 ): Promise<void> {
-  await apiClient.put(`/seasons/${seasonId}/drivers/${seasonDriverId}/team`, payload);
+  await apiClient.put(API_ENDPOINTS.seasons.seasonDriverTeam(seasonId, seasonDriverId), payload);
 }
 
 /**

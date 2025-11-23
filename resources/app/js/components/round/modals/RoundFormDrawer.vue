@@ -535,13 +535,13 @@ async function handleSubmit(): Promise<void> {
       if (form.value.platform_track_id) {
         requestData.platform_track_id = form.value.platform_track_id;
       }
-      // Always include text fields (convert empty strings to null)
-      requestData.name = form.value.name.trim() || null;
-      requestData.track_layout = form.value.track_layout.trim() || null;
-      requestData.track_conditions = form.value.track_conditions.trim() || null;
-      requestData.technical_notes = form.value.technical_notes.trim() || null;
-      requestData.stream_url = form.value.stream_url.trim() || null;
-      requestData.internal_notes = form.value.internal_notes.trim() || null;
+      // Always include text fields (convert empty strings to undefined for create)
+      requestData.name = form.value.name.trim() || undefined;
+      requestData.track_layout = form.value.track_layout.trim() || undefined;
+      requestData.track_conditions = form.value.track_conditions.trim() || undefined;
+      requestData.technical_notes = form.value.technical_notes.trim() || undefined;
+      requestData.stream_url = form.value.stream_url.trim() || undefined;
+      requestData.internal_notes = form.value.internal_notes.trim() || undefined;
       if (form.value.fastest_lap !== null) {
         requestData.fastest_lap = form.value.fastest_lap;
         requestData.fastest_lap_top_10 = form.value.fastest_lap_top_10;

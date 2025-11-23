@@ -276,12 +276,16 @@ describe('driverStore', () => {
         status: 'active',
       });
 
-      expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(1, {
-        page: 2,
-        per_page: 20,
-        search: 'John',
-        status: 'active',
-      });
+      expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(
+        1,
+        {
+          page: 2,
+          per_page: 20,
+          search: 'John',
+          status: 'active',
+        },
+        undefined,
+      );
     });
 
     it('should use store filters when no params provided', async () => {
@@ -305,12 +309,16 @@ describe('driverStore', () => {
 
       await store.fetchLeagueDrivers(1);
 
-      expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(1, {
-        page: 1,
-        per_page: 15,
-        search: 'test',
-        status: 'active',
-      });
+      expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(
+        1,
+        {
+          page: 1,
+          per_page: 15,
+          search: 'test',
+          status: 'active',
+        },
+        undefined,
+      );
     });
 
     it('should handle errors when fetching drivers', async () => {

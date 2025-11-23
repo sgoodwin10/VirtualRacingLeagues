@@ -15,6 +15,7 @@ import ViewDriverModal from './ViewDriverModal.vue';
 import CSVImportDialog from './modals/CSVImportDialog.vue';
 import DrawerHeader from '@app/components/common/modals/DrawerHeader.vue';
 import { useDriverStore } from '@app/stores/driverStore';
+import { useDebouncedSearch } from '@app/composables/useDebouncedSearch';
 import type { LeagueDriver, CreateDriverRequest } from '@app/types/driver';
 import type { Platform } from '@app/types/league';
 
@@ -71,17 +72,16 @@ watch(
   },
 );
 
-// Watch for search input changes (debounced)
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
-watch(searchInput, (newValue) => {
-  if (searchTimeout) {
-    clearTimeout(searchTimeout);
-  }
-  searchTimeout = setTimeout(() => {
-    driverStore.setSearchQuery(newValue);
-    loadDrivers();
-  }, 300);
-});
+// Setup debounced search using composable
+// Note: isSearching available but not currently displayed in UI
+const { isSearching: _isSearching } = useDebouncedSearch(
+  searchInput,
+  async (query, _signal) => {
+    driverStore.setSearchQuery(query);
+    await loadDrivers();
+  },
+  300,
+);
 
 // Watch for status filter changes
 watch(

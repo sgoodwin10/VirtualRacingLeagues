@@ -4,7 +4,7 @@
  */
 
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import type {
   Competition,
   CompetitionForm,
@@ -21,13 +21,62 @@ import {
   buildCompetitionFormData,
   buildUpdateCompetitionFormData,
 } from '@app/services/competitionService';
+import { useStoreEvents } from '@app/composables/useStoreEvents';
+import { useCrudStore } from '@app/composables/useCrudStore';
 
 export const useCompetitionStore = defineStore('competition', () => {
-  // State
-  const competitions = ref<Competition[]>([]);
-  const currentCompetition = ref<Competition | null>(null);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+  // Use CRUD composable for competition management
+  const crud = useCrudStore<Competition>();
+  const {
+    items: competitions,
+    currentItem: currentCompetition,
+    loading,
+    error,
+    setLoading,
+    setError,
+    setItems,
+    setCurrentItem,
+    addItem,
+    updateItemInList,
+    removeItemFromList,
+    clearError,
+    resetStore,
+  } = crud;
+
+  // Set up event listeners for season events
+  const events = useStoreEvents();
+
+  events.on('season:created', (competitionId: number, season: CompetitionSeason) => {
+    addSeasonToCompetition(competitionId, season);
+  });
+
+  events.on('season:updated', (competitionId: number, season: CompetitionSeason) => {
+    updateSeasonInCompetition(competitionId, season);
+  });
+
+  events.on('season:deleted', (competitionId: number, seasonId: number) => {
+    removeSeasonFromCompetition(competitionId, seasonId);
+  });
+
+  events.on('season:archived', (competitionId: number, season: CompetitionSeason) => {
+    updateSeasonInCompetition(competitionId, season);
+  });
+
+  events.on('season:unarchived', (competitionId: number, season: CompetitionSeason) => {
+    updateSeasonInCompetition(competitionId, season);
+  });
+
+  events.on('season:activated', (competitionId: number, season: CompetitionSeason) => {
+    updateSeasonInCompetition(competitionId, season);
+  });
+
+  events.on('season:completed', (competitionId: number, season: CompetitionSeason) => {
+    updateSeasonInCompetition(competitionId, season);
+  });
+
+  events.on('season:restored', (competitionId: number, season: CompetitionSeason) => {
+    addSeasonToCompetition(competitionId, season);
+  });
 
   // Getters
   const activeCompetitions = computed(() => competitions.value.filter((c) => c.is_active));
@@ -54,17 +103,18 @@ export const useCompetitionStore = defineStore('competition', () => {
    * Fetch all competitions for a league
    */
   async function fetchCompetitions(leagueId: number, filters?: CompetitionFilters): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
-      competitions.value = await getLeagueCompetitions(leagueId, filters);
+      const fetchedCompetitions = await getLeagueCompetitions(leagueId, filters);
+      setItems(fetchedCompetitions);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load competitions';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -72,19 +122,19 @@ export const useCompetitionStore = defineStore('competition', () => {
    * Fetch a specific competition
    */
   async function fetchCompetition(id: number): Promise<Competition> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const competition = await getCompetition(id);
-      currentCompetition.value = competition;
+      setCurrentItem(competition);
       return competition;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load competition';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -99,8 +149,8 @@ export const useCompetitionStore = defineStore('competition', () => {
       throw new Error('Platform is required');
     }
 
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const formData = buildCompetitionFormData({
@@ -114,15 +164,15 @@ export const useCompetitionStore = defineStore('competition', () => {
       });
 
       const competition = await createCompetition(leagueId, formData);
-      competitions.value.push(competition);
-      currentCompetition.value = competition;
+      addItem(competition);
+      setCurrentItem(competition);
       return competition;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create competition';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -133,8 +183,8 @@ export const useCompetitionStore = defineStore('competition', () => {
     id: number,
     form: Partial<CompetitionForm>,
   ): Promise<Competition> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const formData = buildUpdateCompetitionFormData({
@@ -150,24 +200,14 @@ export const useCompetitionStore = defineStore('competition', () => {
       });
 
       const updatedCompetition = await updateCompetition(id, formData);
-
-      // Update in local state
-      const index = competitions.value.findIndex((c) => c.id === id);
-      if (index !== -1) {
-        competitions.value[index] = updatedCompetition;
-      }
-
-      if (currentCompetition.value?.id === id) {
-        currentCompetition.value = updatedCompetition;
-      }
-
+      updateItemInList(updatedCompetition);
       return updatedCompetition;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update competition';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -175,8 +215,8 @@ export const useCompetitionStore = defineStore('competition', () => {
    * Archive a competition
    */
   async function archiveExistingCompetition(id: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       await archiveCompetition(id);
@@ -201,10 +241,10 @@ export const useCompetitionStore = defineStore('competition', () => {
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to archive competition';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -212,39 +252,26 @@ export const useCompetitionStore = defineStore('competition', () => {
    * Delete a competition permanently
    */
   async function deleteExistingCompetition(id: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       await deleteCompetition(id);
-
-      // Remove from local state
-      competitions.value = competitions.value.filter((c) => c.id !== id);
-
-      if (currentCompetition.value?.id === id) {
-        currentCompetition.value = null;
-      }
+      removeItemFromList(id);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete competition';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
-  }
-
-  /**
-   * Clear error
-   */
-  function clearError(): void {
-    error.value = null;
   }
 
   /**
    * Clear current competition
    */
   function clearCurrentCompetition(): void {
-    currentCompetition.value = null;
+    setCurrentItem(null);
   }
 
   /**
@@ -337,12 +364,20 @@ export const useCompetitionStore = defineStore('competition', () => {
     updateExistingCompetition,
     archiveExistingCompetition,
     deleteExistingCompetition,
-    clearError,
     clearCurrentCompetition,
 
     // Season management (for reactive updates)
     addSeasonToCompetition,
     updateSeasonInCompetition,
     removeSeasonFromCompetition,
+
+    // Utility
+    clearError,
+    resetStore,
+
+    // Test helpers (for mocking in tests)
+    setLoading,
+    setItems,
+    setError,
   };
 });

@@ -11,6 +11,7 @@ import type {
   AssignDriverDivisionPayload,
 } from '@app/types/division';
 import type { AxiosResponse } from 'axios';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 // API response wrapper
 interface ApiResponse<T> {
@@ -28,7 +29,7 @@ interface DriverCountResponse {
  */
 export async function getDivisions(seasonId: number): Promise<Division[]> {
   const response: AxiosResponse<ApiResponse<Division[]>> = await apiClient.get(
-    `/seasons/${seasonId}/divisions`,
+    API_ENDPOINTS.seasons.divisions(seasonId),
   );
   return response.data.data;
 }
@@ -38,7 +39,7 @@ export async function getDivisions(seasonId: number): Promise<Division[]> {
  */
 export async function createDivision(seasonId: number, formData: FormData): Promise<Division> {
   const response: AxiosResponse<ApiResponse<Division>> = await apiClient.post(
-    `/seasons/${seasonId}/divisions`,
+    API_ENDPOINTS.seasons.divisions(seasonId),
     formData,
     {
       headers: {
@@ -61,7 +62,7 @@ export async function updateDivision(
   formData.append('_method', 'PUT');
 
   const response: AxiosResponse<ApiResponse<Division>> = await apiClient.post(
-    `/seasons/${seasonId}/divisions/${divisionId}`,
+    API_ENDPOINTS.seasons.divisionDetail(seasonId, divisionId),
     formData,
     {
       headers: {
@@ -76,7 +77,7 @@ export async function updateDivision(
  * Delete division (hard delete)
  */
 export async function deleteDivision(seasonId: number, divisionId: number): Promise<void> {
-  await apiClient.delete(`/seasons/${seasonId}/divisions/${divisionId}`);
+  await apiClient.delete(API_ENDPOINTS.seasons.divisionDetail(seasonId, divisionId));
 }
 
 /**
@@ -84,7 +85,7 @@ export async function deleteDivision(seasonId: number, divisionId: number): Prom
  */
 export async function getDriverCount(seasonId: number, divisionId: number): Promise<number> {
   const response: AxiosResponse<ApiResponse<DriverCountResponse>> = await apiClient.get(
-    `/seasons/${seasonId}/divisions/${divisionId}/driver-count`,
+    API_ENDPOINTS.seasons.divisionDriverCount(seasonId, divisionId),
   );
   return response.data.data.count;
 }
@@ -97,7 +98,10 @@ export async function assignDriverDivision(
   seasonDriverId: number,
   payload: AssignDriverDivisionPayload,
 ): Promise<void> {
-  await apiClient.put(`/seasons/${seasonId}/drivers/${seasonDriverId}/division`, payload);
+  await apiClient.put(
+    API_ENDPOINTS.seasons.seasonDriverDivision(seasonId, seasonDriverId),
+    payload,
+  );
 }
 
 /**

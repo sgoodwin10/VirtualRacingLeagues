@@ -61,13 +61,13 @@ export interface League {
 }
 
 /**
- * Form data interface for the league creation wizard
+ * Form data interface for the league creation wizard (form state - internal)
  */
 export interface CreateLeagueForm {
   // Step 1: Essentials
   name: string;
   logo: File | null;
-  logo_url?: string | null; // Existing logo URL (for edit mode)
+  logo_url?: string; // Existing logo URL (for edit mode)
   platform_ids: number[];
   timezone: string;
   visibility: LeagueVisibility;
@@ -76,7 +76,7 @@ export interface CreateLeagueForm {
   tagline: string;
   description: string;
   header_image: File | null;
-  header_image_url?: string | null; // Existing header image URL (for edit mode)
+  header_image_url?: string; // Existing header image URL (for edit mode)
 
   // Step 3: Community & Admin
   contact_email: string;
@@ -108,13 +108,13 @@ export interface ApiError {
 }
 
 /**
- * Update league form data (all fields optional for partial updates)
+ * Update league form data (update/partial type - can be omitted, provided, or cleared)
  */
 export interface UpdateLeagueForm {
   // Essentials
   name?: string;
   logo?: File | null;
-  logo_url?: string | null; // Existing logo URL (for edit mode)
+  logo_url?: string; // Existing logo URL (for edit mode)
   platform_ids?: number[];
   timezone?: string;
   visibility?: LeagueVisibility;
@@ -123,7 +123,7 @@ export interface UpdateLeagueForm {
   tagline?: string;
   description?: string;
   header_image?: File | null;
-  header_image_url?: string | null; // Existing header image URL (for edit mode)
+  header_image_url?: string; // Existing header image URL (for edit mode)
 
   // Contact & Community
   contact_email?: string;

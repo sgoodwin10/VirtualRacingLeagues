@@ -6,6 +6,7 @@
 import { apiClient } from './api';
 import type { Competition, CompetitionFilters, SlugCheckResponse } from '@app/types/competition';
 import type { AxiosResponse } from 'axios';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 // API response wrapper
 interface ApiResponse<T> {
@@ -21,7 +22,7 @@ export async function getLeagueCompetitions(
   filters?: CompetitionFilters,
 ): Promise<Competition[]> {
   const response: AxiosResponse<ApiResponse<Competition[]>> = await apiClient.get(
-    `/leagues/${leagueId}/competitions`,
+    API_ENDPOINTS.leagues.competitions(leagueId),
     { params: filters },
   );
   return response.data.data;
@@ -32,7 +33,7 @@ export async function getLeagueCompetitions(
  */
 export async function getCompetition(id: number): Promise<Competition> {
   const response: AxiosResponse<ApiResponse<Competition>> = await apiClient.get(
-    `/competitions/${id}`,
+    API_ENDPOINTS.competitions.detail(id),
   );
   return response.data.data;
 }
@@ -45,7 +46,7 @@ export async function createCompetition(
   formData: FormData,
 ): Promise<Competition> {
   const response: AxiosResponse<ApiResponse<Competition>> = await apiClient.post(
-    `/leagues/${leagueId}/competitions`,
+    API_ENDPOINTS.leagues.competitions(leagueId),
     formData,
     {
       headers: {
@@ -64,7 +65,7 @@ export async function updateCompetition(id: number, formData: FormData): Promise
   formData.append('_method', 'PUT');
 
   const response: AxiosResponse<ApiResponse<Competition>> = await apiClient.post(
-    `/competitions/${id}`,
+    API_ENDPOINTS.competitions.update(id),
     formData,
     {
       headers: {
@@ -79,14 +80,14 @@ export async function updateCompetition(id: number, formData: FormData): Promise
  * Archive a competition
  */
 export async function archiveCompetition(id: number): Promise<void> {
-  await apiClient.post(`/competitions/${id}/archive`);
+  await apiClient.post(API_ENDPOINTS.competitions.archive(id));
 }
 
 /**
  * Delete a competition permanently
  */
 export async function deleteCompetition(id: number): Promise<void> {
-  await apiClient.delete(`/competitions/${id}`);
+  await apiClient.delete(API_ENDPOINTS.competitions.delete(id));
 }
 
 /**
@@ -98,7 +99,7 @@ export async function checkSlugAvailability(
   excludeId?: number,
 ): Promise<SlugCheckResponse> {
   const response: AxiosResponse<ApiResponse<SlugCheckResponse>> = await apiClient.post(
-    `/leagues/${leagueId}/competitions/check-slug`,
+    API_ENDPOINTS.competitions.checkSlug(leagueId),
     { name, exclude_id: excludeId },
   );
   return response.data.data;

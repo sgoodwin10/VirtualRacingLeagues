@@ -53,14 +53,14 @@ const isLoadingLeague = ref(false);
 const form = reactive<CreateLeagueForm>({
   name: '',
   logo: null,
-  logo_url: null,
+  logo_url: undefined,
   platform_ids: [],
   timezone: '',
   visibility: 'public',
   tagline: '',
   description: '',
   header_image: null,
-  header_image_url: null,
+  header_image_url: undefined,
   contact_email: '',
   organizer_name: '',
   discord_url: '',
@@ -167,13 +167,13 @@ async function loadLeagueData(leagueId: number): Promise<void> {
 
     // Pre-populate form with existing league data
     form.name = league.name;
-    form.logo_url = league.logo_url;
+    form.logo_url = league.logo_url || undefined;
     form.platform_ids = league.platform_ids;
     form.timezone = league.timezone;
     form.visibility = league.visibility;
     form.tagline = league.tagline || '';
     form.description = league.description || '';
-    form.header_image_url = league.header_image_url;
+    form.header_image_url = league.header_image_url || undefined;
     form.contact_email = league.contact_email || '';
     form.organizer_name = league.organizer_name || '';
     form.discord_url = league.discord_url || '';
@@ -392,14 +392,14 @@ function resetForm(): void {
   // Reset form fields
   form.name = '';
   form.logo = null;
-  form.logo_url = null;
+  form.logo_url = undefined;
   form.platform_ids = [];
   form.timezone = '';
   form.visibility = 'public';
   form.tagline = '';
   form.description = '';
   form.header_image = null;
-  form.header_image_url = null;
+  form.header_image_url = undefined;
   form.contact_email = '';
   form.organizer_name = '';
   form.discord_url = '';
@@ -641,7 +641,7 @@ function resetForm(): void {
                     :error="errors.logo"
                     preview-size="small"
                     helper-text="Square logo (400x400px recommended)"
-                    @remove-existing="form.logo_url = null"
+                    @remove-existing="form.logo_url = undefined"
                   />
                 </div>
 
@@ -655,7 +655,7 @@ function resetForm(): void {
                     :error="errors.header_image"
                     preview-size="large"
                     helper-text="Banner image (1200x400px recommended)"
-                    @remove-existing="form.header_image_url = null"
+                    @remove-existing="form.header_image_url = undefined"
                   />
                 </div>
               </div>

@@ -2,14 +2,25 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { Track, TrackLocationGroup, TrackSearchParams } from '@app/types/track';
 import * as trackService from '@app/services/trackService';
+import { useCrudStore } from '@app/composables/useCrudStore';
 
 export const useTrackStore = defineStore('track', () => {
-  // State
-  const tracks = ref<Track[]>([]);
+  // Use CRUD composable
+  const crud = useCrudStore<Track>();
+  const {
+    items: tracks,
+    currentItem: currentTrack,
+    loading,
+    error,
+    setLoading,
+    setError,
+    setCurrentItem,
+    clearError,
+    resetStore,
+  } = crud;
+
+  // Additional state
   const trackLocations = ref<TrackLocationGroup[]>([]);
-  const currentTrack = ref<Track | null>(null);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
 
   // Getters
   const tracksByPlatformId = computed(() => {
@@ -30,8 +41,8 @@ export const useTrackStore = defineStore('track', () => {
 
   // Actions
   async function fetchTracks(params: TrackSearchParams): Promise<TrackLocationGroup[]> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const locationGroups = await trackService.getTracks(params);
 
@@ -59,10 +70,10 @@ export const useTrackStore = defineStore('track', () => {
 
       return locationGroups;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch tracks';
+      setError(err instanceof Error ? err.message : 'Failed to fetch tracks');
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -76,11 +87,11 @@ export const useTrackStore = defineStore('track', () => {
   }
 
   async function fetchTrack(trackId: number): Promise<Track> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const data = await trackService.getTrack(trackId);
-      currentTrack.value = data;
+      setCurrentItem(data);
       // Update in tracks array if exists
       const index = tracks.value.findIndex((t) => t.id === trackId);
       if (index !== -1) {
@@ -90,27 +101,20 @@ export const useTrackStore = defineStore('track', () => {
       }
       return data;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch track';
+      setError(err instanceof Error ? err.message : 'Failed to fetch track');
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
-  function clearError(): void {
-    error.value = null;
-  }
-
   function clearCurrentTrack(): void {
-    currentTrack.value = null;
+    setCurrentItem(null);
   }
 
   function $reset(): void {
-    tracks.value = [];
+    resetStore();
     trackLocations.value = [];
-    currentTrack.value = null;
-    loading.value = false;
-    error.value = null;
   }
 
   return {

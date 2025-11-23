@@ -16,7 +16,7 @@ export interface Division {
 }
 
 /**
- * Create division request
+ * Create division request (form input type - user may not provide)
  */
 export interface CreateDivisionPayload {
   name: string;

@@ -947,36 +947,36 @@ async function handleSave(): Promise<void> {
       ? {
           // Qualifier-specific payload
           race_number: 0, // Signal to backend this is a qualifier
-          name: form.name.trim() || null,
+          name: form.name.trim() || undefined,
           // Omit race_type for qualifiers
           qualifying_format: form.qualifying_format,
           qualifying_length:
             form.qualifying_format !== 'none' && form.qualifying_format !== 'previous_race'
               ? form.qualifying_length
               : undefined,
-          qualifying_tire: form.qualifying_tire.trim() || null,
+          qualifying_tire: form.qualifying_tire.trim() || undefined,
           // Qualifiers always use qualifying as grid source
           grid_source: 'qualifying',
           // Omit grid_source_race_id for qualifiers
           length_type: 'time',
           length_value: form.qualifying_length,
           extra_lap_after_time: false,
-          weather: form.weather.trim() || null,
-          tire_restrictions: form.tire_restrictions.trim() || null,
-          fuel_usage: form.fuel_usage.trim() || null,
-          damage_model: form.damage_model.trim() || null,
+          weather: form.weather.trim() || undefined,
+          tire_restrictions: form.tire_restrictions.trim() || undefined,
+          fuel_usage: form.fuel_usage.trim() || undefined,
+          damage_model: form.damage_model.trim() || undefined,
           // Omit penalty fields for qualifiers - they will be set to defaults in backend
-          assists_restrictions: form.assists_restrictions.trim() || null,
+          assists_restrictions: form.assists_restrictions.trim() || undefined,
           race_divisions: form.race_divisions,
           points_system: form.points_system,
           bonus_points: Object.keys(bonusPoints).length > 0 ? bonusPoints : null,
           dnf_points: form.dnf_points,
           dns_points: form.dns_points,
-          race_notes: form.race_notes.trim() || null,
+          race_notes: form.race_notes.trim() || undefined,
         }
       : {
           // Regular race payload
-          name: form.name.trim() || null,
+          name: form.name.trim() || undefined,
           race_type: form.race_type || undefined,
           qualifying_format: undefined,
           qualifying_length: undefined,
@@ -988,22 +988,22 @@ async function handleSave(): Promise<void> {
           length_type: form.length_type,
           length_value: form.length_value,
           extra_lap_after_time: form.extra_lap_after_time,
-          weather: form.weather.trim() || null,
-          tire_restrictions: form.tire_restrictions.trim() || null,
-          fuel_usage: form.fuel_usage.trim() || null,
-          damage_model: form.damage_model.trim() || null,
+          weather: form.weather.trim() || undefined,
+          tire_restrictions: form.tire_restrictions.trim() || undefined,
+          fuel_usage: form.fuel_usage.trim() || undefined,
+          damage_model: form.damage_model.trim() || undefined,
           track_limits_enforced: form.track_limits_enforced,
           false_start_detection: form.false_start_detection,
           collision_penalties: form.collision_penalties,
           mandatory_pit_stop: form.mandatory_pit_stop,
           minimum_pit_time: form.mandatory_pit_stop ? form.minimum_pit_time : undefined,
-          assists_restrictions: form.assists_restrictions.trim() || null,
+          assists_restrictions: form.assists_restrictions.trim() || undefined,
           race_divisions: form.race_divisions,
           points_system: form.points_system,
           bonus_points: Object.keys(bonusPoints).length > 0 ? bonusPoints : null,
           dnf_points: form.dnf_points,
           dns_points: form.dns_points,
-          race_notes: form.race_notes.trim() || null,
+          race_notes: form.race_notes.trim() || undefined,
         };
 
     if (props.mode === 'edit' && props.race) {

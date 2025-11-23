@@ -22,13 +22,23 @@ import {
   removeDriverFromLeague,
   importDriversFromCSV,
 } from '@app/services/driverService';
+import { useCrudStore } from '@app/composables/useCrudStore';
 
 export const useDriverStore = defineStore('driver', () => {
-  // State
-  const drivers = ref<LeagueDriver[]>([]);
-  const currentDriver = ref<LeagueDriver | null>(null);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+  // Use CRUD composable
+  const crud = useCrudStore<LeagueDriver>();
+  const {
+    items: drivers,
+    currentItem: currentDriver,
+    loading,
+    error,
+    setLoading,
+    setError,
+    setItems,
+    setCurrentItem,
+    clearError,
+    resetStore: resetCrudStore,
+  } = crud;
 
   // Pagination state
   const currentPage = ref(1);
@@ -76,13 +86,15 @@ export const useDriverStore = defineStore('driver', () => {
    * Fetch drivers for a specific league
    * @param leagueId - League ID
    * @param params - Optional query parameters
+   * @param signal - Optional AbortSignal for request cancellation
    */
   async function fetchLeagueDrivers(
     leagueId: number,
     params?: LeagueDriversQueryParams,
+    signal?: AbortSignal,
   ): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const queryParams: LeagueDriversQueryParams = {
@@ -92,19 +104,23 @@ export const useDriverStore = defineStore('driver', () => {
         status: params?.status ?? (statusFilter.value !== 'all' ? statusFilter.value : undefined),
       };
 
-      const response: PaginatedDriversResponse = await getLeagueDrivers(leagueId, queryParams);
+      const response: PaginatedDriversResponse = await getLeagueDrivers(
+        leagueId,
+        queryParams,
+        signal,
+      );
 
-      drivers.value = response.data;
+      setItems(response.data);
       currentPage.value = response.meta.current_page;
       perPage.value = response.meta.per_page;
       totalDrivers.value = response.meta.total;
       lastPage.value = response.meta.last_page;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load drivers';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -117,8 +133,8 @@ export const useDriverStore = defineStore('driver', () => {
     leagueId: number,
     data: CreateDriverRequest,
   ): Promise<LeagueDriver> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const driver = await createDriver(leagueId, data);
@@ -127,10 +143,10 @@ export const useDriverStore = defineStore('driver', () => {
       return driver;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create driver';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -140,19 +156,19 @@ export const useDriverStore = defineStore('driver', () => {
    * @param driverId - Driver ID
    */
   async function fetchLeagueDriver(leagueId: number, driverId: number): Promise<LeagueDriver> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const driver = await getLeagueDriver(leagueId, driverId);
-      currentDriver.value = driver;
+      setCurrentItem(driver);
       return driver;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load driver';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -167,8 +183,8 @@ export const useDriverStore = defineStore('driver', () => {
     driverId: number,
     data: UpdateDriverRequest,
   ): Promise<LeagueDriver> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const updatedDriver = await updateDriverService(leagueId, driverId, data);
@@ -181,17 +197,18 @@ export const useDriverStore = defineStore('driver', () => {
       }
 
       // Update current driver if it's the one being edited
+      // Update currentDriver if needed (handled by manual check since we use driver_id)
       if (currentDriver.value?.driver_id === driverId) {
-        currentDriver.value = updatedDriver;
+        setCurrentItem(updatedDriver);
       }
 
       return updatedDriver;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update driver';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -201,8 +218,8 @@ export const useDriverStore = defineStore('driver', () => {
    * @param driverId - Driver ID
    */
   async function removeDriver(leagueId: number, driverId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       await removeDriverFromLeague(leagueId, driverId);
@@ -216,14 +233,14 @@ export const useDriverStore = defineStore('driver', () => {
 
       // Clear current driver if it was the one removed
       if (currentDriver.value?.driver_id === driverId) {
-        currentDriver.value = null;
+        setCurrentItem(null);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to remove driver';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -233,8 +250,8 @@ export const useDriverStore = defineStore('driver', () => {
    * @param csvData - CSV string data
    */
   async function importCSV(leagueId: number, csvData: string) {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const result = await importDriversFromCSV(leagueId, csvData);
@@ -245,10 +262,10 @@ export const useDriverStore = defineStore('driver', () => {
       return result;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to import drivers';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -308,20 +325,10 @@ export const useDriverStore = defineStore('driver', () => {
   }
 
   /**
-   * Clear error message
-   */
-  function clearError(): void {
-    error.value = null;
-  }
-
-  /**
    * Reset store to initial state
    */
   function resetStore(): void {
-    drivers.value = [];
-    currentDriver.value = null;
-    loading.value = false;
-    error.value = null;
+    resetCrudStore();
     currentPage.value = 1;
     perPage.value = 15;
     totalDrivers.value = 0;

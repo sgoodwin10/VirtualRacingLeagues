@@ -57,7 +57,7 @@ export interface BonusPoints {
   leading_most_laps?: number;
 }
 
-// Create payload
+// Create payload (form input type - user may not provide)
 // Note: For qualifiers (race_number === 0):
 // - race_number is set to 0 to signal qualifier
 // - race_type should be omitted (backend will set to 'qualifying')
@@ -67,32 +67,32 @@ export interface BonusPoints {
 // - mandatory_pit_stop should be omitted - backend will set to false
 export interface CreateRaceRequest {
   race_number?: number; // 0 for qualifiers (explicit), omitted for races (auto-generated)
-  name?: string | null;
+  name?: string;
   race_type?: RaceType; // Omit for qualifiers, required for races
   qualifying_format?: QualifyingFormat;
   qualifying_length?: number; // Required when qualifying_format is 'standard' or 'time_trial'
-  qualifying_tire?: string | null;
+  qualifying_tire?: string;
   grid_source: GridSource; // 'qualifying' for qualifiers
   grid_source_race_id?: number; // Required when grid_source is 'previous_race' or 'reverse_previous'
   length_type: RaceLengthType; // For qualifiers: 'time' (uses qualifying_length)
   length_value: number; // For qualifiers: same as qualifying_length
   extra_lap_after_time: boolean; // Always false for qualifiers
-  weather?: string | null;
-  tire_restrictions?: string | null;
-  fuel_usage?: string | null;
-  damage_model?: string | null;
+  weather?: string;
+  tire_restrictions?: string;
+  fuel_usage?: string;
+  damage_model?: string;
   track_limits_enforced?: boolean; // Omit for qualifiers
   false_start_detection?: boolean; // Omit for qualifiers
   collision_penalties?: boolean; // Omit for qualifiers
   mandatory_pit_stop?: boolean; // Omit for qualifiers
   minimum_pit_time?: number; // Only for races when mandatory_pit_stop is true
-  assists_restrictions?: string | null;
+  assists_restrictions?: string;
   race_divisions: boolean;
   points_system: PointsSystemMap;
   bonus_points?: BonusPoints | null; // For qualifiers: only 'pole' is applicable. Can be null to clear bonuses
   dnf_points: number;
   dns_points: number;
-  race_notes?: string | null;
+  race_notes?: string;
 }
 
 // Update payload

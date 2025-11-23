@@ -27,14 +27,26 @@ import {
   buildCreateSeasonFormData,
   buildUpdateSeasonFormData,
 } from '@app/services/seasonService';
-import { useCompetitionStore } from '@app/stores/competitionStore';
+import { useStoreEvents } from '@app/composables/useStoreEvents';
+import { useCrudStore } from '@app/composables/useCrudStore';
 
 export const useSeasonStore = defineStore('season', () => {
-  // State
-  const seasons = ref<Season[]>([]);
-  const currentSeason = ref<Season | null>(null);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+  // Use CRUD composable for season management
+  const crud = useCrudStore<Season>();
+  const {
+    items: seasons,
+    currentItem: currentSeason,
+    loading,
+    error,
+    setLoading,
+    setError,
+    setItems,
+    setCurrentItem,
+    addItem,
+    updateItemInList,
+    removeItemFromList,
+    clearError: clearCrudError,
+  } = crud;
 
   // Pagination
   const currentPage = ref(1);
@@ -108,8 +120,8 @@ export const useSeasonStore = defineStore('season', () => {
    * Note: Backend returns all seasons (not paginated). Pagination is done client-side.
    */
   async function fetchSeasons(competitionId: number, params?: SeasonQueryParams): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const queryParams: SeasonQueryParams = {
@@ -121,7 +133,7 @@ export const useSeasonStore = defineStore('season', () => {
       const allSeasons: Season[] = await getSeasons(competitionId, queryParams);
 
       // Store all seasons
-      seasons.value = allSeasons;
+      setItems(allSeasons);
 
       // Client-side pagination calculations
       totalSeasons.value = allSeasons.length;
@@ -133,10 +145,10 @@ export const useSeasonStore = defineStore('season', () => {
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load seasons';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -144,19 +156,19 @@ export const useSeasonStore = defineStore('season', () => {
    * Fetch a specific season
    */
   async function fetchSeason(seasonId: number): Promise<Season> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const season = await getSeasonById(seasonId);
-      currentSeason.value = season;
+      setCurrentItem(season);
       return season;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load season';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -167,26 +179,26 @@ export const useSeasonStore = defineStore('season', () => {
     competitionId: number,
     data: CreateSeasonRequest,
   ): Promise<Season> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const formData = buildCreateSeasonFormData(data);
       const season = await createSeason(competitionId, formData);
-      seasons.value.push(season);
-      currentSeason.value = season;
+      addItem(season);
+      setCurrentItem(season);
 
-      // Update competition store with the new season
-      const competitionStore = useCompetitionStore();
-      competitionStore.addSeasonToCompetition(competitionId, toCompetitionSeason(season));
+      // Emit event for competition store to listen to
+      const events = useStoreEvents();
+      events.emit('season:created', competitionId, toCompetitionSeason(season));
 
       return season;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create season';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -197,26 +209,20 @@ export const useSeasonStore = defineStore('season', () => {
     seasonId: number,
     data: UpdateSeasonRequest,
   ): Promise<Season> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const formData = buildUpdateSeasonFormData(data);
       const updatedSeason = await updateSeason(seasonId, formData);
 
       // Update in local state
-      const index = seasons.value.findIndex((s) => s.id === seasonId);
-      if (index !== -1) {
-        seasons.value[index] = updatedSeason;
-      }
+      updateItemInList(updatedSeason);
 
-      if (currentSeason.value?.id === seasonId) {
-        currentSeason.value = updatedSeason;
-      }
-
-      // Update competition store with the updated season
-      const competitionStore = useCompetitionStore();
-      competitionStore.updateSeasonInCompetition(
+      // Emit event for competition store to listen to
+      const events = useStoreEvents();
+      events.emit(
+        'season:updated',
         updatedSeason.competition_id,
         toCompetitionSeason(updatedSeason),
       );
@@ -224,10 +230,10 @@ export const useSeasonStore = defineStore('season', () => {
       return updatedSeason;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update season';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -235,8 +241,8 @@ export const useSeasonStore = defineStore('season', () => {
    * Archive a season
    */
   async function archiveExistingSeason(seasonId: number): Promise<Season> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const archivedSeason = await archiveSeason(seasonId);
@@ -251,9 +257,10 @@ export const useSeasonStore = defineStore('season', () => {
         currentSeason.value = archivedSeason;
       }
 
-      // Update competition store with the archived season
-      const competitionStore = useCompetitionStore();
-      competitionStore.updateSeasonInCompetition(
+      // Emit event for competition store to listen to
+      const events = useStoreEvents();
+      events.emit(
+        'season:archived',
         archivedSeason.competition_id,
         toCompetitionSeason(archivedSeason),
       );
@@ -261,10 +268,10 @@ export const useSeasonStore = defineStore('season', () => {
       return archivedSeason;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to archive season';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -272,8 +279,8 @@ export const useSeasonStore = defineStore('season', () => {
    * Activate a season
    */
   async function activateExistingSeason(seasonId: number): Promise<Season> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const activatedSeason = await activateSeason(seasonId);
@@ -288,9 +295,10 @@ export const useSeasonStore = defineStore('season', () => {
         currentSeason.value = activatedSeason;
       }
 
-      // Update competition store with the activated season
-      const competitionStore = useCompetitionStore();
-      competitionStore.updateSeasonInCompetition(
+      // Emit event for competition store to listen to
+      const events = useStoreEvents();
+      events.emit(
+        'season:activated',
         activatedSeason.competition_id,
         toCompetitionSeason(activatedSeason),
       );
@@ -298,10 +306,10 @@ export const useSeasonStore = defineStore('season', () => {
       return activatedSeason;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to activate season';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -309,8 +317,8 @@ export const useSeasonStore = defineStore('season', () => {
    * Complete a season
    */
   async function completeExistingSeason(seasonId: number): Promise<Season> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const completedSeason = await completeSeason(seasonId);
@@ -325,9 +333,10 @@ export const useSeasonStore = defineStore('season', () => {
         currentSeason.value = completedSeason;
       }
 
-      // Update competition store with the completed season
-      const competitionStore = useCompetitionStore();
-      competitionStore.updateSeasonInCompetition(
+      // Emit event for competition store to listen to
+      const events = useStoreEvents();
+      events.emit(
+        'season:completed',
         completedSeason.competition_id,
         toCompetitionSeason(completedSeason),
       );
@@ -335,10 +344,10 @@ export const useSeasonStore = defineStore('season', () => {
       return completedSeason;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to complete season';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -346,8 +355,8 @@ export const useSeasonStore = defineStore('season', () => {
    * Delete a season (soft delete)
    */
   async function deleteExistingSeason(seasonId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       // Store competition_id before deletion
@@ -357,23 +366,19 @@ export const useSeasonStore = defineStore('season', () => {
       await deleteSeason(seasonId);
 
       // Remove from local state
-      seasons.value = seasons.value.filter((s) => s.id !== seasonId);
+      removeItemFromList(seasonId);
 
-      if (currentSeason.value?.id === seasonId) {
-        currentSeason.value = null;
-      }
-
-      // Update competition store to remove the season
+      // Emit event for competition store to listen to
       if (competitionId) {
-        const competitionStore = useCompetitionStore();
-        competitionStore.removeSeasonFromCompetition(competitionId, seasonId);
+        const events = useStoreEvents();
+        events.emit('season:deleted', competitionId, seasonId);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete season';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -381,8 +386,8 @@ export const useSeasonStore = defineStore('season', () => {
    * Unarchive a season (restore from archived state)
    */
   async function unarchiveExistingSeason(seasonId: number): Promise<Season> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const unarchivedSeason = await unarchiveSeason(seasonId);
@@ -397,9 +402,10 @@ export const useSeasonStore = defineStore('season', () => {
         currentSeason.value = unarchivedSeason;
       }
 
-      // Update competition store with the unarchived season
-      const competitionStore = useCompetitionStore();
-      competitionStore.updateSeasonInCompetition(
+      // Emit event for competition store to listen to
+      const events = useStoreEvents();
+      events.emit(
+        'season:unarchived',
         unarchivedSeason.competition_id,
         toCompetitionSeason(unarchivedSeason),
       );
@@ -407,10 +413,10 @@ export const useSeasonStore = defineStore('season', () => {
       return unarchivedSeason;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to unarchive season';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -418,18 +424,19 @@ export const useSeasonStore = defineStore('season', () => {
    * Restore a deleted season
    */
   async function restoreDeletedSeason(seasonId: number): Promise<Season> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const restoredSeason = await restoreSeason(seasonId);
 
       // Add back to local state
-      seasons.value.push(restoredSeason);
+      addItem(restoredSeason);
 
-      // Update competition store with the restored season
-      const competitionStore = useCompetitionStore();
-      competitionStore.addSeasonToCompetition(
+      // Emit event for competition store to listen to
+      const events = useStoreEvents();
+      events.emit(
+        'season:restored',
         restoredSeason.competition_id,
         toCompetitionSeason(restoredSeason),
       );
@@ -437,10 +444,10 @@ export const useSeasonStore = defineStore('season', () => {
       return restoredSeason;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to restore season';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -481,14 +488,11 @@ export const useSeasonStore = defineStore('season', () => {
   }
 
   function clearError(): void {
-    error.value = null;
+    clearCrudError();
   }
 
   function resetStore(): void {
-    seasons.value = [];
-    currentSeason.value = null;
-    loading.value = false;
-    error.value = null;
+    crud.resetStore();
     currentPage.value = 1;
     perPage.value = 10;
     totalSeasons.value = 0;

@@ -16,6 +16,7 @@ import type {
   LeagueDriversQueryParams,
 } from '@app/types/driver';
 import type { AxiosResponse } from 'axios';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 /**
  * API response wrapper
@@ -44,14 +45,16 @@ interface PaginatedApiResponse {
  * Get all drivers for a specific league with optional filters
  * @param leagueId - League ID
  * @param params - Query parameters (pagination, search, status filter)
+ * @param signal - Optional AbortSignal for request cancellation
  */
 export async function getLeagueDrivers(
   leagueId: number,
   params?: LeagueDriversQueryParams,
+  signal?: AbortSignal,
 ): Promise<PaginatedDriversResponse> {
   const response: AxiosResponse<PaginatedApiResponse> = await apiClient.get(
-    `/leagues/${leagueId}/drivers`,
-    { params },
+    API_ENDPOINTS.leagues.drivers(leagueId),
+    { params, signal },
   );
 
   // Check if the response has the expected structure
@@ -87,7 +90,7 @@ export async function createDriver(
   data: CreateDriverRequest,
 ): Promise<LeagueDriver> {
   const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.post(
-    `/leagues/${leagueId}/drivers`,
+    API_ENDPOINTS.leagues.drivers(leagueId),
     data,
   );
   return response.data.data;
@@ -100,7 +103,7 @@ export async function createDriver(
  */
 export async function getLeagueDriver(leagueId: number, driverId: number): Promise<LeagueDriver> {
   const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.get(
-    `/leagues/${leagueId}/drivers/${driverId}`,
+    API_ENDPOINTS.leagues.driverDetail(leagueId, driverId),
   );
   return response.data.data;
 }
@@ -117,7 +120,7 @@ export async function updateDriver(
   data: UpdateDriverRequest,
 ): Promise<LeagueDriver> {
   const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.put(
-    `/leagues/${leagueId}/drivers/${driverId}`,
+    API_ENDPOINTS.leagues.driverDetail(leagueId, driverId),
     data,
   );
   return response.data.data;
@@ -136,7 +139,7 @@ export async function updateLeagueDriver(
   data: UpdateLeagueDriverRequest,
 ): Promise<LeagueDriver> {
   const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.put(
-    `/leagues/${leagueId}/drivers/${driverId}`,
+    API_ENDPOINTS.leagues.driverDetail(leagueId, driverId),
     data,
   );
   return response.data.data;
@@ -148,7 +151,7 @@ export async function updateLeagueDriver(
  * @param driverId - Driver ID
  */
 export async function removeDriverFromLeague(leagueId: number, driverId: number): Promise<void> {
-  await apiClient.delete(`/leagues/${leagueId}/drivers/${driverId}`);
+  await apiClient.delete(API_ENDPOINTS.leagues.driverDetail(leagueId, driverId));
 }
 
 /**
@@ -162,7 +165,7 @@ export async function importDriversFromCSV(
 ): Promise<ImportDriversResponse> {
   const payload: ImportDriversRequest = { csv_data: csvData };
   const response: AxiosResponse<ApiResponse<ImportDriversBackendResponse>> = await apiClient.post(
-    `/leagues/${leagueId}/drivers/import-csv`,
+    API_ENDPOINTS.leagues.importDriversCsv(leagueId),
     payload,
   );
 

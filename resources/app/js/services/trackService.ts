@@ -1,6 +1,7 @@
 import { apiClient } from './api';
 import type { AxiosResponse } from 'axios';
 import type { Track, TrackLocationGroup, TrackSearchParams } from '@app/types/track';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 interface ApiResponse<T> {
   data: T;
@@ -9,7 +10,7 @@ interface ApiResponse<T> {
 
 export async function getTracks(params: TrackSearchParams): Promise<TrackLocationGroup[]> {
   const response: AxiosResponse<ApiResponse<TrackLocationGroup[]>> = await apiClient.get(
-    '/tracks',
+    API_ENDPOINTS.tracks.list(),
     {
       params,
     },
@@ -18,6 +19,8 @@ export async function getTracks(params: TrackSearchParams): Promise<TrackLocatio
 }
 
 export async function getTrack(trackId: number): Promise<Track> {
-  const response: AxiosResponse<ApiResponse<Track>> = await apiClient.get(`/tracks/${trackId}`);
+  const response: AxiosResponse<ApiResponse<Track>> = await apiClient.get(
+    API_ENDPOINTS.tracks.detail(trackId),
+  );
   return response.data.data;
 }

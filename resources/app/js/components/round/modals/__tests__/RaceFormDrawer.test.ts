@@ -76,6 +76,15 @@ vi.mock('primevue/skeleton', () => ({
   default: { name: 'Skeleton', template: '<div></div>' },
 }));
 
+// Common stubs for all tests
+const commonStubs = {
+  BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
+  FormLabel: { template: '<label><slot/></label>' },
+  FormError: { template: '<span><slot/></span>' },
+  FormOptionalText: { template: '<span><slot/></span>' },
+  FormInputGroup: { template: '<div><slot/></div>' },
+};
+
 describe('RaceFormDrawer', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -141,11 +150,7 @@ describe('RaceFormDrawer', () => {
         raceType: 'race',
       },
       global: {
-        stubs: {
-          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
-          FormLabel: { template: '<label><slot/></label>' },
-          FormError: { template: '<span><slot/></span>' },
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -193,11 +198,7 @@ describe('RaceFormDrawer', () => {
         raceType: 'race',
       },
       global: {
-        stubs: {
-          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
-          FormLabel: { template: '<label><slot/></label>' },
-          FormError: { template: '<span><slot/></span>' },
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -254,11 +255,7 @@ describe('RaceFormDrawer', () => {
         raceType: 'race',
       },
       global: {
-        stubs: {
-          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
-          FormLabel: { template: '<label><slot/></label>' },
-          FormError: { template: '<span><slot/></span>' },
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -300,11 +297,7 @@ describe('RaceFormDrawer', () => {
         mode: 'create',
       },
       global: {
-        stubs: {
-          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
-          FormLabel: { template: '<label><slot/></label>' },
-          FormError: { template: '<span><slot/></span>' },
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -344,11 +337,7 @@ describe('RaceFormDrawer', () => {
         mode: 'edit',
       },
       global: {
-        stubs: {
-          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
-          FormLabel: { template: '<label><slot/></label>' },
-          FormError: { template: '<span><slot/></span>' },
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -399,11 +388,7 @@ describe('RaceFormDrawer', () => {
         mode: 'edit',
       },
       global: {
-        stubs: {
-          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
-          FormLabel: { template: '<label><slot/></label>' },
-          FormError: { template: '<span><slot/></span>' },
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -453,11 +438,7 @@ describe('RaceFormDrawer', () => {
         mode: 'create',
       },
       global: {
-        stubs: {
-          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
-          FormLabel: { template: '<label><slot/></label>' },
-          FormError: { template: '<span><slot/></span>' },
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -500,11 +481,7 @@ describe('RaceFormDrawer', () => {
         mode: 'create',
       },
       global: {
-        stubs: {
-          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
-          FormLabel: { template: '<label><slot/></label>' },
-          FormError: { template: '<span><slot/></span>' },
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -547,11 +524,7 @@ describe('RaceFormDrawer', () => {
         mode: 'create',
       },
       global: {
-        stubs: {
-          BaseModal: { template: '<div><slot name="header"/><slot/><slot name="footer"/></div>' },
-          FormLabel: { template: '<label><slot/></label>' },
-          FormError: { template: '<span><slot/></span>' },
-        },
+        stubs: commonStubs,
       },
     });
 

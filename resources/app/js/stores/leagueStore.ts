@@ -30,15 +30,30 @@ import {
   getDriverFormFields,
   getDriverCsvHeaders,
 } from '@app/services/leagueService';
+import { useCrudStore } from '@app/composables/useCrudStore';
 
 export const useLeagueStore = defineStore('league', () => {
-  // State
-  const leagues = ref<League[]>([]);
+  // Use CRUD composable for league management
+  const crud = useCrudStore<League>();
+  const {
+    items: leagues,
+    currentItem: currentLeague,
+    loading,
+    error,
+    setLoading,
+    setError,
+    setItems,
+    setCurrentItem,
+    addItem,
+    updateItemInList,
+    removeItemFromList,
+    clearError,
+    resetStore,
+  } = crud;
+
+  // Additional state specific to league store
   const platforms = ref<Platform[]>([]);
   const timezones = ref<Timezone[]>([]);
-  const currentLeague = ref<League | null>(null);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
   const currentStep = ref(0);
 
   // Platform configuration state
@@ -69,17 +84,17 @@ export const useLeagueStore = defineStore('league', () => {
       return;
     }
 
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       platforms.value = await getPlatforms();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load platforms';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -92,17 +107,17 @@ export const useLeagueStore = defineStore('league', () => {
       return;
     }
 
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       timezones.value = await getTimezones();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load timezones';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -138,21 +153,21 @@ export const useLeagueStore = defineStore('league', () => {
    * @param form - League form data
    */
   async function createNewLeague(form: CreateLeagueForm): Promise<League> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const formData = buildLeagueFormData(form);
       const league = await createLeague(formData);
-      leagues.value.push(league);
-      currentLeague.value = league;
+      addItem(league);
+      setCurrentItem(league);
       return league;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create league';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -160,17 +175,18 @@ export const useLeagueStore = defineStore('league', () => {
    * Fetch all leagues for the current user
    */
   async function fetchLeagues(): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
-      leagues.value = await getUserLeagues();
+      const fetchedLeagues = await getUserLeagues();
+      setItems(fetchedLeagues);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load leagues';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -179,19 +195,19 @@ export const useLeagueStore = defineStore('league', () => {
    * @param id - League ID
    */
   async function fetchLeague(id: number): Promise<League> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const league = await getLeague(id);
-      currentLeague.value = league;
+      setCurrentItem(league);
       return league;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load league';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -201,8 +217,8 @@ export const useLeagueStore = defineStore('league', () => {
    * @param form - Update form data
    */
   async function updateExistingLeague(leagueId: number, form: UpdateLeagueForm): Promise<League> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       // Get original league for comparison
@@ -213,25 +229,14 @@ export const useLeagueStore = defineStore('league', () => {
 
       const formData = buildUpdateLeagueFormData(form, originalLeague);
       const updatedLeague = await updateLeague(leagueId, formData);
-
-      // Update in local state
-      const index = leagues.value.findIndex((l) => l.id === leagueId);
-      if (index !== -1) {
-        leagues.value[index] = updatedLeague;
-      }
-
-      // Update current league if it's the one being edited
-      if (currentLeague.value?.id === leagueId) {
-        currentLeague.value = updatedLeague;
-      }
-
+      updateItemInList(updatedLeague);
       return updatedLeague;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update league';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -240,22 +245,18 @@ export const useLeagueStore = defineStore('league', () => {
    * @param id - League ID
    */
   async function removeLeague(id: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       await deleteLeague(id);
-      leagues.value = leagues.value.filter((l) => l.id !== id);
-
-      if (currentLeague.value?.id === id) {
-        currentLeague.value = null;
-      }
+      removeItemFromList(id);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete league';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -275,29 +276,22 @@ export const useLeagueStore = defineStore('league', () => {
   }
 
   /**
-   * Clear error message
-   */
-  function clearError(): void {
-    error.value = null;
-  }
-
-  /**
    * Fetch driver columns configuration for a league's platforms
    * @param leagueId - League ID
    */
   async function fetchDriverColumnsForLeague(leagueId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       platformColumns.value = await getDriverColumns(leagueId);
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to load driver columns configuration';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -306,18 +300,18 @@ export const useLeagueStore = defineStore('league', () => {
    * @param leagueId - League ID
    */
   async function fetchDriverFormFieldsForLeague(leagueId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       platformFormFields.value = await getDriverFormFields(leagueId);
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to load driver form fields configuration';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -326,18 +320,18 @@ export const useLeagueStore = defineStore('league', () => {
    * @param leagueId - League ID
    */
   async function fetchDriverCsvHeadersForLeague(leagueId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       platformCsvHeaders.value = await getDriverCsvHeaders(leagueId);
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to load CSV headers configuration';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -370,9 +364,12 @@ export const useLeagueStore = defineStore('league', () => {
     removeLeague,
     setCurrentStep,
     resetWizard,
-    clearError,
     fetchDriverColumnsForLeague,
     fetchDriverFormFieldsForLeague,
     fetchDriverCsvHeadersForLeague,
+
+    // Utility
+    clearError,
+    resetStore,
   };
 });

@@ -6,6 +6,7 @@
 import { apiClient } from './api';
 import type { SiteConfig, SiteConfigResponse } from '@app/types/siteConfig';
 import type { AxiosResponse } from 'axios';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 /**
  * Fetch site configuration from the API
@@ -13,6 +14,8 @@ import type { AxiosResponse } from 'axios';
  * @throws Error if the request fails
  */
 export async function getSiteConfig(): Promise<SiteConfig> {
-  const response: AxiosResponse<SiteConfigResponse> = await apiClient.get('/site-config');
+  const response: AxiosResponse<SiteConfigResponse> = await apiClient.get(
+    API_ENDPOINTS.siteConfig.get(),
+  );
   return response.data.data;
 }

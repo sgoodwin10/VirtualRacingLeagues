@@ -100,7 +100,7 @@ describe('CompetitionList', () => {
   describe('Loading State', () => {
     it('displays skeleton loaders when loading', () => {
       const competitionStore = useCompetitionStore();
-      competitionStore.loading = true;
+      competitionStore.setLoading(true);
 
       const wrapper = mountComponent({ leagueId: 1 });
 
@@ -112,8 +112,8 @@ describe('CompetitionList', () => {
   describe('Empty State', () => {
     it('displays empty state when no competitions exist', () => {
       const competitionStore = useCompetitionStore();
-      competitionStore.loading = false;
-      competitionStore.competitions = [];
+      competitionStore.setLoading(false);
+      competitionStore.setItems([]);
 
       const wrapper = mountComponent({ leagueId: 1 });
 
@@ -123,8 +123,8 @@ describe('CompetitionList', () => {
 
     it('shows create button in empty state', () => {
       const competitionStore = useCompetitionStore();
-      competitionStore.loading = false;
-      competitionStore.competitions = [];
+      competitionStore.setLoading(false);
+      competitionStore.setItems([]);
 
       const wrapper = mountComponent({ leagueId: 1 });
 
@@ -137,11 +137,11 @@ describe('CompetitionList', () => {
   describe('Competition Cards Display', () => {
     it('displays competition cards in a grid', () => {
       const competitionStore = useCompetitionStore();
-      competitionStore.loading = false;
-      competitionStore.competitions = [
+      competitionStore.setLoading(false);
+      competitionStore.setItems([
         createMockCompetition({ id: 1, name: 'GT3 Championship' }),
         createMockCompetition({ id: 2, name: 'GT4 Series' }),
-      ];
+      ]);
 
       const wrapper = mountComponent({ leagueId: 1 });
 
@@ -151,11 +151,11 @@ describe('CompetitionList', () => {
 
     it('displays create competition card after all competition cards', () => {
       const competitionStore = useCompetitionStore();
-      competitionStore.loading = false;
-      competitionStore.competitions = [
+      competitionStore.setLoading(false);
+      competitionStore.setItems([
         createMockCompetition({ id: 1, name: 'GT3 Championship' }),
         createMockCompetition({ id: 2, name: 'GT4 Series' }),
-      ];
+      ]);
 
       const wrapper = mountComponent({ leagueId: 1 });
 
@@ -168,8 +168,8 @@ describe('CompetitionList', () => {
 
     it('uses 2-column grid on medium screens and above', () => {
       const competitionStore = useCompetitionStore();
-      competitionStore.loading = false;
-      competitionStore.competitions = [createMockCompetition()];
+      competitionStore.setLoading(false);
+      competitionStore.setItems([createMockCompetition()]);
 
       const wrapper = mountComponent({ leagueId: 1 });
 
@@ -181,8 +181,8 @@ describe('CompetitionList', () => {
   describe('Create Competition Card', () => {
     it('displays create competition card with proper styling', () => {
       const competitionStore = useCompetitionStore();
-      competitionStore.loading = false;
-      competitionStore.competitions = [createMockCompetition()];
+      competitionStore.setLoading(false);
+      competitionStore.setItems([createMockCompetition()]);
 
       const wrapper = mountComponent({ leagueId: 1 });
 
@@ -205,8 +205,8 @@ describe('CompetitionList', () => {
 
     it('has same height as competition cards (h-32)', () => {
       const competitionStore = useCompetitionStore();
-      competitionStore.loading = false;
-      competitionStore.competitions = [createMockCompetition()];
+      competitionStore.setLoading(false);
+      competitionStore.setItems([createMockCompetition()]);
 
       const wrapper = mountComponent({ leagueId: 1 });
 
@@ -216,8 +216,8 @@ describe('CompetitionList', () => {
 
     it('displays plus icon and text', () => {
       const competitionStore = useCompetitionStore();
-      competitionStore.loading = false;
-      competitionStore.competitions = [createMockCompetition()];
+      competitionStore.setLoading(false);
+      competitionStore.setItems([createMockCompetition()]);
 
       const wrapper = mountComponent({ leagueId: 1 });
 

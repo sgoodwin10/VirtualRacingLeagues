@@ -4,7 +4,7 @@
  */
 
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import type {
   Team,
   CreateTeamPayload,
@@ -20,12 +20,24 @@ import {
   buildCreateTeamFormData,
   buildUpdateTeamFormData,
 } from '@app/services/teamService';
+import { useCrudStore } from '@app/composables/useCrudStore';
 
 export const useTeamStore = defineStore('team', () => {
-  // State
-  const teams = ref<Team[]>([]);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+  // Use CRUD composable
+  const crud = useCrudStore<Team>();
+  const {
+    items: teams,
+    loading,
+    error,
+    setLoading,
+    setError,
+    setItems,
+    addItem,
+    updateItemInList,
+    removeItemFromList,
+    clearError,
+    resetStore,
+  } = crud;
 
   // Getters
   const getTeamById = computed(() => {
@@ -50,17 +62,18 @@ export const useTeamStore = defineStore('team', () => {
    * Fetch all teams for a season
    */
   async function fetchTeams(seasonId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
-      teams.value = await getTeams(seasonId);
+      const fetchedTeams = await getTeams(seasonId);
+      setItems(fetchedTeams);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -68,20 +81,20 @@ export const useTeamStore = defineStore('team', () => {
    * Create a new team
    */
   async function createTeam(seasonId: number, payload: CreateTeamPayload): Promise<Team> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const formData = buildCreateTeamFormData(payload);
       const team = await createTeamApi(seasonId, formData);
-      teams.value.push(team);
+      addItem(team);
       return team;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create team';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -93,26 +106,20 @@ export const useTeamStore = defineStore('team', () => {
     teamId: number,
     payload: UpdateTeamPayload,
   ): Promise<Team> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       const formData = buildUpdateTeamFormData(payload);
       const updatedTeam = await updateTeamApi(seasonId, teamId, formData);
-
-      // Update in local state
-      const index = teams.value.findIndex((team) => team.id === teamId);
-      if (index !== -1) {
-        teams.value[index] = updatedTeam;
-      }
-
+      updateItemInList(updatedTeam);
       return updatedTeam;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update team';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -120,20 +127,18 @@ export const useTeamStore = defineStore('team', () => {
    * Delete team
    */
   async function deleteTeam(seasonId: number, teamId: number): Promise<void> {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
 
     try {
       await deleteTeamApi(seasonId, teamId);
-
-      // Remove from local state
-      teams.value = teams.value.filter((team) => team.id !== teamId);
+      removeItemFromList(teamId);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete team';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   }
 
@@ -145,26 +150,15 @@ export const useTeamStore = defineStore('team', () => {
     seasonDriverId: number,
     payload: AssignDriverTeamPayload,
   ): Promise<void> {
-    error.value = null;
+    setError(null);
 
     try {
       await assignDriverToTeamApi(seasonId, seasonDriverId, payload);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to assign driver to team';
-      error.value = errorMessage;
+      setError(errorMessage);
       throw err;
     }
-  }
-
-  // Utility
-  function clearError(): void {
-    error.value = null;
-  }
-
-  function resetStore(): void {
-    teams.value = [];
-    loading.value = false;
-    error.value = null;
   }
 
   return {

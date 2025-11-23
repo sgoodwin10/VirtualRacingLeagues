@@ -16,6 +16,7 @@ import type {
 } from '@app/types/seasonDriver';
 import type { LeagueDriversQueryParams } from '@app/types/driver';
 import type { AxiosResponse } from 'axios';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 // API response wrapper
 interface ApiResponse<T> {
@@ -59,7 +60,7 @@ export async function getSeasonDrivers(
   params?: SeasonDriverQueryParams,
 ): Promise<PaginatedSeasonDriversResponse> {
   const response: AxiosResponse<PaginatedApiResponse> = await apiClient.get(
-    `/seasons/${seasonId}/drivers`,
+    API_ENDPOINTS.seasons.seasonDrivers(seasonId),
     { params },
   );
   return {
@@ -77,7 +78,7 @@ export async function getAvailableDrivers(
   params?: LeagueDriversQueryParams,
 ): Promise<PaginatedAvailableDriversResponse> {
   const response: AxiosResponse<PaginatedAvailableDriversApiResponse> = await apiClient.get(
-    `/seasons/${seasonId}/available-drivers`,
+    API_ENDPOINTS.seasons.availableDrivers(seasonId),
     {
       params: {
         ...params,
@@ -99,7 +100,7 @@ export async function addDriverToSeason(
   data: AddDriverToSeasonRequest,
 ): Promise<SeasonDriver> {
   const response: AxiosResponse<ApiResponse<SeasonDriver>> = await apiClient.post(
-    `/seasons/${seasonId}/drivers`,
+    API_ENDPOINTS.seasons.seasonDrivers(seasonId),
     data,
   );
   return response.data.data;
@@ -114,7 +115,7 @@ export async function updateSeasonDriver(
   data: UpdateSeasonDriverRequest,
 ): Promise<SeasonDriver> {
   const response: AxiosResponse<ApiResponse<SeasonDriver>> = await apiClient.put(
-    `/seasons/${seasonId}/drivers/${seasonDriverId}`,
+    API_ENDPOINTS.seasons.seasonDriverDetail(seasonId, seasonDriverId),
     data,
   );
   return response.data.data;
@@ -127,7 +128,7 @@ export async function removeDriverFromSeason(
   seasonId: number,
   leagueDriverId: number,
 ): Promise<void> {
-  await apiClient.delete(`/seasons/${seasonId}/drivers/${leagueDriverId}`);
+  await apiClient.delete(API_ENDPOINTS.seasons.seasonDriverDetail(seasonId, leagueDriverId));
 }
 
 /**
@@ -135,7 +136,7 @@ export async function removeDriverFromSeason(
  */
 export async function getSeasonDriverStats(seasonId: number): Promise<SeasonDriverStats> {
   const response: AxiosResponse<ApiResponse<SeasonDriverStats>> = await apiClient.get(
-    `/seasons/${seasonId}/drivers/stats`,
+    API_ENDPOINTS.seasons.seasonDriverStats(seasonId),
   );
   return response.data.data;
 }

@@ -16,6 +16,7 @@ import type {
   PlatformCsvHeader,
 } from '@app/types/league';
 import type { AxiosResponse } from 'axios';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 /**
  * API response wrapper
@@ -29,7 +30,9 @@ interface ApiResponse<T> {
  * Get all active platforms
  */
 export async function getPlatforms(): Promise<Platform[]> {
-  const response: AxiosResponse<ApiResponse<Platform[]>> = await apiClient.get('/platforms');
+  const response: AxiosResponse<ApiResponse<Platform[]>> = await apiClient.get(
+    API_ENDPOINTS.platforms.list(),
+  );
   return response.data.data;
 }
 
@@ -37,7 +40,9 @@ export async function getPlatforms(): Promise<Platform[]> {
  * Get all available timezones
  */
 export async function getTimezones(): Promise<Timezone[]> {
-  const response: AxiosResponse<ApiResponse<Timezone[]>> = await apiClient.get('/timezones');
+  const response: AxiosResponse<ApiResponse<Timezone[]>> = await apiClient.get(
+    API_ENDPOINTS.timezones.list(),
+  );
   return response.data.data;
 }
 
@@ -51,7 +56,7 @@ export async function checkSlugAvailability(
   leagueId?: number,
 ): Promise<SlugCheckResponse> {
   const response: AxiosResponse<ApiResponse<SlugCheckResponse>> = await apiClient.post(
-    '/leagues/check-slug',
+    API_ENDPOINTS.leagues.checkSlug(),
     { name, league_id: leagueId },
   );
   return response.data.data;
@@ -62,11 +67,15 @@ export async function checkSlugAvailability(
  * @param formData - FormData containing league information and files
  */
 export async function createLeague(formData: FormData): Promise<League> {
-  const response: AxiosResponse<ApiResponse<League>> = await apiClient.post('/leagues', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
+  const response: AxiosResponse<ApiResponse<League>> = await apiClient.post(
+    API_ENDPOINTS.leagues.create(),
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     },
-  });
+  );
   return response.data.data;
 }
 
@@ -74,7 +83,9 @@ export async function createLeague(formData: FormData): Promise<League> {
  * Get all leagues for the authenticated user
  */
 export async function getUserLeagues(): Promise<League[]> {
-  const response: AxiosResponse<ApiResponse<League[]>> = await apiClient.get('/leagues');
+  const response: AxiosResponse<ApiResponse<League[]>> = await apiClient.get(
+    API_ENDPOINTS.leagues.list(),
+  );
   return response.data.data;
 }
 
@@ -83,7 +94,9 @@ export async function getUserLeagues(): Promise<League[]> {
  * @param id - League ID
  */
 export async function getLeague(id: number): Promise<League> {
-  const response: AxiosResponse<ApiResponse<League>> = await apiClient.get(`/leagues/${id}`);
+  const response: AxiosResponse<ApiResponse<League>> = await apiClient.get(
+    API_ENDPOINTS.leagues.detail(id),
+  );
   return response.data.data;
 }
 
@@ -106,7 +119,7 @@ export async function updateLeague(id: number, formData: FormData): Promise<Leag
   formData.append('_method', 'PUT');
 
   const response: AxiosResponse<ApiResponse<League>> = await apiClient.post(
-    `/leagues/${id}`,
+    API_ENDPOINTS.leagues.update(id),
     formData,
     {
       headers: {
@@ -122,7 +135,7 @@ export async function updateLeague(id: number, formData: FormData): Promise<Leag
  * @param id - League ID
  */
 export async function deleteLeague(id: number): Promise<void> {
-  await apiClient.delete(`/leagues/${id}`);
+  await apiClient.delete(API_ENDPOINTS.leagues.delete(id));
 }
 
 /**
@@ -275,7 +288,7 @@ export function buildUpdateLeagueFormData(
  */
 export async function getDriverColumns(leagueId: number): Promise<PlatformColumn[]> {
   const response: AxiosResponse<ApiResponse<PlatformColumn[]>> = await apiClient.get(
-    `/leagues/${leagueId}/driver-columns`,
+    API_ENDPOINTS.leagues.driverColumns(leagueId),
   );
   return response.data.data;
 }
@@ -286,7 +299,7 @@ export async function getDriverColumns(leagueId: number): Promise<PlatformColumn
  */
 export async function getDriverFormFields(leagueId: number): Promise<PlatformFormField[]> {
   const response: AxiosResponse<ApiResponse<PlatformFormField[]>> = await apiClient.get(
-    `/leagues/${leagueId}/driver-form-fields`,
+    API_ENDPOINTS.leagues.driverFormFields(leagueId),
   );
   return response.data.data;
 }
@@ -297,7 +310,7 @@ export async function getDriverFormFields(leagueId: number): Promise<PlatformFor
  */
 export async function getDriverCsvHeaders(leagueId: number): Promise<PlatformCsvHeader[]> {
   const response: AxiosResponse<ApiResponse<PlatformCsvHeader[]>> = await apiClient.get(
-    `/leagues/${leagueId}/driver-csv-headers`,
+    API_ENDPOINTS.leagues.driverCsvHeaders(leagueId),
   );
   return response.data.data;
 }
