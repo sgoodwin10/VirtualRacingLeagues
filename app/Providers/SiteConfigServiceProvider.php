@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Domain\SiteConfig\Repositories\FileStorageServiceInterface;
 use App\Domain\SiteConfig\Repositories\SiteConfigRepositoryInterface;
+use App\Infrastructure\Persistence\FileStorage\FileStorageServiceInterface;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSiteConfigRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\LocalFileStorageService;
 use Illuminate\Support\ServiceProvider;

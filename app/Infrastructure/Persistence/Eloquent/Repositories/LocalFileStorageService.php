@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Eloquent\Repositories;
 
 use App\Domain\SiteConfig\Exceptions\FileUploadException;
-use App\Domain\SiteConfig\Repositories\FileStorageServiceInterface;
+use App\Infrastructure\Persistence\FileStorage\FileStorageServiceInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 

@@ -22,7 +22,7 @@ final class PlatformFactory extends Factory
      */
     public function definition(): array
     {
-        $name = $this->faker->unique()->randomElement([
+        $baseName = $this->faker->randomElement([
             'Gran Turismo 7',
             'iRacing',
             'Assetto Corsa Competizione',
@@ -43,9 +43,15 @@ final class PlatformFactory extends Factory
             'Le Mans Ultimate',
         ]);
 
+        // Generate unique name and slug by appending a random string
+        // This prevents conflicts when multiple platforms might be created by factories
+        $uniqueSuffix = Str::random(8);
+        $uniqueName = $baseName . ' ' . $uniqueSuffix;
+        $uniqueSlug = Str::slug($baseName) . '-' . strtolower($uniqueSuffix);
+
         return [
-            'name' => $name,
-            'slug' => Str::slug($name),
+            'name' => $uniqueName,
+            'slug' => $uniqueSlug,
             'description' => $this->faker->optional(0.7)->sentence(),
             'logo_url' => null,
             'is_active' => $this->faker->boolean(90),

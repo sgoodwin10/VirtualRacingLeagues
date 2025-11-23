@@ -30,7 +30,7 @@ describe('useAdminUserModals', () => {
   };
 
   let mockToast: any;
-  let mockOnReload: ReturnType<typeof vi.fn>;
+  let mockOnReload: () => Promise<void>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -40,7 +40,7 @@ describe('useAdminUserModals', () => {
       removeGroup: vi.fn(),
       removeAllGroups: vi.fn(),
     };
-    mockOnReload = vi.fn().mockResolvedValue(undefined);
+    mockOnReload = vi.fn<() => Promise<void>>(() => Promise.resolve());
   });
 
   describe('initial state', () => {

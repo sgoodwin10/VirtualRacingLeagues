@@ -1,15 +1,8 @@
 import { vi } from 'vitest';
 import { config } from '@vue/test-utils';
 import { setupMockServer } from './mocks/server';
-import '@testing-library/jest-dom/vitest';
 
 // Global test setup for Vitest
-
-// ========================================
-// Testing Library Matchers
-// ========================================
-// Adds custom matchers like toBeInTheDocument(), toHaveValue(), etc.
-// See: https://github.com/testing-library/jest-dom
 
 // ========================================
 // MSW (Mock Service Worker) Setup

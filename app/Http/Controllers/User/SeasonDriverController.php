@@ -8,6 +8,7 @@ use App\Application\Competition\DTOs\AddSeasonDriverData;
 use App\Application\Competition\DTOs\UpdateSeasonDriverData;
 use App\Application\Competition\Services\SeasonDriverApplicationService;
 use App\Helpers\ApiResponse;
+use App\Helpers\PaginationHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -50,29 +51,16 @@ final class SeasonDriverController extends Controller
         ]));
 
         // Build pagination links
-        $baseUrl = $request->url();
-        $queryParams = $request->except('page');
-        $lastPage = $result['meta']['last_page'];
-        $currentPage = $result['meta']['current_page'];
-
-        $firstPage = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1]));
-        $lastPageUrl = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $lastPage]));
-        $prevPage = $currentPage > 1
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))
-            : null;
-        $nextPage = $currentPage < $lastPage
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))
-            : null;
+        $links = PaginationHelper::buildLinks(
+            $request,
+            $result['meta']['current_page'],
+            $result['meta']['last_page']
+        );
 
         return ApiResponse::paginated(
             array_map(fn($item) => $item->toArray(), $result['data']),
             $result['meta'],
-            [
-                'first' => $firstPage,
-                'last' => $lastPageUrl,
-                'prev' => $prevPage,
-                'next' => $nextPage,
-            ]
+            $links
         );
     }
 

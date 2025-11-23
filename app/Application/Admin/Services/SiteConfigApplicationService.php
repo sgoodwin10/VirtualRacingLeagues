@@ -6,8 +6,8 @@ namespace App\Application\Admin\Services;
 
 use App\Domain\SiteConfig\Entities\ConfigurationFile;
 use App\Domain\SiteConfig\Entities\SiteConfig;
-use App\Domain\SiteConfig\Repositories\FileStorageServiceInterface;
 use App\Domain\SiteConfig\Repositories\SiteConfigRepositoryInterface;
+use App\Infrastructure\Persistence\FileStorage\FileStorageServiceInterface;
 use App\Domain\Shared\ValueObjects\EmailAddress;
 use App\Domain\SiteConfig\ValueObjects\SiteName;
 use App\Domain\SiteConfig\ValueObjects\Timezone;

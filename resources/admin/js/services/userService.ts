@@ -1,6 +1,7 @@
 import { apiService } from './api';
 import type {
   User,
+  Activity,
   CreateUserPayload,
   UpdateUserPayload,
   UserListParams,
@@ -117,7 +118,7 @@ class UserService {
    */
   async getUser(id: string, signal?: AbortSignal): Promise<User> {
     try {
-      const response = await apiService.get<ApiResponse<{ user: User; activities: unknown[] }>>(
+      const response = await apiService.get<ApiResponse<{ user: User; activities: Activity[] }>>(
         `/users/${id}`,
         { signal },
       );

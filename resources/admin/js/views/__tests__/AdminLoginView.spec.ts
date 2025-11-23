@@ -807,19 +807,19 @@ describe('AdminLoginView', () => {
       const rememberCheckbox = wrapper.find('#remember');
 
       // Initially unchecked
-      expect(rememberCheckbox.element.checked).toBe(false);
+      expect((rememberCheckbox.element as HTMLInputElement).checked).toBe(false);
 
       // Check the checkbox
       await rememberCheckbox.setValue(true);
       await nextTick();
 
-      expect(rememberCheckbox.element.checked).toBe(true);
+      expect((rememberCheckbox.element as HTMLInputElement).checked).toBe(true);
 
       // Uncheck the checkbox
       await rememberCheckbox.setValue(false);
       await nextTick();
 
-      expect(rememberCheckbox.element.checked).toBe(false);
+      expect((rememberCheckbox.element as HTMLInputElement).checked).toBe(false);
     });
   });
 

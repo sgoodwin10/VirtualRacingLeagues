@@ -12,6 +12,7 @@ use App\Domain\Driver\Exceptions\DriverAlreadyInLeagueException;
 use App\Domain\Driver\Exceptions\DriverNotFoundException;
 use App\Domain\Driver\Exceptions\InvalidDriverDataException;
 use App\Helpers\ApiResponse;
+use App\Helpers\PaginationHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,19 +49,11 @@ final class DriverController extends Controller
         );
 
         // Build pagination links
-        $baseUrl = $request->url();
-        $queryParams = $request->except('page');
-        $lastPage = $result->last_page;
-        $currentPage = $result->current_page;
-
-        $firstPage = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1]));
-        $lastPageUrl = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $lastPage]));
-        $prevPage = $currentPage > 1
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))
-            : null;
-        $nextPage = $currentPage < $lastPage
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))
-            : null;
+        $links = PaginationHelper::buildLinks(
+            $request,
+            $result->current_page,
+            $result->last_page
+        );
 
         return ApiResponse::paginated(
             $result->data,
@@ -70,12 +63,7 @@ final class DriverController extends Controller
                 'current_page' => $result->current_page,
                 'last_page' => $result->last_page,
             ],
-            [
-                'first' => $firstPage,
-                'last' => $lastPageUrl,
-                'prev' => $prevPage,
-                'next' => $nextPage,
-            ]
+            $links
         );
     }
 

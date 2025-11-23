@@ -34,8 +34,8 @@ class CompetitionSlugTest extends TestCase
     {
         $slug = CompetitionSlug::fromName('GT3 Championship @2024!');
 
-        // Laravel's Str::slug converts @ to 'at' by default
-        $this->assertSame('gt3-championship-at-2024', $slug->value());
+        // Laravel's Str::slug removes @ symbol
+        $this->assertSame('gt3-championship-2024', $slug->value());
     }
 
     public function test_handles_multiple_consecutive_spaces(): void

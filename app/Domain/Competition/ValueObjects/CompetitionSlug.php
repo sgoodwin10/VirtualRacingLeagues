@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Competition\ValueObjects;
 
-use Illuminate\Support\Str;
-
 /**
  * Value Object representing a competition slug.
  * Immutable and URL-safe.
@@ -19,7 +17,11 @@ final readonly class CompetitionSlug
 
     public static function fromName(string $name): self
     {
-        $slug = Str::slug($name);
+        $slug = strtolower(trim($name));
+        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
+        $slug = preg_replace('/[\s-]+/', '-', $slug);
+        $slug = trim($slug, '-');
+
         return new self($slug);
     }
 

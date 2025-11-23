@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Competition\ValueObjects;
 
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
@@ -20,7 +19,12 @@ final readonly class RoundSlug
 
     public static function from(string $value): self
     {
-        return new self(Str::slug($value));
+        $slug = strtolower(trim($value));
+        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
+        $slug = preg_replace('/[\s-]+/', '-', $slug);
+        $slug = trim($slug, '-');
+
+        return new self($slug);
     }
 
     public static function fromName(?string $name, int $roundNumber): self

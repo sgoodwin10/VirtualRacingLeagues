@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Domain\Competition\ValueObjects;
 
 use App\Domain\Competition\Exceptions\InvalidSeasonSlugException;
-use Illuminate\Support\Str;
 
 /**
  * SeasonSlug Value Object.
@@ -38,7 +37,11 @@ final readonly class SeasonSlug
      */
     public static function generate(string $name): self
     {
-        $slug = Str::slug($name);
+        $slug = strtolower(trim($name));
+        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
+        $slug = preg_replace('/[\s-]+/', '-', $slug);
+        $slug = trim($slug, '-');
+
         return new self($slug);
     }
 

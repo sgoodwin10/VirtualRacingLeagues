@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\SiteConfig\Repositories;
+namespace App\Infrastructure\Persistence\FileStorage;
 
 use App\Domain\SiteConfig\Exceptions\FileUploadException;
 use Illuminate\Http\UploadedFile;

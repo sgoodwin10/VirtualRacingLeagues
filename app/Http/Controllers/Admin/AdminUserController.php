@@ -10,8 +10,10 @@ use App\Application\Admin\Services\AdminApplicationService;
 use App\Domain\Admin\Exceptions\AdminNotFoundException;
 use App\Domain\Admin\Exceptions\CannotDeleteSelfException;
 use App\Helpers\ApiResponse;
+use App\Helpers\PaginationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateAdminUserRequest;
+use App\Http\Requests\Admin\IndexAdminUsersRequest;
 use App\Http\Requests\Admin\UpdateAdminUserRequest;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentAdminRepository;
 use App\Models\Admin;
@@ -20,7 +22,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 
 class AdminUserController extends Controller
 {
@@ -40,7 +41,7 @@ class AdminUserController extends Controller
      * - sort_order: asc/desc
      * - per_page: pagination (default: 15)
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexAdminUsersRequest $request): JsonResponse
     {
         try {
             $currentAdmin = $this->adminService->getCurrentAuthenticatedAdmin();
@@ -48,49 +49,23 @@ class AdminUserController extends Controller
             return ApiResponse::unauthorized();
         }
 
-        // Check authorization using policy
         Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', Admin::class);
 
-        // Validate query parameters
-        $validated = $request->validate([
-            'search' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'string', Rule::in(['active', 'inactive', 'both'])],
-            'sort_by' => ['nullable', 'string', Rule::in(['id', 'first_name', 'last_name', 'status', 'last_login_at'])],
-            'sort_order' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
-        ]);
-
-        // Get paginated data with metadata from application service
         $result = $this->adminService->getPaginatedAdminsWithMetadata(
             $currentAdmin,
-            array_merge($validated, ['page' => $request->input('page', 1)])
+            array_merge($request->validated(), ['page' => $request->input('page', 1)])
         );
 
-        // Build pagination links
-        $baseUrl = $request->url();
-        $queryParams = $request->except('page');
-        $lastPage = $result['meta']['last_page'];
-        $currentPage = $result['meta']['current_page'];
-
-        // Build pagination links
-        $firstPage = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1]));
-        $lastPageUrl = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $lastPage]));
-        $prevPage = $currentPage > 1
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))
-            : null;
-        $nextPage = $currentPage < $lastPage
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))
-            : null;
+        $links = PaginationHelper::buildLinks(
+            $request,
+            $result['meta']['current_page'],
+            $result['meta']['last_page']
+        );
 
         return ApiResponse::paginated(
             array_map(fn($item) => $item->toArray(), $result['data']),
             $result['meta'],
-            [
-                'first' => $firstPage,
-                'last' => $lastPageUrl,
-                'prev' => $prevPage,
-                'next' => $nextPage,
-            ]
+            $links
         );
     }
 

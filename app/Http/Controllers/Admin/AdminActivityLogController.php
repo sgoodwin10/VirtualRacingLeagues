@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Helpers\ApiResponse;
+use App\Helpers\PaginationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\User;
@@ -51,19 +52,11 @@ class AdminActivityLogController extends Controller
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         // Build pagination links
-        $baseUrl = $request->url();
-        $queryParams = $request->except('page');
-        $lastPage = $paginator->lastPage();
-        $currentPage = $paginator->currentPage();
-
-        $firstPage = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1]));
-        $lastPageUrl = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $lastPage]));
-        $prevPage = $currentPage > 1
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))
-            : null;
-        $nextPage = $currentPage < $lastPage
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))
-            : null;
+        $links = PaginationHelper::buildLinks(
+            $request,
+            $paginator->currentPage(),
+            $paginator->lastPage()
+        );
 
         return ApiResponse::paginated(
             $paginator->items(),
@@ -73,12 +66,7 @@ class AdminActivityLogController extends Controller
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
             ],
-            [
-                'first' => $firstPage,
-                'last' => $lastPageUrl,
-                'prev' => $prevPage,
-                'next' => $nextPage,
-            ]
+            $links
         );
     }
 
@@ -105,19 +93,11 @@ class AdminActivityLogController extends Controller
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         // Build pagination links
-        $baseUrl = $request->url();
-        $queryParams = $request->except('page');
-        $lastPage = $paginator->lastPage();
-        $currentPage = $paginator->currentPage();
-
-        $firstPage = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1]));
-        $lastPageUrl = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $lastPage]));
-        $prevPage = $currentPage > 1
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))
-            : null;
-        $nextPage = $currentPage < $lastPage
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))
-            : null;
+        $links = PaginationHelper::buildLinks(
+            $request,
+            $paginator->currentPage(),
+            $paginator->lastPage()
+        );
 
         return ApiResponse::paginated(
             $paginator->items(),
@@ -127,12 +107,7 @@ class AdminActivityLogController extends Controller
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
             ],
-            [
-                'first' => $firstPage,
-                'last' => $lastPageUrl,
-                'prev' => $prevPage,
-                'next' => $nextPage,
-            ]
+            $links
         );
     }
 
@@ -159,19 +134,11 @@ class AdminActivityLogController extends Controller
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         // Build pagination links
-        $baseUrl = $request->url();
-        $queryParams = $request->except('page');
-        $lastPage = $paginator->lastPage();
-        $currentPage = $paginator->currentPage();
-
-        $firstPage = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1]));
-        $lastPageUrl = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $lastPage]));
-        $prevPage = $currentPage > 1
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))
-            : null;
-        $nextPage = $currentPage < $lastPage
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))
-            : null;
+        $links = PaginationHelper::buildLinks(
+            $request,
+            $paginator->currentPage(),
+            $paginator->lastPage()
+        );
 
         return ApiResponse::paginated(
             $paginator->items(),
@@ -181,12 +148,7 @@ class AdminActivityLogController extends Controller
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
             ],
-            [
-                'first' => $firstPage,
-                'last' => $lastPageUrl,
-                'prev' => $prevPage,
-                'next' => $nextPage,
-            ]
+            $links
         );
     }
 

@@ -12,7 +12,11 @@ use App\Domain\User\Exceptions\UserAlreadyExistsException;
 use App\Domain\User\Exceptions\UserNotDeletedException;
 use App\Domain\User\Exceptions\UserNotFoundException;
 use App\Helpers\ApiResponse;
+use App\Helpers\FilterBuilder;
+use App\Helpers\PaginationHelper;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\CreateUserRequest;
+use App\Http\Requests\Admin\IndexUsersRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User as UserModel;
 use Illuminate\Http\JsonResponse;
@@ -34,81 +38,30 @@ final class UserController extends Controller
     /**
      * Display a listing of users.
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexUsersRequest $request): JsonResponse
     {
-        // Cast string boolean to actual boolean before validation
-        $request->merge([
-            'include_deleted' => filter_var(
-                $request->input('include_deleted'),
-                FILTER_VALIDATE_BOOLEAN,
-                FILTER_NULL_ON_FAILURE
-            ),
-        ]);
+        $filters = FilterBuilder::buildWithMapping(
+            $request->validated(),
+            ['sort_field' => 'order_by', 'sort_order' => 'order_direction'],
+            ['include_deleted' => false, 'order_by' => 'created_at', 'order_direction' => 'desc']
+        );
 
-        // Validate input parameters
-        $validated = $request->validate([
-            'search' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'in:active,inactive,suspended'],
-            'include_deleted' => ['nullable', 'boolean'],
-            'sort_field' => ['nullable', 'in:first_name,last_name,email,alias,uuid,status,created_at,updated_at'],
-            'sort_order' => ['nullable', 'in:asc,desc'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
-        ]);
-
-        $filters = [
-            'include_deleted' => $validated['include_deleted'] ?? false,
-            'order_by' => $validated['sort_field'] ?? 'created_at',
-            'order_direction' => $validated['sort_order'] ?? 'desc',
-        ];
-
-        // Only add search if provided
-        if (!empty($validated['search'])) {
-            $filters['search'] = $validated['search'];
-        }
-
-        // Only add status if provided
-        if (!empty($validated['status'])) {
-            $filters['status'] = $validated['status'];
-        }
-
-        $perPage = (int) ($validated['per_page'] ?? 15);
+        $perPage = (int) ($request->validated()['per_page'] ?? 15);
         $page = (int) $request->input('page', 1);
 
         $result = $this->userService->getPaginatedUsers($page, $perPage, $filters);
 
-        // Convert Data objects to arrays
-        $data = array_map(fn($item) => $item->toArray(), $result['data']);
+        $links = PaginationHelper::buildLinks($request, $result['current_page'], $result['last_page']);
 
-        // Build pagination links
-        $baseUrl = $request->url();
-        $queryParams = $request->except('page');
-        $lastPage = $result['last_page'];
-        $currentPage = $result['current_page'];
-
-        $firstPage = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1]));
-        $lastPageUrl = $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $lastPage]));
-        $prevPage = $currentPage > 1
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))
-            : null;
-        $nextPage = $currentPage < $lastPage
-            ? $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))
-            : null;
-
-        // Return paginated response with proper structure
         return ApiResponse::paginated(
-            data: $data,
+            data: array_map(fn($item) => $item->toArray(), $result['data']),
             meta: [
                 'total' => $result['total'],
                 'per_page' => $result['per_page'],
                 'current_page' => $result['current_page'],
                 'last_page' => $result['last_page'],
             ],
-            links: [
-                'first' => $firstPage,
-                'last' => $lastPageUrl,
-                'prev' => $prevPage,
-                'next' => $nextPage,
-            ]
+            links: $links
         );
     }
 
@@ -128,29 +81,13 @@ final class UserController extends Controller
     /**
      * Store a newly created user.
      */
-    public function store(Request $request): JsonResponse
+    public function store(CreateUserRequest $request): JsonResponse
     {
-        // Validate the request
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-            'alias' => 'nullable|string|max:100',
-            'uuid' => 'nullable|string|max:60',
-            'status' => 'nullable|in:active,inactive,suspended',
-        ]);
-
         try {
-            $data = CreateUserData::from([
-                'first_name' => $validated['first_name'],
-                'last_name' => $validated['last_name'],
-                'email' => $validated['email'],
-                'password' => $validated['password'],
-                'alias' => $validated['alias'] ?? null,
-                'uuid' => $validated['uuid'] ?? null,
-                'status' => $validated['status'] ?? 'active',
-            ]);
+            $data = CreateUserData::from(array_merge(
+                $request->validated(),
+                ['status' => $request->validated()['status'] ?? 'active']
+            ));
 
             $userData = $this->userService->createUser($data);
 
