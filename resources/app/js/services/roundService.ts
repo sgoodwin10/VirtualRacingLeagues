@@ -54,3 +54,17 @@ export async function getNextRoundNumber(seasonId: number): Promise<number> {
   );
   return response.data.data.next_round_number;
 }
+
+export async function completeRound(roundId: number): Promise<Round> {
+  const response: AxiosResponse<ApiResponse<Round>> = await apiClient.put(
+    API_ENDPOINTS.rounds.complete(roundId),
+  );
+  return response.data.data;
+}
+
+export async function uncompleteRound(roundId: number): Promise<Round> {
+  const response: AxiosResponse<ApiResponse<Round>> = await apiClient.put(
+    API_ENDPOINTS.rounds.uncomplete(roundId),
+  );
+  return response.data.data;
+}

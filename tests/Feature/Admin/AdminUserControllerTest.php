@@ -129,7 +129,7 @@ class AdminUserControllerTest extends TestCase
      */
     public function test_can_sort_admin_users(): void
     {
-        $superAdmin = Admin::factory()->create(['role' => 'super_admin']);
+        $superAdmin = Admin::factory()->create(['first_name' => 'Zach', 'role' => 'super_admin']);
         Admin::factory()->create(['first_name' => 'Alice', 'role' => 'admin']);
         Admin::factory()->create(['first_name' => 'Charlie', 'role' => 'admin']);
         Admin::factory()->create(['first_name' => 'Bob', 'role' => 'admin']);

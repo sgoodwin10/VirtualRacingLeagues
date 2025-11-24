@@ -85,4 +85,51 @@ final class PointsSystemTest extends TestCase
 
         $this->assertSame(0, $pointsSystem->getPointsForPosition(2));
     }
+
+    public function test_converts_to_json(): void
+    {
+        $points = [1 => 25, 2 => 18, 3 => 15];
+        $pointsSystem = PointsSystem::from($points);
+
+        $json = $pointsSystem->toJson();
+        $decoded = json_decode($json, true);
+
+        $this->assertSame($points, $decoded);
+    }
+
+    public function test_creates_from_json(): void
+    {
+        $points = [1 => 25, 2 => 18, 3 => 15];
+        $json = json_encode($points);
+
+        $pointsSystem = PointsSystem::fromJson($json);
+
+        $this->assertSame($points, $pointsSystem->toArray());
+    }
+
+    public function test_creates_from_json_or_null_with_null(): void
+    {
+        $result = PointsSystem::fromJsonOrNull(null);
+
+        $this->assertNull($result);
+    }
+
+    public function test_creates_from_json_or_null_with_valid_json(): void
+    {
+        $points = [1 => 25, 2 => 18, 3 => 15];
+        $json = json_encode($points);
+
+        $pointsSystem = PointsSystem::fromJsonOrNull($json);
+
+        $this->assertNotNull($pointsSystem);
+        $this->assertSame($points, $pointsSystem->toArray());
+    }
+
+    public function test_throws_exception_for_invalid_json(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid JSON for points system');
+
+        PointsSystem::fromJson('invalid json');
+    }
 }

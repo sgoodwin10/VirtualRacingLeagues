@@ -1,7 +1,7 @@
 <template>
   <BaseModal
     v-model:visible="isVisible"
-    :header="mode === 'create' ? 'Create Round' : 'Edit Round'"
+    :header="mode === 'create' ? 'Create Round' : 'Edit Round: ' + form.round_number"
     width="4xl"
     :closable="!saving"
     :dismissable-mask="false"
@@ -13,7 +13,7 @@
       <!-- Top Section: Round Number + Name -->
       <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
         <!-- Round Number (20% width) -->
-        <div class="md:col-span-1">
+        <div class="md:col-span-1 hidden">
           <FormInputGroup class="w-full">
             <FormLabel for="round_number" text="Round Number" required />
             <InputNumber
@@ -75,10 +75,10 @@
                     <AutoComplete
                       id="track"
                       v-model="selectedTrack"
-                      :suggestions="trackSearch.searchResults.value"
+                      :suggestions="trackSuggestions"
                       option-group-label="name"
                       option-group-children="tracks"
-                      option-label="name"
+                      :option-label="formatTrackDisplay"
                       placeholder="Search for a location..."
                       :invalid="!!validationErrors.platform_track_id"
                       force-selection
@@ -91,7 +91,9 @@
                     >
                       <template #optiongroup="slotProps">
                         <div class="flex items-center gap-2">
-                          <span class="font-semibold">{{ slotProps.option.name }}</span>
+                          <span class="font-semibold text-surface-700">{{
+                            slotProps.option.name
+                          }}</span>
                           <span v-if="slotProps.option.country" class="text-sm text-gray-500">
                             ({{ slotProps.option.country }})
                           </span>
@@ -99,19 +101,14 @@
                       </template>
                       <template #option="slotProps">
                         <div class="flex items-center gap-2">
-                          <span>
-                            {{ slotProps.option.name }}
-                            <span v-if="slotProps.option.location?.country" class="text-gray-500">
-                              ({{ slotProps.option.location.country }})
-                            </span>
+                          <span class="flex items-center gap-2">
+                            <PhArrowRight size="16" class="text-surface-500" />
+                            {{ formatTrackDisplay(slotProps.option) }}
                           </span>
-                          <Tag
-                            v-if="slotProps.option.is_reverse"
-                            value="Reverse"
-                            severity="info"
-                            size="small"
-                          />
                         </div>
+                      </template>
+                      <template #chip="slotProps">
+                        <span>{{ formatTrackDisplay(slotProps.value) }}</span>
                       </template>
                     </AutoComplete>
                     <FormOptionalText
@@ -264,11 +261,98 @@
                       {{ validationErrors.fastest_lap }}
                     </FormError>
                   </FormInputGroup>
+
+                  <hr class="border-gray-300" />
+
+                  <!-- Round Points -->
+                  <FormInputGroup>
+                    <FormLabel text="Round Points" />
+                    <div class="space-y-3">
+                      <div class="flex items-center gap-2">
+                        <InputSwitch
+                          id="round_points"
+                          v-model="form.round_points"
+                          aria-label="Enable round points"
+                          @change="validation.validateRoundPoints(form.round_points)"
+                        />
+                        <label for="round_points" class="text-sm font-medium"
+                          >Enable round-level points calculation</label
+                        >
+                      </div>
+                      <FormOptionalText
+                        :show-optional="false"
+                        text="When enabled, accumulated race results create a round standing using the round's points system"
+                      />
+                      <FormError v-if="validationErrors.round_points">
+                        {{ validationErrors.round_points }}
+                      </FormError>
+                    </div>
+                  </FormInputGroup>
+                </div>
+              </div>
+
+              <!-- Points System Section - Only show when round_points is enabled -->
+              <div v-if="form.round_points" class="space-y-3">
+                <!-- Horizontal Rule -->
+                <hr class="border-gray-300" />
+
+                <h3 class="text-sm font-semibold text-gray-900">Points System</h3>
+
+                <div class="space-y-3">
+                  <!-- Points Grid (always visible when round_points is enabled) -->
+                  <FormInputGroup>
+                    <FormLabel text="Points per Position" />
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                      <div class="grid grid-cols-5 gap-3">
+                        <InputGroup
+                          v-for="position in Object.keys(form.points_system).map(Number)"
+                          :key="position"
+                        >
+                          <InputGroupAddon>P{{ position }}</InputGroupAddon>
+                          <InputNumber
+                            :id="`position_${position}`"
+                            v-model="form.points_system[position]"
+                            :min="0"
+                            :max="999"
+                            size="small"
+                            fluid
+                            class="w-full"
+                          />
+                        </InputGroup>
+                      </div>
+                      <div class="mt-3 flex gap-2">
+                        <Button
+                          label="Add Position"
+                          icon="pi pi-plus"
+                          size="small"
+                          severity="success"
+                          outlined
+                          @click="addPointsPosition"
+                        />
+                        <Button
+                          label="Remove Last"
+                          icon="pi pi-trash"
+                          size="small"
+                          severity="danger"
+                          outlined
+                          :disabled="Object.keys(form.points_system).length <= 1"
+                          @click="removeLastPointsPosition"
+                        />
+                      </div>
+                    </div>
+                    <FormOptionalText
+                      :show-optional="false"
+                      text="Pre-populated with F1 standard points (25-18-15-12-10-8-6-4-2-1). Modify as needed."
+                    />
+                    <FormError v-if="validationErrors.points_system">
+                      {{ validationErrors.points_system }}
+                    </FormError>
+                  </FormInputGroup>
                 </div>
               </div>
 
               <!-- Horizontal Rule -->
-              <hr class="border-gray-300" />
+              <hr v-if="!form.round_points" class="border-gray-300" />
 
               <!-- Second Section: Notes -->
               <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -355,11 +439,13 @@ import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
+import InputGroup from 'primevue/inputgroup';
+import InputGroupAddon from 'primevue/inputgroupaddon';
 import Checkbox from 'primevue/checkbox';
+import InputSwitch from 'primevue/inputswitch';
 import DatePicker from 'primevue/datepicker';
 import AutoComplete from 'primevue/autocomplete';
 import Textarea from 'primevue/textarea';
-import Tag from 'primevue/tag';
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import AccordionHeader from 'primevue/accordionheader';
@@ -374,6 +460,8 @@ import { useTrackStore } from '@app/stores/trackStore';
 import { useRoundValidation } from '@app/composables/useRoundValidation';
 import { useTrackSearch } from '@app/composables/useTrackSearch';
 import type { Round, RoundForm, CreateRoundRequest, UpdateRoundRequest } from '@app/types/round';
+import { F1_STANDARD_POINTS } from '@app/types/race';
+import { PhArrowRight } from '@phosphor-icons/vue';
 import type { Track } from '@app/types/track';
 
 interface Props {
@@ -401,6 +489,9 @@ const trackSearch = useTrackSearch();
 const saving = ref(false);
 const selectedTrack = ref<Track | null>(null);
 
+// Computed property to unwrap the ref for TypeScript
+const trackSuggestions = computed(() => trackSearch.searchResults.value);
+
 const form = ref<RoundForm>({
   round_number: 1,
   name: '',
@@ -413,6 +504,8 @@ const form = ref<RoundForm>({
   internal_notes: '',
   fastest_lap: null,
   fastest_lap_top_10: false,
+  points_system: { ...F1_STANDARD_POINTS },
+  round_points: false,
 });
 
 const isVisible = computed({
@@ -421,6 +514,27 @@ const isVisible = computed({
 });
 
 const validationErrors = computed(() => validation.errors.value);
+
+// Add a new points position
+function addPointsPosition(): void {
+  const maxPosition = Math.max(...Object.keys(form.value.points_system).map(Number));
+  form.value.points_system[maxPosition + 1] = 0;
+}
+
+// Remove the last points position
+function removeLastPointsPosition(): void {
+  const positions = Object.keys(form.value.points_system)
+    .map(Number)
+    .sort((a, b) => a - b);
+  if (positions.length > 1) {
+    const lastPosition = positions[positions.length - 1];
+    if (lastPosition !== undefined) {
+      const newSystem = { ...form.value.points_system };
+      delete newSystem[lastPosition];
+      form.value.points_system = newSystem;
+    }
+  }
+}
 
 // Computed property for fastest lap bonus checkbox
 const hasFastestLapBonus = computed({
@@ -462,6 +576,8 @@ async function initializeForm(): Promise<void> {
       internal_notes: '',
       fastest_lap: null,
       fastest_lap_top_10: false,
+      points_system: { ...F1_STANDARD_POINTS },
+      round_points: false,
     };
     selectedTrack.value = null;
 
@@ -473,6 +589,19 @@ async function initializeForm(): Promise<void> {
       console.error('Failed to fetch next round number:', error);
     }
   } else if (props.mode === 'edit' && props.round) {
+    // Parse points_system from string to object
+    let pointsSystemObject = { ...F1_STANDARD_POINTS };
+
+    if (props.round.points_system && props.round.points_system.trim()) {
+      try {
+        pointsSystemObject = JSON.parse(props.round.points_system);
+      } catch (error) {
+        console.error('Failed to parse points_system:', error);
+        // Fall back to F1 standard
+        pointsSystemObject = { ...F1_STANDARD_POINTS };
+      }
+    }
+
     // Populate form for edit mode
     form.value = {
       round_number: props.round.round_number,
@@ -486,6 +615,8 @@ async function initializeForm(): Promise<void> {
       internal_notes: props.round.internal_notes || '',
       fastest_lap: props.round.fastest_lap,
       fastest_lap_top_10: props.round.fastest_lap_top_10,
+      points_system: pointsSystemObject,
+      round_points: props.round.round_points,
     };
 
     // Load selected track
@@ -498,6 +629,15 @@ async function initializeForm(): Promise<void> {
       }
     }
   }
+}
+
+function formatTrackDisplay(track: Track | null): string {
+  if (!track) return '';
+
+  const locationName = track.location?.name || 'Unknown Location';
+  const trackName = track.name;
+
+  return `${locationName} - ${trackName}`;
 }
 
 function handleTrackSearch(event: { query: string }): void {
@@ -545,6 +685,12 @@ async function handleSubmit(): Promise<void> {
       if (form.value.fastest_lap !== null) {
         requestData.fastest_lap = form.value.fastest_lap;
         requestData.fastest_lap_top_10 = form.value.fastest_lap_top_10;
+      }
+      // Always include round_points (boolean)
+      requestData.round_points = form.value.round_points;
+      // Include points_system if provided and round_points is enabled
+      if (form.value.round_points && Object.keys(form.value.points_system).length > 0) {
+        requestData.points_system = JSON.stringify(form.value.points_system);
       }
 
       await roundStore.createNewRound(props.seasonId, requestData);
@@ -620,6 +766,18 @@ async function handleSubmit(): Promise<void> {
 
       if (form.value.fastest_lap_top_10 !== props.round.fastest_lap_top_10) {
         requestData.fastest_lap_top_10 = form.value.fastest_lap_top_10;
+      }
+
+      if (form.value.round_points !== props.round.round_points) {
+        requestData.round_points = form.value.round_points;
+      }
+
+      // Compare points_system objects
+      const formPointsSystemJson = JSON.stringify(form.value.points_system);
+      const originalPointsSystem = props.round.points_system || '';
+      if (formPointsSystemJson !== originalPointsSystem) {
+        requestData.points_system =
+          Object.keys(form.value.points_system).length > 0 ? formPointsSystemJson : null;
       }
 
       if (Object.keys(requestData).length > 0) {

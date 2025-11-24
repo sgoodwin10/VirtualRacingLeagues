@@ -55,7 +55,21 @@ export async function updateRace(raceId: number, data: UpdateRaceRequest): Promi
   return response.data.data;
 }
 
+// PUT update qualifier
+export async function updateQualifier(qualifierId: number, data: UpdateRaceRequest): Promise<Race> {
+  const response: AxiosResponse<ApiResponse<Race>> = await apiClient.put(
+    API_ENDPOINTS.qualifiers.update(qualifierId),
+    data,
+  );
+  return response.data.data;
+}
+
 // DELETE race
 export async function deleteRace(raceId: number): Promise<void> {
   await apiClient.delete(API_ENDPOINTS.races.delete(raceId));
+}
+
+// DELETE qualifier
+export async function deleteQualifier(qualifierId: number): Promise<void> {
+  await apiClient.delete(API_ENDPOINTS.qualifiers.delete(qualifierId));
 }

@@ -46,9 +46,24 @@ class TrackController extends Controller
         ->where('is_active', true)
         ->orderBy('sort_order');
 
-        // Search by location name if provided
+        // Search by location name or track name if provided
         if (!empty($validated['search'])) {
-            $query->where('name', 'like', '%' . $validated['search'] . '%');
+            $searchTerm = $validated['search'];
+            $query->where(function ($q) use ($searchTerm, $platformId, $validated) {
+                // Search in location name
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                    // OR search in track names (with platform and is_active filters)
+                    ->orWhereHas('tracks', function ($trackQuery) use ($searchTerm, $platformId, $validated) {
+                        $trackQuery->where('name', 'like', '%' . $searchTerm . '%')
+                            ->where('platform_id', $platformId);
+
+                        // Apply is_active filter if provided
+                        if (isset($validated['is_active'])) {
+                            $isActive = filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN);
+                            $trackQuery->where('is_active', $isActive);
+                        }
+                    });
+            });
         }
 
         $locations = $query->get();

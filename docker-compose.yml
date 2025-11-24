@@ -21,7 +21,7 @@ services:
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
       # Dependency caching - override delegated mount for these directories
       - vendor:/var/www/vendor
-      - node_modules:/var/www/node_modules
+      - node_modules:/var/www/node_modules  # Commented out to make visible on host
       # Cache directories for faster installs
       - composer_cache:/home/laravel/.composer/cache
       - npm_cache:/home/laravel/.npm
@@ -136,7 +136,7 @@ volumes:
   # Dependency caching volumes for faster rebuilds and startups
   vendor:
     driver: local
-  node_modules:
+  node_modules:  # Commented out to make visible on host
     driver: local
   composer_cache:
     driver: local

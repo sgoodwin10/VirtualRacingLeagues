@@ -289,7 +289,7 @@ describe('useCrudStore', () => {
 
       // Update item
       crud.updateItemInList({ id: 1, name: 'Updated Item 1' });
-      expect(crud.items.value[0].name).toBe('Updated Item 1');
+      expect(crud.items.value[0]?.name).toBe('Updated Item 1');
 
       // Remove item
       crud.removeItemFromList(1);
@@ -301,7 +301,7 @@ describe('useCrudStore', () => {
       crud.updateItemInList({ id: 1, name: 'Update 1' });
       crud.updateItemInList({ id: 1, name: 'Update 2' });
       crud.updateItemInList({ id: 1, name: 'Update 3' });
-      expect(crud.items.value[0].name).toBe('Update 3');
+      expect(crud.items.value[0]?.name).toBe('Update 3');
     });
 
     it('should maintain consistency during error scenarios', () => {

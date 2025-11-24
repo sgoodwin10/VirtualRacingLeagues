@@ -8,32 +8,51 @@ describe('useRaceValidation', () => {
 
   beforeEach(() => {
     form = reactive({
-      race_type: 'race',
+      race_type: 'sprint',
       race_number: 1,
       name: '',
       qualifying_format: 'none',
-      qualifying_length: null,
-      length_type: 'laps',
-      length_value: 10,
-      mandatory_pit_stop: false,
-      minimum_pit_time: null,
-      points_template: 'default',
-      points_system: {},
+      qualifying_length: 0,
+      qualifying_tire: '',
       grid_source: 'manual',
       grid_source_race_id: null,
+      length_type: 'laps',
+      length_value: 10,
+      extra_lap_after_time: false,
+      weather: '',
+      tire_restrictions: '',
+      fuel_usage: '',
+      damage_model: '',
+      track_limits_enforced: false,
+      false_start_detection: false,
+      collision_penalties: false,
+      mandatory_pit_stop: false,
+      minimum_pit_time: 0,
+      assists_restrictions: '',
+      race_divisions: false,
+      points_template: 'f1',
+      points_system: {},
+      bonus_pole: false,
+      bonus_pole_points: 0,
+      bonus_fastest_lap: false,
+      bonus_fastest_lap_points: 0,
+      bonus_fastest_lap_top_10: false,
+      dnf_points: 0,
+      dns_points: 0,
+      race_notes: '',
     });
   });
 
   describe('validateRaceType', () => {
     it('should return error if race_type is empty', () => {
-      form.race_type = '';
+      form.race_type = null;
       const { validateRaceType } = useRaceValidation(form);
 
       expect(validateRaceType()).toBe('Race type is required');
     });
 
     it('should return undefined for valid race_type', () => {
-      form.race_type = 'race';
+      form.race_type = 'sprint';
       const { validateRaceType } = useRaceValidation(form);
 
       expect(validateRaceType()).toBeUndefined();
@@ -124,15 +143,15 @@ describe('useRaceValidation', () => {
     });
 
     it('should return error if qualifying_length is missing when required', () => {
-      form.qualifying_format = 'open';
-      form.qualifying_length = null;
+      form.qualifying_format = 'standard';
+      form.qualifying_length = 0;
       const { validateQualifyingLength } = useRaceValidation(form);
 
       expect(validateQualifyingLength()).toBe('Qualifying length must be a positive number');
     });
 
     it('should return error if qualifying_length > 999', () => {
-      form.qualifying_format = 'open';
+      form.qualifying_format = 'standard';
       form.qualifying_length = 1000;
       const { validateQualifyingLength } = useRaceValidation(form);
 
@@ -140,7 +159,7 @@ describe('useRaceValidation', () => {
     });
 
     it('should return undefined for valid qualifying_length', () => {
-      form.qualifying_format = 'open';
+      form.qualifying_format = 'standard';
       form.qualifying_length = 30;
       const { validateQualifyingLength } = useRaceValidation(form);
 
@@ -203,7 +222,7 @@ describe('useRaceValidation', () => {
 
     it('should return error if minimum_pit_time is missing when required', () => {
       form.mandatory_pit_stop = true;
-      form.minimum_pit_time = null;
+      form.minimum_pit_time = 0;
       const { validateMinimumPitTime } = useRaceValidation(form);
 
       expect(validateMinimumPitTime()).toBe(
@@ -230,7 +249,7 @@ describe('useRaceValidation', () => {
 
   describe('validatePointsSystem', () => {
     it('should return undefined for non-custom points template', () => {
-      form.points_template = 'default';
+      form.points_template = 'f1';
       const { validatePointsSystem } = useRaceValidation(form);
 
       expect(validatePointsSystem()).toBeUndefined();
@@ -303,7 +322,7 @@ describe('useRaceValidation', () => {
     });
 
     it('should return false and populate errors for invalid form', () => {
-      form.race_type = '';
+      form.race_type = null;
       form.race_number = 0;
       form.name = 'AB';
 
@@ -318,7 +337,7 @@ describe('useRaceValidation', () => {
 
   describe('clearErrors', () => {
     it('should clear all errors', () => {
-      form.race_type = '';
+      form.race_type = null;
       const { validateAll, clearErrors, errors } = useRaceValidation(form);
 
       validateAll();

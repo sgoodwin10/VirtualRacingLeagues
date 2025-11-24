@@ -28,8 +28,8 @@ vi.mock('primevue/inputnumber', () => ({
   default: { name: 'InputNumber', template: '<input type="number" />' },
 }));
 
-vi.mock('primevue/dropdown', () => ({
-  default: { name: 'Dropdown', template: '<select><slot/></select>' },
+vi.mock('primevue/select', () => ({
+  default: { name: 'Select', template: '<select><slot/></select>' },
 }));
 
 vi.mock('primevue/textarea', () => ({

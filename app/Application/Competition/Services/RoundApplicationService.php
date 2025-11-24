@@ -13,6 +13,7 @@ use App\Domain\Competition\ValueObjects\RoundName;
 use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
+use App\Domain\Competition\ValueObjects\PointsSystem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use DateTimeImmutable;
@@ -60,6 +61,8 @@ final class RoundApplicationService
                 internalNotes: $data->internal_notes,
                 fastestLap: $data->fastest_lap,
                 fastestLapTop10: $data->fastest_lap_top_10,
+                pointsSystem: $data->points_system ? PointsSystem::fromJson($data->points_system) : null,
+                roundPoints: $data->round_points,
                 createdByUserId: $userId,
             );
 
@@ -146,6 +149,18 @@ final class RoundApplicationService
                 ? $data->internal_notes
                 : $round->internalNotes();
 
+            // Determine points_system: if field provided in request, update it (even to null); otherwise keep existing
+            $pointsSystem = $round->pointsSystem();
+            if (array_key_exists('points_system', $requestData)) {
+                $pointsSystem = $data->points_system ? PointsSystem::fromJson($data->points_system) : null;
+            }
+
+            // Determine round_points: if field provided in request, update it; otherwise keep existing
+            $roundPoints = $round->roundPoints();
+            if (array_key_exists('round_points', $requestData)) {
+                $roundPoints = $data->round_points ?? false;
+            }
+
             $round->updateDetails(
                 roundNumber: $data->round_number !== null
                     ? RoundNumber::from($data->round_number)
@@ -161,6 +176,8 @@ final class RoundApplicationService
                 internalNotes: $internalNotes,
                 fastestLap: $fastestLap,
                 fastestLapTop10: $fastestLapTop10,
+                pointsSystem: $pointsSystem,
+                roundPoints: $roundPoints,
             );
 
             $this->roundRepository->save($round);
@@ -226,6 +243,34 @@ final class RoundApplicationService
     public function getNextRoundNumber(int $seasonId): int
     {
         return $this->roundRepository->getNextRoundNumber($seasonId);
+    }
+
+    /**
+     * Mark round as completed.
+     */
+    public function completeRound(int $roundId): RoundData
+    {
+        return DB::transaction(function () use ($roundId) {
+            $round = $this->roundRepository->findById($roundId);
+            $round->complete();
+            $this->roundRepository->save($round);
+            $this->dispatchEvents($round);
+            return RoundData::fromEntity($round);
+        });
+    }
+
+    /**
+     * Mark round as not completed (scheduled).
+     */
+    public function uncompleteRound(int $roundId): RoundData
+    {
+        return DB::transaction(function () use ($roundId) {
+            $round = $this->roundRepository->findById($roundId);
+            $round->uncomplete();
+            $this->roundRepository->save($round);
+            $this->dispatchEvents($round);
+            return RoundData::fromEntity($round);
+        });
     }
 
     /**

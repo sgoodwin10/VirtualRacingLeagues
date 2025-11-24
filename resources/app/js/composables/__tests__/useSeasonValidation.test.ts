@@ -16,6 +16,8 @@ describe('useSeasonValidation', () => {
       logo_url: null,
       banner: null,
       banner_url: null,
+      race_divisions_enabled: false,
+      team_championship_enabled: false,
     });
   });
 

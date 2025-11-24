@@ -96,29 +96,47 @@ export const useRaceStore = defineStore('race', () => {
     }
   }
 
-  async function updateExistingRace(raceId: number, data: UpdateRaceRequest): Promise<Race> {
+  async function updateExistingRace(
+    raceId: number,
+    data: UpdateRaceRequest,
+    isQualifier = false,
+  ): Promise<Race> {
     setLoading(true);
     setError(null);
     try {
-      const updatedRace = await raceService.updateRace(raceId, data);
+      const updatedRace = isQualifier
+        ? await raceService.updateQualifier(raceId, data)
+        : await raceService.updateRace(raceId, data);
       updateItemInList(updatedRace);
       return updatedRace;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update race');
+      setError(
+        err instanceof Error
+          ? err.message
+          : `Failed to update ${isQualifier ? 'qualifier' : 'race'}`,
+      );
       throw err;
     } finally {
       setLoading(false);
     }
   }
 
-  async function deleteExistingRace(raceId: number): Promise<void> {
+  async function deleteExistingRace(raceId: number, isQualifier = false): Promise<void> {
     setLoading(true);
     setError(null);
     try {
-      await raceService.deleteRace(raceId);
+      if (isQualifier) {
+        await raceService.deleteQualifier(raceId);
+      } else {
+        await raceService.deleteRace(raceId);
+      }
       removeItemFromList(raceId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete race');
+      setError(
+        err instanceof Error
+          ? err.message
+          : `Failed to delete ${isQualifier ? 'qualifier' : 'race'}`,
+      );
       throw err;
     } finally {
       setLoading(false);

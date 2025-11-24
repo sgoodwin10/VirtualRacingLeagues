@@ -54,15 +54,14 @@ fi
 
 # Ensure Playwright Chromium is installed (fallback safety check)
 log_info "Checking Playwright Chromium browser..."
-if ! gosu laravel npx playwright@1.56.0 --version &> /dev/null; then
-    log_warning "Playwright not available, installing..."
-    gosu laravel npm install --save-dev @playwright/test@^1.56.0
-fi
 
-# Check if Chromium browser is installed
-if [ ! -d "/home/laravel/.cache/playwright/chromium-*" ]; then
+# Check if Chromium browser is installed by listing the cache directory
+CHROMIUM_DIRS=$(gosu laravel sh -c 'ls -d /home/laravel/.cache/ms-playwright/chromium-* 2>/dev/null || true')
+
+if [ -z "$CHROMIUM_DIRS" ]; then
     log_warning "Playwright Chromium browser missing, installing..."
-    gosu laravel npx playwright@1.56.0 install chromium --with-deps
+    # Install chromium browser only (system deps already installed in Dockerfile)
+    gosu laravel npx playwright@1.56.0 install chromium
     log_success "Playwright Chromium browser installed"
 else
     log_success "Playwright Chromium browser available"

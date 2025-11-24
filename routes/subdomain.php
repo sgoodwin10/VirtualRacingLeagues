@@ -240,6 +240,8 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             Route::get('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'show'])->name('rounds.show');
             Route::put('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'update'])->name('rounds.update');
             Route::delete('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'destroy'])->name('rounds.destroy');
+            Route::put('/rounds/{roundId}/complete', [\App\Http\Controllers\User\RoundController::class, 'complete'])->name('rounds.complete');
+            Route::put('/rounds/{roundId}/uncomplete', [\App\Http\Controllers\User\RoundController::class, 'uncomplete'])->name('rounds.uncomplete');
 
             // Races
             Route::get('/rounds/{roundId}/races', [RaceController::class, 'index'])->name('rounds.races.index');

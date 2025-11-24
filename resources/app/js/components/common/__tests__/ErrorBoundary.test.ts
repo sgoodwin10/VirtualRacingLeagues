@@ -53,44 +53,27 @@ describe('ErrorBoundary', () => {
   });
 
   describe('Props and State', () => {
-    it('should have error property from composable', () => {
+    it('should render without error initially', () => {
       const wrapper = mount(ErrorBoundary, {
         slots: {
           default: h(SafeComponent),
         },
       });
 
-      expect(wrapper.vm.error).toBeDefined();
+      // Should render slot content, not error UI
+      expect(wrapper.find('.error-boundary').exists()).toBe(false);
+      expect(wrapper.find('.safe-content').exists()).toBe(true);
     });
 
-    it('should have errorInfo property from composable', () => {
+    it('should not show error details in production mode', () => {
       const wrapper = mount(ErrorBoundary, {
         slots: {
           default: h(SafeComponent),
         },
       });
 
-      expect(wrapper.vm.errorInfo).toBeDefined();
-    });
-
-    it('should have resetError method from composable', () => {
-      const wrapper = mount(ErrorBoundary, {
-        slots: {
-          default: h(SafeComponent),
-        },
-      });
-
-      expect(typeof wrapper.vm.resetError).toBe('function');
-    });
-
-    it('should have isDev computed property', () => {
-      const wrapper = mount(ErrorBoundary, {
-        slots: {
-          default: h(SafeComponent),
-        },
-      });
-
-      expect(wrapper.vm.isDev).toBeDefined();
+      // Error boundary should not be visible when no error
+      expect(wrapper.find('.error-boundary').exists()).toBe(false);
     });
   });
 

@@ -54,10 +54,20 @@
                 }}</span>
               </div>
 
-              <div v-if="round.name" class="flex flex-none items-center mr-4">
-                <span class="font-medium text-lg text-gray-700">{{
+              <div class="flex flex-none items-center mr-4 gap-2">
+                <span v-if="round.name" class="font-medium text-lg text-gray-700">{{
                   round.name || 'Untitled Round'
                 }}</span>
+                <span
+                  v-if="round.round_points"
+                  v-tooltip.top="
+                    'Round points enabled: Race results are combined to create a round standing'
+                  "
+                  class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200"
+                >
+                  <i class="pi pi-calculator mr-1 text-xs"></i>
+                  Round Points
+                </span>
               </div>
               <div class="flex flex-grow flex-row pr-4 space-y-0">
                 <div class="flex-none flex-col">
@@ -104,6 +114,14 @@
               </div>
               <div class="flex items-center gap-2">
                 <Button
+                  :label="round.status === 'completed' ? 'Uncomplete' : 'Complete'"
+                  :severity="round.status === 'completed' ? 'secondary' : 'success'"
+                  :loading="completingRoundId === round.id"
+                  outlined
+                  size="small"
+                  @click.stop="handleToggleCompletion(round)"
+                />
+                <Button
                   v-tooltip.top="'Edit Round'"
                   icon="pi pi-pencil"
                   text
@@ -129,7 +147,12 @@
             <div class="space-y-2">
               <!-- Round Details -->
               <div
-                v-if="round.technical_notes || round.stream_url || round.internal_notes"
+                v-if="
+                  round.technical_notes ||
+                  round.stream_url ||
+                  round.internal_notes ||
+                  (round.round_points && round.points_system)
+                "
                 class="grid grid-cols-3 gap-4 border-b border-slate-300 pb-4"
               >
                 <BasePanel
@@ -169,12 +192,25 @@
                   </template>
                   <div class="whitespace-pre-wrap">{{ round.internal_notes }}</div>
                 </BasePanel>
+
+                <BasePanel
+                  v-if="round.round_points && round.points_system"
+                  content-class="p-4 border border-slate-300 rounded-md bg-surface-50"
+                >
+                  <template #header>
+                    <div class="flex items-center gap-2 py-2 mx-2 w-full">
+                      <i class="pi pi-calculator text-blue-600"></i>
+                      <span class="font-medium text-surface-700">Round Points System</span>
+                    </div>
+                  </template>
+                  <div class="whitespace-pre-wrap font-mono text-sm">{{ round.points_system }}</div>
+                </BasePanel>
               </div>
 
               <!-- Race Events Section (Qualifying + Races) -->
               <div>
                 <div class="flex items-center justify-between my-3">
-                  <HTag :level="3">Race Events</HTag>
+                  <HTag :level="3">Round {{ round.round_number }} Race Events</HTag>
                   <div class="flex items-center gap-2">
                     <Button
                       label="Add Event"
@@ -193,7 +229,7 @@
 
                 <div
                   v-else-if="getAllRaceEvents(round.id).length === 0"
-                  class="text-sm text-gray-500 text-center py-4"
+                  class="text-md text-gray-500 text-center py-4"
                 >
                   No race events added yet
                 </div>
@@ -340,6 +376,7 @@ const selectedRoundId = ref<number | null>(null);
 const raceFormMode = ref<'create' | 'edit'>('create');
 const raceFormType = ref<'race' | 'qualifier'>('race');
 const loadingRaces = ref(false);
+const completingRoundId = ref<number | null>(null);
 
 const rounds = computed(() => {
   return roundStore
@@ -482,6 +519,39 @@ async function handleRoundSaved(): Promise<void> {
   }
 }
 
+async function handleToggleCompletion(round: Round): Promise<void> {
+  completingRoundId.value = round.id;
+
+  try {
+    if (round.status === 'completed') {
+      await roundStore.uncompleteRound(round.id);
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Round marked as incomplete',
+        life: 3000,
+      });
+    } else {
+      await roundStore.completeRound(round.id);
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Round marked as completed',
+        life: 3000,
+      });
+    }
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error instanceof Error ? error.message : 'Failed to update round status',
+      life: 5000,
+    });
+  } finally {
+    completingRoundId.value = null;
+  }
+}
+
 function getAllRaceEvents(roundId: number): Race[] {
   return allRaceEventsByRound.value.get(roundId) || [];
 }
@@ -511,7 +581,7 @@ function handleDeleteQualifier(qualifier: Race): void {
     acceptClass: 'p-button-danger',
     accept: async () => {
       try {
-        await raceStore.deleteExistingRace(qualifier.id);
+        await raceStore.deleteExistingRace(qualifier.id, true);
         toast.add({
           severity: 'success',
           summary: 'Success',

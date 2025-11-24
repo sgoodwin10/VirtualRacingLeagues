@@ -116,6 +116,46 @@ export function useRoundValidation() {
     return true;
   }
 
+  function validatePointsSystem(
+    value: Record<number, number>,
+    roundPointsEnabled: boolean,
+  ): boolean {
+    // Only validate if round_points is enabled
+    if (!roundPointsEnabled) {
+      delete errors.value.points_system;
+      return true;
+    }
+
+    // Required when round_points is enabled
+    if (!value || Object.keys(value).length === 0) {
+      errors.value.points_system = 'Points system is required when round points are enabled';
+      return false;
+    }
+
+    // Validate that all positions are positive integers
+    const positions = Object.keys(value).map(Number);
+    if (positions.some((pos) => pos < 1 || !Number.isInteger(pos))) {
+      errors.value.points_system = 'All positions must be positive integers';
+      return false;
+    }
+
+    // Validate that all points values are non-negative integers
+    const points = Object.values(value);
+    if (points.some((pts) => pts < 0 || !Number.isInteger(pts))) {
+      errors.value.points_system = 'All points values must be non-negative integers';
+      return false;
+    }
+
+    delete errors.value.points_system;
+    return true;
+  }
+
+  function validateRoundPoints(_value: boolean): boolean {
+    // Boolean field - always valid
+    delete errors.value.round_points;
+    return true;
+  }
+
   function validateAll(form: RoundForm): boolean {
     const isRoundNumberValid = validateRoundNumber(form.round_number);
     const isNameValid = validateName(form.name);
@@ -128,6 +168,8 @@ export function useRoundValidation() {
     const isInternalNotesValid = validateInternalNotes(form.internal_notes);
     const isFastestLapValid = validateFastestLap(form.fastest_lap);
     const isFastestLapTop10Valid = validateFastestLapTop10(form.fastest_lap_top_10);
+    const isPointsSystemValid = validatePointsSystem(form.points_system, form.round_points);
+    const isRoundPointsValid = validateRoundPoints(form.round_points);
 
     return (
       isRoundNumberValid &&
@@ -140,7 +182,9 @@ export function useRoundValidation() {
       isTrackConditionsValid &&
       isInternalNotesValid &&
       isFastestLapValid &&
-      isFastestLapTop10Valid
+      isFastestLapTop10Valid &&
+      isPointsSystemValid &&
+      isRoundPointsValid
     );
   }
 
@@ -161,6 +205,8 @@ export function useRoundValidation() {
     validateInternalNotes,
     validateFastestLap,
     validateFastestLapTop10,
+    validatePointsSystem,
+    validateRoundPoints,
     validateAll,
     clearErrors,
   };

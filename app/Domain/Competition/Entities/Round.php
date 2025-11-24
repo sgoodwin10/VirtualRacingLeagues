@@ -8,6 +8,7 @@ use App\Domain\Competition\ValueObjects\RoundName;
 use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
+use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\Events\RoundCreated;
 use App\Domain\Competition\Events\RoundUpdated;
 use App\Domain\Competition\Events\RoundDeleted;
@@ -39,6 +40,8 @@ final class Round
         private ?string $internalNotes,
         private ?int $fastestLap,
         private bool $fastestLapTop10,
+        private ?PointsSystem $pointsSystem,
+        private bool $roundPoints,
         private RoundStatus $status,
         private int $createdByUserId,
         private DateTimeImmutable $createdAt,
@@ -65,6 +68,8 @@ final class Round
         ?string $internalNotes,
         ?int $fastestLap,
         bool $fastestLapTop10,
+        ?PointsSystem $pointsSystem,
+        bool $roundPoints,
         int $createdByUserId,
     ): self {
         return new self(
@@ -83,6 +88,8 @@ final class Round
             internalNotes: $internalNotes,
             fastestLap: $fastestLap,
             fastestLapTop10: $fastestLapTop10,
+            pointsSystem: $pointsSystem,
+            roundPoints: $roundPoints,
             status: RoundStatus::SCHEDULED,
             createdByUserId: $createdByUserId,
             createdAt: new DateTimeImmutable(),
@@ -110,6 +117,8 @@ final class Round
         ?string $internalNotes,
         ?int $fastestLap,
         bool $fastestLapTop10,
+        ?PointsSystem $pointsSystem,
+        bool $roundPoints,
         RoundStatus $status,
         int $createdByUserId,
         DateTimeImmutable $createdAt,
@@ -132,6 +141,8 @@ final class Round
             internalNotes: $internalNotes,
             fastestLap: $fastestLap,
             fastestLapTop10: $fastestLapTop10,
+            pointsSystem: $pointsSystem,
+            roundPoints: $roundPoints,
             status: $status,
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
@@ -156,6 +167,8 @@ final class Round
         ?string $internalNotes,
         ?int $fastestLap,
         bool $fastestLapTop10,
+        ?PointsSystem $pointsSystem,
+        bool $roundPoints,
     ): void {
         $hasChanges = false;
 
@@ -219,6 +232,26 @@ final class Round
             $hasChanges = true;
         }
 
+        // Compare points system (null-safe comparison)
+        $pointsSystemChanged = false;
+        if ($this->pointsSystem === null && $pointsSystem !== null) {
+            $pointsSystemChanged = true;
+        } elseif ($this->pointsSystem !== null && $pointsSystem === null) {
+            $pointsSystemChanged = true;
+        } elseif ($this->pointsSystem !== null && $pointsSystem !== null) {
+            $pointsSystemChanged = $this->pointsSystem->toArray() !== $pointsSystem->toArray();
+        }
+
+        if ($pointsSystemChanged) {
+            $this->pointsSystem = $pointsSystem;
+            $hasChanges = true;
+        }
+
+        if ($this->roundPoints !== $roundPoints) {
+            $this->roundPoints = $roundPoints;
+            $hasChanges = true;
+        }
+
         if ($hasChanges) {
             $this->updatedAt = new DateTimeImmutable();
             $this->recordUpdatedEvent();
@@ -245,6 +278,22 @@ final class Round
             newStatus: $newStatus->value,
             occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
         ));
+    }
+
+    /**
+     * Mark round as completed.
+     */
+    public function complete(): void
+    {
+        $this->changeStatus(RoundStatus::COMPLETED);
+    }
+
+    /**
+     * Mark round as not completed (scheduled).
+     */
+    public function uncomplete(): void
+    {
+        $this->changeStatus(RoundStatus::SCHEDULED);
     }
 
     /**
@@ -382,6 +431,16 @@ final class Round
     public function fastestLapTop10(): bool
     {
         return $this->fastestLapTop10;
+    }
+
+    public function pointsSystem(): ?PointsSystem
+    {
+        return $this->pointsSystem;
+    }
+
+    public function roundPoints(): bool
+    {
+        return $this->roundPoints;
     }
 
     public function status(): RoundStatus

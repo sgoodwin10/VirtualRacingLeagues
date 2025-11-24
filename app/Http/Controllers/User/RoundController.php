@@ -7,6 +7,7 @@ namespace App\Http\Controllers\User;
 use App\Application\Competition\DTOs\CreateRoundData;
 use App\Application\Competition\DTOs\UpdateRoundData;
 use App\Application\Competition\Services\RoundApplicationService;
+use App\Domain\Competition\Exceptions\RoundNotFoundException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -84,5 +85,33 @@ final class RoundController extends Controller
     {
         $nextNumber = $this->roundService->getNextRoundNumber($seasonId);
         return ApiResponse::success(['next_round_number' => $nextNumber]);
+    }
+
+    /**
+     * Mark round as completed.
+     */
+    public function complete(int $roundId): JsonResponse
+    {
+        try {
+            // TODO: Authorize user owns league
+            $round = $this->roundService->completeRound($roundId);
+            return ApiResponse::success($round->toArray(), 'Round marked as completed');
+        } catch (RoundNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
+        }
+    }
+
+    /**
+     * Mark round as not completed.
+     */
+    public function uncomplete(int $roundId): JsonResponse
+    {
+        try {
+            // TODO: Authorize user owns league
+            $round = $this->roundService->uncompleteRound($roundId);
+            return ApiResponse::success($round->toArray(), 'Round marked as not completed');
+        } catch (RoundNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
+        }
     }
 }

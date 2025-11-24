@@ -52,22 +52,6 @@ class AuthService {
     await apiService.fetchCSRFToken();
     await apiClient.post('/reset-password', data, { signal });
   }
-
-  async updateProfile(
-    data: {
-      first_name: string;
-      last_name: string;
-      email: string;
-      password?: string;
-      password_confirmation?: string;
-      current_password?: string;
-    },
-    signal?: AbortSignal,
-  ): Promise<User> {
-    const response = await apiClient.put<{ data: { user: User } }>('/profile', data, { signal });
-
-    return response.data.data.user;
-  }
 }
 
 export const authService = new AuthService();

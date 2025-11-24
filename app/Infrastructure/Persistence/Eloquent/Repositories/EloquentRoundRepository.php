@@ -10,6 +10,7 @@ use App\Domain\Competition\ValueObjects\RoundName;
 use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
+use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\Exceptions\RoundNotFoundException;
 use App\Infrastructure\Persistence\Eloquent\Models\Round as RoundEloquent;
 use DateTimeImmutable;
@@ -158,6 +159,8 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
         $model->internal_notes = $entity->internalNotes();
         $model->fastest_lap = $entity->fastestLap();
         $model->fastest_lap_top_10 = $entity->fastestLapTop10();
+        $model->points_system = $entity->pointsSystem()?->toJson();
+        $model->round_points = $entity->roundPoints();
         $model->status = $entity->status()->value;
         $model->created_by_user_id = $entity->createdByUserId();
     }
@@ -183,6 +186,8 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
             internalNotes: $model->internal_notes,
             fastestLap: $model->fastest_lap,
             fastestLapTop10: $model->fastest_lap_top_10,
+            pointsSystem: PointsSystem::fromJsonOrNull($model->points_system),
+            roundPoints: $model->round_points,
             status: RoundStatus::from($model->status),
             createdByUserId: $model->created_by_user_id,
             createdAt: new DateTimeImmutable($model->created_at->toDateTimeString()),

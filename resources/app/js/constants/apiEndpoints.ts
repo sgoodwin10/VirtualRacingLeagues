@@ -89,6 +89,8 @@ export const API_ENDPOINTS = {
     detail: (id: number) => `/rounds/${id}`,
     update: (id: number) => `/rounds/${id}`,
     delete: (id: number) => `/rounds/${id}`,
+    complete: (id: number) => `/rounds/${id}/complete`,
+    uncomplete: (id: number) => `/rounds/${id}/uncomplete`,
     races: (roundId: number) => `/rounds/${roundId}/races`,
     qualifier: (roundId: number) => `/rounds/${roundId}/qualifier`,
   },
@@ -98,6 +100,12 @@ export const API_ENDPOINTS = {
     detail: (id: number) => `/races/${id}`,
     update: (id: number) => `/races/${id}`,
     delete: (id: number) => `/races/${id}`,
+  },
+
+  // Qualifier endpoints
+  qualifiers: {
+    update: (id: number) => `/qualifiers/${id}`,
+    delete: (id: number) => `/qualifiers/${id}`,
   },
 
   // Track endpoints

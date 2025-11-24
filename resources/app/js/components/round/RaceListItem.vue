@@ -43,14 +43,7 @@
         </div>
 
         <div class="flex gap-2 mt-2 text-xs">
-          <Tag v-if="race.race_divisions" value="Divisions" severity="info" />
-          <Tag v-if="race.mandatory_pit_stop" value="Pit Stop" severity="warning" />
           <Tag v-if="hasFastestLapBonus" value="Fastest Lap Bonus" severity="success" />
-          <Tag
-            v-if="race.track_limits_enforced"
-            value="Track Limits"
-            icon="pi pi-exclamation-triangle"
-          />
         </div>
       </div>
 

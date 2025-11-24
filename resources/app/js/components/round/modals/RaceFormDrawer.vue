@@ -28,7 +28,7 @@
         <!-- Race Type (20% width) -->
         <div class="md:col-span-1">
           <FormLabel for="race_type" text="Race Type" required />
-          <Dropdown
+          <Select
             id="race_type"
             v-model="form.race_type"
             :options="RACE_TYPE_OPTIONS"
@@ -75,7 +75,7 @@
             <div class="flex flex-row gap-4">
               <div class="flex-grow">
                 <FormLabel for="qualifying_format" text="Format" required />
-                <Dropdown
+                <Select
                   id="qualifying_format"
                   v-model="form.qualifying_format"
                   :options="QUALIFYING_FORMAT_OPTIONS"
@@ -155,7 +155,7 @@
                     <div class="grid grid-cols-2 gap-3">
                       <FormInputGroup>
                         <FormLabel for="grid_source" text="Grid Source" required />
-                        <Dropdown
+                        <Select
                           id="grid_source"
                           v-model="form.grid_source"
                           :options="GRID_SOURCE_OPTIONS"
@@ -169,7 +169,7 @@
                       </FormInputGroup>
                       <FormInputGroup v-if="requiresGridSourceRace">
                         <FormLabel for="grid_source_race_id" :text="sourceRaceLabel" />
-                        <Dropdown
+                        <Select
                           id="grid_source_race_id"
                           v-model="form.grid_source_race_id"
                           :options="sourceRaceOptions"
@@ -569,7 +569,7 @@ import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
@@ -1012,7 +1012,7 @@ async function handleSave(): Promise<void> {
         ...payload,
         race_number: form.race_number,
       };
-      await raceStore.updateExistingRace(props.race.id, updatePayload);
+      await raceStore.updateExistingRace(props.race.id, updatePayload, isQualifying.value);
     } else {
       // Don't include race_number for create mode - backend will auto-generate
       await raceStore.createNewRace(props.roundId, payload as CreateRaceRequest);

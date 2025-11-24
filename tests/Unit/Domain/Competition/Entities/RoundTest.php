@@ -13,6 +13,7 @@ use App\Domain\Competition\ValueObjects\RoundName;
 use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
+use App\Domain\Competition\ValueObjects\PointsSystem;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -40,6 +41,8 @@ final class RoundTest extends TestCase
             internalNotes: null,
             fastestLap: 1,
             fastestLapTop10: false,
+            pointsSystem: null,
+            roundPoints: false,
             createdByUserId: 1,
         );
 
@@ -53,12 +56,16 @@ final class RoundTest extends TestCase
         $this->assertEquals(10, $round->platformTrackId());
         $this->assertEquals(1, $round->fastestLap());
         $this->assertEquals(false, $round->fastestLapTop10());
+        $this->assertNull($round->pointsSystem());
+        $this->assertEquals(false, $round->roundPoints());
         $this->assertEquals(1, $round->createdByUserId());
     }
 
     #[Test]
     public function it_reconstitutes_round_from_persistence(): void
     {
+        $pointsSystem = PointsSystem::from([1 => 25, 2 => 18, 3 => 15]);
+
         $round = Round::reconstitute(
             id: 1,
             seasonId: 2,
@@ -75,6 +82,8 @@ final class RoundTest extends TestCase
             internalNotes: 'Test notes',
             fastestLap: null,
             fastestLapTop10: true,
+            pointsSystem: $pointsSystem,
+            roundPoints: true,
             status: RoundStatus::COMPLETED,
             createdByUserId: 1,
             createdAt: new DateTimeImmutable('2025-01-01 00:00:00'),
@@ -89,12 +98,16 @@ final class RoundTest extends TestCase
         $this->assertEquals('GP', $round->trackLayout());
         $this->assertNull($round->fastestLap());
         $this->assertTrue($round->fastestLapTop10());
+        $this->assertNotNull($round->pointsSystem());
+        $this->assertEquals([1 => 25, 2 => 18, 3 => 15], $round->pointsSystem()?->toArray());
+        $this->assertTrue($round->roundPoints());
     }
 
     #[Test]
     public function it_updates_round_details(): void
     {
         $round = $this->createDefaultRound();
+        $newPointsSystem = PointsSystem::from([1 => 30, 2 => 25, 3 => 20]);
 
         $round->updateDetails(
             roundNumber: RoundNumber::from(6),
@@ -109,6 +122,8 @@ final class RoundTest extends TestCase
             internalNotes: 'Internal update',
             fastestLap: 2,
             fastestLapTop10: true,
+            pointsSystem: $newPointsSystem,
+            roundPoints: true,
         );
 
         $this->assertEquals(6, $round->roundNumber()->value());
@@ -116,6 +131,8 @@ final class RoundTest extends TestCase
         $this->assertEquals('National', $round->trackLayout());
         $this->assertEquals(2, $round->fastestLap());
         $this->assertTrue($round->fastestLapTop10());
+        $this->assertEquals([1 => 30, 2 => 25, 3 => 20], $round->pointsSystem()?->toArray());
+        $this->assertTrue($round->roundPoints());
         $this->assertTrue($round->hasEvents());
     }
 
@@ -137,6 +154,8 @@ final class RoundTest extends TestCase
             internalNotes: $round->internalNotes(),
             fastestLap: $round->fastestLap(),
             fastestLapTop10: $round->fastestLapTop10(),
+            pointsSystem: $round->pointsSystem(),
+            roundPoints: $round->roundPoints(),
         );
 
         $this->assertFalse($round->hasEvents());
@@ -229,6 +248,8 @@ final class RoundTest extends TestCase
             internalNotes: null,
             fastestLap: 1,
             fastestLapTop10: false,
+            pointsSystem: null,
+            roundPoints: false,
             createdByUserId: 1,
         );
     }

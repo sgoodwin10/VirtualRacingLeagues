@@ -169,6 +169,106 @@ class TrackControllerTest extends TestCase
         $this->assertEquals('United Kingdom', $response->json('data.0.country'));
     }
 
+    public function test_index_searches_by_track_name(): void
+    {
+        // Create a second location
+        $lagoMaggioreLocation = PlatformTrackLocation::create([
+            'platform_id' => $this->platform->id,
+            'name' => 'Autodrome Lago Maggiore',
+            'slug' => 'lago-maggiore',
+            'country' => 'Italy',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        // Create tracks at Silverstone (no "West" in track names)
+        PlatformTrack::factory()->create([
+            'platform_id' => $this->platform->id,
+            'platform_track_location_id' => $this->location->id,
+            'name' => 'Grand Prix Circuit',
+            'is_active' => true,
+        ]);
+
+        PlatformTrack::factory()->create([
+            'platform_id' => $this->platform->id,
+            'platform_track_location_id' => $this->location->id,
+            'name' => 'National Circuit',
+            'is_active' => true,
+        ]);
+
+        // Create tracks at Lago Maggiore with "West" in track names
+        PlatformTrack::factory()->create([
+            'platform_id' => $this->platform->id,
+            'platform_track_location_id' => $lagoMaggioreLocation->id,
+            'name' => 'West',
+            'is_active' => true,
+        ]);
+
+        PlatformTrack::factory()->create([
+            'platform_id' => $this->platform->id,
+            'platform_track_location_id' => $lagoMaggioreLocation->id,
+            'name' => 'West - Reverse',
+            'is_active' => true,
+        ]);
+
+        // Search for "West" - should only return Lago Maggiore location
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("http://app.virtualracingleagues.localhost/api/tracks?platform_id={$this->platform->id}&search=West");
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data'); // Only one location
+
+        // Verify it's the Lago Maggiore location
+        $this->assertEquals('Autodrome Lago Maggiore', $response->json('data.0.name'));
+        $this->assertEquals('Italy', $response->json('data.0.country'));
+
+        // Verify it has 2 tracks with "West" in the name
+        $this->assertCount(2, $response->json('data.0.tracks'));
+        $trackNames = array_column($response->json('data.0.tracks'), 'name');
+        $this->assertContains('West', $trackNames);
+        $this->assertContains('West - Reverse', $trackNames);
+    }
+
+    public function test_index_searches_by_track_name_respects_is_active_filter(): void
+    {
+        // Create a location
+        $location = PlatformTrackLocation::create([
+            'platform_id' => $this->platform->id,
+            'name' => 'Test Location',
+            'slug' => 'test-location',
+            'country' => 'Test Country',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        // Create active track with "Circuit" in name
+        PlatformTrack::factory()->create([
+            'platform_id' => $this->platform->id,
+            'platform_track_location_id' => $location->id,
+            'name' => 'Active Circuit',
+            'is_active' => true,
+        ]);
+
+        // Create inactive track with "Circuit" in name
+        PlatformTrack::factory()->create([
+            'platform_id' => $this->platform->id,
+            'platform_track_location_id' => $location->id,
+            'name' => 'Inactive Circuit',
+            'is_active' => false,
+        ]);
+
+        // Search for "Circuit" with is_active=true
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("http://app.virtualracingleagues.localhost/api/tracks?platform_id={$this->platform->id}&search=Circuit&is_active=true");
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data'); // One location
+
+        // Verify only the active track is returned
+        $this->assertCount(1, $response->json('data.0.tracks'));
+        $this->assertEquals('Active Circuit', $response->json('data.0.tracks.0.name'));
+    }
+
     public function test_index_filters_out_locations_with_no_tracks_for_platform(): void
     {
         // Create a second platform

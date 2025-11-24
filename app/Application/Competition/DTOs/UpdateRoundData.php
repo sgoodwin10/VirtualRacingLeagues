@@ -13,6 +13,7 @@ use Spatie\LaravelData\Attributes\Validation\Nullable;
 use Spatie\LaravelData\Attributes\Validation\Sometimes;
 use Spatie\LaravelData\Attributes\Validation\StringType;
 use Spatie\LaravelData\Attributes\Validation\BooleanType;
+use Spatie\LaravelData\Attributes\Validation\Json;
 use Spatie\LaravelData\Data;
 
 /**
@@ -43,6 +44,10 @@ final class UpdateRoundData extends Data
         public readonly ?int $fastest_lap = null,
         #[Sometimes, BooleanType]
         public readonly ?bool $fastest_lap_top_10 = null,
+        #[Sometimes, Nullable, Json]
+        public readonly ?string $points_system = null,
+        #[Sometimes, BooleanType]
+        public readonly ?bool $round_points = null,
     ) {
     }
 
@@ -61,6 +66,7 @@ final class UpdateRoundData extends Data
             'technical_notes',
             'stream_url',
             'internal_notes',
+            'points_system',
         ];
 
         foreach ($nullableStringFields as $field) {

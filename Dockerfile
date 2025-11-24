@@ -80,11 +80,6 @@ RUN apt-get update && \
     apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright system dependencies for Chromium only
-# This installs the required system libraries for running Chromium browser
-# Version pinned to match package.json
-RUN npx -y playwright@1.56.0 install-deps chromium
-
 # Configure npm to use user-writable directory for global packages
 RUN mkdir -p /home/laravel/.npm-global && \
     chown -R laravel:laravel /home/laravel/.npm-global
@@ -95,6 +90,23 @@ USER laravel
 # Set npm global directory to user-writable location
 ENV NPM_CONFIG_PREFIX=/home/laravel/.npm-global
 ENV PATH=/home/laravel/.npm-global/bin:$PATH
+
+# Copy package files for dependency installation
+COPY --chown=laravel:laravel package*.json ./
+
+# Install project npm dependencies during build (MUST happen before Playwright install)
+RUN npm install && npm cache clean --force
+
+# Switch back to root for Playwright system dependencies
+USER root
+
+# Install Playwright system dependencies for Chromium only
+# This installs the required system libraries for running Chromium browser
+# Version pinned to match package.json
+RUN npx -y playwright@1.56.0 install-deps chromium
+
+# Switch back to laravel user
+USER laravel
 
 # Install Playwright Chromium browser only
 # This downloads and installs only the Chromium browser
@@ -116,12 +128,6 @@ RUN npm install -g @upstash/context7-mcp@latest
 
 # Install Playwright MCP
 RUN claude mcp add playwright npx '@playwright/mcp@latest'
-
-# Copy package files for dependency installation
-COPY --chown=laravel:laravel package*.json ./
-
-# Install project npm dependencies during build
-RUN npm install && npm cache clean --force
 
 # Switch to root to copy entrypoint
 USER root

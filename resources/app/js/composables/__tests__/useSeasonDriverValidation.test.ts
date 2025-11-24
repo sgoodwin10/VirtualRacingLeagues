@@ -19,7 +19,7 @@ describe('useSeasonDriverValidation', () => {
 
   describe('validateStatus', () => {
     it('should return error if status is empty', () => {
-      form.status = '';
+      form.status = '' as any;
       const { validateStatus } = useSeasonDriverValidation(form);
 
       expect(validateStatus()).toBe('Status is required');
@@ -86,7 +86,7 @@ describe('useSeasonDriverValidation', () => {
 
   describe('validateAll', () => {
     it('should return false if status is invalid', () => {
-      form.status = '';
+      form.status = '' as any;
       const { validateAll } = useSeasonDriverValidation(form);
 
       expect(validateAll()).toBe(false);
@@ -109,7 +109,7 @@ describe('useSeasonDriverValidation', () => {
     });
 
     it('should populate errors object with validation results', () => {
-      form.status = '';
+      form.status = '' as any;
       form.notes = 'A'.repeat(1001);
 
       const { validateAll, errors } = useSeasonDriverValidation(form);
@@ -123,7 +123,7 @@ describe('useSeasonDriverValidation', () => {
 
   describe('clearErrors', () => {
     it('should clear all errors', () => {
-      form.status = '';
+      form.status = '' as any;
       form.notes = 'A'.repeat(1001);
 
       const { validateAll, clearErrors, errors } = useSeasonDriverValidation(form);
@@ -140,7 +140,7 @@ describe('useSeasonDriverValidation', () => {
 
   describe('clearError', () => {
     it('should clear a specific error', () => {
-      form.status = '';
+      form.status = '' as any;
       form.notes = 'A'.repeat(1001);
 
       const { validateAll, clearError, errors } = useSeasonDriverValidation(form);
@@ -155,7 +155,7 @@ describe('useSeasonDriverValidation', () => {
     });
 
     it('should clear notes error specifically', () => {
-      form.status = '';
+      form.status = '' as any;
       form.notes = 'A'.repeat(1001);
 
       const { validateAll, clearError, errors } = useSeasonDriverValidation(form);
@@ -181,7 +181,7 @@ describe('useSeasonDriverValidation', () => {
     });
 
     it('isValid should return false when there are errors', () => {
-      form.status = '';
+      form.status = '' as any;
       const { validateStatus, errors, isValid } = useSeasonDriverValidation(form);
 
       errors.status = validateStatus();
@@ -190,7 +190,7 @@ describe('useSeasonDriverValidation', () => {
     });
 
     it('hasErrors should return true when there are errors', () => {
-      form.status = '';
+      form.status = '' as any;
       const { validateStatus, errors, hasErrors } = useSeasonDriverValidation(form);
 
       errors.status = validateStatus();

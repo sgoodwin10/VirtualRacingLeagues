@@ -19,6 +19,8 @@ describe('useRoundValidation', () => {
       internal_notes: '',
       fastest_lap: null,
       fastest_lap_top_10: false,
+      points_system: { 1: 25, 2: 18, 3: 15 },
+      round_points: false,
     };
     validation = useRoundValidation();
   });
@@ -385,6 +387,70 @@ describe('useRoundValidation', () => {
 
       expect(result).toBe(true);
       expect(validation.errors.value.fastest_lap_top_10).toBeUndefined();
+    });
+  });
+
+  describe('validatePointsSystem', () => {
+    it('should return true when round_points is disabled', () => {
+      const result = validation.validatePointsSystem({}, false);
+
+      expect(result).toBe(true);
+      expect(validation.errors.value.points_system).toBeUndefined();
+    });
+
+    it('should return false when round_points is enabled but points_system is empty', () => {
+      const result = validation.validatePointsSystem({}, true);
+
+      expect(result).toBe(false);
+      expect(validation.errors.value.points_system).toBe(
+        'Points system is required when round points are enabled',
+      );
+    });
+
+    it('should return true for valid points_system with round_points enabled', () => {
+      const result = validation.validatePointsSystem({ 1: 25, 2: 18, 3: 15 }, true);
+
+      expect(result).toBe(true);
+      expect(validation.errors.value.points_system).toBeUndefined();
+    });
+
+    it('should return false for invalid position (zero)', () => {
+      const result = validation.validatePointsSystem({ 0: 25, 1: 18 }, true);
+
+      expect(result).toBe(false);
+      expect(validation.errors.value.points_system).toBe('All positions must be positive integers');
+    });
+
+    it('should return false for negative points value', () => {
+      const result = validation.validatePointsSystem({ 1: -5, 2: 18 }, true);
+
+      expect(result).toBe(false);
+      expect(validation.errors.value.points_system).toBe(
+        'All points values must be non-negative integers',
+      );
+    });
+
+    it('should return true for zero points value', () => {
+      const result = validation.validatePointsSystem({ 1: 25, 2: 0 }, true);
+
+      expect(result).toBe(true);
+      expect(validation.errors.value.points_system).toBeUndefined();
+    });
+  });
+
+  describe('validateRoundPoints', () => {
+    it('should return true for false value', () => {
+      const result = validation.validateRoundPoints(false);
+
+      expect(result).toBe(true);
+      expect(validation.errors.value.round_points).toBeUndefined();
+    });
+
+    it('should return true for true value', () => {
+      const result = validation.validateRoundPoints(true);
+
+      expect(result).toBe(true);
+      expect(validation.errors.value.round_points).toBeUndefined();
     });
   });
 

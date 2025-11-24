@@ -22,19 +22,23 @@ describe('LeagueDriversTab', () => {
     id: 1,
     driver_id: 100,
     league_id: 1,
-    number: '99',
+    driver_number: 99,
     status: 'active',
-    notes: null,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    league_notes: null,
+    added_to_league_at: '2024-01-01T00:00:00Z',
     driver: {
       id: 100,
       display_name: 'John Doe',
       first_name: 'John',
       last_name: 'Doe',
-      date_of_birth: '1990-01-01',
-      profile_picture: null,
-      bio: null,
+      nickname: null,
+      discord_id: null,
+      email: null,
+      phone: null,
+      psn_id: null,
+      iracing_id: null,
+      iracing_customer_id: null,
+      primary_platform_id: null,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
     },
@@ -67,7 +71,7 @@ describe('LeagueDriversTab', () => {
   });
 
   it('has leagueId prop', () => {
-    expect(wrapper.props('leagueId')).toBe(1);
+    expect((wrapper.props() as any).leagueId).toBe(1);
   });
 
   it('has searchQuery from composable', () => {

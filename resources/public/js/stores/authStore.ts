@@ -18,10 +18,6 @@ export const useAuthStore = defineStore(
       if (!user.value) return 'Guest';
       return `${user.value.first_name} ${user.value.last_name}`.trim() || 'Guest';
     });
-    const userFirstName = computed((): string => user.value?.first_name || '');
-    const userLastName = computed((): string => user.value?.last_name || '');
-    const userEmail = computed((): string => user.value?.email || '');
-    const isEmailVerified = computed((): boolean => user.value?.email_verified_at !== null);
 
     // Helper to get app subdomain URL
     const getAppSubdomainUrl = (): string => {
@@ -100,23 +96,6 @@ export const useAuthStore = defineStore(
       await authService.resendVerificationEmail();
     }
 
-    async function updateProfile(data: {
-      first_name: string;
-      last_name: string;
-      email: string;
-      password?: string;
-      password_confirmation?: string;
-      current_password?: string;
-    }): Promise<void> {
-      isLoading.value = true;
-      try {
-        const updatedUser = await authService.updateProfile(data);
-        setUser(updatedUser);
-      } finally {
-        isLoading.value = false;
-      }
-    }
-
     function setUser(userData: User): void {
       user.value = userData;
       isAuthenticated.value = true;
@@ -135,10 +114,6 @@ export const useAuthStore = defineStore(
 
       // Getters
       userName,
-      userFirstName,
-      userLastName,
-      userEmail,
-      isEmailVerified,
 
       // Actions
       register,
@@ -146,7 +121,6 @@ export const useAuthStore = defineStore(
       logout,
       checkAuth,
       resendVerificationEmail,
-      updateProfile,
       clearAuth,
       setUser, // Expose for testing
     };

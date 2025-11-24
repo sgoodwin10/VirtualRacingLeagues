@@ -66,3 +66,17 @@ http://virtualracingleagues.localhost:8025
 
  docker compose down
   docker compose up -d
+
+
+
+# Remove all stopped containers
+docker container prune
+
+# Remove all unused images (not just dangling ones)
+docker image prune -a
+
+# Remove unused volumes
+docker volume prune
+
+# Remove unused networks
+docker network prune

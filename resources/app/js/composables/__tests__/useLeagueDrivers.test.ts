@@ -4,7 +4,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useLeagueDrivers } from '../useLeagueDrivers';
 import { useDriverStore } from '@app/stores/driverStore';
 import * as driverService from '@app/services/driverService';
-import type { PaginatedDriversResponse, LeagueDriver } from '@app/types/driver';
+import type { PaginatedDriversResponse } from '@app/types/driver';
 
 vi.mock('@app/services/driverService', () => ({
   getLeagueDrivers: vi.fn(),
@@ -22,20 +22,22 @@ const mockDriverResponse: PaginatedDriversResponse = {
       driver_id: 10,
       league_id: 1,
       status: 'active',
-      race_number: 1,
-      team_name: 'Test Team',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
+      driver_number: 1,
+      league_notes: null,
+      added_to_league_at: '2024-01-01T00:00:00Z',
       driver: {
         id: 10,
         display_name: 'Test Driver',
         first_name: 'Test',
         last_name: 'Driver',
-        nationality: 'US',
-        date_of_birth: '1990-01-01',
-        gamertag: 'testdriver',
-        platform: 'PC',
+        nickname: null,
+        discord_id: null,
         email: 'test@example.com',
+        phone: null,
+        psn_id: null,
+        iracing_id: null,
+        iracing_customer_id: null,
+        primary_platform_id: null,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
       },
@@ -75,8 +77,8 @@ describe('useLeagueDrivers', () => {
     await loadDrivers();
 
     expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(1, expect.any(Object));
-    expect(driverStore.drivers.value).toHaveLength(1);
-    expect(driverStore.drivers.value[0].driver?.display_name).toBe('Test Driver');
+    expect(driverStore.drivers).toHaveLength(1);
+    expect(driverStore.drivers[0]?.driver?.display_name).toBe('Test Driver');
   });
 
   it('sets loading state during driver fetch', async () => {
@@ -106,7 +108,7 @@ describe('useLeagueDrivers', () => {
   });
 
   it('adds a driver successfully', async () => {
-    const mockDriver: LeagueDriver = mockDriverResponse.data[0];
+    const mockDriver = mockDriverResponse.data[0]!;
     vi.mocked(driverService.createDriver).mockResolvedValue(mockDriver);
     vi.mocked(driverService.getLeagueDrivers).mockResolvedValue(mockDriverResponse);
 
@@ -117,8 +119,7 @@ describe('useLeagueDrivers', () => {
     await addDriver({
       first_name: 'Test',
       last_name: 'Driver',
-      display_name: 'Test Driver',
-      race_number: 1,
+      driver_number: 1,
     });
 
     expect(driverService.createDriver).toHaveBeenCalledWith(1, expect.any(Object));
@@ -136,8 +137,7 @@ describe('useLeagueDrivers', () => {
       addDriver({
         first_name: 'Test',
         last_name: 'Driver',
-        display_name: 'Test Driver',
-        race_number: 1,
+        driver_number: 1,
       }),
     ).rejects.toThrow('Creation failed');
 
@@ -145,7 +145,7 @@ describe('useLeagueDrivers', () => {
   });
 
   it('updates a driver successfully', async () => {
-    const mockDriver: LeagueDriver = mockDriverResponse.data[0];
+    const mockDriver = mockDriverResponse.data[0]!;
     vi.mocked(driverService.updateDriver).mockResolvedValue(mockDriver);
     vi.mocked(driverService.getLeagueDrivers).mockResolvedValue(mockDriverResponse);
 
@@ -156,8 +156,7 @@ describe('useLeagueDrivers', () => {
     await updateDriver(10, {
       first_name: 'Updated',
       last_name: 'Driver',
-      display_name: 'Updated Driver',
-      race_number: 2,
+      driver_number: 2,
     });
 
     expect(driverService.updateDriver).toHaveBeenCalledWith(1, 10, expect.any(Object));
@@ -175,8 +174,7 @@ describe('useLeagueDrivers', () => {
       updateDriver(10, {
         first_name: 'Updated',
         last_name: 'Driver',
-        display_name: 'Updated Driver',
-        race_number: 2,
+        driver_number: 2,
       }),
     ).rejects.toThrow('Update failed');
 

@@ -129,6 +129,36 @@ export const useRoundStore = defineStore('round', () => {
     }
   }
 
+  async function completeRound(roundId: number): Promise<Round> {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedRound = await roundService.completeRound(roundId);
+      updateItemInList(updatedRound);
+      return updatedRound;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete round');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function uncompleteRound(roundId: number): Promise<Round> {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedRound = await roundService.uncompleteRound(roundId);
+      updateItemInList(updatedRound);
+      return updatedRound;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to uncomplete round');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function clearCurrentRound(): void {
     setCurrentItem(null);
   }
@@ -155,6 +185,8 @@ export const useRoundStore = defineStore('round', () => {
     updateExistingRound,
     deleteExistingRound,
     fetchNextRoundNumber,
+    completeRound,
+    uncompleteRound,
     clearError,
     clearCurrentRound,
     $reset,

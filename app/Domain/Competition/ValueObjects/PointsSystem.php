@@ -24,6 +24,29 @@ final readonly class PointsSystem
         return new self($positions);
     }
 
+    /**
+     * Create from JSON string.
+     */
+    public static function fromJson(string $json): self
+    {
+        $decoded = json_decode($json, true);
+        if (!is_array($decoded)) {
+            throw new InvalidArgumentException('Invalid JSON for points system');
+        }
+        return new self($decoded);
+    }
+
+    /**
+     * Create from JSON string or null.
+     */
+    public static function fromJsonOrNull(?string $json): ?self
+    {
+        if ($json === null) {
+            return null;
+        }
+        return self::fromJson($json);
+    }
+
     public static function f1Standard(): self
     {
         return new self([
@@ -67,5 +90,13 @@ final readonly class PointsSystem
     public function getPointsForPosition(int $position): int
     {
         return $this->positions[$position] ?? 0;
+    }
+
+    /**
+     * Convert to JSON string for storage.
+     */
+    public function toJson(): string
+    {
+        return json_encode($this->positions, JSON_THROW_ON_ERROR);
     }
 }

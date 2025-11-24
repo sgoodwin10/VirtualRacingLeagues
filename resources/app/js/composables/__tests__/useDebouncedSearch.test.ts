@@ -136,8 +136,8 @@ describe('useDebouncedSearch', () => {
       await vi.advanceTimersByTimeAsync(300);
 
       expect(onSearch).toHaveBeenCalledWith('test', expect.any(AbortSignal));
-      const signal = onSearch.mock.calls[0][1];
-      expect(signal.aborted).toBe(false);
+      const signal = onSearch.mock.calls[0]?.[1];
+      expect(signal?.aborted).toBe(false);
     });
 
     it('should set isSearching to true during search', async () => {
@@ -192,7 +192,7 @@ describe('useDebouncedSearch', () => {
     it('should provide new AbortSignal for each search', async () => {
       const searchQuery = ref('');
       const signals: AbortSignal[] = [];
-      const onSearch = vi.fn().mockImplementation(async (query, signal) => {
+      const onSearch = vi.fn().mockImplementation(async (_query, signal) => {
         signals.push(signal);
       });
 
@@ -268,7 +268,7 @@ describe('useDebouncedSearch', () => {
     it('should abort in-flight request when cancelSearch is called', async () => {
       const searchQuery = ref('');
       let searchSignal: AbortSignal | null = null;
-      const onSearch = vi.fn().mockImplementation((query, signal) => {
+      const onSearch = vi.fn().mockImplementation((_query, signal: AbortSignal) => {
         searchSignal = signal;
         return new Promise(() => {}); // Never resolves
       });
@@ -278,11 +278,12 @@ describe('useDebouncedSearch', () => {
       searchQuery.value = 'test';
       await vi.advanceTimersByTimeAsync(300);
 
-      expect(searchSignal?.aborted).toBe(false);
+      expect(searchSignal).not.toBeNull();
+      expect(searchSignal!.aborted).toBe(false);
 
       cancelSearch();
 
-      expect(searchSignal?.aborted).toBe(true);
+      expect(searchSignal!.aborted).toBe(true);
     });
 
     it('should set isSearching to false when cancelSearch is called', async () => {
@@ -326,7 +327,7 @@ describe('useDebouncedSearch', () => {
     it('should provide different AbortSignal for each search', async () => {
       const searchQuery = ref('');
       const signals: AbortSignal[] = [];
-      const onSearch = vi.fn().mockImplementation((query, signal) => {
+      const onSearch = vi.fn().mockImplementation((_query, signal) => {
         signals.push(signal);
         return Promise.resolve();
       });
@@ -363,14 +364,11 @@ describe('useDebouncedSearch', () => {
       const onSearch = vi.fn().mockResolvedValue(undefined);
 
       // Simulate component lifecycle
-      const { unmount } = {
-        setup() {
-          return useDebouncedSearch(searchQuery, onSearch);
-        },
-        unmount() {
-          // This would trigger onUnmounted hooks
-        },
+      const unmount = () => {
+        // This would trigger onUnmounted hooks in a real component
       };
+
+      useDebouncedSearch(searchQuery, onSearch);
 
       searchQuery.value = 'test';
 
