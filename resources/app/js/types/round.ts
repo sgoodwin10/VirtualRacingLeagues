@@ -15,6 +15,8 @@ export interface Round {
   internal_notes: string | null;
   fastest_lap: number | null;
   fastest_lap_top_10: boolean;
+  qualifying_pole: number | null;
+  qualifying_pole_top_10: boolean;
   points_system: string | null;
   round_points: boolean;
   status: RoundStatus;
@@ -40,6 +42,8 @@ export interface CreateRoundRequest {
   internal_notes?: string;
   fastest_lap?: number;
   fastest_lap_top_10?: boolean;
+  qualifying_pole?: number;
+  qualifying_pole_top_10?: boolean;
   points_system?: string;
   round_points?: boolean;
 }
@@ -57,6 +61,8 @@ export interface UpdateRoundRequest {
   internal_notes?: string | null;
   fastest_lap?: number | null;
   fastest_lap_top_10?: boolean;
+  qualifying_pole?: number | null;
+  qualifying_pole_top_10?: boolean;
   points_system?: string | null;
   round_points?: boolean;
 }
@@ -77,6 +83,8 @@ export interface RoundForm {
   internal_notes: string;
   fastest_lap: number | null;
   fastest_lap_top_10: boolean;
+  qualifying_pole: number | null;
+  qualifying_pole_top_10: boolean;
   points_system: PointsSystemMap;
   round_points: boolean;
 }
@@ -93,6 +101,8 @@ export interface RoundFormErrors {
   internal_notes?: string;
   fastest_lap?: string;
   fastest_lap_top_10?: string;
+  qualifying_pole?: string;
+  qualifying_pole_top_10?: string;
   points_system?: string;
   round_points?: string;
 }

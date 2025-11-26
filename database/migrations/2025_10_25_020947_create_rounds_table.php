@@ -25,11 +25,12 @@ return new class extends Migration
             $table->string('slug', 150)->comment('URL-friendly slug');
 
             // Schedule
-            $table->dateTime('scheduled_at')->comment('Round date and time');
+            $table->dateTime('scheduled_at')->nullable()->comment('Round date and time');
             $table->string('timezone', 50)->comment('Timezone (inherited from league)');
 
             // Track
             $table->foreignId('platform_track_id')
+                ->nullable()
                 ->constrained('platform_tracks')
                 ->onDelete('restrict')
                 ->comment('Track for this round');
@@ -40,6 +41,22 @@ return new class extends Migration
             $table->text('technical_notes')->nullable()->comment('BOP, restrictions, etc.');
             $table->string('stream_url', 255)->nullable()->comment('Stream/broadcast URL');
             $table->text('internal_notes')->nullable()->comment('Internal notes for organizers');
+
+            // Fastest Lap Configuration
+            $table->integer('fastest_lap')->nullable()
+                ->comment('Points awarded for fastest lap. If null, each race awards fastest lap. If not null, fastest lap across all races (except quali) gets the points.');
+            $table->boolean('fastest_lap_top_10')->default(false)
+                ->comment('Whether fastest lap bonus is only awarded to drivers finishing in top 10.');
+
+            // Qualifying Pole Configuration
+            $table->integer('qualifying_pole')->nullable()
+                ->comment('Points awarded for qualifying pole position.');
+            $table->boolean('qualifying_pole_top_10')->default(false)
+                ->comment('Whether qualifying pole bonus is only awarded to drivers finishing in top 10.');
+
+            // Points System Configuration
+            $table->longText('points_system')->nullable();
+            $table->boolean('round_points')->default(false);
 
             // Status
             $table->enum('status', ['scheduled', 'pre_race', 'in_progress', 'completed', 'cancelled'])

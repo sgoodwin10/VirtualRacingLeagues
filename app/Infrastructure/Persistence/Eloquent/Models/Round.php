@@ -28,6 +28,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $internal_notes
  * @property int|null $fastest_lap
  * @property bool $fastest_lap_top_10
+ * @property int|null $qualifying_pole
+ * @property bool $qualifying_pole_top_10
  * @property string|null $points_system
  * @property bool $round_points
  * @property string $status
@@ -76,6 +78,8 @@ final class Round extends Model
         'internal_notes',
         'fastest_lap',
         'fastest_lap_top_10',
+        'qualifying_pole',
+        'qualifying_pole_top_10',
         'points_system',
         'round_points',
         'status',
@@ -88,6 +92,7 @@ final class Round extends Model
     protected $casts = [
         'scheduled_at' => 'datetime',
         'fastest_lap_top_10' => 'boolean',
+        'qualifying_pole_top_10' => 'boolean',
         'round_points' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

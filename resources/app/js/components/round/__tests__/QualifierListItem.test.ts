@@ -33,13 +33,14 @@ describe('QualifierListItem', () => {
     mandatory_pit_stop: false,
     minimum_pit_time: null,
     assists_restrictions: null,
-    race_divisions: true,
+    race_points: false,
     points_system: F1_STANDARD_POINTS,
     bonus_points: { pole: 1 },
     dnf_points: 0,
     dns_points: 0,
     race_notes: null,
     is_qualifier: true,
+    status: 'scheduled',
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
   };
@@ -78,7 +79,7 @@ describe('QualifierListItem', () => {
 
   it('displays qualifying format', () => {
     expect(wrapper.text()).toContain('Format');
-    expect(wrapper.text()).toContain('Standard Qualifying');
+    expect(wrapper.text()).toContain('Standard');
   });
 
   it('displays qualifying length when present', () => {
@@ -117,17 +118,6 @@ describe('QualifierListItem', () => {
     expect(wrapper.text()).not.toContain('Weather:');
   });
 
-  it('shows divisions enabled tag when race_divisions is true', () => {
-    expect(wrapper.text()).toContain('Divisions Enabled');
-  });
-
-  it('hides divisions tag when race_divisions is false', async () => {
-    await wrapper.setProps({
-      race: { ...mockQualifier, race_divisions: false },
-    });
-    expect(wrapper.text()).not.toContain('Divisions Enabled');
-  });
-
   it('shows pole bonus tag when bonus_points.pole is set', () => {
     expect(wrapper.text()).toContain('Pole Bonus');
   });
@@ -164,11 +154,21 @@ describe('QualifierListItem', () => {
     expect(icon.props('size')).toBe('24'); // PrimeVue converts number to string
   });
 
-  it('emits edit event when edit button clicked', async () => {
+  it('emits enterResults event when enter results button clicked', async () => {
     const buttons = wrapper.findAll('button');
-    expect(buttons.length).toBeGreaterThanOrEqual(2);
+    expect(buttons.length).toBeGreaterThanOrEqual(3);
 
     await buttons[0]?.trigger('click');
+
+    expect(wrapper.emitted('enterResults')).toBeTruthy();
+    expect(wrapper.emitted('enterResults')?.[0]).toEqual([mockQualifier]);
+  });
+
+  it('emits edit event when edit button clicked', async () => {
+    const buttons = wrapper.findAll('button');
+    expect(buttons.length).toBeGreaterThanOrEqual(3);
+
+    await buttons[1]?.trigger('click');
 
     expect(wrapper.emitted('edit')).toBeTruthy();
     expect(wrapper.emitted('edit')?.[0]).toEqual([mockQualifier]);
@@ -176,9 +176,9 @@ describe('QualifierListItem', () => {
 
   it('emits delete event when delete button clicked', async () => {
     const buttons = wrapper.findAll('button');
-    expect(buttons.length).toBeGreaterThanOrEqual(2);
+    expect(buttons.length).toBeGreaterThanOrEqual(3);
 
-    await buttons[1]?.trigger('click');
+    await buttons[2]?.trigger('click');
 
     expect(wrapper.emitted('delete')).toBeTruthy();
     expect(wrapper.emitted('delete')?.[0]).toEqual([mockQualifier]);
@@ -221,5 +221,90 @@ describe('QualifierListItem', () => {
     const container = wrapper.find('.border-blue-200');
     expect(container.classes()).toContain('hover:border-blue-400');
     expect(container.classes()).toContain('transition-colors');
+  });
+
+  it('displays completion toggle with correct state for scheduled race', () => {
+    expect(wrapper.text()).toContain('Completed');
+    const toggle = wrapper.findComponent({ name: 'ToggleSwitch' });
+    expect(toggle.exists()).toBe(true);
+  });
+
+  it('hides toggle and shows Completed tag when qualifier is completed', async () => {
+    await wrapper.setProps({
+      race: { ...mockQualifier, status: 'completed' },
+    });
+    const toggle = wrapper.findComponent({ name: 'ToggleSwitch' });
+    expect(toggle.exists()).toBe(false);
+    // Should show Completed tag instead (the text 'Completed' is rendered by the Tag stub)
+    expect(wrapper.text()).toContain('Completed');
+  });
+
+  it('hides edit and delete buttons when qualifier is completed', async () => {
+    await wrapper.setProps({
+      race: { ...mockQualifier, status: 'completed' },
+    });
+    const buttons = wrapper.findAll('button');
+    // Results button should be visible, edit and delete should be hidden
+    expect(buttons.length).toBe(1);
+  });
+
+  it('emits toggleStatus event when toggle is changed', async () => {
+    const toggle = wrapper.findComponent({ name: 'ToggleSwitch' });
+    await toggle.vm.$emit('update:modelValue', true);
+
+    expect(wrapper.emitted('toggleStatus')).toBeTruthy();
+    expect(wrapper.emitted('toggleStatus')?.[0]).toEqual([mockQualifier, 'completed']);
+  });
+
+  it('hides completion toggle when round is completed', async () => {
+    await wrapper.setProps({
+      isRoundCompleted: true,
+    });
+
+    const toggle = wrapper.findComponent({ name: 'ToggleSwitch' });
+    expect(toggle.exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Completed');
+  });
+
+  it('hides edit button when round is completed', async () => {
+    await wrapper.setProps({
+      isRoundCompleted: true,
+    });
+
+    const buttons = wrapper.findAll('button');
+    // Only "Results" button should remain (1 button instead of 4)
+    expect(buttons.length).toBe(1);
+  });
+
+  it('hides delete button when round is completed', async () => {
+    await wrapper.setProps({
+      isRoundCompleted: true,
+    });
+
+    const buttons = wrapper.findAll('button');
+    // Only "Results" button should remain
+    expect(buttons.length).toBe(1);
+  });
+
+  it('shows all controls when round is not completed', async () => {
+    await wrapper.setProps({
+      isRoundCompleted: false,
+    });
+
+    const toggle = wrapper.findComponent({ name: 'ToggleSwitch' });
+    expect(toggle.exists()).toBe(true);
+
+    const buttons = wrapper.findAll('button');
+    // Results, Edit, and Delete buttons (3 buttons + toggle)
+    expect(buttons.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('shows all controls by default when isRoundCompleted is not provided', () => {
+    const toggle = wrapper.findComponent({ name: 'ToggleSwitch' });
+    expect(toggle.exists()).toBe(true);
+
+    const buttons = wrapper.findAll('button');
+    // Results, Edit, and Delete buttons
+    expect(buttons.length).toBeGreaterThanOrEqual(3);
   });
 });

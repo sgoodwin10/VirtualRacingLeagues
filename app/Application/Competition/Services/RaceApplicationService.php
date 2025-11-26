@@ -10,11 +10,14 @@ use App\Application\Competition\DTOs\UpdateRaceData;
 use App\Domain\Competition\Entities\Race;
 use App\Domain\Competition\Exceptions\RaceNotFoundException;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
+use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\ValueObjects\GridSource;
 use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
 use App\Domain\Competition\ValueObjects\RaceLengthType;
 use App\Domain\Competition\ValueObjects\RaceName;
+use App\Domain\Competition\ValueObjects\RaceResultStatus;
+use App\Domain\Competition\ValueObjects\RaceStatus;
 use App\Domain\Competition\ValueObjects\RaceType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -24,6 +27,7 @@ final class RaceApplicationService
 {
     public function __construct(
         private readonly RaceRepositoryInterface $raceRepository,
+        private readonly RaceResultRepositoryInterface $raceResultRepository,
     ) {
     }
 
@@ -46,10 +50,10 @@ final class RaceApplicationService
             $falseStartDetection = $data->false_start_detection ?? false;
             $collisionPenalties = $data->collision_penalties ?? false;
             $mandatoryPitStop = $data->mandatory_pit_stop ?? false;
-            $raceDivisions = $data->race_divisions ?? false;
             $pointsSystem = $data->points_system ?? [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
             $dnfPoints = $data->dnf_points ?? 0;
             $dnsPoints = $data->dns_points ?? 0;
+            $racePoints = $data->race_points ?? false;
 
             if ($isQualifier) {
                 // Validate qualifying_format is not 'none' for qualifiers
@@ -75,7 +79,6 @@ final class RaceApplicationService
                     fuelUsage: $data->fuel_usage,
                     damageModel: $data->damage_model,
                     assistsRestrictions: $data->assists_restrictions,
-                    raceDivisions: $raceDivisions,
                     bonusPoints: $data->bonus_points,
                     raceNotes: $data->race_notes,
                 );
@@ -104,11 +107,11 @@ final class RaceApplicationService
                     mandatoryPitStop: $mandatoryPitStop,
                     minimumPitTime: $data->minimum_pit_time,
                     assistsRestrictions: $data->assists_restrictions,
-                    raceDivisions: $raceDivisions,
                     pointsSystem: PointsSystem::from($pointsSystem),
                     bonusPoints: $data->bonus_points,
                     dnfPoints: $dnfPoints,
                     dnsPoints: $dnsPoints,
+                    racePoints: $racePoints,
                     raceNotes: $data->race_notes,
                 );
             }
@@ -124,6 +127,23 @@ final class RaceApplicationService
     {
         return DB::transaction(function () use ($raceId, $data) {
             $race = $this->raceRepository->findById($raceId);
+
+            // Handle status change if provided
+            $statusChanged = false;
+            $oldStatus = $race->status();
+            $newStatus = null;
+
+            if (!($data->status instanceof Optional) && $data->status !== null) {
+                $newStatus = RaceStatus::from($data->status);
+                if ($oldStatus !== $newStatus) {
+                    $statusChanged = true;
+                    if ($newStatus === RaceStatus::COMPLETED) {
+                        $race->markAsCompleted();
+                    } elseif ($newStatus === RaceStatus::SCHEDULED) {
+                        $race->markAsScheduled();
+                    }
+                }
+            }
 
             // Check if this is a qualifier
             if ($race->isQualifier()) {
@@ -173,10 +193,6 @@ final class RaceApplicationService
                     ? $data->assists_restrictions
                     : $race->assistsRestrictions();
 
-                $raceDivisions = !($data->race_divisions instanceof Optional)
-                    ? ($data->race_divisions ?? $race->raceDivisions())
-                    : $race->raceDivisions();
-
                 $bonusPoints = !($data->bonus_points instanceof Optional)
                     ? $data->bonus_points
                     : $race->bonusPoints();
@@ -195,7 +211,6 @@ final class RaceApplicationService
                     fuelUsage: $fuelUsage,
                     damageModel: $damageModel,
                     assistsRestrictions: $assistsRestrictions,
-                    raceDivisions: $raceDivisions,
                     bonusPoints: $bonusPoints,
                     raceNotes: $raceNotes,
                 );
@@ -283,10 +298,6 @@ final class RaceApplicationService
                     ? $data->assists_restrictions
                     : $race->assistsRestrictions();
 
-                $raceDivisions = !($data->race_divisions instanceof Optional)
-                    ? ($data->race_divisions ?? $race->raceDivisions())
-                    : $race->raceDivisions();
-
                 $pointsSystem = !($data->points_system instanceof Optional)
                     ? ($data->points_system !== null ? PointsSystem::from($data->points_system) : $race->pointsSystem())
                     : $race->pointsSystem();
@@ -302,6 +313,10 @@ final class RaceApplicationService
                 $dnsPoints = !($data->dns_points instanceof Optional)
                     ? ($data->dns_points ?? $race->dnsPoints())
                     : $race->dnsPoints();
+
+                $racePoints = !($data->race_points instanceof Optional)
+                    ? ($data->race_points ?? $race->racePoints())
+                    : $race->racePoints();
 
                 $raceNotes = !($data->race_notes instanceof Optional)
                     ? $data->race_notes
@@ -328,17 +343,22 @@ final class RaceApplicationService
                     mandatoryPitStop: $mandatoryPitStop,
                     minimumPitTime: $minimumPitTime,
                     assistsRestrictions: $assistsRestrictions,
-                    raceDivisions: $raceDivisions,
                     pointsSystem: $pointsSystem,
                     bonusPoints: $bonusPoints,
                     dnfPoints: $dnfPoints,
                     dnsPoints: $dnsPoints,
+                    racePoints: $racePoints,
                     raceNotes: $raceNotes,
                 );
             }
 
             $this->raceRepository->save($race);
             $this->dispatchEvents($race);
+
+            // Update RaceResult statuses if race status changed
+            if ($statusChanged && $newStatus !== null) {
+                $this->updateRaceResultStatuses($raceId, $newStatus);
+            }
 
             return RaceData::fromEntity($race);
         });
@@ -380,6 +400,25 @@ final class RaceApplicationService
         $events = $race->releaseEvents();
         foreach ($events as $event) {
             Event::dispatch($event);
+        }
+    }
+
+    /**
+     * Update all RaceResult statuses when race status changes.
+     */
+    private function updateRaceResultStatuses(int $raceId, RaceStatus $newRaceStatus): void
+    {
+        $raceResults = $this->raceResultRepository->findByRaceId($raceId);
+
+        $targetStatus = $newRaceStatus === RaceStatus::COMPLETED
+            ? RaceResultStatus::CONFIRMED
+            : RaceResultStatus::PENDING;
+
+        foreach ($raceResults as $result) {
+            if ($result->status() !== $targetStatus) {
+                $result->updateStatus($targetStatus);
+                $this->raceResultRepository->save($result);
+            }
         }
     }
 }

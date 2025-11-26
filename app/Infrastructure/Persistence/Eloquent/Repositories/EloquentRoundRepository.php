@@ -159,6 +159,8 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
         $model->internal_notes = $entity->internalNotes();
         $model->fastest_lap = $entity->fastestLap();
         $model->fastest_lap_top_10 = $entity->fastestLapTop10();
+        $model->qualifying_pole = $entity->qualifyingPole();
+        $model->qualifying_pole_top_10 = $entity->qualifyingPoleTop10();
         $model->points_system = $entity->pointsSystem()?->toJson();
         $model->round_points = $entity->roundPoints();
         $model->status = $entity->status()->value;
@@ -186,6 +188,8 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
             internalNotes: $model->internal_notes,
             fastestLap: $model->fastest_lap,
             fastestLapTop10: $model->fastest_lap_top_10,
+            qualifyingPole: $model->qualifying_pole,
+            qualifyingPoleTop10: $model->qualifying_pole_top_10,
             pointsSystem: PointsSystem::fromJsonOrNull($model->points_system),
             roundPoints: $model->round_points,
             status: RoundStatus::from($model->status),

@@ -28,6 +28,7 @@ return new class extends Migration
             $table->string('psn_id', 255)->nullable();
             $table->string('iracing_id', 255)->nullable();
             $table->integer('iracing_customer_id')->nullable();
+            $table->string('discord_id', 255)->nullable();
 
             // Timestamps
             $table->timestamps();
@@ -40,6 +41,7 @@ return new class extends Migration
             $table->index('psn_id', 'idx_driver_psn_id');
             $table->index('iracing_id', 'idx_driver_iracing_id');
             $table->index('email', 'idx_driver_email');
+            $table->index('discord_id', 'idx_driver_discord_id');
         });
     }
 

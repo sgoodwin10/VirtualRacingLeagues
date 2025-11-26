@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import LoginView from '../LoginView.vue';
+import LoginView from '@public/views/auth/LoginView.vue';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 import { useAuthStore } from '@public/stores/authStore';

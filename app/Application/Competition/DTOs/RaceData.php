@@ -39,15 +39,16 @@ final class RaceData extends Data
         public bool $mandatory_pit_stop,
         public ?int $minimum_pit_time,
         public ?string $assists_restrictions,
-        // Division
-        public bool $race_divisions,
         // Points
         public array $points_system,
         public ?array $bonus_points,
         public int $dnf_points,
         public int $dns_points,
+        public bool $race_points,
         // Notes
         public ?string $race_notes,
+        // Status
+        public string $status,
         // Timestamps
         public string $created_at,
         public string $updated_at,
@@ -83,12 +84,13 @@ final class RaceData extends Data
             mandatory_pit_stop: $race->mandatoryPitStop(),
             minimum_pit_time: $race->minimumPitTime(),
             assists_restrictions: $race->assistsRestrictions(),
-            race_divisions: $race->raceDivisions(),
             points_system: $race->pointsSystem()->toArray(),
             bonus_points: $race->bonusPoints(),
             dnf_points: $race->dnfPoints(),
             dns_points: $race->dnsPoints(),
+            race_points: $race->racePoints(),
             race_notes: $race->raceNotes(),
+            status: $race->status()->value,
             created_at: $race->createdAt()->format('Y-m-d H:i:s'),
             updated_at: $race->updatedAt()->format('Y-m-d H:i:s'),
         );

@@ -12,6 +12,7 @@ use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
 use App\Domain\Competition\ValueObjects\RaceLengthType;
 use App\Domain\Competition\ValueObjects\RaceName;
+use App\Domain\Competition\ValueObjects\RaceStatus;
 use App\Domain\Competition\ValueObjects\RaceType;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -43,12 +44,12 @@ final class RaceTest extends TestCase
             mandatoryPitStop: false,
             minimumPitTime: null,
             assistsRestrictions: 'limited',
-            raceDivisions: false,
             pointsSystem: PointsSystem::f1Standard(),
             bonusPoints: ['fastest_lap' => 1],
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: 'Test race',
+            racePoints: false,
         );
 
         $this->assertNull($race->id());
@@ -65,7 +66,6 @@ final class RaceTest extends TestCase
         $this->assertSame(20, $race->lengthValue());
         $this->assertFalse($race->extraLapAfterTime());
         $this->assertTrue($race->trackLimitsEnforced());
-        $this->assertFalse($race->raceDivisions());
         $this->assertSame(['fastest_lap' => 1], $race->bonusPoints());
         $this->assertSame(0, $race->dnfPoints());
         $this->assertSame(0, $race->dnsPoints());
@@ -97,12 +97,12 @@ final class RaceTest extends TestCase
             mandatoryPitStop: false,
             minimumPitTime: null,
             assistsRestrictions: null,
-            raceDivisions: false,
             pointsSystem: PointsSystem::f1Standard(),
             bonusPoints: null,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
+            racePoints: false,
         );
 
         $events = $race->events();
@@ -147,12 +147,13 @@ final class RaceTest extends TestCase
             mandatoryPitStop: true,
             minimumPitTime: 90,
             assistsRestrictions: 'none',
-            raceDivisions: true,
             pointsSystem: PointsSystem::f1Standard(),
             bonusPoints: ['pole' => 1, 'fastest_lap' => 1],
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: 'Championship finale',
+            racePoints: false,
+            status: RaceStatus::SCHEDULED,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
         );
@@ -165,7 +166,6 @@ final class RaceTest extends TestCase
         $this->assertSame(122, $race->gridSourceRaceId());
         $this->assertTrue($race->mandatoryPitStop());
         $this->assertSame(90, $race->minimumPitTime());
-        $this->assertTrue($race->raceDivisions());
         $this->assertSame($createdAt, $race->createdAt());
         $this->assertSame($updatedAt, $race->updatedAt());
         $this->assertEmpty($race->events());
@@ -196,12 +196,12 @@ final class RaceTest extends TestCase
             mandatoryPitStop: false,
             minimumPitTime: null,
             assistsRestrictions: 'limited',
-            raceDivisions: false,
             pointsSystem: PointsSystem::f1Standard(),
             bonusPoints: null,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
+            racePoints: false,
         );
 
         $race->setId(1);
@@ -231,12 +231,12 @@ final class RaceTest extends TestCase
             mandatoryPitStop: true,
             minimumPitTime: 120,
             assistsRestrictions: 'none',
-            raceDivisions: true,
             pointsSystem: PointsSystem::from([1 => 10, 2 => 8, 3 => 6]),
             bonusPoints: ['fastest_lap' => 2],
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: 'Updated notes',
+            racePoints: false,
         );
 
         $this->assertSame('Updated Name', $race->name()?->value());
@@ -250,7 +250,6 @@ final class RaceTest extends TestCase
         $this->assertFalse($race->trackLimitsEnforced());
         $this->assertTrue($race->mandatoryPitStop());
         $this->assertSame(120, $race->minimumPitTime());
-        $this->assertTrue($race->raceDivisions());
         $this->assertSame([1 => 10, 2 => 8, 3 => 6], $race->pointsSystem()->toArray());
         $this->assertSame(['fastest_lap' => 2], $race->bonusPoints());
         $this->assertGreaterThan($originalUpdatedAt, $race->updatedAt());
@@ -285,12 +284,12 @@ final class RaceTest extends TestCase
             mandatoryPitStop: false,
             minimumPitTime: null,
             assistsRestrictions: 'limited',
-            raceDivisions: false,
             pointsSystem: PointsSystem::f1Standard(),
             bonusPoints: null,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
+            racePoints: false,
         );
 
         // Update with same values
@@ -315,12 +314,12 @@ final class RaceTest extends TestCase
             mandatoryPitStop: false,
             minimumPitTime: null,
             assistsRestrictions: 'limited',
-            raceDivisions: false,
             pointsSystem: PointsSystem::f1Standard(),
             bonusPoints: null,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
+            racePoints: false,
         );
 
         $events = $race->events();
@@ -352,12 +351,12 @@ final class RaceTest extends TestCase
             mandatoryPitStop: false,
             minimumPitTime: null,
             assistsRestrictions: null,
-            raceDivisions: false,
             pointsSystem: PointsSystem::f1Standard(),
             bonusPoints: null,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
+            racePoints: false,
         );
 
         $this->assertCount(1, $race->events());

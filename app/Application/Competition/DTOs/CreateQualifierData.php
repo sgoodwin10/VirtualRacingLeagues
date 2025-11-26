@@ -47,9 +47,6 @@ final class CreateQualifierData extends Data
         public bool $collision_penalties,
         #[Nullable, StringType]
         public ?string $assists_restrictions,
-        // Division Support
-        #[Required, BooleanType]
-        public bool $race_divisions,
         // Bonus Points (ONLY pole position allowed)
         #[Nullable, ArrayType]
         public ?array $bonus_points,

@@ -47,15 +47,15 @@ final class UpdateQualifierData extends Data
         public bool|Optional|null $collision_penalties = new Optional(),
         #[Nullable, StringType]
         public string|Optional|null $assists_restrictions = new Optional(),
-        // Division Support
-        #[Nullable, BooleanType]
-        public bool|Optional|null $race_divisions = new Optional(),
         // Bonus Points
         #[Nullable, ArrayType]
         public array|Optional|null $bonus_points = new Optional(),
         // Notes
         #[Nullable, StringType]
         public string|Optional|null $race_notes = new Optional(),
+        // Status
+        #[Nullable, StringType, In(['scheduled', 'completed'])]
+        public string|Optional|null $status = new Optional(),
     ) {
     }
 }

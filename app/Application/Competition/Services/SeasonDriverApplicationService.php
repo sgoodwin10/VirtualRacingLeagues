@@ -504,8 +504,9 @@ final class SeasonDriverApplicationService
             throw new \RuntimeException("League driver not found");
         }
 
-        // Get team name and division name from season driver's relationships if assigned
+        // Get team name, division id and division name from season driver's relationships if assigned
         $teamName = null;
+        $divisionId = null;
         $divisionName = null;
 
         if ($seasonDriverModels !== null && $seasonDriver->id() !== null) {
@@ -515,6 +516,7 @@ final class SeasonDriverApplicationService
                     $teamName = $seasonDriverModel->team->name;
                 }
                 if ($seasonDriverModel->division) {
+                    $divisionId = $seasonDriverModel->division_id;
                     $divisionName = $seasonDriverModel->division->name;
                 }
             }
@@ -527,6 +529,7 @@ final class SeasonDriverApplicationService
                     $teamName = $seasonDriverModel->team->name;
                 }
                 if ($seasonDriverModel->division) {
+                    $divisionId = $seasonDriverModel->division_id;
                     $divisionName = $seasonDriverModel->division->name;
                 }
             }
@@ -545,6 +548,7 @@ final class SeasonDriverApplicationService
                 'iracing_id' => $leagueDriver->driver->iracing_id ?? null,
                 'discord_id' => $leagueDriver->driver->discord_id ?? null,
                 'team_name' => $teamName,
+                'division_id' => $divisionId,
                 'division_name' => $divisionName,
             ]
         );

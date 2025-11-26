@@ -19,6 +19,8 @@ describe('useRoundValidation', () => {
       internal_notes: '',
       fastest_lap: null,
       fastest_lap_top_10: false,
+      qualifying_pole: null,
+      qualifying_pole_top_10: false,
       points_system: { 1: 25, 2: 18, 3: 15 },
       round_points: false,
     };

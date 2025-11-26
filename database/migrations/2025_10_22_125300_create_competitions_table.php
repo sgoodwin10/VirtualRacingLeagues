@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('slug', 100);
             $table->text('description')->nullable();
             $table->string('logo_path')->nullable();
+            $table->string('competition_colour')->nullable();
 
             // Status fields
             $table->string('status', 20)->default('active')->index();

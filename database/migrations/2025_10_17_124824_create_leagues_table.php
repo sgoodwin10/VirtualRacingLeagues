@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable(); // Will store HTML from rich text editor
 
             // Image storage paths
-            $table->string('logo_path');
+            $table->string('logo_path')->nullable();
             $table->string('header_image_path')->nullable();
 
             // Platform selections stored as JSON array of platform IDs

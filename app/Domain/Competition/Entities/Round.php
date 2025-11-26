@@ -40,6 +40,8 @@ final class Round
         private ?string $internalNotes,
         private ?int $fastestLap,
         private bool $fastestLapTop10,
+        private ?int $qualifyingPole,
+        private bool $qualifyingPoleTop10,
         private ?PointsSystem $pointsSystem,
         private bool $roundPoints,
         private RoundStatus $status,
@@ -68,6 +70,8 @@ final class Round
         ?string $internalNotes,
         ?int $fastestLap,
         bool $fastestLapTop10,
+        ?int $qualifyingPole,
+        bool $qualifyingPoleTop10,
         ?PointsSystem $pointsSystem,
         bool $roundPoints,
         int $createdByUserId,
@@ -88,6 +92,8 @@ final class Round
             internalNotes: $internalNotes,
             fastestLap: $fastestLap,
             fastestLapTop10: $fastestLapTop10,
+            qualifyingPole: $qualifyingPole,
+            qualifyingPoleTop10: $qualifyingPoleTop10,
             pointsSystem: $pointsSystem,
             roundPoints: $roundPoints,
             status: RoundStatus::SCHEDULED,
@@ -117,6 +123,8 @@ final class Round
         ?string $internalNotes,
         ?int $fastestLap,
         bool $fastestLapTop10,
+        ?int $qualifyingPole,
+        bool $qualifyingPoleTop10,
         ?PointsSystem $pointsSystem,
         bool $roundPoints,
         RoundStatus $status,
@@ -141,6 +149,8 @@ final class Round
             internalNotes: $internalNotes,
             fastestLap: $fastestLap,
             fastestLapTop10: $fastestLapTop10,
+            qualifyingPole: $qualifyingPole,
+            qualifyingPoleTop10: $qualifyingPoleTop10,
             pointsSystem: $pointsSystem,
             roundPoints: $roundPoints,
             status: $status,
@@ -167,6 +177,8 @@ final class Round
         ?string $internalNotes,
         ?int $fastestLap,
         bool $fastestLapTop10,
+        ?int $qualifyingPole,
+        bool $qualifyingPoleTop10,
         ?PointsSystem $pointsSystem,
         bool $roundPoints,
     ): void {
@@ -229,6 +241,16 @@ final class Round
 
         if ($this->fastestLapTop10 !== $fastestLapTop10) {
             $this->fastestLapTop10 = $fastestLapTop10;
+            $hasChanges = true;
+        }
+
+        if ($this->qualifyingPole !== $qualifyingPole) {
+            $this->qualifyingPole = $qualifyingPole;
+            $hasChanges = true;
+        }
+
+        if ($this->qualifyingPoleTop10 !== $qualifyingPoleTop10) {
+            $this->qualifyingPoleTop10 = $qualifyingPoleTop10;
             $hasChanges = true;
         }
 
@@ -431,6 +453,16 @@ final class Round
     public function fastestLapTop10(): bool
     {
         return $this->fastestLapTop10;
+    }
+
+    public function qualifyingPole(): ?int
+    {
+        return $this->qualifyingPole;
+    }
+
+    public function qualifyingPoleTop10(): bool
+    {
+        return $this->qualifyingPoleTop10;
     }
 
     public function pointsSystem(): ?PointsSystem

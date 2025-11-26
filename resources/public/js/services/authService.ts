@@ -1,4 +1,4 @@
-import { apiClient, apiService } from './api';
+import { apiClient, apiService } from '@public/services/api';
 import type { User } from '@public/types/user';
 import type { LoginCredentials, RegisterData } from '@public/types/auth';
 

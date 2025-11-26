@@ -23,13 +23,14 @@ export interface Race {
   mandatory_pit_stop: boolean;
   minimum_pit_time: number | null;
   assists_restrictions: string | null;
-  race_divisions: boolean;
+  race_points: boolean;
   points_system: PointsSystemMap;
   bonus_points: BonusPoints | null;
   dnf_points: number;
   dns_points: number;
   race_notes: string | null;
   is_qualifier: boolean;
+  status: 'scheduled' | 'completed';
   created_at: string;
   updated_at: string;
 }
@@ -67,36 +68,38 @@ export interface BonusPoints {
 // - mandatory_pit_stop should be omitted - backend will set to false
 export interface CreateRaceRequest {
   race_number?: number; // 0 for qualifiers (explicit), omitted for races (auto-generated)
-  name?: string;
-  race_type?: RaceType; // Omit for qualifiers, required for races
-  qualifying_format?: QualifyingFormat;
-  qualifying_length?: number; // Required when qualifying_format is 'standard' or 'time_trial'
-  qualifying_tire?: string;
+  name?: string | null;
+  race_type?: RaceType | null; // Omit for qualifiers, required for races
+  qualifying_format?: QualifyingFormat | null;
+  qualifying_length?: number | null; // Required when qualifying_format is 'standard' or 'time_trial'
+  qualifying_tire?: string | null;
   grid_source: GridSource; // 'qualifying' for qualifiers
-  grid_source_race_id?: number; // Required when grid_source is 'previous_race' or 'reverse_previous'
+  grid_source_race_id?: number | null; // Required when grid_source is 'previous_race' or 'reverse_previous'
   length_type: RaceLengthType; // For qualifiers: 'time' (uses qualifying_length)
   length_value: number; // For qualifiers: same as qualifying_length
   extra_lap_after_time: boolean; // Always false for qualifiers
-  weather?: string;
-  tire_restrictions?: string;
-  fuel_usage?: string;
-  damage_model?: string;
+  weather?: string | null;
+  tire_restrictions?: string | null;
+  fuel_usage?: string | null;
+  damage_model?: string | null;
   track_limits_enforced?: boolean; // Omit for qualifiers
   false_start_detection?: boolean; // Omit for qualifiers
   collision_penalties?: boolean; // Omit for qualifiers
   mandatory_pit_stop?: boolean; // Omit for qualifiers
-  minimum_pit_time?: number; // Only for races when mandatory_pit_stop is true
-  assists_restrictions?: string;
-  race_divisions: boolean;
+  minimum_pit_time?: number | null; // Only for races when mandatory_pit_stop is true
+  assists_restrictions?: string | null;
+  race_points: boolean;
   points_system: PointsSystemMap;
   bonus_points?: BonusPoints | null; // For qualifiers: only 'pole' is applicable. Can be null to clear bonuses
   dnf_points: number;
   dns_points: number;
-  race_notes?: string;
+  race_notes?: string | null;
 }
 
 // Update payload
-export type UpdateRaceRequest = Partial<CreateRaceRequest>;
+export interface UpdateRaceRequest extends Partial<CreateRaceRequest> {
+  status?: 'scheduled' | 'completed';
+}
 
 // Form state
 export interface RaceForm {
@@ -121,8 +124,7 @@ export interface RaceForm {
   mandatory_pit_stop: boolean;
   minimum_pit_time: number;
   assists_restrictions: string;
-  race_divisions: boolean;
-  points_template: 'f1' | 'custom';
+  race_points: boolean;
   points_system: PointsSystemMap;
   bonus_pole: boolean;
   bonus_pole_points: number;
@@ -171,14 +173,14 @@ export const RACE_TYPE_OPTIONS: { value: RaceType; label: string }[] = [
 
 // Dropdown options for qualifying formats
 export const QUALIFYING_FORMAT_OPTIONS: { value: QualifyingFormat; label: string }[] = [
-  { value: 'standard', label: 'Standard Qualifying' },
+  { value: 'standard', label: 'Standard' },
   { value: 'time_trial', label: 'Time Trial' },
 ];
 
 // Dropdown options for grid sources
 export const GRID_SOURCE_OPTIONS: { value: GridSource; label: string }[] = [
-  { value: 'qualifying', label: 'Qualifying Result' },
-  { value: 'previous_race', label: 'Previous Race Result' },
+  { value: 'qualifying', label: 'Qualifying' },
+  { value: 'previous_race', label: 'Previous Race' },
   { value: 'reverse_previous', label: 'Reverse Previous Race' },
   { value: 'manual', label: 'Manual Grid' },
 ];

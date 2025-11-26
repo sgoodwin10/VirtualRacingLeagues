@@ -9,11 +9,14 @@ use App\Application\Competition\DTOs\UpdateRoundData;
 use App\Application\Competition\DTOs\RoundData;
 use App\Domain\Competition\Entities\Round;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
+use App\Domain\Competition\Repositories\RaceRepositoryInterface;
+use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\ValueObjects\RoundName;
 use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
 use App\Domain\Competition\ValueObjects\PointsSystem;
+use App\Domain\Competition\ValueObjects\RaceResultStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use DateTimeImmutable;
@@ -26,6 +29,8 @@ final class RoundApplicationService
 {
     public function __construct(
         private readonly RoundRepositoryInterface $roundRepository,
+        private readonly RaceRepositoryInterface $raceRepository,
+        private readonly RaceResultRepositoryInterface $raceResultRepository,
     ) {
     }
 
@@ -61,6 +66,8 @@ final class RoundApplicationService
                 internalNotes: $data->internal_notes,
                 fastestLap: $data->fastest_lap,
                 fastestLapTop10: $data->fastest_lap_top_10,
+                qualifyingPole: $data->qualifying_pole,
+                qualifyingPoleTop10: $data->qualifying_pole_top_10,
                 pointsSystem: $data->points_system ? PointsSystem::fromJson($data->points_system) : null,
                 roundPoints: $data->round_points,
                 createdByUserId: $userId,
@@ -124,6 +131,17 @@ final class RoundApplicationService
                 $fastestLapTop10 = $data->fastest_lap_top_10 ?? false;
             }
 
+            // Determine qualifying_pole and qualifying_pole_top_10: if field provided in request, update it; otherwise keep existing
+            $qualifyingPole = $round->qualifyingPole();
+            if (array_key_exists('qualifying_pole', $requestData)) {
+                $qualifyingPole = $data->qualifying_pole;
+            }
+
+            $qualifyingPoleTop10 = $round->qualifyingPoleTop10();
+            if (array_key_exists('qualifying_pole_top_10', $requestData)) {
+                $qualifyingPoleTop10 = $data->qualifying_pole_top_10 ?? false;
+            }
+
             // Determine nullable string fields: if field provided in request, update it (even to null); otherwise keep existing
             $name = array_key_exists('name', $requestData)
                 ? ($data->name !== null ? RoundName::from($data->name) : null)
@@ -176,6 +194,8 @@ final class RoundApplicationService
                 internalNotes: $internalNotes,
                 fastestLap: $fastestLap,
                 fastestLapTop10: $fastestLapTop10,
+                qualifyingPole: $qualifyingPole,
+                qualifyingPoleTop10: $qualifyingPoleTop10,
                 pointsSystem: $pointsSystem,
                 roundPoints: $roundPoints,
             );
@@ -247,20 +267,44 @@ final class RoundApplicationService
 
     /**
      * Mark round as completed.
+     * Also marks all associated races and race results as completed/confirmed.
      */
     public function completeRound(int $roundId): RoundData
     {
         return DB::transaction(function () use ($roundId) {
+            // Mark round as completed
             $round = $this->roundRepository->findById($roundId);
             $round->complete();
             $this->roundRepository->save($round);
             $this->dispatchEvents($round);
+
+            // Cascade completion to all races (including qualifiers)
+            $races = $this->raceRepository->findAllByRoundId($roundId);
+            foreach ($races as $race) {
+                // Mark race as completed
+                $race->markAsCompleted();
+                $this->raceRepository->save($race);
+
+                // Mark all race results as confirmed
+                $raceId = $race->id();
+                if ($raceId !== null) {
+                    $raceResults = $this->raceResultRepository->findByRaceId($raceId);
+                    foreach ($raceResults as $result) {
+                        if ($result->status() !== RaceResultStatus::CONFIRMED) {
+                            $result->updateStatus(RaceResultStatus::CONFIRMED);
+                            $this->raceResultRepository->save($result);
+                        }
+                    }
+                }
+            }
+
             return RoundData::fromEntity($round);
         });
     }
 
     /**
      * Mark round as not completed (scheduled).
+     * Does NOT affect associated races or race results - only changes round status.
      */
     public function uncompleteRound(int $roundId): RoundData
     {

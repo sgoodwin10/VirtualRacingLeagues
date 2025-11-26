@@ -56,9 +56,6 @@ final class RaceFactory extends Factory
             'minimum_pit_time' => $this->faker->optional(0.3)->numberBetween(30, 120),
             'assists_restrictions' => $this->faker->optional(0.6)->randomElement(['any', 'limited', 'none']),
 
-            // Division
-            'race_divisions' => $this->faker->boolean(30),
-
             // Points (F1 standard)
             'points_system' => [
                 1 => 25, 2 => 18, 3 => 15, 4 => 12, 5 => 10,

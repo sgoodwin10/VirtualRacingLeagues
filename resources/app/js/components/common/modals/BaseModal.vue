@@ -16,7 +16,7 @@ interface Props {
   header?: string;
 
   /** Modal width - accepts Tailwind classes or custom width */
-  width?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | 'full' | string;
+  width?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | 'full' | string;
 
   /** Modal position on screen */
   position?: DialogProps['position'];
@@ -126,6 +126,8 @@ const widthClass = computed(() => {
     '3xl': 'max-w-3xl',
     '4xl': 'max-w-4xl',
     full: 'max-w-full',
+    '6xl': 'max-w-6xl',
+    '5xl': 'max-w-5xl',
   };
 
   return widthMap[props.width] || props.width;

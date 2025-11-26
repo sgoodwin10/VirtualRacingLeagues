@@ -123,7 +123,7 @@
                   <!-- Track Conditions + Layout Row -->
                   <div class="grid grid-cols-2 gap-3">
                     <!-- Track Conditions -->
-                    <FormInputGroup>
+                    <FormInputGroup class="hidden">
                       <FormLabel for="track_conditions" text="Weather / Time of Day" />
                       <InputText
                         id="track_conditions"
@@ -141,7 +141,7 @@
                     </FormInputGroup>
 
                     <!-- Track Layout -->
-                    <FormInputGroup>
+                    <FormInputGroup class="hidden">
                       <FormLabel for="track_layout" text="Circuit Direction" />
                       <InputText
                         id="track_layout"
@@ -166,7 +166,7 @@
 
                   <div>
                     <!-- Stream URL -->
-                    <FormInputGroup>
+                    <FormInputGroup class="hidden">
                       <FormLabel for="stream_url" text="Stream URL" />
                       <InputText
                         id="stream_url"
@@ -262,6 +262,57 @@
                     </FormError>
                   </FormInputGroup>
 
+                  <!-- Qualifying Pole Bonus -->
+                  <FormInputGroup>
+                    <FormLabel text="Qualifying Pole Bonus" />
+                    <div class="space-y-2">
+                      <div class="flex items-center gap-2">
+                        <Checkbox
+                          id="bonus_qualifying_pole"
+                          v-model="hasQualifyingPoleBonus"
+                          :binary="true"
+                        />
+                        <label for="bonus_qualifying_pole" class="text-sm"
+                          >Enable qualifying pole bonus</label
+                        >
+                        <InputNumber
+                          v-if="hasQualifyingPoleBonus"
+                          v-model="form.qualifying_pole"
+                          :min="1"
+                          :max="99"
+                          fluid
+                          :invalid="!!validationErrors.qualifying_pole"
+                          placeholder="Pts"
+                          size="small"
+                          class="w-20"
+                          @blur="validation.validateQualifyingPole(form.qualifying_pole)"
+                        />
+                      </div>
+                      <div
+                        v-if="
+                          hasQualifyingPoleBonus && form.qualifying_pole && form.qualifying_pole > 0
+                        "
+                        class="ml-6"
+                      >
+                        <Checkbox
+                          id="bonus_qualifying_pole_top_10"
+                          v-model="form.qualifying_pole_top_10"
+                          :binary="true"
+                        />
+                        <label for="bonus_qualifying_pole_top_10" class="ml-2 text-sm"
+                          >Only award if driver finishes in top 10</label
+                        >
+                      </div>
+                    </div>
+                    <FormOptionalText
+                      :show-optional="false"
+                      text="Award points for qualifying pole position"
+                    />
+                    <FormError v-if="validationErrors.qualifying_pole">
+                      {{ validationErrors.qualifying_pole }}
+                    </FormError>
+                  </FormInputGroup>
+
                   <hr class="border-gray-300" />
 
                   <!-- Round Points -->
@@ -301,17 +352,17 @@
                 <div class="space-y-3">
                   <!-- Points Grid (always visible when round_points is enabled) -->
                   <FormInputGroup>
-                    <FormLabel text="Points per Position" />
                     <div class="bg-white rounded-lg border border-gray-200 p-4">
-                      <div class="grid grid-cols-5 gap-3">
+                      <div class="grid grid-cols-6 gap-3">
                         <InputGroup
                           v-for="position in Object.keys(form.points_system).map(Number)"
                           :key="position"
                         >
-                          <InputGroupAddon>P{{ position }}</InputGroupAddon>
+                          <InputGroupAddon class="bg-slate-100">P{{ position }}</InputGroupAddon>
                           <InputNumber
                             :id="`position_${position}`"
                             v-model="form.points_system[position]"
+                            :max-fraction-digits="2"
                             :min="0"
                             :max="999"
                             size="small"
@@ -340,10 +391,6 @@
                         />
                       </div>
                     </div>
-                    <FormOptionalText
-                      :show-optional="false"
-                      text="Pre-populated with F1 standard points (25-18-15-12-10-8-6-4-2-1). Modify as needed."
-                    />
                     <FormError v-if="validationErrors.points_system">
                       {{ validationErrors.points_system }}
                     </FormError>
@@ -355,7 +402,7 @@
               <hr v-if="!form.round_points" class="border-gray-300" />
 
               <!-- Second Section: Notes -->
-              <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 hidden">
                 <!-- Left Column (66% width): Technical Notes -->
                 <div class="lg:col-span-2">
                   <FormInputGroup>
@@ -504,6 +551,8 @@ const form = ref<RoundForm>({
   internal_notes: '',
   fastest_lap: null,
   fastest_lap_top_10: false,
+  qualifying_pole: null,
+  qualifying_pole_top_10: false,
   points_system: { ...F1_STANDARD_POINTS },
   round_points: false,
 });
@@ -549,6 +598,19 @@ const hasFastestLapBonus = computed({
   },
 });
 
+// Computed property for qualifying pole bonus checkbox
+const hasQualifyingPoleBonus = computed({
+  get: () => form.value.qualifying_pole !== null && form.value.qualifying_pole > 0,
+  set: (enabled: boolean) => {
+    if (enabled) {
+      form.value.qualifying_pole = 1; // Default to 1 point when enabling
+    } else {
+      form.value.qualifying_pole = null;
+      form.value.qualifying_pole_top_10 = false;
+    }
+  },
+});
+
 // Watch for drawer opening to initialize form
 watch(
   () => props.visible,
@@ -576,6 +638,8 @@ async function initializeForm(): Promise<void> {
       internal_notes: '',
       fastest_lap: null,
       fastest_lap_top_10: false,
+      qualifying_pole: null,
+      qualifying_pole_top_10: false,
       points_system: { ...F1_STANDARD_POINTS },
       round_points: false,
     };
@@ -615,6 +679,8 @@ async function initializeForm(): Promise<void> {
       internal_notes: props.round.internal_notes || '',
       fastest_lap: props.round.fastest_lap,
       fastest_lap_top_10: props.round.fastest_lap_top_10,
+      qualifying_pole: props.round.qualifying_pole,
+      qualifying_pole_top_10: props.round.qualifying_pole_top_10,
       points_system: pointsSystemObject,
       round_points: props.round.round_points,
     };
@@ -685,6 +751,10 @@ async function handleSubmit(): Promise<void> {
       if (form.value.fastest_lap !== null) {
         requestData.fastest_lap = form.value.fastest_lap;
         requestData.fastest_lap_top_10 = form.value.fastest_lap_top_10;
+      }
+      if (form.value.qualifying_pole !== null) {
+        requestData.qualifying_pole = form.value.qualifying_pole;
+        requestData.qualifying_pole_top_10 = form.value.qualifying_pole_top_10;
       }
       // Always include round_points (boolean)
       requestData.round_points = form.value.round_points;
@@ -766,6 +836,14 @@ async function handleSubmit(): Promise<void> {
 
       if (form.value.fastest_lap_top_10 !== props.round.fastest_lap_top_10) {
         requestData.fastest_lap_top_10 = form.value.fastest_lap_top_10;
+      }
+
+      if (form.value.qualifying_pole !== props.round.qualifying_pole) {
+        requestData.qualifying_pole = form.value.qualifying_pole;
+      }
+
+      if (form.value.qualifying_pole_top_10 !== props.round.qualifying_pole_top_10) {
+        requestData.qualifying_pole_top_10 = form.value.qualifying_pole_top_10;
       }
 
       if (form.value.round_points !== props.round.round_points) {

@@ -33,12 +33,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $mandatory_pit_stop
  * @property int|null $minimum_pit_time
  * @property string|null $assists_restrictions
- * @property bool $race_divisions
  * @property array<int, int> $points_system
  * @property array<string, int>|null $bonus_points
  * @property int $dnf_points
  * @property int $dns_points
+ * @property bool $race_points
  * @property string|null $race_notes
+ * @property string $status
  * @property string $created_at
  * @property string $updated_at
  *
@@ -91,15 +92,16 @@ final class Race extends Model
         'mandatory_pit_stop',
         'minimum_pit_time',
         'assists_restrictions',
-        // Division
-        'race_divisions',
         // Points
         'points_system',
         'bonus_points',
         'dnf_points',
         'dns_points',
+        'race_points',
         // Notes
         'race_notes',
+        // Status
+        'status',
     ];
 
     protected $casts = [
@@ -114,11 +116,11 @@ final class Race extends Model
         'collision_penalties' => 'boolean',
         'mandatory_pit_stop' => 'boolean',
         'minimum_pit_time' => 'integer',
-        'race_divisions' => 'boolean',
         'points_system' => 'array',
         'bonus_points' => 'array',
         'dnf_points' => 'integer',
         'dns_points' => 'integer',
+        'race_points' => 'boolean',
     ];
 
     /**

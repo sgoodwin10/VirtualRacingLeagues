@@ -247,7 +247,7 @@
                       </FormInputGroup>
                     </div>
                     <!-- Extra lap after time checkbox -->
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 hidden">
                       <Checkbox
                         id="extra_lap_after_time"
                         v-model="form.extra_lap_after_time"
@@ -293,21 +293,6 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- Division Support -->
-                <div>
-                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Division Support</h3>
-                  <div class="space-y-2">
-                    <div class="flex items-center gap-2">
-                      <Checkbox id="race_divisions" v-model="form.race_divisions" :binary="true" />
-                      <label for="race_divisions">Enable separate results per division</label>
-                    </div>
-                    <Message severity="info" :closable="false">
-                      When enabled, race results and points will be tracked separately for each
-                      division in the season.
-                    </Message>
-                  </div>
-                </div>
               </div>
             </div>
           </AccordionContent>
@@ -319,180 +304,156 @@
         <AccordionPanel value="0">
           <AccordionHeader>Points</AccordionHeader>
           <AccordionContent>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              <!-- Left Column (66% - 2 cols) -->
-              <div class="lg:col-span-2 space-y-3">
-                <!-- Points System -->
-                <div>
-                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Points System</h3>
-                  <div class="space-y-3">
-                    <!-- Points Template radio buttons -->
-                    <FormInputGroup>
-                      <FormLabel text="Points Template" required />
-                      <div class="flex gap-4">
-                        <div class="flex items-center">
-                          <RadioButton
-                            v-model="form.points_template"
-                            input-id="points_f1"
-                            value="f1"
-                            @change="applyF1Points"
-                          />
-                          <label for="points_f1" class="ml-2">F1 Standard (25-18-15...)</label>
-                        </div>
-                        <div class="flex items-center">
-                          <RadioButton
-                            v-model="form.points_template"
-                            input-id="points_custom"
-                            value="custom"
-                          />
-                          <label for="points_custom" class="ml-2">Custom Points</label>
-                        </div>
-                      </div>
-                    </FormInputGroup>
-
-                    <!-- Custom Points Table -->
-                    <FormInputGroup v-if="form.points_template === 'custom'">
-                      <FormLabel text="Custom Points Table" />
-                      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <DataTable
-                          :value="pointsTableData"
-                          edit-mode="cell"
-                          class="p-datatable-sm"
-                          :pt="{
-                            root: { class: 'border-0' },
-                          }"
-                        >
-                          <Column field="position" header="Position" style="width: 40%" />
-                          <Column field="points" header="Points" style="width: 40%">
-                            <template #editor="{ data }">
-                              <InputNumber
-                                v-model="data.points"
-                                :min="0"
-                                size="small"
-                                class="w-full"
-                              />
-                            </template>
-                          </Column>
-                          <Column style="width: 20%">
-                            <template #body="{ index }">
-                              <div class="flex gap-1">
-                                <Button
-                                  icon="pi pi-plus"
-                                  size="small"
-                                  text
-                                  severity="success"
-                                  @click="addPointsPosition"
-                                />
-                                <Button
-                                  icon="pi pi-trash"
-                                  size="small"
-                                  severity="danger"
-                                  text
-                                  @click="removePointsPosition(index)"
-                                />
-                              </div>
-                            </template>
-                          </Column>
-                        </DataTable>
-                      </div>
-                      <FormError :error="errors.points_system" />
-                    </FormInputGroup>
-
-                    <!-- Points Breakdown -->
-                    <FormInputGroup>
-                      <FormLabel text="Points Breakdown" />
-                      <div class="bg-white rounded-lg border border-gray-200 p-3">
-                        <div class="grid grid-cols-5 gap-2 text-sm">
-                          <div
-                            v-for="(points, position) in form.points_system"
-                            :key="position"
-                            class="flex items-center gap-1"
-                          >
-                            <span class="font-semibold text-gray-700">P{{ position }}:</span>
-                            <span class="text-gray-900">{{ points }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </FormInputGroup>
+            <div class="space-y-3">
+              <!-- Race Points Toggle -->
+              <FormInputGroup>
+                <FormLabel text="Race Points" />
+                <div class="space-y-3">
+                  <div class="flex items-center gap-2">
+                    <InputSwitch
+                      id="race_points"
+                      v-model="form.race_points"
+                      aria-label="Enable race points"
+                    />
+                    <label for="race_points" class="text-sm font-medium"
+                      >Enable race-level points calculation</label
+                    >
                   </div>
+                  <FormOptionalText
+                    :show-optional="false"
+                    text="When enabled, race results create standings using this race's points system"
+                  />
                 </div>
+              </FormInputGroup>
+
+              <!-- Points System Section - Only show when race_points is enabled -->
+              <div v-if="form.race_points" class="space-y-3">
+                <!-- Horizontal Rule -->
+                <hr class="border-gray-300" />
+
+                <h3 class="text-sm font-semibold text-gray-900">Points System</h3>
+
+                <!-- Points Grid -->
+                <FormInputGroup>
+                  <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <div class="grid grid-cols-6 gap-3">
+                      <InputGroup
+                        v-for="position in Object.keys(form.points_system).map(Number)"
+                        :key="position"
+                      >
+                        <InputGroupAddon class="bg-slate-100">P{{ position }}</InputGroupAddon>
+                        <InputNumber
+                          :id="`position_${position}`"
+                          v-model="form.points_system[position]"
+                          :max-fraction-digits="2"
+                          :min="0"
+                          :max="999"
+                          size="small"
+                          fluid
+                          class="w-full"
+                        />
+                      </InputGroup>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                      <Button
+                        label="Add Position"
+                        icon="pi pi-plus"
+                        size="small"
+                        severity="success"
+                        outlined
+                        @click="addPointsPosition"
+                      />
+                      <Button
+                        label="Remove Last"
+                        icon="pi pi-trash"
+                        size="small"
+                        severity="danger"
+                        outlined
+                        :disabled="Object.keys(form.points_system).length <= 1"
+                        @click="removeLastPointsPosition"
+                      />
+                    </div>
+                  </div>
+                  <FormError :error="errors.points_system" />
+                </FormInputGroup>
               </div>
 
-              <!-- Right Column (33% - 1 col) -->
-              <div class="lg:col-span-1 space-y-3">
-                <!-- Bonus Points -->
-                <div>
+              <!-- Horizontal Rule -->
+              <hr v-if="!form.race_points" class="border-gray-300" />
+
+              <!-- Bonus Points Section -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Fastest Lap Bonus -->
+                <div v-if="showFastestLapBonus">
                   <h3 class="text-sm font-semibold text-gray-900 mb-2">Bonus Points</h3>
                   <div class="space-y-2">
-                    <!-- Fastest Lap Bonus -->
-                    <div v-if="showFastestLapBonus" class="space-y-2">
-                      <div class="flex items-center gap-2">
-                        <Checkbox
-                          id="bonus_fastest_lap"
-                          v-model="form.bonus_fastest_lap"
-                          :binary="true"
-                        />
-                        <label for="bonus_fastest_lap" class="text-sm">Fastest lap</label>
-                        <InputNumber
-                          v-if="form.bonus_fastest_lap"
-                          v-model="form.bonus_fastest_lap_points"
-                          :min="1"
-                          :max="99"
-                          placeholder="Pts"
-                          size="small"
-                          class="w-20"
-                        />
-                      </div>
-                      <div v-if="form.bonus_fastest_lap" class="ml-6">
-                        <Checkbox
-                          id="bonus_fastest_lap_top_10"
-                          v-model="form.bonus_fastest_lap_top_10"
-                          :binary="true"
-                        />
-                        <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
-                          >Only award if driver finishes in top 10</label
-                        >
-                      </div>
+                    <div class="flex items-center gap-2">
+                      <Checkbox
+                        id="bonus_fastest_lap"
+                        v-model="form.bonus_fastest_lap"
+                        :binary="true"
+                      />
+                      <label for="bonus_fastest_lap" class="text-sm">Fastest lap</label>
+                      <InputNumber
+                        v-if="form.bonus_fastest_lap"
+                        v-model="form.bonus_fastest_lap_points"
+                        :min="1"
+                        :max="99"
+                        placeholder="Pts"
+                        size="small"
+                        class="w-20"
+                      />
                     </div>
-                    <!-- Message when round has fastest lap configured -->
-                    <Message v-if="roundHasFastestLap" severity="info" :closable="false">
-                      Fastest lap bonus is configured at the round level and will apply to all races
-                      in this round.
-                    </Message>
+                    <div v-if="form.bonus_fastest_lap" class="ml-6">
+                      <Checkbox
+                        id="bonus_fastest_lap_top_10"
+                        v-model="form.bonus_fastest_lap_top_10"
+                        :binary="true"
+                      />
+                      <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
+                        >Only award if driver finishes in top 10</label
+                      >
+                    </div>
                   </div>
+                </div>
+
+                <!-- Message when round has fastest lap configured -->
+                <div v-if="roundHasFastestLap">
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Bonus Points</h3>
+                  <Message severity="info" :closable="false">
+                    Fastest lap bonus is configured at the round level and will apply to all races
+                    in this round.
+                  </Message>
                 </div>
 
                 <!-- DNF/DNS Points -->
                 <div>
                   <h3 class="text-sm font-semibold text-gray-900 mb-2">DNF/DNS Points</h3>
-                  <div class="space-y-2">
-                    <!-- DNF and DNS on SAME row (grid-cols-2) -->
-                    <div class="grid grid-cols-2 gap-2">
-                      <FormInputGroup>
-                        <FormLabel for="dnf_points" text="DNF" />
-                        <InputNumber
-                          id="dnf_points"
-                          v-model="form.dnf_points"
-                          :min="0"
-                          :max="99"
-                          size="small"
-                          fluid
-                        />
-                        <small class="text-xs text-gray-500">Did Not Finish</small>
-                      </FormInputGroup>
-                      <FormInputGroup>
-                        <FormLabel for="dns_points" text="DNS" />
-                        <InputNumber
-                          id="dns_points"
-                          v-model="form.dns_points"
-                          :min="0"
-                          :max="99"
-                          size="small"
-                          fluid
-                        />
-                        <small class="text-xs text-gray-500">Did Not Start</small>
-                      </FormInputGroup>
-                    </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <FormInputGroup>
+                      <FormLabel for="dnf_points" text="DNF" />
+                      <InputNumber
+                        id="dnf_points"
+                        v-model="form.dnf_points"
+                        :min="0"
+                        :max="99"
+                        size="small"
+                        fluid
+                      />
+                      <small class="text-xs text-gray-500">Did Not Finish</small>
+                    </FormInputGroup>
+                    <FormInputGroup>
+                      <FormLabel for="dns_points" text="DNS" />
+                      <InputNumber
+                        id="dns_points"
+                        v-model="form.dns_points"
+                        :min="0"
+                        :max="99"
+                        size="small"
+                        fluid
+                      />
+                      <small class="text-xs text-gray-500">Did Not Start</small>
+                    </FormInputGroup>
                   </div>
                 </div>
               </div>
@@ -573,8 +534,9 @@ import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
+import InputSwitch from 'primevue/inputswitch';
+import InputGroup from 'primevue/inputgroup';
+import InputGroupAddon from 'primevue/inputgroupaddon';
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import AccordionHeader from 'primevue/accordionheader';
@@ -647,8 +609,7 @@ const form = reactive<RaceForm>({
   mandatory_pit_stop: false,
   minimum_pit_time: 0,
   assists_restrictions: '',
-  race_divisions: false,
-  points_template: 'f1',
+  race_points: false,
   points_system: { ...F1_STANDARD_POINTS },
   bonus_pole: false,
   bonus_pole_points: 1,
@@ -753,24 +714,6 @@ const sourceRaceLabel = computed(() => {
   return 'Source Race';
 });
 
-const pointsTableData = computed({
-  get: () => {
-    return Object.entries(form.points_system)
-      .map(([position, points]) => ({
-        position: parseInt(position),
-        points,
-      }))
-      .sort((a, b) => a.position - b.position);
-  },
-  set: (value) => {
-    const newPointsSystem: Record<number, number> = {};
-    value.forEach((item) => {
-      newPointsSystem[item.position] = item.points;
-    });
-    form.points_system = newPointsSystem;
-  },
-});
-
 // Check if the parent round has fastest lap bonus configured
 const roundHasFastestLap = computed(() => {
   const round = roundStore.getRoundById(props.roundId);
@@ -844,15 +787,11 @@ function loadRaceIntoForm(race: Race): void {
   form.mandatory_pit_stop = race.mandatory_pit_stop;
   form.minimum_pit_time = race.minimum_pit_time || 0;
   form.assists_restrictions = race.assists_restrictions || '';
-  form.race_divisions = race.race_divisions;
+  form.race_points = race.race_points;
   form.points_system = { ...race.points_system };
   form.dnf_points = race.dnf_points;
   form.dns_points = race.dns_points;
   form.race_notes = race.race_notes || '';
-
-  // Determine points template
-  const isF1Standard = JSON.stringify(race.points_system) === JSON.stringify(F1_STANDARD_POINTS);
-  form.points_template = isF1Standard ? 'f1' : 'custom';
 
   // Load bonus points - reset first to ensure clean state
   form.bonus_pole = false;
@@ -892,8 +831,7 @@ function resetForm(): void {
   form.mandatory_pit_stop = false;
   form.minimum_pit_time = 0;
   form.assists_restrictions = '';
-  form.race_divisions = false;
-  form.points_template = 'f1';
+  form.race_points = false;
   form.points_system = { ...F1_STANDARD_POINTS };
   form.bonus_pole = false;
   form.bonus_pole_points = 1;
@@ -905,22 +843,23 @@ function resetForm(): void {
   form.race_notes = '';
 }
 
-function applyF1Points(): void {
-  form.points_system = { ...F1_STANDARD_POINTS };
-}
-
 function addPointsPosition(): void {
   const maxPosition = Math.max(...Object.keys(form.points_system).map(Number));
   form.points_system[maxPosition + 1] = 0;
 }
 
-function removePointsPosition(index: number): void {
-  const item = pointsTableData.value[index];
-  if (!item) return;
-  const position = item.position;
-  const newSystem = { ...form.points_system };
-  delete newSystem[position];
-  form.points_system = newSystem;
+function removeLastPointsPosition(): void {
+  const positions = Object.keys(form.points_system)
+    .map(Number)
+    .sort((a, b) => a - b);
+  if (positions.length > 1) {
+    const lastPosition = positions[positions.length - 1];
+    if (lastPosition !== undefined) {
+      const newSystem = { ...form.points_system };
+      delete newSystem[lastPosition];
+      form.points_system = newSystem;
+    }
+  }
 }
 
 async function handleSave(): Promise<void> {
@@ -947,63 +886,63 @@ async function handleSave(): Promise<void> {
       ? {
           // Qualifier-specific payload
           race_number: 0, // Signal to backend this is a qualifier
-          name: form.name.trim() || undefined,
+          name: form.name.trim() || null,
           // Omit race_type for qualifiers
           qualifying_format: form.qualifying_format,
           qualifying_length:
             form.qualifying_format !== 'none' && form.qualifying_format !== 'previous_race'
               ? form.qualifying_length
-              : undefined,
-          qualifying_tire: form.qualifying_tire.trim() || undefined,
+              : null,
+          qualifying_tire: form.qualifying_tire.trim() || null,
           // Qualifiers always use qualifying as grid source
           grid_source: 'qualifying',
           // Omit grid_source_race_id for qualifiers
           length_type: 'time',
           length_value: form.qualifying_length,
           extra_lap_after_time: false,
-          weather: form.weather.trim() || undefined,
-          tire_restrictions: form.tire_restrictions.trim() || undefined,
-          fuel_usage: form.fuel_usage.trim() || undefined,
-          damage_model: form.damage_model.trim() || undefined,
+          weather: form.weather.trim() || null,
+          tire_restrictions: form.tire_restrictions.trim() || null,
+          fuel_usage: form.fuel_usage.trim() || null,
+          damage_model: form.damage_model.trim() || null,
           // Omit penalty fields for qualifiers - they will be set to defaults in backend
-          assists_restrictions: form.assists_restrictions.trim() || undefined,
-          race_divisions: form.race_divisions,
+          assists_restrictions: form.assists_restrictions.trim() || null,
+          race_points: form.race_points,
           points_system: form.points_system,
           bonus_points: Object.keys(bonusPoints).length > 0 ? bonusPoints : null,
           dnf_points: form.dnf_points,
           dns_points: form.dns_points,
-          race_notes: form.race_notes.trim() || undefined,
+          race_notes: form.race_notes.trim() || null,
         }
       : {
           // Regular race payload
-          name: form.name.trim() || undefined,
-          race_type: form.race_type || undefined,
-          qualifying_format: undefined,
-          qualifying_length: undefined,
-          qualifying_tire: undefined,
+          name: form.name.trim() || null,
+          race_type: form.race_type || null,
+          qualifying_format: null,
+          qualifying_length: null,
+          qualifying_tire: null,
           grid_source: form.grid_source,
           grid_source_race_id: requiresGridSourceRace.value
-            ? form.grid_source_race_id || undefined
-            : undefined,
+            ? form.grid_source_race_id || null
+            : null,
           length_type: form.length_type,
           length_value: form.length_value,
           extra_lap_after_time: form.extra_lap_after_time,
-          weather: form.weather.trim() || undefined,
-          tire_restrictions: form.tire_restrictions.trim() || undefined,
-          fuel_usage: form.fuel_usage.trim() || undefined,
-          damage_model: form.damage_model.trim() || undefined,
+          weather: form.weather.trim() || null,
+          tire_restrictions: form.tire_restrictions.trim() || null,
+          fuel_usage: form.fuel_usage.trim() || null,
+          damage_model: form.damage_model.trim() || null,
           track_limits_enforced: form.track_limits_enforced,
           false_start_detection: form.false_start_detection,
           collision_penalties: form.collision_penalties,
           mandatory_pit_stop: form.mandatory_pit_stop,
-          minimum_pit_time: form.mandatory_pit_stop ? form.minimum_pit_time : undefined,
-          assists_restrictions: form.assists_restrictions.trim() || undefined,
-          race_divisions: form.race_divisions,
+          minimum_pit_time: form.mandatory_pit_stop ? form.minimum_pit_time : null,
+          assists_restrictions: form.assists_restrictions.trim() || null,
+          race_points: form.race_points,
           points_system: form.points_system,
           bonus_points: Object.keys(bonusPoints).length > 0 ? bonusPoints : null,
           dnf_points: form.dnf_points,
           dns_points: form.dns_points,
-          race_notes: form.race_notes.trim() || undefined,
+          race_notes: form.race_notes.trim() || null,
         };
 
     if (props.mode === 'edit' && props.race) {

@@ -116,6 +116,26 @@ export function useRoundValidation() {
     return true;
   }
 
+  function validateQualifyingPole(value: number | null): boolean {
+    // Optional field - allow null
+    if (value === null || value === undefined) {
+      delete errors.value.qualifying_pole;
+      return true;
+    }
+    if (value < 0 || value > 99) {
+      errors.value.qualifying_pole = 'Qualifying pole bonus must be between 0 and 99';
+      return false;
+    }
+    delete errors.value.qualifying_pole;
+    return true;
+  }
+
+  function validateQualifyingPoleTop10(_value: boolean): boolean {
+    // Boolean field - always valid
+    delete errors.value.qualifying_pole_top_10;
+    return true;
+  }
+
   function validatePointsSystem(
     value: Record<number, number>,
     roundPointsEnabled: boolean,
@@ -168,6 +188,8 @@ export function useRoundValidation() {
     const isInternalNotesValid = validateInternalNotes(form.internal_notes);
     const isFastestLapValid = validateFastestLap(form.fastest_lap);
     const isFastestLapTop10Valid = validateFastestLapTop10(form.fastest_lap_top_10);
+    const isQualifyingPoleValid = validateQualifyingPole(form.qualifying_pole);
+    const isQualifyingPoleTop10Valid = validateQualifyingPoleTop10(form.qualifying_pole_top_10);
     const isPointsSystemValid = validatePointsSystem(form.points_system, form.round_points);
     const isRoundPointsValid = validateRoundPoints(form.round_points);
 
@@ -183,6 +205,8 @@ export function useRoundValidation() {
       isInternalNotesValid &&
       isFastestLapValid &&
       isFastestLapTop10Valid &&
+      isQualifyingPoleValid &&
+      isQualifyingPoleTop10Valid &&
       isPointsSystemValid &&
       isRoundPointsValid
     );
@@ -205,6 +229,8 @@ export function useRoundValidation() {
     validateInternalNotes,
     validateFastestLap,
     validateFastestLapTop10,
+    validateQualifyingPole,
+    validateQualifyingPoleTop10,
     validatePointsSystem,
     validateRoundPoints,
     validateAll,

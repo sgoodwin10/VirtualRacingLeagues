@@ -107,8 +107,8 @@ export function useRaceValidation(form: RaceForm, isQualifier: Ref<boolean> | bo
   }
 
   function validatePointsSystem(): string | undefined {
-    // For custom points, ensure at least position 1 has points
-    if (form.points_template === 'custom') {
+    // Only validate points system if race_points is enabled
+    if (form.race_points) {
       if (!form.points_system || Object.keys(form.points_system).length === 0) {
         return 'Points system must define at least one position';
       }

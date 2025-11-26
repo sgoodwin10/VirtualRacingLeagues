@@ -28,6 +28,8 @@ describe('roundStore', () => {
     internal_notes: 'Internal notes',
     fastest_lap: null,
     fastest_lap_top_10: false,
+    qualifying_pole: null,
+    qualifying_pole_top_10: false,
     points_system: null,
     round_points: false,
     status: 'scheduled',

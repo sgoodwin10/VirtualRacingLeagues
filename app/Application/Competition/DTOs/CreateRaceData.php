@@ -68,9 +68,6 @@ final class CreateRaceData extends Data
         public ?int $minimum_pit_time,
         #[Nullable, StringType]
         public ?string $assists_restrictions,
-        // Division
-        #[Nullable, BooleanType]
-        public ?bool $race_divisions,
         // Points - defaults to F1 standard points system
         #[Nullable, ArrayType]
         public ?array $points_system,
@@ -80,6 +77,8 @@ final class CreateRaceData extends Data
         public ?int $dnf_points,
         #[Nullable, IntegerType, Min(0)]
         public ?int $dns_points,
+        #[Nullable, BooleanType]
+        public ?bool $race_points,
         // Notes
         #[Nullable, StringType]
         public ?string $race_notes,

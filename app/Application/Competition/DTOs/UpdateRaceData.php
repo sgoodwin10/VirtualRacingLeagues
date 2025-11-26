@@ -66,9 +66,6 @@ final class UpdateRaceData extends Data
         public int|Optional|null $minimum_pit_time = new Optional(),
         #[Nullable, StringType]
         public string|Optional|null $assists_restrictions = new Optional(),
-        // Division
-        #[Nullable, BooleanType]
-        public bool|Optional|null $race_divisions = new Optional(),
         // Points
         #[Nullable, ArrayType]
         public array|Optional|null $points_system = new Optional(),
@@ -78,9 +75,14 @@ final class UpdateRaceData extends Data
         public int|Optional|null $dnf_points = new Optional(),
         #[Nullable, IntegerType, Min(0)]
         public int|Optional|null $dns_points = new Optional(),
+        #[Nullable, BooleanType]
+        public bool|Optional|null $race_points = new Optional(),
         // Notes
         #[Nullable, StringType]
         public string|Optional|null $race_notes = new Optional(),
+        // Status
+        #[Nullable, StringType, In(['scheduled', 'completed'])]
+        public string|Optional|null $status = new Optional(),
     ) {
     }
 
@@ -105,6 +107,7 @@ final class UpdateRaceData extends Data
             'damage_model',
             'assists_restrictions',
             'race_notes',
+            'status',
         ];
 
         foreach ($nullableStringFields as $field) {

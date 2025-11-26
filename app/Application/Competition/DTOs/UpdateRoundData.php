@@ -44,6 +44,10 @@ final class UpdateRoundData extends Data
         public readonly ?int $fastest_lap = null,
         #[Sometimes, BooleanType]
         public readonly ?bool $fastest_lap_top_10 = null,
+        #[Sometimes, Nullable, IntegerType, Min(0), Max(100)]
+        public readonly ?int $qualifying_pole = null,
+        #[Sometimes, BooleanType]
+        public readonly ?bool $qualifying_pole_top_10 = null,
         #[Sometimes, Nullable, Json]
         public readonly ?string $points_system = null,
         #[Sometimes, BooleanType]

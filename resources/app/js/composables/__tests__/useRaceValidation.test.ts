@@ -29,8 +29,7 @@ describe('useRaceValidation', () => {
       mandatory_pit_stop: false,
       minimum_pit_time: 0,
       assists_restrictions: '',
-      race_divisions: false,
-      points_template: 'f1',
+      race_points: false,
       points_system: {},
       bonus_pole: false,
       bonus_pole_points: 0,
@@ -248,15 +247,15 @@ describe('useRaceValidation', () => {
   });
 
   describe('validatePointsSystem', () => {
-    it('should return undefined for non-custom points template', () => {
-      form.points_template = 'f1';
+    it('should return undefined when race_points is disabled', () => {
+      form.race_points = false;
       const { validatePointsSystem } = useRaceValidation(form);
 
       expect(validatePointsSystem()).toBeUndefined();
     });
 
-    it('should return error if custom points_system is empty', () => {
-      form.points_template = 'custom';
+    it('should return error if race_points enabled but points_system is empty', () => {
+      form.race_points = true;
       form.points_system = {};
       const { validatePointsSystem } = useRaceValidation(form);
 
@@ -264,7 +263,7 @@ describe('useRaceValidation', () => {
     });
 
     it('should return error if position 1 is not defined', () => {
-      form.points_template = 'custom';
+      form.race_points = true;
       form.points_system = { 2: 18, 3: 15 };
       const { validatePointsSystem } = useRaceValidation(form);
 
@@ -272,15 +271,15 @@ describe('useRaceValidation', () => {
     });
 
     it('should return error if points are negative', () => {
-      form.points_template = 'custom';
+      form.race_points = true;
       form.points_system = { 1: 25, 2: -5 };
       const { validatePointsSystem } = useRaceValidation(form);
 
       expect(validatePointsSystem()).toBe('Points cannot be negative');
     });
 
-    it('should return undefined for valid custom points_system', () => {
-      form.points_template = 'custom';
+    it('should return undefined for valid points_system', () => {
+      form.race_points = true;
       form.points_system = { 1: 25, 2: 18, 3: 15 };
       const { validatePointsSystem } = useRaceValidation(form);
 

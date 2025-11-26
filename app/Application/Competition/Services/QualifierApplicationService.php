@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace App\Application\Competition\Services;
 
 use App\Application\Competition\DTOs\CreateQualifierData;
-use App\Application\Competition\DTOs\QualifierData;
 use App\Application\Competition\DTOs\RaceData;
 use App\Application\Competition\DTOs\UpdateQualifierData;
 use App\Domain\Competition\Entities\Race;
 use App\Domain\Competition\Events\QualifierDeleted;
 use App\Domain\Competition\Exceptions\QualifierAlreadyExistsException;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
+use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
 use App\Domain\Competition\ValueObjects\RaceName;
+use App\Domain\Competition\ValueObjects\RaceResultStatus;
+use App\Domain\Competition\ValueObjects\RaceStatus;
 use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -23,10 +25,11 @@ final class QualifierApplicationService
 {
     public function __construct(
         private readonly RaceRepositoryInterface $raceRepository,
+        private readonly RaceResultRepositoryInterface $raceResultRepository,
     ) {
     }
 
-    public function createQualifier(CreateQualifierData $data, int $roundId): QualifierData
+    public function createQualifier(CreateQualifierData $data, int $roundId): RaceData
     {
         return DB::transaction(function () use ($data, $roundId) {
             // Business rule: Only one qualifier per round
@@ -45,7 +48,6 @@ final class QualifierApplicationService
                 fuelUsage: $data->fuel_usage,
                 damageModel: $data->damage_model,
                 assistsRestrictions: $data->assists_restrictions,
-                raceDivisions: $data->race_divisions,
                 bonusPoints: $data->bonus_points,
                 raceNotes: $data->race_notes,
             );
@@ -53,14 +55,19 @@ final class QualifierApplicationService
             $this->raceRepository->save($qualifier);
             $this->dispatchEvents($qualifier);
 
-            return QualifierData::fromEntity($qualifier);
+            return RaceData::fromEntity($qualifier);
         });
     }
 
-    public function updateQualifier(int $qualifierId, UpdateQualifierData $data): QualifierData
+    public function updateQualifier(int $qualifierId, UpdateQualifierData $data): RaceData
     {
         return DB::transaction(function () use ($qualifierId, $data) {
             $qualifier = $this->raceRepository->findQualifierById($qualifierId);
+
+            // Track status changes for updating race results
+            $statusChanged = false;
+            $oldStatus = $qualifier->status();
+            $newStatus = null;
 
             // Get current values for fields not being updated
             $name = !($data->name instanceof Optional)
@@ -68,7 +75,11 @@ final class QualifierApplicationService
                 : $qualifier->name();
 
             $qualifyingFormat = !($data->qualifying_format instanceof Optional)
-                ? ($data->qualifying_format !== null ? QualifyingFormat::from($data->qualifying_format) : $qualifier->qualifyingFormat())
+                ? (
+                    $data->qualifying_format !== null
+                        ? QualifyingFormat::from($data->qualifying_format)
+                        : $qualifier->qualifyingFormat()
+                )
                 : $qualifier->qualifyingFormat();
 
             $qualifyingLength = !($data->qualifying_length instanceof Optional)
@@ -101,10 +112,6 @@ final class QualifierApplicationService
                 ? $data->assists_restrictions
                 : $qualifier->assistsRestrictions();
 
-            $raceDivisions = !($data->race_divisions instanceof Optional)
-                ? ($data->race_divisions ?? $qualifier->raceDivisions())
-                : $qualifier->raceDivisions();
-
             $bonusPoints = !($data->bonus_points instanceof Optional)
                 ? $data->bonus_points
                 : $qualifier->bonusPoints();
@@ -123,22 +130,39 @@ final class QualifierApplicationService
                 fuelUsage: $fuelUsage,
                 damageModel: $damageModel,
                 assistsRestrictions: $assistsRestrictions,
-                raceDivisions: $raceDivisions,
                 bonusPoints: $bonusPoints,
                 raceNotes: $raceNotes,
             );
 
+            // Handle status update if provided
+            if (!($data->status instanceof Optional) && $data->status !== null) {
+                $newStatus = RaceStatus::from($data->status);
+                if ($oldStatus !== $newStatus) {
+                    $statusChanged = true;
+                    if ($newStatus === RaceStatus::COMPLETED) {
+                        $qualifier->markAsCompleted();
+                    } elseif ($newStatus === RaceStatus::SCHEDULED) {
+                        $qualifier->markAsScheduled();
+                    }
+                }
+            }
+
             $this->raceRepository->save($qualifier);
             $this->dispatchEvents($qualifier);
 
-            return QualifierData::fromEntity($qualifier);
+            // Update RaceResult statuses if qualifier status changed
+            if ($statusChanged && $newStatus !== null) {
+                $this->updateRaceResultStatuses($qualifierId, $newStatus);
+            }
+
+            return RaceData::fromEntity($qualifier);
         });
     }
 
-    public function getQualifier(int $qualifierId): QualifierData
+    public function getQualifier(int $qualifierId): RaceData
     {
         $qualifier = $this->raceRepository->findQualifierById($qualifierId);
-        return QualifierData::fromEntity($qualifier);
+        return RaceData::fromEntity($qualifier);
     }
 
     public function getQualifierByRound(int $roundId): ?RaceData
@@ -174,6 +198,25 @@ final class QualifierApplicationService
         $events = $qualifier->releaseEvents();
         foreach ($events as $event) {
             Event::dispatch($event);
+        }
+    }
+
+    /**
+     * Update all RaceResult statuses when qualifier status changes.
+     */
+    private function updateRaceResultStatuses(int $qualifierId, RaceStatus $newRaceStatus): void
+    {
+        $raceResults = $this->raceResultRepository->findByRaceId($qualifierId);
+
+        $targetStatus = $newRaceStatus === RaceStatus::COMPLETED
+            ? RaceResultStatus::CONFIRMED
+            : RaceResultStatus::PENDING;
+
+        foreach ($raceResults as $result) {
+            if ($result->status() !== $targetStatus) {
+                $result->updateStatus($targetStatus);
+                $this->raceResultRepository->save($result);
+            }
         }
     }
 }

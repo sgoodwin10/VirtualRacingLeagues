@@ -15,8 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('round_id')->constrained('rounds')->onDelete('cascade');
 
+            // Discriminator
+            $table->boolean('is_qualifier')->default(false);
+
             // Basic
-            $table->integer('race_number');
+            $table->integer('race_number')->nullable();
             $table->string('name', 100)->nullable();
             $table->string('race_type', 50)->nullable();
 
@@ -48,8 +51,8 @@ return new class extends Migration
             $table->integer('minimum_pit_time')->nullable();
             $table->text('assists_restrictions')->nullable();
 
-            // Division
-            $table->boolean('race_divisions')->default(false);
+            // Points Configuration
+            $table->boolean('race_points')->default(false);
 
             // Points (JSON)
             $table->json('points_system');
@@ -60,11 +63,16 @@ return new class extends Migration
             // Notes
             $table->text('race_notes')->nullable();
 
+            // Status
+            $table->string('status', 20)->default('scheduled');
+
             $table->timestamps();
 
             // Indexes
             $table->index('round_id');
             $table->index(['round_id', 'race_number']);
+            $table->index(['round_id', 'is_qualifier'], 'idx_races_round_qualifier');
+            $table->index('status');
         });
     }
 

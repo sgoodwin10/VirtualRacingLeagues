@@ -6,9 +6,13 @@ namespace Tests\Feature\Http\Controllers\User;
 
 use App\Infrastructure\Persistence\Eloquent\Models\Round as RoundEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\Race as RaceEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\RaceResult as RaceResultEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use App\Models\User;
 use Database\Factories\RoundFactory;
 use Database\Factories\SeasonFactory;
+use Database\Factories\SeasonDriverFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -423,5 +427,177 @@ final class RoundControllerTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors('points_system');
+    }
+
+    public function test_completing_round_cascades_to_races_and_race_results(): void
+    {
+        // Create a round with 'scheduled' status
+        $round = RoundFactory::new()->create([
+            'season_id' => $this->season->id,
+            'created_by_user_id' => $this->user->id,
+            'platform_track_id' => null,
+            'status' => 'scheduled',
+        ]);
+
+        // Create a race for the round with 'scheduled' status
+        $race = RaceEloquent::factory()->create([
+            'round_id' => $round->id,
+            'race_number' => 1,
+            'status' => 'scheduled',
+        ]);
+
+        // Create season drivers
+        $driver1 = SeasonDriverEloquent::factory()->create([
+            'season_id' => $this->season->id,
+        ]);
+
+        $driver2 = SeasonDriverEloquent::factory()->create([
+            'season_id' => $this->season->id,
+        ]);
+
+        // Create race results with 'pending' status
+        $result1 = RaceResultEloquent::create([
+            'race_id' => $race->id,
+            'driver_id' => $driver1->id,
+            'position' => 1,
+            'race_time' => null,
+            'race_time_difference' => null,
+            'fastest_lap' => null,
+            'penalties' => null,
+            'has_fastest_lap' => false,
+            'has_pole' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+        ]);
+
+        $result2 = RaceResultEloquent::create([
+            'race_id' => $race->id,
+            'driver_id' => $driver2->id,
+            'position' => 2,
+            'race_time' => null,
+            'race_time_difference' => null,
+            'fastest_lap' => null,
+            'penalties' => null,
+            'has_fastest_lap' => false,
+            'has_pole' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+        ]);
+
+        // Mark the round as completed
+        $response = $this->putJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}/complete");
+
+        // Assert response
+        $response->assertOk();
+        $response->assertJsonPath('data.status', 'completed');
+
+        // Verify round is completed in database
+        $this->assertDatabaseHas('rounds', [
+            'id' => $round->id,
+            'status' => 'completed',
+        ]);
+
+        // Verify race is also marked as completed
+        $this->assertDatabaseHas('races', [
+            'id' => $race->id,
+            'status' => 'completed',
+        ]);
+
+        // Verify all race results are marked as confirmed
+        $this->assertDatabaseHas('race_results', [
+            'id' => $result1->id,
+            'status' => 'confirmed',
+        ]);
+
+        $this->assertDatabaseHas('race_results', [
+            'id' => $result2->id,
+            'status' => 'confirmed',
+        ]);
+    }
+
+    public function test_uncompleting_round_does_not_affect_races_or_race_results(): void
+    {
+        // Create a round with 'completed' status
+        $round = RoundFactory::new()->create([
+            'season_id' => $this->season->id,
+            'created_by_user_id' => $this->user->id,
+            'platform_track_id' => null,
+            'status' => 'completed',
+        ]);
+
+        // Create a race with 'completed' status
+        $race = RaceEloquent::factory()->create([
+            'round_id' => $round->id,
+            'race_number' => 1,
+            'status' => 'completed',
+        ]);
+
+        // Create season drivers
+        $driver1 = SeasonDriverEloquent::factory()->create([
+            'season_id' => $this->season->id,
+        ]);
+
+        $driver2 = SeasonDriverEloquent::factory()->create([
+            'season_id' => $this->season->id,
+        ]);
+
+        // Create race results with 'confirmed' status
+        $result1 = RaceResultEloquent::create([
+            'race_id' => $race->id,
+            'driver_id' => $driver1->id,
+            'position' => 1,
+            'race_time' => null,
+            'race_time_difference' => null,
+            'fastest_lap' => null,
+            'penalties' => null,
+            'has_fastest_lap' => false,
+            'has_pole' => false,
+            'status' => 'confirmed',
+            'race_points' => 25,
+        ]);
+
+        $result2 = RaceResultEloquent::create([
+            'race_id' => $race->id,
+            'driver_id' => $driver2->id,
+            'position' => 2,
+            'race_time' => null,
+            'race_time_difference' => null,
+            'fastest_lap' => null,
+            'penalties' => null,
+            'has_fastest_lap' => false,
+            'has_pole' => false,
+            'status' => 'confirmed',
+            'race_points' => 18,
+        ]);
+
+        // Mark the round as not completed
+        $response = $this->putJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}/uncomplete");
+
+        // Assert response
+        $response->assertOk();
+        $response->assertJsonPath('data.status', 'scheduled');
+
+        // Verify round status changed to scheduled
+        $this->assertDatabaseHas('rounds', [
+            'id' => $round->id,
+            'status' => 'scheduled',
+        ]);
+
+        // Verify race status remains completed (NOT changed)
+        $this->assertDatabaseHas('races', [
+            'id' => $race->id,
+            'status' => 'completed',
+        ]);
+
+        // Verify race results remain confirmed (NOT changed)
+        $this->assertDatabaseHas('race_results', [
+            'id' => $result1->id,
+            'status' => 'confirmed',
+        ]);
+
+        $this->assertDatabaseHas('race_results', [
+            'id' => $result2->id,
+            'status' => 'confirmed',
+        ]);
     }
 }

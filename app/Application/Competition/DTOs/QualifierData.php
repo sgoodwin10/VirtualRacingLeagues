@@ -28,8 +28,6 @@ final class QualifierData extends Data
         public bool $false_start_detection,
         public bool $collision_penalties,
         public ?string $assists_restrictions,
-        // Division Support
-        public bool $race_divisions,
         // Bonus Points
         public ?array $bonus_points,
         // Notes
@@ -61,7 +59,6 @@ final class QualifierData extends Data
             false_start_detection: $qualifier->falseStartDetection(),
             collision_penalties: $qualifier->collisionPenalties(),
             assists_restrictions: $qualifier->assistsRestrictions(),
-            race_divisions: $qualifier->raceDivisions(),
             bonus_points: $qualifier->bonusPoints(),
             race_notes: $qualifier->raceNotes(),
             created_at: $qualifier->createdAt()->format('Y-m-d H:i:s'),

@@ -56,6 +56,8 @@ describe('RoundsPanel', () => {
       internal_notes: null,
       fastest_lap: null,
       fastest_lap_top_10: false,
+      qualifying_pole: null,
+      qualifying_pole_top_10: false,
       points_system: null,
       round_points: false,
       status: 'scheduled',
@@ -90,13 +92,14 @@ describe('RoundsPanel', () => {
       mandatory_pit_stop: false,
       minimum_pit_time: null,
       assists_restrictions: null,
-      race_divisions: false,
+      race_points: false,
       points_system: { 1: 25, 2: 18, 3: 15 },
       bonus_points: null,
       dnf_points: 0,
       dns_points: 0,
       race_notes: null,
       is_qualifier: false,
+      status: 'scheduled' as const,
       created_at: '2025-01-01T10:00:00Z',
       updated_at: '2025-01-01T10:00:00Z',
     };
@@ -125,13 +128,14 @@ describe('RoundsPanel', () => {
       mandatory_pit_stop: false,
       minimum_pit_time: null,
       assists_restrictions: null,
-      race_divisions: false,
+      race_points: false,
       points_system: {},
       bonus_points: null,
       dnf_points: 0,
       dns_points: 0,
       race_notes: null,
       is_qualifier: true,
+      status: 'scheduled' as const,
       created_at: '2025-01-01T10:00:00Z',
       updated_at: '2025-01-01T10:00:00Z',
     };
@@ -158,6 +162,7 @@ describe('RoundsPanel', () => {
           Skeleton: true,
           Divider: true,
           ConfirmDialog: true,
+          ToggleSwitch: true,
           RoundFormDrawer: true,
           RaceFormDrawer: true,
           RaceListItem: true,
@@ -211,13 +216,14 @@ describe('RoundsPanel', () => {
       mandatory_pit_stop: false,
       minimum_pit_time: null,
       assists_restrictions: null,
-      race_divisions: false,
+      race_points: false,
       points_system: { 1: 25, 2: 18, 3: 15 },
       bonus_points: null,
       dnf_points: 0,
       dns_points: 0,
       race_notes: null,
       is_qualifier: false,
+      status: 'scheduled' as const,
       created_at: '2025-01-01T11:00:00Z', // Later timestamp
       updated_at: '2025-01-01T11:00:00Z',
     };
@@ -248,6 +254,8 @@ describe('RoundsPanel', () => {
       internal_notes: null,
       fastest_lap: null,
       fastest_lap_top_10: false,
+      qualifying_pole: null,
+      qualifying_pole_top_10: false,
       points_system: null,
       round_points: false,
       status: 'scheduled',
@@ -275,7 +283,7 @@ describe('RoundsPanel', () => {
       mandatory_pit_stop: false,
       minimum_pit_time: null,
       assists_restrictions: null,
-      race_divisions: false,
+      race_points: false,
       points_system: { 1: 25, 2: 18, 3: 15 },
       bonus_points: null,
       dnf_points: 0,
@@ -297,6 +305,7 @@ describe('RoundsPanel', () => {
         length_type: 'laps' as const,
         length_value: 20,
         is_qualifier: false,
+        status: 'scheduled' as const,
         created_at: '2025-01-01T12:00:00Z', // Third (newest)
       },
       {
@@ -312,6 +321,7 @@ describe('RoundsPanel', () => {
         length_value: 15,
         points_system: {},
         is_qualifier: true,
+        status: 'scheduled' as const,
         created_at: '2025-01-01T10:00:00Z', // First (oldest)
       },
       {
@@ -324,6 +334,7 @@ describe('RoundsPanel', () => {
         length_type: 'laps' as const,
         length_value: 15,
         is_qualifier: false,
+        status: 'scheduled' as const,
         created_at: '2025-01-01T11:00:00Z', // Second
       },
     ];
@@ -344,6 +355,7 @@ describe('RoundsPanel', () => {
           Tag: true,
           Skeleton: true,
           ConfirmDialog: true,
+          ToggleSwitch: true,
           RoundFormDrawer: true,
           RaceFormDrawer: true,
           RaceListItem: true,
@@ -393,6 +405,8 @@ describe('RoundsPanel', () => {
         internal_notes: null,
         fastest_lap: null,
         fastest_lap_top_10: false,
+        qualifying_pole: null,
+        qualifying_pole_top_10: false,
         points_system: null,
         round_points: false,
         status: 'scheduled',
@@ -418,6 +432,8 @@ describe('RoundsPanel', () => {
         internal_notes: null,
         fastest_lap: null,
         fastest_lap_top_10: false,
+        qualifying_pole: null,
+        qualifying_pole_top_10: false,
         points_system: null,
         round_points: false,
         status: 'scheduled',
@@ -443,6 +459,8 @@ describe('RoundsPanel', () => {
         internal_notes: null,
         fastest_lap: null,
         fastest_lap_top_10: false,
+        qualifying_pole: null,
+        qualifying_pole_top_10: false,
         points_system: null,
         round_points: false,
         status: 'scheduled',
@@ -473,6 +491,7 @@ describe('RoundsPanel', () => {
           Tag: true,
           Skeleton: true,
           ConfirmDialog: true,
+          ToggleSwitch: true,
           RoundFormDrawer: true,
           RaceFormDrawer: true,
           RaceListItem: true,
@@ -532,6 +551,8 @@ describe('RoundsPanel', () => {
         internal_notes: null,
         fastest_lap: null,
         fastest_lap_top_10: false,
+        qualifying_pole: null,
+        qualifying_pole_top_10: false,
         points_system: null,
         round_points: false,
         status: 'scheduled',
@@ -557,6 +578,8 @@ describe('RoundsPanel', () => {
         internal_notes: null,
         fastest_lap: null,
         fastest_lap_top_10: false,
+        qualifying_pole: null,
+        qualifying_pole_top_10: false,
         points_system: null,
         round_points: false,
         status: 'scheduled',
@@ -590,6 +613,7 @@ describe('RoundsPanel', () => {
           Tag: true,
           Skeleton: true,
           ConfirmDialog: true,
+          ToggleSwitch: true,
           RoundFormDrawer: true,
           RaceFormDrawer: true,
           RaceListItem: true,
@@ -642,6 +666,8 @@ describe('RoundsPanel', () => {
       internal_notes: null,
       fastest_lap: null,
       fastest_lap_top_10: false,
+      qualifying_pole: null,
+      qualifying_pole_top_10: false,
       points_system: null,
       round_points: false,
       status: 'scheduled',
@@ -670,6 +696,7 @@ describe('RoundsPanel', () => {
           Tag: true,
           Skeleton: true,
           ConfirmDialog: true,
+          ToggleSwitch: true,
           RoundFormDrawer: true,
           RaceFormDrawer: true,
           RaceListItem: true,
@@ -693,5 +720,101 @@ describe('RoundsPanel', () => {
     // Verify that both rounds and tracks are reloaded
     expect(roundStore.fetchRounds).toHaveBeenCalledWith(1);
     expect(trackStore.fetchTracks).toHaveBeenCalledWith({ platform_id: 1, is_active: true });
+  });
+
+  it('should hide "Add Event" button when round status is completed', async () => {
+    const completedRound: Round = {
+      id: 1,
+      season_id: 1,
+      platform_track_id: 1,
+      round_number: 1,
+      name: 'Completed Round',
+      slug: 'completed-round',
+      scheduled_at: '2025-01-15T10:00:00Z',
+      timezone: 'UTC',
+      track_layout: null,
+      track_conditions: null,
+      technical_notes: null,
+      stream_url: null,
+      internal_notes: null,
+      fastest_lap: null,
+      fastest_lap_top_10: false,
+      qualifying_pole: null,
+      qualifying_pole_top_10: false,
+      points_system: null,
+      round_points: false,
+      status: 'completed',
+      status_label: 'Completed',
+      created_by_user_id: 1,
+      created_at: '2025-01-01T10:00:00Z',
+      updated_at: '2025-01-01T10:00:00Z',
+      deleted_at: null,
+    };
+
+    roundStore.rounds = [completedRound];
+
+    const wrapper = mount(RoundsPanel, {
+      props: {
+        seasonId: 1,
+        platformId: 1,
+      },
+    });
+
+    await flushPromises();
+
+    // Find the wrapping div that should be conditionally rendered
+    // When status is 'completed', the v-if should prevent the div from rendering
+    const addEventWrapper = wrapper.find('[class*="flex items-center gap-2"]');
+    const buttons = addEventWrapper.findAll('button');
+    const addEventButton = buttons.find((btn) => btn.text().includes('Add Event'));
+
+    expect(addEventButton).toBeUndefined();
+  });
+
+  it('should show "Add Event" button when round status is not completed', async () => {
+    const scheduledRound: Round = {
+      id: 1,
+      season_id: 1,
+      platform_track_id: 1,
+      round_number: 1,
+      name: 'Scheduled Round',
+      slug: 'scheduled-round',
+      scheduled_at: '2025-01-15T10:00:00Z',
+      timezone: 'UTC',
+      track_layout: null,
+      track_conditions: null,
+      technical_notes: null,
+      stream_url: null,
+      internal_notes: null,
+      fastest_lap: null,
+      fastest_lap_top_10: false,
+      qualifying_pole: null,
+      qualifying_pole_top_10: false,
+      points_system: null,
+      round_points: false,
+      status: 'scheduled',
+      status_label: 'Scheduled',
+      created_by_user_id: 1,
+      created_at: '2025-01-01T10:00:00Z',
+      updated_at: '2025-01-01T10:00:00Z',
+      deleted_at: null,
+    };
+
+    roundStore.rounds = [scheduledRound];
+
+    const wrapper = mount(RoundsPanel, {
+      props: {
+        seasonId: 1,
+        platformId: 1,
+      },
+    });
+
+    await flushPromises();
+
+    // Find buttons with "Add Event" text
+    const buttons = wrapper.findAll('button');
+    const addEventButton = buttons.find((btn) => btn.text().includes('Add Event'));
+
+    expect(addEventButton).toBeDefined();
   });
 });

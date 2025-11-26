@@ -42,7 +42,6 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'race_divisions' => false,
                 'bonus_points' => ['pole' => 1],
                 'race_notes' => null,
             ]);
@@ -84,7 +83,6 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'race_divisions' => false,
                 'bonus_points' => null,
                 'race_notes' => null,
             ]);
@@ -104,7 +102,6 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'race_divisions' => false,
                 'bonus_points' => null,
                 'race_notes' => null,
             ]);
@@ -131,7 +128,6 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'race_divisions' => false,
                 'bonus_points' => ['pole' => 1, 'fastest_lap' => 1],
                 'race_notes' => null,
             ]);
@@ -156,7 +152,6 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'race_divisions' => false,
                 'bonus_points' => null,
                 'race_notes' => null,
             ]);
@@ -202,7 +197,6 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'race_divisions' => false,
                 'bonus_points' => null,
                 'race_notes' => null,
             ]);
@@ -242,7 +236,6 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'race_divisions' => false,
                 'bonus_points' => null,
                 'race_notes' => null,
             ]);
@@ -272,7 +265,6 @@ final class QualifierControllerTest extends TestCase
             'false_start_detection' => true,
             'collision_penalties' => true,
             'assists_restrictions' => null,
-            'race_divisions' => false,
             'bonus_points' => null,
             'race_notes' => null,
         ]);
@@ -294,7 +286,6 @@ final class QualifierControllerTest extends TestCase
             'track_limits_enforced',
             'false_start_detection',
             'collision_penalties',
-            'race_divisions',
         ]);
     }
 }

@@ -23,7 +23,14 @@ return new class extends Migration
                 ->comment('Reference to league driver (NOT direct driver)');
             $table->foreignId('team_id')
                 ->nullable()
+                ->constrained('teams')
+                ->onDelete('set null')
                 ->comment('Team this driver is assigned to (null = Privateer)');
+            $table->foreignId('division_id')
+                ->nullable()
+                ->constrained('divisions')
+                ->onDelete('set null')
+                ->comment('Division this driver is assigned to (optional)');
             $table->enum('status', ['active', 'reserve', 'withdrawn'])
                 ->default('active')
                 ->comment('Driver status in this season');
@@ -36,6 +43,7 @@ return new class extends Migration
             $table->index('season_id');
             $table->index('league_driver_id');
             $table->index('team_id');
+            $table->index('division_id');
             $table->index('status');
             $table->index(['season_id', 'status']);
         });

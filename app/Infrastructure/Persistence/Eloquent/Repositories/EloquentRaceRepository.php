@@ -13,6 +13,7 @@ use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
 use App\Domain\Competition\ValueObjects\RaceLengthType;
 use App\Domain\Competition\ValueObjects\RaceName;
+use App\Domain\Competition\ValueObjects\RaceStatus;
 use App\Domain\Competition\ValueObjects\RaceType;
 use App\Infrastructure\Persistence\Eloquent\Models\Race as RaceEloquent;
 use DateTimeImmutable;
@@ -52,6 +53,21 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
         /** @var \Illuminate\Database\Eloquent\Collection<int, RaceEloquent> $eloquentModels */
         $eloquentModels = RaceEloquent::where('round_id', $roundId)
             ->where('is_qualifier', false)
+            ->orderBy('race_number')
+            ->get();
+
+        return $eloquentModels->map(fn(RaceEloquent $model) => $this->toDomainEntity($model))
+            ->all();
+    }
+
+    /**
+     * @return array<RaceEntity>
+     */
+    public function findAllByRoundId(int $roundId): array
+    {
+        /** @var \Illuminate\Database\Eloquent\Collection<int, RaceEloquent> $eloquentModels */
+        $eloquentModels = RaceEloquent::where('round_id', $roundId)
+            ->orderBy('is_qualifier', 'desc') // Qualifier first
             ->orderBy('race_number')
             ->get();
 
@@ -118,17 +134,18 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
         $model->minimum_pit_time = $race->minimumPitTime();
         $model->assists_restrictions = $race->assistsRestrictions();
 
-        // Division
-        $model->race_divisions = $race->raceDivisions();
-
         // Points - Convert to JSON
         $model->points_system = $race->pointsSystem()->toArray();
         $model->bonus_points = $race->bonusPoints();
         $model->dnf_points = $race->dnfPoints();
         $model->dns_points = $race->dnsPoints();
+        $model->race_points = $race->racePoints();
 
         // Notes
         $model->race_notes = $race->raceNotes();
+
+        // Status
+        $model->status = $race->status()->value;
     }
 
     private function toDomainEntity(RaceEloquent $model): RaceEntity
@@ -158,12 +175,13 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
             mandatoryPitStop: $model->mandatory_pit_stop,
             minimumPitTime: $model->minimum_pit_time,
             assistsRestrictions: $model->assists_restrictions,
-            raceDivisions: $model->race_divisions,
             pointsSystem: PointsSystem::from($model->points_system ?? []),
             bonusPoints: $model->bonus_points,
             dnfPoints: $model->dnf_points,
             dnsPoints: $model->dns_points,
+            racePoints: $model->race_points ?? false,
             raceNotes: $model->race_notes,
+            status: RaceStatus::from($model->status ?? 'scheduled'),
             /** @phpstan-ignore-next-line */
             createdAt: DateTimeImmutable::createFromMutable($model->created_at),
             /** @phpstan-ignore-next-line */

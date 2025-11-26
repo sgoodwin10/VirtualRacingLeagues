@@ -13,9 +13,18 @@ interface RaceRepositoryInterface
     public function findById(int $id): Race;
 
     /**
+     * Find all regular races (excluding qualifiers) for a round.
+     *
      * @return array<Race>
      */
     public function findByRoundId(int $roundId): array;
+
+    /**
+     * Find all races for a round, including qualifiers.
+     *
+     * @return array<Race>
+     */
+    public function findAllByRoundId(int $roundId): array;
 
     public function delete(Race $race): void;
 

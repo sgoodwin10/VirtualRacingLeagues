@@ -114,7 +114,7 @@ describe('RaceFormDrawer', () => {
     mandatory_pit_stop: false,
     minimum_pit_time: null,
     assists_restrictions: 'none',
-    race_divisions: false,
+    race_points: false,
     points_system: { ...F1_STANDARD_POINTS },
     bonus_points: {
       pole: 1,
@@ -125,6 +125,7 @@ describe('RaceFormDrawer', () => {
     dns_points: 0,
     race_notes: 'Test notes',
     is_qualifier: false,
+    status: 'scheduled' as const,
     created_at: '2024-01-01T00:00:00.000000Z',
     updated_at: '2024-01-01T00:00:00.000000Z',
   };

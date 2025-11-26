@@ -53,6 +53,9 @@ export interface SeasonDriver {
   team_name: string | null;
   division_name: string | null;
 
+  // Division and team IDs
+  division_id: number | null;
+
   // Season-specific metadata
   status: SeasonDriverStatus;
   notes: string | null; // Internal notes

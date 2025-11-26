@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use App\Infrastructure\Persistence\Eloquent\Models\Driver;
 use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class DriverSeeder extends Seeder
@@ -16,6 +17,11 @@ class DriverSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('drivers')->truncate();
+        DB::table('league_drivers')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $drivers = [
             ['discord_id' => 'Half-Byte', 'psn_id' => 'Half-Byte', 'race_number' => '21'],
             ['discord_id' => 'T F Eccles', 'psn_id' => 'tfeccles', 'race_number' => '52'],

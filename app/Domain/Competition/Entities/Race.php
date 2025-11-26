@@ -14,6 +14,7 @@ use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
 use App\Domain\Competition\ValueObjects\RaceLengthType;
 use App\Domain\Competition\ValueObjects\RaceName;
+use App\Domain\Competition\ValueObjects\RaceStatus;
 use App\Domain\Competition\ValueObjects\RaceType;
 use DateTimeImmutable;
 
@@ -54,15 +55,16 @@ final class Race
         private bool $mandatoryPitStop,
         private ?int $minimumPitTime,
         private ?string $assistsRestrictions,
-        // Division support
-        private bool $raceDivisions,
         // Points
         private PointsSystem $pointsSystem,
         private ?array $bonusPoints,
         private int $dnfPoints,
         private int $dnsPoints,
+        private bool $racePoints,
         // Notes
         private ?string $raceNotes,
+        // Status
+        private RaceStatus $status,
         // Timestamps
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
@@ -92,11 +94,11 @@ final class Race
         bool $mandatoryPitStop,
         ?int $minimumPitTime,
         ?string $assistsRestrictions,
-        bool $raceDivisions,
         PointsSystem $pointsSystem,
         ?array $bonusPoints,
         int $dnfPoints,
         int $dnsPoints,
+        bool $racePoints,
         ?string $raceNotes,
     ): self {
         $now = new DateTimeImmutable();
@@ -126,12 +128,13 @@ final class Race
             mandatoryPitStop: $mandatoryPitStop,
             minimumPitTime: $minimumPitTime,
             assistsRestrictions: $assistsRestrictions,
-            raceDivisions: $raceDivisions,
             pointsSystem: $pointsSystem,
             bonusPoints: $bonusPoints,
             dnfPoints: $dnfPoints,
             dnsPoints: $dnsPoints,
+            racePoints: $racePoints,
             raceNotes: $raceNotes,
+            status: RaceStatus::SCHEDULED,
             createdAt: $now,
             updatedAt: $now,
         );
@@ -173,12 +176,13 @@ final class Race
         bool $mandatoryPitStop,
         ?int $minimumPitTime,
         ?string $assistsRestrictions,
-        bool $raceDivisions,
         PointsSystem $pointsSystem,
         ?array $bonusPoints,
         int $dnfPoints,
         int $dnsPoints,
+        bool $racePoints,
         ?string $raceNotes,
+        RaceStatus $status,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
     ): self {
@@ -207,12 +211,13 @@ final class Race
             mandatoryPitStop: $mandatoryPitStop,
             minimumPitTime: $minimumPitTime,
             assistsRestrictions: $assistsRestrictions,
-            raceDivisions: $raceDivisions,
             pointsSystem: $pointsSystem,
             bonusPoints: $bonusPoints,
             dnfPoints: $dnfPoints,
             dnsPoints: $dnsPoints,
+            racePoints: $racePoints,
             raceNotes: $raceNotes,
+            status: $status,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
         );
@@ -239,11 +244,11 @@ final class Race
         bool $mandatoryPitStop,
         ?int $minimumPitTime,
         ?string $assistsRestrictions,
-        bool $raceDivisions,
         PointsSystem $pointsSystem,
         ?array $bonusPoints,
         int $dnfPoints,
         int $dnsPoints,
+        bool $racePoints,
         ?string $raceNotes,
     ): void {
         $hasChanges = false;
@@ -348,11 +353,6 @@ final class Race
             $hasChanges = true;
         }
 
-        if ($this->raceDivisions !== $raceDivisions) {
-            $this->raceDivisions = $raceDivisions;
-            $hasChanges = true;
-        }
-
         if ($this->pointsSystem->toArray() !== $pointsSystem->toArray()) {
             $this->pointsSystem = $pointsSystem;
             $hasChanges = true;
@@ -370,6 +370,11 @@ final class Race
 
         if ($this->dnsPoints !== $dnsPoints) {
             $this->dnsPoints = $dnsPoints;
+            $hasChanges = true;
+        }
+
+        if ($this->racePoints !== $racePoints) {
+            $this->racePoints = $racePoints;
             $hasChanges = true;
         }
 
@@ -399,7 +404,6 @@ final class Race
         ?string $fuelUsage,
         ?string $damageModel,
         ?string $assistsRestrictions,
-        bool $raceDivisions,
         ?array $bonusPoints,
         ?string $raceNotes,
     ): self {
@@ -445,12 +449,13 @@ final class Race
             mandatoryPitStop: false,
             minimumPitTime: null,
             assistsRestrictions: $assistsRestrictions,
-            raceDivisions: $raceDivisions,
             pointsSystem: PointsSystem::from([1 => 0]),
             bonusPoints: $bonusPoints,
             dnfPoints: 0,
             dnsPoints: 0,
+            racePoints: false,
             raceNotes: $raceNotes,
+            status: RaceStatus::SCHEDULED,
             createdAt: $now,
             updatedAt: $now,
         );
@@ -475,7 +480,6 @@ final class Race
         ?string $fuelUsage,
         ?string $damageModel,
         ?string $assistsRestrictions,
-        bool $raceDivisions,
         ?array $bonusPoints,
         ?string $raceNotes,
     ): void {
@@ -545,11 +549,6 @@ final class Race
 
         if ($this->assistsRestrictions !== $assistsRestrictions) {
             $this->assistsRestrictions = $assistsRestrictions;
-            $hasChanges = true;
-        }
-
-        if ($this->raceDivisions !== $raceDivisions) {
-            $this->raceDivisions = $raceDivisions;
             $hasChanges = true;
         }
 
@@ -694,11 +693,6 @@ final class Race
         return $this->assistsRestrictions;
     }
 
-    public function raceDivisions(): bool
-    {
-        return $this->raceDivisions;
-    }
-
     public function pointsSystem(): PointsSystem
     {
         return $this->pointsSystem;
@@ -722,6 +716,11 @@ final class Race
         return $this->dnsPoints;
     }
 
+    public function racePoints(): bool
+    {
+        return $this->racePoints;
+    }
+
     public function raceNotes(): ?string
     {
         return $this->raceNotes;
@@ -735,6 +734,33 @@ final class Race
     public function updatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function status(): RaceStatus
+    {
+        return $this->status;
+    }
+
+    /**
+     * Mark race as completed.
+     */
+    public function markAsCompleted(): void
+    {
+        if ($this->status !== RaceStatus::COMPLETED) {
+            $this->status = RaceStatus::COMPLETED;
+            $this->updatedAt = new DateTimeImmutable();
+        }
+    }
+
+    /**
+     * Mark race as scheduled.
+     */
+    public function markAsScheduled(): void
+    {
+        if ($this->status !== RaceStatus::SCHEDULED) {
+            $this->status = RaceStatus::SCHEDULED;
+            $this->updatedAt = new DateTimeImmutable();
+        }
     }
 
     // For repository use

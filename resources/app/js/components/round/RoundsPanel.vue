@@ -54,20 +54,10 @@
                 }}</span>
               </div>
 
-              <div class="flex flex-none items-center mr-4 gap-2">
+              <div v-if="round.name" class="flex flex-none items-center mr-4 gap-2">
                 <span v-if="round.name" class="font-medium text-lg text-gray-700">{{
                   round.name || 'Untitled Round'
                 }}</span>
-                <span
-                  v-if="round.round_points"
-                  v-tooltip.top="
-                    'Round points enabled: Race results are combined to create a round standing'
-                  "
-                  class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200"
-                >
-                  <i class="pi pi-calculator mr-1 text-xs"></i>
-                  Round Points
-                </span>
               </div>
               <div class="flex flex-grow flex-row pr-4 space-y-0">
                 <div class="flex-none flex-col">
@@ -78,33 +68,9 @@
                     {{ getTrackAndLocation(round.platform_track_id) }}
                   </span>
                 </div>
-                <div
-                  v-if="round.track_layout || round.track_conditions"
-                  class="flex flex-row ml-4 gap-4"
-                >
-                  <div v-if="round.track_layout" class="flex flex-col">
-                    <div>
-                      <span class="text-sm text-gray-400 font-medium">Direction</span>
-                    </div>
-                    <span class="text-md text-gray-700 font-normal">
-                      {{ round.track_layout }}
-                    </span>
-                  </div>
-
-                  <div v-if="round.track_conditions" class="flex flex-col">
-                    <div>
-                      <span class="text-sm text-gray-400 font-medium"
-                        >Conditions / Time Of Day</span
-                      >
-                    </div>
-                    <span class="text-md text-gray-700 font-normal">
-                      {{ round.track_conditions }}
-                    </span>
-                  </div>
-                </div>
               </div>
 
-              <div class="w-36 flex flex-col">
+              <div v-if="round.scheduled_at" class="w-36 flex flex-col">
                 <div>
                   <span class="text-sm text-gray-400 font-medium">Date</span>
                 </div>
@@ -113,28 +79,46 @@
                 </span>
               </div>
               <div class="flex items-center gap-2">
-                <Button
-                  :label="round.status === 'completed' ? 'Uncomplete' : 'Complete'"
-                  :severity="round.status === 'completed' ? 'secondary' : 'success'"
-                  :loading="completingRoundId === round.id"
-                  outlined
-                  size="small"
-                  @click.stop="handleToggleCompletion(round)"
+                <Tag
+                  v-if="round.round_points"
+                  v-tooltip.top="
+                    'Round points enabled: Race results are combined to create a round standing'
+                  "
+                  icon="pi pi-calculator"
+                  severity="info"
+                  value="Round Points"
                 />
+                <div class="flex items-center gap-2" @click.stop>
+                  <ToggleSwitch
+                    :model-value="round.status === 'completed'"
+                    :disabled="completingRoundId === round.id"
+                    @update:model-value="handleToggleCompletion(round)"
+                  >
+                    <template #handle="{ checked }">
+                      <i :class="['!text-xs pi', { 'pi-check': checked, 'pi-times': !checked }]" />
+                    </template>
+                  </ToggleSwitch>
+                  <span
+                    :class="[
+                      'text-sm font-medium',
+                      round.status === 'completed' ? 'text-green-600' : 'text-slate-400',
+                    ]"
+                  >
+                    Completed
+                  </span>
+                </div>
                 <Button
-                  v-tooltip.top="'Edit Round'"
+                  v-if="round.status !== 'completed'"
                   icon="pi pi-pencil"
                   text
-                  rounded
                   size="small"
                   severity="secondary"
                   @click.stop="handleEditRound(round)"
                 />
                 <Button
-                  v-tooltip.top="'Delete Round'"
+                  v-if="round.status !== 'completed'"
                   icon="pi pi-trash"
                   text
-                  rounded
                   size="small"
                   severity="danger"
                   @click.stop="handleDeleteRound(round)"
@@ -211,7 +195,7 @@
               <div>
                 <div class="flex items-center justify-between my-3">
                   <HTag :level="3">Round {{ round.round_number }} Race Events</HTag>
-                  <div class="flex items-center gap-2">
+                  <div v-if="round.status !== 'completed'" class="flex items-center gap-2">
                     <Button
                       label="Add Event"
                       icon="pi pi-plus"
@@ -239,14 +223,20 @@
                     <QualifierListItem
                       v-if="isQualifier(race)"
                       :race="race"
+                      :is-round-completed="round.status === 'completed'"
                       @edit="handleEditQualifier"
                       @delete="handleDeleteQualifier"
+                      @enter-results="handleEnterResults($event, round)"
+                      @toggle-status="handleToggleRaceStatus"
                     />
                     <RaceListItem
                       v-else
                       :race="race"
+                      :is-round-completed="round.status === 'completed'"
                       @edit="handleEditRace"
                       @delete="handleDeleteRace"
+                      @enter-results="handleEnterResults($event, round)"
+                      @toggle-status="handleToggleRaceStatus"
                     />
                   </template>
                 </div>
@@ -292,6 +282,16 @@
     @saved="handleRaceSaved"
   />
 
+  <!-- Race Results Modal -->
+  <RaceResultModal
+    v-if="selectedRaceForResults && selectedRoundForResults"
+    v-model:visible="showResultsModal"
+    :race="selectedRaceForResults"
+    :round="selectedRoundForResults"
+    :season-id="seasonId"
+    @saved="handleResultsSaved"
+  />
+
   <!-- Confirm Delete Dialogs -->
   <ConfirmDialog group="round-delete" />
   <ConfirmDialog group="race-delete" />
@@ -308,6 +308,7 @@ import RoundFormDrawer from '@app/components/round/modals/RoundFormDrawer.vue';
 import RaceFormDrawer from '@app/components/round/modals/RaceFormDrawer.vue';
 import RaceListItem from '@app/components/round/RaceListItem.vue';
 import QualifierListItem from '@app/components/round/QualifierListItem.vue';
+import RaceResultModal from '@app/components/result/RaceResultModal.vue';
 import Button from 'primevue/button';
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
@@ -315,6 +316,8 @@ import AccordionHeader from 'primevue/accordionheader';
 import AccordionContent from 'primevue/accordioncontent';
 import Skeleton from 'primevue/skeleton';
 import ConfirmDialog from 'primevue/confirmdialog';
+import ToggleSwitch from 'primevue/toggleswitch';
+import Tag from 'primevue/tag';
 import { useRoundStore } from '@app/stores/roundStore';
 import { useRaceStore } from '@app/stores/raceStore';
 import { useTrackStore } from '@app/stores/trackStore';
@@ -377,6 +380,10 @@ const raceFormMode = ref<'create' | 'edit'>('create');
 const raceFormType = ref<'race' | 'qualifier'>('race');
 const loadingRaces = ref(false);
 const completingRoundId = ref<number | null>(null);
+
+const showResultsModal = ref(false);
+const selectedRaceForResults = ref<Race | null>(null);
+const selectedRoundForResults = ref<Round | null>(null);
 
 const rounds = computed(() => {
   return roundStore
@@ -533,10 +540,13 @@ async function handleToggleCompletion(round: Round): Promise<void> {
       });
     } else {
       await roundStore.completeRound(round.id);
+      // When completing a round, the backend also completes all races and confirms results
+      // Refresh the races to reflect the updated status
+      await raceStore.fetchRaces(round.id);
       toast.add({
         severity: 'success',
         summary: 'Success',
-        detail: 'Round marked as completed',
+        detail: 'Round and all races marked as completed',
         life: 3000,
       });
     }
@@ -677,5 +687,44 @@ async function handleRaceSaved(): Promise<void> {
     detail: `${entityType} ${action} successfully`,
     life: 3000,
   });
+}
+
+function handleEnterResults(race: Race, round: Round): void {
+  selectedRaceForResults.value = race;
+  selectedRoundForResults.value = round;
+  showResultsModal.value = true;
+}
+
+function handleResultsSaved(): void {
+  toast.add({
+    severity: 'success',
+    summary: 'Success',
+    detail: 'Race results saved successfully',
+    life: 3000,
+  });
+}
+
+async function handleToggleRaceStatus(
+  race: Race,
+  newStatus: 'scheduled' | 'completed',
+): Promise<void> {
+  try {
+    // Call the race store to update the race status
+    await raceStore.updateExistingRace(race.id, { status: newStatus }, race.is_qualifier);
+
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: `${race.is_qualifier ? 'Qualifying session' : 'Race'} marked as ${newStatus}`,
+      life: 3000,
+    });
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error instanceof Error ? error.message : 'Failed to update race status',
+      life: 5000,
+    });
+  }
 }
 </script>

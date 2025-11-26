@@ -22,6 +22,7 @@ use App\Http\Controllers\User\PlatformController;
 use App\Http\Controllers\User\PlatformSettingsController;
 use App\Http\Controllers\User\QualifierController;
 use App\Http\Controllers\User\RaceController;
+use App\Http\Controllers\User\RaceResultController;
 use App\Http\Controllers\User\SeasonController;
 use App\Http\Controllers\User\SeasonDriverController;
 use App\Http\Controllers\User\SiteConfigController as UserSiteConfigController;
@@ -262,6 +263,11 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             // Tracks
             Route::get('/tracks', [TrackController::class, 'index'])->name('tracks.index');
             Route::get('/tracks/{id}', [TrackController::class, 'show'])->name('tracks.show');
+
+            // Race Results
+            Route::get('/races/{raceId}/results', [RaceResultController::class, 'index'])->name('races.results.index');
+            Route::post('/races/{raceId}/results', [RaceResultController::class, 'store'])->name('races.results.store');
+            Route::delete('/races/{raceId}/results', [RaceResultController::class, 'destroy'])->name('races.results.destroy');
         });
     });
 

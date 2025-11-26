@@ -27,6 +27,9 @@ return new class extends Migration
             $table->boolean('team_championship_enabled')
                 ->default(false)
                 ->comment('Enable team championship features');
+            $table->boolean('race_divisions_enabled')
+                ->default(false)
+                ->comment('Enable race division features');
             $table->enum('status', ['setup', 'active', 'completed', 'archived'])
                 ->default('setup')
                 ->comment('Season lifecycle status');
