@@ -25,7 +25,10 @@ export interface Race {
   assists_restrictions: string | null;
   race_points: boolean;
   points_system: PointsSystemMap;
-  bonus_points: BonusPoints | null;
+  fastest_lap: number | null;
+  fastest_lap_top_10: boolean;
+  qualifying_pole: number | null;
+  qualifying_pole_top_10: boolean;
   dnf_points: number;
   dns_points: number;
   race_notes: string | null;
@@ -48,14 +51,6 @@ export type RaceLengthType = 'laps' | 'time';
 
 export interface PointsSystemMap {
   [position: number]: number; // 1: 25, 2: 18, etc.
-}
-
-export interface BonusPoints {
-  pole?: number;
-  fastest_lap?: number;
-  fastest_lap_top_10_only?: boolean;
-  most_positions_gained?: number;
-  leading_most_laps?: number;
 }
 
 // Create payload (form input type - user may not provide)
@@ -90,7 +85,10 @@ export interface CreateRaceRequest {
   assists_restrictions?: string | null;
   race_points: boolean;
   points_system: PointsSystemMap;
-  bonus_points?: BonusPoints | null; // For qualifiers: only 'pole' is applicable. Can be null to clear bonuses
+  fastest_lap?: number | null;
+  fastest_lap_top_10?: boolean;
+  qualifying_pole?: number | null;
+  qualifying_pole_top_10?: boolean;
   dnf_points: number;
   dns_points: number;
   race_notes?: string | null;
@@ -126,11 +124,10 @@ export interface RaceForm {
   assists_restrictions: string;
   race_points: boolean;
   points_system: PointsSystemMap;
-  bonus_pole: boolean;
-  bonus_pole_points: number;
-  bonus_fastest_lap: boolean;
-  bonus_fastest_lap_points: number;
-  bonus_fastest_lap_top_10: boolean;
+  fastest_lap: number | null;
+  fastest_lap_top_10: boolean;
+  qualifying_pole: number | null;
+  qualifying_pole_top_10: boolean;
   dnf_points: number;
   dns_points: number;
   race_notes: string;

@@ -120,18 +120,33 @@
                 <label for="bonus_pole" class="text-sm font-medium text-gray-900"
                   >Pole position bonus</label
                 >
-                <div class="flex items-center gap-2 pt-1">
-                  <Checkbox id="bonus_pole" v-model="form.bonus_pole" :binary="true" />
-                  <InputNumber
-                    v-if="form.bonus_pole"
-                    v-model="form.bonus_pole_points"
-                    :min="1"
-                    :max="99"
-                    placeholder="Points"
-                    size="small"
-                    fluid
-                    class="w-12"
-                  />
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2 pt-1">
+                    <Checkbox id="bonus_pole" v-model="hasQualifyingPole" :binary="true" />
+                    <label for="bonus_pole" class="text-sm">Enable pole bonus</label>
+                    <InputNumber
+                      v-if="hasQualifyingPole"
+                      v-model="form.qualifying_pole"
+                      :min="1"
+                      placeholder="Pts"
+                      size="small"
+                      fluid
+                      class="w-20"
+                    />
+                  </div>
+                  <div
+                    v-if="hasQualifyingPole && form.qualifying_pole && form.qualifying_pole > 0"
+                    class="ml-6"
+                  >
+                    <Checkbox
+                      id="bonus_pole_top_10"
+                      v-model="form.qualifying_pole_top_10"
+                      :binary="true"
+                    />
+                    <label for="bonus_pole_top_10" class="ml-2 text-sm"
+                      >Only award if driver finishes in top 10</label
+                    >
+                  </div>
                 </div>
               </div>
             </div>
@@ -383,31 +398,33 @@
 
               <!-- Bonus Points Section -->
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <!-- Fastest Lap Bonus -->
-                <div v-if="showFastestLapBonus">
+                <!-- Fastest Lap Bonus (for non-qualifying races) -->
+                <div>
                   <h3 class="text-sm font-semibold text-gray-900 mb-2">Bonus Points</h3>
                   <div class="space-y-2">
                     <div class="flex items-center gap-2">
                       <Checkbox
                         id="bonus_fastest_lap"
-                        v-model="form.bonus_fastest_lap"
+                        v-model="hasFastestLapBonus"
                         :binary="true"
                       />
                       <label for="bonus_fastest_lap" class="text-sm">Fastest lap</label>
                       <InputNumber
-                        v-if="form.bonus_fastest_lap"
-                        v-model="form.bonus_fastest_lap_points"
+                        v-if="hasFastestLapBonus"
+                        v-model="form.fastest_lap"
                         :min="1"
-                        :max="99"
                         placeholder="Pts"
                         size="small"
                         class="w-20"
                       />
                     </div>
-                    <div v-if="form.bonus_fastest_lap" class="ml-6">
+                    <div
+                      v-if="hasFastestLapBonus && form.fastest_lap && form.fastest_lap > 0"
+                      class="ml-6"
+                    >
                       <Checkbox
                         id="bonus_fastest_lap_top_10"
-                        v-model="form.bonus_fastest_lap_top_10"
+                        v-model="form.fastest_lap_top_10"
                         :binary="true"
                       />
                       <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
@@ -417,18 +434,9 @@
                   </div>
                 </div>
 
-                <!-- Message when round has fastest lap configured -->
-                <div v-if="roundHasFastestLap">
-                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Bonus Points</h3>
-                  <Message severity="info" :closable="false">
-                    Fastest lap bonus is configured at the round level and will apply to all races
-                    in this round.
-                  </Message>
-                </div>
-
                 <!-- DNF/DNS Points -->
                 <div>
-                  <h3 class="text-sm font-semibold text-gray-900 mb-2">DNF/DNS Points</h3>
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">DNF Points</h3>
                   <div class="grid grid-cols-2 gap-2">
                     <FormInputGroup>
                       <FormLabel for="dnf_points" text="DNF" />
@@ -441,18 +449,6 @@
                         fluid
                       />
                       <small class="text-xs text-gray-500">Did Not Finish</small>
-                    </FormInputGroup>
-                    <FormInputGroup>
-                      <FormLabel for="dns_points" text="DNS" />
-                      <InputNumber
-                        id="dns_points"
-                        v-model="form.dns_points"
-                        :min="0"
-                        :max="99"
-                        size="small"
-                        fluid
-                      />
-                      <small class="text-xs text-gray-500">Did Not Start</small>
                     </FormInputGroup>
                   </div>
                 </div>
@@ -524,7 +520,6 @@
 import { ref, reactive, watch, computed } from 'vue';
 import { useRaceStore } from '@app/stores/raceStore';
 import { useRaceSettingsStore } from '@app/stores/raceSettingsStore';
-import { useRoundStore } from '@app/stores/roundStore';
 import { useRaceValidation } from '@app/composables/useRaceValidation';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import Button from 'primevue/button';
@@ -552,7 +547,6 @@ import type {
   CreateRaceRequest,
   UpdateRaceRequest,
   PlatformRaceSettings,
-  BonusPoints,
 } from '@app/types/race';
 import {
   RACE_TYPE_OPTIONS,
@@ -585,7 +579,6 @@ const emit = defineEmits<Emits>();
 
 const raceStore = useRaceStore();
 const raceSettingsStore = useRaceSettingsStore();
-const roundStore = useRoundStore();
 
 const form = reactive<RaceForm>({
   race_number: 1,
@@ -611,11 +604,10 @@ const form = reactive<RaceForm>({
   assists_restrictions: '',
   race_points: false,
   points_system: { ...F1_STANDARD_POINTS },
-  bonus_pole: false,
-  bonus_pole_points: 1,
-  bonus_fastest_lap: false,
-  bonus_fastest_lap_points: 1,
-  bonus_fastest_lap_top_10: true,
+  fastest_lap: 1,
+  fastest_lap_top_10: false,
+  qualifying_pole: 1,
+  qualifying_pole_top_10: false,
   dnf_points: 0,
   dns_points: 0,
   race_notes: '',
@@ -714,15 +706,30 @@ const sourceRaceLabel = computed(() => {
   return 'Source Race';
 });
 
-// Check if the parent round has fastest lap bonus configured
-const roundHasFastestLap = computed(() => {
-  const round = roundStore.getRoundById(props.roundId);
-  return round && round.fastest_lap !== null && round.fastest_lap > 0;
+// Computed property for fastest lap bonus checkbox
+const hasFastestLapBonus = computed({
+  get: () => form.fastest_lap !== null && form.fastest_lap > 0,
+  set: (enabled: boolean) => {
+    if (enabled) {
+      form.fastest_lap = 1;
+    } else {
+      form.fastest_lap = null;
+      form.fastest_lap_top_10 = false;
+    }
+  },
 });
 
-// If round has fastest lap configured, hide the race-level fastest lap bonus
-const showFastestLapBonus = computed(() => {
-  return !isQualifying.value && !roundHasFastestLap.value;
+// Computed property for qualifying pole bonus checkbox
+const hasQualifyingPole = computed({
+  get: () => form.qualifying_pole !== null && form.qualifying_pole > 0,
+  set: (enabled: boolean) => {
+    if (enabled) {
+      form.qualifying_pole = 1;
+    } else {
+      form.qualifying_pole = null;
+      form.qualifying_pole_top_10 = false;
+    }
+  },
 });
 
 watch(
@@ -789,24 +796,13 @@ function loadRaceIntoForm(race: Race): void {
   form.assists_restrictions = race.assists_restrictions || '';
   form.race_points = race.race_points;
   form.points_system = { ...race.points_system };
+  form.fastest_lap = race.fastest_lap;
+  form.fastest_lap_top_10 = race.fastest_lap_top_10;
+  form.qualifying_pole = race.qualifying_pole;
+  form.qualifying_pole_top_10 = race.qualifying_pole_top_10;
   form.dnf_points = race.dnf_points;
   form.dns_points = race.dns_points;
   form.race_notes = race.race_notes || '';
-
-  // Load bonus points - reset first to ensure clean state
-  form.bonus_pole = false;
-  form.bonus_pole_points = 1;
-  form.bonus_fastest_lap = false;
-  form.bonus_fastest_lap_points = 1;
-  form.bonus_fastest_lap_top_10 = true;
-
-  if (race.bonus_points) {
-    form.bonus_pole = !!race.bonus_points.pole;
-    form.bonus_pole_points = race.bonus_points.pole || 1;
-    form.bonus_fastest_lap = !!race.bonus_points.fastest_lap;
-    form.bonus_fastest_lap_points = race.bonus_points.fastest_lap || 1;
-    form.bonus_fastest_lap_top_10 = race.bonus_points.fastest_lap_top_10_only || false;
-  }
 }
 
 function resetForm(): void {
@@ -833,11 +829,10 @@ function resetForm(): void {
   form.assists_restrictions = '';
   form.race_points = false;
   form.points_system = { ...F1_STANDARD_POINTS };
-  form.bonus_pole = false;
-  form.bonus_pole_points = 1;
-  form.bonus_fastest_lap = false;
-  form.bonus_fastest_lap_points = 1;
-  form.bonus_fastest_lap_top_10 = true;
+  form.fastest_lap = 1;
+  form.fastest_lap_top_10 = false;
+  form.qualifying_pole = 1;
+  form.qualifying_pole_top_10 = false;
   form.dnf_points = 0;
   form.dns_points = 0;
   form.race_notes = '';
@@ -871,16 +866,6 @@ async function handleSave(): Promise<void> {
 
   saving.value = true;
   try {
-    const bonusPoints: BonusPoints = {};
-    if (isQualifying.value && form.bonus_pole) {
-      bonusPoints.pole = form.bonus_pole_points;
-    }
-    // Only include fastest lap bonus for races (not qualifying)
-    if (!isQualifying.value && form.bonus_fastest_lap) {
-      bonusPoints.fastest_lap = form.bonus_fastest_lap_points;
-      bonusPoints.fastest_lap_top_10_only = form.bonus_fastest_lap_top_10;
-    }
-
     // Build payload conditionally based on whether this is a qualifier or race
     const payload: CreateRaceRequest | UpdateRaceRequest = isQualifying.value
       ? {
@@ -908,7 +893,10 @@ async function handleSave(): Promise<void> {
           assists_restrictions: form.assists_restrictions.trim() || null,
           race_points: form.race_points,
           points_system: form.points_system,
-          bonus_points: Object.keys(bonusPoints).length > 0 ? bonusPoints : null,
+          fastest_lap: null,
+          fastest_lap_top_10: false,
+          qualifying_pole: form.qualifying_pole,
+          qualifying_pole_top_10: form.qualifying_pole_top_10,
           dnf_points: form.dnf_points,
           dns_points: form.dns_points,
           race_notes: form.race_notes.trim() || null,
@@ -939,7 +927,10 @@ async function handleSave(): Promise<void> {
           assists_restrictions: form.assists_restrictions.trim() || null,
           race_points: form.race_points,
           points_system: form.points_system,
-          bonus_points: Object.keys(bonusPoints).length > 0 ? bonusPoints : null,
+          fastest_lap: form.fastest_lap,
+          fastest_lap_top_10: form.fastest_lap_top_10,
+          qualifying_pole: null,
+          qualifying_pole_top_10: false,
           dnf_points: form.dnf_points,
           dns_points: form.dns_points,
           race_notes: form.race_notes.trim() || null,

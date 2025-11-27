@@ -29,7 +29,8 @@ final class QualifierData extends Data
         public bool $collision_penalties,
         public ?string $assists_restrictions,
         // Bonus Points
-        public ?array $bonus_points,
+        public ?int $qualifying_pole,
+        public bool $qualifying_pole_top_10,
         // Notes
         public ?string $race_notes,
         // Timestamps
@@ -59,7 +60,8 @@ final class QualifierData extends Data
             false_start_detection: $qualifier->falseStartDetection(),
             collision_penalties: $qualifier->collisionPenalties(),
             assists_restrictions: $qualifier->assistsRestrictions(),
-            bonus_points: $qualifier->bonusPoints(),
+            qualifying_pole: $qualifier->qualifyingPole(),
+            qualifying_pole_top_10: $qualifier->qualifyingPoleTop10(),
             race_notes: $qualifier->raceNotes(),
             created_at: $qualifier->createdAt()->format('Y-m-d H:i:s'),
             updated_at: $qualifier->updatedAt()->format('Y-m-d H:i:s'),

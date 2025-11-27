@@ -107,6 +107,13 @@ function handleView(): void {
           :disabled="season.is_archived"
           @click.stop="emit('edit')"
         />
+        <Button
+          label="Delete"
+          icon="pi pi-trash"
+          severity="danger"
+          outlined
+          @click.stop="emit('delete')"
+        />
       </div>
     </template>
   </Card>

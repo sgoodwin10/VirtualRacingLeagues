@@ -74,6 +74,11 @@ interface SeasonRepositoryInterface
     public function delete(Season $season): void;
 
     /**
+     * Force delete a season (permanent deletion, bypassing soft delete).
+     */
+    public function forceDelete(int $id): void;
+
+    /**
      * Restore a soft-deleted season.
      */
     public function restore(int $id): void;

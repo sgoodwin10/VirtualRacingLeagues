@@ -66,11 +66,18 @@ final class UpdateRaceData extends Data
         public int|Optional|null $minimum_pit_time = new Optional(),
         #[Nullable, StringType]
         public string|Optional|null $assists_restrictions = new Optional(),
+        // Bonus Points
+        #[Nullable, IntegerType, Min(1)]
+        public int|Optional|null $fastest_lap = new Optional(),
+        #[Nullable, BooleanType]
+        public bool|Optional|null $fastest_lap_top_10 = new Optional(),
+        #[Nullable, IntegerType, Min(1)]
+        public int|Optional|null $qualifying_pole = new Optional(),
+        #[Nullable, BooleanType]
+        public bool|Optional|null $qualifying_pole_top_10 = new Optional(),
         // Points
         #[Nullable, ArrayType]
         public array|Optional|null $points_system = new Optional(),
-        #[Nullable, ArrayType]
-        public array|Optional|null $bonus_points = new Optional(),
         #[Nullable, IntegerType, Min(0)]
         public int|Optional|null $dnf_points = new Optional(),
         #[Nullable, IntegerType, Min(0)]
@@ -87,7 +94,7 @@ final class UpdateRaceData extends Data
     }
 
     /**
-     * Normalize empty strings to null for nullable fields.
+     * Normalize empty strings to null for nullable fields and validate cross-field rules.
      *
      * @param array<string, mixed> $payload
      * @return array<string, mixed>
@@ -114,6 +121,52 @@ final class UpdateRaceData extends Data
             if (isset($payload[$field]) && $payload[$field] === '') {
                 $payload[$field] = null;
             }
+        }
+
+        // Validate: if fastest_lap is explicitly set to null, fastest_lap_top_10 cannot be true
+        if (
+            array_key_exists('fastest_lap', $payload)
+            && $payload['fastest_lap'] === null
+            && array_key_exists('fastest_lap_top_10', $payload)
+            && $payload['fastest_lap_top_10'] === true
+        ) {
+            throw new \InvalidArgumentException(
+                'fastest_lap_top_10 cannot be true when fastest_lap is null'
+            );
+        }
+
+        // Validate: if qualifying_pole is explicitly set to null, qualifying_pole_top_10 cannot be true
+        if (
+            array_key_exists('qualifying_pole', $payload)
+            && $payload['qualifying_pole'] === null
+            && array_key_exists('qualifying_pole_top_10', $payload)
+            && $payload['qualifying_pole_top_10'] === true
+        ) {
+            throw new \InvalidArgumentException(
+                'qualifying_pole_top_10 cannot be true when qualifying_pole is null'
+            );
+        }
+
+        // Validate: fastest_lap must be at least 1 when provided
+        if (
+            array_key_exists('fastest_lap', $payload)
+            && $payload['fastest_lap'] !== null
+            && $payload['fastest_lap'] < 1
+        ) {
+            throw new \InvalidArgumentException(
+                'fastest_lap must be at least 1 when provided'
+            );
+        }
+
+        // Validate: qualifying_pole must be at least 1 when provided
+        if (
+            array_key_exists('qualifying_pole', $payload)
+            && $payload['qualifying_pole'] !== null
+            && $payload['qualifying_pole'] < 1
+        ) {
+            throw new \InvalidArgumentException(
+                'qualifying_pole must be at least 1 when provided'
+            );
         }
 
         return $payload;

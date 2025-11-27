@@ -55,9 +55,13 @@ final class Race
         private bool $mandatoryPitStop,
         private ?int $minimumPitTime,
         private ?string $assistsRestrictions,
+        // Bonus Points
+        private ?int $fastestLap,
+        private bool $fastestLapTop10,
+        private ?int $qualifyingPole,
+        private bool $qualifyingPoleTop10,
         // Points
         private PointsSystem $pointsSystem,
-        private ?array $bonusPoints,
         private int $dnfPoints,
         private int $dnsPoints,
         private bool $racePoints,
@@ -94,8 +98,11 @@ final class Race
         bool $mandatoryPitStop,
         ?int $minimumPitTime,
         ?string $assistsRestrictions,
+        ?int $fastestLap,
+        bool $fastestLapTop10,
+        ?int $qualifyingPole,
+        bool $qualifyingPoleTop10,
         PointsSystem $pointsSystem,
-        ?array $bonusPoints,
         int $dnfPoints,
         int $dnsPoints,
         bool $racePoints,
@@ -128,8 +135,11 @@ final class Race
             mandatoryPitStop: $mandatoryPitStop,
             minimumPitTime: $minimumPitTime,
             assistsRestrictions: $assistsRestrictions,
+            fastestLap: $fastestLap,
+            fastestLapTop10: $fastestLapTop10,
+            qualifyingPole: $qualifyingPole,
+            qualifyingPoleTop10: $qualifyingPoleTop10,
             pointsSystem: $pointsSystem,
-            bonusPoints: $bonusPoints,
             dnfPoints: $dnfPoints,
             dnsPoints: $dnsPoints,
             racePoints: $racePoints,
@@ -176,8 +186,11 @@ final class Race
         bool $mandatoryPitStop,
         ?int $minimumPitTime,
         ?string $assistsRestrictions,
+        ?int $fastestLap,
+        bool $fastestLapTop10,
+        ?int $qualifyingPole,
+        bool $qualifyingPoleTop10,
         PointsSystem $pointsSystem,
-        ?array $bonusPoints,
         int $dnfPoints,
         int $dnsPoints,
         bool $racePoints,
@@ -211,8 +224,11 @@ final class Race
             mandatoryPitStop: $mandatoryPitStop,
             minimumPitTime: $minimumPitTime,
             assistsRestrictions: $assistsRestrictions,
+            fastestLap: $fastestLap,
+            fastestLapTop10: $fastestLapTop10,
+            qualifyingPole: $qualifyingPole,
+            qualifyingPoleTop10: $qualifyingPoleTop10,
             pointsSystem: $pointsSystem,
-            bonusPoints: $bonusPoints,
             dnfPoints: $dnfPoints,
             dnsPoints: $dnsPoints,
             racePoints: $racePoints,
@@ -244,8 +260,11 @@ final class Race
         bool $mandatoryPitStop,
         ?int $minimumPitTime,
         ?string $assistsRestrictions,
+        ?int $fastestLap,
+        bool $fastestLapTop10,
+        ?int $qualifyingPole,
+        bool $qualifyingPoleTop10,
         PointsSystem $pointsSystem,
-        ?array $bonusPoints,
         int $dnfPoints,
         int $dnsPoints,
         bool $racePoints,
@@ -353,13 +372,28 @@ final class Race
             $hasChanges = true;
         }
 
-        if ($this->pointsSystem->toArray() !== $pointsSystem->toArray()) {
-            $this->pointsSystem = $pointsSystem;
+        if ($this->fastestLap !== $fastestLap) {
+            $this->fastestLap = $fastestLap;
             $hasChanges = true;
         }
 
-        if ($this->bonusPoints !== $bonusPoints) {
-            $this->bonusPoints = $bonusPoints;
+        if ($this->fastestLapTop10 !== $fastestLapTop10) {
+            $this->fastestLapTop10 = $fastestLapTop10;
+            $hasChanges = true;
+        }
+
+        if ($this->qualifyingPole !== $qualifyingPole) {
+            $this->qualifyingPole = $qualifyingPole;
+            $hasChanges = true;
+        }
+
+        if ($this->qualifyingPoleTop10 !== $qualifyingPoleTop10) {
+            $this->qualifyingPoleTop10 = $qualifyingPoleTop10;
+            $hasChanges = true;
+        }
+
+        if ($this->pointsSystem->toArray() !== $pointsSystem->toArray()) {
+            $this->pointsSystem = $pointsSystem;
             $hasChanges = true;
         }
 
@@ -404,7 +438,8 @@ final class Race
         ?string $fuelUsage,
         ?string $damageModel,
         ?string $assistsRestrictions,
-        ?array $bonusPoints,
+        ?int $qualifyingPole,
+        bool $qualifyingPoleTop10,
         ?string $raceNotes,
     ): self {
         // Validate qualifier-specific rules
@@ -414,11 +449,6 @@ final class Race
 
         if ($qualifyingLength < 1) {
             throw InvalidQualifierConfigurationException::invalidLength($qualifyingLength);
-        }
-
-        // Validate bonus points only contains pole position
-        if ($bonusPoints !== null && array_diff(array_keys($bonusPoints), ['pole']) !== []) {
-            throw InvalidQualifierConfigurationException::invalidBonusPoints($bonusPoints);
         }
 
         $now = new DateTimeImmutable();
@@ -449,8 +479,12 @@ final class Race
             mandatoryPitStop: false,
             minimumPitTime: null,
             assistsRestrictions: $assistsRestrictions,
+            // Bonus points - qualifiers don't award fastest lap points
+            fastestLap: null,
+            fastestLapTop10: false,
+            qualifyingPole: $qualifyingPole,
+            qualifyingPoleTop10: $qualifyingPoleTop10,
             pointsSystem: PointsSystem::from([1 => 0]),
-            bonusPoints: $bonusPoints,
             dnfPoints: 0,
             dnsPoints: 0,
             racePoints: false,
@@ -480,7 +514,8 @@ final class Race
         ?string $fuelUsage,
         ?string $damageModel,
         ?string $assistsRestrictions,
-        ?array $bonusPoints,
+        ?int $qualifyingPole,
+        bool $qualifyingPoleTop10,
         ?string $raceNotes,
     ): void {
         if (!$this->isQualifier) {
@@ -494,11 +529,6 @@ final class Race
 
         if ($qualifyingLength < 1) {
             throw InvalidQualifierConfigurationException::invalidLength($qualifyingLength);
-        }
-
-        // Validate bonus points only contains pole position
-        if ($bonusPoints !== null && array_diff(array_keys($bonusPoints), ['pole']) !== []) {
-            throw InvalidQualifierConfigurationException::invalidBonusPoints($bonusPoints);
         }
 
         $hasChanges = false;
@@ -552,8 +582,13 @@ final class Race
             $hasChanges = true;
         }
 
-        if ($this->bonusPoints !== $bonusPoints) {
-            $this->bonusPoints = $bonusPoints;
+        if ($this->qualifyingPole !== $qualifyingPole) {
+            $this->qualifyingPole = $qualifyingPole;
+            $hasChanges = true;
+        }
+
+        if ($this->qualifyingPoleTop10 !== $qualifyingPoleTop10) {
+            $this->qualifyingPoleTop10 = $qualifyingPoleTop10;
             $hasChanges = true;
         }
 
@@ -698,12 +733,24 @@ final class Race
         return $this->pointsSystem;
     }
 
-    /**
-     * @return array<string, int>|null
-     */
-    public function bonusPoints(): ?array
+    public function fastestLap(): ?int
     {
-        return $this->bonusPoints;
+        return $this->fastestLap;
+    }
+
+    public function fastestLapTop10(): bool
+    {
+        return $this->fastestLapTop10;
+    }
+
+    public function qualifyingPole(): ?int
+    {
+        return $this->qualifyingPole;
+    }
+
+    public function qualifyingPoleTop10(): bool
+    {
+        return $this->qualifyingPoleTop10;
     }
 
     public function dnfPoints(): int

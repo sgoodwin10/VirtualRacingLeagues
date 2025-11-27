@@ -24,6 +24,7 @@ final class RaceFactory extends Factory
     {
         return [
             'round_id' => Round::factory(),
+            'is_qualifier' => false,
             'race_number' => $this->faker->numberBetween(1, 20),
             'name' => $this->faker->words(3, true),
             'race_type' => $this->faker->randomElement(['sprint', 'feature', 'endurance', 'qualifying', 'custom']),
@@ -56,21 +57,38 @@ final class RaceFactory extends Factory
             'minimum_pit_time' => $this->faker->optional(0.3)->numberBetween(30, 120),
             'assists_restrictions' => $this->faker->optional(0.6)->randomElement(['any', 'limited', 'none']),
 
+            // Bonus Points
+            'fastest_lap' => $this->faker->optional(0.3)->numberBetween(1, 3),
+            'fastest_lap_top_10' => $this->faker->boolean(50),
+            'qualifying_pole' => $this->faker->optional(0.3)->numberBetween(1, 3),
+            'qualifying_pole_top_10' => $this->faker->boolean(50),
+
             // Points (F1 standard)
+            'race_points' => $this->faker->boolean(80),
             'points_system' => [
                 1 => 25, 2 => 18, 3 => 15, 4 => 12, 5 => 10,
                 6 => 8, 7 => 6, 8 => 4, 9 => 2, 10 => 1,
             ],
-            'bonus_points' => $this->faker->optional(0.3)->passthrough([
-                'fastest_lap' => 1,
-                'pole_position' => 1,
-            ]),
             'dnf_points' => 0,
             'dns_points' => 0,
 
             // Notes
             'race_notes' => $this->faker->optional(0.4)->sentence(),
         ];
+    }
+
+    /**
+     * Indicate that this is a qualifier session.
+     */
+    public function qualifier(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'is_qualifier' => true,
+            'race_number' => 0,
+            'race_type' => null,
+            'qualifying_format' => $this->faker->randomElement(['standard', 'time_trial', 'previous_race']),
+            'qualifying_length' => $this->faker->numberBetween(10, 60),
+        ]);
     }
 
     /**

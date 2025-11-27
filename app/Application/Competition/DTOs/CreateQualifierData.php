@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\DTOs;
 
-use Spatie\LaravelData\Attributes\Validation\ArrayType;
 use Spatie\LaravelData\Attributes\Validation\Between;
 use Spatie\LaravelData\Attributes\Validation\BooleanType;
 use Spatie\LaravelData\Attributes\Validation\In;
@@ -47,12 +46,42 @@ final class CreateQualifierData extends Data
         public bool $collision_penalties,
         #[Nullable, StringType]
         public ?string $assists_restrictions,
-        // Bonus Points (ONLY pole position allowed)
-        #[Nullable, ArrayType]
-        public ?array $bonus_points,
+        // Bonus Points
+        #[Nullable, IntegerType, Min(1)]
+        public ?int $qualifying_pole,
+        #[Nullable, BooleanType]
+        public ?bool $qualifying_pole_top_10,
         // Notes
         #[Nullable, StringType]
         public ?string $race_notes,
     ) {
+    }
+
+    /**
+     * Prepare data for pipeline with validation.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public static function prepareForPipeline(array $payload): array
+    {
+        // Validate: if qualifying_pole is null, qualifying_pole_top_10 must be false or null
+        $qualifyingPole = $payload['qualifying_pole'] ?? null;
+        $qualifyingPoleTop10 = $payload['qualifying_pole_top_10'] ?? null;
+
+        if ($qualifyingPole === null && $qualifyingPoleTop10 === true) {
+            throw new \InvalidArgumentException(
+                'qualifying_pole_top_10 cannot be true when qualifying_pole is null'
+            );
+        }
+
+        // Validate: qualifying_pole must be at least 1 when provided
+        if (isset($payload['qualifying_pole']) && $payload['qualifying_pole'] !== null && $payload['qualifying_pole'] < 1) {
+            throw new \InvalidArgumentException(
+                'qualifying_pole must be at least 1 when provided'
+            );
+        }
+
+        return $payload;
     }
 }

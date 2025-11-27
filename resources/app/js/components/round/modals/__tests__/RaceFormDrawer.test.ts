@@ -116,11 +116,10 @@ describe('RaceFormDrawer', () => {
     assists_restrictions: 'none',
     race_points: false,
     points_system: { ...F1_STANDARD_POINTS },
-    bonus_points: {
-      pole: 1,
-      fastest_lap: 1,
-      fastest_lap_top_10_only: true,
-    },
+    fastest_lap: 1,
+    fastest_lap_top_10: true,
+    qualifying_pole: null,
+    qualifying_pole_top_10: false,
     dnf_points: 0,
     dns_points: 0,
     race_notes: 'Test notes',
@@ -545,5 +544,348 @@ describe('RaceFormDrawer', () => {
 
     // Verify sourceRaceOptions uses races
     expect(vm.sourceRaceLabel).toBe('Select Race');
+  });
+
+  describe('Points System', () => {
+    it('should add a new position to points system', async () => {
+      const raceSettingsStore = useRaceSettingsStore();
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          points_system: Record<number, number>;
+        };
+        addPointsPosition: () => void;
+      };
+
+      const initialPositionCount = Object.keys(vm.form.points_system).length;
+
+      // Add a new position
+      vm.addPointsPosition();
+      await nextTick();
+
+      // Verify a new position was added
+      expect(Object.keys(vm.form.points_system).length).toBe(initialPositionCount + 1);
+    });
+
+    it('should remove the last position from points system', async () => {
+      const raceSettingsStore = useRaceSettingsStore();
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          points_system: Record<number, number>;
+        };
+        removeLastPointsPosition: () => void;
+      };
+
+      const initialPositionCount = Object.keys(vm.form.points_system).length;
+
+      // Remove the last position
+      vm.removeLastPointsPosition();
+      await nextTick();
+
+      // Verify a position was removed
+      expect(Object.keys(vm.form.points_system).length).toBe(initialPositionCount - 1);
+    });
+
+    it('should not remove position if only one remains', async () => {
+      const raceSettingsStore = useRaceSettingsStore();
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          points_system: Record<number, number>;
+        };
+        removeLastPointsPosition: () => void;
+      };
+
+      // Remove all but one position
+      while (Object.keys(vm.form.points_system).length > 1) {
+        vm.removeLastPointsPosition();
+      }
+
+      // Try to remove the last position
+      vm.removeLastPointsPosition();
+      await nextTick();
+
+      // Verify at least one position remains
+      expect(Object.keys(vm.form.points_system).length).toBe(1);
+    });
+  });
+
+  describe('Bonus Points', () => {
+    it('should enable fastest lap bonus when checkbox is checked', async () => {
+      const raceSettingsStore = useRaceSettingsStore();
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          fastest_lap: number | null;
+          fastest_lap_top_10: boolean;
+        };
+        hasFastestLapBonus: boolean;
+      };
+
+      // Initially fastest lap should be 1
+      expect(vm.form.fastest_lap).toBe(1);
+
+      // Disable fastest lap bonus
+      vm.hasFastestLapBonus = false;
+      await nextTick();
+
+      // Verify fastest lap is now null
+      expect(vm.form.fastest_lap).toBe(null);
+      expect(vm.form.fastest_lap_top_10).toBe(false);
+
+      // Re-enable fastest lap bonus
+      vm.hasFastestLapBonus = true;
+      await nextTick();
+
+      // Verify fastest lap is set back to 1
+      expect(vm.form.fastest_lap).toBe(1);
+    });
+
+    it('should enable qualifying pole bonus when checkbox is checked', async () => {
+      const raceSettingsStore = useRaceSettingsStore();
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      const qualifyingRace: Race = {
+        ...mockRace,
+        race_type: 'qualifying',
+        qualifying_format: 'standard',
+        qualifying_length: 15,
+      };
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: qualifyingRace,
+          mode: 'edit',
+        },
+        global: {
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          qualifying_pole: number | null;
+          qualifying_pole_top_10: boolean;
+        };
+        hasQualifyingPole: boolean;
+      };
+
+      // Initially qualifying pole should be 1
+      expect(vm.form.qualifying_pole).toBe(1);
+
+      // Disable qualifying pole bonus
+      vm.hasQualifyingPole = false;
+      await nextTick();
+
+      // Verify qualifying pole is now null
+      expect(vm.form.qualifying_pole).toBe(null);
+      expect(vm.form.qualifying_pole_top_10).toBe(false);
+
+      // Re-enable qualifying pole bonus
+      vm.hasQualifyingPole = true;
+      await nextTick();
+
+      // Verify qualifying pole is set back to 1
+      expect(vm.form.qualifying_pole).toBe(1);
+    });
+  });
+
+  describe('Validation', () => {
+    it('should show validation errors for invalid form data', async () => {
+      const raceSettingsStore = useRaceSettingsStore();
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          race_type: string | null;
+          length_value: number;
+        };
+        errors: Record<string, string | undefined>;
+        validateAll: () => boolean;
+      };
+
+      // Set invalid data
+      vm.form.race_type = null;
+      vm.form.length_value = -1;
+
+      // Trigger validation
+      const isValid = vm.validateAll();
+
+      // Verify validation failed
+      expect(isValid).toBe(false);
+      expect(vm.errors.race_type).toBeDefined();
+    });
+
+    it('should clear validation errors after fixing issues', async () => {
+      const raceSettingsStore = useRaceSettingsStore();
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          race_type: string | null;
+          length_value: number;
+        };
+        errors: Record<string, string | undefined>;
+        clearErrors: () => void;
+      };
+
+      // Set invalid data
+      vm.form.race_type = null;
+
+      // Clear errors
+      vm.clearErrors();
+
+      // Verify errors are cleared
+      expect(vm.errors.race_type).toBeUndefined();
+    });
   });
 });

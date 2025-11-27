@@ -7,7 +7,9 @@ import { usesPsnId, usesIracingId } from '@app/constants/platforms';
 import DataTable from 'primevue/datatable';
 import type { DataTablePageEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
-import Button from 'primevue/button';
+import { ViewButton, AddButton } from '@app/components/common/buttons';
+import { createLogger } from '@app/utils/logger';
+import { DEFAULT_ROWS_PER_PAGE, ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
 
 interface Props {
   seasonId: number;
@@ -27,6 +29,7 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const seasonDriverStore = useSeasonDriverStore();
+const logger = createLogger('AvailableDriversTable');
 
 const availableDrivers = computed(() => seasonDriverStore.availableDrivers);
 const loading = computed(() => seasonDriverStore.loadingAvailable);
@@ -35,23 +38,9 @@ const first = computed(
   () => (seasonDriverStore.availablePage - 1) * seasonDriverStore.availablePerPage,
 );
 
-const showPsnColumn = computed(() => {
-  const result = usesPsnId(props.platformId);
-  console.log('[AvailableDriversTable] PSN Column Visibility:', {
-    platformId: props.platformId,
-    showPsnColumn: result,
-  });
-  return result;
-});
+const showPsnColumn = computed(() => usesPsnId(props.platformId));
 
-const showIracingColumn = computed(() => {
-  const result = usesIracingId(props.platformId);
-  console.log('[AvailableDriversTable] iRacing Column Visibility:', {
-    platformId: props.platformId,
-    showIracingColumn: result,
-  });
-  return result;
-});
+const showIracingColumn = computed(() => usesIracingId(props.platformId));
 
 function getDriverDisplayName(driver: AvailableDriver): string {
   // Backend already computes and returns driver_name
@@ -79,7 +68,7 @@ async function handlePageChange(event: DataTablePageEvent): Promise<void> {
       per_page: perPage,
     });
   } catch (error) {
-    console.error('Failed to fetch available drivers:', error);
+    logger.error('Failed to fetch available drivers', { data: error });
   }
 }
 
@@ -90,7 +79,7 @@ onMounted(async () => {
   try {
     await seasonDriverStore.fetchAvailableDrivers(props.seasonId, props.leagueId);
   } catch (error) {
-    console.error('Failed to load available drivers:', error);
+    logger.error('Failed to load available drivers', { data: error });
   }
 });
 </script>
@@ -102,8 +91,8 @@ onMounted(async () => {
       :loading="loading"
       lazy
       paginator
-      :rows="10"
-      :rows-per-page-options="[10, 25, 50]"
+      :rows="DEFAULT_ROWS_PER_PAGE"
+      :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
       :total-records="totalRecords"
       :first="first"
       striped-rows
@@ -149,8 +138,8 @@ onMounted(async () => {
       <Column header="Actions" :exportable="false">
         <template #body="{ data }">
           <div class="flex gap-2">
-            <Button icon="pi pi-eye" size="small" outlined @click="handleView(data)" />
-            <Button icon="pi pi-plus" size="small" @click="handleAdd(data)" />
+            <ViewButton @click="handleView(data)" />
+            <AddButton @click="handleAdd(data)" />
           </div>
         </template>
       </Column>

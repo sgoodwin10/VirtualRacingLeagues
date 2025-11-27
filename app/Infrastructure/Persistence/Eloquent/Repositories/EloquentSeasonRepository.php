@@ -110,9 +110,10 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
         }
 
         if (isset($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['search'] . '%')
-                  ->orWhere('slug', 'like', '%' . $filters['search'] . '%');
+            $searchTerm = $filters['search'];
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('slug', 'like', '%' . $searchTerm . '%');
             });
         }
 
@@ -134,6 +135,13 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
     public function delete(Season $season): void
     {
         SeasonEloquent::where('id', $season->id())->delete();
+    }
+
+    public function forceDelete(int $id): void
+    {
+        SeasonEloquent::withTrashed()
+            ->where('id', $id)
+            ->forceDelete();
     }
 
     public function restore(int $id): void

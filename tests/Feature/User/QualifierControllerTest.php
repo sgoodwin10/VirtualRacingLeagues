@@ -42,7 +42,8 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'bonus_points' => ['pole' => 1],
+                'qualifying_pole' => 1,
+                'qualifying_pole_top_10' => false,
                 'race_notes' => null,
             ]);
 
@@ -54,7 +55,8 @@ final class QualifierControllerTest extends TestCase
                 'name',
                 'qualifying_format',
                 'qualifying_length',
-                'bonus_points',
+                'qualifying_pole',
+                'qualifying_pole_top_10',
             ],
         ]);
 
@@ -83,7 +85,8 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'bonus_points' => null,
+                'qualifying_pole' => null,
+                'qualifying_pole_top_10' => false,
                 'race_notes' => null,
             ]);
 
@@ -102,7 +105,8 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'bonus_points' => null,
+                'qualifying_pole' => null,
+                'qualifying_pole_top_10' => false,
                 'race_notes' => null,
             ]);
 
@@ -112,28 +116,6 @@ final class QualifierControllerTest extends TestCase
         ]);
     }
 
-    public function test_validates_bonus_points(): void
-    {
-        $response = $this->actingAs($this->user)
-            ->postJson(self::APP_URL . "/api/rounds/{$this->round->id}/qualifier", [
-                'name' => 'Invalid Qualifier',
-                'qualifying_format' => 'standard',
-                'qualifying_length' => 15,
-                'qualifying_tire' => null,
-                'weather' => null,
-                'tire_restrictions' => null,
-                'fuel_usage' => null,
-                'damage_model' => null,
-                'track_limits_enforced' => true,
-                'false_start_detection' => true,
-                'collision_penalties' => true,
-                'assists_restrictions' => null,
-                'bonus_points' => ['pole' => 1, 'fastest_lap' => 1],
-                'race_notes' => null,
-            ]);
-
-        $response->assertStatus(422);
-    }
 
     public function test_retrieves_qualifier_by_round(): void
     {
@@ -152,7 +134,8 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'bonus_points' => null,
+                'qualifying_pole' => null,
+                'qualifying_pole_top_10' => false,
                 'race_notes' => null,
             ]);
 
@@ -197,7 +180,8 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'bonus_points' => null,
+                'qualifying_pole' => null,
+                'qualifying_pole_top_10' => false,
                 'race_notes' => null,
             ]);
 
@@ -236,7 +220,8 @@ final class QualifierControllerTest extends TestCase
                 'false_start_detection' => true,
                 'collision_penalties' => true,
                 'assists_restrictions' => null,
-                'bonus_points' => null,
+                'qualifying_pole' => null,
+                'qualifying_pole_top_10' => false,
                 'race_notes' => null,
             ]);
 
@@ -265,7 +250,8 @@ final class QualifierControllerTest extends TestCase
             'false_start_detection' => true,
             'collision_penalties' => true,
             'assists_restrictions' => null,
-            'bonus_points' => null,
+            'qualifying_pole' => null,
+                'qualifying_pole_top_10' => false,
             'race_notes' => null,
         ]);
 
@@ -286,6 +272,238 @@ final class QualifierControllerTest extends TestCase
             'track_limits_enforced',
             'false_start_detection',
             'collision_penalties',
+        ]);
+    }
+
+    public function test_calculates_pole_position_points_when_completed(): void
+    {
+        // Create qualifier with pole position bonus
+        $createResponse = $this->actingAs($this->user)
+            ->postJson(self::APP_URL . "/api/rounds/{$this->round->id}/qualifier", [
+                'name' => 'Qualifying',
+                'qualifying_format' => 'standard',
+                'qualifying_length' => 15,
+                'qualifying_tire' => null,
+                'weather' => null,
+                'tire_restrictions' => null,
+                'fuel_usage' => null,
+                'damage_model' => null,
+                'track_limits_enforced' => true,
+                'false_start_detection' => true,
+                'collision_penalties' => true,
+                'assists_restrictions' => null,
+                'qualifying_pole' => 3,
+                'qualifying_pole_top_10' => false,
+                'race_notes' => null,
+            ]);
+
+        $qualifierId = $createResponse->json('data.id');
+
+        // Get the season and league from the round
+        $seasonId = $this->round->season_id;
+        $season = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::find($seasonId);
+        $competition = \App\Infrastructure\Persistence\Eloquent\Models\Competition::find($season->competition_id);
+        $leagueId = $competition->league_id;
+
+        // Create season drivers
+        $seasonDrivers = [];
+        for ($i = 0; $i < 5; $i++) {
+            $driver = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+            $leagueDriver = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+                'league_id' => $leagueId,
+                'driver_id' => $driver->id,
+                'status' => 'active',
+            ]);
+            $seasonDrivers[$i] = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+                'season_id' => $seasonId,
+                'league_driver_id' => $leagueDriver->id,
+                'status' => 'active',
+            ]);
+        }
+
+        // Driver 1: Fastest lap - should get pole
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[0]->id,
+            'fastest_lap' => '01:23:45.123',
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        // Driver 2: Second fastest
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[1]->id,
+            'fastest_lap' => '01:23:45.456',
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        // Driver 3: Third fastest
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[2]->id,
+            'fastest_lap' => '01:23:46.000',
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        // Driver 4: DNF - should be at the end
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[3]->id,
+            'fastest_lap' => '01:23:44.000',
+            'dnf' => true,
+            'status' => 'pending',
+        ]);
+
+        // Driver 5: No time - should be at the end
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[4]->id,
+            'fastest_lap' => null,
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        // Mark qualifier as completed
+        $response = $this->actingAs($this->user)
+            ->putJson(self::APP_URL . "/api/qualifiers/{$qualifierId}", [
+                'status' => 'completed',
+            ]);
+
+        $response->assertStatus(200);
+
+        // Verify pole position was awarded correctly
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[0]->id,
+            'position' => 1,
+            'has_pole' => true,
+            'race_points' => 3,
+        ]);
+
+        // Verify second place
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[1]->id,
+            'position' => 2,
+            'has_pole' => false,
+            'race_points' => 0,
+        ]);
+
+        // Verify third place
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[2]->id,
+            'position' => 3,
+            'has_pole' => false,
+            'race_points' => 0,
+        ]);
+
+        // Verify DNF is placed at the end (position 4)
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[3]->id,
+            'position' => 4,
+            'has_pole' => false,
+            'race_points' => 0,
+        ]);
+
+        // Verify no time is placed at the end (position 5)
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[4]->id,
+            'position' => 5,
+            'has_pole' => false,
+            'race_points' => 0,
+        ]);
+    }
+
+    public function test_calculates_positions_without_qualifying_pole(): void
+    {
+        // Create qualifier without pole position bonus
+        $createResponse = $this->actingAs($this->user)
+            ->postJson(self::APP_URL . "/api/rounds/{$this->round->id}/qualifier", [
+                'name' => 'Qualifying',
+                'qualifying_format' => 'standard',
+                'qualifying_length' => 15,
+                'qualifying_tire' => null,
+                'weather' => null,
+                'tire_restrictions' => null,
+                'fuel_usage' => null,
+                'damage_model' => null,
+                'track_limits_enforced' => true,
+                'false_start_detection' => true,
+                'collision_penalties' => true,
+                'assists_restrictions' => null,
+                'qualifying_pole' => null,
+                'qualifying_pole_top_10' => false,
+                'race_notes' => null,
+            ]);
+
+        $qualifierId = $createResponse->json('data.id');
+
+        // Get the season and league from the round
+        $seasonId = $this->round->season_id;
+        $season = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::find($seasonId);
+        $competition = \App\Infrastructure\Persistence\Eloquent\Models\Competition::find($season->competition_id);
+        $leagueId = $competition->league_id;
+
+        // Create season drivers
+        $seasonDrivers = [];
+        for ($i = 0; $i < 2; $i++) {
+            $driver = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+            $leagueDriver = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+                'league_id' => $leagueId,
+                'driver_id' => $driver->id,
+                'status' => 'active',
+            ]);
+            $seasonDrivers[$i] = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+                'season_id' => $seasonId,
+                'league_driver_id' => $leagueDriver->id,
+                'status' => 'active',
+            ]);
+        }
+
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[0]->id,
+            'fastest_lap' => '01:23:45.123',
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[1]->id,
+            'fastest_lap' => '01:23:46.000',
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        // Mark qualifier as completed
+        $this->actingAs($this->user)
+            ->putJson(self::APP_URL . "/api/qualifiers/{$qualifierId}", [
+                'status' => 'completed',
+            ]);
+
+        // Verify pole position was awarded but with 0 points
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[0]->id,
+            'position' => 1,
+            'has_pole' => true,
+            'race_points' => 0,
+        ]);
+
+        // Verify second place
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDrivers[1]->id,
+            'position' => 2,
+            'has_pole' => false,
+            'race_points' => 0,
         ]);
     }
 }

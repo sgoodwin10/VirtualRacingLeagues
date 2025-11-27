@@ -134,9 +134,14 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
         $model->minimum_pit_time = $race->minimumPitTime();
         $model->assists_restrictions = $race->assistsRestrictions();
 
+        // Bonus Points
+        $model->fastest_lap = $race->fastestLap();
+        $model->fastest_lap_top_10 = $race->fastestLapTop10();
+        $model->qualifying_pole = $race->qualifyingPole();
+        $model->qualifying_pole_top_10 = $race->qualifyingPoleTop10();
+
         // Points - Convert to JSON
         $model->points_system = $race->pointsSystem()->toArray();
-        $model->bonus_points = $race->bonusPoints();
         $model->dnf_points = $race->dnfPoints();
         $model->dns_points = $race->dnsPoints();
         $model->race_points = $race->racePoints();
@@ -150,6 +155,18 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
 
     private function toDomainEntity(RaceEloquent $model): RaceEntity
     {
+        // Handle points_system - should always be array due to cast, but defensive check for edge cases
+        /** @var array<int, int>|string $pointsSystemRaw */
+        $pointsSystemRaw = $model->points_system;
+        $pointsSystem = [];
+
+        if (is_string($pointsSystemRaw)) {
+            $decoded = json_decode($pointsSystemRaw, true);
+            $pointsSystem = is_array($decoded) ? $decoded : [];
+        } elseif (is_array($pointsSystemRaw)) {
+            $pointsSystem = $pointsSystemRaw;
+        }
+
         return RaceEntity::reconstitute(
             id: $model->id,
             roundId: $model->round_id,
@@ -175,13 +192,16 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
             mandatoryPitStop: $model->mandatory_pit_stop,
             minimumPitTime: $model->minimum_pit_time,
             assistsRestrictions: $model->assists_restrictions,
-            pointsSystem: PointsSystem::from($model->points_system ?? []),
-            bonusPoints: $model->bonus_points,
+            fastestLap: $model->fastest_lap,
+            fastestLapTop10: $model->fastest_lap_top_10,
+            qualifyingPole: $model->qualifying_pole,
+            qualifyingPoleTop10: $model->qualifying_pole_top_10,
+            pointsSystem: PointsSystem::from($pointsSystem),
             dnfPoints: $model->dnf_points,
             dnsPoints: $model->dns_points,
-            racePoints: $model->race_points ?? false,
+            racePoints: $model->race_points,
             raceNotes: $model->race_notes,
-            status: RaceStatus::from($model->status ?? 'scheduled'),
+            status: RaceStatus::from($model->status),
             /** @phpstan-ignore-next-line */
             createdAt: DateTimeImmutable::createFromMutable($model->created_at),
             /** @phpstan-ignore-next-line */

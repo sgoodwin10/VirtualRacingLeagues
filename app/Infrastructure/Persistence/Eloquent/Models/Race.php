@@ -33,8 +33,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $mandatory_pit_stop
  * @property int|null $minimum_pit_time
  * @property string|null $assists_restrictions
+ * @property int|null $fastest_lap
+ * @property bool $fastest_lap_top_10
+ * @property int|null $qualifying_pole
+ * @property bool $qualifying_pole_top_10
  * @property array<int, int> $points_system
- * @property array<string, int>|null $bonus_points
  * @property int $dnf_points
  * @property int $dns_points
  * @property bool $race_points
@@ -92,9 +95,13 @@ final class Race extends Model
         'mandatory_pit_stop',
         'minimum_pit_time',
         'assists_restrictions',
+        // Bonus Points
+        'fastest_lap',
+        'fastest_lap_top_10',
+        'qualifying_pole',
+        'qualifying_pole_top_10',
         // Points
         'points_system',
-        'bonus_points',
         'dnf_points',
         'dns_points',
         'race_points',
@@ -116,8 +123,11 @@ final class Race extends Model
         'collision_penalties' => 'boolean',
         'mandatory_pit_stop' => 'boolean',
         'minimum_pit_time' => 'integer',
+        'fastest_lap' => 'integer',
+        'fastest_lap_top_10' => 'boolean',
+        'qualifying_pole' => 'integer',
+        'qualifying_pole_top_10' => 'boolean',
         'points_system' => 'array',
-        'bonus_points' => 'array',
         'dnf_points' => 'integer',
         'dns_points' => 'integer',
         'race_points' => 'boolean',

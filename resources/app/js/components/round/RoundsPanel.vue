@@ -107,21 +107,10 @@
                     Completed
                   </span>
                 </div>
-                <Button
+                <EditButton v-if="round.status !== 'completed'" @click="handleEditRound(round)" />
+                <DeleteButton
                   v-if="round.status !== 'completed'"
-                  icon="pi pi-pencil"
-                  text
-                  size="small"
-                  severity="secondary"
-                  @click.stop="handleEditRound(round)"
-                />
-                <Button
-                  v-if="round.status !== 'completed'"
-                  icon="pi pi-trash"
-                  text
-                  size="small"
-                  severity="danger"
-                  @click.stop="handleDeleteRound(round)"
+                  @click="handleDeleteRound(round)"
                 />
               </div>
             </div>
@@ -304,6 +293,7 @@ import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { PhPlus } from '@phosphor-icons/vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
+import { EditButton, DeleteButton } from '@app/components/common/buttons';
 import RoundFormDrawer from '@app/components/round/modals/RoundFormDrawer.vue';
 import RaceFormDrawer from '@app/components/round/modals/RaceFormDrawer.vue';
 import RaceListItem from '@app/components/round/RaceListItem.vue';
@@ -327,6 +317,8 @@ import { isQualifier } from '@app/types/race';
 import type { RGBColor } from '@app/types/competition';
 import HTag from '@app/components/common/HTag.vue';
 import { useColorRange } from '@app/composables/useColorRange';
+import { createLogger } from '@app/utils/logger';
+import { DEFAULT_COLOR_RANGE_STEPS } from '@app/constants/pagination';
 
 interface Props {
   seasonId: number;
@@ -341,6 +333,9 @@ const raceStore = useRaceStore();
 const trackStore = useTrackStore();
 const toast = useToast();
 const confirm = useConfirm();
+
+// Create a logger instance for this component
+const logger = createLogger('RoundsPanel');
 
 // Parse competition color from JSON string
 const competitionColor = computed<RGBColor | null>(() => {
@@ -360,13 +355,13 @@ const competitionColor = computed<RGBColor | null>(() => {
     }
     return null;
   } catch {
-    console.warn('[RoundsPanel] Invalid competition color format:', props.competitionColour);
+    logger.warn('Invalid competition color format', { data: props.competitionColour });
     return null;
   }
 });
 
 // Generate color range based on competition color (pass computed ref for reactivity)
-const { getColor } = useColorRange(competitionColor, { steps: 10 });
+const { getColor } = useColorRange(competitionColor, { steps: DEFAULT_COLOR_RANGE_STEPS });
 
 const showFormDrawer = ref(false);
 const selectedRound = ref<Round | null>(null);
@@ -415,7 +410,7 @@ onMounted(async () => {
     try {
       await trackStore.fetchTracks({ platform_id: props.platformId, is_active: true });
     } catch (trackError) {
-      console.error('[RoundsPanel] Error loading tracks:', trackError);
+      logger.error('Error loading tracks', { data: trackError });
       // Continue anyway - tracks are just for display names
     }
 
@@ -531,6 +526,8 @@ async function handleToggleCompletion(round: Round): Promise<void> {
 
   try {
     if (round.status === 'completed') {
+      // Uncompleting a round - just update the round status
+      // DO NOT cascade to child races - they keep their current status
       await roundStore.uncompleteRound(round.id);
       toast.add({
         severity: 'success',
@@ -539,10 +536,20 @@ async function handleToggleCompletion(round: Round): Promise<void> {
         life: 3000,
       });
     } else {
+      // Completing a round - update round status
+      // The backend also completes all races and confirms results
       await roundStore.completeRound(round.id);
-      // When completing a round, the backend also completes all races and confirms results
-      // Refresh the races to reflect the updated status
-      await raceStore.fetchRaces(round.id);
+
+      // Update local race statuses to 'completed' (optimistic update)
+      // This is a frontend-only visual update - no API calls for child items
+      const racesForRound = raceStore.racesByRoundId(round.id);
+      racesForRound.forEach((race) => {
+        const existingRace = raceStore.races.find((r) => r.id === race.id);
+        if (existingRace) {
+          existingRace.status = 'completed';
+        }
+      });
+
       toast.add({
         severity: 'success',
         summary: 'Success',
@@ -712,10 +719,32 @@ async function handleToggleRaceStatus(
     // Call the race store to update the race status
     await raceStore.updateExistingRace(race.id, { status: newStatus }, race.is_qualifier);
 
+    // Determine the success message
+    let detail: string;
+    if (race.is_qualifier && newStatus === 'completed') {
+      // Check if pole bonus points are configured
+      const hasPoleBonus = race.qualifying_pole !== null && race.qualifying_pole > 0;
+      detail = hasPoleBonus
+        ? 'Qualifying completed. Pole position points calculated.'
+        : 'Qualifying session marked as completed';
+    } else if (!race.is_qualifier && newStatus === 'completed') {
+      // Handle race completion
+      if (race.race_points) {
+        const hasFastestLapBonus = race.fastest_lap !== null && race.fastest_lap > 0;
+        detail = hasFastestLapBonus
+          ? 'Race completed. Points and fastest lap bonus calculated.'
+          : 'Race completed. Points calculated.';
+      } else {
+        detail = 'Race marked as completed';
+      }
+    } else {
+      detail = `${race.is_qualifier ? 'Qualifying session' : 'Race'} marked as ${newStatus}`;
+    }
+
     toast.add({
       severity: 'success',
       summary: 'Success',
-      detail: `${race.is_qualifier ? 'Qualifying session' : 'Race'} marked as ${newStatus}`,
+      detail,
       life: 3000,
     });
   } catch (error) {

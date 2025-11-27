@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\DTOs;
 
-use Spatie\LaravelData\Attributes\Validation\ArrayType;
 use Spatie\LaravelData\Attributes\Validation\Between;
 use Spatie\LaravelData\Attributes\Validation\BooleanType;
 use Spatie\LaravelData\Attributes\Validation\In;
@@ -48,8 +47,10 @@ final class UpdateQualifierData extends Data
         #[Nullable, StringType]
         public string|Optional|null $assists_restrictions = new Optional(),
         // Bonus Points
-        #[Nullable, ArrayType]
-        public array|Optional|null $bonus_points = new Optional(),
+        #[Nullable, IntegerType, Min(1)]
+        public int|Optional|null $qualifying_pole = new Optional(),
+        #[Nullable, BooleanType]
+        public bool|Optional|null $qualifying_pole_top_10 = new Optional(),
         // Notes
         #[Nullable, StringType]
         public string|Optional|null $race_notes = new Optional(),
@@ -57,5 +58,58 @@ final class UpdateQualifierData extends Data
         #[Nullable, StringType, In(['scheduled', 'completed'])]
         public string|Optional|null $status = new Optional(),
     ) {
+    }
+
+    /**
+     * Normalize empty strings to null for nullable fields and validate cross-field rules.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public static function prepareForPipeline(array $payload): array
+    {
+        $nullableStringFields = [
+            'name',
+            'qualifying_format',
+            'qualifying_tire',
+            'weather',
+            'tire_restrictions',
+            'fuel_usage',
+            'damage_model',
+            'assists_restrictions',
+            'race_notes',
+            'status',
+        ];
+
+        foreach ($nullableStringFields as $field) {
+            if (isset($payload[$field]) && $payload[$field] === '') {
+                $payload[$field] = null;
+            }
+        }
+
+        // Validate: if qualifying_pole is explicitly set to null, qualifying_pole_top_10 cannot be true
+        if (
+            array_key_exists('qualifying_pole', $payload)
+            && $payload['qualifying_pole'] === null
+            && array_key_exists('qualifying_pole_top_10', $payload)
+            && $payload['qualifying_pole_top_10'] === true
+        ) {
+            throw new \InvalidArgumentException(
+                'qualifying_pole_top_10 cannot be true when qualifying_pole is null'
+            );
+        }
+
+        // Validate: qualifying_pole must be at least 1 when provided
+        if (
+            array_key_exists('qualifying_pole', $payload)
+            && $payload['qualifying_pole'] !== null
+            && $payload['qualifying_pole'] < 1
+        ) {
+            throw new \InvalidArgumentException(
+                'qualifying_pole must be at least 1 when provided'
+            );
+        }
+
+        return $payload;
     }
 }

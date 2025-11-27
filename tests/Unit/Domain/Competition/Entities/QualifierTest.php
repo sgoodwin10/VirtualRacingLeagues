@@ -27,7 +27,8 @@ final class QualifierTest extends TestCase
             fuelUsage: null,
             damageModel: null,
             assistsRestrictions: null,
-            bonusPoints: ['pole' => 1],
+            qualifyingPole: 1,
+            qualifyingPoleTop10: false,
             raceNotes: null,
         );
 
@@ -39,7 +40,8 @@ final class QualifierTest extends TestCase
         $this->assertNull($qualifier->type());
         $this->assertSame(QualifyingFormat::STANDARD, $qualifier->qualifyingFormat());
         $this->assertSame(20, $qualifier->qualifyingLength());
-        $this->assertSame(['pole' => 1], $qualifier->bonusPoints());
+        $this->assertSame(1, $qualifier->qualifyingPole());
+        $this->assertFalse($qualifier->qualifyingPoleTop10());
         $this->assertFalse($qualifier->mandatoryPitStop());
         $this->assertNull($qualifier->minimumPitTime());
         // Verify penalty fields are disabled by default for qualifiers
@@ -61,7 +63,8 @@ final class QualifierTest extends TestCase
             fuelUsage: null,
             damageModel: null,
             assistsRestrictions: null,
-            bonusPoints: null,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             raceNotes: null,
         );
 
@@ -86,31 +89,12 @@ final class QualifierTest extends TestCase
             fuelUsage: null,
             damageModel: null,
             assistsRestrictions: null,
-            bonusPoints: null,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             raceNotes: null,
         );
     }
 
-    public function test_throws_exception_for_invalid_bonus_points(): void
-    {
-        $this->expectException(InvalidQualifierConfigurationException::class);
-        $this->expectExceptionMessage('Qualifiers can only have pole position bonus');
-
-        Race::createQualifier(
-            roundId: 1,
-            name: null,
-            qualifyingFormat: QualifyingFormat::STANDARD,
-            qualifyingLength: 15,
-            qualifyingTire: null,
-            weather: null,
-            tireRestrictions: null,
-            fuelUsage: null,
-            damageModel: null,
-            assistsRestrictions: null,
-            bonusPoints: ['pole' => 1, 'fastest_lap' => 1],
-            raceNotes: null,
-        );
-    }
 
     public function test_throws_exception_for_invalid_length(): void
     {
@@ -128,7 +112,8 @@ final class QualifierTest extends TestCase
             fuelUsage: null,
             damageModel: null,
             assistsRestrictions: null,
-            bonusPoints: null,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             raceNotes: null,
         );
     }
@@ -146,7 +131,8 @@ final class QualifierTest extends TestCase
             fuelUsage: null,
             damageModel: null,
             assistsRestrictions: null,
-            bonusPoints: null,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             raceNotes: null,
         );
 
@@ -164,7 +150,8 @@ final class QualifierTest extends TestCase
             fuelUsage: 'standard',
             damageModel: 'full',
             assistsRestrictions: 'limited',
-            bonusPoints: ['pole' => 2],
+            qualifyingPole: 2,
+            qualifyingPoleTop10: false,
             raceNotes: 'Updated notes',
         );
 
@@ -172,7 +159,8 @@ final class QualifierTest extends TestCase
         $this->assertSame(QualifyingFormat::TIME_TRIAL, $qualifier->qualifyingFormat());
         $this->assertSame(20, $qualifier->qualifyingLength());
         $this->assertSame('medium', $qualifier->qualifyingTire());
-        $this->assertSame(['pole' => 2], $qualifier->bonusPoints());
+        $this->assertSame(2, $qualifier->qualifyingPole());
+        $this->assertFalse($qualifier->qualifyingPoleTop10());
         // Verify penalty fields remain disabled even after update
         $this->assertFalse($qualifier->trackLimitsEnforced());
         $this->assertFalse($qualifier->falseStartDetection());
@@ -209,7 +197,10 @@ final class QualifierTest extends TestCase
             minimumPitTime: null,
             assistsRestrictions: null,
             pointsSystem: \App\Domain\Competition\ValueObjects\PointsSystem::from([1 => 25]),
-            bonusPoints: null,
+            fastestLap: null,
+            fastestLapTop10: false,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
@@ -231,7 +222,8 @@ final class QualifierTest extends TestCase
             fuelUsage: null,
             damageModel: null,
             assistsRestrictions: null,
-            bonusPoints: null,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             raceNotes: null,
         );
     }

@@ -35,7 +35,10 @@ describe('RaceListItem', () => {
     assists_restrictions: null,
     race_points: false,
     points_system: F1_STANDARD_POINTS,
-    bonus_points: { fastest_lap: 1 },
+    fastest_lap: 1,
+    fastest_lap_top_10: false,
+    qualifying_pole: null,
+    qualifying_pole_top_10: false,
     dnf_points: 0,
     dns_points: 0,
     race_notes: null,
@@ -136,13 +139,13 @@ describe('RaceListItem', () => {
     expect(wrapper.text()).not.toContain('Pit Stop:');
   });
 
-  it('shows fastest lap bonus tag when bonus_points.fastest_lap is set', () => {
+  it('shows fastest lap bonus tag when fastest_lap is set', () => {
     expect(wrapper.text()).toContain('FL Bonus');
   });
 
-  it('hides fastest lap bonus tag when bonus_points is null', async () => {
+  it('hides fastest lap bonus tag when fastest_lap is null', async () => {
     await wrapper.setProps({
-      race: { ...mockRace, bonus_points: null },
+      race: { ...mockRace, fastest_lap: null },
     });
     expect(wrapper.text()).not.toContain('FL Bonus');
   });
@@ -207,13 +210,13 @@ describe('RaceListItem', () => {
     expect(toggle.exists()).toBe(true);
   });
 
-  it('hides toggle and shows Completed tag when race is completed', async () => {
+  it('shows toggle in checked state when race is completed', async () => {
     await wrapper.setProps({
       race: { ...mockRace, status: 'completed' },
     });
     const toggle = wrapper.findComponent({ name: 'ToggleSwitch' });
-    expect(toggle.exists()).toBe(false);
-    // Should show Completed tag instead (the text 'Completed' is rendered by the Tag stub)
+    expect(toggle.exists()).toBe(true);
+    // Should show Completed text with green color
     expect(wrapper.text()).toContain('Completed');
   });
 

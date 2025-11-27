@@ -28,6 +28,7 @@ export default [
         URL: 'readonly',
         Event: 'readonly',
         DragEvent: 'readonly',
+        MouseEvent: 'readonly',
         HTMLInputElement: 'readonly',
         document: 'readonly',
         window: 'readonly',

@@ -11,6 +11,8 @@ use App\Domain\Competition\Entities\Race;
 use App\Domain\Competition\Exceptions\RaceNotFoundException;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
+use App\Domain\Competition\Repositories\RoundRepositoryInterface;
+use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\ValueObjects\GridSource;
 use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
@@ -28,6 +30,8 @@ final class RaceApplicationService
     public function __construct(
         private readonly RaceRepositoryInterface $raceRepository,
         private readonly RaceResultRepositoryInterface $raceResultRepository,
+        private readonly RoundRepositoryInterface $roundRepository,
+        private readonly SeasonRepositoryInterface $seasonRepository,
     ) {
     }
 
@@ -54,6 +58,10 @@ final class RaceApplicationService
             $dnfPoints = $data->dnf_points ?? 0;
             $dnsPoints = $data->dns_points ?? 0;
             $racePoints = $data->race_points ?? false;
+            $fastestLap = $data->fastest_lap ?? null;
+            $fastestLapTop10 = $data->fastest_lap_top_10 ?? false;
+            $qualifyingPole = $data->qualifying_pole ?? null;
+            $qualifyingPoleTop10 = $data->qualifying_pole_top_10 ?? false;
 
             if ($isQualifier) {
                 // Validate qualifying_format is not 'none' for qualifiers
@@ -79,7 +87,8 @@ final class RaceApplicationService
                     fuelUsage: $data->fuel_usage,
                     damageModel: $data->damage_model,
                     assistsRestrictions: $data->assists_restrictions,
-                    bonusPoints: $data->bonus_points,
+                    qualifyingPole: $qualifyingPole,
+                    qualifyingPoleTop10: $qualifyingPoleTop10,
                     raceNotes: $data->race_notes,
                 );
             } else {
@@ -107,8 +116,11 @@ final class RaceApplicationService
                     mandatoryPitStop: $mandatoryPitStop,
                     minimumPitTime: $data->minimum_pit_time,
                     assistsRestrictions: $data->assists_restrictions,
+                    fastestLap: $fastestLap,
+                    fastestLapTop10: $fastestLapTop10,
+                    qualifyingPole: $qualifyingPole,
+                    qualifyingPoleTop10: $qualifyingPoleTop10,
                     pointsSystem: PointsSystem::from($pointsSystem),
-                    bonusPoints: $data->bonus_points,
                     dnfPoints: $dnfPoints,
                     dnsPoints: $dnsPoints,
                     racePoints: $racePoints,
@@ -193,9 +205,13 @@ final class RaceApplicationService
                     ? $data->assists_restrictions
                     : $race->assistsRestrictions();
 
-                $bonusPoints = !($data->bonus_points instanceof Optional)
-                    ? $data->bonus_points
-                    : $race->bonusPoints();
+                $qualifyingPole = !($data->qualifying_pole instanceof Optional)
+                    ? $data->qualifying_pole
+                    : $race->qualifyingPole();
+
+                $qualifyingPoleTop10 = !($data->qualifying_pole_top_10 instanceof Optional)
+                    ? ($data->qualifying_pole_top_10 ?? $race->qualifyingPoleTop10())
+                    : $race->qualifyingPoleTop10();
 
                 $raceNotes = !($data->race_notes instanceof Optional)
                     ? $data->race_notes
@@ -211,7 +227,8 @@ final class RaceApplicationService
                     fuelUsage: $fuelUsage,
                     damageModel: $damageModel,
                     assistsRestrictions: $assistsRestrictions,
-                    bonusPoints: $bonusPoints,
+                    qualifyingPole: $qualifyingPole,
+                    qualifyingPoleTop10: $qualifyingPoleTop10,
                     raceNotes: $raceNotes,
                 );
             } else {
@@ -298,13 +315,25 @@ final class RaceApplicationService
                     ? $data->assists_restrictions
                     : $race->assistsRestrictions();
 
+                $fastestLap = !($data->fastest_lap instanceof Optional)
+                    ? $data->fastest_lap
+                    : $race->fastestLap();
+
+                $fastestLapTop10 = !($data->fastest_lap_top_10 instanceof Optional)
+                    ? ($data->fastest_lap_top_10 ?? $race->fastestLapTop10())
+                    : $race->fastestLapTop10();
+
+                $qualifyingPole = !($data->qualifying_pole instanceof Optional)
+                    ? $data->qualifying_pole
+                    : $race->qualifyingPole();
+
+                $qualifyingPoleTop10 = !($data->qualifying_pole_top_10 instanceof Optional)
+                    ? ($data->qualifying_pole_top_10 ?? $race->qualifyingPoleTop10())
+                    : $race->qualifyingPoleTop10();
+
                 $pointsSystem = !($data->points_system instanceof Optional)
                     ? ($data->points_system !== null ? PointsSystem::from($data->points_system) : $race->pointsSystem())
                     : $race->pointsSystem();
-
-                $bonusPoints = !($data->bonus_points instanceof Optional)
-                    ? $data->bonus_points
-                    : $race->bonusPoints();
 
                 $dnfPoints = !($data->dnf_points instanceof Optional)
                     ? ($data->dnf_points ?? $race->dnfPoints())
@@ -343,8 +372,11 @@ final class RaceApplicationService
                     mandatoryPitStop: $mandatoryPitStop,
                     minimumPitTime: $minimumPitTime,
                     assistsRestrictions: $assistsRestrictions,
+                    fastestLap: $fastestLap,
+                    fastestLapTop10: $fastestLapTop10,
+                    qualifyingPole: $qualifyingPole,
+                    qualifyingPoleTop10: $qualifyingPoleTop10,
                     pointsSystem: $pointsSystem,
-                    bonusPoints: $bonusPoints,
                     dnfPoints: $dnfPoints,
                     dnsPoints: $dnsPoints,
                     racePoints: $racePoints,
@@ -419,6 +451,212 @@ final class RaceApplicationService
                 $result->updateStatus($targetStatus);
                 $this->raceResultRepository->save($result);
             }
+        }
+
+        // Calculate race points when race is marked as completed
+        if ($newRaceStatus === RaceStatus::COMPLETED) {
+            $this->calculateRacePoints($raceId);
+        }
+    }
+
+    /**
+     * Calculate and assign race points to all drivers based on their finishing positions.
+     * Handles position recalculation, points assignment, DNF/DNS cases, and fastest lap bonus.
+     */
+    private function calculateRacePoints(int $raceId): void
+    {
+        $race = $this->raceRepository->findById($raceId);
+
+        // Only calculate points if race_points is enabled
+        if (!$race->racePoints()) {
+            return;
+        }
+
+        // Get round and season to check if divisions are enabled
+        $round = $this->roundRepository->findById($race->roundId());
+        $season = $this->seasonRepository->findById($round->seasonId());
+        $divisionsEnabled = $season->raceDivisionsEnabled();
+
+        // Get all race results
+        $raceResults = $this->raceResultRepository->findByRaceId($raceId);
+
+        if ($divisionsEnabled) {
+            // Group results by division
+            $resultsByDivision = [];
+            foreach ($raceResults as $result) {
+                $divisionId = $result->divisionId() ?? 0; // Use 0 for null division
+                if (!isset($resultsByDivision[$divisionId])) {
+                    $resultsByDivision[$divisionId] = [];
+                }
+                $resultsByDivision[$divisionId][] = $result;
+            }
+
+            // Calculate points for each division independently
+            foreach ($resultsByDivision as $divisionResults) {
+                $this->calculatePointsForResultSet($race, $divisionResults);
+            }
+        } else {
+            // Calculate points for all results together
+            $this->calculatePointsForResultSet($race, $raceResults);
+        }
+    }
+
+    /**
+     * Calculate and assign points for a set of race results.
+     *
+     * @param array<\App\Domain\Competition\Entities\RaceResult> $results
+     */
+    private function calculatePointsForResultSet(Race $race, array $results): void
+    {
+        // Separate DNS, DNF, and finishers
+        $finishers = [];
+        $dnfDrivers = [];
+        $dnsDrivers = [];
+
+        foreach ($results as $result) {
+            if ($result->dnf()) {
+                $dnfDrivers[] = $result;
+            } elseif ($result->raceTime()->isNull()) {
+                // DNS = no race_time AND not DNF
+                $dnsDrivers[] = $result;
+            } else {
+                $finishers[] = $result;
+            }
+        }
+
+        // Sort finishers by race_time ascending (fastest first)
+        usort($finishers, function ($a, $b) {
+            $timeA = $a->raceTime()->toMilliseconds();
+            $timeB = $b->raceTime()->toMilliseconds();
+
+            if ($timeA === null && $timeB === null) {
+                return 0;
+            }
+            if ($timeA === null) {
+                return 1; // null times go to the end
+            }
+            if ($timeB === null) {
+                return -1;
+            }
+
+            return $timeA <=> $timeB;
+        });
+
+        // Assign positions and calculate points for finishers
+        $position = 1;
+        foreach ($finishers as $result) {
+            $points = $race->pointsSystem()->getPointsForPosition($position);
+            $result->update(
+                position: $position,
+                raceTime: $result->raceTime()->value(),
+                raceTimeDifference: $result->raceTimeDifference()->value(),
+                fastestLap: $result->fastestLap()->value(),
+                penalties: $result->penalties()->value(),
+                hasFastestLap: false, // Will be updated below for fastest lap winner
+                hasPole: $result->hasPole(),
+                dnf: false,
+            );
+            $result->setRacePoints($points);
+            $position++;
+        }
+
+        // Assign DNF positions and points
+        foreach ($dnfDrivers as $result) {
+            $points = $race->dnfPoints();
+            $result->update(
+                position: $position,
+                raceTime: $result->raceTime()->value(),
+                raceTimeDifference: $result->raceTimeDifference()->value(),
+                fastestLap: $result->fastestLap()->value(),
+                penalties: $result->penalties()->value(),
+                hasFastestLap: false,
+                hasPole: $result->hasPole(),
+                dnf: true,
+            );
+            $result->setRacePoints($points);
+            $position++;
+        }
+
+        // Assign DNS positions and points
+        foreach ($dnsDrivers as $result) {
+            $points = $race->dnsPoints();
+            $result->update(
+                position: $position,
+                raceTime: $result->raceTime()->value(),
+                raceTimeDifference: $result->raceTimeDifference()->value(),
+                fastestLap: $result->fastestLap()->value(),
+                penalties: $result->penalties()->value(),
+                hasFastestLap: false,
+                hasPole: $result->hasPole(),
+                dnf: false,
+            );
+            $result->setRacePoints($points);
+            $position++;
+        }
+
+        // Handle fastest lap bonus
+        if ($race->fastestLap() !== null && $race->fastestLap() > 0) {
+            $this->assignFastestLapBonus($race, $finishers);
+        }
+
+        // Save all results
+        foreach (array_merge($finishers, $dnfDrivers, $dnsDrivers) as $result) {
+            $this->raceResultRepository->save($result);
+        }
+    }
+
+    /**
+     * Assign fastest lap bonus to the eligible driver with the fastest lap time.
+     *
+     * @param array<\App\Domain\Competition\Entities\RaceResult> $finishers
+     */
+    private function assignFastestLapBonus(Race $race, array $finishers): void
+    {
+        if (empty($finishers)) {
+            return;
+        }
+
+        // Filter eligible drivers
+        $eligible = $finishers;
+        if ($race->fastestLapTop10()) {
+            // Only top 10 finishers are eligible
+            $eligible = array_slice($finishers, 0, 10);
+        }
+
+        // Find driver with fastest lap time
+        $fastestLapDriver = null;
+        $fastestLapTime = null;
+
+        foreach ($eligible as $result) {
+            $lapTime = $result->fastestLap()->toMilliseconds();
+
+            if ($lapTime === null) {
+                continue; // Skip drivers without fastest lap time
+            }
+
+            if ($fastestLapTime === null || $lapTime < $fastestLapTime) {
+                $fastestLapTime = $lapTime;
+                $fastestLapDriver = $result;
+            }
+        }
+
+        // Award bonus points to the winner
+        if ($fastestLapDriver !== null) {
+            $bonusPoints = $race->fastestLap() ?? 0;
+            $currentPoints = $fastestLapDriver->racePoints();
+            $fastestLapDriver->setRacePoints($currentPoints + $bonusPoints);
+
+            // Update hasFastestLap flag
+            $fastestLapDriver->update(
+                position: $fastestLapDriver->position(),
+                raceTime: $fastestLapDriver->raceTime()->value(),
+                raceTimeDifference: $fastestLapDriver->raceTimeDifference()->value(),
+                fastestLap: $fastestLapDriver->fastestLap()->value(),
+                penalties: $fastestLapDriver->penalties()->value(),
+                hasFastestLap: true,
+                hasPole: $fastestLapDriver->hasPole(),
+                dnf: $fastestLapDriver->dnf(),
+            );
         }
     }
 }

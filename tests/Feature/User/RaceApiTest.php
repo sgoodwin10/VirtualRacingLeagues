@@ -177,10 +177,10 @@ final class RaceApiTest extends TestCase
         ]);
     }
 
-    public function test_can_create_qualifier(): void
+    public function test_cannot_create_qualifier_via_race_endpoint(): void
     {
         $data = [
-            'race_number' => 0, // 0 indicates this is a qualifier
+            'race_number' => 0, // 0 should not be allowed - qualifiers must use the qualifier endpoint
             'name' => 'Qualifying Session',
             'race_type' => null,
             'qualifying_format' => 'standard',
@@ -211,19 +211,11 @@ final class RaceApiTest extends TestCase
         $response = $this->actingAs($this->user)
             ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
 
-        $response->assertStatus(201)
-            ->assertJsonStructure([
-                'success',
-                'data' => [
-                    'id',
-                    'round_id',
-                    'is_qualifier',
-                    'qualifying_format',
-                    'qualifying_length',
-                ],
-            ]);
+        // Should fail validation because race_number must be at least 1
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['race_number']);
 
-        $this->assertDatabaseHas('races', [
+        $this->assertDatabaseMissing('races', [
             'round_id' => $this->round->id,
             'is_qualifier' => true,
             'race_number' => null,

@@ -20,7 +20,7 @@ final class CreateRaceData extends Data
 {
     public function __construct(
         // Basic - race_number is nullable for auto-increment
-        #[Nullable, IntegerType, Min(0)]
+        #[Nullable, IntegerType, Min(1)]
         public ?int $race_number,
         #[Nullable, StringType, Between(3, 100)]
         public ?string $name,
@@ -68,11 +68,18 @@ final class CreateRaceData extends Data
         public ?int $minimum_pit_time,
         #[Nullable, StringType]
         public ?string $assists_restrictions,
+        // Bonus Points
+        #[Nullable, IntegerType, Min(1)]
+        public ?int $fastest_lap,
+        #[Nullable, BooleanType]
+        public ?bool $fastest_lap_top_10,
+        #[Nullable, IntegerType, Min(1)]
+        public ?int $qualifying_pole,
+        #[Nullable, BooleanType]
+        public ?bool $qualifying_pole_top_10,
         // Points - defaults to F1 standard points system
         #[Nullable, ArrayType]
         public ?array $points_system,
-        #[Nullable, ArrayType]
-        public ?array $bonus_points,
         #[Nullable, IntegerType, Min(0)]
         public ?int $dnf_points,
         #[Nullable, IntegerType, Min(0)]
@@ -83,5 +90,50 @@ final class CreateRaceData extends Data
         #[Nullable, StringType]
         public ?string $race_notes,
     ) {
+    }
+
+    /**
+     * Prepare data for pipeline with validation.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public static function prepareForPipeline(array $payload): array
+    {
+        // Validate: if fastest_lap is null, fastest_lap_top_10 must be false or null
+        $fastestLap = $payload['fastest_lap'] ?? null;
+        $fastestLapTop10 = $payload['fastest_lap_top_10'] ?? null;
+
+        if ($fastestLap === null && $fastestLapTop10 === true) {
+            throw new \InvalidArgumentException(
+                'fastest_lap_top_10 cannot be true when fastest_lap is null'
+            );
+        }
+
+        // Validate: if qualifying_pole is null, qualifying_pole_top_10 must be false or null
+        $qualifyingPole = $payload['qualifying_pole'] ?? null;
+        $qualifyingPoleTop10 = $payload['qualifying_pole_top_10'] ?? null;
+
+        if ($qualifyingPole === null && $qualifyingPoleTop10 === true) {
+            throw new \InvalidArgumentException(
+                'qualifying_pole_top_10 cannot be true when qualifying_pole is null'
+            );
+        }
+
+        // Validate: fastest_lap must be at least 1 when provided
+        if (isset($payload['fastest_lap']) && $payload['fastest_lap'] !== null && $payload['fastest_lap'] < 1) {
+            throw new \InvalidArgumentException(
+                'fastest_lap must be at least 1 when provided'
+            );
+        }
+
+        // Validate: qualifying_pole must be at least 1 when provided
+        if (isset($payload['qualifying_pole']) && $payload['qualifying_pole'] !== null && $payload['qualifying_pole'] < 1) {
+            throw new \InvalidArgumentException(
+                'qualifying_pole must be at least 1 when provided'
+            );
+        }
+
+        return $payload;
     }
 }

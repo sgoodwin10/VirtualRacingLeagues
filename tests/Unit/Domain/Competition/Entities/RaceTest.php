@@ -45,7 +45,10 @@ final class RaceTest extends TestCase
             minimumPitTime: null,
             assistsRestrictions: 'limited',
             pointsSystem: PointsSystem::f1Standard(),
-            bonusPoints: ['fastest_lap' => 1],
+            fastestLap: 1,
+            fastestLapTop10: false,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: 'Test race',
@@ -66,7 +69,9 @@ final class RaceTest extends TestCase
         $this->assertSame(20, $race->lengthValue());
         $this->assertFalse($race->extraLapAfterTime());
         $this->assertTrue($race->trackLimitsEnforced());
-        $this->assertSame(['fastest_lap' => 1], $race->bonusPoints());
+        $this->assertSame(1, $race->fastestLap());
+        $this->assertFalse($race->fastestLapTop10());
+        $this->assertNull($race->qualifyingPole());
         $this->assertSame(0, $race->dnfPoints());
         $this->assertSame(0, $race->dnsPoints());
         $this->assertSame('Test race', $race->raceNotes());
@@ -98,7 +103,10 @@ final class RaceTest extends TestCase
             minimumPitTime: null,
             assistsRestrictions: null,
             pointsSystem: PointsSystem::f1Standard(),
-            bonusPoints: null,
+            fastestLap: null,
+            fastestLapTop10: false,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
@@ -148,7 +156,10 @@ final class RaceTest extends TestCase
             minimumPitTime: 90,
             assistsRestrictions: 'none',
             pointsSystem: PointsSystem::f1Standard(),
-            bonusPoints: ['pole' => 1, 'fastest_lap' => 1],
+            fastestLap: 1,
+            fastestLapTop10: false,
+            qualifyingPole: 1,
+            qualifyingPoleTop10: false,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: 'Championship finale',
@@ -197,7 +208,10 @@ final class RaceTest extends TestCase
             minimumPitTime: null,
             assistsRestrictions: 'limited',
             pointsSystem: PointsSystem::f1Standard(),
-            bonusPoints: null,
+            fastestLap: null,
+            fastestLapTop10: false,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
@@ -232,7 +246,10 @@ final class RaceTest extends TestCase
             minimumPitTime: 120,
             assistsRestrictions: 'none',
             pointsSystem: PointsSystem::from([1 => 10, 2 => 8, 3 => 6]),
-            bonusPoints: ['fastest_lap' => 2],
+            fastestLap: 2,
+            fastestLapTop10: false,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: 'Updated notes',
@@ -251,7 +268,9 @@ final class RaceTest extends TestCase
         $this->assertTrue($race->mandatoryPitStop());
         $this->assertSame(120, $race->minimumPitTime());
         $this->assertSame([1 => 10, 2 => 8, 3 => 6], $race->pointsSystem()->toArray());
-        $this->assertSame(['fastest_lap' => 2], $race->bonusPoints());
+        $this->assertSame(2, $race->fastestLap());
+        $this->assertFalse($race->fastestLapTop10());
+        $this->assertNull($race->qualifyingPole());
         $this->assertGreaterThan($originalUpdatedAt, $race->updatedAt());
 
         $events = $race->events();
@@ -285,7 +304,10 @@ final class RaceTest extends TestCase
             minimumPitTime: null,
             assistsRestrictions: 'limited',
             pointsSystem: PointsSystem::f1Standard(),
-            bonusPoints: null,
+            fastestLap: null,
+            fastestLapTop10: false,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
@@ -315,7 +337,10 @@ final class RaceTest extends TestCase
             minimumPitTime: null,
             assistsRestrictions: 'limited',
             pointsSystem: PointsSystem::f1Standard(),
-            bonusPoints: null,
+            fastestLap: null,
+            fastestLapTop10: false,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,
@@ -352,7 +377,10 @@ final class RaceTest extends TestCase
             minimumPitTime: null,
             assistsRestrictions: null,
             pointsSystem: PointsSystem::f1Standard(),
-            bonusPoints: null,
+            fastestLap: null,
+            fastestLapTop10: false,
+            qualifyingPole: null,
+            qualifyingPoleTop10: false,
             dnfPoints: 0,
             dnsPoints: 0,
             raceNotes: null,

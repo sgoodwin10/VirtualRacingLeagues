@@ -22,12 +22,12 @@
             <div class="font-medium text-gray-500">Grid Source</div>
             <div class="text-gray-600 text-md">{{ formatGridSource(race.grid_source) }}</div>
           </div>
-          <div class="flex flex-col">
+          <div class="flex flex-col min-w-18">
             <div class="font-medium text-gray-500">Length</div>
             <div class="text-gray-600 text-md">{{ formatRaceLength(race) }}</div>
           </div>
           <div v-if="race.weather">
-            <div class="flex flex-col">
+            <div class="flex flex-col min-w-18">
               <div class="font-medium text-gray-500">Weather</div>
               <div class="text-gray-600 text-md">{{ race.weather }}</div>
             </div>
@@ -57,7 +57,7 @@
           severity="info"
           @click="handleEnterResults"
         />
-        <div v-if="!isRoundCompleted && !isCompleted" class="flex items-center gap-2">
+        <div v-if="!isRoundCompleted" class="flex items-center gap-2">
           <ToggleSwitch v-model="isCompleted" @update:model-value="handleToggleStatus">
             <template #handle="{ checked }">
               <i :class="['!text-xs pi', { 'pi-check': checked, 'pi-times': !checked }]" />
@@ -67,23 +67,8 @@
             Completed
           </span>
         </div>
-        <Tag v-if="isCompleted" value="Completed" severity="success" />
-        <Button
-          v-if="!isRoundCompleted && !isCompleted"
-          icon="pi pi-pencil"
-          text
-          size="small"
-          severity="secondary"
-          @click="handleEdit"
-        />
-        <Button
-          v-if="!isRoundCompleted && !isCompleted"
-          icon="pi pi-trash"
-          text
-          size="small"
-          severity="danger"
-          @click="handleDelete"
-        />
+        <EditButton v-if="!isRoundCompleted && !isCompleted" @click="handleEdit" />
+        <DeleteButton v-if="!isRoundCompleted && !isCompleted" @click="handleDelete" />
       </div>
     </div>
   </div>
@@ -94,6 +79,7 @@ import { computed } from 'vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import ToggleSwitch from 'primevue/toggleswitch';
+import { EditButton, DeleteButton } from '@app/components/common/buttons';
 import type { Race, GridSource } from '@app/types/race';
 import { RACE_TYPE_OPTIONS, GRID_SOURCE_OPTIONS } from '@app/types/race';
 import { PhFlag } from '@phosphor-icons/vue';
@@ -119,7 +105,7 @@ const raceTypeLabel = computed(() => {
 });
 
 const hasFastestLapBonus = computed(() => {
-  return !!props.race.bonus_points?.fastest_lap;
+  return props.race.fastest_lap !== null && props.race.fastest_lap > 0;
 });
 
 const hasRacePoints = computed(() => {

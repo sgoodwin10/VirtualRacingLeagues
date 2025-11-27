@@ -2,11 +2,15 @@
 import { onMounted, computed } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Button from 'primevue/button';
 import { useLeagueStore } from '@app/stores/leagueStore';
+import ViewButton from '@app/components/common/buttons/ViewButton.vue';
+import EditButton from '@app/components/common/buttons/EditButton.vue';
+import DeleteButton from '@app/components/common/buttons/DeleteButton.vue';
 import { useDriverStore } from '@app/stores/driverStore';
-import type { LeagueDriver } from '@app/types/driver';
+import type { LeagueDriver, Driver } from '@app/types/driver';
 import type { DataTablePageEvent } from 'primevue/datatable';
+import { createLogger } from '@app/utils/logger';
+import { DEFAULT_ROWS_PER_PAGE, ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
 
 interface Props {
   leagueId?: number;
@@ -25,6 +29,7 @@ const emit = defineEmits<Emits>();
 
 const leagueStore = useLeagueStore();
 const driverStore = useDriverStore();
+const logger = createLogger('DriverTable');
 
 // Computed properties bound to store
 const drivers = computed(() => driverStore.drivers);
@@ -61,15 +66,26 @@ const getDriverDiscordId = (leagueDriver: LeagueDriver): string => {
 };
 
 /**
+ * Type-safe helper to check if a key exists on the Driver object
+ */
+const isValidDriverKey = (key: string, obj: Driver): key is keyof Driver => {
+  return key in obj;
+};
+
+/**
  * Get the value for a dynamic platform column
  */
 const getPlatformValue = (leagueDriver: LeagueDriver, field: string): string => {
   const driver = leagueDriver.driver;
   if (!driver) return '-';
 
-  // Access the field dynamically from the driver object
-  const value = driver[field as keyof typeof driver];
-  return value != null ? String(value) : '-';
+  // Type-safe field access using runtime check
+  if (isValidDriverKey(field, driver)) {
+    const value = driver[field];
+    return value != null ? String(value) : '-';
+  }
+
+  return '-';
 };
 
 /**
@@ -108,7 +124,7 @@ const handlePageChange = async (event: DataTablePageEvent): Promise<void> => {
       per_page: perPage,
     });
   } catch (error) {
-    console.error('Failed to fetch drivers:', error);
+    logger.error('Failed to fetch drivers', { data: error });
   }
 };
 
@@ -124,7 +140,7 @@ onMounted(async () => {
       // Fetch initial driver data
       await driverStore.fetchLeagueDrivers(props.leagueId);
     } catch (error) {
-      console.error('Failed to fetch initial data:', error);
+      logger.error('Failed to fetch initial data', { data: error });
     }
   }
 });
@@ -137,8 +153,8 @@ onMounted(async () => {
     lazy
     striped-rows
     paginator
-    :rows="10"
-    :rows-per-page-options="[10, 25, 50]"
+    :rows="DEFAULT_ROWS_PER_PAGE"
+    :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
     :total-records="totalRecords"
     :first="first"
     data-key="id"
@@ -186,29 +202,9 @@ onMounted(async () => {
     <Column header="Actions" style="width: 200px">
       <template #body="{ data }">
         <div class="flex gap-2">
-          <Button
-            label="View"
-            size="small"
-            text
-            severity="secondary"
-            aria-label="View driver details"
-            @click="handleView(data)"
-          />
-          <Button
-            label="Edit"
-            size="small"
-            text
-            aria-label="Edit driver"
-            @click="handleEdit(data)"
-          />
-          <Button
-            icon="pi pi-times"
-            size="small"
-            text
-            severity="danger"
-            aria-label="Remove driver"
-            @click="handleRemove(data)"
-          />
+          <ViewButton aria-label="View driver details" @click="handleView(data)" />
+          <EditButton aria-label="Edit driver" @click="handleEdit(data)" />
+          <DeleteButton aria-label="Remove driver" @click="handleRemove(data)" />
         </div>
       </template>
     </Column>

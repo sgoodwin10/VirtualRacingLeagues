@@ -35,7 +35,10 @@ describe('QualifierListItem', () => {
     assists_restrictions: null,
     race_points: false,
     points_system: F1_STANDARD_POINTS,
-    bonus_points: { pole: 1 },
+    fastest_lap: null,
+    fastest_lap_top_10: false,
+    qualifying_pole: 1,
+    qualifying_pole_top_10: false,
     dnf_points: 0,
     dns_points: 0,
     race_notes: null,
@@ -118,20 +121,20 @@ describe('QualifierListItem', () => {
     expect(wrapper.text()).not.toContain('Weather:');
   });
 
-  it('shows pole bonus tag when bonus_points.pole is set', () => {
+  it('shows pole bonus tag when qualifying_pole is set', () => {
     expect(wrapper.text()).toContain('Pole Bonus');
   });
 
-  it('hides pole bonus tag when bonus_points is null', async () => {
+  it('hides pole bonus tag when qualifying_pole is null', async () => {
     await wrapper.setProps({
-      race: { ...mockQualifier, bonus_points: null },
+      race: { ...mockQualifier, qualifying_pole: null },
     });
     expect(wrapper.text()).not.toContain('Pole Bonus');
   });
 
-  it('hides pole bonus tag when bonus_points.pole is undefined', async () => {
+  it('hides pole bonus tag when qualifying_pole is 0', async () => {
     await wrapper.setProps({
-      race: { ...mockQualifier, bonus_points: {} },
+      race: { ...mockQualifier, qualifying_pole: 0 },
     });
     expect(wrapper.text()).not.toContain('Pole Bonus');
   });
@@ -229,13 +232,13 @@ describe('QualifierListItem', () => {
     expect(toggle.exists()).toBe(true);
   });
 
-  it('hides toggle and shows Completed tag when qualifier is completed', async () => {
+  it('shows toggle in checked state when qualifier is completed', async () => {
     await wrapper.setProps({
       race: { ...mockQualifier, status: 'completed' },
     });
     const toggle = wrapper.findComponent({ name: 'ToggleSwitch' });
-    expect(toggle.exists()).toBe(false);
-    // Should show Completed tag instead (the text 'Completed' is rendered by the Tag stub)
+    expect(toggle.exists()).toBe(true);
+    // Should show Completed text with green color
     expect(wrapper.text()).toContain('Completed');
   });
 

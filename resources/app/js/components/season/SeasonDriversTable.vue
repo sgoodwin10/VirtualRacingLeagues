@@ -15,9 +15,11 @@ import { usesPsnId, usesIracingId } from '@app/constants/platforms';
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Button from 'primevue/button';
 import Select from 'primevue/select';
 import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
+import ViewButton from '@app/components/common/buttons/ViewButton.vue';
+import DeleteButton from '@app/components/common/buttons/DeleteButton.vue';
+import { DEFAULT_ROWS_PER_PAGE, ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
 
 interface Props {
   seasonId: number;
@@ -64,23 +66,9 @@ const updatingDivision = ref<{ [key: number]: boolean }>({});
 
 const drivers = computed(() => seasonDriverStore.seasonDrivers);
 
-const showPsnColumn = computed(() => {
-  const result = usesPsnId(props.platformId);
-  console.log('[SeasonDriversTable] PSN Column Visibility:', {
-    platformId: props.platformId,
-    showPsnColumn: result,
-  });
-  return result;
-});
+const showPsnColumn = computed(() => usesPsnId(props.platformId));
 
-const showIracingColumn = computed(() => {
-  const result = usesIracingId(props.platformId);
-  console.log('[SeasonDriversTable] iRacing Column Visibility:', {
-    platformId: props.platformId,
-    showIracingColumn: result,
-  });
-  return result;
-});
+const showIracingColumn = computed(() => usesIracingId(props.platformId));
 
 function getDriverDisplayName(driver: SeasonDriver): string {
   const { first_name, last_name, nickname } = driver;
@@ -236,17 +224,21 @@ async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null):
       team_id: newTeamId,
     });
 
-    // Refresh drivers to get updated team assignment
-    await seasonDriverStore.fetchSeasonDrivers(props.seasonId);
+    // Update local state directly instead of refetching all drivers
+    const existingDriver = seasonDriverStore.seasonDrivers.find((d) => d.id === driver.id);
+    if (existingDriver) {
+      const teamName = newTeamId ? props.teams.find((t) => t.id === newTeamId)?.name || null : null;
+      existingDriver.team_name = teamName;
+    }
 
-    const teamName = newTeamId
+    const displayTeamName = newTeamId
       ? props.teams.find((t) => t.id === newTeamId)?.name || 'team'
       : 'Privateer';
 
     toast.add({
       severity: 'success',
       summary: 'Team Updated',
-      detail: `Driver assigned to ${teamName}`,
+      detail: `Driver assigned to ${displayTeamName}`,
       life: 3000,
     });
   } catch (error: unknown) {
@@ -305,17 +297,23 @@ async function handleDivisionChange(
       division_id: newDivisionId,
     });
 
-    // Refresh drivers to get updated division assignment
-    await seasonDriverStore.fetchSeasonDrivers(props.seasonId);
+    // Update local state directly instead of refetching all drivers
+    const existingDriver = seasonDriverStore.seasonDrivers.find((d) => d.id === driver.id);
+    if (existingDriver) {
+      const divisionName = newDivisionId
+        ? props.divisions.find((d) => d.id === newDivisionId)?.name || null
+        : null;
+      existingDriver.division_name = divisionName;
+    }
 
-    const divisionName = newDivisionId
+    const displayDivisionName = newDivisionId
       ? props.divisions.find((d) => d.id === newDivisionId)?.name || 'division'
       : 'No Division';
 
     toast.add({
       severity: 'success',
       summary: 'Division Updated',
-      detail: `Driver assigned to ${divisionName}`,
+      detail: `Driver assigned to ${displayDivisionName}`,
       life: 3000,
     });
   } catch (error: unknown) {
@@ -346,8 +344,8 @@ async function handleDivisionChange(
       :value="drivers"
       :loading="loading || loadingDriver"
       paginator
-      :rows="10"
-      :rows-per-page-options="[10, 25, 50]"
+      :rows="DEFAULT_ROWS_PER_PAGE"
+      :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
       striped-rows
       show-gridlines
       responsive-layout="scroll"
@@ -484,14 +482,8 @@ async function handleDivisionChange(
       <Column header="Actions" :exportable="false">
         <template #body="{ data }">
           <div class="flex gap-2">
-            <Button icon="pi pi-eye" size="small" outlined @click="handleView(data)" />
-            <Button
-              icon="pi pi-trash"
-              size="small"
-              severity="danger"
-              outlined
-              @click="handleRemove(data)"
-            />
+            <ViewButton aria-label="View driver" @click="handleView(data)" />
+            <DeleteButton aria-label="Remove driver" @click="handleRemove(data)" />
           </div>
         </template>
       </Column>

@@ -48,7 +48,8 @@ final class QualifierApplicationService
                 fuelUsage: $data->fuel_usage,
                 damageModel: $data->damage_model,
                 assistsRestrictions: $data->assists_restrictions,
-                bonusPoints: $data->bonus_points,
+                qualifyingPole: $data->qualifying_pole,
+                qualifyingPoleTop10: $data->qualifying_pole_top_10 ?? false,
                 raceNotes: $data->race_notes,
             );
 
@@ -112,9 +113,13 @@ final class QualifierApplicationService
                 ? $data->assists_restrictions
                 : $qualifier->assistsRestrictions();
 
-            $bonusPoints = !($data->bonus_points instanceof Optional)
-                ? $data->bonus_points
-                : $qualifier->bonusPoints();
+            $qualifyingPole = !($data->qualifying_pole instanceof Optional)
+                ? $data->qualifying_pole
+                : $qualifier->qualifyingPole();
+
+            $qualifyingPoleTop10 = !($data->qualifying_pole_top_10 instanceof Optional)
+                ? ($data->qualifying_pole_top_10 ?? $qualifier->qualifyingPoleTop10())
+                : $qualifier->qualifyingPoleTop10();
 
             $raceNotes = !($data->race_notes instanceof Optional)
                 ? $data->race_notes
@@ -130,7 +135,8 @@ final class QualifierApplicationService
                 fuelUsage: $fuelUsage,
                 damageModel: $damageModel,
                 assistsRestrictions: $assistsRestrictions,
-                bonusPoints: $bonusPoints,
+                qualifyingPole: $qualifyingPole,
+                qualifyingPoleTop10: $qualifyingPoleTop10,
                 raceNotes: $raceNotes,
             );
 
@@ -217,6 +223,114 @@ final class QualifierApplicationService
                 $result->updateStatus($targetStatus);
                 $this->raceResultRepository->save($result);
             }
+        }
+
+        // Calculate pole position points when qualifier is completed
+        if ($newRaceStatus === RaceStatus::COMPLETED) {
+            $this->calculatePolePositionPoints($qualifierId);
+        }
+    }
+
+    /**
+     * Calculate pole position points for qualifier.
+     * Determines positions based on fastest_lap times (ascending - fastest wins).
+     * Awards pole position bonus points if configured.
+     */
+    private function calculatePolePositionPoints(int $qualifierId): void
+    {
+        $raceResults = $this->raceResultRepository->findByRaceId($qualifierId);
+        $qualifier = $this->raceRepository->findQualifierById($qualifierId);
+
+        if (empty($raceResults)) {
+            return;
+        }
+
+        // Separate results into two groups: valid times and DNF/no time
+        $validResults = [];
+        $invalidResults = [];
+
+        foreach ($raceResults as $result) {
+            if ($result->dnf() || $result->fastestLap()->isNull()) {
+                $invalidResults[] = $result;
+            } else {
+                $validResults[] = $result;
+            }
+        }
+
+        // Sort valid results by fastest_lap ascending (fastest time wins)
+        usort($validResults, function ($a, $b) {
+            $timeA = $a->fastestLap()->toMilliseconds();
+            $timeB = $b->fastestLap()->toMilliseconds();
+
+            if ($timeA === null && $timeB === null) {
+                return 0;
+            }
+            if ($timeA === null) {
+                return 1;
+            }
+            if ($timeB === null) {
+                return -1;
+            }
+
+            return $timeA <=> $timeB;
+        });
+
+        // Get pole position bonus points configuration
+        $polePoints = $qualifier->qualifyingPole() ?? 0;
+        $poleTop10Only = $qualifier->qualifyingPoleTop10();
+
+        // Update positions and points for valid results
+        $position = 1;
+        foreach ($validResults as $result) {
+            $hasPole = ($position === 1);
+
+            // Award pole points conditionally:
+            // - Pole position holder gets hasPole flag set
+            // - If qualifying_pole_top_10 is true, points are NOT awarded here
+            //   (they will be awarded when the race completes if driver finishes top 10)
+            // - If qualifying_pole_top_10 is false, award points immediately
+            $points = 0;
+            if ($hasPole && $polePoints > 0 && !$poleTop10Only) {
+                $points = $polePoints;
+            }
+
+            // Update position, hasPole flag
+            $result->update(
+                position: $position,
+                raceTime: $result->raceTime()->value(),
+                raceTimeDifference: $result->raceTimeDifference()->value(),
+                fastestLap: $result->fastestLap()->value(),
+                penalties: $result->penalties()->value(),
+                hasFastestLap: $result->hasFastestLap(),
+                hasPole: $hasPole,
+                dnf: $result->dnf(),
+            );
+
+            // Set race points
+            $result->setRacePoints($points);
+
+            $this->raceResultRepository->save($result);
+            $position++;
+        }
+
+        // Update DNF/no time results - place at the end
+        foreach ($invalidResults as $result) {
+            $result->update(
+                position: $position,
+                raceTime: $result->raceTime()->value(),
+                raceTimeDifference: $result->raceTimeDifference()->value(),
+                fastestLap: $result->fastestLap()->value(),
+                penalties: $result->penalties()->value(),
+                hasFastestLap: false,
+                hasPole: false,
+                dnf: $result->dnf(),
+            );
+
+            // DNF/no time gets 0 points
+            $result->setRacePoints(0);
+
+            $this->raceResultRepository->save($result);
+            $position++;
         }
     }
 }

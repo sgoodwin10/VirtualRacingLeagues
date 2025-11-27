@@ -351,10 +351,8 @@ class SeasonControllerTest extends UserControllerTestCase
 
         $response->assertStatus(200);
 
-        // Verify soft delete
-        $this->assertSoftDeleted('seasons', [
-            'id' => $season->id,
-        ]);
+        // Verify permanent delete (not soft delete)
+        $this->assertEquals(0, SeasonEloquent::withTrashed()->where('id', $season->id)->count());
     }
 
     public function test_guest_cannot_delete_season(): void

@@ -13,6 +13,8 @@ use App\Domain\Competition\Entities\Season;
 use App\Domain\Competition\Exceptions\CompetitionNotFoundException;
 use App\Domain\Competition\Exceptions\SeasonNotFoundException;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
+use App\Domain\Competition\Repositories\RaceRepositoryInterface;
+use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
@@ -48,6 +50,8 @@ final class SeasonApplicationService
         private readonly DivisionRepositoryInterface $divisionRepository,
         private readonly TeamRepositoryInterface $teamRepository,
         private readonly RoundRepositoryInterface $roundRepository,
+        private readonly RaceRepositoryInterface $raceRepository,
+        private readonly RaceResultRepositoryInterface $raceResultRepository,
     ) {
     }
 
@@ -231,7 +235,8 @@ final class SeasonApplicationService
     }
 
     /**
-     * Delete a season (soft delete).
+     * Delete a season permanently with cascade deletion.
+     * Deletes all related data: race results, races, rounds, season drivers, and the season itself.
      *
      * @throws SeasonNotFoundException
      * @throws UnauthorizedException
@@ -244,8 +249,46 @@ final class SeasonApplicationService
 
             $this->authorizeLeagueOwner($competition, $userId);
 
+            // 1. Delete uploaded images before deleting the season
+            $this->deleteSeasonImage($season->logoPath());
+            $this->deleteSeasonImage($season->bannerPath());
+
+            // 2. Get all rounds for this season (including soft-deleted ones)
+            $rounds = $this->roundRepository->findBySeasonId($id);
+
+            // 3. For each round, cascade delete races and race results
+            foreach ($rounds as $round) {
+                if ($round->id() === null) {
+                    continue;
+                }
+
+                // Get all races for this round using repository
+                $races = $this->raceRepository->findAllByRoundId($round->id());
+
+                foreach ($races as $race) {
+                    if ($race->id() === null) {
+                        continue;
+                    }
+
+                    // Delete all race results for this race using repository
+                    $this->raceResultRepository->deleteByRaceId($race->id());
+
+                    // Delete the race itself using repository
+                    $this->raceRepository->delete($race);
+                }
+
+                // Delete the round using repository
+                $this->roundRepository->delete($round);
+            }
+
+            // 4. Delete all season drivers
+            $this->seasonDriverRepository->deleteAllForSeason($id);
+
+            // 5. Delete the season using repository (which handles force delete)
+            $this->seasonRepository->forceDelete($id);
+
+            // 6. Record and dispatch deletion event
             $season->delete();
-            $this->seasonRepository->delete($season);
             $this->dispatchEvents($season);
         });
     }
