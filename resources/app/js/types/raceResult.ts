@@ -17,6 +17,7 @@ export interface RaceResult {
   dnf: boolean;
   status: RaceResultStatus;
   race_points: number;
+  positions_gained: number | null; // Positive = gained positions, negative = lost positions, null = no grid source
   created_at: string;
   updated_at: string;
   // Eager loaded

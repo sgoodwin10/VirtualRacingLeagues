@@ -57,6 +57,12 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
   const searchQuery = ref('');
   const statusFilter = ref<SeasonDriverStatus | 'all'>('all');
   const availableSearchQuery = ref('');
+  const divisionFilter = ref<number | null>(null);
+  const teamFilter = ref<number | null>(null);
+
+  // Sorting
+  const sortField = ref<string>('driver_name');
+  const sortOrder = ref<'asc' | 'desc'>('asc');
 
   // Getters
   const activeDrivers = computed(() => seasonDrivers.value.filter((sd) => sd.status === 'active'));
@@ -97,6 +103,13 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
         per_page: params?.per_page || perPage.value,
         search: params?.search || searchQuery.value || undefined,
         status: params?.status || (statusFilter.value !== 'all' ? statusFilter.value : undefined),
+        division_id:
+          params?.division_id !== undefined
+            ? params.division_id
+            : divisionFilter.value || undefined,
+        team_id: params?.team_id !== undefined ? params.team_id : teamFilter.value || undefined,
+        order_by: params?.order_by || sortField.value || undefined,
+        order_direction: params?.order_direction || sortOrder.value || undefined,
       };
 
       const response: PaginatedSeasonDriversResponse = await getSeasonDrivers(
@@ -279,6 +292,24 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
     availablePage.value = 1;
   }
 
+  function setDivisionFilter(divisionId: number | null): void {
+    divisionFilter.value = divisionId;
+    currentPage.value = 1;
+  }
+
+  function setTeamFilter(teamId: number | null): void {
+    teamFilter.value = teamId;
+    currentPage.value = 1;
+  }
+
+  function setSortField(field: string): void {
+    sortField.value = field;
+  }
+
+  function setSortOrder(order: 'asc' | 'desc'): void {
+    sortOrder.value = order;
+  }
+
   function nextPage(): void {
     if (hasNextPage.value) {
       currentPage.value += 1;
@@ -320,6 +351,10 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
     searchQuery.value = '';
     statusFilter.value = 'all';
     availableSearchQuery.value = '';
+    divisionFilter.value = null;
+    teamFilter.value = null;
+    sortField.value = 'driver_name';
+    sortOrder.value = 'asc';
     currentPage.value = 1;
     availablePage.value = 1;
   }
@@ -353,6 +388,10 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
     searchQuery.value = '';
     statusFilter.value = 'all';
     availableSearchQuery.value = '';
+    divisionFilter.value = null;
+    teamFilter.value = null;
+    sortField.value = 'driver_name';
+    sortOrder.value = 'asc';
   }
 
   return {
@@ -374,6 +413,10 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
     searchQuery,
     statusFilter,
     availableSearchQuery,
+    divisionFilter,
+    teamFilter,
+    sortField,
+    sortOrder,
 
     // Getters
     activeDrivers,
@@ -398,6 +441,10 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
     setSearchQuery,
     setStatusFilter,
     setAvailableSearchQuery,
+    setDivisionFilter,
+    setTeamFilter,
+    setSortField,
+    setSortOrder,
     nextPage,
     previousPage,
     goToPage,

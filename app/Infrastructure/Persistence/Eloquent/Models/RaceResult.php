@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $dnf
  * @property string $status
  * @property int $race_points
+ * @property int|null $positions_gained
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @method static RaceResult|null find(int $id, $columns = ['*'])
@@ -45,6 +46,7 @@ class RaceResult extends Model
         'dnf',
         'status',
         'race_points',
+        'positions_gained',
     ];
 
     protected $casts = [
@@ -53,6 +55,7 @@ class RaceResult extends Model
         'dnf' => 'boolean',
         'race_points' => 'integer',
         'position' => 'integer',
+        'positions_gained' => 'integer',
     ];
 
     /**

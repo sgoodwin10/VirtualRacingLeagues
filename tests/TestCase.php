@@ -18,6 +18,16 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
+     * Seed the database after it has been refreshed.
+     * This runs automatically when using RefreshDatabase trait.
+     */
+    protected function afterRefreshingDatabase()
+    {
+        // Seed platforms for all tests
+        $this->seed(\Database\Seeders\PlatformSeeder::class);
+    }
+
+    /**
      * Helper method to make requests to the app subdomain.
      */
     protected function onAppDomain(): static

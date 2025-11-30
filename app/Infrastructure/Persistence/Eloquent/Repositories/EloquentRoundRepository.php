@@ -164,6 +164,10 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
         $model->points_system = $entity->pointsSystem()?->toJson();
         $model->round_points = $entity->roundPoints();
         $model->status = $entity->status()->value;
+        $model->round_results = $entity->roundResults();
+        $model->qualifying_results = $entity->qualifyingResults();
+        $model->race_time_results = $entity->raceTimeResults();
+        $model->fastest_lap_results = $entity->fastestLapResults();
         $model->created_by_user_id = $entity->createdByUserId();
     }
 
@@ -172,6 +176,18 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
      */
     private function toDomainEntity(RoundEloquent $model): Round
     {
+        /** @var array<mixed>|null $roundResults Laravel's JSON cast returns array or null */
+        $roundResults = $model->getAttribute('round_results');
+
+        /** @var array<mixed>|null $qualifyingResults Laravel's JSON cast returns array or null */
+        $qualifyingResults = $model->getAttribute('qualifying_results');
+
+        /** @var array<mixed>|null $raceTimeResults Laravel's JSON cast returns array or null */
+        $raceTimeResults = $model->getAttribute('race_time_results');
+
+        /** @var array<mixed>|null $fastestLapResults Laravel's JSON cast returns array or null */
+        $fastestLapResults = $model->getAttribute('fastest_lap_results');
+
         return Round::reconstitute(
             id: $model->id,
             seasonId: $model->season_id,
@@ -193,6 +209,10 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
             pointsSystem: PointsSystem::fromJsonOrNull($model->points_system),
             roundPoints: $model->round_points,
             status: RoundStatus::from($model->status),
+            roundResults: $roundResults,
+            qualifyingResults: $qualifyingResults,
+            raceTimeResults: $raceTimeResults,
+            fastestLapResults: $fastestLapResults,
             createdByUserId: $model->created_by_user_id,
             createdAt: new DateTimeImmutable($model->created_at->toDateTimeString()),
             updatedAt: new DateTimeImmutable($model->updated_at->toDateTimeString()),

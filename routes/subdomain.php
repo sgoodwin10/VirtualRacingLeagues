@@ -239,6 +239,7 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             Route::post('/seasons/{seasonId}/rounds', [\App\Http\Controllers\User\RoundController::class, 'store'])->name('seasons.rounds.store');
             Route::get('/seasons/{seasonId}/rounds/next-number', [\App\Http\Controllers\User\RoundController::class, 'nextRoundNumber'])->name('seasons.rounds.next-number');
             Route::get('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'show'])->name('rounds.show');
+            Route::get('/rounds/{roundId}/results', [\App\Http\Controllers\User\RoundController::class, 'results'])->name('rounds.results');
             Route::put('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'update'])->name('rounds.update');
             Route::delete('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'destroy'])->name('rounds.destroy');
             Route::put('/rounds/{roundId}/complete', [\App\Http\Controllers\User\RoundController::class, 'complete'])->name('rounds.complete');

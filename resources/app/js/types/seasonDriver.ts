@@ -127,8 +127,10 @@ export interface SeasonDriverQueryParams {
   per_page?: number;
   search?: string;
   status?: SeasonDriverStatus | 'all';
-  division_id?: number;
-  team_id?: number;
+  division_id?: number | null;
+  team_id?: number | null;
+  order_by?: string;
+  order_direction?: 'asc' | 'desc';
 }
 
 /**

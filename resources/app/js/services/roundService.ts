@@ -6,6 +6,7 @@ import type {
   UpdateRoundRequest,
   NextRoundNumberResponse,
 } from '@app/types/round';
+import type { RoundResultsResponse } from '@app/types/roundResult';
 import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
 interface ApiResponse<T> {
@@ -65,6 +66,13 @@ export async function completeRound(roundId: number): Promise<Round> {
 export async function uncompleteRound(roundId: number): Promise<Round> {
   const response: AxiosResponse<ApiResponse<Round>> = await apiClient.put(
     API_ENDPOINTS.rounds.uncomplete(roundId),
+  );
+  return response.data.data;
+}
+
+export async function getRoundResults(roundId: number): Promise<RoundResultsResponse> {
+  const response: AxiosResponse<ApiResponse<RoundResultsResponse>> = await apiClient.get(
+    API_ENDPOINTS.rounds.results(roundId),
   );
   return response.data.data;
 }

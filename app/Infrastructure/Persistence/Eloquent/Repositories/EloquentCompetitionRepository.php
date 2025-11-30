@@ -61,6 +61,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
     {
         /** @var CompetitionModel|null $model */
         $model = CompetitionModel::withTrashed()
+            ->with('platform')
             ->withCount([
                 'seasons as total_seasons',
                 'seasons as active_seasons' => function ($query): void {
@@ -81,6 +82,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
     {
         $model = CompetitionModel::where('slug', $slug)
             ->where('league_id', $leagueId)
+            ->with('platform')
             ->withCount([
                 'seasons as total_seasons',
                 'seasons as active_seasons' => function ($query): void {
@@ -103,6 +105,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
     public function findByLeagueId(int $leagueId): array
     {
         return CompetitionModel::where('league_id', $leagueId)
+            ->with('platform')
             ->withCount([
                 'seasons as total_seasons',
                 'seasons as active_seasons' => function ($query): void {

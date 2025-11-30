@@ -33,12 +33,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $points_system
  * @property bool $round_points
  * @property string $status
+ * @property array<mixed>|null $round_results
+ * @property array<mixed>|null $qualifying_results
+ * @property array<mixed>|null $race_time_results
+ * @property array<mixed>|null $fastest_lap_results
  * @property int $created_by_user_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  *
- * @method static \Illuminate\Database\Eloquent\Builder<Round> where($column, $operator = null, $value = null, $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder<Round> where($column, $operator = null, $value = null)
  * @method static Round|null find(int $id, $columns = ['*'])
  * @method static Round findOrFail(int $id, $columns = ['*'])
  * @method static \Database\Factories\RoundFactory factory($count = null, $state = [])
@@ -83,6 +87,10 @@ final class Round extends Model
         'points_system',
         'round_points',
         'status',
+        'round_results',
+        'qualifying_results',
+        'race_time_results',
+        'fastest_lap_results',
         'created_by_user_id',
     ];
 
@@ -94,6 +102,10 @@ final class Round extends Model
         'fastest_lap_top_10' => 'boolean',
         'qualifying_pole_top_10' => 'boolean',
         'round_points' => 'boolean',
+        'round_results' => 'json',
+        'qualifying_results' => 'json',
+        'race_time_results' => 'json',
+        'fastest_lap_results' => 'json',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

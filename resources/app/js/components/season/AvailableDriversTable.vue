@@ -96,7 +96,6 @@ onMounted(async () => {
       :total-records="totalRecords"
       :first="first"
       striped-rows
-      show-gridlines
       responsive-layout="scroll"
       @page="handlePageChange"
     >

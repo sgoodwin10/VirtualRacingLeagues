@@ -88,6 +88,15 @@
                   severity="info"
                   value="Round Points"
                 />
+                <Button
+                  v-if="round.status === 'completed'"
+                  label="Results"
+                  icon="pi pi-trophy"
+                  size="small"
+                  severity="success"
+                  outlined
+                  @click.stop="handleViewRoundResults(round)"
+                />
                 <div class="flex items-center gap-2" @click.stop>
                   <ToggleSwitch
                     :model-value="round.status === 'completed'"
@@ -281,6 +290,14 @@
     @saved="handleResultsSaved"
   />
 
+  <!-- Round Results Modal -->
+  <RoundResultsModal
+    v-if="selectedRoundForRoundResults"
+    v-model:visible="showRoundResultsModal"
+    :round="selectedRoundForRoundResults"
+    :season-id="seasonId"
+  />
+
   <!-- Confirm Delete Dialogs -->
   <ConfirmDialog group="round-delete" />
   <ConfirmDialog group="race-delete" />
@@ -299,6 +316,7 @@ import RaceFormDrawer from '@app/components/round/modals/RaceFormDrawer.vue';
 import RaceListItem from '@app/components/round/RaceListItem.vue';
 import QualifierListItem from '@app/components/round/QualifierListItem.vue';
 import RaceResultModal from '@app/components/result/RaceResultModal.vue';
+import RoundResultsModal from '@app/components/round/modals/RoundResultsModal.vue';
 import Button from 'primevue/button';
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
@@ -379,6 +397,10 @@ const completingRoundId = ref<number | null>(null);
 const showResultsModal = ref(false);
 const selectedRaceForResults = ref<Race | null>(null);
 const selectedRoundForResults = ref<Round | null>(null);
+
+// Round results modal state
+const showRoundResultsModal = ref(false);
+const selectedRoundForRoundResults = ref<Round | null>(null);
 
 const rounds = computed(() => {
   return roundStore
@@ -709,6 +731,11 @@ function handleResultsSaved(): void {
     detail: 'Race results saved successfully',
     life: 3000,
   });
+}
+
+function handleViewRoundResults(round: Round): void {
+  selectedRoundForRoundResults.value = round;
+  showRoundResultsModal.value = true;
 }
 
 async function handleToggleRaceStatus(

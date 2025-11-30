@@ -12,6 +12,8 @@ use App\Domain\Competition\Events\QualifierDeleted;
 use App\Domain\Competition\Exceptions\QualifierAlreadyExistsException;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
+use App\Domain\Competition\Repositories\RoundRepositoryInterface;
+use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
 use App\Domain\Competition\ValueObjects\RaceName;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
@@ -26,6 +28,8 @@ final class QualifierApplicationService
     public function __construct(
         private readonly RaceRepositoryInterface $raceRepository,
         private readonly RaceResultRepositoryInterface $raceResultRepository,
+        private readonly RoundRepositoryInterface $roundRepository,
+        private readonly SeasonRepositoryInterface $seasonRepository,
     ) {
     }
 
@@ -235,21 +239,56 @@ final class QualifierApplicationService
      * Calculate pole position points for qualifier.
      * Determines positions based on fastest_lap times (ascending - fastest wins).
      * Awards pole position bonus points if configured.
+     * Handles divisions if enabled - each division gets its own pole position.
      */
     private function calculatePolePositionPoints(int $qualifierId): void
     {
-        $raceResults = $this->raceResultRepository->findByRaceId($qualifierId);
         $qualifier = $this->raceRepository->findQualifierById($qualifierId);
+        $raceResults = $this->raceResultRepository->findByRaceId($qualifierId);
 
         if (empty($raceResults)) {
             return;
         }
 
+        // Get round and season to check if divisions are enabled
+        $round = $this->roundRepository->findById($qualifier->roundId());
+        $season = $this->seasonRepository->findById($round->seasonId());
+        $divisionsEnabled = $season->raceDivisionsEnabled();
+
+        if ($divisionsEnabled) {
+            // Group results by division and calculate pole position for each division
+            $resultsByDivision = [];
+            foreach ($raceResults as $result) {
+                $divisionId = $result->divisionId() ?? 0; // Use 0 for null division
+                if (!isset($resultsByDivision[$divisionId])) {
+                    $resultsByDivision[$divisionId] = [];
+                }
+                $resultsByDivision[$divisionId][] = $result;
+            }
+
+            // Calculate pole position for each division independently
+            foreach ($resultsByDivision as $divisionResults) {
+                $this->calculatePolePositionForResultSet($qualifier, $divisionResults);
+            }
+        } else {
+            // Calculate pole position for all results together
+            $this->calculatePolePositionForResultSet($qualifier, $raceResults);
+        }
+    }
+
+    /**
+     * Calculate pole position for a set of qualifier results.
+     * This method is called per division when divisions are enabled.
+     *
+     * @param array<\App\Domain\Competition\Entities\RaceResult> $results
+     */
+    private function calculatePolePositionForResultSet(Race $qualifier, array $results): void
+    {
         // Separate results into two groups: valid times and DNF/no time
         $validResults = [];
         $invalidResults = [];
 
-        foreach ($raceResults as $result) {
+        foreach ($results as $result) {
             if ($result->dnf() || $result->fastestLap()->isNull()) {
                 $invalidResults[] = $result;
             } else {

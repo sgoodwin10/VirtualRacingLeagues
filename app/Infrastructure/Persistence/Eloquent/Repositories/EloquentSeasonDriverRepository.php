@@ -160,12 +160,12 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
      */
     public function findBySeasonPaginated(int $seasonId, int $page, int $perPage, array $filters = []): array
     {
-        $query = SeasonDriverEloquent::where('season_id', $seasonId)
+        $query = SeasonDriverEloquent::where('season_drivers.season_id', $seasonId)
             ->with(['leagueDriver.driver', 'team', 'division']); // Eager load to prevent N+1 queries
 
         $this->applyFilters($query, $filters);
 
-        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+        $paginator = $query->paginate($perPage, ['season_drivers.*'], 'page', $page);
 
         return [
             'data' => $paginator->items() ? array_map(
@@ -188,7 +188,27 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     {
         // Apply status filter
         if (isset($filters['status']) && $filters['status'] !== '') {
-            $query->where('status', $filters['status']);
+            $query->where('season_drivers.status', $filters['status']);
+        }
+
+        // Apply division_id filter
+        if (isset($filters['division_id'])) {
+            // Special value 0 means filter for NULL (drivers without a division)
+            if ($filters['division_id'] === 0) {
+                $query->whereNull('season_drivers.division_id');
+            } else {
+                $query->where('season_drivers.division_id', $filters['division_id']);
+            }
+        }
+
+        // Apply team_id filter
+        if (isset($filters['team_id'])) {
+            // Special value 0 means filter for NULL (privateers without a team)
+            if ($filters['team_id'] === 0) {
+                $query->whereNull('season_drivers.team_id');
+            } else {
+                $query->where('season_drivers.team_id', $filters['team_id']);
+            }
         }
 
         // Apply search filter (search by driver fields)
@@ -208,7 +228,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
         $orderBy = $filters['order_by'] ?? 'added_at';
         $orderDirection = $filters['order_direction'] ?? 'desc';
 
-        // Handle special case for ordering by driver name
+        // Handle special cases for ordering
         if ($orderBy === 'driver_name') {
             $nameExpression = "COALESCE(drivers.nickname, " .
                 "CONCAT(drivers.first_name, ' ', drivers.last_name), " .
@@ -218,8 +238,34 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
                 ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
                 ->orderByRaw("{$nameExpression} {$orderDirection}")
                 ->select('season_drivers.*'); // Ensure we only select season_drivers columns
+        } elseif (in_array($orderBy, ['discord_id', 'psn_id', 'iracing_id'])) {
+            // Sort by driver platform IDs (with NULL values last)
+            $query->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+                ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+                ->orderByRaw("drivers.{$orderBy} IS NULL")
+                ->orderBy("drivers.{$orderBy}", $orderDirection)
+                ->select('season_drivers.*');
+        } elseif ($orderBy === 'driver_number') {
+            // Sort by driver number (with NULL values last)
+            $query->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+                ->orderByRaw("league_drivers.driver_number IS NULL")
+                ->orderBy('league_drivers.driver_number', $orderDirection)
+                ->select('season_drivers.*');
+        } elseif ($orderBy === 'team_name') {
+            // Sort by team name (with NULL values last)
+            $query->leftJoin('teams', 'season_drivers.team_id', '=', 'teams.id')
+                ->orderByRaw("teams.name IS NULL")
+                ->orderBy('teams.name', $orderDirection)
+                ->select('season_drivers.*');
+        } elseif ($orderBy === 'division_name') {
+            // Sort by division name (with NULL values last)
+            $query->leftJoin('divisions', 'season_drivers.division_id', '=', 'divisions.id')
+                ->orderByRaw("divisions.name IS NULL")
+                ->orderBy('divisions.name', $orderDirection)
+                ->select('season_drivers.*');
         } else {
-            $query->orderBy($orderBy, $orderDirection);
+            // Default ordering (added_at, status, etc.)
+            $query->orderBy("season_drivers.{$orderBy}", $orderDirection);
         }
     }
 

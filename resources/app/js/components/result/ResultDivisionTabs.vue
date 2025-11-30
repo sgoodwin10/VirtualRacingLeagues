@@ -2,9 +2,23 @@
   <div class="border border-gray-200 rounded-lg overflow-hidden">
     <Tabs v-model:value="activeTab">
       <TabList>
-        <Tab v-for="division in divisions" :key="division.id" :value="division.id">
-          {{ division.name }}
-        </Tab>
+        <div class="flex items-center justify-between w-full">
+          <div class="flex items-center gap-2">
+            <Tab v-for="division in divisions" :key="division.id" :value="division.id">
+              {{ division.name }}
+            </Tab>
+          </div>
+          <Button
+            v-if="!readOnly"
+            label="Reset All Results"
+            icon="pi pi-refresh"
+            severity="danger"
+            outlined
+            size="small"
+            class="mr-4"
+            @click="handleResetAllClick"
+          />
+        </div>
       </TabList>
       <TabPanels>
         <TabPanel v-for="division in divisions" :key="division.id" :value="division.id">
@@ -29,6 +43,8 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
+import Button from 'primevue/button';
+import { useConfirm } from 'primevue/useconfirm';
 import ResultEntryTable from './ResultEntryTable.vue';
 import type { RaceResultFormData, DriverOption } from '@app/types/raceResult';
 import type { Division } from '@app/types/division';
@@ -44,10 +60,13 @@ interface Props {
 
 interface Emits {
   (e: 'update:results', results: RaceResultFormData[]): void;
+  (e: 'reset-all'): void;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
+const confirm = useConfirm();
 
 // Active tab value (division ID) - defaults to -1, will be set to first division when available
 const activeTab = ref<number>(-1);
@@ -72,6 +91,7 @@ const selectedDriverIdsByDivision = computed<Record<number, Set<number>>>(() => 
     );
     const selectedInDivision = new Set<number>();
     for (const result of props.results) {
+      // Type-safe null check before Set operations
       if (result.driver_id !== null && divisionDriverIds.has(result.driver_id)) {
         selectedInDivision.add(result.driver_id);
       }
@@ -97,9 +117,9 @@ watch(
       );
 
       // Filter results to only include drivers from this division
+      // Type-safe: explicit null check before Set.has() operation
       newDivisionResults[division.id] = results.filter((r) => {
-        if (r.driver_id === null) return false;
-        return divisionDriverIds.has(r.driver_id);
+        return r.driver_id !== null && divisionDriverIds.has(r.driver_id);
       });
     }
 
@@ -121,5 +141,26 @@ function handleDivisionUpdate(divisionId: number, updatedResults: RaceResultForm
 
   // Emit the updated results array to trigger reactivity in parent
   emit('update:results', [...allResults]);
+}
+
+function handleResetAllClick(): void {
+  confirm.require({
+    message:
+      'Are you sure you want to reset all results? This will clear all times, penalties, and DNF status for all drivers across all divisions.',
+    header: 'Reset All Results',
+    icon: 'pi pi-exclamation-triangle',
+    rejectProps: {
+      label: 'Cancel',
+      severity: 'secondary',
+      outlined: true,
+    },
+    acceptProps: {
+      label: 'Reset All',
+      severity: 'danger',
+    },
+    accept: () => {
+      emit('reset-all');
+    },
+  });
 }
 </script>

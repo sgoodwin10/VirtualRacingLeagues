@@ -90,7 +90,8 @@ interface SeasonDriverRepositoryInterface
      * @param int $seasonId
      * @param int $page
      * @param int $perPage
-     * @param array<string, mixed> $filters Optional filters (search, status, order_by, order_direction)
+     * @param array<string, mixed> $filters Optional filters (search, status,
+     *     division_id, team_id, order_by, order_direction)
      * @return array{data: array<SeasonDriver>, total: int, per_page: int, current_page: int}
      */
     public function findBySeasonPaginated(int $seasonId, int $page, int $perPage, array $filters = []): array;

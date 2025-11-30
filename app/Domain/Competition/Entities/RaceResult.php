@@ -32,6 +32,7 @@ final class RaceResult
         private bool $dnf,
         private RaceResultStatus $status,
         private int $racePoints,
+        private ?int $positionsGained,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
     ) {
@@ -67,6 +68,7 @@ final class RaceResult
             dnf: $dnf,
             status: RaceResultStatus::PENDING,
             racePoints: 0,
+            positionsGained: null,
             createdAt: $now,
             updatedAt: $now,
         );
@@ -89,6 +91,7 @@ final class RaceResult
         bool $dnf,
         RaceResultStatus $status,
         int $racePoints,
+        ?int $positionsGained,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
     ): self {
@@ -107,6 +110,7 @@ final class RaceResult
             dnf: $dnf,
             status: $status,
             racePoints: $racePoints,
+            positionsGained: $positionsGained,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
         );
@@ -203,6 +207,11 @@ final class RaceResult
         return $this->racePoints;
     }
 
+    public function positionsGained(): ?int
+    {
+        return $this->positionsGained;
+    }
+
     public function createdAt(): DateTimeImmutable
     {
         return $this->createdAt;
@@ -287,6 +296,12 @@ final class RaceResult
     public function setRacePoints(int $points): void
     {
         $this->racePoints = $points;
+        $this->updatedAt = new DateTimeImmutable();
+    }
+
+    public function setPositionsGained(?int $positions): void
+    {
+        $this->positionsGained = $positions;
         $this->updatedAt = new DateTimeImmutable();
     }
 

@@ -13,6 +13,7 @@ use App\Domain\Competition\Events\RoundCreated;
 use App\Domain\Competition\Events\RoundUpdated;
 use App\Domain\Competition\Events\RoundDeleted;
 use App\Domain\Competition\Events\RoundStatusChanged;
+use App\Domain\Competition\Events\RoundResultsCalculated;
 use DateTimeImmutable;
 
 /**
@@ -24,6 +25,12 @@ final class Round
     /** @var array<object> */
     private array $events = [];
 
+    /**
+     * @param array<mixed>|null $roundResults
+     * @param array<mixed>|null $qualifyingResults
+     * @param array<mixed>|null $raceTimeResults
+     * @param array<mixed>|null $fastestLapResults
+     */
     private function __construct(
         private ?int $id,
         private int $seasonId,
@@ -45,6 +52,10 @@ final class Round
         private ?PointsSystem $pointsSystem,
         private bool $roundPoints,
         private RoundStatus $status,
+        private ?array $roundResults,
+        private ?array $qualifyingResults,
+        private ?array $raceTimeResults,
+        private ?array $fastestLapResults,
         private int $createdByUserId,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
@@ -97,6 +108,10 @@ final class Round
             pointsSystem: $pointsSystem,
             roundPoints: $roundPoints,
             status: RoundStatus::SCHEDULED,
+            roundResults: null,
+            qualifyingResults: null,
+            raceTimeResults: null,
+            fastestLapResults: null,
             createdByUserId: $createdByUserId,
             createdAt: new DateTimeImmutable(),
             updatedAt: new DateTimeImmutable(),
@@ -106,6 +121,11 @@ final class Round
 
     /**
      * Reconstitute round from persistence.
+     *
+     * @param array<mixed>|null $roundResults
+     * @param array<mixed>|null $qualifyingResults
+     * @param array<mixed>|null $raceTimeResults
+     * @param array<mixed>|null $fastestLapResults
      */
     public static function reconstitute(
         int $id,
@@ -128,6 +148,10 @@ final class Round
         ?PointsSystem $pointsSystem,
         bool $roundPoints,
         RoundStatus $status,
+        ?array $roundResults,
+        ?array $qualifyingResults,
+        ?array $raceTimeResults,
+        ?array $fastestLapResults,
         int $createdByUserId,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
@@ -154,6 +178,10 @@ final class Round
             pointsSystem: $pointsSystem,
             roundPoints: $roundPoints,
             status: $status,
+            roundResults: $roundResults,
+            qualifyingResults: $qualifyingResults,
+            raceTimeResults: $raceTimeResults,
+            fastestLapResults: $fastestLapResults,
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
@@ -480,6 +508,38 @@ final class Round
         return $this->status;
     }
 
+    /**
+     * @return array<mixed>|null
+     */
+    public function roundResults(): ?array
+    {
+        return $this->roundResults;
+    }
+
+    /**
+     * @return array<mixed>|null
+     */
+    public function qualifyingResults(): ?array
+    {
+        return $this->qualifyingResults;
+    }
+
+    /**
+     * @return array<mixed>|null
+     */
+    public function raceTimeResults(): ?array
+    {
+        return $this->raceTimeResults;
+    }
+
+    /**
+     * @return array<mixed>|null
+     */
+    public function fastestLapResults(): ?array
+    {
+        return $this->fastestLapResults;
+    }
+
     public function createdByUserId(): int
     {
         return $this->createdByUserId;
@@ -506,6 +566,42 @@ final class Round
     public function setId(int $id): void
     {
         $this->id = $id;
+    }
+
+    /**
+     * Set round results after calculation.
+     *
+     * @param array<mixed> $results
+     */
+    public function setRoundResults(array $results): void
+    {
+        $this->roundResults = $results;
+        $this->updatedAt = new DateTimeImmutable();
+
+        // Record domain event
+        $this->recordEvent(new RoundResultsCalculated(
+            roundId: $this->id ?? 0,
+            seasonId: $this->seasonId,
+            occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+        ));
+    }
+
+    /**
+     * Set cross-division results after calculation.
+     *
+     * @param array<mixed> $qualifyingResults
+     * @param array<mixed> $raceTimeResults
+     * @param array<mixed> $fastestLapResults
+     */
+    public function setCrossDivisionResults(
+        array $qualifyingResults,
+        array $raceTimeResults,
+        array $fastestLapResults
+    ): void {
+        $this->qualifyingResults = $qualifyingResults;
+        $this->raceTimeResults = $raceTimeResults;
+        $this->fastestLapResults = $fastestLapResults;
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     /**

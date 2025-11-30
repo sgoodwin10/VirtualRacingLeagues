@@ -36,6 +36,7 @@
           :selected-driver-ids="selectedDriverIds"
           :read-only="isReadOnly"
           @update:results="handleResultsUpdate"
+          @reset-all="handleResetAll"
         />
 
         <ResultEntryTable
@@ -264,6 +265,26 @@ function handleCsvParse(parsedRows: CsvResultRow[]): void {
   recalculateTimesFromDifferences();
 }
 
+// Map game platform slugs to their corresponding driver identity field
+function getPlatformIdField(platformSlug: string | undefined): 'psn_id' | 'iracing_id' | null {
+  if (!platformSlug) return null;
+
+  // PSN-based games (PlayStation Network ID)
+  const psnGames = ['gran-turismo-7', 'f1-24', 'assetto-corsa-competizione'];
+  if (psnGames.includes(platformSlug)) {
+    return 'psn_id';
+  }
+
+  // iRacing uses its own ID system
+  if (platformSlug === 'iracing') {
+    return 'iracing_id';
+  }
+
+  // Other games (rFactor 2, Automobilista 2) - may need additional mapping
+  // For now, default to PSN as most common for console games
+  return 'psn_id';
+}
+
 function findDriverByName(name: string): DriverOption | undefined {
   const searchValue = name.toLowerCase().trim();
 
@@ -271,34 +292,53 @@ function findDriverByName(name: string): DriverOption | undefined {
   const nicknameMatch = allDrivers.value.find(
     (d) => d.nickname?.toLowerCase().trim() === searchValue,
   );
-  if (nicknameMatch) return nicknameMatch;
-
-  // Priority 2: Platform ID match (based on competition's platform)
-  const platformSlug = seasonStore.currentSeason?.competition?.platform?.slug;
-  if (platformSlug) {
-    const platformMatch = allDrivers.value.find((d) => {
-      if (platformSlug === 'psn' && d.psn_id) {
-        return d.psn_id.toLowerCase().trim() === searchValue;
-      }
-      if (platformSlug === 'iracing' && d.iracing_id) {
-        return d.iracing_id.toLowerCase().trim() === searchValue;
-      }
-      if (platformSlug === 'discord' && d.discord_id) {
-        return d.discord_id.toLowerCase().trim() === searchValue;
-      }
-      return false;
-    });
-    if (platformMatch) return platformMatch;
+  if (nicknameMatch) {
+    return nicknameMatch;
   }
 
-  // Priority 3: Exact full name match (case-insensitive)
-  const exactNameMatch = allDrivers.value.find((d) => d.name.toLowerCase().trim() === searchValue);
-  if (exactNameMatch) return exactNameMatch;
+  // Priority 2: Discord ID match (always checked regardless of platform)
+  const discordMatch = allDrivers.value.find(
+    (d) => d.discord_id?.toLowerCase().trim() === searchValue,
+  );
+  if (discordMatch) {
+    return discordMatch;
+  }
 
-  // Priority 4: Partial/fuzzy match (fallback)
-  return allDrivers.value.find(
+  // Priority 3: Platform ID match (based on league's selected game platform)
+  const platformSlug = seasonStore.currentSeason?.competition?.platform?.slug;
+  const platformIdField = getPlatformIdField(platformSlug);
+
+  if (platformIdField) {
+    const platformMatch = allDrivers.value.find((d) => {
+      const platformId = d[platformIdField];
+      return platformId?.toLowerCase().trim() === searchValue;
+    });
+    if (platformMatch) {
+      return platformMatch;
+    }
+  } else {
+    // Fallback: check all platform IDs when platform slug is not available
+    const anyPlatformMatch = allDrivers.value.find((d) => {
+      const psnMatch = d.psn_id?.toLowerCase().trim() === searchValue;
+      const iracingMatch = d.iracing_id?.toLowerCase().trim() === searchValue;
+      return psnMatch || iracingMatch;
+    });
+    if (anyPlatformMatch) {
+      return anyPlatformMatch;
+    }
+  }
+
+  // Priority 4: Exact full name match (case-insensitive)
+  const exactNameMatch = allDrivers.value.find((d) => d.name.toLowerCase().trim() === searchValue);
+  if (exactNameMatch) {
+    return exactNameMatch;
+  }
+
+  // Priority 5: Partial/fuzzy match (fallback)
+  const fuzzyMatch = allDrivers.value.find(
     (d) => d.name.toLowerCase().includes(searchValue) || searchValue.includes(d.name.toLowerCase()),
   );
+  return fuzzyMatch;
 }
 
 function handleResultsUpdate(): void {
@@ -306,26 +346,61 @@ function handleResultsUpdate(): void {
   recalculateTimesFromDifferences();
 }
 
+function handleResetAll(): void {
+  // Clear all result data while keeping driver_id and division_id
+  formResults.value = formResults.value.map((result) => ({
+    driver_id: result.driver_id,
+    division_id: result.division_id,
+    position: null,
+    race_time: '',
+    race_time_difference: '',
+    fastest_lap: '',
+    penalties: '',
+    has_fastest_lap: false,
+    has_pole: false,
+    dnf: false,
+  }));
+}
+
 function recalculateTimesFromDifferences(): void {
   if (isQualifying.value) return;
 
-  // Find the leader's time (fastest race_time)
-  let leaderTimeMs: number | null = null;
+  // Group results by division to find each division's pole position
+  const resultsByDivision = new Map<number | null, RaceResultFormData[]>();
   for (const result of formResults.value) {
-    if (!result.driver_id || !result.race_time) continue;
-    const timeMs = parseTimeToMs(result.race_time);
-    if (timeMs !== null && (leaderTimeMs === null || timeMs < leaderTimeMs)) {
-      leaderTimeMs = timeMs;
+    if (!result.driver_id) continue;
+    const divisionId = result.division_id ?? null;
+    if (!resultsByDivision.has(divisionId)) {
+      resultsByDivision.set(divisionId, []);
+    }
+    resultsByDivision.get(divisionId)?.push(result);
+  }
+
+  // Find leader time for each division separately
+  const leaderTimeByDivision = new Map<number | null, number>();
+  for (const [divisionId, divisionResults] of resultsByDivision) {
+    let divisionLeaderTime: number | null = null;
+    for (const result of divisionResults) {
+      if (!result.race_time) continue;
+      const timeMs = parseTimeToMs(result.race_time);
+      if (timeMs !== null && (divisionLeaderTime === null || timeMs < divisionLeaderTime)) {
+        divisionLeaderTime = timeMs;
+      }
+    }
+    if (divisionLeaderTime !== null) {
+      leaderTimeByDivision.set(divisionId, divisionLeaderTime);
     }
   }
 
-  if (leaderTimeMs === null) return;
-
-  // Calculate race_time for rows that only have difference
+  // Calculate race_time for rows that only have difference, using their division's leader time
   for (const result of formResults.value) {
     if (!result.driver_id) continue;
     if (result.race_time) continue; // Already has race time
     if (!result.race_time_difference) continue;
+
+    const divisionId = result.division_id ?? null;
+    const leaderTimeMs = leaderTimeByDivision.get(divisionId);
+    if (leaderTimeMs === undefined) continue;
 
     const diffMs = parseTimeToMs(result.race_time_difference);
     if (diffMs !== null) {

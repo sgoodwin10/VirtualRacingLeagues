@@ -7,6 +7,7 @@ import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import { useDriverStore } from '@app/stores/driverStore';
 import { useTeamStore } from '@app/stores/teamStore';
 import { useDivisionStore } from '@app/stores/divisionStore';
+import { useDebouncedSearch } from '@app/composables/useDebouncedSearch';
 import type { SeasonDriver } from '@app/types/seasonDriver';
 import type { LeagueDriver } from '@app/types/driver';
 import type { Team } from '@app/types/team';
@@ -14,12 +15,17 @@ import type { Division } from '@app/types/division';
 import { usesPsnId, usesIracingId } from '@app/constants/platforms';
 
 import DataTable from 'primevue/datatable';
+import type { DataTablePageEvent, DataTableSortEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
 import Select from 'primevue/select';
+import Button from 'primevue/button';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import InputText from 'primevue/inputtext';
 import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
 import ViewButton from '@app/components/common/buttons/ViewButton.vue';
 import DeleteButton from '@app/components/common/buttons/DeleteButton.vue';
-import { DEFAULT_ROWS_PER_PAGE, ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
+import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
 
 interface Props {
   seasonId: number;
@@ -30,6 +36,8 @@ interface Props {
   teams?: Team[];
   raceDivisionsEnabled?: boolean;
   divisions?: Division[];
+  showManageButton?: boolean;
+  manageButtonDisabled?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -40,13 +48,13 @@ const props = withDefaults(defineProps<Props>(), {
   teams: () => [],
   raceDivisionsEnabled: false,
   divisions: () => [],
+  showManageButton: true,
+  manageButtonDisabled: false,
 });
 
-interface Emits {
-  (e: 'view', driver: SeasonDriver): void;
-}
-
-const emit = defineEmits<Emits>();
+const emit = defineEmits<{
+  manageDrivers: [];
+}>();
 
 const route = useRoute();
 const confirm = useConfirm();
@@ -64,7 +72,37 @@ const loadingDriver = ref(false);
 const updatingTeam = ref<{ [key: number]: boolean }>({});
 const updatingDivision = ref<{ [key: number]: boolean }>({});
 
+// Filter state
+// null = "All", 0 = "No Division"/"Privateer" (filters for NULL in DB), number = specific ID
+const selectedDivision = ref<number | null>(null);
+const selectedTeam = ref<number | null>(null);
+
+// Search state
+const searchQuery = ref('');
+
+// Setup debounced search
+const { isSearching } = useDebouncedSearch(searchQuery, async (query) => {
+  seasonDriverStore.setSearchQuery(query);
+  try {
+    await seasonDriverStore.fetchSeasonDrivers(props.seasonId, {
+      page: 1, // Reset to page 1 when searching
+      search: query,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to search drivers';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  }
+});
+
 const drivers = computed(() => seasonDriverStore.seasonDrivers);
+const totalRecords = computed(() => seasonDriverStore.totalDrivers);
+const currentPage = computed(() => seasonDriverStore.currentPage);
+const perPage = computed(() => seasonDriverStore.perPage);
 
 const showPsnColumn = computed(() => usesPsnId(props.platformId));
 
@@ -93,9 +131,6 @@ const leagueId = computed(() => {
  * Fetches the full LeagueDriver data and opens the ViewDriverModal
  */
 async function handleView(driver: SeasonDriver): Promise<void> {
-  // Emit the view event for backward compatibility
-  emit('view', driver);
-
   // Check if leagueId is available
   if (!leagueId.value) {
     toast.add({
@@ -182,6 +217,80 @@ function handleRemove(driver: SeasonDriver): void {
       }
     },
   });
+}
+
+/**
+ * Handle pagination changes
+ */
+async function onPage(event: DataTablePageEvent): Promise<void> {
+  const newPage = event.page + 1; // PrimeVue uses 0-based index
+  const newPerPage = event.rows;
+
+  try {
+    await seasonDriverStore.fetchSeasonDrivers(props.seasonId, {
+      page: newPage,
+      per_page: newPerPage,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to load drivers';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  }
+}
+
+/**
+ * Handle sort changes
+ */
+async function onSort(event: DataTableSortEvent): Promise<void> {
+  const field = event.sortField as string;
+  const order = event.sortOrder === 1 ? 'asc' : 'desc';
+
+  seasonDriverStore.setSortField(field);
+  seasonDriverStore.setSortOrder(order);
+
+  try {
+    await seasonDriverStore.fetchSeasonDrivers(props.seasonId, {
+      page: 1, // Reset to page 1 when sorting
+      order_by: field,
+      order_direction: order,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to load drivers';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  }
+}
+
+/**
+ * Handle filter changes
+ */
+async function onFilterChange(): Promise<void> {
+  seasonDriverStore.setDivisionFilter(selectedDivision.value);
+  seasonDriverStore.setTeamFilter(selectedTeam.value);
+
+  try {
+    await seasonDriverStore.fetchSeasonDrivers(props.seasonId, {
+      page: 1, // Reset to page 1 when filtering
+      division_id: selectedDivision.value,
+      team_id: selectedTeam.value,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to load drivers';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  }
 }
 
 // Team selection options
@@ -328,6 +437,62 @@ async function handleDivisionChange(
     updatingDivision.value[driver.id] = false;
   }
 }
+
+// Filter options for division dropdown
+interface DivisionFilterOption {
+  label: string;
+  value: number | null;
+}
+
+const divisionFilterOptions = computed((): DivisionFilterOption[] => {
+  const options: DivisionFilterOption[] = [
+    {
+      label: 'All Divisions',
+      value: null,
+    },
+    {
+      label: 'No Division',
+      value: 0,
+    },
+  ];
+
+  props.divisions.forEach((division) => {
+    options.push({
+      label: division.name,
+      value: division.id,
+    });
+  });
+
+  return options;
+});
+
+// Filter options for team dropdown
+interface TeamFilterOption {
+  label: string;
+  value: number | null;
+}
+
+const teamFilterOptions = computed((): TeamFilterOption[] => {
+  const options: TeamFilterOption[] = [
+    {
+      label: 'All Teams',
+      value: null,
+    },
+    {
+      label: 'Privateer',
+      value: 0,
+    },
+  ];
+
+  props.teams.forEach((team) => {
+    options.push({
+      label: team.name,
+      value: team.id,
+    });
+  });
+
+  return options;
+});
 </script>
 
 <template>
@@ -340,15 +505,81 @@ async function handleDivisionChange(
       @edit="handleEditDriver"
     />
 
+    <!-- Search, Filters and Actions Bar -->
+    <div
+      v-if="raceDivisionsEnabled || teamChampionshipEnabled"
+      class="flex flex-row gap-4 mb-6 border border-slate-200 bg-slate-50 p-2 rounded-md"
+    >
+      <!-- Bottom Row: Filters -->
+      <div
+        v-if="raceDivisionsEnabled || teamChampionshipEnabled"
+        class="flex items-end gap-3 flex-wrap"
+      >
+        <div class="flex-1 max-w-md">
+          <IconField>
+            <InputIcon class="pi pi-search" />
+            <InputText
+              v-model="searchQuery"
+              placeholder="Search drivers by name..."
+              class="w-full"
+              :disabled="loading || isSearching"
+            />
+          </IconField>
+        </div>
+
+        <div v-if="raceDivisionsEnabled" class="flex flex-col gap-2">
+          <label for="division-filter" class="text-sm font-medium">Division</label>
+          <Select
+            id="division-filter"
+            v-model="selectedDivision"
+            :options="divisionFilterOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="All Divisions"
+            class="w-52"
+            @change="onFilterChange"
+          />
+        </div>
+
+        <div v-if="teamChampionshipEnabled" class="flex flex-col gap-2">
+          <label for="team-filter" class="text-sm font-medium">Team</label>
+          <Select
+            id="team-filter"
+            v-model="selectedTeam"
+            :options="teamFilterOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="All Teams"
+            class="w-52"
+            @change="onFilterChange"
+          />
+        </div>
+
+        <!-- Manage Drivers Button -->
+        <Button
+          v-if="showManageButton"
+          label="Manage Drivers"
+          icon="pi pi-users"
+          size="medium"
+          :disabled="manageButtonDisabled"
+          @click="emit('manageDrivers')"
+        />
+      </div>
+    </div>
+
     <DataTable
       :value="drivers"
-      :loading="loading || loadingDriver"
+      :loading="loading || loadingDriver || isSearching"
+      lazy
       paginator
-      :rows="DEFAULT_ROWS_PER_PAGE"
+      :rows="perPage"
+      :total-records="totalRecords"
       :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
+      :first="(currentPage - 1) * perPage"
       striped-rows
-      show-gridlines
       responsive-layout="scroll"
+      @page="onPage"
+      @sort="onSort"
     >
       <template #empty>
         <div class="text-center py-8">
@@ -361,37 +592,37 @@ async function handleDivisionChange(
         <div class="text-center py-8 text-gray-500">Loading season drivers...</div>
       </template>
 
-      <Column field="driver_name" header="Driver">
+      <Column field="driver_name" header="Driver" sortable>
         <template #body="{ data }">
           <span class="font-semibold">{{ getDriverDisplayName(data) }}</span>
         </template>
       </Column>
 
-      <Column field="discord_id" header="Discord">
+      <Column field="discord_id" header="Discord" sortable>
         <template #body="{ data }">
           <span class="text-sm text-gray-600">{{ data.discord_id || '-' }}</span>
         </template>
       </Column>
 
-      <Column v-if="showPsnColumn" field="psn_id" header="PSN ID">
+      <Column v-if="showPsnColumn" field="psn_id" header="PSN ID" sortable>
         <template #body="{ data }">
           <span class="text-sm text-gray-600">{{ data.psn_id || '-' }}</span>
         </template>
       </Column>
 
-      <Column v-if="showIracingColumn" field="iracing_id" header="iRacing ID">
+      <Column v-if="showIracingColumn" field="iracing_id" header="iRacing ID" sortable>
         <template #body="{ data }">
           <span class="text-sm text-gray-600">{{ data.iracing_id || '-' }}</span>
         </template>
       </Column>
 
-      <Column v-if="showNumberColumn" field="driver_number" header="#" class="text-center">
+      <Column v-if="showNumberColumn" field="driver_number" header="#" class="text-center" sortable>
         <template #body="{ data }">
           <span class="text-sm text-gray-600">{{ data.driver_number || '-' }}</span>
         </template>
       </Column>
 
-      <Column v-if="raceDivisionsEnabled" field="division_name" header="Division">
+      <Column v-if="raceDivisionsEnabled" field="division_name" header="Division" sortable>
         <template #body="{ data }">
           <Select
             :model-value="getDriverDivisionId(data)"
@@ -436,7 +667,7 @@ async function handleDivisionChange(
         </template>
       </Column>
 
-      <Column v-if="teamChampionshipEnabled" field="team_name" header="Team">
+      <Column v-if="teamChampionshipEnabled" field="team_name" header="Team" sortable>
         <template #body="{ data }">
           <Select
             :model-value="getDriverTeamId(data)"

@@ -320,7 +320,7 @@
                     <FormLabel text="Round Points" />
                     <div class="space-y-3">
                       <div class="flex items-center gap-2">
-                        <InputSwitch
+                        <ToggleSwitch
                           id="round_points"
                           v-model="form.round_points"
                           aria-label="Enable round points"
@@ -489,7 +489,7 @@ import InputNumber from 'primevue/inputnumber';
 import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import Checkbox from 'primevue/checkbox';
-import InputSwitch from 'primevue/inputswitch';
+import ToggleSwitch from 'primevue/toggleswitch';
 import DatePicker from 'primevue/datepicker';
 import AutoComplete from 'primevue/autocomplete';
 import Textarea from 'primevue/textarea';
@@ -700,7 +700,7 @@ async function initializeForm(): Promise<void> {
 function formatTrackDisplay(track: Track | null): string {
   if (!track) return '';
 
-  const locationName = track.location?.name || 'Unknown Location';
+  const locationName = track.location?.name || '';
   const trackName = track.name;
 
   return `${locationName} - ${trackName}`;

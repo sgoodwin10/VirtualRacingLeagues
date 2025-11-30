@@ -46,6 +46,10 @@ final class RoundFactory extends Factory
             'points_system' => null,
             'round_points' => $this->faker->boolean(20),
             'status' => $this->faker->randomElement(['scheduled', 'pre_race', 'in_progress', 'completed', 'cancelled']),
+            'round_results' => null,
+            'qualifying_results' => null,
+            'race_time_results' => null,
+            'fastest_lap_results' => null,
             'created_by_user_id' => User::factory(),
         ];
     }

@@ -16,6 +16,7 @@ import {
   PhGear,
   PhTrophy,
   PhCar,
+  PhUsersThree,
 } from '@phosphor-icons/vue';
 
 import Button from 'primevue/button';
@@ -175,11 +176,6 @@ function handleDeleted(): void {
 
 function handleManageDrivers(): void {
   showDriverManagementDrawer.value = true;
-}
-
-function handleEditDriver(driver: SeasonDriver): void {
-  selectedSeasonDriver.value = driver;
-  showEditDriverDialog.value = true;
 }
 
 function handleDriverUpdated(): void {
@@ -512,41 +508,63 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
 
           <!-- Divisions & Teams Tab -->
           <TabPanel value="divisions-teams">
-            <BasePanel class="p-4">
-              <div class="space-y-6">
-                <!-- Divisions Panel -->
-                <DivisionsPanel
-                  :season-id="seasonId"
-                  :race-divisions-enabled="season.race_divisions_enabled"
-                />
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Divisions Column (Left) -->
+              <BasePanel>
+                <template #header>
+                  <div
+                    class="flex items-center gap-3 border-b border-gray-200 py-3 px-4 w-full bg-gradient-to-r from-purple-50 to-blue-50"
+                  >
+                    <PhTrophy :size="24" class="text-purple-600" weight="fill" />
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-gray-900">Divisions</h3>
+                      <p class="text-sm text-gray-600 mt-0.5">
+                        Skill-based groupings for fair competition within division championships
+                      </p>
+                    </div>
+                  </div>
+                </template>
+                <div class="p-4">
+                  <DivisionsPanel
+                    :season-id="seasonId"
+                    :race-divisions-enabled="season.race_divisions_enabled"
+                  />
+                </div>
+              </BasePanel>
 
-                <!-- Teams Panel -->
-                <TeamsPanel
-                  :season-id="seasonId"
-                  :team-championship-enabled="season.team_championship_enabled"
-                />
-              </div>
-            </BasePanel>
+              <!-- Teams Column (Right) -->
+              <BasePanel>
+                <template #header>
+                  <div
+                    class="flex items-center gap-3 border-b border-gray-200 py-3 px-4 w-full bg-gradient-to-r from-blue-50 to-indigo-50"
+                  >
+                    <PhUsersThree :size="24" class="text-blue-600" weight="fill" />
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-gray-900">Teams</h3>
+                      <p class="text-sm text-gray-600 mt-0.5">
+                        Multi-division organizations competing for the team championship
+                      </p>
+                    </div>
+                  </div>
+                </template>
+                <div class="p-4">
+                  <TeamsPanel
+                    :season-id="seasonId"
+                    :team-championship-enabled="season.team_championship_enabled"
+                  />
+                </div>
+              </BasePanel>
+            </div>
           </TabPanel>
 
           <!-- Drivers Tab -->
           <TabPanel value="drivers">
             <BasePanel>
               <div class="p-4 space-y-6">
-                <!-- Manage Drivers Button -->
-                <div class="flex justify-between items-center">
-                  <HTag :level="3">Season Drivers</HTag>
-                  <Button
-                    label="Manage Drivers"
-                    icon="pi pi-users"
-                    outlined
-                    size="small"
-                    :disabled="season.is_archived"
-                    @click="handleManageDrivers"
-                  />
-                </div>
+                <!-- Section Header -->
+                <HTag :level="3">Season Drivers</HTag>
 
-                <!-- Drivers Table -->
+                <!-- Drivers Table with integrated filters and manage button -->
                 <div class="overflow-auto">
                   <SeasonDriversTable
                     :season-id="seasonId"
@@ -556,7 +574,8 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                     :teams="teams"
                     :race-divisions-enabled="season.race_divisions_enabled"
                     :divisions="divisions"
-                    @view="handleEditDriver"
+                    :manage-button-disabled="season.is_archived"
+                    @manage-drivers="handleManageDrivers"
                   />
                 </div>
               </div>

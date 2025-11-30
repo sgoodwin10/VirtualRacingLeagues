@@ -38,13 +38,10 @@ final class RoundController extends Controller
      */
     public function store(CreateRoundData $data, int $seasonId): JsonResponse
     {
-        // TODO: Get timezone from season/league
-        // TODO: Authorize user owns league
-        $timezone = 'UTC'; // Placeholder
         /** @var int $userId */
         $userId = auth('web')->id() ?? 0;
 
-        $round = $this->roundService->createRound($data, $seasonId, $timezone, $userId);
+        $round = $this->roundService->createRound($data, $seasonId, $userId);
         return ApiResponse::created($round->toArray(), 'Round created successfully');
     }
 
@@ -62,9 +59,10 @@ final class RoundController extends Controller
      */
     public function update(Request $request, UpdateRoundData $data, int $roundId): JsonResponse
     {
-        // TODO: Authorize user owns league
+        /** @var int $userId */
+        $userId = auth('web')->id() ?? 0;
 
-        $round = $this->roundService->updateRound($roundId, $data, $request->all());
+        $round = $this->roundService->updateRound($roundId, $data, $request->all(), $userId);
         return ApiResponse::success($round->toArray(), 'Round updated successfully');
     }
 
@@ -73,8 +71,10 @@ final class RoundController extends Controller
      */
     public function destroy(int $roundId): JsonResponse
     {
-        // TODO: Authorize user owns league
-        $this->roundService->deleteRound($roundId);
+        /** @var int $userId */
+        $userId = auth('web')->id() ?? 0;
+
+        $this->roundService->deleteRound($roundId, $userId);
         return ApiResponse::success(null, 'Round deleted successfully');
     }
 
@@ -93,8 +93,10 @@ final class RoundController extends Controller
     public function complete(int $roundId): JsonResponse
     {
         try {
-            // TODO: Authorize user owns league
-            $round = $this->roundService->completeRound($roundId);
+            /** @var int $userId */
+            $userId = auth('web')->id() ?? 0;
+
+            $round = $this->roundService->completeRound($roundId, $userId);
             return ApiResponse::success($round->toArray(), 'Round marked as completed');
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -107,11 +109,27 @@ final class RoundController extends Controller
     public function uncomplete(int $roundId): JsonResponse
     {
         try {
-            // TODO: Authorize user owns league
-            $round = $this->roundService->uncompleteRound($roundId);
+            /** @var int $userId */
+            $userId = auth('web')->id() ?? 0;
+
+            $round = $this->roundService->uncompleteRound($roundId, $userId);
             return ApiResponse::success($round->toArray(), 'Round marked as not completed');
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
+        }
+    }
+
+    /**
+     * Get all race results for a round.
+     * NOTE: This is a read-only operation, so authorization is not required.
+     */
+    public function results(int $roundId): JsonResponse
+    {
+        try {
+            $results = $this->roundService->getRoundResults($roundId);
+            return ApiResponse::success($results->toArray());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return ApiResponse::error('Round not found', null, 404);
         }
     }
 }

@@ -7,6 +7,7 @@ namespace App\Infrastructure\Persistence\Eloquent\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -181,5 +182,15 @@ final class Race extends Model
     public function scopeForRound($query, int $roundId)
     {
         return $query->where('round_id', $roundId);
+    }
+
+    /**
+     * Get the results for this race.
+     *
+     * @return HasMany<RaceResult>
+     */
+    public function results(): HasMany
+    {
+        return $this->hasMany(RaceResult::class, 'race_id');
     }
 }

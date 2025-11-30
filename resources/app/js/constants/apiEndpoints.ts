@@ -93,6 +93,7 @@ export const API_ENDPOINTS = {
     uncomplete: (id: number) => `/rounds/${id}/uncomplete`,
     races: (roundId: number) => `/rounds/${roundId}/races`,
     qualifier: (roundId: number) => `/rounds/${roundId}/qualifier`,
+    results: (roundId: number) => `/rounds/${roundId}/results`,
   },
 
   // Race endpoints

@@ -3,7 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
-import type { SeasonDriver, AvailableDriver } from '@app/types/seasonDriver';
+import type { AvailableDriver } from '@app/types/seasonDriver';
 
 import Drawer from 'primevue/drawer';
 import InputText from 'primevue/inputtext';
@@ -186,9 +186,14 @@ watch(seasonSearch, () => {
   debouncedSearchSeason();
 });
 
-function handleViewDriver(driver: SeasonDriver | AvailableDriver): void {
-  // Navigate to driver detail or show driver info modal
-  console.log('View driver:', driver);
+/**
+ * Handle view event from AvailableDriversTable
+ * Note: SeasonDriversTable now handles its own ViewDriverModal internally,
+ * so this is only used by AvailableDriversTable
+ */
+function handleViewDriver(driver: AvailableDriver): void {
+  // TODO: Implement view functionality for available drivers
+  console.log('View available driver:', driver);
 }
 </script>
 
@@ -234,7 +239,6 @@ function handleViewDriver(driver: SeasonDriver | AvailableDriver): void {
               :loading="seasonDriverStore.loading"
               :show-number-column="false"
               :show-team-column="false"
-              @view="handleViewDriver"
             />
           </div>
         </div>

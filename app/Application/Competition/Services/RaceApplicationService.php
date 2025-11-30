@@ -463,7 +463,7 @@ final class RaceApplicationService
      * Calculate and assign race points to all drivers based on their finishing positions.
      * Handles position recalculation, points assignment, DNF/DNS cases, and fastest lap bonus.
      */
-    private function calculateRacePoints(int $raceId): void
+    public function calculateRacePoints(int $raceId): void
     {
         $race = $this->raceRepository->findById($raceId);
 
@@ -508,6 +508,21 @@ final class RaceApplicationService
      */
     private function calculatePointsForResultSet(Race $race, array $results): void
     {
+        // Get grid source information for positions_gained calculation
+        $gridSource = $race->gridSource();
+        $gridSourceRaceId = $race->gridSourceRaceId();
+
+        // Fetch grid source results if available (for positions_gained calculation)
+        $gridSourceResults = [];
+        if ($gridSource->value !== 'manual' && $gridSourceRaceId !== null) {
+            $sourceResults = $this->raceResultRepository->findByRaceId($gridSourceRaceId);
+            foreach ($sourceResults as $sourceResult) {
+                if ($sourceResult->position() !== null) {
+                    $gridSourceResults[$sourceResult->driverId()] = $sourceResult->position();
+                }
+            }
+        }
+
         // Separate DNS, DNF, and finishers
         $finishers = [];
         $dnfDrivers = [];
@@ -599,8 +614,34 @@ final class RaceApplicationService
             $this->assignFastestLapBonus($race, $finishers);
         }
 
+        // Handle pole position for qualifiers (per division)
+        if ($race->isQualifier()) {
+            $this->assignPolePosition($race, $finishers);
+        }
+
+        // Calculate positions_gained for all results
+        $allResults = array_merge($finishers, $dnfDrivers, $dnsDrivers);
+        foreach ($allResults as $result) {
+            $positionsGained = null;
+
+            // Only calculate if we have a grid source
+            if (!empty($gridSourceResults)) {
+                $driverId = $result->driverId();
+                $finishPosition = $result->position();
+                $startingPosition = $gridSourceResults[$driverId] ?? null;
+
+                if ($startingPosition !== null && $finishPosition !== null) {
+                    // Formula: positions_gained = starting_position - finish_position
+                    // Positive = gained positions, Negative = lost positions
+                    $positionsGained = $startingPosition - $finishPosition;
+                }
+            }
+
+            $result->setPositionsGained($positionsGained);
+        }
+
         // Save all results
-        foreach (array_merge($finishers, $dnfDrivers, $dnsDrivers) as $result) {
+        foreach ($allResults as $result) {
             $this->raceResultRepository->save($result);
         }
     }
@@ -656,6 +697,82 @@ final class RaceApplicationService
                 hasFastestLap: true,
                 hasPole: $fastestLapDriver->hasPole(),
                 dnf: $fastestLapDriver->dnf(),
+            );
+        }
+    }
+
+    /**
+     * Assign pole position to the driver with the fastest lap time in qualifying.
+     * This method is called per division when divisions are enabled, so each division
+     * gets its own pole position winner.
+     *
+     * @param array<\App\Domain\Competition\Entities\RaceResult> $finishers
+     */
+    private function assignPolePosition(Race $race, array $finishers): void
+    {
+        if (empty($finishers)) {
+            return;
+        }
+
+        // First, reset hasPole for all finishers in case of recalculation
+        foreach ($finishers as $result) {
+            if ($result->hasPole()) {
+                $result->update(
+                    position: $result->position(),
+                    raceTime: $result->raceTime()->value(),
+                    raceTimeDifference: $result->raceTimeDifference()->value(),
+                    fastestLap: $result->fastestLap()->value(),
+                    penalties: $result->penalties()->value(),
+                    hasFastestLap: $result->hasFastestLap(),
+                    hasPole: false,
+                    dnf: $result->dnf(),
+                );
+            }
+        }
+
+        // Filter eligible drivers based on qualifying_pole_top_10 setting
+        $eligible = $finishers;
+        if ($race->qualifyingPoleTop10()) {
+            // Only top 10 finishers are eligible for pole position
+            $eligible = array_slice($finishers, 0, 10);
+        }
+
+        // Find driver with fastest lap time (pole position)
+        $poleDriver = null;
+        $fastestLapTime = null;
+
+        foreach ($eligible as $result) {
+            $lapTime = $result->fastestLap()->toMilliseconds();
+
+            if ($lapTime === null) {
+                continue; // Skip drivers without fastest lap time
+            }
+
+            if ($fastestLapTime === null || $lapTime < $fastestLapTime) {
+                $fastestLapTime = $lapTime;
+                $poleDriver = $result;
+            }
+        }
+
+        // Award pole position to the winner
+        if ($poleDriver !== null) {
+            // Award pole position bonus points if configured
+            $bonusPoints = $race->qualifyingPole() ?? 0;
+            if ($bonusPoints > 0) {
+                $currentPoints = $poleDriver->racePoints();
+                $poleDriver->setRacePoints($currentPoints + $bonusPoints);
+            }
+
+            // Update hasPole flag
+            $poleDriver->update(
+                position: $poleDriver->position(),
+                raceTime: $poleDriver->raceTime()->value(),
+                raceTimeDifference: $poleDriver->raceTimeDifference()->value(),
+                fastestLap: $poleDriver->fastestLap()->value(),
+                penalties: $poleDriver->penalties()->value(),
+                hasFastestLap: $poleDriver->hasFastestLap(),
+                hasPole: true,
+                dnf: $poleDriver->dnf(),
             );
         }
     }

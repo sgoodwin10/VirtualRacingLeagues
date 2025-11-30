@@ -114,97 +114,99 @@ function truncateDescription(description: string | null, maxLength: number = 30)
 </script>
 
 <template>
-  <Button
-    v-if="raceDivisionsEnabled"
-    icon="pi pi-plus"
-    size="small"
-    label="Add Division"
-    @click="handleAddDivision"
-  />
-
-  <!-- Disabled State -->
-  <div v-if="!raceDivisionsEnabled" class="text-center py-8">
-    <Message severity="info" :closable="false">
-      <div class="flex flex-col items-center gap-2">
-        <i class="pi pi-info-circle text-2xl"></i>
-        <p class="font-semibold">Divisions not enabled for this season</p>
-        <p class="text-sm">Enable race divisions in season settings to manage divisions</p>
-      </div>
-    </Message>
-  </div>
-
-  <!-- Enabled State -->
-  <div v-else>
-    <DataTable
-      :value="divisions"
-      :loading="loading"
-      striped-rows
-      show-gridlines
-      responsive-layout="scroll"
-      class="text-sm"
-    >
-      <template #empty>
-        <div class="text-center py-6">
-          <i class="pi pi-trophy text-3xl text-gray-400 mb-2"></i>
-          <p class="text-gray-600">No divisions created yet</p>
-          <p class="text-sm text-gray-500 mt-1">
-            Click "Add Division" to create your first division
-          </p>
+  <div>
+    <!-- Disabled State -->
+    <div v-if="!raceDivisionsEnabled" class="text-center py-8">
+      <Message severity="info" :closable="false">
+        <div class="flex flex-col items-center gap-2">
+          <i class="pi pi-info-circle text-2xl"></i>
+          <p class="font-semibold">Divisions not enabled for this season</p>
+          <p class="text-sm">Enable race divisions in season settings to manage divisions</p>
         </div>
-      </template>
+      </Message>
+    </div>
 
-      <template #loading>
-        <div class="text-center py-6 text-gray-500">Loading divisions...</div>
-      </template>
+    <!-- Enabled State -->
+    <div v-else>
+      <!-- Header Row -->
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm text-gray-600">
+          {{ divisions.length }} division{{ divisions.length !== 1 ? 's' : '' }}
+        </span>
+        <Button icon="pi pi-plus" size="small" label="Add Division" @click="handleAddDivision" />
+      </div>
 
-      <Column field="name" header="Division">
-        <template #body="{ data }">
-          <div class="flex items-start gap-2">
-            <img
-              v-if="data.logo_url"
-              :src="data.logo_url"
-              :alt="data.name"
-              class="w-8 h-8 rounded object-cover flex-shrink-0"
-            />
-            <div class="flex-1 min-w-0">
-              <p class="font-semibold">{{ data.name }}</p>
-              <p v-if="data.description" class="text-xs text-gray-500 mt-1 truncate">
-                {{ truncateDescription(data.description, 50) }}
-              </p>
+      <!-- DataTable -->
+      <DataTable
+        :value="divisions"
+        :loading="loading"
+        striped-rows
+        responsive-layout="scroll"
+        class="text-sm"
+      >
+        <template #empty>
+          <div class="text-center py-8">
+            <i class="pi pi-trophy text-3xl text-gray-400 mb-2"></i>
+            <p class="text-gray-600">No divisions created yet</p>
+            <p class="text-sm text-gray-500 mt-1">
+              Click "Add Division" to create your first division
+            </p>
+          </div>
+        </template>
+
+        <template #loading>
+          <div class="text-center py-6 text-gray-500">Loading divisions...</div>
+        </template>
+
+        <Column field="name" header="Division">
+          <template #body="{ data }">
+            <div class="flex items-start gap-2">
+              <img
+                v-if="data.logo_url"
+                :src="data.logo_url"
+                :alt="data.name"
+                class="w-8 h-8 rounded object-cover flex-shrink-0"
+              />
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold">{{ data.name }}</p>
+                <p v-if="data.description" class="text-xs text-gray-500 mt-1 truncate">
+                  {{ truncateDescription(data.description, 50) }}
+                </p>
+              </div>
             </div>
-          </div>
-        </template>
-      </Column>
+          </template>
+        </Column>
 
-      <Column header="Actions" :exportable="false" style="width: 8rem">
-        <template #body="{ data }">
-          <div class="flex gap-1">
-            <Button
-              icon="pi pi-pencil"
-              size="small"
-              outlined
-              severity="secondary"
-              @click="handleEditDivision(data)"
-            />
-            <Button
-              icon="pi pi-trash"
-              size="small"
-              outlined
-              severity="danger"
-              @click="handleDeleteDivision(data)"
-            />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
+        <Column header="Actions" :exportable="false" style="width: 8rem">
+          <template #body="{ data }">
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-pencil"
+                size="small"
+                outlined
+                severity="secondary"
+                @click="handleEditDivision(data)"
+              />
+              <Button
+                icon="pi pi-trash"
+                size="small"
+                outlined
+                severity="danger"
+                @click="handleDeleteDivision(data)"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+    </div>
+
+    <!-- Division Form Modal -->
+    <DivisionFormModal
+      v-model:visible="showDivisionModal"
+      :mode="modalMode"
+      :season-id="seasonId"
+      :division="selectedDivision"
+      @save="handleDivisionSaved"
+    />
   </div>
-
-  <!-- Division Form Modal -->
-  <DivisionFormModal
-    v-model:visible="showDivisionModal"
-    :mode="modalMode"
-    :season-id="seasonId"
-    :division="selectedDivision"
-    @save="handleDivisionSaved"
-  />
 </template>

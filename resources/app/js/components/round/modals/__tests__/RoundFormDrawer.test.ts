@@ -161,7 +161,7 @@ describe('RoundFormDrawer', () => {
       };
 
       const formatted = component.formatTrackDisplay(track);
-      expect(formatted).toBe('Unknown Location - Test Circuit');
+      expect(formatted).toBe(' - Test Circuit');
     });
 
     it('should handle null track', () => {

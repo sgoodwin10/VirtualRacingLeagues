@@ -9,6 +9,8 @@ use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Race as RaceEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\RaceResult as RaceResultEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\League;
+use App\Infrastructure\Persistence\Eloquent\Models\Competition;
 use App\Models\User;
 use Database\Factories\RoundFactory;
 use Database\Factories\SeasonFactory;
@@ -30,8 +32,20 @@ final class RoundControllerTest extends TestCase
         // Create a user
         $this->user = User::factory()->create();
 
-        // Create a season
+        // Create a league owned by the user
+        $league = League::factory()->create([
+            'owner_user_id' => $this->user->id,
+        ]);
+
+        // Create a competition for the league
+        $competition = Competition::factory()->create([
+            'league_id' => $league->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Create a season for the competition
         $this->season = SeasonFactory::new()->create([
+            'competition_id' => $competition->id,
             'created_by_user_id' => $this->user->id,
         ]);
 

@@ -32,7 +32,10 @@ final class SeasonDriverController extends Controller
      * - per_page: items per page (default: 10, max: 100)
      * - search: search by driver name
      * - status: filter by status (active, reserve, withdrawn)
-     * - order_by: sort column (added_at, status, driver_name)
+     * - division_id: filter by division ID (optional)
+     * - team_id: filter by team ID (optional)
+     * - order_by: sort column (added_at, status, driver_name, discord_id, psn_id, iracing_id,
+     *            driver_number, division_name, team_name)
      * - order_direction: sort direction (asc, desc)
      */
     public function index(Request $request, int $seasonId): JsonResponse
@@ -42,7 +45,28 @@ final class SeasonDriverController extends Controller
             'per_page' => 'nullable|integer|min:1|max:100',
             'search' => 'nullable|string|max:255',
             'status' => 'nullable|string|in:active,reserve,withdrawn',
-            'order_by' => 'nullable|string|in:added_at,status,driver_name',
+            'division_id' => ['nullable', 'integer', function (string $attribute, mixed $value, \Closure $fail): void {
+                // Allow 0 as special value for "no division" filter
+                $intValue = (int) $value;
+                if ($intValue !== 0 && $value !== null) {
+                    $exists = \Illuminate\Support\Facades\DB::table('divisions')->where('id', $intValue)->exists();
+                    if (!$exists) {
+                        $fail('The selected division id is invalid.');
+                    }
+                }
+            }],
+            'team_id' => ['nullable', 'integer', function (string $attribute, mixed $value, \Closure $fail): void {
+                // Allow 0 as special value for "no team" (privateer) filter
+                $intValue = (int) $value;
+                if ($intValue !== 0 && $value !== null) {
+                    $exists = \Illuminate\Support\Facades\DB::table('teams')->where('id', $intValue)->exists();
+                    if (!$exists) {
+                        $fail('The selected team id is invalid.');
+                    }
+                }
+            }],
+            'order_by' => 'nullable|string|in:added_at,status,driver_name,discord_id,psn_id,' .
+                'iracing_id,driver_number,division_name,team_name',
             'order_direction' => 'nullable|string|in:asc,desc',
         ]);
 

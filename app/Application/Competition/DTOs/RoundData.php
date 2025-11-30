@@ -12,6 +12,12 @@ use Spatie\LaravelData\Data;
  */
 final class RoundData extends Data
 {
+    /**
+     * @param array<mixed>|null $round_results
+     * @param array<mixed>|null $qualifying_results
+     * @param array<mixed>|null $race_time_results
+     * @param array<mixed>|null $fastest_lap_results
+     */
     public function __construct(
         public readonly int $id,
         public readonly int $season_id,
@@ -34,6 +40,10 @@ final class RoundData extends Data
         public readonly bool $round_points,
         public readonly string $status,
         public readonly string $status_label,
+        public readonly ?array $round_results,
+        public readonly ?array $qualifying_results,
+        public readonly ?array $race_time_results,
+        public readonly ?array $fastest_lap_results,
         public readonly int $created_by_user_id,
         public readonly string $created_at,
         public readonly string $updated_at,
@@ -68,6 +78,10 @@ final class RoundData extends Data
             round_points: $round->roundPoints(),
             status: $round->status()->value,
             status_label: $round->status()->label(),
+            round_results: $round->roundResults(),
+            qualifying_results: $round->qualifyingResults(),
+            race_time_results: $round->raceTimeResults(),
+            fastest_lap_results: $round->fastestLapResults(),
             created_by_user_id: $round->createdByUserId(),
             created_at: $round->createdAt()->format('Y-m-d H:i:s'),
             updated_at: $round->updatedAt()->format('Y-m-d H:i:s'),

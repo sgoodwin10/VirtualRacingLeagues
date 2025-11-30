@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Competition\Services;
 
 use App\Application\Competition\DTOs\CreateSeasonData;
+use App\Application\Competition\DTOs\PlatformData;
 use App\Application\Competition\DTOs\SeasonCompetitionData;
 use App\Application\Competition\DTOs\SeasonData;
 use App\Application\Competition\DTOs\SeasonLeagueData;
@@ -498,7 +499,13 @@ final class SeasonApplicationService
         $totalRounds = count($rounds);
         $completedRounds = count(array_filter($rounds, fn($round) => $round->status()->isCompleted()));
 
-        // Build nested competition data with league
+        // Get platform data
+        $platformModel = \App\Infrastructure\Persistence\Eloquent\Models\Platform::find($competition->platformId());
+        if (!$platformModel) {
+            throw new \RuntimeException('Platform not found for competition');
+        }
+
+        // Build nested competition data with league and platform
         $competitionData = new SeasonCompetitionData(
             id: $competition->id() ?? 0,
             name: $competition->name()->value(),
@@ -509,6 +516,11 @@ final class SeasonApplicationService
                 id: $league->id() ?? 0,
                 name: $league->name()->value(),
                 slug: $league->slug()->value(),
+            ),
+            platform: new PlatformData(
+                id: $platformModel->id,
+                name: $platformModel->name,
+                slug: $platformModel->slug,
             ),
         );
 

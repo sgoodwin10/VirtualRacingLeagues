@@ -35,6 +35,7 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
         $model->dnf = $result->dnf();
         $model->status = $result->status()->value;
         $model->race_points = $result->racePoints();
+        $model->positions_gained = $result->positionsGained();
         $model->save();
 
         if ($result->id() === null) {
@@ -114,6 +115,7 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
             dnf: $model->dnf,
             status: RaceResultStatus::from($model->status),
             racePoints: $model->race_points,
+            positionsGained: $model->positions_gained,
             createdAt: new DateTimeImmutable($model->created_at->toDateTimeString()),
             updatedAt: new DateTimeImmutable($model->updated_at->toDateTimeString()),
         );

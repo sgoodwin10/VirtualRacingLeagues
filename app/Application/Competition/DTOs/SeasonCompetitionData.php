@@ -8,7 +8,7 @@ use Spatie\LaravelData\Data;
 
 /**
  * Competition reference data for season context.
- * Lightweight DTO containing competition information with league details for breadcrumbs.
+ * Lightweight DTO containing competition information with league and platform details.
  */
 final class SeasonCompetitionData extends Data
 {
@@ -19,6 +19,7 @@ final class SeasonCompetitionData extends Data
         public int $platform_id,
         public ?string $competition_colour,
         public SeasonLeagueData $league,
+        public PlatformData $platform,
     ) {
     }
 }

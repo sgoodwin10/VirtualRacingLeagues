@@ -203,7 +203,11 @@ final class SeasonDriverApplicationService
             ->keyBy('id');
 
         return array_map(
-            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData($seasonDriver, $leagueDrivers, $seasonDriverModels),
+            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData(
+                $seasonDriver,
+                $leagueDrivers,
+                $seasonDriverModels
+            ),
             $seasonDrivers
         );
     }
@@ -212,7 +216,8 @@ final class SeasonDriverApplicationService
      * Get paginated season drivers with optional filters.
      *
      * @param array<string, mixed> $queryParams Query parameters
-     *     (page, per_page, search, status, order_by, order_direction)
+     *     (page, per_page, search, status, division_id, team_id,
+     *      order_by, order_direction)
      * @return array{
      *     data: array<SeasonDriverData>,
      *     meta: array{
@@ -232,6 +237,8 @@ final class SeasonDriverApplicationService
         $perPage = (int) ($queryParams['per_page'] ?? 10);
         $search = $queryParams['search'] ?? null;
         $status = $queryParams['status'] ?? null;
+        $divisionId = $queryParams['division_id'] ?? null;
+        $teamId = $queryParams['team_id'] ?? null;
         $orderBy = $queryParams['order_by'] ?? 'added_at';
         $orderDirection = $queryParams['order_direction'] ?? 'desc';
 
@@ -247,6 +254,14 @@ final class SeasonDriverApplicationService
 
         if ($status !== null && $status !== '') {
             $filters['status'] = $status;
+        }
+
+        if ($divisionId !== null) {
+            $filters['division_id'] = (int) $divisionId;
+        }
+
+        if ($teamId !== null) {
+            $filters['team_id'] = (int) $teamId;
         }
 
         // Get paginated data from repository
@@ -270,7 +285,11 @@ final class SeasonDriverApplicationService
 
         // Convert entities to DTOs
         $data = array_map(
-            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData($seasonDriver, $leagueDrivers, $seasonDriverModels),
+            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData(
+                $seasonDriver,
+                $leagueDrivers,
+                $seasonDriverModels
+            ),
             $result['data']
         );
 
@@ -490,8 +509,11 @@ final class SeasonDriverApplicationService
      * @param \Illuminate\Support\Collection<int, LeagueDriverEloquent>|null $leagueDrivers
      * @param \Illuminate\Support\Collection<int, SeasonDriverEloquent>|null $seasonDriverModels
      */
-    private function toSeasonDriverData(SeasonDriver $seasonDriver, $leagueDrivers = null, $seasonDriverModels = null): SeasonDriverData
-    {
+    private function toSeasonDriverData(
+        SeasonDriver $seasonDriver,
+        $leagueDrivers = null,
+        $seasonDriverModels = null
+    ): SeasonDriverData {
         // If preloaded drivers provided, use them (optimized path)
         if ($leagueDrivers !== null) {
             $leagueDriver = $leagueDrivers->get($seasonDriver->leagueDriverId());

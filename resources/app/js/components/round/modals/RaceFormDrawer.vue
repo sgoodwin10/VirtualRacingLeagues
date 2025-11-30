@@ -325,7 +325,7 @@
                 <FormLabel text="Race Points" />
                 <div class="space-y-3">
                   <div class="flex items-center gap-2">
-                    <InputSwitch
+                    <ToggleSwitch
                       id="race_points"
                       v-model="form.race_points"
                       aria-label="Enable race points"
@@ -529,7 +529,7 @@ import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
-import InputSwitch from 'primevue/inputswitch';
+import ToggleSwitch from 'primevue/toggleswitch';
 import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import Accordion from 'primevue/accordion';

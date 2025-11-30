@@ -37,13 +37,17 @@ vi.mock('primevue/datatable', () => ({
     props: [
       'value',
       'loading',
+      'lazy',
       'paginator',
       'rows',
+      'totalRecords',
       'rowsPerPageOptions',
+      'first',
       'stripedRows',
       'showGridlines',
       'responsiveLayout',
     ],
+    emits: ['page', 'sort'],
     template: `
       <div data-testid="datatable">
         <slot v-for="item in value" :key="item.id" name="default" :data="item" />
@@ -55,7 +59,7 @@ vi.mock('primevue/datatable', () => ({
 vi.mock('primevue/column', () => ({
   default: {
     name: 'Column',
-    props: ['field', 'header', 'exportable'],
+    props: ['field', 'header', 'exportable', 'sortable'],
     template: '<div><slot name="body" /></div>',
   },
 }));
@@ -78,6 +82,30 @@ vi.mock('primevue/select', () => ({
   default: {
     name: 'Select',
     template: '<select><slot /></select>',
+  },
+}));
+
+vi.mock('primevue/iconfield', () => ({
+  default: {
+    name: 'IconField',
+    template: '<div><slot /></div>',
+  },
+}));
+
+vi.mock('primevue/inputicon', () => ({
+  default: {
+    name: 'InputIcon',
+    template: '<i></i>',
+  },
+}));
+
+vi.mock('primevue/inputtext', () => ({
+  default: {
+    name: 'InputText',
+    props: ['modelValue', 'placeholder', 'disabled'],
+    emits: ['update:modelValue'],
+    template:
+      '<input :value="modelValue" :placeholder="placeholder" :disabled="disabled" @input="$emit(\'update:modelValue\', $event.target.value)" />',
   },
 }));
 
@@ -253,22 +281,33 @@ describe('SeasonDriversTable', () => {
     expect(component.showIracingColumn).toBe(true);
   });
 
-  it('emits view event when view is called', () => {
+  it('opens ViewDriverModal when handleView is called', async () => {
+    const pinia = createPinia();
+    const driverStore = useDriverStore(pinia);
+    driverStore.fetchLeagueDriver = vi.fn().mockResolvedValue({
+      id: 1,
+      first_name: 'John',
+      last_name: 'Doe',
+      nickname: 'JD',
+      discord_id: 'john#1234',
+    });
+
     wrapper = mount(SeasonDriversTable, {
       props: {
         seasonId: 1,
         loading: false,
       },
       global: {
-        plugins: [createPinia()],
+        plugins: [pinia],
       },
     });
 
     const component = wrapper.vm as any;
-    component.handleView(mockDriverWithFullName);
+    await component.handleView(mockDriverWithFullName);
 
-    expect(wrapper.emitted('view')).toBeTruthy();
-    expect(wrapper.emitted('view')?.[0]).toEqual([mockDriverWithFullName]);
+    // Verify modal is opened
+    expect(component.showViewDriverModal).toBe(true);
+    expect(component.selectedDriver).toBeTruthy();
   });
 
   it('accepts showNumberColumn prop', () => {
@@ -378,7 +417,7 @@ describe('SeasonDriversTable', () => {
     expect(component.selectedDriver).toEqual(mockLeagueDriver);
   });
 
-  it('emits view event for backward compatibility when handleView is called', async () => {
+  it('does not emit view event (modal is handled internally)', async () => {
     const pinia = createPinia();
     setActivePinia(pinia);
 
@@ -400,9 +439,8 @@ describe('SeasonDriversTable', () => {
     // Call handleView
     await component.handleView(mockDriverWithFullName);
 
-    // Verify view event was emitted
-    expect(wrapper.emitted('view')).toBeTruthy();
-    expect(wrapper.emitted('view')?.[0]).toEqual([mockDriverWithFullName]);
+    // Verify view event was NOT emitted (component handles modal internally)
+    expect(wrapper.emitted('view')).toBeFalsy();
   });
 
   it('handles close modal correctly', () => {
@@ -509,5 +547,151 @@ describe('SeasonDriversTable', () => {
     // Verify modal is not opened
     expect(component.showViewDriverModal).toBe(false);
     expect(component.selectedDriver).toBeNull();
+  });
+
+  it('renders filter dropdowns when raceDivisionsEnabled is true', () => {
+    const mockDivisions = [
+      {
+        id: 1,
+        season_id: 1,
+        name: 'Division A',
+        description: null,
+        logo_url: null,
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01',
+      },
+      {
+        id: 2,
+        season_id: 1,
+        name: 'Division B',
+        description: null,
+        logo_url: null,
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01',
+      },
+    ];
+
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        raceDivisionsEnabled: true,
+        divisions: mockDivisions,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const divisionFilter = wrapper.find('#division-filter');
+    expect(divisionFilter.exists()).toBe(true);
+  });
+
+  it('renders filter dropdowns when teamChampionshipEnabled is true', () => {
+    const mockTeams = [
+      {
+        id: 1,
+        season_id: 1,
+        name: 'Team A',
+        logo_url: null,
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01',
+      },
+      {
+        id: 2,
+        season_id: 1,
+        name: 'Team B',
+        logo_url: null,
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01',
+      },
+    ];
+
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        teamChampionshipEnabled: true,
+        teams: mockTeams,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const teamFilter = wrapper.find('#team-filter');
+    expect(teamFilter.exists()).toBe(true);
+  });
+
+  it('does not render filter dropdowns when neither raceDivisionsEnabled nor teamChampionshipEnabled', () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        raceDivisionsEnabled: false,
+        teamChampionshipEnabled: false,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const divisionFilter = wrapper.find('#division-filter');
+    const teamFilter = wrapper.find('#team-filter');
+    expect(divisionFilter.exists()).toBe(false);
+    expect(teamFilter.exists()).toBe(false);
+  });
+
+  it('renders search field', () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        raceDivisionsEnabled: true, // Enable to show search field
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const searchInput = wrapper.find('input');
+    expect(searchInput.exists()).toBe(true);
+    expect(searchInput.attributes('placeholder')).toBe('Search drivers by name...');
+  });
+
+  it('updates searchQuery when user types in search field', async () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        raceDivisionsEnabled: true, // Enable to show search field
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const component = wrapper.vm as any;
+    const searchInput = wrapper.find('input');
+
+    await searchInput.setValue('John Doe');
+
+    expect(component.searchQuery).toBe('John Doe');
+  });
+
+  it('disables search input when loading', () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: true,
+        raceDivisionsEnabled: true, // Enable to show search field
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const searchInput = wrapper.find('input');
+    expect(searchInput.attributes('disabled')).toBeDefined();
   });
 });

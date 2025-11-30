@@ -112,7 +112,8 @@ final class QualifierControllerTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJson([
-            'message' => "A qualifier already exists for round {$this->round->id}. Only one qualifier is allowed per round.",
+            'message' => "A qualifier already exists for round {$this->round->id}. " .
+                "Only one qualifier is allowed per round.",
         ]);
     }
 
@@ -501,6 +502,188 @@ final class QualifierControllerTest extends TestCase
         $this->assertDatabaseHas('race_results', [
             'race_id' => $qualifierId,
             'driver_id' => $seasonDrivers[1]->id,
+            'position' => 2,
+            'has_pole' => false,
+            'race_points' => 0,
+        ]);
+    }
+
+    public function test_calculates_pole_position_per_division_when_divisions_enabled(): void
+    {
+        // Get the season and enable divisions
+        $seasonId = $this->round->season_id;
+        $season = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::find($seasonId);
+        $season->update(['race_divisions_enabled' => true]);
+
+        $competition = \App\Infrastructure\Persistence\Eloquent\Models\Competition::find($season->competition_id);
+        $leagueId = $competition->league_id;
+
+        // Create two divisions
+        $division1 = \App\Infrastructure\Persistence\Eloquent\Models\Division::factory()->create([
+            'season_id' => $seasonId,
+            'name' => 'Pro Division',
+        ]);
+        $division2 = \App\Infrastructure\Persistence\Eloquent\Models\Division::factory()->create([
+            'season_id' => $seasonId,
+            'name' => 'Amateur Division',
+        ]);
+
+        // Create qualifier with pole position bonus
+        $createResponse = $this->actingAs($this->user)
+            ->postJson(self::APP_URL . "/api/rounds/{$this->round->id}/qualifier", [
+                'name' => 'Qualifying',
+                'qualifying_format' => 'standard',
+                'qualifying_length' => 15,
+                'qualifying_tire' => null,
+                'weather' => null,
+                'tire_restrictions' => null,
+                'fuel_usage' => null,
+                'damage_model' => null,
+                'track_limits_enforced' => true,
+                'false_start_detection' => true,
+                'collision_penalties' => true,
+                'assists_restrictions' => null,
+                'qualifying_pole' => 3,
+                'qualifying_pole_top_10' => false,
+                'race_notes' => null,
+            ]);
+
+        $qualifierId = $createResponse->json('data.id');
+
+        // Create season drivers for Division 1
+        $div1Driver1 = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+        $div1LeagueDriver1 = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+            'league_id' => $leagueId,
+            'driver_id' => $div1Driver1->id,
+            'status' => 'active',
+        ]);
+        $seasonDriver1 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+            'season_id' => $seasonId,
+            'league_driver_id' => $div1LeagueDriver1->id,
+            'status' => 'active',
+        ]);
+
+        $div1Driver2 = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+        $div1LeagueDriver2 = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+            'league_id' => $leagueId,
+            'driver_id' => $div1Driver2->id,
+            'status' => 'active',
+        ]);
+        $seasonDriver2 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+            'season_id' => $seasonId,
+            'league_driver_id' => $div1LeagueDriver2->id,
+            'status' => 'active',
+        ]);
+
+        // Create season drivers for Division 2
+        $div2Driver1 = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+        $div2LeagueDriver1 = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+            'league_id' => $leagueId,
+            'driver_id' => $div2Driver1->id,
+            'status' => 'active',
+        ]);
+        $seasonDriver3 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+            'season_id' => $seasonId,
+            'league_driver_id' => $div2LeagueDriver1->id,
+            'status' => 'active',
+        ]);
+
+        $div2Driver2 = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+        $div2LeagueDriver2 = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+            'league_id' => $leagueId,
+            'driver_id' => $div2Driver2->id,
+            'status' => 'active',
+        ]);
+        $seasonDriver4 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+            'season_id' => $seasonId,
+            'league_driver_id' => $div2LeagueDriver2->id,
+            'status' => 'active',
+        ]);
+
+        // Division 1 - Driver 1 is fastest (should get pole)
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDriver1->id,
+            'division_id' => $division1->id,
+            'fastest_lap' => '01:23:45.123',
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        // Division 1 - Driver 2 is slower
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDriver2->id,
+            'division_id' => $division1->id,
+            'fastest_lap' => '01:23:46.000',
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        // Division 2 - Driver 3 is fastest in Division 2 (should get pole in Division 2)
+        // Note: This time is FASTER than Division 1 drivers, but should still get pole in Division 2
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDriver3->id,
+            'division_id' => $division2->id,
+            'fastest_lap' => '01:23:44.000',
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        // Division 2 - Driver 4 is slower
+        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDriver4->id,
+            'division_id' => $division2->id,
+            'fastest_lap' => '01:23:47.000',
+            'dnf' => false,
+            'status' => 'pending',
+        ]);
+
+        // Mark qualifier as completed
+        $response = $this->actingAs($this->user)
+            ->putJson(self::APP_URL . "/api/qualifiers/{$qualifierId}", [
+                'status' => 'completed',
+            ]);
+
+        $response->assertStatus(200);
+
+        // Verify Division 1 - Driver 1 gets pole and points
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDriver1->id,
+            'division_id' => $division1->id,
+            'position' => 1,
+            'has_pole' => true,
+            'race_points' => 3,
+        ]);
+
+        // Verify Division 1 - Driver 2 does NOT get pole
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDriver2->id,
+            'division_id' => $division1->id,
+            'position' => 2,
+            'has_pole' => false,
+            'race_points' => 0,
+        ]);
+
+        // Verify Division 2 - Driver 3 gets pole and points (even though faster overall)
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDriver3->id,
+            'division_id' => $division2->id,
+            'position' => 1,
+            'has_pole' => true,
+            'race_points' => 3,
+        ]);
+
+        // Verify Division 2 - Driver 4 does NOT get pole
+        $this->assertDatabaseHas('race_results', [
+            'race_id' => $qualifierId,
+            'driver_id' => $seasonDriver4->id,
+            'division_id' => $division2->id,
             'position' => 2,
             'has_pole' => false,
             'race_points' => 0,
