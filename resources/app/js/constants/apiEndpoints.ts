@@ -82,6 +82,7 @@ export const API_ENDPOINTS = {
       `/seasons/${seasonId}/drivers/${seasonDriverId}/division`,
     seasonDriverStats: (seasonId: number) => `/seasons/${seasonId}/drivers/stats`,
     availableDrivers: (seasonId: number) => `/seasons/${seasonId}/available-drivers`,
+    standings: (seasonId: number) => `/seasons/${seasonId}/standings`,
   },
 
   // Round endpoints

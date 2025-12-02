@@ -19,15 +19,25 @@ final readonly class RaceTime
             return new self(null);
         }
 
-        // Validate format: hh:mm:ss.ms (ms can be 1-3 digits)
-        // Also allow +hh:mm:ss.ms for differences
-        $pattern = '/^[+]?(\d{1,2}):(\d{2}):(\d{2})\.(\d{1,3})$/';
+        // Strip leading + sign if present (normalize input)
+        $normalizedValue = ltrim($value, '+');
 
-        if (!preg_match($pattern, $value)) {
+        // Validate format: hh:mm:ss.ms (ms can be 1-3 digits)
+        $pattern = '/^(\d{1,2}):(\d{2}):(\d{2})\.(\d{1,3})$/';
+
+        if (!preg_match($pattern, $normalizedValue, $matches)) {
             throw InvalidRaceTimeException::invalidFormat($value);
         }
 
-        return new self($value);
+        // Normalize milliseconds to always be 3 digits for consistency
+        $hours = $matches[1];
+        $minutes = $matches[2];
+        $seconds = $matches[3];
+        $milliseconds = str_pad($matches[4], 3, '0', STR_PAD_RIGHT);
+
+        $normalizedValue = sprintf('%s:%s:%s.%s', $hours, $minutes, $seconds, $milliseconds);
+
+        return new self($normalizedValue);
     }
 
     public function value(): ?string
@@ -49,7 +59,6 @@ final readonly class RaceTime
             return null;
         }
 
-        $isPositive = str_starts_with($this->value, '+');
         $timeStr = ltrim($this->value, '+');
 
         preg_match('/^(\d{1,2}):(\d{2}):(\d{2})\.(\d{1,3})$/', $timeStr, $matches);

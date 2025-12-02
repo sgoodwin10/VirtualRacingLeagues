@@ -175,8 +175,8 @@ describe('RoundStandingsSection', () => {
       expect(wrapper.text()).toContain('4');
     });
 
-    it('should display race points when raceCount >= 2', () => {
-      const wrapper = createWrapper({ raceCount: 2 });
+    it('should display race points when hasRacePointsEnabled is true', () => {
+      const wrapper = createWrapper({ hasRacePointsEnabled: true });
 
       expect(wrapper.text()).toContain('25');
       expect(wrapper.text()).toContain('18');
@@ -202,7 +202,7 @@ describe('RoundStandingsSection', () => {
 
       const wrapper = createWrapper({
         roundStandings: standingsWithZeroRacePoints,
-        raceCount: 2,
+        hasRacePointsEnabled: true,
       });
 
       // Should display "0" in the race points column, not an empty string
@@ -212,8 +212,8 @@ describe('RoundStandingsSection', () => {
       expect(html).toContain('0');
     });
 
-    it('should not display race points column when raceCount < 2', () => {
-      const wrapper = createWrapper({ raceCount: 1 });
+    it('should not display race points column when hasRacePointsEnabled is false', () => {
+      const wrapper = createWrapper({ hasRacePointsEnabled: false });
 
       // Race points column should not be visible, but Total Points column will still show
       // We can verify by checking that the Total Race Points header is not present
@@ -350,8 +350,8 @@ describe('RoundStandingsSection', () => {
   });
 
   describe('Column Headers', () => {
-    it('should display all required column headers when raceCount < 2', () => {
-      const wrapper = createWrapper({ raceCount: 1 });
+    it('should display all required column headers when hasRacePointsEnabled is false', () => {
+      const wrapper = createWrapper({ hasRacePointsEnabled: false });
 
       expect(wrapper.text()).toContain('#');
       expect(wrapper.text()).toContain('Driver');
@@ -362,8 +362,8 @@ describe('RoundStandingsSection', () => {
       expect(wrapper.text()).toContain('Final Points');
     });
 
-    it('should display Total Race Points column when raceCount >= 2', () => {
-      const wrapper = createWrapper({ raceCount: 2 });
+    it('should display Total Race Points column when hasRacePointsEnabled is true', () => {
+      const wrapper = createWrapper({ hasRacePointsEnabled: true });
 
       expect(wrapper.text()).toContain('#');
       expect(wrapper.text()).toContain('Driver');
@@ -374,7 +374,7 @@ describe('RoundStandingsSection', () => {
       expect(wrapper.text()).toContain('Final Points');
     });
 
-    it('should not display Total Race Points column when raceCount is undefined', () => {
+    it('should not display Total Race Points column when hasRacePointsEnabled is undefined', () => {
       const wrapper = createWrapper();
 
       expect(wrapper.text()).toContain('#');

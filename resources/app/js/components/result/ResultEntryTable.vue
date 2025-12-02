@@ -5,19 +5,19 @@
         <tr>
           <th class="px-2 py-2 text-center font-medium text-gray-700 w-6">#</th>
           <th class="px-2 py-2 text-left font-medium text-gray-700 min-w-[200px]">Driver</th>
-          <th v-if="!isQualifying" class="px-2 py-2 text-left font-medium text-gray-700 w-42">
+          <th v-if="!isQualifying" class="px-2 py-2 text-right font-medium text-gray-700 w-42">
             Race Time
           </th>
-          <th v-if="!isQualifying" class="px-2 py-2 text-left font-medium text-gray-700 w-42">
+          <th v-if="!isQualifying" class="px-2 py-2 text-right font-medium text-gray-700 w-42">
             Time Diff
           </th>
-          <th class="px-2 py-2 text-left font-medium text-gray-700 w-42">
+          <th class="px-2 py-2 text-right font-medium text-gray-700 w-42">
             {{ isQualifying ? 'Lap Time' : 'Fastest Lap' }}
           </th>
-          <th v-if="!isQualifying" class="px-2 py-2 text-left font-medium text-gray-700 w-42">
+          <th v-if="!isQualifying" class="px-2 py-2 text-right font-medium text-gray-700 w-42">
             Penalties
           </th>
-          <th v-if="!isQualifying" class="px-2 py-2 text-center font-medium text-gray-700 w-20">
+          <th v-if="!isQualifying" class="px-2 py-2 text-right font-medium text-gray-700 w-20">
             DNF
           </th>
           <th v-if="!readOnly" class="px-2 py-2 text-center font-medium text-gray-700 w-4"></th>
@@ -27,7 +27,7 @@
         <tr
           v-for="(row, index) in sortedResults"
           :key="row.driver_id ?? `empty-${index}`"
-          class="border-b border-gray-100 hover:bg-gray-50"
+          :class="['border-b border-gray-100', getRowClass(index) || 'hover:bg-gray-50']"
         >
           <td class="px-2 py-2 text-gray-500 text-center">{{ index + 1 }}</td>
           <td class="px-2 py-2">
@@ -49,10 +49,10 @@
               />
             </template>
           </td>
-          <td v-if="!isQualifying" class="px-2 py-2">
+          <td v-if="!isQualifying" class="px-2 py-2 text-end">
             <!-- Read-only: show time as text -->
             <template v-if="readOnly">
-              <span class="text-gray-900 font-mono">{{ row.race_time || '-' }}</span>
+              <span class="text-gray-900 font-mono">{{ formatRaceTime(row.race_time) }}</span>
             </template>
             <!-- Edit mode: show input -->
             <template v-else>
@@ -63,10 +63,12 @@
               />
             </template>
           </td>
-          <td v-if="!isQualifying" class="px-2 py-2">
+          <td v-if="!isQualifying" class="px-2 py-2 text-end">
             <!-- Read-only: show time diff as text -->
             <template v-if="readOnly">
-              <span class="text-gray-900 font-mono">{{ row.race_time_difference || '-' }}</span>
+              <span v-if="row.race_time_difference !== null && row.race_time_difference !== ''" class="text-gray-900 font-mono">+{{
+                formatRaceTime(row.race_time_difference)
+              }}</span>
             </template>
             <!-- Edit mode: show input -->
             <template v-else>
@@ -77,10 +79,24 @@
               />
             </template>
           </td>
-          <td class="px-2 py-2">
+          <td class="px-2 py-2 text-end">
             <!-- Read-only: show fastest lap as text -->
             <template v-if="readOnly">
-              <span class="text-gray-900 font-mono">{{ row.fastest_lap || '-' }}</span>
+              <Tag
+                v-if="row.has_fastest_lap && !isQualifying"
+                value="FL"
+                class="text-xs bg-purple-500 text-white mr-1"
+                :pt="{ root: { class: 'bg-purple-500 text-white border-purple-600' } }"
+              />
+              <span
+                class="font-mono"
+                :class="{
+                  'text-purple-600': row.has_pole || row.has_fastest_lap,
+                  'text-gray-900': !row.has_fastest_lap,
+                }"
+                >{{ formatRaceTime(row.fastest_lap) }}</span
+              >
+              
             </template>
             <!-- Edit mode: show input -->
             <template v-else>
@@ -91,10 +107,10 @@
               />
             </template>
           </td>
-          <td v-if="!isQualifying" class="px-2 py-2">
+          <td v-if="!isQualifying" class="px-2 py-2 text-end">
             <!-- Read-only: show penalties as text -->
             <template v-if="readOnly">
-              <span class="text-gray-900 font-mono">{{ row.penalties || '-' }}</span>
+              <span class="text-gray-900 font-mono">{{ formatRaceTime(row.penalties) }}</span>
             </template>
             <!-- Edit mode: show input -->
             <template v-else>
@@ -151,9 +167,12 @@
 import { computed } from 'vue';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
+import Tag from 'primevue/tag';
 import Checkbox from 'primevue/checkbox';
-import ResultTimeInput from './ResultTimeInput.vue';
+import ResultTimeInput from '@app/components/result/ResultTimeInput.vue';
 import { useRaceTimeCalculation } from '@app/composables/useRaceTimeCalculation';
+import { useTimeFormat } from '@app/composables/useTimeFormat';
+import { getPodiumRowClass } from '@app/constants/podiumColors';
 import type { RaceResultFormData, DriverOption } from '@app/types/raceResult';
 
 interface Props {
@@ -172,20 +191,32 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const { sortResultsByTime } = useRaceTimeCalculation();
+const { formatRaceTime } = useTimeFormat();
+
+/**
+ * Check if a result row has meaningful data to display
+ * A row is considered to have data if it has race_time, fastest_lap, or DNF
+ */
+function hasResultData(row: RaceResultFormData): boolean {
+  return Boolean(row.race_time || row.fastest_lap || row.dnf);
+}
 
 const sortedResults = computed(() => {
+  // In read-only mode, filter out drivers without any result data
+  const resultsToProcess = props.readOnly ? props.results.filter(hasResultData) : props.results;
+
   // Check if any results have times entered - if not, keep original order
-  const hasAnyTimes = props.results.some((r) =>
+  const hasAnyTimes = resultsToProcess.some((r) =>
     props.isQualifying ? r.fastest_lap : r.race_time || r.race_time_difference,
   );
 
   if (!hasAnyTimes) {
     // Return results in original order (by driver name order from props)
-    return props.results;
+    return resultsToProcess;
   }
 
   // Sort results by time, then separate DNF drivers to the bottom
-  const sorted = sortResultsByTime(props.results, props.isQualifying);
+  const sorted = sortResultsByTime(resultsToProcess, props.isQualifying);
 
   // Separate into non-DNF and DNF groups
   const nonDnfResults = sorted.filter((r) => !r.dnf);
@@ -218,6 +249,15 @@ function getDriverName(driverId: number | null): string {
   if (driverId === null) return '-';
   const driver = props.drivers.find((d) => d.id === driverId);
   return driver?.name ?? '-';
+}
+
+/**
+ * Get row class for podium styling in read-only mode
+ * Position is 1-indexed (index + 1)
+ */
+function getRowClass(index: number): string {
+  if (!props.readOnly) return '';
+  return getPodiumRowClass(index + 1);
 }
 
 function handleDriverChange(): void {

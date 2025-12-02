@@ -694,4 +694,41 @@ describe('SeasonDriversTable', () => {
     const searchInput = wrapper.find('input');
     expect(searchInput.attributes('disabled')).toBeDefined();
   });
+
+  it('maintains focus on search input after search completes', async () => {
+    const pinia = createPinia();
+
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        raceDivisionsEnabled: true, // Enable to show search field
+      },
+      global: {
+        plugins: [pinia],
+      },
+      attachTo: document.body, // Attach to body to test focus
+    });
+
+    const searchInput = wrapper.find('input');
+
+    // Focus the input
+    (searchInput.element as HTMLInputElement).focus();
+    expect(document.activeElement).toBe(searchInput.element);
+
+    // Type in the search field
+    await searchInput.setValue('John');
+
+    // Wait for debounce
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await wrapper.vm.$nextTick();
+
+    // Verify the input is NOT disabled during search (which would cause focus loss)
+    expect(searchInput.attributes('disabled')).toBeUndefined();
+
+    // Verify focus is maintained (input stays enabled, so focus is preserved)
+    expect(document.activeElement).toBe(searchInput.element);
+
+    wrapper.unmount();
+  });
 });

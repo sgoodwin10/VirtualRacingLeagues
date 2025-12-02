@@ -1,90 +1,96 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-lg">
-    <!-- Section Header -->
-    <div class="bg-amber-50 px-4 py-3 border-b border-amber-200">
-      <div class="flex items-center gap-2">
-        <PhTrophy :size="20" class="text-amber-600" />
-        <h3 class="font-semibold text-gray-900">Round Standings</h3>
-      </div>
-    </div>
+  <Accordion value="0" class="bg-white border border-slate-200 rounded">
+    <AccordionPanel value="0">
+      <AccordionHeader class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div class="flex items-center gap-2">
+          <PhTrophy :size="20" class="text-amber-600" />
+          <h3 class="font-semibold text-gray-900">Round Standings</h3>
+        </div>
+      </AccordionHeader>
+      <AccordionContent>
+        <!-- Standings Table -->
+        <div class="overflow-x-auto">
+          <DataTable :value="displayStandings" :rows="50" :row-class="getRowClass" class="">
+            <Column field="position" header="#" class="w-16">
+              <template #body="{ data }">
+                <div class="text-center font-bold">
+                  {{ data.position }}
+                </div>
+              </template>
+            </Column>
 
-    <!-- Standings Table -->
-    <div class="overflow-x-auto">
-      <DataTable :value="displayStandings" :rows="50" :row-class="getRowClass" class="text-sm">
-        <Column field="position" header="#" class="w-16">
-          <template #body="{ data }">
-            <div class="text-center font-bold">
-              {{ data.position }}
-            </div>
-          </template>
-        </Column>
+            <Column field="driver_name" header="Driver" class="min-w-[170px]">
+              <template #body="{ data }">
+                <span class="font-medium text-gray-900">{{ data.driver_name }}</span>
+              </template>
+            </Column>
 
-        <Column field="driver_name" header="Driver" class="min-w-[200px]">
-          <template #body="{ data }">
-            <span class="font-medium text-gray-900">{{ data.driver_name }}</span>
-          </template>
-        </Column>
-
-        <Column
-          v-if="showTotalRacePoints"
-          field="race_points"
-          header="Total Race Points"
-          class="w-32"
-        >
-          <template #body="{ data }">
-            <div class="text-center text-gray-900">
-              {{ data.race_points ?? '' }}
-            </div>
-          </template>
-        </Column>
-
-        <Column field="fastest_lap_points" header="Fastest Lap" class="w-32">
-          <template #body="{ data }">
-            <div v-if="data.fastest_lap_points" class="flex items-center justify-center gap-2">
-              <span class="text-gray-900">{{ data.fastest_lap_points }}</span>
-              <PhLightning :size="16" weight="fill" class="text-purple-500" />
-            </div>
-          </template>
-        </Column>
-
-        <Column field="pole_position_points" header="Pole Position" class="w-32">
-          <template #body="{ data }">
-            <div
-              v-if="data.pole_position_points"
-              class="flex items-center justify-center gap-2 text-purple-500 font-bold"
+            <Column
+              v-if="showTotalRacePoints"
+              field="race_points"
+              header="Total Race Points"
+              class="w-32"
             >
-              <PhMedal :size="16" weight="fill" class="text-purple-500" />
-              <span class="text-gray-900">{{ data.pole_position_points }}</span>
-            </div>
-          </template>
-        </Column>
+              <template #body="{ data }">
+                <div class="text-center text-gray-900">
+                  {{ data.race_points ?? '' }}
+                </div>
+              </template>
+            </Column>
 
-        <Column field="total_positions_gained" header="+/-" class="w-24">
-          <template #body="{ data }">
-            <div class="text-center font-semibold" :class="getPositionsGainedClass(data)">
-              {{ formatPositionsGained(data.total_positions_gained) }}
-            </div>
-          </template>
-        </Column>
+            <Column field="fastest_lap_points" header="Fastest Lap" class="w-32">
+              <template #body="{ data }">
+                <div v-if="data.fastest_lap_points" class="flex items-center justify-center gap-2">
+                  <PhLightning :size="16" weight="fill" class="text-purple-500" />
+                  <span class="text-gray-900">{{ data.fastest_lap_points }}</span>
+                </div>
+              </template>
+            </Column>
 
-        <Column field="total_points" header="Final Points" class="w-32">
-          <template #body="{ data }">
-            <div class="text-center font-bold text-gray-900">
-              {{ data.total_points ?? '' }}
-            </div>
-          </template>
-        </Column>
+            <Column field="pole_position_points" header="Pole Position" class="w-32">
+              <template #body="{ data }">
+                <div
+                  v-if="data.pole_position_points"
+                  class="flex items-center justify-center gap-2 text-purple-500 font-bold"
+                >
+                  <PhMedal :size="16" weight="fill" class="text-purple-500" />
+                  <span class="text-gray-900">{{ data.pole_position_points }}</span>
+                </div>
+              </template>
+            </Column>
 
-        <template #empty>
-          <div class="text-center py-6 text-gray-500">No standings data available</div>
-        </template>
-      </DataTable>
-    </div>
-  </div>
+            <Column field="total_positions_gained" header="+/-" class="w-24">
+              <template #body="{ data }">
+                <div class="text-center font-semibold" :class="getPositionsGainedClass(data)">
+                  {{ formatPositionsGained(data.total_positions_gained) }}
+                </div>
+              </template>
+            </Column>
+
+            <Column field="total_points" header="Final Points" class="w-32">
+              <template #body="{ data }">
+                <div class="text-center font-bold text-gray-900">
+                  {{ data.total_points ?? '' }}
+                </div>
+              </template>
+            </Column>
+
+            <template #empty>
+              <div class="text-center py-6 text-gray-500">No standings data available</div>
+            </template>
+          </DataTable>
+        </div>
+      </AccordionContent>
+    </AccordionPanel>
+  </Accordion>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import Accordion from 'primevue/accordion';
+import AccordionPanel from 'primevue/accordionpanel';
+import AccordionHeader from 'primevue/accordionheader';
+import AccordionContent from 'primevue/accordioncontent';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { PhTrophy, PhLightning, PhMedal } from '@phosphor-icons/vue';
@@ -98,7 +104,7 @@ import type {
 interface Props {
   roundStandings: RoundStandings | null;
   divisionId?: number;
-  raceCount?: number;
+  hasRacePointsEnabled?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -125,8 +131,8 @@ function isDivisionStandings(
 
 // Computed
 const showTotalRacePoints = computed(() => {
-  // Only show Total Race Points column if there are 2 or more races
-  return (props.raceCount ?? 0) >= 2;
+  // Only show Total Race Points column if any race in the round has race_points enabled
+  return props.hasRacePointsEnabled ?? false;
 });
 
 const displayStandings = computed<RoundStandingDriver[]>(() => {

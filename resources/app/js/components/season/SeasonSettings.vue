@@ -2,12 +2,15 @@
 import { ref, computed } from 'vue';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import type { Season } from '@app/types/season';
 
-import Card from 'primevue/card';
+import { PhGear, PhPlay, PhFlag, PhArchive, PhTrash, PhWarning } from '@phosphor-icons/vue';
+import BasePanel from '@app/components/common/panels/BasePanel.vue';
+import PanelHeader from '@app/components/common/panels/PanelHeader.vue';
 import Button from 'primevue/button';
+import Tag from 'primevue/tag';
 import Message from 'primevue/message';
-import { useConfirm } from 'primevue/useconfirm';
 
 import SeasonDeleteDialog from './modals/SeasonDeleteDialog.vue';
 
@@ -40,6 +43,17 @@ const canComplete = computed(() => props.season.status === 'active');
 const canArchive = computed(
   () => props.season.status === 'completed' || props.season.status === 'active',
 );
+
+// Status display configuration
+const statusConfig = computed(() => {
+  const configs = {
+    setup: { label: 'Setup', severity: 'secondary' as const },
+    active: { label: 'Active', severity: 'success' as const },
+    completed: { label: 'Completed', severity: 'info' as const },
+    archived: { label: 'Archived', severity: 'warn' as const },
+  };
+  return configs[props.season.status];
+});
 
 async function handleArchive(): Promise<void> {
   confirm.require({
@@ -160,97 +174,158 @@ function handleSeasonDeleted(): void {
 </script>
 
 <template>
-  <div class="season-settings space-y-6">
-    <!-- Status Management Section -->
-    <Card v-if="!season.is_archived">
-      <template #title>Season Status</template>
-      <template #content>
-        <p class="text-gray-600 mb-4">Manage the season lifecycle:</p>
-
-        <div class="space-y-3">
-          <!-- Activate -->
-          <div v-if="season.status === 'setup'" class="flex items-center justify-between">
-            <div>
-              <h4 class="font-semibold">Activate Season</h4>
-              <p class="text-sm text-gray-600">Start this season and open it for racing</p>
-            </div>
-            <Button
-              label="Activate"
-              icon="pi pi-play"
-              severity="success"
-              :loading="isActivating"
-              :disabled="!canActivate || isActivating"
-              @click="handleActivate"
+  <div class="season-settings space-y-4">
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Left Column: Season Status (2/3 width) -->
+      <div class="lg:col-span-2">
+        <!-- Season Status Panel -->
+        <BasePanel v-if="!season.is_archived" class="h-full">
+          <template #header>
+            <PanelHeader
+              :icon="PhGear"
+              :icon-size="20"
+              icon-class="text-blue-600"
+              title="Season Status"
+              description="Manage your season lifecycle"
+              gradient="from-blue-50 to-indigo-50"
             />
-          </div>
+          </template>
 
-          <!-- Complete -->
-          <div v-if="season.status === 'active'" class="flex items-center justify-between">
-            <div>
-              <h4 class="font-semibold">Complete Season</h4>
-              <p class="text-sm text-gray-600">Mark this season as finished</p>
+          <div class="p-4">
+            <!-- Current Status Display -->
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+              <div>
+                <span class="text-lg font-medium text-gray-900">Current Status</span>
+              </div>
+              <Tag :value="statusConfig.label" :severity="statusConfig.severity" />
             </div>
-            <Button
-              label="Complete"
-              icon="pi pi-flag-fill"
-              severity="info"
-              :loading="isCompleting"
-              :disabled="!canComplete || isCompleting"
-              @click="handleComplete"
-            />
-          </div>
 
-          <!-- Archive -->
-          <div
-            v-if="season.status === 'completed' || season.status === 'active'"
-            class="flex items-center justify-between"
-          >
-            <div>
-              <h4 class="font-semibold">Archive Season</h4>
-              <p class="text-sm text-gray-600">Hide from active lists and make read-only</p>
+            <!-- Status Actions -->
+            <div class="space-y-3">
+              <!-- Activate Action -->
+              <div class="flex items-center justify-between py-2">
+                <div class="flex items-center gap-3">
+                  <PhPlay :size="20" class="text-green-600" weight="fill" />
+                  <div>
+                    <div class="font-medium text-gray-900">Activate Season</div>
+                    <div class="text-sm text-gray-600">Start racing and open for results</div>
+                  </div>
+                </div>
+                <Button
+                  label="Activate"
+                  size="small"
+                  severity="success"
+                  :loading="isActivating"
+                  :disabled="!canActivate"
+                  @click="handleActivate"
+                />
+              </div>
+
+              <!-- Complete Action -->
+              <div class="flex items-center justify-between py-2">
+                <div class="flex items-center gap-3">
+                  <PhFlag :size="20" class="text-blue-600" weight="fill" />
+                  <div>
+                    <div class="font-medium text-gray-900">Complete Season</div>
+                    <div class="text-sm text-gray-600">Mark season as finished</div>
+                  </div>
+                </div>
+                <Button
+                  label="Complete"
+                  size="small"
+                  severity="info"
+                  :loading="isCompleting"
+                  :disabled="!canComplete"
+                  @click="handleComplete"
+                />
+              </div>
+
+              <!-- Archive Action -->
+              <div class="flex items-center justify-between py-2">
+                <div class="flex items-center gap-3">
+                  <PhArchive :size="20" class="text-gray-600" weight="fill" />
+                  <div>
+                    <div class="font-medium text-gray-900">Archive Season</div>
+                    <div class="text-sm text-gray-600">Hide from lists and make read-only</div>
+                  </div>
+                </div>
+                <Button
+                  label="Archive"
+                  size="small"
+                  severity="secondary"
+                  :loading="isArchiving"
+                  :disabled="!canArchive"
+                  @click="handleArchive"
+                />
+              </div>
             </div>
-            <Button
-              label="Archive"
-              icon="pi pi-archive"
-              severity="secondary"
-              :loading="isArchiving"
-              :disabled="!canArchive || isArchiving"
-              @click="handleArchive"
-            />
           </div>
+        </BasePanel>
+
+        <!-- Archived Season Info Panel -->
+        <BasePanel v-else class="h-full">
+          <template #header>
+            <PanelHeader
+              :icon="PhArchive"
+              :icon-size="20"
+              icon-class="text-amber-600"
+              title="Archived Season"
+              gradient="from-amber-50 to-orange-50"
+            />
+          </template>
+
+          <div class="p-4">
+            <Message severity="info" :closable="false">
+              This season is archived and read-only. To make changes, restore it from the archived
+              status first.
+            </Message>
+          </div>
+        </BasePanel>
+      </div>
+
+      <!-- Right Column: Danger Zone (1/3 width) -->
+      <div class="lg:col-span-1">
+        <!-- Danger Zone Panel with red border -->
+        <div class="h-full rounded-lg border-2 border-red-300 bg-red-50/30 overflow-hidden">
+          <BasePanel class="h-full border-0 shadow-none bg-transparent">
+            <template #header>
+              <PanelHeader
+                :icon="PhWarning"
+                :icon-size="20"
+                icon-class="text-red-600"
+                title="Danger Zone"
+                description="Irreversible actions"
+                gradient="from-red-100 to-rose-100"
+              />
+            </template>
+
+            <div class="p-4">
+              <div class="flex flex-col gap-3">
+                <div class="flex items-start gap-3">
+                  <PhTrash :size="20" class="text-red-600 mt-0.5 shrink-0" weight="fill" />
+                  <div>
+                    <div class="font-medium text-gray-900 mb-1">Delete Season</div>
+                    <div class="text-sm text-gray-600">
+                      Permanently remove all race results and historical data. This action cannot be
+                      undone.
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  label="Delete Season"
+                  size="small"
+                  severity="danger"
+                  outlined
+                  class="w-full"
+                  @click="handleDelete"
+                />
+              </div>
+            </div>
+          </BasePanel>
         </div>
-      </template>
-    </Card>
-
-    <!-- Archived Status Info -->
-    <Card v-else>
-      <template #title>Archived Season</template>
-      <template #content>
-        <Message severity="info" :closable="false">
-          This season is archived and read-only. To make changes, restore it from the completed
-          status first.
-        </Message>
-      </template>
-    </Card>
-
-    <!-- Danger Zone -->
-    <Card>
-      <template #title>
-        <span class="text-red-600">Danger Zone</span>
-      </template>
-      <template #content>
-        <Message severity="error" :closable="false" class="mb-4">
-          <strong>PERMANENT DELETION</strong>
-        </Message>
-
-        <p class="text-gray-600 mb-4">
-          Deleting this season will permanently remove all driver assignments, race results, and
-          historical data. This action cannot be undone.
-        </p>
-
-        <Button label="Delete Season" severity="danger" @click="handleDelete" />
-      </template>
-    </Card>
+      </div>
+    </div>
 
     <SeasonDeleteDialog
       v-model:visible="showDeleteDialog"

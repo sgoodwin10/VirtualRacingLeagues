@@ -829,4 +829,174 @@ describe('RoundsPanel', () => {
 
     expect(addEventButton).toBeDefined();
   });
+
+  it('should format round points tooltip with all configuration details', async () => {
+    const roundWithPoints: Round = {
+      id: 1,
+      season_id: 1,
+      platform_track_id: 1,
+      round_number: 1,
+      name: 'Round with Points',
+      slug: 'round-with-points',
+      scheduled_at: '2025-01-15T10:00:00Z',
+      timezone: 'UTC',
+      track_layout: null,
+      track_conditions: null,
+      technical_notes: null,
+      stream_url: null,
+      internal_notes: null,
+      fastest_lap: 1,
+      fastest_lap_top_10: true,
+      qualifying_pole: 3,
+      qualifying_pole_top_10: false,
+      points_system: JSON.stringify({ 1: 25, 2: 18, 3: 15, 4: 12, 5: 10 }),
+      round_points: true,
+      status: 'scheduled',
+      status_label: 'Scheduled',
+      created_by_user_id: 1,
+      created_at: '2025-01-01T10:00:00Z',
+      updated_at: '2025-01-01T10:00:00Z',
+      deleted_at: null,
+    };
+
+    roundStore.rounds = [roundWithPoints];
+
+    const wrapper = mount(RoundsPanel, {
+      props: {
+        seasonId: 1,
+        platformId: 1,
+      },
+      global: {
+        stubs: {
+          BasePanel: true,
+          Button: true,
+          Accordion: true,
+          AccordionPanel: true,
+          AccordionHeader: true,
+          AccordionContent: true,
+          Tag: true,
+          Skeleton: true,
+          ConfirmDialog: true,
+          ToggleSwitch: true,
+          RoundFormDrawer: true,
+          RaceFormDrawer: true,
+          RaceListItem: true,
+          QualifierListItem: true,
+        },
+      },
+    });
+
+    await flushPromises();
+
+    const vm = wrapper.vm as unknown as {
+      formatRoundPointsTooltip: (round: Round) => string;
+    };
+
+    const tooltipText = vm.formatRoundPointsTooltip(roundWithPoints);
+
+    // Should contain header
+    expect(tooltipText).toContain('Round Points Configuration');
+
+    // Should contain position points with grid layout
+    expect(tooltipText).toContain('Position Points:');
+    expect(tooltipText).toContain(
+      '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem 0.5rem; margin-top: 0.5rem;">',
+    );
+    // Check that position points are present (format is <span class="w-6">P1:</span> 25)
+    expect(tooltipText).toContain('P1:');
+    expect(tooltipText).toContain('25');
+    expect(tooltipText).toContain('P2:');
+    expect(tooltipText).toContain('18');
+    expect(tooltipText).toContain('P5:');
+    expect(tooltipText).toContain('10');
+
+    // Should contain bonus points
+    expect(tooltipText).toContain('Bonus Points:');
+    expect(tooltipText).toContain('Fastest Lap: +1 pts (Top 10 only)');
+    expect(tooltipText).toContain('Pole Position: +3 pts');
+  });
+
+  it('should format round points tooltip without bonus points when none configured', async () => {
+    const roundWithoutBonuses: Round = {
+      id: 1,
+      season_id: 1,
+      platform_track_id: 1,
+      round_number: 1,
+      name: 'Round without Bonuses',
+      slug: 'round-without-bonuses',
+      scheduled_at: '2025-01-15T10:00:00Z',
+      timezone: 'UTC',
+      track_layout: null,
+      track_conditions: null,
+      technical_notes: null,
+      stream_url: null,
+      internal_notes: null,
+      fastest_lap: null,
+      fastest_lap_top_10: false,
+      qualifying_pole: null,
+      qualifying_pole_top_10: false,
+      points_system: JSON.stringify({ 1: 25, 2: 18, 3: 15 }),
+      round_points: true,
+      status: 'scheduled',
+      status_label: 'Scheduled',
+      created_by_user_id: 1,
+      created_at: '2025-01-01T10:00:00Z',
+      updated_at: '2025-01-01T10:00:00Z',
+      deleted_at: null,
+    };
+
+    roundStore.rounds = [roundWithoutBonuses];
+
+    const wrapper = mount(RoundsPanel, {
+      props: {
+        seasonId: 1,
+        platformId: 1,
+      },
+      global: {
+        stubs: {
+          BasePanel: true,
+          Button: true,
+          Accordion: true,
+          AccordionPanel: true,
+          AccordionHeader: true,
+          AccordionContent: true,
+          Tag: true,
+          Skeleton: true,
+          ConfirmDialog: true,
+          ToggleSwitch: true,
+          RoundFormDrawer: true,
+          RaceFormDrawer: true,
+          RaceListItem: true,
+          QualifierListItem: true,
+        },
+      },
+    });
+
+    await flushPromises();
+
+    const vm = wrapper.vm as unknown as {
+      formatRoundPointsTooltip: (round: Round) => string;
+    };
+
+    const tooltipText = vm.formatRoundPointsTooltip(roundWithoutBonuses);
+
+    // Should contain header
+    expect(tooltipText).toContain('Round Points Configuration');
+
+    // Should contain position points with grid layout
+    expect(tooltipText).toContain('Position Points:');
+    expect(tooltipText).toContain(
+      '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem 0.5rem; margin-top: 0.5rem;">',
+    );
+    expect(tooltipText).toContain('P1:');
+    expect(tooltipText).toContain('25');
+    expect(tooltipText).toContain('P2:');
+    expect(tooltipText).toContain('18');
+    expect(tooltipText).toContain('P3:');
+    expect(tooltipText).toContain('15');
+
+    // Should indicate no bonus points
+    expect(tooltipText).toContain('Bonus Points:');
+    expect(tooltipText).toContain('None');
+  });
 });

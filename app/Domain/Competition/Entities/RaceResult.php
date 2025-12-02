@@ -319,6 +319,22 @@ final class RaceResult
         }
     }
 
+    public function markAsFastestLap(): void
+    {
+        if (!$this->hasFastestLap) {
+            $this->hasFastestLap = true;
+            $this->updatedAt = new DateTimeImmutable();
+        }
+    }
+
+    public function clearFastestLap(): void
+    {
+        if ($this->hasFastestLap) {
+            $this->hasFastestLap = false;
+            $this->updatedAt = new DateTimeImmutable();
+        }
+    }
+
     // Domain Events
     private function recordEvent(object $event): void
     {

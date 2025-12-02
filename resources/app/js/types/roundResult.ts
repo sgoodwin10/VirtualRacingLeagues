@@ -76,6 +76,7 @@ export interface RaceEventResults {
   race_number: number;
   name: string | null;
   is_qualifier: boolean;
+  race_points: boolean;
   status: string;
   results: RaceResultWithDriver[];
 }

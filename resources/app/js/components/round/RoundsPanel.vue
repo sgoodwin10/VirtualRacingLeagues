@@ -81,9 +81,13 @@
               <div class="flex items-center gap-2">
                 <Tag
                   v-if="round.round_points"
-                  v-tooltip.top="
-                    'Round points enabled: Race results are combined to create a round standing'
-                  "
+                  v-tooltip.top="{
+                    value: formatRoundPointsTooltip(round),
+                    escape: false,
+                    pt: {
+                      text: 'max-w-md whitespace-pre-wrap font-mono text-xs leading-relaxed',
+                    },
+                  }"
                   icon="pi pi-calculator"
                   severity="info"
                   value="Round Points"
@@ -129,12 +133,7 @@
             <div class="space-y-2">
               <!-- Round Details -->
               <div
-                v-if="
-                  round.technical_notes ||
-                  round.stream_url ||
-                  round.internal_notes ||
-                  (round.round_points && round.points_system)
-                "
+                v-if="round.technical_notes || round.stream_url || round.internal_notes"
                 class="grid grid-cols-3 gap-4 border-b border-slate-300 pb-4"
               >
                 <BasePanel
@@ -174,25 +173,11 @@
                   </template>
                   <div class="whitespace-pre-wrap">{{ round.internal_notes }}</div>
                 </BasePanel>
-
-                <BasePanel
-                  v-if="round.round_points && round.points_system"
-                  content-class="p-4 border border-slate-300 rounded-md bg-surface-50"
-                >
-                  <template #header>
-                    <div class="flex items-center gap-2 py-2 mx-2 w-full">
-                      <i class="pi pi-calculator text-blue-600"></i>
-                      <span class="font-medium text-surface-700">Round Points System</span>
-                    </div>
-                  </template>
-                  <div class="whitespace-pre-wrap font-mono text-sm">{{ round.points_system }}</div>
-                </BasePanel>
               </div>
 
               <!-- Race Events Section (Qualifying + Races) -->
               <div>
                 <div class="flex items-center justify-between my-3">
-                  <HTag :level="3">Round {{ round.round_number }} Race Events</HTag>
                   <div v-if="round.status !== 'completed'" class="flex items-center gap-2">
                     <Button
                       label="Add Event"
@@ -333,7 +318,6 @@ import type { Round } from '@app/types/round';
 import type { Race } from '@app/types/race';
 import { isQualifier } from '@app/types/race';
 import type { RGBColor } from '@app/types/competition';
-import HTag from '@app/components/common/HTag.vue';
 import { useColorRange } from '@app/composables/useColorRange';
 import { createLogger } from '@app/utils/logger';
 import { DEFAULT_COLOR_RANGE_STEPS } from '@app/constants/pagination';
@@ -483,6 +467,57 @@ function getTrackAndLocation(trackId: number | null): string {
 
 function getRoundBackgroundColor(index: number): string {
   return getColor(index);
+}
+
+function formatRoundPointsTooltip(round: Round): string {
+  const lines: string[] = ['<strong>Round Points Configuration</strong>', ''];
+
+  // Parse points system
+  if (round.points_system) {
+    try {
+      const pointsSystem = JSON.parse(round.points_system) as Record<string, number>;
+      const positions = Object.entries(pointsSystem)
+        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .map(([pos, pts]) => `<span class="w-6">P${pos}:</span> ${pts}`);
+
+      lines.push('<strong>Position Points:</strong>');
+
+      // Create a grid layout for position points
+      lines.push(
+        '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem 0.5rem; margin-top: 0.5rem;">',
+      );
+      positions.forEach((positionText) => {
+        lines.push(`<div style="white-space: nowrap;">${positionText}</div>`);
+      });
+      lines.push('</div>');
+      lines.push('');
+    } catch {
+      lines.push('<strong>Position Points:</strong> Not configured');
+      lines.push('');
+    }
+  }
+
+  // Bonus points
+  const bonuses: string[] = [];
+
+  if (round.fastest_lap !== null && round.fastest_lap > 0) {
+    const restriction = round.fastest_lap_top_10 ? ' (Top 10 only)' : '';
+    bonuses.push(`Fastest Lap: +${round.fastest_lap} pts${restriction}`);
+  }
+
+  if (round.qualifying_pole !== null && round.qualifying_pole > 0) {
+    const restriction = round.qualifying_pole_top_10 ? ' (Top 10 only)' : '';
+    bonuses.push(`Pole Position: +${round.qualifying_pole} pts${restriction}`);
+  }
+
+  if (bonuses.length > 0) {
+    lines.push('<strong>Bonus Points:</strong>');
+    lines.push(bonuses.join('\n'));
+  } else {
+    lines.push('<strong>Bonus Points:</strong> None');
+  }
+
+  return lines.join('\n');
 }
 
 function handleCreateRound(): void {

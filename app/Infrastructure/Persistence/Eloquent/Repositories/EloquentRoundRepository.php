@@ -76,7 +76,8 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
     }
 
     /**
-     * Delete a round (soft delete).
+     * Delete a round (hard delete).
+     * Cascades to all races and race results via database foreign key constraints.
      */
     public function delete(Round $round): void
     {
@@ -85,9 +86,9 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
         }
 
         /** @var RoundEloquent|null $eloquent */
-        $eloquent = RoundEloquent::find($round->id());
+        $eloquent = RoundEloquent::withTrashed()->find($round->id());
         if ($eloquent !== null) {
-            $eloquent->delete(); // Soft delete
+            $eloquent->forceDelete(); // Hard delete - cascades to races and race_results
         }
     }
 

@@ -12,15 +12,15 @@ use Spatie\LaravelData\Attributes\Validation\IntegerType;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
-use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Attributes\Validation\StringType;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class CreateRaceData extends Data
 {
     public function __construct(
-        // Basic - race_number is nullable for auto-increment
-        #[Nullable, IntegerType, Min(1)]
+        // Basic - race_number is nullable for auto-increment, 0 for qualifying races
+        #[Nullable, IntegerType, Min(0)]
         public ?int $race_number,
         #[Nullable, StringType, Between(3, 100)]
         public ?string $name,
@@ -93,47 +93,32 @@ final class CreateRaceData extends Data
     }
 
     /**
-     * Prepare data for pipeline with validation.
+     * Additional validation rules for cross-field validation.
      *
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @param ValidationContext $context
+     * @return array<string, array<mixed>>
      */
-    public static function prepareForPipeline(array $payload): array
+    public static function rules(ValidationContext $context): array
     {
-        // Validate: if fastest_lap is null, fastest_lap_top_10 must be false or null
-        $fastestLap = $payload['fastest_lap'] ?? null;
-        $fastestLapTop10 = $payload['fastest_lap_top_10'] ?? null;
-
-        if ($fastestLap === null && $fastestLapTop10 === true) {
-            throw new \InvalidArgumentException(
-                'fastest_lap_top_10 cannot be true when fastest_lap is null'
-            );
-        }
-
-        // Validate: if qualifying_pole is null, qualifying_pole_top_10 must be false or null
-        $qualifyingPole = $payload['qualifying_pole'] ?? null;
-        $qualifyingPoleTop10 = $payload['qualifying_pole_top_10'] ?? null;
-
-        if ($qualifyingPole === null && $qualifyingPoleTop10 === true) {
-            throw new \InvalidArgumentException(
-                'qualifying_pole_top_10 cannot be true when qualifying_pole is null'
-            );
-        }
-
-        // Validate: fastest_lap must be at least 1 when provided
-        if (isset($payload['fastest_lap']) && $payload['fastest_lap'] !== null && $payload['fastest_lap'] < 1) {
-            throw new \InvalidArgumentException(
-                'fastest_lap must be at least 1 when provided'
-            );
-        }
-
-        // Validate: qualifying_pole must be at least 1 when provided
-        if (isset($payload['qualifying_pole']) && $payload['qualifying_pole'] !== null && $payload['qualifying_pole'] < 1) {
-            throw new \InvalidArgumentException(
-                'qualifying_pole must be at least 1 when provided'
-            );
-        }
-
-        return $payload;
+        return [
+            // grid_source_race_id is required when grid_source is 'previous_race'
+            'grid_source_race_id' => [
+                function ($attribute, $value, $fail) use ($context) {
+                    $gridSource = $context->payload['grid_source'] ?? null;
+                    if ($gridSource === 'previous_race' && empty($value)) {
+                        $fail('The grid_source_race_id field is required when grid_source is previous_race.');
+                    }
+                },
+            ],
+            // minimum_pit_time is required when mandatory_pit_stop is true
+            'minimum_pit_time' => [
+                function ($attribute, $value, $fail) use ($context) {
+                    $mandatoryPitStop = $context->payload['mandatory_pit_stop'] ?? false;
+                    if ($mandatoryPitStop === true && $value === null) {
+                        $fail('The minimum_pit_time field is required when mandatory_pit_stop is true.');
+                    }
+                },
+            ],
+        ];
     }
 }

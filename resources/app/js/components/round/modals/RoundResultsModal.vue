@@ -11,7 +11,7 @@
       </div>
     </template>
 
-    <div class="space-y-6">
+    <div>
       <!-- Loading State -->
       <div v-if="isLoading" class="flex items-center justify-center py-12">
         <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
@@ -27,7 +27,7 @@
       <!-- Results Content -->
       <template v-else>
         <!-- Main Content Tabs (Round Results vs Cross-Division Results) -->
-        <div class="border border-gray-200 rounded-lg overflow-hidden">
+        <div class="rounded-lg overflow-hidden">
           <Tabs v-model:value="activeMainTab">
             <TabList>
               <Tab value="round-results">Round Results</Tab>
@@ -39,7 +39,7 @@
               <!-- Round Results Tab -->
               <TabPanel value="round-results">
                 <!-- Division Tabs (if divisions exist) -->
-                <div v-if="hasDivisions" class="p-4">
+                <div v-if="hasDivisions" class="p-0">
                   <Tabs v-model:value="activeDivisionId">
                     <TabList>
                       <Tab v-for="division in divisions" :key="division.id" :value="division.id">
@@ -52,24 +52,21 @@
                         :key="division.id"
                         :value="division.id"
                       >
-                        <div class="space-y-6 pt-4">
+                        <div class="space-y-2 pt-2">
                           <!-- Round Standings Section -->
                           <RoundStandingsSection
                             v-if="roundData?.round_results"
                             :round-standings="roundData.round_results"
                             :division-id="division.id"
-                            :race-count="raceCount"
+                            :has-race-points-enabled="hasRacePointsEnabled"
                           />
-
-                          <!-- Divider -->
-                          <div v-if="roundData?.round_results" class="border-t border-gray-200" />
-
                           <!-- Race Events Results -->
                           <RaceEventResultsSection
                             v-for="raceEvent in raceEvents"
                             :key="raceEvent.id"
                             :race-event="raceEvent"
                             :division-id="division.id"
+                            :is-round-completed="isRoundCompleted"
                           />
                         </div>
                       </TabPanel>
@@ -83,7 +80,7 @@
                   <RoundStandingsSection
                     v-if="roundData?.round_results"
                     :round-standings="roundData.round_results"
-                    :race-count="raceCount"
+                    :has-race-points-enabled="hasRacePointsEnabled"
                   />
 
                   <!-- Divider -->
@@ -94,6 +91,7 @@
                     v-for="raceEvent in raceEvents"
                     :key="raceEvent.id"
                     :race-event="raceEvent"
+                    :is-round-completed="isRoundCompleted"
                   />
                 </div>
               </TabPanel>
@@ -203,9 +201,13 @@ const hasResults = computed(() => {
   return raceEvents.value.length > 0 && raceEvents.value.some((event) => event.results.length > 0);
 });
 
-const raceCount = computed(() => {
-  // Count only races (not qualifiers)
-  return raceEvents.value.filter((event) => !event.is_qualifier).length;
+const hasRacePointsEnabled = computed(() => {
+  // Check if any race (non-qualifier) has race_points enabled
+  return raceEvents.value.some((event) => !event.is_qualifier && event.race_points);
+});
+
+const isRoundCompleted = computed(() => {
+  return props.round.status === 'completed';
 });
 
 // Methods
@@ -249,6 +251,7 @@ function handleClose(): void {
 }
 
 // Watch for modal open to load data
+// Use immediate: true to handle cases where the modal is mounted with visible=true
 watch(
   () => props.visible,
   async (visible) => {
@@ -256,5 +259,6 @@ watch(
       await loadResults();
     }
   },
+  { immediate: true },
 );
 </script>

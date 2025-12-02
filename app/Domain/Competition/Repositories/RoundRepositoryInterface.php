@@ -31,7 +31,8 @@ interface RoundRepositoryInterface
     public function findBySeasonId(int $seasonId): array;
 
     /**
-     * Delete a round (soft delete).
+     * Delete a round (hard delete).
+     * Cascades to all races and race results via database foreign key constraints.
      */
     public function delete(Round $round): void;
 

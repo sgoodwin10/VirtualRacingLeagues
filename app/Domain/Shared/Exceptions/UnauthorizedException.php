@@ -20,4 +20,9 @@ class UnauthorizedException extends RuntimeException
     {
         return new self($message);
     }
+
+    public static function notAuthenticated(): self
+    {
+        return new self('User must be authenticated');
+    }
 }

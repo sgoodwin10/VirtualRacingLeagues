@@ -2,12 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Admin\AdminActivityLogController;
-use App\Http\Controllers\Admin\AdminAuthController;
-use App\Http\Controllers\Admin\AdminLeagueController;
-use App\Http\Controllers\Admin\AdminUserController;
-use App\Http\Controllers\Admin\SiteConfigController;
-use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -29,89 +23,15 @@ use App\Http\Controllers\User\SiteConfigController as UserSiteConfigController;
 use App\Http\Controllers\User\TeamController;
 use App\Http\Controllers\User\TimezoneController;
 use App\Http\Controllers\User\TrackController;
-use App\Http\Middleware\AdminOrSuperAdminOnly;
 use App\Http\Middleware\AdminSessionMiddleware;
-use App\Http\Middleware\SuperAdminOnly;
 use Illuminate\Support\Facades\Route;
 
 // Admin subdomain routes (admin.virtualracingleagues.localhost)
 Route::domain('admin.virtualracingleagues.localhost')->middleware('web')->group(function () {
-    // Admin API routes
-    Route::prefix('api')->name('admin.api.')->middleware([AdminSessionMiddleware::class])->group(function () {
-        // CSRF cookie route
-        Route::get('/csrf-cookie', function () {
-            return response()->json(['message' => 'CSRF cookie set']);
-        });
-
-        // Public routes (no authentication required)
-        // Relax rate limiting in local environment for testing (60/min vs 5/min)
-        $loginThrottle = app()->environment('local') ? 'throttle:60,1' : 'throttle:5,1';
-        Route::post('/login', [AdminAuthController::class, 'login'])
-            ->middleware($loginThrottle)
-            ->name('login');
-
-        // Auth check routes - these check if user is authenticated but don't require auth middleware
-        Route::get('/auth/check', [AdminAuthController::class, 'check'])->name('check');
-        Route::get('/auth/me', [AdminAuthController::class, 'me'])->name('me');
-
-        // Protected routes (authentication required)
-        Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(function () {
-            Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
-            Route::get('/profile', [AdminAuthController::class, 'profile'])->name('profile');
-            Route::put('/profile', [AdminAuthController::class, 'updateProfile'])->name('profile.update');
-
-            // Admin User Management
-            Route::prefix('admins')->name('admins.')->group(function () {
-                Route::get('/', [AdminUserController::class, 'index'])->name('index');
-                Route::post('/', [AdminUserController::class, 'store'])->name('store');
-                Route::get('/{id}', [AdminUserController::class, 'show'])->name('show');
-                Route::put('/{id}', [AdminUserController::class, 'update'])->name('update');
-                Route::delete('/{id}', [AdminUserController::class, 'destroy'])->name('destroy'); // Deactivates admin
-                Route::post('/{id}/restore', [AdminUserController::class, 'restore'])->name('restore'); // Reactivates admin
-            });
-
-            // Activity Log Management
-            Route::prefix('activities')->name('activities.')->group(function () {
-                Route::get('/', [AdminActivityLogController::class, 'index'])->name('index');
-                Route::get('/admins', [AdminActivityLogController::class, 'adminActivities'])->name('admins');
-                Route::get('/admin/{adminId}', [AdminActivityLogController::class, 'adminActivity'])->name('admin');
-                Route::get('/users', [AdminActivityLogController::class, 'userActivities'])->name('users');
-                Route::get('/user/{userId}', [AdminActivityLogController::class, 'userActivity'])->name('user');
-                Route::get('/{id}', [AdminActivityLogController::class, 'show'])->name('show');
-                Route::post('/clean', [AdminActivityLogController::class, 'clean'])
-                    ->middleware(SuperAdminOnly::class)
-                    ->name('clean');
-            });
-
-            // User Management
-            Route::apiResource('users', UserController::class);
-            Route::post('users/{user}/restore', [UserController::class, 'restore'])
-                ->name('users.restore');
-            Route::patch('users/{user}/verify-email', [UserController::class, 'verifyEmail'])
-                ->name('users.verify-email');
-            Route::post('users/{user}/resend-verification', [UserController::class, 'resendVerification'])
-                ->name('users.resend-verification');
-
-            // User Impersonation (Admin and Super Admin only)
-            Route::post('users/{user}/login-as', [UserController::class, 'loginAs'])
-                ->middleware(AdminOrSuperAdminOnly::class)
-                ->name('users.login-as');
-
-            // Site Configuration (Super Admin only)
-            Route::middleware([SuperAdminOnly::class])->group(function () {
-                Route::get('/site-config', [SiteConfigController::class, 'show'])->name('site-config.show');
-                Route::put('/site-config', [SiteConfigController::class, 'update'])->name('site-config.update');
-            });
-
-            // Leagues Management (Admin)
-            Route::prefix('leagues')->name('leagues.')->group(function () {
-                Route::get('/', [AdminLeagueController::class, 'index'])->name('index');
-                Route::get('/{id}', [AdminLeagueController::class, 'show'])->name('show');
-                Route::post('/{id}/archive', [AdminLeagueController::class, 'archive'])->name('archive');
-                Route::delete('/{id}', [AdminLeagueController::class, 'destroy'])->name('destroy');
-            });
-        });
-    });
+    // Admin API routes - imported from admin-api.php to avoid duplication
+    Route::prefix('api')->name('admin.api.')->middleware([AdminSessionMiddleware::class])->group(
+        base_path('routes/admin-api.php')
+    );
 
     // Admin SPA - catch all admin routes and let Vue Router handle them
     Route::get('/{any?}', function () {
@@ -202,6 +122,9 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
 
             // Seasons
             Route::get('/seasons/{id}', [SeasonController::class, 'show'])->name('seasons.show');
+            Route::get('/seasons/{id}/standings', [SeasonController::class, 'standings'])
+                ->middleware('throttle:30,1')
+                ->name('seasons.standings');
             Route::put('/seasons/{id}', [SeasonController::class, 'update'])->name('seasons.update');
             Route::delete('/seasons/{id}', [SeasonController::class, 'destroy'])->name('seasons.destroy');
             Route::post('/seasons/{id}/archive', [SeasonController::class, 'archive'])->name('seasons.archive');
@@ -288,81 +211,10 @@ Route::domain('virtualracingleagues.localhost')->middleware('web')->group(functi
         ->name('public.login-as');
 
     // Admin API routes (on main domain for easier testing and CORS)
-    Route::prefix('api/admin')->name('admin.api.')->middleware([AdminSessionMiddleware::class])->group(function () {
-        // CSRF cookie route
-        Route::get('/csrf-cookie', function () {
-            return response()->json(['message' => 'CSRF cookie set']);
-        });
-
-        // Public routes (no authentication required)
-        // Relax rate limiting in local environment for testing (60/min vs 5/min)
-        $loginThrottle = app()->environment('local') ? 'throttle:60,1' : 'throttle:5,1';
-        Route::post('/login', [AdminAuthController::class, 'login'])
-            ->middleware($loginThrottle)
-            ->name('login');
-
-        // Auth check routes - these check if user is authenticated but don't require auth middleware
-        Route::get('/auth/check', [AdminAuthController::class, 'check'])->name('check');
-        Route::get('/auth/me', [AdminAuthController::class, 'me'])->name('me');
-
-        // Protected routes (authentication required)
-        Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(function () {
-            Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
-            Route::get('/profile', [AdminAuthController::class, 'profile'])->name('profile');
-            Route::put('/profile', [AdminAuthController::class, 'updateProfile'])->name('profile.update');
-
-            // Admin User Management
-            Route::prefix('admins')->name('admins.')->group(function () {
-                Route::get('/', [AdminUserController::class, 'index'])->name('index');
-                Route::post('/', [AdminUserController::class, 'store'])->name('store');
-                Route::get('/{id}', [AdminUserController::class, 'show'])->name('show');
-                Route::put('/{id}', [AdminUserController::class, 'update'])->name('update');
-                Route::delete('/{id}', [AdminUserController::class, 'destroy'])->name('destroy'); // Deactivates admin
-                Route::post('/{id}/restore', [AdminUserController::class, 'restore'])->name('restore'); // Reactivates admin
-            });
-
-            // Activity Log Management
-            Route::prefix('activities')->name('activities.')->group(function () {
-                Route::get('/', [AdminActivityLogController::class, 'index'])->name('index');
-                Route::get('/admins', [AdminActivityLogController::class, 'adminActivities'])->name('admins');
-                Route::get('/admin/{adminId}', [AdminActivityLogController::class, 'adminActivity'])->name('admin');
-                Route::get('/users', [AdminActivityLogController::class, 'userActivities'])->name('users');
-                Route::get('/user/{userId}', [AdminActivityLogController::class, 'userActivity'])->name('user');
-                Route::get('/{id}', [AdminActivityLogController::class, 'show'])->name('show');
-                Route::post('/clean', [AdminActivityLogController::class, 'clean'])
-                    ->middleware(SuperAdminOnly::class)
-                    ->name('clean');
-            });
-
-            // User Management
-            Route::apiResource('users', UserController::class);
-            Route::post('users/{user}/restore', [UserController::class, 'restore'])
-                ->name('users.restore');
-            Route::patch('users/{user}/verify-email', [UserController::class, 'verifyEmail'])
-                ->name('users.verify-email');
-            Route::post('users/{user}/resend-verification', [UserController::class, 'resendVerification'])
-                ->name('users.resend-verification');
-
-            // User Impersonation (Admin and Super Admin only)
-            Route::post('users/{user}/login-as', [UserController::class, 'loginAs'])
-                ->middleware(AdminOrSuperAdminOnly::class)
-                ->name('users.login-as');
-
-            // Site Configuration (Super Admin only)
-            Route::middleware([SuperAdminOnly::class])->group(function () {
-                Route::get('/site-config', [SiteConfigController::class, 'show'])->name('site-config.show');
-                Route::put('/site-config', [SiteConfigController::class, 'update'])->name('site-config.update');
-            });
-
-            // Leagues Management (Admin)
-            Route::prefix('leagues')->name('leagues.')->group(function () {
-                Route::get('/', [AdminLeagueController::class, 'index'])->name('index');
-                Route::get('/{id}', [AdminLeagueController::class, 'show'])->name('show');
-                Route::post('/{id}/archive', [AdminLeagueController::class, 'archive'])->name('archive');
-                Route::delete('/{id}', [AdminLeagueController::class, 'destroy'])->name('destroy');
-            });
-        });
-    });
+    // Imported from admin-api.php to avoid duplication with admin subdomain
+    Route::prefix('api/admin')->name('admin.api.')->middleware([AdminSessionMiddleware::class])->group(
+        base_path('routes/admin-api.php')
+    );
 
     // Public authentication routes
     Route::prefix('api')->name('public.api.')->group(function () {

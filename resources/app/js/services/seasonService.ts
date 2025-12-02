@@ -11,6 +11,7 @@ import type {
   SeasonQueryParams,
   SlugCheckResponse,
 } from '@app/types/season';
+import type { SeasonStandingsResponse } from '@app/types/seasonStandings';
 import type { AxiosResponse } from 'axios';
 import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
@@ -148,6 +149,16 @@ export async function checkSeasonSlugAvailability(
   const response: AxiosResponse<ApiResponse<SlugCheckResponse>> = await apiClient.post(
     API_ENDPOINTS.competitions.checkSeasonSlug(competitionId),
     { name, exclude_id: excludeSeasonId },
+  );
+  return response.data.data;
+}
+
+/**
+ * Get season standings (cumulative driver standings across all rounds)
+ */
+export async function getSeasonStandings(seasonId: number): Promise<SeasonStandingsResponse> {
+  const response: AxiosResponse<ApiResponse<SeasonStandingsResponse>> = await apiClient.get(
+    API_ENDPOINTS.seasons.standings(seasonId),
   );
   return response.data.data;
 }

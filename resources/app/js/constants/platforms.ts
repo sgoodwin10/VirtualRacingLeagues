@@ -46,6 +46,25 @@ export const PLATFORM_F1_24 = 6;
 export const PLATFORM_PSN = PLATFORM_GRAN_TURISMO_7;
 
 /**
+ * Platform slugs for platform identification
+ */
+export const PLATFORM_SLUG_GRAN_TURISMO_7 = 'gran-turismo-7';
+export const PLATFORM_SLUG_F1_24 = 'f1-24';
+export const PLATFORM_SLUG_ASSETTO_CORSA_COMPETIZIONE = 'assetto-corsa-competizione';
+export const PLATFORM_SLUG_IRACING = 'iracing';
+export const PLATFORM_SLUG_RFACTOR_2 = 'rfactor-2';
+export const PLATFORM_SLUG_AUTOMOBILISTA_2 = 'automobilista-2';
+
+/**
+ * PSN-based game platform slugs (use PlayStation Network ID)
+ */
+export const PSN_BASED_PLATFORMS = [
+  PLATFORM_SLUG_GRAN_TURISMO_7,
+  PLATFORM_SLUG_F1_24,
+  PLATFORM_SLUG_ASSETTO_CORSA_COMPETIZIONE,
+] as const;
+
+/**
  * Check if a platform uses PSN ID
  */
 export function usesPsnId(platformId: number | undefined): boolean {

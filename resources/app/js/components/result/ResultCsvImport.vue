@@ -142,7 +142,12 @@ function parseCsv(text: string): CsvResultRow[] {
         row.dnf = true;
         row.race_time_difference = ''; // Clear the time since it's DNF
       } else {
-        row.race_time_difference = values[diffIndex];
+        // Remove leading '+' from time difference if present
+        let timeDiff = values[diffIndex];
+        if (timeDiff.startsWith('+')) {
+          timeDiff = timeDiff.substring(1);
+        }
+        row.race_time_difference = timeDiff;
       }
     }
 
@@ -175,6 +180,14 @@ function handleFileSelect(event: Event): void {
     return;
   }
 
+  // Validate file size (5MB max)
+  const maxFileSizeBytes = 5 * 1024 * 1024; // 5MB in bytes
+  if (file.size > maxFileSizeBytes) {
+    parseError.value = 'File size must not exceed 5MB';
+    target.value = ''; // Reset file input
+    return;
+  }
+
   // Validate file is a CSV
   const validTypes = ['text/csv', 'application/csv', 'text/plain'];
   const validExtensions = ['.csv'];
@@ -188,11 +201,9 @@ function handleFileSelect(event: Event): void {
   }
 
   // Read the file
-  // eslint-disable-next-line no-undef
-  const reader = new FileReader();
+  const reader: FileReader = new FileReader();
 
-  // eslint-disable-next-line no-undef
-  reader.onload = (e: ProgressEvent<FileReader>) => {
+  reader.onload = (e: ProgressEvent<FileReader>): void => {
     const contents = e.target?.result;
 
     if (typeof contents === 'string') {

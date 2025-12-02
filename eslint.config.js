@@ -25,6 +25,8 @@ export default [
         setInterval: 'readonly',
         clearInterval: 'readonly',
         File: 'readonly',
+        FileReader: 'readonly',
+        ProgressEvent: 'readonly',
         URL: 'readonly',
         Event: 'readonly',
         DragEvent: 'readonly',

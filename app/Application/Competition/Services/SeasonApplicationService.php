@@ -10,6 +10,7 @@ use App\Application\Competition\DTOs\SeasonCompetitionData;
 use App\Application\Competition\DTOs\SeasonData;
 use App\Application\Competition\DTOs\SeasonLeagueData;
 use App\Application\Competition\DTOs\UpdateSeasonData;
+use App\Application\Competition\Traits\BatchFetchHelpersTrait;
 use App\Domain\Competition\Entities\Season;
 use App\Domain\Competition\Exceptions\CompetitionNotFoundException;
 use App\Domain\Competition\Exceptions\SeasonNotFoundException;
@@ -43,6 +44,8 @@ use Illuminate\Support\Facades\Storage;
  */
 final class SeasonApplicationService
 {
+    use BatchFetchHelpersTrait;
+
     public function __construct(
         private readonly SeasonRepositoryInterface $seasonRepository,
         private readonly SeasonDriverRepositoryInterface $seasonDriverRepository,
@@ -123,11 +126,30 @@ final class SeasonApplicationService
             });
         } catch (\Throwable $e) {
             // Cleanup uploaded files on failure
+            // Wrap cleanup in try-catch to prevent cleanup failures from masking the original exception
             if ($logoPath) {
-                $this->deleteSeasonImage($logoPath);
+                try {
+                    $this->deleteSeasonImage($logoPath);
+                } catch (\Throwable $cleanupException) {
+                    // Log cleanup failure but don't throw - preserve original exception
+                    \Log::warning('Failed to cleanup season logo during error handling', [
+                        'logo_path' => $logoPath,
+                        'cleanup_error' => $cleanupException->getMessage(),
+                        'original_error' => $e->getMessage(),
+                    ]);
+                }
             }
             if ($bannerPath) {
-                $this->deleteSeasonImage($bannerPath);
+                try {
+                    $this->deleteSeasonImage($bannerPath);
+                } catch (\Throwable $cleanupException) {
+                    // Log cleanup failure but don't throw - preserve original exception
+                    \Log::warning('Failed to cleanup season banner during error handling', [
+                        'banner_path' => $bannerPath,
+                        'cleanup_error' => $cleanupException->getMessage(),
+                        'original_error' => $e->getMessage(),
+                    ]);
+                }
             }
             throw $e;
         }
@@ -552,6 +574,251 @@ final class SeasonApplicationService
         if ($league->ownerUserId() !== $userId) {
             throw new UnauthorizedException('Only league owner can manage seasons');
         }
+    }
+
+    /**
+     * Get season standings by aggregating round standings.
+     * Returns cumulative standings for all drivers across all completed rounds.
+     *
+     * @param int $seasonId
+     * @return array{standings: array<mixed>, has_divisions: bool}
+     */
+    public function getSeasonStandings(int $seasonId): array
+    {
+        // Fetch season to check if divisions are enabled
+        $season = $this->seasonRepository->findById($seasonId);
+        $hasDivisions = $season->raceDivisionsEnabled();
+
+        // Fetch all rounds with results (completed rounds only)
+        $rounds = $this->roundRepository->findBySeasonId($seasonId);
+
+        // Filter to completed rounds with round_results populated
+        $completedRounds = array_filter($rounds, function ($round) {
+            return $round->status()->isCompleted() && $round->roundResults() !== null;
+        });
+
+        if (empty($completedRounds)) {
+            // No completed rounds yet
+            return [
+                'standings' => $hasDivisions ? [] : [],
+                'has_divisions' => $hasDivisions,
+            ];
+        }
+
+        if ($hasDivisions) {
+            return [
+                'standings' => $this->aggregateStandingsWithDivisions($completedRounds),
+                'has_divisions' => true,
+            ];
+        }
+
+        return [
+            'standings' => $this->aggregateStandingsWithoutDivisions($completedRounds),
+            'has_divisions' => false,
+        ];
+    }
+
+    /**
+     * Aggregate standings across rounds without divisions.
+     *
+     * @param array<\App\Domain\Competition\Entities\Round> $rounds
+     * @return array<mixed>
+     */
+    private function aggregateStandingsWithoutDivisions(array $rounds): array
+    {
+        // Extract unique driver IDs for batch fetch
+        $driverIds = [];
+        foreach ($rounds as $round) {
+            $roundResults = $round->roundResults();
+            if ($roundResults === null || !isset($roundResults['standings'])) {
+                continue;
+            }
+
+            foreach ($roundResults['standings'] as $standing) {
+                $driverIds[$standing['driver_id']] = true;
+            }
+        }
+        $driverIds = array_keys($driverIds);
+
+        // Batch fetch driver names to avoid N+1 queries
+        $driverNames = $this->batchFetchDriverNames($driverIds);
+
+        // Aggregate points per driver
+        $driverTotals = [];
+        $driverRoundData = [];
+
+        foreach ($rounds as $round) {
+            $roundResults = $round->roundResults();
+            if ($roundResults === null || !isset($roundResults['standings'])) {
+                continue;
+            }
+
+            $roundId = $round->id();
+            $roundNumber = $round->roundNumber()->value();
+
+            foreach ($roundResults['standings'] as $standing) {
+                $driverId = $standing['driver_id'];
+                $points = $standing['total_points'];
+                $hasPole = ($standing['pole_position_points'] ?? 0) > 0;
+                $hasFastestLap = ($standing['fastest_lap_points'] ?? 0) > 0;
+
+                if (!isset($driverTotals[$driverId])) {
+                    $driverTotals[$driverId] = [
+                        'driver_id' => $driverId,
+                        'driver_name' => $driverNames[$driverId] ?? 'Unknown Driver',
+                        'total_points' => 0,
+                    ];
+                    $driverRoundData[$driverId] = [];
+                }
+
+                $driverTotals[$driverId]['total_points'] += $points;
+                $driverRoundData[$driverId][] = [
+                    'round_id' => $roundId,
+                    'round_number' => $roundNumber,
+                    'points' => $points,
+                    'has_pole' => $hasPole,
+                    'has_fastest_lap' => $hasFastestLap,
+                ];
+            }
+        }
+
+        // Sort by total points descending
+        uasort($driverTotals, fn($a, $b) => $b['total_points'] <=> $a['total_points']);
+
+        // Build final standings with positions
+        $standings = [];
+        $position = 1;
+        foreach ($driverTotals as $driverId => $data) {
+            $standings[] = [
+                'position' => $position++,
+                'driver_id' => $data['driver_id'],
+                'driver_name' => $data['driver_name'],
+                'total_points' => $data['total_points'],
+                'rounds' => $driverRoundData[$driverId],
+            ];
+        }
+
+        return $standings;
+    }
+
+    /**
+     * Aggregate standings across rounds with divisions.
+     *
+     * @param array<\App\Domain\Competition\Entities\Round> $rounds
+     * @return array<mixed>
+     */
+    private function aggregateStandingsWithDivisions(array $rounds): array
+    {
+        // Extract unique driver IDs and division IDs for batch fetch
+        $driverIds = [];
+        $divisionIds = [];
+
+        foreach ($rounds as $round) {
+            $roundResults = $round->roundResults();
+            if ($roundResults === null || !isset($roundResults['standings'])) {
+                continue;
+            }
+
+            foreach ($roundResults['standings'] as $divisionStanding) {
+                $divisionId = $divisionStanding['division_id'] ?? 0;
+                if ($divisionId > 0) {
+                    $divisionIds[$divisionId] = true;
+                }
+
+                foreach ($divisionStanding['results'] as $standing) {
+                    $driverIds[$standing['driver_id']] = true;
+                }
+            }
+        }
+        $driverIds = array_keys($driverIds);
+        $divisionIds = array_keys($divisionIds);
+
+        // Batch fetch driver and division names
+        $driverNames = $this->batchFetchDriverNames($driverIds);
+        $divisionNames = $this->batchFetchDivisionNames($divisionIds);
+
+        // Aggregate points per driver per division
+        $divisionDriverTotals = [];
+        $divisionDriverRoundData = [];
+
+        foreach ($rounds as $round) {
+            $roundResults = $round->roundResults();
+            if ($roundResults === null || !isset($roundResults['standings'])) {
+                continue;
+            }
+
+            $roundId = $round->id();
+            $roundNumber = $round->roundNumber()->value();
+
+            foreach ($roundResults['standings'] as $divisionStanding) {
+                $divisionId = $divisionStanding['division_id'] ?? 0;
+                $divisionName = $divisionId === 0
+                    ? 'No Division'
+                    : ($divisionNames[$divisionId] ?? 'Unknown Division');
+
+                if (!isset($divisionDriverTotals[$divisionId])) {
+                    $divisionDriverTotals[$divisionId] = [
+                        'division_id' => $divisionId === 0 ? null : $divisionId,
+                        'division_name' => $divisionName,
+                        'drivers' => [],
+                    ];
+                    $divisionDriverRoundData[$divisionId] = [];
+                }
+
+                foreach ($divisionStanding['results'] as $standing) {
+                    $driverId = $standing['driver_id'];
+                    $points = $standing['total_points'];
+                    $hasPole = ($standing['pole_position_points'] ?? 0) > 0;
+                    $hasFastestLap = ($standing['fastest_lap_points'] ?? 0) > 0;
+
+                    if (!isset($divisionDriverTotals[$divisionId]['drivers'][$driverId])) {
+                        $divisionDriverTotals[$divisionId]['drivers'][$driverId] = [
+                            'driver_id' => $driverId,
+                            'driver_name' => $driverNames[$driverId] ?? 'Unknown Driver',
+                            'total_points' => 0,
+                        ];
+                        $divisionDriverRoundData[$divisionId][$driverId] = [];
+                    }
+
+                    $divisionDriverTotals[$divisionId]['drivers'][$driverId]['total_points'] += $points;
+                    $divisionDriverRoundData[$divisionId][$driverId][] = [
+                        'round_id' => $roundId,
+                        'round_number' => $roundNumber,
+                        'points' => $points,
+                        'has_pole' => $hasPole,
+                        'has_fastest_lap' => $hasFastestLap,
+                    ];
+                }
+            }
+        }
+
+        // Build final standings with positions per division
+        $standings = [];
+        foreach ($divisionDriverTotals as $divisionId => $divisionData) {
+            // Sort drivers by total points descending
+            uasort($divisionData['drivers'], fn($a, $b) => $b['total_points'] <=> $a['total_points']);
+
+            // Build driver standings with positions
+            $drivers = [];
+            $position = 1;
+            foreach ($divisionData['drivers'] as $driverId => $driverData) {
+                $drivers[] = [
+                    'position' => $position++,
+                    'driver_id' => $driverData['driver_id'],
+                    'driver_name' => $driverData['driver_name'],
+                    'total_points' => $driverData['total_points'],
+                    'rounds' => $divisionDriverRoundData[$divisionId][$driverId],
+                ];
+            }
+
+            $standings[] = [
+                'division_id' => $divisionData['division_id'],
+                'division_name' => $divisionData['division_name'],
+                'drivers' => $drivers,
+            ];
+        }
+
+        return $standings;
     }
 
     /**

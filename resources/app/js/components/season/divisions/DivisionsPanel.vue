@@ -10,6 +10,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
+import { PhPlus } from '@phosphor-icons/vue';
 
 import DivisionFormModal from './DivisionFormModal.vue';
 
@@ -116,7 +117,7 @@ function truncateDescription(description: string | null, maxLength: number = 30)
 <template>
   <div>
     <!-- Disabled State -->
-    <div v-if="!raceDivisionsEnabled" class="text-center py-8">
+    <div v-if="!raceDivisionsEnabled" class="text-center py-6">
       <Message severity="info" :closable="false">
         <div class="flex flex-col items-center gap-2">
           <i class="pi pi-info-circle text-2xl"></i>
@@ -129,11 +130,10 @@ function truncateDescription(description: string | null, maxLength: number = 30)
     <!-- Enabled State -->
     <div v-else>
       <!-- Header Row -->
-      <div class="flex items-center justify-between mb-3">
+      <div class="mb-3">
         <span class="text-sm text-gray-600">
           {{ divisions.length }} division{{ divisions.length !== 1 ? 's' : '' }}
         </span>
-        <Button icon="pi pi-plus" size="small" label="Add Division" @click="handleAddDivision" />
       </div>
 
       <!-- DataTable -->
@@ -198,6 +198,18 @@ function truncateDescription(description: string | null, maxLength: number = 30)
           </template>
         </Column>
       </DataTable>
+
+      <!-- Add Division Button (footer) -->
+      <div v-if="raceDivisionsEnabled" class="mt-2">
+        <button
+          type="button"
+          class="flex items-center justify-center gap-2 w-full p-2 bg-white rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
+          @click.stop="handleAddDivision"
+        >
+          <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
+          <span class="text-sm font-medium">Add Division</span>
+        </button>
+      </div>
     </div>
 
     <!-- Division Form Modal -->

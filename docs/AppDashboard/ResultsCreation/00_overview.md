@@ -1,283 +1,230 @@
-# Race Results Feature - Overview
+# Results Creation Process - Overview
 
-## Purpose
+This document provides a comprehensive overview of how race results, round completions, and season standings are calculated and stored in the Virtual Racing Leagues application.
 
-Allow users to upload or manually enter results for races and qualifiers. These results will be used to calculate round standings, championship points, and determine fastest lap/pole position holders.
+## Table of Contents
 
----
+1. [High-Level Overview](#high-level-overview)
+2. [Key Concepts](#key-concepts)
+3. [Process Flow](#process-flow)
+4. [Architecture](#architecture)
+5. [Related Documents](#related-documents)
 
-## Feature Scope (MVP)
+## High-Level Overview
 
-### In Scope
-- Create new `race_results` database table
-- Modal UI for entering results (CSV paste + manual entry)
-- Support for divisions (when `raceDivisionsEnabled` on season)
-- Auto-matching drivers from CSV data
-- Real-time time calculations (race_time from race_time_difference)
-- Auto-sorting by race time (or qualifying time for qualifiers)
-- Penalty time additions with automatic re-sorting
-- Save results with `pending` status
+The results creation process involves three main stages:
 
-### Out of Scope (Future Phase)
-- Changing result status to `confirmed`
-- Calculating final points from results
-- Determining pole position and fastest lap awards
-- Result history/audit logging
+1. **Race Result Entry** - Users enter individual driver results for races (including qualifiers)
+2. **Race Completion** - When a race is marked complete, points are calculated per race
+3. **Round Completion** - When a round is completed, all race results are aggregated into round standings
+4. **Season Standings** - Season-wide standings are calculated on-demand by aggregating completed round results
 
----
+### Data Flow
 
-## User Workflow
-
-1. Navigate to a Race Event (Race or Qualifier within a Round)
-2. Click "Enter Results" button on the race
-3. Modal opens with two sections:
-   - **Top**: CSV paste textarea
-   - **Bottom**: Division tabs (or single list if no divisions) with driver result entry
-4. Option A: Paste CSV data → auto-populates matching driver rows
-5. Option B: Manually enter times for each driver
-6. Save results to database
-
----
-
-## Key Business Rules
-
-### Time Handling
-- Time format: `hh:mm:ss.ms` (milliseconds can be 1-3 digits, variable length)
-- If CSV provides both `race_time` and `race_time_difference`, use `race_time` only
-- `race_time_difference` is time off the fastest driver in that division
-- When only `race_time_difference` is provided, calculate actual `race_time`:
-  ```
-  race_time = fastest_driver_race_time + race_time_difference
-  ```
-- This calculation must be real-time as users edit the fastest driver's time
-
-### Penalties
-- Penalty time is added to `race_time` for sorting purposes
-- When a penalty is added/changed, the table automatically re-sorts
-- Penalty does not change the stored `race_time`, only affects final position
-
-### Qualifying Mode
-- When the race is a qualifier (`is_qualifier = true`):
-  - Hide `race_time` and `race_time_difference` columns
-  - Only show `fastest_lap_time` column
-  - Sort by `fastest_lap_time` (ascending)
-
-### Race Mode
-- Show all columns: `driver`, `race_time`, `race_time_difference`, `fastest_lap_time`, `penalties`
-- Sort by `race_time + penalties` (ascending)
-
-### Division Handling
-- If `season.raceDivisionsEnabled = true`:
-  - Show tabs/accordion for each division
-  - Each division shows only its assigned drivers
-  - Calculations (race_time_difference) are per-division
-- If `season.raceDivisionsEnabled = false`:
-  - Show a single flat list of all season drivers
-
-### Driver Selection
-- Each driver can only appear once in the results
-- Dropdown should disable/remove already-selected drivers
-- Validate no duplicate drivers before saving
-
-### Position Storage
-- Store finishing position in the database (allows manual override if needed)
-- Position is calculated from sorted times but stored for persistence
-
----
-
-## CSV Format
-
-### Fields
-```csv
-driver,race_time,race_time_difference,fastest_lap_time
+```
+Race Results (individual driver times)
+    ↓
+Race Completion (calculate race points per driver)
+    ↓
+Round Completion (aggregate all race results)
+    ↓
+Round Results (stored in rounds.round_results JSON field)
+    ↓
+Season Standings (calculated on-demand from all completed rounds)
 ```
 
-### Rules
-- First row is header (required)
-- `driver` field used for matching (by name)
-- `race_time` and `race_time_difference` - if both provided, use `race_time`
-- Times in format: `hh:mm:ss.ms` or `+hh:mm:ss.ms` for differences
+## Key Concepts
 
-### Example - Race
-```csv
-driver,race_time,race_time_difference,fastest_lap_time
-John Smith,01:23:45.678,,01:32.456
-Jane Doe,+00:00:02.104,,01:33.012
-Bob Wilson,01:23:50.890,,01:32.890
+### 1. Races vs Qualifiers
+
+- **Races**: Regular race events with position-based scoring
+- **Qualifiers**: Special race events (race_number = 0 or is_qualifier = true) that determine grid positions for races
+  - Have `qualifying_format` (e.g., "one_shot", "best_of_3")
+  - Store fastest lap times in `race_results.fastest_lap` field
+  - Can award pole position bonus points
+
+### 2. Two Point Calculation Modes
+
+The system supports two distinct modes for calculating points:
+
+#### Mode 1: Race Points Mode (`round.round_points = false`)
+- **Race-level bonuses**: Fastest lap and pole bonuses are awarded during individual race completion
+- **Bonuses included in race_points**: The `race_results.race_points` field includes both position points AND bonuses
+- **Round standings**: Calculated by summing `race_points` from all races
+- **Use case**: Traditional championship where each race awards bonuses independently
+
+#### Mode 2: Round Points Mode (`round.round_points = true`)
+- **Round-level bonuses**: Single fastest lap and pole bonus awarded across ALL races in the round
+- **Race points separate**: The `race_results.race_points` contains ONLY position-based points
+- **Round standings**: Calculated by `race_points` sum, then bonuses awarded based on final position
+- **Round points**: Additional points awarded based on final standings position using `round.points_system`
+- **Total points**: `round_points + fastest_lap_points + pole_position_points` (NOT including race_points)
+- **Use case**: Weekend format where bonuses are awarded once for the entire weekend
+
+### 3. Division Support
+
+The system supports optional race divisions:
+
+- **Without Divisions** (`season.race_divisions_enabled = false`):
+  - All drivers compete in a single standings table
+  - One set of round results
+
+- **With Divisions** (`season.race_divisions_enabled = true`):
+  - Separate standings per division
+  - Round results contain multiple division standings
+  - Cross-division results track best times across all divisions
+
+### 4. Data Storage Locations
+
+| Data | Storage Location | Format | When Calculated |
+|------|-----------------|--------|-----------------|
+| Race results | `race_results` table | Row per driver | When results entered |
+| Race points | `race_results.race_points` | Integer | When race completed |
+| Positions gained | `race_results.positions_gained` | Integer (nullable) | When race completed |
+| Round results | `rounds.round_results` | JSON | When round completed |
+| Cross-division results | `rounds.qualifying_results`, `rounds.race_time_results`, `rounds.fastest_lap_results` | JSON | When round completed |
+| Season standings | Not stored (calculated on-demand) | - | On API request |
+
+## Process Flow
+
+### 1. Race Result Entry
+**Triggers:** User submits race results via UI
+**File:** `app/Application/Competition/Services/RaceResultApplicationService.php:45`
+
+```
+1. User enters driver times/positions
+2. Frontend sends bulk results to API
+3. Delete existing race results (if any)
+4. Create new RaceResult entities
+5. Calculate fastest lap per division (for non-qualifiers)
+6. Save to database
 ```
 
-### Example - Qualifying
-```csv
-driver,fastest_lap_time
-John Smith,01:32.456
-Jane Doe,01:33.012
-Bob Wilson,01:32.890
+**Result:** Race results stored in `race_results` table with `status = pending`
+
+### 2. Race Completion
+**Triggers:** User clicks "Complete" on race OR round completion cascades to races
+**Files:**
+- `app/Application/Competition/Services/RaceApplicationService.php:466-502`
+- `app/Http/Controllers/User/RaceController.php` (if manual race completion)
+
+```
+1. Race status changed to "completed"
+2. All race results status changed to "confirmed"
+3. IF race_points enabled:
+   - Separate finishers, DNF, DNS
+   - Sort finishers by race_time
+   - Assign positions (1, 2, 3...)
+   - Calculate race points from points_system
+   - Handle fastest lap bonus (race-level or round-level)
+   - Handle pole position (qualifiers only)
+   - Calculate positions_gained (if grid_source set)
+4. Save race results with calculated values
 ```
 
----
+**Result:** Race results have `race_points` and `positions_gained` calculated
 
-## Data Model
+### 3. Round Completion
+**Triggers:** User clicks "Complete Round" button
+**Files:**
+- `app/Application/Competition/Services/RoundApplicationService.php:317-396`
+- `app/Http/Controllers/User/RoundController.php:93-104`
 
-### New Table: `race_results`
-
-| Field | Type | Description |
-|-------|------|-------------|
-| id | bigint | Primary key |
-| race_id | bigint FK | Reference to races table |
-| driver_id | bigint FK | Reference to season_drivers table |
-| position | int | Finishing position (stored, calculated from times) |
-| race_time | time(3) | Race completion time (hh:mm:ss.ms) |
-| race_time_difference | time(3) | Time behind leader |
-| fastest_lap | time(3) | Fastest lap time |
-| penalties | time(3) | Total penalty time |
-| has_fastest_lap | boolean | Driver has race fastest lap |
-| has_pole | boolean | Driver has pole position |
-| status | enum | 'pending', 'confirmed' |
-| race_points | int | Points earned (calculated later) |
-| created_at | timestamp | Record creation time |
-| updated_at | timestamp | Last update time |
-
-### Relationships
-- `race_results` belongs to `races` (via `race_id`)
-- `race_results` belongs to `season_drivers` (via `driver_id`)
-- A race can have many results
-- A driver can have one result per race
-
----
-
-## UI Components
-
-### Modal Structure
 ```
-+--------------------------------------------------+
-|  [Race Name] Results                         [X] |
-+--------------------------------------------------+
-|  +--------------------------------------------+  |
-|  | CSV Import                                 |  |
-|  | [Paste CSV data here...]                   |  |
-|  | [Parse CSV] button                         |  |
-|  +--------------------------------------------+  |
-|                                                  |
-|  +--------------------------------------------+  |
-|  | [Division 1] [Division 2] [Division 3]    |  |  <- Tabs (if divisions)
-|  +--------------------------------------------+  |
-|  | # | Driver     | Time    | Diff  | FL | Pen |  |
-|  |---|------------|---------|-------|----|----|  |
-|  | 1 | [Select v] | [mask]  | [mask]|[ms]|[ms]|  |
-|  | 2 | [Select v] | [mask]  | [mask]|[ms]|[ms]|  |
-|  | 3 | [Select v] | [mask]  | [mask]|[ms]|[ms]|  |
-|  +--------------------------------------------+  |
-|                                                  |
-|  [Cancel]                           [Save]       |
-+--------------------------------------------------+
+1. Fetch round and authorize user
+2. Check if divisions enabled
+3. CASCADE: Mark all races as completed (triggers race point calculation)
+4. Fetch all race results for the round
+5. Calculate round standings:
+   - Aggregate race points per driver
+   - Apply round-level bonuses (if round_points enabled)
+   - Assign round points based on standings position
+   - Sort drivers by total points with tie-breaking
+6. Calculate cross-division results (qualifying, race time, fastest lap)
+7. Store results in rounds.round_results JSON field
+8. Mark round as completed
 ```
 
-### Key PrimeVue Components
-- `Dialog` or drawer (BaseModal) - Modal container
-- `Textarea` - CSV input
-- `TabView` / `Accordion` - Division switching
-- `DataTable` - Results grid (if needed, or custom table)
-- `Select` - Driver dropdown
-- `InputMask` - Time inputs with mask `99:99:99.999` (allowing variable ms)
-- `Button` - Actions
+**Result:** Round marked complete, `round_results` JSON populated
 
----
+### 4. Season Standings
+**Triggers:** User views season standings page
+**Files:**
+- `app/Application/Competition/Services/SeasonApplicationService.php:564-597`
+- `app/Http/Controllers/User/SeasonController.php:188-192`
 
-## Implementation Agents
-
-| Layer | Agent | Responsibility |
-|-------|-------|----------------|
-| Backend | `dev-be` | Domain entities, DTOs, repository, controller, migrations |
-| Frontend | `dev-fe-app` | Vue components, Pinia store, services, types |
-
----
-
-## Dependencies
-
-### Backend
-- Existing `Race` entity and model
-- Existing `SeasonDriver` entity and model
-- Existing `Division` entity and model
-
-### Frontend
-- Existing race/round views and components
-- Existing season store with drivers/divisions
-- PrimeVue InputMask, Select, Dialog components
-
----
-
-## File Structure (Planned)
-
-### Backend
 ```
-app/
-├── Domain/Competition/
-│   ├── Entities/RaceResult.php
-│   ├── ValueObjects/
-│   │   ├── RaceTime.php
-│   │   └── RaceResultStatus.php
-│   ├── Events/
-│   │   ├── RaceResultCreated.php
-│   │   └── RaceResultUpdated.php
-│   ├── Exceptions/
-│   │   └── RaceResultException.php
-│   └── Repositories/RaceResultRepositoryInterface.php
-├── Application/Competition/
-│   ├── Services/RaceResultApplicationService.php
-│   └── DTOs/
-│       ├── CreateRaceResultData.php
-│       ├── UpdateRaceResultData.php
-│       └── RaceResultData.php
-├── Infrastructure/Persistence/Eloquent/
-│   ├── Models/RaceResult.php
-│   └── Repositories/EloquentRaceResultRepository.php
-└── Http/Controllers/User/RaceResultController.php
-
-database/migrations/
-└── 2025_xx_xx_create_race_results_table.php
+1. Fetch all rounds for season
+2. Filter to completed rounds with round_results populated
+3. Aggregate total_points across all rounds per driver
+4. Sort by total points descending
+5. Assign season positions
+6. Return standings (not stored)
 ```
 
-### Frontend
+**Result:** Season standings returned as JSON response
+
+## Architecture
+
+This application follows **Domain-Driven Design (DDD)** principles:
+
+### Layers
+
 ```
-resources/app/js/
-├── types/raceResult.ts
-├── services/raceResultService.ts
-├── stores/raceResultStore.ts
-├── components/result/
-│   ├── RaceResultModal.vue
-│   ├── ResultCsvImport.vue
-│   ├── ResultDivisionTabs.vue
-│   └── ResultEntryTable.vue
-└── composables/useRaceTimeCalculation.ts
+┌─────────────────────────────────────────┐
+│  Interface Layer (Controllers)          │  Thin controllers (3-5 lines)
+│  - RoundController                      │
+│  - RaceController                       │
+│  - SeasonController                     │
+└─────────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────────┐
+│  Application Layer (Services, DTOs)     │  Orchestration, transactions
+│  - RoundApplicationService              │
+│  - RaceApplicationService               │
+│  - SeasonApplicationService             │
+│  - RaceResultApplicationService         │
+└─────────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────────┐
+│  Domain Layer (Entities, VOs)           │  Business logic (pure PHP)
+│  - Round entity                         │
+│  - Race entity                          │
+│  - RaceResult entity                    │
+│  - RaceTime value object                │
+│  - PointsSystem value object            │
+└─────────────────────────────────────────┘
+              ↑
+┌─────────────────────────────────────────┐
+│  Infrastructure Layer (Repositories)     │  Database persistence
+│  - RoundRepository                      │
+│  - RaceRepository                       │
+│  - RaceResultRepository                 │
+└─────────────────────────────────────────┘
 ```
 
----
+### Key Files
 
-## API Endpoints
+| Layer | File | Purpose |
+|-------|------|---------|
+| **Controllers** | `app/Http/Controllers/User/RoundController.php` | Round CRUD and completion endpoints |
+| | `app/Http/Controllers/User/RaceController.php` | Race CRUD endpoints |
+| | `app/Http/Controllers/User/SeasonController.php` | Season endpoints including standings |
+| **Application Services** | `app/Application/Competition/Services/RoundApplicationService.php` | Round orchestration, point calculation |
+| | `app/Application/Competition/Services/RaceApplicationService.php` | Race completion, race point calculation |
+| | `app/Application/Competition/Services/SeasonApplicationService.php` | Season standings aggregation |
+| | `app/Application/Competition/Services/RaceResultApplicationService.php` | Result entry and fastest lap calculation |
+| **Domain Entities** | `app/Domain/Competition/Entities/Round.php` | Round business logic |
+| | `app/Domain/Competition/Entities/Race.php` | Race and qualifier logic |
+| | `app/Domain/Competition/Entities/RaceResult.php` | Individual result logic |
+| **Value Objects** | `app/Domain/Competition/ValueObjects/RaceTime.php` | Time parsing and conversion |
+| | `app/Domain/Competition/ValueObjects/PointsSystem.php` | Points array management |
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/races/{raceId}/results` | Get all results for a race |
-| POST | `/races/{raceId}/results` | Create/update results (bulk) |
-| DELETE | `/races/{raceId}/results` | Delete all results for a race |
+## Related Documents
 
-Note: Using bulk operations since results are typically entered all at once.
-
----
-
-## Testing Strategy
-
-### Backend
-- Unit tests for `RaceTime` value object
-- Unit tests for `RaceResult` entity business logic
-- Feature tests for API endpoints
-
-### Frontend
-- Unit tests for time calculation composable
-- Component tests for ResultEntryTable
-- Integration tests for CSV parsing logic
-
-
-# Plans
-Backend `docs/AppDashboard/ResultsCreation/01_backend_plan.md`
-Front End `docs/AppDashboard/ResultsCreation/02_frontend_plan.md`
+- [01_race_result_entry.md](./01_race_result_entry.md) - How race results are entered and stored
+- [02_race_completion.md](./02_race_completion.md) - Race completion and point calculation
+- [03_round_completion.md](./03_round_completion.md) - Round completion and standings calculation
+- [04_season_standings.md](./04_season_standings.md) - Season standings aggregation
+- [05_points_calculation.md](./05_points_calculation.md) - Detailed points calculation logic
+- [06_data_structures.md](./06_data_structures.md) - JSON structure of stored results

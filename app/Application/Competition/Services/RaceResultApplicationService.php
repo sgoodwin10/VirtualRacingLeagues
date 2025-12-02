@@ -41,6 +41,7 @@ final class RaceResultApplicationService
      * Replaces all existing results for the race.
      *
      * @return RaceResultData[]
+     * @throws RaceResultException if race not found or validation fails
      */
     public function saveResults(int $raceId, BulkRaceResultsData $data): array
     {
@@ -50,10 +51,13 @@ final class RaceResultApplicationService
         }
 
         return DB::transaction(function () use ($raceId, $data) {
+            // Fetch race to check if it's a qualifier
+            $race = $this->raceRepository->findById($raceId);
+
             // Delete existing results
             $this->raceResultRepository->deleteByRaceId($raceId);
 
-            // Create new results
+            // Create new results (ignore frontend has_fastest_lap value)
             $entities = [];
             foreach ($data->results as $resultData) {
                 /** @var CreateRaceResultData $resultData */
@@ -66,11 +70,16 @@ final class RaceResultApplicationService
                     raceTimeDifference: $resultData->race_time_difference,
                     fastestLap: $resultData->fastest_lap,
                     penalties: $resultData->penalties,
-                    hasFastestLap: $resultData->has_fastest_lap,
+                    hasFastestLap: false, // Always false initially - we calculate this
                     hasPole: $resultData->has_pole,
                     dnf: $resultData->dnf,
                 );
                 $entities[] = $entity;
+            }
+
+            // Calculate fastest lap BEFORE saving (only for non-qualifier races)
+            if (!$race->isQualifier()) {
+                $this->calculateFastestLaps($entities);
             }
 
             // Save all
@@ -89,10 +98,93 @@ final class RaceResultApplicationService
     }
 
     /**
+     * Calculate and mark fastest lap for each division group.
+     * Handles ties - multiple drivers can have fastest lap.
+     *
+     * @param RaceResult[] $results
+     */
+    private function calculateFastestLaps(array $results): void
+    {
+        // Group results by division (null division is treated as its own group)
+        $groups = [];
+        $hasDivisions = false;
+
+        foreach ($results as $result) {
+            $divisionId = $result->divisionId();
+            if ($divisionId !== null) {
+                $hasDivisions = true;
+            }
+            $groupKey = $divisionId ?? 'no_division';
+            if (!isset($groups[$groupKey])) {
+                $groups[$groupKey] = [];
+            }
+            $groups[$groupKey][] = $result;
+        }
+
+        // If no divisions exist, treat all results as one group
+        if (!$hasDivisions) {
+            $groups = ['all' => $results];
+        }
+
+        // Process each group
+        foreach ($groups as $groupResults) {
+            $this->markFastestLapInGroup($groupResults);
+        }
+    }
+
+    /**
+     * Find and mark the fastest lap(s) in a group of results.
+     * Handles ties by marking all results with the minimum time.
+     *
+     * @param RaceResult[] $groupResults
+     */
+    private function markFastestLapInGroup(array $groupResults): void
+    {
+        // Find minimum fastest lap time (skip null/empty)
+        $minTimeMs = null;
+
+        foreach ($groupResults as $result) {
+            $fastestLap = $result->fastestLap();
+            if ($fastestLap->isNull()) {
+                continue;
+            }
+
+            $timeMs = $fastestLap->toMilliseconds();
+            if ($timeMs === null) {
+                continue;
+            }
+
+            if ($minTimeMs === null || $timeMs < $minTimeMs) {
+                $minTimeMs = $timeMs;
+            }
+        }
+
+        // No valid times found
+        if ($minTimeMs === null) {
+            return;
+        }
+
+        // Mark all results that match the minimum time (handles ties)
+        foreach ($groupResults as $result) {
+            $fastestLap = $result->fastestLap();
+            if ($fastestLap->isNull()) {
+                continue;
+            }
+
+            $timeMs = $fastestLap->toMilliseconds();
+            if ($timeMs === $minTimeMs) {
+                $result->markAsFastestLap();
+            }
+        }
+    }
+
+    /**
      * Delete all results for a race.
      */
     public function deleteResults(int $raceId): void
     {
-        $this->raceResultRepository->deleteByRaceId($raceId);
+        DB::transaction(function () use ($raceId) {
+            $this->raceResultRepository->deleteByRaceId($raceId);
+        });
     }
 }

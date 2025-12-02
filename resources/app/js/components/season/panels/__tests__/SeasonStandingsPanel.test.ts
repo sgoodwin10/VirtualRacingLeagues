@@ -1,0 +1,455 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mount, VueWrapper } from '@vue/test-utils';
+import { nextTick } from 'vue';
+import SeasonStandingsPanel from '../SeasonStandingsPanel.vue';
+import * as seasonService from '@app/services/seasonService';
+import type {
+  SeasonStandingsResponse,
+  SeasonStandingDriver,
+  SeasonStandingDivision,
+} from '@app/types/seasonStandings';
+
+// Mock PrimeVue components
+vi.mock('primevue/message', () => ({
+  default: {
+    name: 'Message',
+    template: '<div class="p-message"><slot /></div>',
+    props: ['severity'],
+  },
+}));
+
+vi.mock('primevue/tabs', () => ({
+  default: {
+    name: 'Tabs',
+    template: '<div class="p-tabs"><slot /></div>',
+    props: ['modelValue'],
+    emits: ['update:modelValue'],
+  },
+}));
+
+vi.mock('primevue/tablist', () => ({
+  default: {
+    name: 'TabList',
+    template: '<div class="p-tablist"><slot /></div>',
+  },
+}));
+
+vi.mock('primevue/tab', () => ({
+  default: {
+    name: 'Tab',
+    template: '<div class="p-tab"><slot /></div>',
+    props: ['value'],
+  },
+}));
+
+vi.mock('primevue/tabpanels', () => ({
+  default: {
+    name: 'TabPanels',
+    template: '<div class="p-tabpanels"><slot /></div>',
+  },
+}));
+
+vi.mock('primevue/tabpanel', () => ({
+  default: {
+    name: 'TabPanel',
+    template: '<div class="p-tabpanel"><slot /></div>',
+    props: ['value'],
+  },
+}));
+
+vi.mock('primevue/datatable', () => ({
+  default: {
+    name: 'DataTable',
+    template: '<table class="p-datatable"><slot /></table>',
+    props: ['value', 'rowClass', 'stripedRows', 'class'],
+  },
+}));
+
+vi.mock('primevue/column', () => ({
+  default: {
+    name: 'Column',
+    template: '<td><slot /></td>',
+    props: ['field', 'header', 'class', 'body', 'bodyClass'],
+  },
+}));
+
+// Mock BasePanel
+vi.mock('@app/components/common/panels/BasePanel.vue', () => ({
+  default: {
+    name: 'BasePanel',
+    template: `
+      <div class="base-panel">
+        <div class="base-panel-header"><slot name="header" /></div>
+        <div class="base-panel-content"><slot /></div>
+      </div>
+    `,
+  },
+}));
+
+// Mock Phosphor Icons
+vi.mock('@phosphor-icons/vue', () => ({
+  PhTrophy: {
+    name: 'PhTrophy',
+    template: '<i class="ph-trophy" />',
+    props: ['size', 'weight'],
+  },
+  PhCheck: {
+    name: 'PhCheck',
+    template: '<i class="ph-check" />',
+    props: ['size', 'weight'],
+  },
+}));
+
+describe('SeasonStandingsPanel', () => {
+  let wrapper: VueWrapper;
+  let getSeasonStandingsSpy: ReturnType<typeof vi.spyOn>;
+
+  const mockFlatStandings: SeasonStandingsResponse = {
+    standings: [
+      {
+        position: 1,
+        driver_id: 1,
+        driver_name: 'Lewis Hamilton',
+        total_points: 150,
+        rounds: [
+          { round_id: 1, round_number: 1, points: 75, has_pole: true, has_fastest_lap: false },
+          { round_id: 2, round_number: 2, points: 75, has_pole: false, has_fastest_lap: true },
+        ],
+      },
+      {
+        position: 2,
+        driver_id: 2,
+        driver_name: 'Max Verstappen',
+        total_points: 140,
+        rounds: [
+          { round_id: 1, round_number: 1, points: 70, has_pole: false, has_fastest_lap: true },
+          { round_id: 2, round_number: 2, points: 70, has_pole: true, has_fastest_lap: false },
+        ],
+      },
+      {
+        position: 3,
+        driver_id: 3,
+        driver_name: 'Charles Leclerc',
+        total_points: 130,
+        rounds: [
+          { round_id: 1, round_number: 1, points: 65, has_pole: false, has_fastest_lap: false },
+          { round_id: 2, round_number: 2, points: 65, has_pole: false, has_fastest_lap: false },
+        ],
+      },
+    ] as SeasonStandingDriver[],
+    has_divisions: false,
+  };
+
+  const mockDivisionStandings: SeasonStandingsResponse = {
+    standings: [
+      {
+        division_id: 1,
+        division_name: 'Pro Division',
+        drivers: [
+          {
+            position: 1,
+            driver_id: 1,
+            driver_name: 'Lewis Hamilton',
+            total_points: 150,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 75, has_pole: true, has_fastest_lap: false },
+              { round_id: 2, round_number: 2, points: 75, has_pole: false, has_fastest_lap: true },
+            ],
+          },
+          {
+            position: 2,
+            driver_id: 2,
+            driver_name: 'Max Verstappen',
+            total_points: 140,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 70, has_pole: false, has_fastest_lap: true },
+              { round_id: 2, round_number: 2, points: 70, has_pole: true, has_fastest_lap: false },
+            ],
+          },
+        ],
+      },
+      {
+        division_id: 2,
+        division_name: 'Am Division',
+        drivers: [
+          {
+            position: 1,
+            driver_id: 3,
+            driver_name: 'George Russell',
+            total_points: 120,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 60, has_pole: true, has_fastest_lap: true },
+              { round_id: 2, round_number: 2, points: 60, has_pole: false, has_fastest_lap: false },
+            ],
+          },
+        ],
+      },
+    ] as SeasonStandingDivision[],
+    has_divisions: true,
+  };
+
+  beforeEach(() => {
+    getSeasonStandingsSpy = vi.spyOn(seasonService, 'getSeasonStandings');
+  });
+
+  afterEach(() => {
+    if (wrapper) {
+      wrapper.unmount();
+    }
+    vi.clearAllMocks();
+  });
+
+  describe('Loading State', () => {
+    it('should display loading spinner while fetching data', async () => {
+      getSeasonStandingsSpy.mockImplementation(
+        () => new Promise(() => {}), // Never resolves
+      );
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+
+      expect(wrapper.find('.pi-spinner').exists()).toBe(true);
+    });
+  });
+
+  describe('Error State', () => {
+    it('should display error message when API call fails', async () => {
+      getSeasonStandingsSpy.mockRejectedValue(new Error('API Error'));
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick(); // Wait for promise rejection
+
+      expect(wrapper.find('.p-message').exists()).toBe(true);
+      expect(wrapper.text()).toContain('Failed to load season standings');
+    });
+  });
+
+  describe('Empty State', () => {
+    it('should display empty state message when no standings available', async () => {
+      getSeasonStandingsSpy.mockResolvedValue({
+        standings: [],
+        has_divisions: false,
+      });
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      expect(wrapper.text()).toContain('No standings data available yet');
+    });
+  });
+
+  describe('Flat Standings (No Divisions)', () => {
+    beforeEach(async () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockFlatStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+    });
+
+    it('should render flat standings without tabs', () => {
+      expect(wrapper.find('.p-tabs').exists()).toBe(false);
+      // Component renders the table but our mock doesn't show content
+      const vm = wrapper.vm as any;
+      expect(vm.standingsData).toBeTruthy();
+      expect(vm.standingsData.has_divisions).toBe(false);
+    });
+
+    it('should have all drivers in component data', () => {
+      const vm = wrapper.vm as any;
+      expect(vm.flatDriverStandings).toHaveLength(3);
+      expect(vm.flatDriverStandings[0].driver_name).toBe('Lewis Hamilton');
+      expect(vm.flatDriverStandings[1].driver_name).toBe('Max Verstappen');
+      expect(vm.flatDriverStandings[2].driver_name).toBe('Charles Leclerc');
+    });
+
+    it('should fetch standings on mount', () => {
+      expect(getSeasonStandingsSpy).toHaveBeenCalledWith(1);
+      expect(getSeasonStandingsSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Division Standings', () => {
+    beforeEach(async () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockDivisionStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 2,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+    });
+
+    it('should render tabs for divisions', () => {
+      expect(wrapper.find('.p-tabs').exists()).toBe(true);
+      expect(wrapper.find('.p-tablist').exists()).toBe(true);
+    });
+
+    it('should display all division names in tabs', () => {
+      const text = wrapper.text();
+      expect(text).toContain('Pro Division');
+      expect(text).toContain('Am Division');
+    });
+
+    it('should have drivers in component data', () => {
+      const vm = wrapper.vm as any;
+      expect(vm.divisionsWithStandings).toHaveLength(2);
+      expect(vm.divisionsWithStandings[0].drivers[0].driver_name).toBe('Lewis Hamilton');
+      expect(vm.divisionsWithStandings[0].drivers[1].driver_name).toBe('Max Verstappen');
+      expect(vm.divisionsWithStandings[1].drivers[0].driver_name).toBe('George Russell');
+    });
+
+    it('should set initial active division', () => {
+      // Component should set the first division as active
+      const vm = wrapper.vm as any;
+      expect(vm.activeDivisionId).toBe(1); // First division ID
+    });
+  });
+
+  describe('Panel Header', () => {
+    beforeEach(async () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockFlatStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+    });
+
+    it('should render trophy icon in header', () => {
+      expect(wrapper.find('.ph-trophy').exists()).toBe(true);
+    });
+
+    it('should render header title', () => {
+      expect(wrapper.text()).toContain('Season Standings');
+    });
+  });
+
+  describe('Data Structure', () => {
+    it('should correctly identify division standings', async () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockDivisionStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 2,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      const vm = wrapper.vm as any;
+      expect(vm.divisionsWithStandings).toHaveLength(2);
+      expect(vm.flatDriverStandings).toHaveLength(0);
+    });
+
+    it('should correctly identify flat standings', async () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockFlatStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      const vm = wrapper.vm as any;
+      expect(vm.divisionsWithStandings).toHaveLength(0);
+      expect(vm.flatDriverStandings).toHaveLength(3);
+    });
+
+    it('should extract round numbers correctly from flat standings', async () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockFlatStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      const vm = wrapper.vm as any;
+      const roundNumbers = vm.getRoundNumbers(vm.flatDriverStandings);
+      expect(roundNumbers).toEqual([1, 2]);
+    });
+
+    it('should extract round numbers correctly from division standings', async () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockDivisionStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 2,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      const vm = wrapper.vm as any;
+      const roundNumbers = vm.getRoundNumbers(vm.divisionsWithStandings[0].drivers);
+      expect(roundNumbers).toEqual([1, 2]);
+    });
+  });
+
+  describe('Props', () => {
+    it('should accept seasonId prop', () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockFlatStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 42,
+        },
+      });
+
+      const vm = wrapper.vm as any;
+      expect(vm.$props.seasonId).toBe(42);
+    });
+
+    it('should call API with correct seasonId', async () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockFlatStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 99,
+        },
+      });
+
+      await nextTick();
+
+      expect(getSeasonStandingsSpy).toHaveBeenCalledWith(99);
+    });
+  });
+});

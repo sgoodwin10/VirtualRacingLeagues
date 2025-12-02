@@ -12,7 +12,7 @@ use Spatie\LaravelData\Data;
 final class RaceEventResultData extends Data
 {
     /**
-     * @param array<int, RaceResultData> $results
+     * @param array<int, RaceResultData> $results Array of RaceResultData instances
      */
     public function __construct(
         public readonly int $id,
@@ -20,13 +20,8 @@ final class RaceEventResultData extends Data
         public readonly ?string $name,
         public readonly bool $is_qualifier,
         public readonly string $status,
+        public readonly bool $race_points,
         public readonly array $results,
     ) {
-        // Runtime validation: ensure all elements are RaceResultData instances
-        foreach ($results as $result) {
-            if (!$result instanceof RaceResultData) {
-                throw new \InvalidArgumentException('All results must be instances of RaceResultData');
-            }
-        }
     }
 }

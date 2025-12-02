@@ -359,7 +359,22 @@ describe('ResultEntryTable', () => {
 
   describe('Read-only Mode', () => {
     it('renders driver names as text instead of dropdown in read-only mode', () => {
-      const results: RaceResultFormData[] = [createMockResult(1)];
+      // In read-only mode, rows without data (race_time, fastest_lap, or dnf) are filtered out
+      // So we need to provide a result with actual data
+      const results: RaceResultFormData[] = [
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: 1,
+          race_time: '01:30:45.123',
+          race_time_difference: '',
+          fastest_lap: '01:25:00.456',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+      ];
       const wrapper = createWrapper(results, mockDrivers, false, new Set([1]), true);
 
       // Should show driver name as text
@@ -385,10 +400,10 @@ describe('ResultEntryTable', () => {
       ];
       const wrapper = createWrapper(results, mockDrivers, false, new Set([1]), true);
 
-      // Should show times as text
-      expect(wrapper.text()).toContain('01:30:45.123');
-      expect(wrapper.text()).toContain('01:25:00.456');
-      expect(wrapper.text()).toContain('00:00:05.000');
+      // Should show times as text (formatted by useTimeFormat which removes leading zeros)
+      expect(wrapper.text()).toContain('1:30:45.123');
+      expect(wrapper.text()).toContain('1:25:00.456');
+      expect(wrapper.text()).toContain('05.000');
     });
 
     it('hides delete buttons in read-only mode', () => {
@@ -420,12 +435,112 @@ describe('ResultEntryTable', () => {
     });
 
     it('shows dash for empty time values in read-only mode', () => {
-      const results: RaceResultFormData[] = [createMockResult(1)]; // All times are empty
+      // In read-only mode, rows without data are filtered out
+      // Use a DNF result which has no race time but should still be shown
+      const results: RaceResultFormData[] = [
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: null,
+          race_time: '', // Empty - should show dash
+          race_time_difference: '', // Empty - should show dash
+          fastest_lap: '', // Empty - should show dash
+          penalties: '', // Empty - should show dash
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: true, // DNF ensures the row is displayed
+        },
+      ];
       const wrapper = createWrapper(results, mockDrivers, false, new Set([1]), true);
 
       // Should show dashes for empty values
       const dashes = wrapper.findAll('span.font-mono').filter((span) => span.text() === '-');
       expect(dashes.length).toBeGreaterThan(0);
+    });
+
+    it('filters out drivers without result data in read-only mode', () => {
+      const results: RaceResultFormData[] = [
+        // Driver 1: has race_time - should be shown
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: 1,
+          race_time: '01:30:00.000',
+          race_time_difference: '',
+          fastest_lap: '',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+        // Driver 2: no data - should be filtered out
+        {
+          driver_id: 2,
+          division_id: 1,
+          position: null,
+          race_time: '',
+          race_time_difference: '',
+          fastest_lap: '',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+        // Driver 3: has fastest_lap - should be shown
+        {
+          driver_id: 3,
+          division_id: 1,
+          position: 2,
+          race_time: '',
+          race_time_difference: '',
+          fastest_lap: '01:25:00.000',
+          penalties: '',
+          has_fastest_lap: true,
+          has_pole: false,
+          dnf: false,
+        },
+      ];
+      const wrapper = createWrapper(results, mockDrivers, false, new Set([1, 2, 3]), true);
+
+      // Should show Alice Johnson (has race_time) and Charlie Brown (has fastest_lap)
+      // Should NOT show Bob Smith (no data)
+      expect(wrapper.text()).toContain('Alice Johnson');
+      expect(wrapper.text()).toContain('Charlie Brown');
+      expect(wrapper.text()).not.toContain('Bob Smith');
+    });
+
+    it('shows all drivers including those without data in edit mode', () => {
+      const results: RaceResultFormData[] = [
+        createMockResult(1), // No data
+        createMockResult(2), // No data
+      ];
+      const wrapper = createWrapper(results, mockDrivers, false, new Set([1, 2]), false); // readOnly = false
+
+      // In edit mode, all drivers should be shown (as dropdowns)
+      const rows = wrapper.findAll('tbody tr');
+      expect(rows).toHaveLength(2);
+    });
+
+    it('shows DNF drivers in read-only mode even without times', () => {
+      const results: RaceResultFormData[] = [
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: null,
+          race_time: '',
+          race_time_difference: '',
+          fastest_lap: '',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: true, // DNF flag is set
+        },
+      ];
+      const wrapper = createWrapper(results, mockDrivers, false, new Set([1]), true);
+
+      // Driver should be shown because they have DNF status
+      expect(wrapper.text()).toContain('Alice Johnson');
+      expect(wrapper.text()).toContain('DNF');
     });
   });
 });

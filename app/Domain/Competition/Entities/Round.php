@@ -347,7 +347,8 @@ final class Round
     }
 
     /**
-     * Mark round for deletion.
+     * Mark round for deletion and record domain event.
+     * Note: The actual deletion (hard delete with cascade) is performed by the repository.
      */
     public function delete(): void
     {

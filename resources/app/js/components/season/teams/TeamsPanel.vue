@@ -10,6 +10,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
+import { PhPlus } from '@phosphor-icons/vue';
 
 import TeamFormModal from './TeamFormModal.vue';
 
@@ -124,11 +125,10 @@ function handleTeamSaved(): void {
     <!-- Enabled State -->
     <div v-else>
       <!-- Header Row -->
-      <div class="flex items-center justify-between mb-3">
+      <div class="mb-3">
         <span class="text-sm text-gray-600">
           {{ teams.length }} team{{ teams.length !== 1 ? 's' : '' }}
         </span>
-        <Button icon="pi pi-plus" size="small" label="Add Team" @click="handleAddTeam" />
       </div>
 
       <!-- DataTable -->
@@ -140,7 +140,7 @@ function handleTeamSaved(): void {
         class="text-sm"
       >
         <template #empty>
-          <div class="text-center py-8">
+          <div class="text-center py-6">
             <i class="pi pi-users text-3xl text-gray-400 mb-2"></i>
             <p class="text-gray-600">No teams created yet</p>
             <p class="text-sm text-gray-500 mt-1">Click "Add Team" to create your first team</p>
@@ -186,6 +186,18 @@ function handleTeamSaved(): void {
           </template>
         </Column>
       </DataTable>
+
+      <!-- Add Team Button (footer) -->
+      <div v-if="teamChampionshipEnabled" class="mt-2">
+        <button
+          type="button"
+          class="flex items-center justify-center gap-2 w-full p-2 bg-white rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
+          @click.stop="handleAddTeam"
+        >
+          <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
+          <span class="text-sm font-medium">Add Team</span>
+        </button>
+      </div>
     </div>
 
     <!-- Team Form Modal -->

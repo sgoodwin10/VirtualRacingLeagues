@@ -347,7 +347,19 @@
                 <!-- Horizontal Rule -->
                 <hr class="border-gray-300" />
 
-                <h3 class="text-sm font-semibold text-gray-900">Points System</h3>
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-semibold text-gray-900">Points System</h3>
+                  <Button
+                    v-if="canCopyFromRoundOne"
+                    v-tooltip.left="'Copy Round 1 points configuration'"
+                    label="Copy from Round 1"
+                    icon="pi pi-copy"
+                    size="small"
+                    severity="secondary"
+                    outlined
+                    @click="copyFromRoundOne"
+                  />
+                </div>
 
                 <div class="space-y-3">
                   <!-- Points Grid (always visible when round_points is enabled) -->
@@ -483,6 +495,7 @@
 import { ref, computed, watch } from 'vue';
 import { format } from 'date-fns';
 import { useToast } from 'primevue/usetoast';
+import Tooltip from 'primevue/tooltip';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
@@ -527,6 +540,9 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+// Register PrimeVue directives
+const vTooltip = Tooltip;
+
 const roundStore = useRoundStore();
 const trackStore = useTrackStore();
 const toast = useToast();
@@ -563,6 +579,71 @@ const isVisible = computed({
 });
 
 const validationErrors = computed(() => validation.errors.value);
+
+// Check if we can copy from Round 1
+const canCopyFromRoundOne = computed(() => {
+  // Only show if round_points is enabled
+  if (!form.value.round_points) return false;
+
+  // Get rounds for this season
+  const seasonRounds = roundStore.roundsBySeasonId(props.seasonId);
+
+  // Find Round 1
+  const roundOne = seasonRounds.find((r) => r.round_number === 1);
+  if (!roundOne) return false;
+
+  // Don't show on Round 1 itself
+  if (props.mode === 'edit' && props.round?.round_number === 1) return false;
+
+  // Don't show on create mode if this would be Round 1
+  if (props.mode === 'create' && form.value.round_number === 1) return false;
+
+  // Must have points_system configured
+  return !!roundOne.points_system;
+});
+
+// Copy points configuration from Round 1
+function copyFromRoundOne(): void {
+  const seasonRounds = roundStore.roundsBySeasonId(props.seasonId);
+  const roundOne = seasonRounds.find((r) => r.round_number === 1);
+
+  if (!roundOne || !roundOne.points_system) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cannot Copy',
+      detail: 'Round 1 does not have a points system configured',
+      life: 3000,
+    });
+    return;
+  }
+
+  try {
+    // Parse Round 1's points system
+    const roundOnePoints = JSON.parse(roundOne.points_system);
+
+    // Copy to current form
+    form.value.points_system = { ...roundOnePoints };
+    form.value.fastest_lap = roundOne.fastest_lap;
+    form.value.fastest_lap_top_10 = roundOne.fastest_lap_top_10;
+    form.value.qualifying_pole = roundOne.qualifying_pole;
+    form.value.qualifying_pole_top_10 = roundOne.qualifying_pole_top_10;
+
+    toast.add({
+      severity: 'success',
+      summary: 'Points Copied',
+      detail: 'Round 1 points configuration has been copied',
+      life: 3000,
+    });
+  } catch (error) {
+    console.error('Failed to parse Round 1 points system:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Copy Failed',
+      detail: 'Failed to copy points configuration from Round 1',
+      life: 3000,
+    });
+  }
+}
 
 // Add a new points position
 function addPointsPosition(): void {

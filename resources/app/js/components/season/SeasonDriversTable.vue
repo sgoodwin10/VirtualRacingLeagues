@@ -80,9 +80,14 @@ const selectedTeam = ref<number | null>(null);
 // Search state
 const searchQuery = ref('');
 
-// Setup debounced search
+// Track if we're currently doing a search (separate from store loading)
+// This prevents the input from being disabled during search
+const isSearchActive = ref(false);
+
+// Setup debounced search - input stays enabled so focus is never lost
 const { isSearching } = useDebouncedSearch(searchQuery, async (query) => {
   seasonDriverStore.setSearchQuery(query);
+  isSearchActive.value = true;
   try {
     await seasonDriverStore.fetchSeasonDrivers(props.seasonId, {
       page: 1, // Reset to page 1 when searching
@@ -96,8 +101,16 @@ const { isSearching } = useDebouncedSearch(searchQuery, async (query) => {
       detail: errorMessage,
       life: 5000,
     });
+  } finally {
+    isSearchActive.value = false;
   }
 });
+
+// Computed to determine if input should be disabled
+// Only disable for initial loading, NOT during search
+const isInputDisabled = computed(
+  () => props.loading && !isSearchActive.value && !isSearching.value,
+);
 
 const drivers = computed(() => seasonDriverStore.seasonDrivers);
 const totalRecords = computed(() => seasonDriverStore.totalDrivers);
@@ -493,6 +506,42 @@ const teamFilterOptions = computed((): TeamFilterOption[] => {
 
   return options;
 });
+
+/**
+ * Handle refresh button click
+ * Clears all filters and reloads the drivers table from page 1
+ */
+async function handleRefresh(): Promise<void> {
+  // Reset all filter state variables
+  searchQuery.value = '';
+  selectedDivision.value = null;
+  selectedTeam.value = null;
+
+  // Clear store filters
+  seasonDriverStore.setSearchQuery('');
+  seasonDriverStore.setDivisionFilter(null);
+  seasonDriverStore.setTeamFilter(null);
+
+  try {
+    // Fetch fresh data from page 1
+    await seasonDriverStore.fetchSeasonDrivers(props.seasonId, { page: 1 });
+
+    toast.add({
+      severity: 'success',
+      summary: 'Refreshed',
+      detail: 'Drivers table refreshed',
+      life: 3000,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to refresh drivers table';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  }
+}
 </script>
 
 <template>
@@ -517,12 +566,12 @@ const teamFilterOptions = computed((): TeamFilterOption[] => {
       >
         <div class="flex-1 max-w-md">
           <IconField>
-            <InputIcon class="pi pi-search" />
+            <InputIcon :class="isSearching ? 'pi pi-spinner pi-spin' : 'pi pi-search'" />
             <InputText
               v-model="searchQuery"
               placeholder="Search drivers by name..."
               class="w-full"
-              :disabled="loading || isSearching"
+              :disabled="isInputDisabled"
             />
           </IconField>
         </div>
@@ -564,23 +613,120 @@ const teamFilterOptions = computed((): TeamFilterOption[] => {
           :disabled="manageButtonDisabled"
           @click="emit('manageDrivers')"
         />
+
+        <!-- Refresh Drivers Table Button -->
+        <Button
+          label="Refresh Drivers Table"
+          icon="pi pi-refresh"
+          severity="warn"
+          size="medium"
+          @click="handleRefresh"
+        />
       </div>
     </div>
 
     <DataTable
       :value="drivers"
-      :loading="loading || loadingDriver || isSearching"
+      :loading="loading || loadingDriver"
       lazy
       paginator
       :rows="perPage"
       :total-records="totalRecords"
-      :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
       :first="(currentPage - 1) * perPage"
       striped-rows
       responsive-layout="scroll"
       @page="onPage"
       @sort="onSort"
     >
+      <template
+        #paginatorcontainer="{
+          first,
+          last,
+          page,
+          pageCount,
+          prevPageCallback,
+          nextPageCallback,
+          totalRecords: total,
+        }"
+      >
+        <div class="flex items-center justify-between w-full px-4 py-2">
+          <!-- Left: Record info -->
+          <span class="text-sm text-gray-600">
+            Showing {{ first }} to {{ last }} of {{ total }} drivers
+          </span>
+
+          <!-- Center: Rows per page -->
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600">Rows per page:</span>
+            <Select
+              :model-value="perPage"
+              :options="ROWS_PER_PAGE_OPTIONS"
+              class="w-20"
+              @change="
+                (e) =>
+                  onPage({
+                    page: 0,
+                    rows: e.value,
+                    first: 0,
+                    pageCount: Math.ceil(total / e.value),
+                  })
+              "
+            />
+          </div>
+
+          <!-- Right: Navigation -->
+          <div class="flex items-center gap-1">
+            <Button
+              icon="pi pi-angle-double-left"
+              text
+              rounded
+              :disabled="page === 0"
+              aria-label="First page"
+              @click="
+                onPage({
+                  page: 0,
+                  rows: perPage,
+                  first: 0,
+                  pageCount,
+                })
+              "
+            />
+            <Button
+              icon="pi pi-angle-left"
+              text
+              rounded
+              :disabled="page === 0"
+              aria-label="Previous page"
+              @click="prevPageCallback"
+            />
+            <span class="text-sm text-gray-600 mx-2"> Page {{ page + 1 }} of {{ pageCount }} </span>
+            <Button
+              icon="pi pi-angle-right"
+              text
+              rounded
+              :disabled="page === pageCount - 1"
+              aria-label="Next page"
+              @click="nextPageCallback"
+            />
+            <Button
+              icon="pi pi-angle-double-right"
+              text
+              rounded
+              :disabled="page === pageCount - 1"
+              aria-label="Last page"
+              @click="
+                onPage({
+                  page: pageCount - 1,
+                  rows: perPage,
+                  first: (pageCount - 1) * perPage,
+                  pageCount,
+                })
+              "
+            />
+          </div>
+        </div>
+      </template>
+
       <template #empty>
         <div class="text-center py-8">
           <i class="pi pi-users text-4xl text-gray-400 mb-3"></i>
@@ -721,3 +867,31 @@ const teamFilterOptions = computed((): TeamFilterOption[] => {
     </DataTable>
   </div>
 </template>
+
+<style scoped>
+/* Smooth transitions for table rows */
+.season-drivers-table :deep(.p-datatable-tbody > tr) {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Fade in animation for new rows */
+.season-drivers-table :deep(.p-datatable-tbody > tr) {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth hover effect */
+.season-drivers-table :deep(.p-datatable-tbody > tr:hover) {
+  transform: scale(1.001);
+}
+</style>

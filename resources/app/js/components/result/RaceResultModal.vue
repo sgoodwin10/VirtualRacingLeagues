@@ -92,6 +92,7 @@ import { useSeasonStore } from '@app/stores/seasonStore';
 import { useDivisionStore } from '@app/stores/divisionStore';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import { useRaceTimeCalculation } from '@app/composables/useRaceTimeCalculation';
+import { PSN_BASED_PLATFORMS, PLATFORM_SLUG_IRACING } from '@app/constants/platforms';
 import type {
   RaceResultFormData,
   CsvResultRow,
@@ -270,13 +271,12 @@ function getPlatformIdField(platformSlug: string | undefined): 'psn_id' | 'iraci
   if (!platformSlug) return null;
 
   // PSN-based games (PlayStation Network ID)
-  const psnGames = ['gran-turismo-7', 'f1-24', 'assetto-corsa-competizione'];
-  if (psnGames.includes(platformSlug)) {
+  if (PSN_BASED_PLATFORMS.includes(platformSlug as (typeof PSN_BASED_PLATFORMS)[number])) {
     return 'psn_id';
   }
 
   // iRacing uses its own ID system
-  if (platformSlug === 'iracing') {
+  if (platformSlug === PLATFORM_SLUG_IRACING) {
     return 'iracing_id';
   }
 
@@ -414,6 +414,60 @@ function recalculateTimesFromDifferences(): void {
   }
 }
 
+/**
+ * Calculate which driver(s) have the fastest lap for each division
+ * Only applies to races (not qualifying)
+ * Handles divisions if enabled, or processes all results as one group
+ */
+function calculateFastestLaps(results: RaceResultFormData[]): void {
+  // Only apply to races, not qualifying
+  if (isQualifying.value) {
+    return;
+  }
+
+  // Reset all has_fastest_lap flags first
+  results.forEach((result) => {
+    result.has_fastest_lap = false;
+  });
+
+  // Group results by division (if divisions enabled) or process as single group
+  const resultsByDivision = new Map<number | null, RaceResultFormData[]>();
+  for (const result of results) {
+    if (!result.driver_id || !result.fastest_lap) continue;
+
+    const divisionKey = hasDivisions.value ? (result.division_id ?? null) : null;
+    if (!resultsByDivision.has(divisionKey)) {
+      resultsByDivision.set(divisionKey, []);
+    }
+    resultsByDivision.get(divisionKey)?.push(result);
+  }
+
+  // For each division (or single group), find the minimum fastest_lap time
+  for (const [, divisionResults] of resultsByDivision) {
+    let minFastestLapMs: number | null = null;
+
+    // Find the minimum fastest lap time in this division/group
+    for (const result of divisionResults) {
+      const fastestLapMs = parseTimeToMs(result.fastest_lap);
+      if (fastestLapMs !== null) {
+        if (minFastestLapMs === null || fastestLapMs < minFastestLapMs) {
+          minFastestLapMs = fastestLapMs;
+        }
+      }
+    }
+
+    // Set has_fastest_lap = true for all drivers with the minimum time (handles ties)
+    if (minFastestLapMs !== null) {
+      for (const result of divisionResults) {
+        const fastestLapMs = parseTimeToMs(result.fastest_lap);
+        if (fastestLapMs !== null && fastestLapMs === minFastestLapMs) {
+          result.has_fastest_lap = true;
+        }
+      }
+    }
+  }
+}
+
 async function handleSave(): Promise<void> {
   isSaving.value = true;
 
@@ -423,6 +477,9 @@ async function handleSave(): Promise<void> {
       formResults.value.filter((r) => r.driver_id !== null),
       isQualifying.value,
     );
+
+    // Calculate fastest laps (only for races, automatically handles divisions)
+    calculateFastestLaps(sortedResults);
 
     // Build payload
     const payload: BulkRaceResultsPayload = {
@@ -457,6 +514,40 @@ function handleClose(): void {
   localDrivers.value = [];
 }
 
+/**
+ * Populate form with existing results from the store
+ * Matches results to drivers by driver_id
+ */
+function populateFormWithResults(): void {
+  if (!raceResultStore.hasResults) {
+    return;
+  }
+
+  // Populate form with existing results by matching driver_id
+  for (const result of raceResultStore.results) {
+    // Find the form row for this driver by matching driver_id
+    const formRow = formResults.value.find((r) => r.driver_id === result.driver_id);
+
+    if (formRow) {
+      // Update the existing form row with saved result data
+      formRow.division_id = result.division_id ?? null;
+      formRow.position = result.position;
+      formRow.race_time = result.race_time || '';
+      formRow.race_time_difference = result.race_time_difference || '';
+      formRow.fastest_lap = result.fastest_lap || '';
+      formRow.penalties = result.penalties || '';
+      formRow.has_fastest_lap = result.has_fastest_lap;
+      formRow.has_pole = result.has_pole;
+      formRow.dnf = result.dnf;
+    } else {
+      // Handle case where saved result's driver is not in current driver list
+      console.warn(
+        `Saved result for driver_id ${result.driver_id} not found in current season drivers`,
+      );
+    }
+  }
+}
+
 // Load drivers and results data
 async function loadData(): Promise<void> {
   isLoadingDrivers.value = true;
@@ -482,31 +573,8 @@ async function loadData(): Promise<void> {
     // Load existing results if any
     await raceResultStore.fetchResults(props.race.id);
 
-    if (raceResultStore.hasResults) {
-      // Populate form with existing results by matching driver_id
-      for (const result of raceResultStore.results) {
-        // Find the form row for this driver by matching driver_id
-        const formRow = formResults.value.find((r) => r.driver_id === result.driver_id);
-
-        if (formRow) {
-          // Update the existing form row with saved result data
-          formRow.division_id = result.division_id ?? null;
-          formRow.position = result.position;
-          formRow.race_time = result.race_time || '';
-          formRow.race_time_difference = result.race_time_difference || '';
-          formRow.fastest_lap = result.fastest_lap || '';
-          formRow.penalties = result.penalties || '';
-          formRow.has_fastest_lap = result.has_fastest_lap;
-          formRow.has_pole = result.has_pole;
-          formRow.dnf = result.dnf;
-        } else {
-          // Handle case where saved result's driver is not in current driver list
-          console.warn(
-            `Saved result for driver_id ${result.driver_id} not found in current season drivers`,
-          );
-        }
-      }
-    }
+    // Populate form with existing results
+    populateFormWithResults();
   } finally {
     isLoadingDrivers.value = false;
   }

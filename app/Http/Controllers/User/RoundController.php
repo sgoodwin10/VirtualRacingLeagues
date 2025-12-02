@@ -6,8 +6,10 @@ namespace App\Http\Controllers\User;
 
 use App\Application\Competition\DTOs\CreateRoundData;
 use App\Application\Competition\DTOs\UpdateRoundData;
+use App\Application\Competition\DTOs\CompleteRoundData;
 use App\Application\Competition\Services\RoundApplicationService;
 use App\Domain\Competition\Exceptions\RoundNotFoundException;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -71,11 +73,17 @@ final class RoundController extends Controller
      */
     public function destroy(int $roundId): JsonResponse
     {
-        /** @var int $userId */
-        $userId = auth('web')->id() ?? 0;
+        try {
+            /** @var int $userId */
+            $userId = auth('web')->id() ?? 0;
 
-        $this->roundService->deleteRound($roundId, $userId);
-        return ApiResponse::success(null, 'Round deleted successfully');
+            $this->roundService->deleteRound($roundId, $userId);
+            return ApiResponse::success(null, 'Round deleted successfully');
+        } catch (RoundNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        }
     }
 
     /**
@@ -89,14 +97,22 @@ final class RoundController extends Controller
 
     /**
      * Mark round as completed.
+     * Optionally accepts cross-division results data from frontend.
      */
-    public function complete(int $roundId): JsonResponse
+    public function complete(Request $request, int $roundId): JsonResponse
     {
         try {
             /** @var int $userId */
             $userId = auth('web')->id() ?? 0;
 
-            $round = $this->roundService->completeRound($roundId, $userId);
+            // Validate and create DTO if data is provided
+            $data = null;
+            if ($request->hasAny(['qualifying_results', 'race_time_results', 'fastest_lap_results'])) {
+                $validated = $request->validate(CompleteRoundData::rules());
+                $data = CompleteRoundData::from($validated);
+            }
+
+            $round = $this->roundService->completeRound($roundId, $userId, $data);
             return ApiResponse::success($round->toArray(), 'Round marked as completed');
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);

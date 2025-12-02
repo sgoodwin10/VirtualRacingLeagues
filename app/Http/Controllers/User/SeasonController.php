@@ -7,6 +7,7 @@ namespace App\Http\Controllers\User;
 use App\Application\Competition\DTOs\CreateSeasonData;
 use App\Application\Competition\DTOs\UpdateSeasonData;
 use App\Application\Competition\Services\SeasonApplicationService;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +26,20 @@ final class SeasonController extends Controller
     }
 
     /**
+     * Get authenticated user ID with validation.
+     *
+     * @throws UnauthorizedException if user is not authenticated
+     */
+    private function getAuthenticatedUserId(): int
+    {
+        $userId = Auth::id();
+        if ($userId === null) {
+            throw UnauthorizedException::notAuthenticated();
+        }
+        return (int) $userId;
+    }
+
+    /**
      * List all seasons for a competition.
      */
     public function index(int $competitionId): JsonResponse
@@ -38,16 +53,11 @@ final class SeasonController extends Controller
      */
     public function store(Request $request, int $competitionId): JsonResponse
     {
-        $userId = Auth::id();
-        if ($userId === null) {
-            throw new \RuntimeException('User must be authenticated');
-        }
-
         $validated = $request->validate(CreateSeasonData::rules());
         $validated['competition_id'] = $competitionId;
 
         $data = CreateSeasonData::from($validated);
-        $season = $this->seasonService->createSeason($data, (int) $userId);
+        $season = $this->seasonService->createSeason($data, $this->getAuthenticatedUserId());
 
         return ApiResponse::created($season->toArray(), 'Season created successfully');
     }
@@ -66,15 +76,10 @@ final class SeasonController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $userId = Auth::id();
-        if ($userId === null) {
-            throw new \RuntimeException('User must be authenticated');
-        }
-
         $validated = $request->validate(UpdateSeasonData::rules());
 
         $data = UpdateSeasonData::from($validated);
-        $season = $this->seasonService->updateSeason($id, $data, (int) $userId);
+        $season = $this->seasonService->updateSeason($id, $data, $this->getAuthenticatedUserId());
 
         return ApiResponse::success($season->toArray(), 'Season updated successfully');
     }
@@ -84,12 +89,7 @@ final class SeasonController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $userId = Auth::id();
-        if ($userId === null) {
-            throw new \RuntimeException('User must be authenticated');
-        }
-
-        $this->seasonService->deleteSeason($id, (int) $userId);
+        $this->seasonService->deleteSeason($id, $this->getAuthenticatedUserId());
         return ApiResponse::success(null, 'Season deleted successfully');
     }
 
@@ -98,12 +98,7 @@ final class SeasonController extends Controller
      */
     public function archive(int $id): JsonResponse
     {
-        $userId = Auth::id();
-        if ($userId === null) {
-            throw new \RuntimeException('User must be authenticated');
-        }
-
-        $season = $this->seasonService->archiveSeason($id, (int) $userId);
+        $season = $this->seasonService->archiveSeason($id, $this->getAuthenticatedUserId());
         return ApiResponse::success($season->toArray(), 'Season archived successfully');
     }
 
@@ -112,12 +107,7 @@ final class SeasonController extends Controller
      */
     public function unarchive(int $id): JsonResponse
     {
-        $userId = Auth::id();
-        if ($userId === null) {
-            throw new \RuntimeException('User must be authenticated');
-        }
-
-        $season = $this->seasonService->unarchiveSeason($id, (int) $userId);
+        $season = $this->seasonService->unarchiveSeason($id, $this->getAuthenticatedUserId());
         return ApiResponse::success($season->toArray(), 'Season unarchived successfully');
     }
 
@@ -126,12 +116,7 @@ final class SeasonController extends Controller
      */
     public function activate(int $id): JsonResponse
     {
-        $userId = Auth::id();
-        if ($userId === null) {
-            throw new \RuntimeException('User must be authenticated');
-        }
-
-        $season = $this->seasonService->activateSeason($id, (int) $userId);
+        $season = $this->seasonService->activateSeason($id, $this->getAuthenticatedUserId());
         return ApiResponse::success($season->toArray(), 'Season activated successfully');
     }
 
@@ -140,12 +125,7 @@ final class SeasonController extends Controller
      */
     public function complete(int $id): JsonResponse
     {
-        $userId = Auth::id();
-        if ($userId === null) {
-            throw new \RuntimeException('User must be authenticated');
-        }
-
-        $season = $this->seasonService->completeSeason($id, (int) $userId);
+        $season = $this->seasonService->completeSeason($id, $this->getAuthenticatedUserId());
         return ApiResponse::success($season->toArray(), 'Season completed successfully');
     }
 
@@ -154,12 +134,7 @@ final class SeasonController extends Controller
      */
     public function restore(int $id): JsonResponse
     {
-        $userId = Auth::id();
-        if ($userId === null) {
-            throw new \RuntimeException('User must be authenticated');
-        }
-
-        $season = $this->seasonService->restoreSeason($id, (int) $userId);
+        $season = $this->seasonService->restoreSeason($id, $this->getAuthenticatedUserId());
         return ApiResponse::success($season->toArray(), 'Season restored successfully');
     }
 
@@ -180,5 +155,14 @@ final class SeasonController extends Controller
         );
 
         return ApiResponse::success($result);
+    }
+
+    /**
+     * Get season standings (cumulative across all completed rounds).
+     */
+    public function standings(int $id): JsonResponse
+    {
+        $standings = $this->seasonService->getSeasonStandings($id);
+        return ApiResponse::success($standings);
     }
 }

@@ -15,6 +15,7 @@ describe('CrossDivisionResultsSection', () => {
       race_number: 1,
       name: 'Qualifying',
       is_qualifier: true,
+      race_points: false,
       status: 'completed',
       results: [
         {
@@ -302,6 +303,7 @@ describe('CrossDivisionResultsSection', () => {
         race_number: 1,
         name: 'Qualifying',
         is_qualifier: true,
+        race_points: false,
         status: 'completed',
         results: [
           {

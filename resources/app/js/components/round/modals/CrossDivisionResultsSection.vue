@@ -12,8 +12,8 @@
 
     <!-- Results Table -->
     <div v-if="results && results.length > 0" class="overflow-x-auto">
-      <DataTable :value="enrichedResults" :rows="50" :row-class="getRowClass" class="text-sm">
-        <Column field="position" header="#" class="w-16">
+      <DataTable :value="enrichedResults" :rows="50" :row-class="getRowClass" :row-hover="true">
+        <Column field="position" header="#" class="w-16" :pt="{ header: { class: 'text-center' } }">
           <template #body="{ data }">
             <div class="text-center font-medium">
               {{ data.position }}

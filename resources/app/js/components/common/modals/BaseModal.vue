@@ -212,7 +212,13 @@ const handleDragEnd = (event: Event): void => {
     :class="dialogClass"
     :content-class="contentClass"
     :aria-label="ariaLabel"
-    :pt="pt"
+    :pt="{
+      root: { class: 'rounded-sm' },
+      header: { class: 'rounded-t-sm p-4' },
+      content: { class: '' },
+      footer: { class: 'rounded-b-sm p-4' },
+      ...pt,
+    }"
     :unstyled="unstyled"
     @update:visible="handleUpdateVisible"
     @show="handleShow"
@@ -229,7 +235,10 @@ const handleDragEnd = (event: Event): void => {
     </template>
 
     <!-- Loading State Overlay -->
-    <div v-if="loading" class="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+    <div
+      v-if="loading"
+      class="absolute inset-0 bg-white/50 flex items-center justify-center z-10 overflow-hidden"
+    >
       <i class="pi pi-spinner pi-spin text-4xl text-primary" />
     </div>
 

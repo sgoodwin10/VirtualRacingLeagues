@@ -6,6 +6,7 @@ namespace App\Application\Competition\Services;
 
 use App\Application\Competition\DTOs\CreateRoundData;
 use App\Application\Competition\DTOs\UpdateRoundData;
+use App\Application\Competition\DTOs\CompleteRoundData;
 use App\Application\Competition\DTOs\RoundData;
 use App\Application\Competition\DTOs\RoundResultsData;
 use App\Application\Competition\DTOs\RaceEventResultData;
@@ -25,6 +26,7 @@ use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
 use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
+use App\Application\Competition\Traits\BatchFetchHelpersTrait;
 use App\Infrastructure\Persistence\Eloquent\Models\Round as RoundEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Division;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +39,8 @@ use DateTimeImmutable;
  */
 final class RoundApplicationService
 {
+    use BatchFetchHelpersTrait;
+
     public function __construct(
         private readonly RoundRepositoryInterface $roundRepository,
         private readonly RaceRepositoryInterface $raceRepository,
@@ -119,8 +123,12 @@ final class RoundApplicationService
      * @param array<string, mixed> $requestData Raw request data to check field presence
      * @throws UnauthorizedException
      */
-    public function updateRound(int $roundId, UpdateRoundData $data, array $requestData = [], int $userId = 0): RoundData
-    {
+    public function updateRound(
+        int $roundId,
+        UpdateRoundData $data,
+        array $requestData = [],
+        int $userId = 0
+    ): RoundData {
         return DB::transaction(function () use ($roundId, $data, $requestData, $userId) {
             $round = $this->roundRepository->findById($roundId);
 
@@ -267,7 +275,8 @@ final class RoundApplicationService
     }
 
     /**
-     * Delete a round (soft delete).
+     * Delete a round (hard delete with cascade).
+     * All related races and race results are automatically deleted via database foreign key constraints.
      *
      * @throws UnauthorizedException
      */
@@ -311,12 +320,13 @@ final class RoundApplicationService
      * Mark round as completed.
      * Also marks all associated races and race results as completed/confirmed.
      * Calculates and stores round results in the round_results field.
+     * Optionally accepts cross-division results from frontend.
      *
      * @throws UnauthorizedException
      */
-    public function completeRound(int $roundId, int $userId): RoundData
+    public function completeRound(int $roundId, int $userId, ?CompleteRoundData $data = null): RoundData
     {
-        return DB::transaction(function () use ($roundId, $userId) {
+        return DB::transaction(function () use ($roundId, $userId, $data) {
             // Fetch round and authorize
             $round = $this->roundRepository->findById($roundId);
             $this->authorizeLeagueOwner($round->seasonId(), $userId);
@@ -325,74 +335,112 @@ final class RoundApplicationService
             $season = $this->seasonRepository->findById($round->seasonId());
             $hasDivisions = $season->raceDivisionsEnabled();
 
-            // Cascade completion to all races (including qualifiers)
-            // This triggers calculateRacePoints() for each race
+            // Get all races sorted by race_number
             $races = $this->raceRepository->findAllByRoundId($roundId);
 
-            // Sort races by race_number to ensure qualifiers are processed first
-            // This is important because non-qualifier races may depend on qualifier positions for grid_source
-            usort($races, fn($a, $b) => $a->raceNumber() <=> $b->raceNumber());
+            // Cascade completion to all races
+            $this->cascadeRaceCompletion($races);
 
-            foreach ($races as $race) {
-                // Mark race as completed
-                $race->markAsCompleted();
-                $this->raceRepository->save($race);
+            // Calculate and store round results
+            $this->calculateAndStoreRoundResults($round, $races, $hasDivisions, $data);
 
-                // Calculate race points (this also assigns positions and calculates positions_gained)
-                // Only call if race_points is enabled
-                $raceId = $race->id();
-                if ($raceId !== null && $race->racePoints()) {
-                    $this->raceApplicationService->calculateRacePoints($raceId);
-                }
-
-                // Mark all race results as confirmed
-                if ($raceId !== null) {
-                    $raceResults = $this->raceResultRepository->findByRaceId($raceId);
-                    foreach ($raceResults as $result) {
-                        if ($result->status() !== RaceResultStatus::CONFIRMED) {
-                            $result->updateStatus(RaceResultStatus::CONFIRMED);
-                            $this->raceResultRepository->save($result);
-                        }
-                    }
-                }
-            }
-
-            // Fetch all race results for the round (now with calculated race points)
-            $allRaceResults = [];
-            foreach ($races as $race) {
-                $raceId = $race->id();
-                if ($raceId !== null) {
-                    $raceResults = $this->raceResultRepository->findByRaceId($raceId);
-                    foreach ($raceResults as $result) {
-                        $allRaceResults[] = [
-                            'race' => $race,
-                            'result' => $result,
-                        ];
-                    }
-                }
-            }
-
-            // Calculate round results
-            $roundResults = $this->calculateRoundResults($round, $allRaceResults, $hasDivisions);
-
-            // Calculate cross-division results (qualifying, race time, fastest lap)
-            $crossDivisionResults = $this->calculateCrossDivisionResults($allRaceResults);
-
-            // Set round results and cross-division results
-            $round->setRoundResults($roundResults);
-            $round->setCrossDivisionResults(
-                $crossDivisionResults['qualifying_results'],
-                $crossDivisionResults['race_time_results'],
-                $crossDivisionResults['fastest_lap_results']
-            );
-
-            // Mark as completed
+            // Mark round as completed
             $round->complete();
             $this->roundRepository->save($round);
             $this->dispatchEvents($round);
 
             return RoundData::fromEntity($round);
         });
+    }
+
+    /**
+     * Cascade completion to all races (including qualifiers).
+     *
+     * @param array<\App\Domain\Competition\Entities\Race> $races
+     */
+    private function cascadeRaceCompletion(array $races): void
+    {
+        // Sort races by race_number to ensure qualifiers are processed first
+        // This is important because non-qualifier races may depend on qualifier positions for grid_source
+        usort($races, fn($a, $b) => $a->raceNumber() <=> $b->raceNumber());
+
+        foreach ($races as $race) {
+            // Mark race as completed
+            $race->markAsCompleted();
+            $this->raceRepository->save($race);
+
+            // Calculate race points (this also assigns positions and calculates positions_gained)
+            // Only call if race_points is enabled
+            $raceId = $race->id();
+            if ($raceId !== null && $race->racePoints()) {
+                $this->raceApplicationService->calculateRacePoints($raceId);
+            }
+
+            // Mark all race results as confirmed
+            if ($raceId !== null) {
+                $raceResults = $this->raceResultRepository->findByRaceId($raceId);
+                foreach ($raceResults as $result) {
+                    if ($result->status() !== RaceResultStatus::CONFIRMED) {
+                        $result->updateStatus(RaceResultStatus::CONFIRMED);
+                        $this->raceResultRepository->save($result);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Calculate and store round results with cross-division results.
+     *
+     * @param Round $round
+     * @param array<\App\Domain\Competition\Entities\Race> $races
+     * @param bool $hasDivisions
+     * @param CompleteRoundData|null $data Optional data from frontend
+     */
+    private function calculateAndStoreRoundResults(
+        Round $round,
+        array $races,
+        bool $hasDivisions,
+        ?CompleteRoundData $data = null
+    ): void {
+        // Fetch all race results for the round (now with calculated race points)
+        $allRaceResults = [];
+        foreach ($races as $race) {
+            $raceId = $race->id();
+            if ($raceId !== null) {
+                $raceResults = $this->raceResultRepository->findByRaceId($raceId);
+                foreach ($raceResults as $result) {
+                    $allRaceResults[] = [
+                        'race' => $race,
+                        'result' => $result,
+                    ];
+                }
+            }
+        }
+
+        // Calculate round results
+        $roundResults = $this->calculateRoundResults($round, $allRaceResults, $hasDivisions);
+
+        // Use provided cross-division results if available, otherwise calculate them
+        if ($data !== null && $this->hasAnyCrossDivisionResults($data)) {
+            $qualifyingResults = $data->qualifying_results ?? [];
+            $raceTimeResults = $data->race_time_results ?? [];
+            $fastestLapResults = $data->fastest_lap_results ?? [];
+        } else {
+            // Calculate cross-division results (qualifying, race time, fastest lap)
+            $crossDivisionResults = $this->calculateCrossDivisionResults($allRaceResults);
+            $qualifyingResults = $crossDivisionResults['qualifying_results'];
+            $raceTimeResults = $crossDivisionResults['race_time_results'];
+            $fastestLapResults = $crossDivisionResults['fastest_lap_results'];
+        }
+
+        // Set round results and cross-division results
+        $round->setRoundResults($roundResults);
+        $round->setCrossDivisionResults(
+            $qualifyingResults,
+            $raceTimeResults,
+            $fastestLapResults
+        );
     }
 
     /**
@@ -508,6 +556,7 @@ final class RoundApplicationService
                 name: $race->name,
                 is_qualifier: $race->is_qualifier,
                 status: $race->status,
+                race_points: $race->race_points,
                 results: $results,
             );
         })->all();
@@ -567,28 +616,84 @@ final class RoundApplicationService
     {
         $roundPointsEnabled = $round->roundPoints();
 
-        // Extract all unique driver IDs for batch fetch
+        // Batch fetch driver names
+        $driverNames = $this->fetchDriverNamesFromResults($allRaceResults);
+
+        // Aggregate driver points and statistics
+        $aggregatedData = $this->aggregateDriverPoints($allRaceResults, $driverNames);
+
+        // Sort drivers with tie-breaking
+        $sortedDriverPoints = $this->sortDriversWithTieBreaking(
+            $aggregatedData['driverPoints'],
+            $aggregatedData['raceResultsByDriver'],
+            $aggregatedData['driverBestTimes'],
+            $aggregatedData['driverHasDnfOrDns']
+        );
+
+        // Build initial standings
+        $standings = $this->buildStandingsFromSortedPoints(
+            $sortedDriverPoints,
+            $aggregatedData['driverData'],
+            $aggregatedData['driverPositionsGained'],
+            $aggregatedData['driverHasDnfOrDns'],
+            $roundPointsEnabled
+        );
+
+        // Apply round or race-level bonuses
+        $standings = $this->applyBonusPoints($round, $allRaceResults, $standings, $roundPointsEnabled);
+
+        return ['standings' => $standings];
+    }
+
+    /**
+     * Extract and batch fetch driver names from race results.
+     *
+     * @param array<array{race: \App\Domain\Competition\Entities\Race, result: \App\Domain\Competition\Entities\RaceResult}> $allRaceResults
+     * @return array<int, string>
+     */
+    private function fetchDriverNamesFromResults(array $allRaceResults): array
+    {
         $driverIds = [];
         foreach ($allRaceResults as $item) {
-            $result = $item['result'];
-            $driverIds[$result->driverId()] = true;
+            $driverIds[$item['result']->driverId()] = true;
         }
-        $driverIds = array_keys($driverIds);
 
-        // Batch fetch driver names to avoid N+1 queries
-        $driverNames = $this->batchFetchDriverNames($driverIds);
+        return $this->batchFetchDriverNames(array_keys($driverIds));
+    }
 
-        // Aggregate points per driver
+    /**
+     * Aggregate driver points, positions gained, and race results.
+     *
+     * @param array<array{race: \App\Domain\Competition\Entities\Race, result: \App\Domain\Competition\Entities\RaceResult}> $allRaceResults
+     * @param array<int, string> $driverNames
+     * @return array{driverPoints: array<int, int>, driverData: array<int, array<string, mixed>>, raceResultsByDriver: array<int, array<mixed>>, driverPositionsGained: array<int, int>, driverBestTimes: array<int, array<string, int|null>>, driverHasDnfOrDns: array<int, bool>}
+     */
+    private function aggregateDriverPoints(array $allRaceResults, array $driverNames): array
+    {
         $driverPoints = [];
         $driverData = [];
         $raceResultsByDriver = [];
         $driverPositionsGained = [];
+        $driverBestTimes = [];
+        $driverHasDnfOrDns = [];
 
         foreach ($allRaceResults as $item) {
             $race = $item['race'];
             $result = $item['result'];
             $driverId = $result->driverId();
 
+            // Check if this result has ANY participation data (race time, fastest lap, or DNF flag)
+            // Skip results with no participation data - driver may still have valid
+            // participation in other races within this round
+            $hasParticipation = !$result->raceTime()->isNull()
+                || !$result->fastestLap()->isNull()
+                || $result->dnf();
+
+            if (!$hasParticipation) {
+                continue;
+            }
+
+            // Initialize driver data if not already set (only for drivers with participation)
             if (!isset($driverPoints[$driverId])) {
                 $driverPoints[$driverId] = 0;
                 $driverData[$driverId] = [
@@ -597,57 +702,304 @@ final class RoundApplicationService
                 ];
                 $raceResultsByDriver[$driverId] = [];
                 $driverPositionsGained[$driverId] = 0;
+                $driverBestTimes[$driverId] = [
+                    'race_time_ms' => null,
+                    'qualifier_time_ms' => null,
+                    'fastest_lap_ms' => null,
+                ];
+                $driverHasDnfOrDns[$driverId] = false;
             }
 
-            // Sum race points from all sessions (races + qualifiers)
+            // Check for DNF - driver gets 0 points for this race
+            if ($result->dnf()) {
+                $driverHasDnfOrDns[$driverId] = true;
+                // Store result for reference but with 0 points
+                $raceResultsByDriver[$driverId][] = [
+                    'race_points' => 0,
+                    'is_qualifier' => $race->isQualifier(),
+                    'fastest_lap' => null,
+                    'is_dnf' => true,
+                    'is_dns' => false,
+                ];
+                continue;
+            }
+
+            // Check for DNS (no valid race time but has some participation like fastest lap)
+            // Driver gets 0 points but is included in standings
+            if (!$this->hasValidRaceTime($race, $result)) {
+                $driverHasDnfOrDns[$driverId] = true;
+                // Store result for reference but with 0 points
+                $raceResultsByDriver[$driverId][] = [
+                    'race_points' => 0,
+                    'is_qualifier' => $race->isQualifier(),
+                    'fastest_lap' => null,
+                    'is_dnf' => false,
+                    'is_dns' => true,
+                ];
+                continue;
+            }
+
+            // Accumulate points for valid finishes
             $driverPoints[$driverId] += $result->racePoints();
 
-            // Sum positions gained from all races
+            // Accumulate positions gained
             if ($result->positionsGained() !== null) {
                 $driverPositionsGained[$driverId] += $result->positionsGained();
             }
 
-            // Store result info for tie-breaking (best single race result)
+            // Store result for tie-breaking
             $raceResultsByDriver[$driverId][] = [
                 'race_points' => $result->racePoints(),
                 'is_qualifier' => $race->isQualifier(),
                 'fastest_lap' => $result->fastestLap()->value(),
+                'is_dnf' => false,
+                'is_dns' => false,
             ];
+
+            // Track best times for time-based sorting (when no round_points)
+            if ($race->isQualifier()) {
+                // For qualifiers, track the best qualifying time (fastest_lap field)
+                $qualifierTimeMs = $result->fastestLap()->toMilliseconds();
+                if ($qualifierTimeMs !== null && $qualifierTimeMs > 0) {
+                    $currentBest = $driverBestTimes[$driverId]['qualifier_time_ms'];
+                    if ($currentBest === null || $qualifierTimeMs < $currentBest) {
+                        $driverBestTimes[$driverId]['qualifier_time_ms'] = $qualifierTimeMs;
+                    }
+                }
+            } else {
+                // For races, track the best race time
+                $raceTimeMs = $result->raceTime()->toMilliseconds();
+                if ($raceTimeMs !== null && $raceTimeMs > 0) {
+                    $currentBest = $driverBestTimes[$driverId]['race_time_ms'];
+                    if ($currentBest === null || $raceTimeMs < $currentBest) {
+                        $driverBestTimes[$driverId]['race_time_ms'] = $raceTimeMs;
+                    }
+                }
+
+                // Track the best fastest lap from races
+                $fastestLapMs = $result->fastestLap()->toMilliseconds();
+                if ($fastestLapMs !== null && $fastestLapMs > 0) {
+                    $currentBest = $driverBestTimes[$driverId]['fastest_lap_ms'];
+                    if ($currentBest === null || $fastestLapMs < $currentBest) {
+                        $driverBestTimes[$driverId]['fastest_lap_ms'] = $fastestLapMs;
+                    }
+                }
+            }
         }
 
-        // Sort drivers by total points (descending), with tie-breaking
-        // Build sortable array with driver IDs as keys for proper sorting
+        return [
+            'driverPoints' => $driverPoints,
+            'driverData' => $driverData,
+            'raceResultsByDriver' => $raceResultsByDriver,
+            'driverPositionsGained' => $driverPositionsGained,
+            'driverBestTimes' => $driverBestTimes,
+            'driverHasDnfOrDns' => $driverHasDnfOrDns,
+        ];
+    }
+
+    /**
+     * Check if a race result has valid time data.
+     */
+    private function hasValidRaceTime(
+        \App\Domain\Competition\Entities\Race $race,
+        \App\Domain\Competition\Entities\RaceResult $result
+    ): bool {
+        if ($race->isQualifier()) {
+            return !$result->fastestLap()->isNull();
+        }
+
+        return !$result->raceTime()->isNull();
+    }
+
+    /**
+     * Sort drivers by points with tie-breaking logic.
+     *
+     * When all drivers have 0 points (no round_points configured on races),
+     * sorting falls back to time-based ordering:
+     * 1. Best race time (fastest race finish time)
+     * 2. Best qualifier time (if no race time)
+     * 3. Best fastest lap (if no race or qualifier time)
+     *
+     * Drivers with only DNF/DNS results (no valid finishes) are placed at the bottom.
+     *
+     * @param array<int, int> $driverPoints
+     * @param array<int, array<mixed>> $raceResultsByDriver
+     * @param array<int, array<string, int|null>> $driverBestTimes
+     * @param array<int, bool> $driverHasDnfOrDns
+     * @return array<int, int> Sorted driver points (driver ID => points)
+     */
+    private function sortDriversWithTieBreaking(
+        array $driverPoints,
+        array $raceResultsByDriver,
+        array $driverBestTimes = [],
+        array $driverHasDnfOrDns = []
+    ): array {
         $sortableDrivers = [];
         foreach ($driverPoints as $driverId => $points) {
+            // Check if driver has ONLY DNF/DNS (no valid times at all)
+            $hasOnlyDnfOrDns = ($driverHasDnfOrDns[$driverId] ?? false)
+                && ($driverBestTimes[$driverId]['race_time_ms'] ?? null) === null
+                && ($driverBestTimes[$driverId]['qualifier_time_ms'] ?? null) === null
+                && ($driverBestTimes[$driverId]['fastest_lap_ms'] ?? null) === null;
+
             $sortableDrivers[$driverId] = [
                 'points' => $points,
                 'driver_id' => $driverId,
+                'has_only_dnf_or_dns' => $hasOnlyDnfOrDns,
             ];
         }
 
-        uasort($sortableDrivers, function ($driverA, $driverB) use ($raceResultsByDriver) {
+        // Check if all drivers have 0 points (no round_points on races)
+        $allZeroPoints = !empty($driverPoints) && array_sum($driverPoints) === 0;
+
+        uasort($sortableDrivers, function ($driverA, $driverB) use ($raceResultsByDriver, $driverBestTimes, $allZeroPoints) {
+            // First: Drivers with only DNF/DNS go to the bottom
+            $aOnlyDnfDns = $driverA['has_only_dnf_or_dns'];
+            $bOnlyDnfDns = $driverB['has_only_dnf_or_dns'];
+
+            if ($aOnlyDnfDns !== $bOnlyDnfDns) {
+                // Driver with valid results comes first
+                return $aOnlyDnfDns ? 1 : -1;
+            }
+
+            // If both have only DNF/DNS, they're equal (both at bottom)
+            if ($aOnlyDnfDns && $bOnlyDnfDns) {
+                return 0;
+            }
+
+            // Primary sort: by points (descending)
             if ($driverA['points'] !== $driverB['points']) {
                 return $driverB['points'] <=> $driverA['points'];
             }
 
-            // Tie-breaking: driver with better single best race result wins
-            // TODO: This tie-breaking logic may become configurable in the future
-            $bestA = max(array_column($raceResultsByDriver[$driverA['driver_id']], 'race_points'));
-            $bestB = max(array_column($raceResultsByDriver[$driverB['driver_id']], 'race_points'));
+            // When all drivers have 0 points, sort by time instead of best race result
+            if ($allZeroPoints && !empty($driverBestTimes)) {
+                return $this->compareDriversByTime(
+                    $driverA['driver_id'],
+                    $driverB['driver_id'],
+                    $driverBestTimes
+                );
+            }
 
-            return $bestB <=> $bestA;
+            // Tie-breaking: driver with better single best race result wins
+            $racePointsA = array_column($raceResultsByDriver[$driverA['driver_id']], 'race_points');
+            $racePointsB = array_column($raceResultsByDriver[$driverB['driver_id']], 'race_points');
+
+            $bestA = !empty($racePointsA) ? max($racePointsA) : 0;
+            $bestB = !empty($racePointsB) ? max($racePointsB) : 0;
+
+            if ($bestA !== $bestB) {
+                return $bestB <=> $bestA;
+            }
+
+            // Final tie-breaker: compare by time if available
+            if (!empty($driverBestTimes)) {
+                return $this->compareDriversByTime(
+                    $driverA['driver_id'],
+                    $driverB['driver_id'],
+                    $driverBestTimes
+                );
+            }
+
+            return 0;
         });
 
-        // Extract sorted driver IDs and points
-        $driverPoints = [];
+        // Extract sorted driver points
+        $sorted = [];
         foreach ($sortableDrivers as $driverId => $data) {
-            $driverPoints[$driverId] = $data['points'];
+            $sorted[$driverId] = $data['points'];
         }
 
-        // Build standings with positions (positions determined by race_points)
+        return $sorted;
+    }
+
+    /**
+     * Compare two drivers by their best times.
+     *
+     * Priority order:
+     * 1. Race time (fastest race finish)
+     * 2. Qualifier time (if no race time)
+     * 3. Fastest lap (if no race or qualifier time)
+     *
+     * @param int $driverAId
+     * @param int $driverBId
+     * @param array<int, array<string, int|null>> $driverBestTimes
+     * @return int Comparison result (-1, 0, or 1)
+     */
+    private function compareDriversByTime(int $driverAId, int $driverBId, array $driverBestTimes): int
+    {
+        $timesA = $driverBestTimes[$driverAId] ?? ['race_time_ms' => null, 'qualifier_time_ms' => null, 'fastest_lap_ms' => null];
+        $timesB = $driverBestTimes[$driverBId] ?? ['race_time_ms' => null, 'qualifier_time_ms' => null, 'fastest_lap_ms' => null];
+
+        // 1. Compare by race time (ascending - lower is better)
+        $raceTimeA = $timesA['race_time_ms'];
+        $raceTimeB = $timesB['race_time_ms'];
+
+        if ($raceTimeA !== null && $raceTimeB !== null) {
+            if ($raceTimeA !== $raceTimeB) {
+                return $raceTimeA <=> $raceTimeB;
+            }
+        } elseif ($raceTimeA !== null) {
+            // Driver A has race time, driver B doesn't - A wins
+            return -1;
+        } elseif ($raceTimeB !== null) {
+            // Driver B has race time, driver A doesn't - B wins
+            return 1;
+        }
+
+        // 2. Compare by qualifier time (ascending - lower is better)
+        $qualifierTimeA = $timesA['qualifier_time_ms'];
+        $qualifierTimeB = $timesB['qualifier_time_ms'];
+
+        if ($qualifierTimeA !== null && $qualifierTimeB !== null) {
+            if ($qualifierTimeA !== $qualifierTimeB) {
+                return $qualifierTimeA <=> $qualifierTimeB;
+            }
+        } elseif ($qualifierTimeA !== null) {
+            // Driver A has qualifier time, driver B doesn't - A wins
+            return -1;
+        } elseif ($qualifierTimeB !== null) {
+            // Driver B has qualifier time, driver A doesn't - B wins
+            return 1;
+        }
+
+        // 3. Compare by fastest lap (ascending - lower is better)
+        $fastestLapA = $timesA['fastest_lap_ms'];
+        $fastestLapB = $timesB['fastest_lap_ms'];
+
+        if ($fastestLapA !== null && $fastestLapB !== null) {
+            return $fastestLapA <=> $fastestLapB;
+        } elseif ($fastestLapA !== null) {
+            return -1;
+        } elseif ($fastestLapB !== null) {
+            return 1;
+        }
+
+        // No times to compare
+        return 0;
+    }
+
+    /**
+     * Build standings array from sorted driver points.
+     *
+     * @param array<int, int> $sortedDriverPoints
+     * @param array<int, array<string, mixed>> $driverData
+     * @param array<int, int> $driverPositionsGained
+     * @param array<int, bool> $driverHasDnfOrDns
+     * @param bool $roundPointsEnabled
+     * @return array<mixed>
+     */
+    private function buildStandingsFromSortedPoints(
+        array $sortedDriverPoints,
+        array $driverData,
+        array $driverPositionsGained,
+        array $driverHasDnfOrDns,
+        bool $roundPointsEnabled
+    ): array {
         $standings = [];
         $position = 1;
-        foreach ($driverPoints as $driverId => $racePoints) {
+
+        foreach ($sortedDriverPoints as $driverId => $racePoints) {
             $standings[] = [
                 'position' => $position++,
                 'driver_id' => $driverId,
@@ -656,14 +1008,28 @@ final class RoundApplicationService
                 'fastest_lap_points' => 0,
                 'pole_position_points' => 0,
                 'round_points' => 0,
-                'total_points' => $roundPointsEnabled ? 0 : $racePoints, // Different based on mode
+                'total_points' => $roundPointsEnabled ? 0 : $racePoints,
                 'total_positions_gained' => $driverPositionsGained[$driverId],
+                'has_any_dnf' => $driverHasDnfOrDns[$driverId] ?? false,
             ];
         }
 
+        return $standings;
+    }
+
+    /**
+     * Apply bonus points based on round configuration.
+     *
+     * @param Round $round
+     * @param array<array{race: \App\Domain\Competition\Entities\Race, result: \App\Domain\Competition\Entities\RaceResult}> $allRaceResults
+     * @param array<mixed> $standings
+     * @param bool $roundPointsEnabled
+     * @return array<mixed>
+     */
+    private function applyBonusPoints(Round $round, array $allRaceResults, array $standings, bool $roundPointsEnabled): array
+    {
         if ($roundPointsEnabled) {
-            // Round points mode: apply round-level bonuses (single winner across all events)
-            // Positions are already fixed by race_points - bonuses do NOT affect positions
+            // Round points mode: apply round-level bonuses
             $standings = $this->applyFastestLapBonus($round, $allRaceResults, $standings, true);
             $standings = $this->applyPolePositionBonus($round, $allRaceResults, $standings, true);
 
@@ -672,19 +1038,18 @@ final class RoundApplicationService
                 $standings = $this->applyRoundPoints($round, $standings);
             }
 
-            // Calculate total_points = round_points + fastest_lap_points + pole_position_points
+            // Calculate total points
             foreach ($standings as &$standing) {
                 $standing['total_points'] = $standing['round_points']
                     + $standing['fastest_lap_points']
                     + $standing['pole_position_points'];
             }
         } else {
-            // Non-round-points mode: tally race-level bonuses from individual race results
+            // Non-round-points mode: tally race-level bonuses
             $standings = $this->tallyRaceLevelBonuses($allRaceResults, $standings);
-            // total_points = race_points (already set, bonuses already included in race_points)
         }
 
-        return ['standings' => $standings];
+        return $standings;
     }
 
     /**
@@ -733,7 +1098,9 @@ final class RoundApplicationService
 
             $divisionStandings[] = [
                 'division_id' => $divisionId === 0 ? null : $divisionId,
-                'division_name' => $divisionId === 0 ? 'No Division' : ($divisionNames[$divisionId] ?? 'Unknown Division'),
+                'division_name' => $divisionId === 0
+                    ? 'No Division'
+                    : ($divisionNames[$divisionId] ?? 'Unknown Division'),
                 'results' => $divisionData['standings'],
             ];
         }
@@ -910,6 +1277,7 @@ final class RoundApplicationService
     /**
      * Apply round points based on final standings positions.
      * Round points are stored separately and NOT added to total_points.
+     * Drivers with ANY DNF in the round receive 0 round points.
      *
      * @param Round $round
      * @param array<mixed> $standings
@@ -925,6 +1293,12 @@ final class RoundApplicationService
         $pointsArray = $pointsSystem->toArray();
 
         foreach ($standings as &$standing) {
+            // Drivers with ANY DNF in the round should NOT receive round points
+            if ($standing['has_any_dnf'] ?? false) {
+                $standing['round_points'] = 0;
+                continue;
+            }
+
             $position = $standing['position'];
             if (isset($pointsArray[$position])) {
                 $roundPoints = $pointsArray[$position];
@@ -1002,9 +1376,9 @@ final class RoundApplicationService
      */
     private function calculateCrossDivisionResults(array $allRaceResults): array
     {
-        $qualifyingResults = [];
+        $qualifyingByDriver = []; // Track best qualifying time per driver
         $raceTimeByDriver = []; // Track best race time per driver
-        $fastestLapResults = [];
+        $fastestLapByDriver = []; // Track best fastest lap per driver
 
         foreach ($allRaceResults as $item) {
             $race = $item['race'];
@@ -1015,16 +1389,24 @@ final class RoundApplicationService
                 continue;
             }
 
-            // 1. Qualifying results: fastest_lap from qualifiers
+            // 1. Qualifying results: best fastest_lap per driver from qualifiers
             if ($race->isQualifier()) {
                 $lapTime = $result->fastestLap();
                 if (!$lapTime->isNull()) {
                     $lapTimeMs = $lapTime->toMilliseconds();
                     if ($lapTimeMs !== null && $lapTimeMs > 0) {
-                        $qualifyingResults[] = [
-                            'race_result_id' => $resultId,
-                            'time_ms' => $lapTimeMs,
-                        ];
+                        $driverId = $result->driverId();
+
+                        // Keep only the best (fastest) qualifying time per driver
+                        if (
+                            !isset($qualifyingByDriver[$driverId]) ||
+                            $lapTimeMs < $qualifyingByDriver[$driverId]['time_ms']
+                        ) {
+                            $qualifyingByDriver[$driverId] = [
+                                'race_result_id' => $resultId,
+                                'time_ms' => $lapTimeMs,
+                            ];
+                        }
                     }
                 }
             } else {
@@ -1051,21 +1433,30 @@ final class RoundApplicationService
                     }
                 }
 
-                // 3. Fastest lap results: fastest_lap from non-qualifiers
+                // 3. Fastest lap results: best fastest_lap per driver from non-qualifiers
                 $lapTime = $result->fastestLap();
                 if (!$lapTime->isNull()) {
                     $lapTimeMs = $lapTime->toMilliseconds();
                     if ($lapTimeMs !== null && $lapTimeMs > 0) {
-                        $fastestLapResults[] = [
-                            'race_result_id' => $resultId,
-                            'time_ms' => $lapTimeMs,
-                        ];
+                        $driverId = $result->driverId();
+
+                        // Keep only the best (fastest) lap per driver
+                        if (
+                            !isset($fastestLapByDriver[$driverId]) ||
+                            $lapTimeMs < $fastestLapByDriver[$driverId]['time_ms']
+                        ) {
+                            $fastestLapByDriver[$driverId] = [
+                                'race_result_id' => $resultId,
+                                'time_ms' => $lapTimeMs,
+                            ];
+                        }
                     }
                 }
             }
         }
 
-        // Sort qualifying results by time (fastest first)
+        // Convert qualifying by driver to array and sort by time (fastest first)
+        $qualifyingResults = array_values($qualifyingByDriver);
         usort($qualifyingResults, fn($a, $b) => $a['time_ms'] <=> $b['time_ms']);
 
         // Add positions to qualifying results
@@ -1084,7 +1475,8 @@ final class RoundApplicationService
             $rtr['position'] = $position++;
         }
 
-        // Sort fastest lap results by time (fastest first)
+        // Convert fastest lap by driver to array and sort by time (fastest first)
+        $fastestLapResults = array_values($fastestLapByDriver);
         usort($fastestLapResults, fn($a, $b) => $a['time_ms'] <=> $b['time_ms']);
 
         // Add positions to fastest lap results
@@ -1101,53 +1493,13 @@ final class RoundApplicationService
     }
 
     /**
-     * Batch fetch driver names for multiple season driver IDs to avoid N+1 queries.
-     *
-     * @param array<int> $seasonDriverIds
-     * @return array<int, string> Map of season driver ID => driver name
+     * Check if any cross-division results are provided in the data.
      */
-    private function batchFetchDriverNames(array $seasonDriverIds): array
+    private function hasAnyCrossDivisionResults(CompleteRoundData $data): bool
     {
-        if (empty($seasonDriverIds)) {
-            return [];
-        }
-
-        /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent> $seasonDrivers */
-        $seasonDrivers = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::with(
-            'leagueDriver.driver'
-        )->whereIn('id', $seasonDriverIds)->get();
-
-        $driverNames = [];
-        foreach ($seasonDrivers as $seasonDriver) {
-            $driverNames[$seasonDriver->id] = $seasonDriver->leagueDriver->driver->name ?? 'Unknown Driver';
-        }
-
-        return $driverNames;
-    }
-
-    /**
-     * Batch fetch division names for multiple division IDs to avoid N+1 queries.
-     *
-     * @param array<int> $divisionIds
-     * @return array<int, string> Map of division ID => division name
-     */
-    private function batchFetchDivisionNames(array $divisionIds): array
-    {
-        if (empty($divisionIds)) {
-            return [];
-        }
-
-        // Batch fetch divisions
-        // @phpstan-ignore-next-line Eloquent dynamic method
-        $divisions = Division::whereIn('id', $divisionIds)->get();
-
-        $divisionNames = [];
-        /** @var Division $division */
-        foreach ($divisions as $division) {
-            $divisionNames[$division->id] = $division->name ?? 'Unknown Division';
-        }
-
-        return $divisionNames;
+        return $data->qualifying_results !== null
+            || $data->race_time_results !== null
+            || $data->fastest_lap_results !== null;
     }
 
     /**

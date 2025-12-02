@@ -17,6 +17,11 @@ import {
   PhTrophy,
   PhCar,
   PhUsersThree,
+  PhFileText,
+  PhWrench,
+  PhInfo,
+  PhChartBar,
+  PhListBullets,
 } from '@phosphor-icons/vue';
 
 import Button from 'primevue/button';
@@ -38,8 +43,10 @@ import SeasonDriverFormDialog from '@app/components/season/modals/SeasonDriverFo
 import TeamsPanel from '@app/components/season/teams/TeamsPanel.vue';
 import DivisionsPanel from '@app/components/season/divisions/DivisionsPanel.vue';
 import RoundsPanel from '@app/components/round/RoundsPanel.vue';
+import SeasonStandingsPanel from '@app/components/season/panels/SeasonStandingsPanel.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@app/components/common/Breadcrumbs.vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
+import PanelHeader from '@app/components/common/panels/PanelHeader.vue';
 import HTag from '@app/components/common/HTag.vue';
 import InfoItem from '@app/components/common/InfoItem.vue';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
@@ -341,6 +348,12 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
               <span>Overview</span>
             </div>
           </Tab>
+          <Tab value="standings">
+            <div class="flex items-center gap-2">
+              <PhTrophy :size="20" />
+              <span>Standings</span>
+            </div>
+          </Tab>
           <Tab value="rounds">
             <div class="flex items-center gap-2">
               <PhCalendar :size="20" />
@@ -371,15 +384,19 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
           <!-- Overview Tab -->
           <TabPanel value="overview">
             <!-- Main Content: Two-Column Layout (3/5 + 2/5) -->
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-5">
               <!-- Left Column: Main Content (3/5 width) -->
               <div class="lg:col-span-3 space-y-4">
                 <!-- Description Panel -->
                 <BasePanel v-if="season.description">
                   <template #header>
-                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
-                      <span class="font-medium text-surface-700">Description</span>
-                    </div>
+                    <PanelHeader
+                      :icon="PhFileText"
+                      icon-class="text-blue-600"
+                      title="Description"
+                      description="Season overview and key information"
+                      gradient="from-blue-50 to-indigo-50"
+                    />
                   </template>
                   <div class="p-4">
                     <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -391,9 +408,13 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                 <!-- Technical Specifications Panel -->
                 <BasePanel v-if="season.technical_specs">
                   <template #header>
-                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
-                      <span class="font-medium text-surface-700">Technical Specifications</span>
-                    </div>
+                    <PanelHeader
+                      :icon="PhWrench"
+                      icon-class="text-slate-600"
+                      title="Technical Specifications"
+                      description="Vehicle and race configuration details"
+                      gradient="from-slate-50 to-gray-50"
+                    />
                   </template>
                   <div class="p-4">
                     <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -405,9 +426,13 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                 <!-- Season Information Panel -->
                 <BasePanel>
                   <template #header>
-                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
-                      <span class="font-medium text-surface-700">Season Information</span>
-                    </div>
+                    <PanelHeader
+                      :icon="PhInfo"
+                      icon-class="text-indigo-600"
+                      title="Season Information"
+                      description="Competition details and championship settings"
+                      gradient="from-indigo-50 to-purple-50"
+                    />
                   </template>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
                     <div class="p-3 rounded-lg bg-slate-50">
@@ -441,9 +466,13 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                 <!-- Driver Statistics Panel -->
                 <BasePanel>
                   <template #header>
-                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
-                      <span class="font-medium text-surface-700">Driver Statistics</span>
-                    </div>
+                    <PanelHeader
+                      :icon="PhChartBar"
+                      icon-class="text-green-600"
+                      title="Driver Statistics"
+                      description="Current driver participation breakdown"
+                      gradient="from-green-50 to-emerald-50"
+                    />
                   </template>
                   <div class="p-4 space-y-4">
                     <!-- Total Drivers -->
@@ -485,9 +514,13 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                 <!-- Metadata Panel -->
                 <BasePanel>
                   <template #header>
-                    <div class="flex items-center gap-2 border-b border-gray-200 py-2 mx-4 w-full">
-                      <span class="font-medium text-surface-700">Details</span>
-                    </div>
+                    <PanelHeader
+                      :icon="PhListBullets"
+                      icon-class="text-gray-600"
+                      title="Details"
+                      description="Season status and metadata"
+                      gradient="from-gray-50 to-slate-50"
+                    />
                   </template>
                   <div class="p-4 space-y-3">
                     <div>
@@ -506,103 +539,126 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
             </div>
           </TabPanel>
 
+          <!-- Standings Tab -->
+          <TabPanel value="standings">
+            <SeasonStandingsPanel :season-id="seasonId" />
+          </TabPanel>
+
           <!-- Divisions & Teams Tab -->
           <TabPanel value="divisions-teams">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <!-- Divisions Column (Left) -->
-              <BasePanel>
-                <template #header>
-                  <div
-                    class="flex items-center gap-3 border-b border-gray-200 py-3 px-4 w-full bg-gradient-to-r from-purple-50 to-blue-50"
-                  >
-                    <PhTrophy :size="24" class="text-purple-600" weight="fill" />
-                    <div class="flex-1">
-                      <h3 class="font-semibold text-gray-900">Divisions</h3>
-                      <p class="text-sm text-gray-600 mt-0.5">
-                        Skill-based groupings for fair competition within division championships
-                      </p>
-                    </div>
-                  </div>
-                </template>
-                <div class="p-4">
-                  <DivisionsPanel
-                    :season-id="seasonId"
-                    :race-divisions-enabled="season.race_divisions_enabled"
+            <BasePanel>
+              <div class="grid grid-cols-1 lg:grid-cols-2">
+                <!-- Divisions Column (Left) -->
+                <div class="border-r border-gray-200">
+                  <PanelHeader
+                    :icon="PhTrophy"
+                    icon-class="text-purple-600"
+                    title="Divisions"
+                    description="Skill-based groupings for fair competition within division championships"
+                    gradient="from-purple-50 to-blue-50"
+                    half-width
+                    border-right
                   />
+                  <div class="p-4">
+                    <DivisionsPanel
+                      :season-id="seasonId"
+                      :race-divisions-enabled="season.race_divisions_enabled"
+                    />
+                  </div>
                 </div>
-              </BasePanel>
 
-              <!-- Teams Column (Right) -->
-              <BasePanel>
-                <template #header>
-                  <div
-                    class="flex items-center gap-3 border-b border-gray-200 py-3 px-4 w-full bg-gradient-to-r from-blue-50 to-indigo-50"
-                  >
-                    <PhUsersThree :size="24" class="text-blue-600" weight="fill" />
-                    <div class="flex-1">
-                      <h3 class="font-semibold text-gray-900">Teams</h3>
-                      <p class="text-sm text-gray-600 mt-0.5">
-                        Multi-division organizations competing for the team championship
-                      </p>
-                    </div>
-                  </div>
-                </template>
-                <div class="p-4">
-                  <TeamsPanel
-                    :season-id="seasonId"
-                    :team-championship-enabled="season.team_championship_enabled"
+                <!-- Teams Column (Right) -->
+                <div>
+                  <PanelHeader
+                    :icon="PhUsersThree"
+                    icon-class="text-blue-600"
+                    title="Teams"
+                    description="Multi-division organizations competing for the team championship"
+                    gradient="from-blue-50 to-indigo-50"
+                    half-width
                   />
+                  <div class="p-4">
+                    <TeamsPanel
+                      :season-id="seasonId"
+                      :team-championship-enabled="season.team_championship_enabled"
+                    />
+                  </div>
                 </div>
-              </BasePanel>
-            </div>
+              </div>
+            </BasePanel>
           </TabPanel>
 
           <!-- Drivers Tab -->
           <TabPanel value="drivers">
             <BasePanel>
-              <div class="p-4 space-y-6">
-                <!-- Section Header -->
-                <HTag :level="3">Season Drivers</HTag>
-
-                <!-- Drivers Table with integrated filters and manage button -->
-                <div class="overflow-auto">
-                  <SeasonDriversTable
-                    :season-id="seasonId"
-                    :platform-id="season.competition?.platform_id"
-                    :loading="seasonDriverStore.loading"
-                    :team-championship-enabled="season.team_championship_enabled"
-                    :teams="teams"
-                    :race-divisions-enabled="season.race_divisions_enabled"
-                    :divisions="divisions"
-                    :manage-button-disabled="season.is_archived"
-                    @manage-drivers="handleManageDrivers"
-                  />
-                </div>
+              <template #header>
+                <PanelHeader
+                  :icon="PhUsers"
+                  icon-class="text-blue-600"
+                  title="Season Drivers"
+                  description="Manage all drivers registered for this season"
+                  gradient="from-blue-50 to-cyan-50"
+                />
+              </template>
+              <div class="p-4">
+                <SeasonDriversTable
+                  :season-id="seasonId"
+                  :platform-id="season.competition?.platform_id"
+                  :loading="seasonDriverStore.loading"
+                  :team-championship-enabled="season.team_championship_enabled"
+                  :teams="teams"
+                  :race-divisions-enabled="season.race_divisions_enabled"
+                  :divisions="divisions"
+                  :manage-button-disabled="season.is_archived"
+                  @manage-drivers="handleManageDrivers"
+                />
               </div>
             </BasePanel>
           </TabPanel>
 
           <!-- Settings Tab -->
           <TabPanel value="settings">
-            <BasePanel class="p-4">
-              <SeasonSettings
-                :season="season"
-                @updated="loadSeason"
-                @archived="handleArchived"
-                @deleted="handleDeleted"
-              />
+            <BasePanel>
+              <template #header>
+                <PanelHeader
+                  :icon="PhGear"
+                  icon-class="text-gray-600"
+                  title="Season Settings"
+                  description="Configure season preferences and manage archiving"
+                  gradient="from-gray-50 to-zinc-50"
+                />
+              </template>
+              <div class="p-4">
+                <SeasonSettings
+                  :season="season"
+                  @updated="loadSeason"
+                  @archived="handleArchived"
+                  @deleted="handleDeleted"
+                />
+              </div>
             </BasePanel>
           </TabPanel>
 
           <!-- Rounds Tab -->
           <TabPanel value="rounds">
-            <BasePanel class="p-4">
-              <RoundsPanel
-                v-if="season && season.competition?.platform_id"
-                :season-id="seasonId"
-                :platform-id="season.competition.platform_id"
-                :competition-colour="season.competition.competition_colour"
-              />
+            <BasePanel>
+              <template #header>
+                <PanelHeader
+                  :icon="PhCalendar"
+                  icon-class="text-green-600"
+                  title="Race Rounds"
+                  description="View and manage all race rounds in this season"
+                  gradient="from-green-50 to-teal-50"
+                />
+              </template>
+              <div class="p-4">
+                <RoundsPanel
+                  v-if="season && season.competition?.platform_id"
+                  :season-id="seasonId"
+                  :platform-id="season.competition.platform_id"
+                  :competition-colour="season.competition.competition_colour"
+                />
+              </div>
             </BasePanel>
           </TabPanel>
         </TabPanels>

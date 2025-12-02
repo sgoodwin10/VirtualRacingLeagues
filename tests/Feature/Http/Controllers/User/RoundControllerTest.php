@@ -614,4 +614,186 @@ final class RoundControllerTest extends TestCase
             'status' => 'confirmed',
         ]);
     }
+
+    public function test_can_delete_round(): void
+    {
+        // Create a round
+        $round = RoundFactory::new()->create([
+            'season_id' => $this->season->id,
+            'created_by_user_id' => $this->user->id,
+            'platform_track_id' => null,
+        ]);
+
+        // Delete the round
+        $response = $this->deleteJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}");
+
+        // Assert response
+        $response->assertOk();
+        $response->assertJson(['message' => 'Round deleted successfully']);
+
+        // Verify round is deleted from database (hard delete)
+        $this->assertDatabaseMissing('rounds', [
+            'id' => $round->id,
+        ]);
+    }
+
+    public function test_deleting_round_cascades_to_races_and_race_results(): void
+    {
+        // Create a round
+        $round = RoundFactory::new()->create([
+            'season_id' => $this->season->id,
+            'created_by_user_id' => $this->user->id,
+            'platform_track_id' => null,
+        ]);
+
+        // Create races for the round
+        $race1 = RaceEloquent::factory()->create([
+            'round_id' => $round->id,
+            'race_number' => 1,
+        ]);
+
+        $race2 = RaceEloquent::factory()->create([
+            'round_id' => $round->id,
+            'race_number' => 2,
+        ]);
+
+        // Create season drivers
+        $driver1 = SeasonDriverEloquent::factory()->create([
+            'season_id' => $this->season->id,
+        ]);
+
+        $driver2 = SeasonDriverEloquent::factory()->create([
+            'season_id' => $this->season->id,
+        ]);
+
+        // Create race results for race 1
+        $result1 = RaceResultEloquent::create([
+            'race_id' => $race1->id,
+            'driver_id' => $driver1->id,
+            'position' => 1,
+            'status' => 'confirmed',
+            'race_points' => 25,
+        ]);
+
+        $result2 = RaceResultEloquent::create([
+            'race_id' => $race1->id,
+            'driver_id' => $driver2->id,
+            'position' => 2,
+            'status' => 'confirmed',
+            'race_points' => 18,
+        ]);
+
+        // Create race results for race 2
+        $result3 = RaceResultEloquent::create([
+            'race_id' => $race2->id,
+            'driver_id' => $driver1->id,
+            'position' => 1,
+            'status' => 'confirmed',
+            'race_points' => 25,
+        ]);
+
+        $result4 = RaceResultEloquent::create([
+            'race_id' => $race2->id,
+            'driver_id' => $driver2->id,
+            'position' => 2,
+            'status' => 'confirmed',
+            'race_points' => 18,
+        ]);
+
+        // Delete the round
+        $response = $this->deleteJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}");
+
+        // Assert response
+        $response->assertOk();
+
+        // Verify round is deleted (hard delete)
+        $this->assertDatabaseMissing('rounds', [
+            'id' => $round->id,
+        ]);
+
+        // Verify all races are deleted (cascade)
+        $this->assertDatabaseMissing('races', [
+            'id' => $race1->id,
+        ]);
+
+        $this->assertDatabaseMissing('races', [
+            'id' => $race2->id,
+        ]);
+
+        // Verify all race results are deleted (cascade)
+        $this->assertDatabaseMissing('race_results', [
+            'id' => $result1->id,
+        ]);
+
+        $this->assertDatabaseMissing('race_results', [
+            'id' => $result2->id,
+        ]);
+
+        $this->assertDatabaseMissing('race_results', [
+            'id' => $result3->id,
+        ]);
+
+        $this->assertDatabaseMissing('race_results', [
+            'id' => $result4->id,
+        ]);
+    }
+
+    public function test_cannot_delete_round_without_authorization(): void
+    {
+        // Create another user who doesn't own the league
+        $otherUser = User::factory()->create();
+
+        // Create a round
+        $round = RoundFactory::new()->create([
+            'season_id' => $this->season->id,
+            'created_by_user_id' => $this->user->id,
+            'platform_track_id' => null,
+        ]);
+
+        // Authenticate as the other user
+        $this->actingAs($otherUser, 'web');
+
+        // Try to delete the round
+        $response = $this->deleteJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}");
+
+        // Assert forbidden response (403)
+        $response->assertStatus(403);
+
+        // Verify round still exists
+        $this->assertDatabaseHas('rounds', [
+            'id' => $round->id,
+        ]);
+    }
+
+    public function test_deleting_nonexistent_round_returns_404(): void
+    {
+        $nonExistentId = 99999;
+
+        $response = $this->deleteJson("http://app.virtualracingleagues.localhost/api/rounds/{$nonExistentId}");
+
+        $response->assertNotFound();
+    }
+
+    public function test_unauthenticated_user_cannot_delete_round(): void
+    {
+        // Create a round
+        $round = RoundFactory::new()->create([
+            'season_id' => $this->season->id,
+            'created_by_user_id' => $this->user->id,
+            'platform_track_id' => null,
+        ]);
+
+        // Logout the user
+        auth('web')->logout();
+
+        // Try to delete the round
+        $response = $this->deleteJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}");
+
+        $response->assertUnauthorized();
+
+        // Verify round still exists
+        $this->assertDatabaseHas('rounds', [
+            'id' => $round->id,
+        ]);
+    }
 }

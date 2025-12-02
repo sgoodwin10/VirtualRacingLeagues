@@ -72,6 +72,7 @@ const mockRoundResultsResponse: RoundResultsResponse = {
       race_number: 0,
       name: 'Qualifying',
       is_qualifier: true,
+      race_points: false,
       status: 'completed',
       results: [
         {
@@ -121,6 +122,7 @@ const mockRoundResultsResponse: RoundResultsResponse = {
       race_number: 1,
       name: 'Feature Race',
       is_qualifier: false,
+      race_points: true,
       status: 'completed',
       results: [
         {
@@ -477,6 +479,7 @@ describe('RoundResultsModal', () => {
             race_number: 1,
             name: 'Race 1',
             is_qualifier: false,
+            race_points: true,
             status: 'scheduled',
             results: [],
           },
@@ -502,6 +505,7 @@ describe('RoundResultsModal', () => {
             race_number: 2,
             name: 'Sprint Race',
             is_qualifier: false,
+            race_points: true,
             status: 'completed',
             results: [
               {

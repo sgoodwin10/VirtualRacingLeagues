@@ -461,16 +461,12 @@ final class RaceApplicationService
 
     /**
      * Calculate and assign race points to all drivers based on their finishing positions.
-     * Handles position recalculation, points assignment, DNF/DNS cases, and fastest lap bonus.
+     * Handles position recalculation, points assignment, DNF/DNS cases, fastest lap bonus, and positions_gained.
+     * Even if race_points is disabled, positions and positions_gained are still calculated.
      */
     public function calculateRacePoints(int $raceId): void
     {
         $race = $this->raceRepository->findById($raceId);
-
-        // Only calculate points if race_points is enabled
-        if (!$race->racePoints()) {
-            return;
-        }
 
         // Get round and season to check if divisions are enabled
         $round = $this->roundRepository->findById($race->roundId());
@@ -480,6 +476,7 @@ final class RaceApplicationService
         // Get all race results
         $raceResults = $this->raceResultRepository->findByRaceId($raceId);
 
+        // Always calculate positions and positions_gained, regardless of race_points setting
         if ($divisionsEnabled) {
             // Group results by division
             $resultsByDivision = [];
@@ -491,12 +488,12 @@ final class RaceApplicationService
                 $resultsByDivision[$divisionId][] = $result;
             }
 
-            // Calculate points for each division independently
+            // Calculate positions and points for each division independently
             foreach ($resultsByDivision as $divisionResults) {
                 $this->calculatePointsForResultSet($race, $divisionResults);
             }
         } else {
-            // Calculate points for all results together
+            // Calculate positions and points for all results together
             $this->calculatePointsForResultSet($race, $raceResults);
         }
     }
@@ -560,7 +557,8 @@ final class RaceApplicationService
         // Assign positions and calculate points for finishers
         $position = 1;
         foreach ($finishers as $result) {
-            $points = $race->pointsSystem()->getPointsForPosition($position);
+            // Only calculate points if race_points is enabled
+            $points = $race->racePoints() ? $race->pointsSystem()->getPointsForPosition($position) : 0;
             $result->update(
                 position: $position,
                 raceTime: $result->raceTime()->value(),
@@ -577,7 +575,8 @@ final class RaceApplicationService
 
         // Assign DNF positions and points
         foreach ($dnfDrivers as $result) {
-            $points = $race->dnfPoints();
+            // Only calculate points if race_points is enabled
+            $points = $race->racePoints() ? $race->dnfPoints() : 0;
             $result->update(
                 position: $position,
                 raceTime: $result->raceTime()->value(),
@@ -594,7 +593,8 @@ final class RaceApplicationService
 
         // Assign DNS positions and points
         foreach ($dnsDrivers as $result) {
-            $points = $race->dnsPoints();
+            // Only calculate points if race_points is enabled
+            $points = $race->racePoints() ? $race->dnsPoints() : 0;
             $result->update(
                 position: $position,
                 raceTime: $result->raceTime()->value(),
@@ -609,13 +609,13 @@ final class RaceApplicationService
             $position++;
         }
 
-        // Handle fastest lap bonus
-        if ($race->fastestLap() !== null && $race->fastestLap() > 0) {
+        // Handle fastest lap bonus (only if race_points is enabled)
+        if ($race->racePoints() && $race->fastestLap() !== null && $race->fastestLap() > 0) {
             $this->assignFastestLapBonus($race, $finishers);
         }
 
-        // Handle pole position for qualifiers (per division)
-        if ($race->isQualifier()) {
+        // Handle pole position for qualifiers (per division, only if race_points is enabled)
+        if ($race->racePoints() && $race->isQualifier()) {
             $this->assignPolePosition($race, $finishers);
         }
 

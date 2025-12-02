@@ -34,19 +34,29 @@ final class RoundPointsCalculationTest extends TestCase
         parent::setUp();
 
         // Create base test data
-        $this->user = User::factory()->create();
+        /** @var User $user */
+        $user = User::factory()->create();
+        $this->user = $user;
         $this->actingAs($this->user, 'web');
 
-        $this->league = League::factory()->create(['owner_user_id' => $this->user->id]);
-        $this->competition = Competition::factory()->create([
+        /** @var League $league */
+        $league = League::factory()->create(['owner_user_id' => $this->user->id]);
+        $this->league = $league;
+
+        /** @var Competition $competition */
+        $competition = Competition::factory()->create([
             'league_id' => $this->league->id,
             'created_by_user_id' => $this->user->id,
         ]);
-        $this->season = SeasonEloquent::factory()->create([
+        $this->competition = $competition;
+
+        /** @var SeasonEloquent $season */
+        $season = SeasonEloquent::factory()->create([
             'competition_id' => $this->competition->id,
             'race_divisions_enabled' => false,
             'created_by_user_id' => $this->user->id,
         ]);
+        $this->season = $season;
     }
 
     public function test_basic_round_completion_calculates_and_stores_round_results(): void
@@ -172,6 +182,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $sprint->id,
             'driver_id' => $driver1->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:10:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -182,6 +193,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $sprint->id,
             'driver_id' => $driver2->id,
             'position' => 2,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:11:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -200,6 +212,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $feature->id,
             'driver_id' => $driver1->id,
             'position' => 2,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:09:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -210,6 +223,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $feature->id,
             'driver_id' => $driver2->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:10:30.000',
             'dnf' => false,
             'status' => 'pending',
@@ -267,6 +281,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race1->id,
             'driver_id' => $driver1->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:10:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -278,6 +293,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race1->id,
             'driver_id' => $driver2->id,
             'position' => 3,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:11:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -297,6 +313,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race2->id,
             'driver_id' => $driver1->id,
             'position' => 10,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:15:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -308,6 +325,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race2->id,
             'driver_id' => $driver2->id,
             'position' => 6,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:12:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -327,6 +345,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race3->id,
             'driver_id' => $driver1->id,
             'position' => 12,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:16:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -341,6 +360,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race3->id,
             'driver_id' => $driver2->id,
             'position' => 3,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:13:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -393,6 +413,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race->id,
             'driver_id' => $driver1->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:10:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -450,6 +471,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race->id,
             'driver_id' => $driver1->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:10:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -461,6 +483,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race->id,
             'driver_id' => $driver2->id,
             'position' => 2,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:11:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -472,6 +495,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race->id,
             'driver_id' => $driver3->id,
             'position' => 3,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:12:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -562,6 +586,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race1->id,
             'driver_id' => $driver1->id,
             'position' => 2,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:10:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -572,6 +597,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race1->id,
             'driver_id' => $driver2->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:09:00.000', // Fastest in races
             'dnf' => false,
             'status' => 'pending',
@@ -638,6 +664,7 @@ final class RoundPointsCalculationTest extends TestCase
                 'race_id' => $race->id,
                 'driver_id' => $driver->id,
                 'position' => $position,
+            'race_time' => '00:30:00.000',
                 'fastest_lap' => $position === 11 ? '01:09:00.000' : '01:10:00.000', // Position 11 has fastest
                 'dnf' => false,
                 'status' => 'pending',
@@ -756,6 +783,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race->id,
             'driver_id' => $driver1->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:09:00.000', // Fastest overall, but in race
             'dnf' => false,
             'status' => 'pending',
@@ -766,6 +794,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race->id,
             'driver_id' => $driver2->id,
             'position' => 2,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:10:30.000',
             'dnf' => false,
             'status' => 'pending',
@@ -855,6 +884,7 @@ final class RoundPointsCalculationTest extends TestCase
                 'race_id' => $race->id,
                 'driver_id' => $driver->id,
                 'position' => $position,
+            'race_time' => '00:30:00.000',
                 'fastest_lap' => '01:10:00.000',
                 'dnf' => false,
                 'status' => 'pending',
@@ -927,6 +957,7 @@ final class RoundPointsCalculationTest extends TestCase
             'driver_id' => $driver1->id,
             'division_id' => $division1->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:10:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -938,6 +969,7 @@ final class RoundPointsCalculationTest extends TestCase
             'driver_id' => $driver2->id,
             'division_id' => $division1->id,
             'position' => 2,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:11:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -950,6 +982,7 @@ final class RoundPointsCalculationTest extends TestCase
             'driver_id' => $driver3->id,
             'division_id' => $division2->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:12:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -961,6 +994,7 @@ final class RoundPointsCalculationTest extends TestCase
             'driver_id' => $driver4->id,
             'division_id' => $division2->id,
             'position' => 2,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:13:00.000',
             'dnf' => false,
             'status' => 'pending',
@@ -1076,6 +1110,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race->id,
             'driver_id' => $driver2->id,
             'position' => 1,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:08:00.000', // Fastest lap in race
             'dnf' => false,
             'status' => 'pending',
@@ -1086,6 +1121,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race->id,
             'driver_id' => $driver1->id,
             'position' => 2,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:09:30.000',
             'dnf' => false,
             'status' => 'pending',
@@ -1096,6 +1132,7 @@ final class RoundPointsCalculationTest extends TestCase
             'race_id' => $race->id,
             'driver_id' => $driver3->id,
             'position' => 3,
+            'race_time' => '00:30:00.000',
             'fastest_lap' => '01:10:30.000',
             'dnf' => false,
             'status' => 'pending',
@@ -1164,11 +1201,14 @@ final class RoundPointsCalculationTest extends TestCase
      */
     private function createRace(array $attributes = []): Race
     {
-        return Race::factory()->create(array_merge([
+        /** @var Race $race */
+        $race = Race::factory()->create(array_merge([
             'fastest_lap' => null, // No race-level bonuses
             'qualifying_pole' => null,
             'race_points' => false, // Don't auto-calculate race points (tests set manually)
         ], $attributes));
+
+        return $race;
     }
 
     /**
@@ -1181,22 +1221,27 @@ final class RoundPointsCalculationTest extends TestCase
         $seasonDrivers = [];
 
         for ($i = 0; $i < $count; $i++) {
+            /** @var Driver $driver */
             $driver = Driver::factory()->create([
                 'first_name' => "Driver",
                 'last_name' => "Number " . ($i + 1),
                 'nickname' => null,
             ]);
 
+            /** @var LeagueDriverEloquent $leagueDriver */
             $leagueDriver = LeagueDriverEloquent::factory()->create([
                 'league_id' => $this->league->id,
                 'driver_id' => $driver->id,
             ]);
 
-            $seasonDrivers[] = SeasonDriverEloquent::factory()->create([
+            /** @var SeasonDriverEloquent $seasonDriver */
+            $seasonDriver = SeasonDriverEloquent::factory()->create([
                 'season_id' => $this->season->id,
                 'league_driver_id' => $leagueDriver->id,
                 'division_id' => null,
             ]);
+
+            $seasonDrivers[] = $seasonDriver;
         }
 
         return $seasonDrivers;
@@ -1212,22 +1257,27 @@ final class RoundPointsCalculationTest extends TestCase
         $seasonDrivers = [];
 
         for ($i = 0; $i < $count; $i++) {
+            /** @var Driver $driver */
             $driver = Driver::factory()->create([
                 'first_name' => "Driver",
                 'last_name' => "Div{$divisionId} " . ($i + 1),
                 'nickname' => null,
             ]);
 
+            /** @var LeagueDriverEloquent $leagueDriver */
             $leagueDriver = LeagueDriverEloquent::factory()->create([
                 'league_id' => $this->league->id,
                 'driver_id' => $driver->id,
             ]);
 
-            $seasonDrivers[] = SeasonDriverEloquent::factory()->create([
+            /** @var SeasonDriverEloquent $seasonDriver */
+            $seasonDriver = SeasonDriverEloquent::factory()->create([
                 'season_id' => $this->season->id,
                 'league_driver_id' => $leagueDriver->id,
                 'division_id' => $divisionId,
             ]);
+
+            $seasonDrivers[] = $seasonDriver;
         }
 
         return $seasonDrivers;

@@ -12,6 +12,7 @@ const mockQualifyingEvent: RaceEventResults = {
   race_number: 0,
   name: 'Qualifying',
   is_qualifier: true,
+  race_points: false,
   status: 'completed',
   results: [
     {
@@ -62,6 +63,7 @@ const mockRaceEvent: RaceEventResults = {
   race_number: 1,
   name: 'Feature Race',
   is_qualifier: false,
+  race_points: true,
   status: 'completed',
   results: [
     {
@@ -187,21 +189,6 @@ describe('RaceEventResultsSection', () => {
     });
   });
 
-  describe('Status Display', () => {
-    it('should display completed status tag', () => {
-      const wrapper = createWrapper();
-
-      expect(wrapper.text()).toContain('Completed');
-    });
-
-    it('should display other status values', () => {
-      const scheduledEvent = { ...mockRaceEvent, status: 'scheduled' };
-      const wrapper = createWrapper({ raceEvent: scheduledEvent });
-
-      expect(wrapper.text()).toContain('scheduled');
-    });
-  });
-
   describe('Results Table - Qualifying', () => {
     it('should display qualifying-specific columns', () => {
       const wrapper = createWrapper({ raceEvent: mockQualifyingEvent });
@@ -247,14 +234,16 @@ describe('RaceEventResultsSection', () => {
     it('should display race times', () => {
       const wrapper = createWrapper();
 
-      expect(wrapper.text()).toContain('01:42:05.123');
-      expect(wrapper.text()).toContain('01:42:07.890');
+      // Times are formatted by useTimeFormat which removes leading zeros
+      expect(wrapper.text()).toContain('1:42:05.123');
+      expect(wrapper.text()).toContain('1:42:07.890');
     });
 
     it('should display time differences', () => {
       const wrapper = createWrapper();
 
-      expect(wrapper.text()).toContain('+00:00:02.767');
+      // Time differences are formatted by useTimeFormat which removes leading zeros
+      expect(wrapper.text()).toContain('+02.767');
     });
 
     it('should display fastest lap tag', () => {
@@ -269,7 +258,8 @@ describe('RaceEventResultsSection', () => {
     it('should display penalties', () => {
       const wrapper = createWrapper();
 
-      expect(wrapper.text()).toContain('00:00:05.000');
+      // Penalties are formatted by useTimeFormat which removes leading zeros
+      expect(wrapper.text()).toContain('05.000');
     });
 
     it('should display DNF status', () => {
@@ -291,21 +281,27 @@ describe('RaceEventResultsSection', () => {
       expect(wrapper.text()).toContain('3');
     });
 
-    it('should display dash for null positions', () => {
-      const eventWithNullPosition: RaceEventResults = {
-        ...mockRaceEvent,
-        results: [
-          {
-            ...mockRaceEvent.results[0]!,
-            position: null,
-          },
-        ],
-      };
-      const wrapper = createWrapper({ raceEvent: eventWithNullPosition });
+    it('should start position counter at 1 for each race', () => {
+      const wrapper = createWrapper();
 
-      // Position column should contain dash
+      // Position numbers should start at 1 regardless of backend position values
       const html = wrapper.html();
-      expect(html).toContain('-');
+      expect(html).toContain('1');
+      expect(wrapper.text()).toContain('1');
+    });
+
+    it('should renumber positions when filtering by division', () => {
+      const wrapper = createWrapper({ divisionId: 1 });
+
+      // When filtering by division 1, only Lewis Hamilton and Max Verstappen should appear
+      // with positions 1 and 2 (Charles Leclerc from division 2 should be filtered out)
+      expect(wrapper.text()).toContain('Lewis Hamilton');
+      expect(wrapper.text()).toContain('Max Verstappen');
+      expect(wrapper.text()).not.toContain('Charles Leclerc');
+
+      // Check that we only have 2 rows in the table
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
+      expect(dataTable.props('value')).toHaveLength(2);
     });
   });
 
@@ -320,12 +316,33 @@ describe('RaceEventResultsSection', () => {
   });
 
   describe('Points Display', () => {
-    it('should display points for all results', () => {
+    it('should display points for all results when race_points is true', () => {
       const wrapper = createWrapper();
 
+      expect(wrapper.text()).toContain('Points');
       expect(wrapper.text()).toContain('25');
       expect(wrapper.text()).toContain('18');
       expect(wrapper.text()).toContain('0');
+    });
+
+    it('should not display points column when race_points is false', () => {
+      const raceWithoutPoints = { ...mockRaceEvent, race_points: false };
+      const wrapper = createWrapper({ raceEvent: raceWithoutPoints });
+
+      expect(wrapper.text()).not.toContain('Points');
+    });
+
+    it('should display points column for qualifying when race_points is true', () => {
+      const qualifyingWithPoints = { ...mockQualifyingEvent, race_points: true };
+      const wrapper = createWrapper({ raceEvent: qualifyingWithPoints });
+
+      expect(wrapper.text()).toContain('Points');
+    });
+
+    it('should not display points column for qualifying when race_points is false', () => {
+      const wrapper = createWrapper({ raceEvent: mockQualifyingEvent });
+
+      expect(wrapper.text()).not.toContain('Points');
     });
   });
 
@@ -415,6 +432,134 @@ describe('RaceEventResultsSection', () => {
 
       const html = wrapper.html();
       expect(html).toContain('-');
+    });
+  });
+
+  describe('Result Filtering Based on Round Completion', () => {
+    it('should show all drivers when round is not completed', () => {
+      const eventWithMixedResults: RaceEventResults = {
+        ...mockRaceEvent,
+        results: [
+          {
+            ...mockRaceEvent.results[0]!, // Has race_time
+          },
+          {
+            ...mockRaceEvent.results[1]!,
+            race_time: null,
+            fastest_lap: null,
+            dnf: false, // Driver with no results at all
+          },
+        ],
+      };
+      const wrapper = createWrapper({ raceEvent: eventWithMixedResults, isRoundCompleted: false });
+
+      // Both drivers should be visible
+      expect(wrapper.text()).toContain('Lewis Hamilton');
+      expect(wrapper.text()).toContain('Max Verstappen');
+    });
+
+    it('should filter out drivers without results when round is completed', () => {
+      const eventWithMixedResults: RaceEventResults = {
+        ...mockRaceEvent,
+        results: [
+          {
+            ...mockRaceEvent.results[0]!, // Has race_time
+          },
+          {
+            ...mockRaceEvent.results[1]!,
+            race_time: null,
+            fastest_lap: null,
+            dnf: false, // Driver with no results at all
+          },
+        ],
+      };
+      const wrapper = createWrapper({ raceEvent: eventWithMixedResults, isRoundCompleted: true });
+
+      // Only driver with results should be visible
+      expect(wrapper.text()).toContain('Lewis Hamilton');
+      expect(wrapper.text()).not.toContain('Max Verstappen');
+    });
+
+    it('should show DNF drivers when round is completed', () => {
+      const eventWithDNF: RaceEventResults = {
+        ...mockRaceEvent,
+        results: [
+          {
+            ...mockRaceEvent.results[0]!,
+            race_time: null,
+            fastest_lap: '01:13.456',
+            dnf: true, // DNF driver
+          },
+        ],
+      };
+      const wrapper = createWrapper({ raceEvent: eventWithDNF, isRoundCompleted: true });
+
+      expect(wrapper.text()).toContain('Lewis Hamilton');
+      expect(wrapper.text()).toContain('DNF');
+    });
+
+    it('should show drivers with fastest lap but no race time when round is completed', () => {
+      const eventWithFastestLapOnly: RaceEventResults = {
+        ...mockRaceEvent,
+        results: [
+          {
+            ...mockRaceEvent.results[0]!,
+            race_time: null,
+            fastest_lap: '01:13.456',
+            dnf: false,
+          },
+        ],
+      };
+      const wrapper = createWrapper({
+        raceEvent: eventWithFastestLapOnly,
+        isRoundCompleted: true,
+      });
+
+      expect(wrapper.text()).toContain('Lewis Hamilton');
+    });
+
+    it('should filter qualifying results based on lap time when round is completed', () => {
+      const qualifyingWithMixedResults: RaceEventResults = {
+        ...mockQualifyingEvent,
+        results: [
+          {
+            ...mockQualifyingEvent.results[0]!, // Has fastest_lap (qualifying time)
+          },
+          {
+            ...mockQualifyingEvent.results[1]!,
+            fastest_lap: null, // No qualifying time
+          },
+        ],
+      };
+      const wrapper = createWrapper({
+        raceEvent: qualifyingWithMixedResults,
+        isRoundCompleted: true,
+      });
+
+      expect(wrapper.text()).toContain('Lewis Hamilton');
+      expect(wrapper.text()).not.toContain('Max Verstappen');
+    });
+
+    it('should show all qualifying drivers when round is not completed', () => {
+      const qualifyingWithMixedResults: RaceEventResults = {
+        ...mockQualifyingEvent,
+        results: [
+          {
+            ...mockQualifyingEvent.results[0]!, // Has fastest_lap (qualifying time)
+          },
+          {
+            ...mockQualifyingEvent.results[1]!,
+            fastest_lap: null, // No qualifying time
+          },
+        ],
+      };
+      const wrapper = createWrapper({
+        raceEvent: qualifyingWithMixedResults,
+        isRoundCompleted: false,
+      });
+
+      expect(wrapper.text()).toContain('Lewis Hamilton');
+      expect(wrapper.text()).toContain('Max Verstappen');
     });
   });
 

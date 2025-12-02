@@ -13,6 +13,7 @@ vi.mock('@app/stores/roundStore', () => ({
     fetchNextRoundNumber: vi.fn().mockResolvedValue(1),
     createNewRound: vi.fn().mockResolvedValue({}),
     updateExistingRound: vi.fn().mockResolvedValue({}),
+    roundsBySeasonId: vi.fn(() => []),
   })),
 }));
 
@@ -331,5 +332,142 @@ describe('RoundFormDrawer', () => {
     // Basic structure test - validates that points_system is optional when round_points is false
     // Full component testing will be done in E2E tests
     expect(true).toBe(true);
+  });
+
+  describe('Copy from Round 1 functionality', () => {
+    it('should not show copy button when round_points is disabled', () => {
+      const wrapper = mount(RoundFormDrawer, {
+        props: {
+          visible: true,
+          seasonId: 1,
+          platformId: 1,
+          mode: 'create',
+        },
+        global: {
+          plugins: [
+            [
+              PrimeVue,
+              {
+                theme: {
+                  preset: Aura,
+                  options: {
+                    prefix: 'p',
+                    darkModeSelector: false,
+                    cssLayer: false,
+                  },
+                },
+              },
+            ],
+            ToastService,
+          ],
+        },
+      });
+
+      const component = wrapper.vm as any;
+
+      // When round_points is false, canCopyFromRoundOne should be false
+      component.form.round_points = false;
+      expect(component.canCopyFromRoundOne).toBe(false);
+    });
+
+    it('should not show copy button on Round 1 itself in edit mode', () => {
+      const mockRound = {
+        id: 1,
+        season_id: 1,
+        round_number: 1,
+        name: 'Round 1',
+        slug: 'round-1',
+        scheduled_at: null,
+        timezone: 'UTC',
+        platform_track_id: null,
+        track_layout: null,
+        track_conditions: null,
+        technical_notes: null,
+        stream_url: null,
+        internal_notes: null,
+        fastest_lap: 1,
+        fastest_lap_top_10: false,
+        qualifying_pole: null,
+        qualifying_pole_top_10: false,
+        points_system: '{"1":25,"2":18,"3":15}',
+        round_points: true,
+        status: 'scheduled' as const,
+        status_label: 'Scheduled',
+        created_by_user_id: 1,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+        deleted_at: null,
+      };
+
+      const wrapper = mount(RoundFormDrawer, {
+        props: {
+          visible: true,
+          seasonId: 1,
+          platformId: 1,
+          mode: 'edit',
+          round: mockRound,
+        },
+        global: {
+          plugins: [
+            [
+              PrimeVue,
+              {
+                theme: {
+                  preset: Aura,
+                  options: {
+                    prefix: 'p',
+                    darkModeSelector: false,
+                    cssLayer: false,
+                  },
+                },
+              },
+            ],
+            ToastService,
+          ],
+        },
+      });
+
+      const component = wrapper.vm as any;
+
+      // Should not show copy button when editing Round 1 itself
+      component.form.round_points = true;
+      expect(component.canCopyFromRoundOne).toBe(false);
+    });
+
+    it('should not show copy button when creating Round 1', () => {
+      const wrapper = mount(RoundFormDrawer, {
+        props: {
+          visible: true,
+          seasonId: 1,
+          platformId: 1,
+          mode: 'create',
+        },
+        global: {
+          plugins: [
+            [
+              PrimeVue,
+              {
+                theme: {
+                  preset: Aura,
+                  options: {
+                    prefix: 'p',
+                    darkModeSelector: false,
+                    cssLayer: false,
+                  },
+                },
+              },
+            ],
+            ToastService,
+          ],
+        },
+      });
+
+      const component = wrapper.vm as any;
+
+      // When creating Round 1, button should not show
+      component.form.round_points = true;
+      component.form.round_number = 1;
+      expect(component.canCopyFromRoundOne).toBe(false);
+    });
   });
 });

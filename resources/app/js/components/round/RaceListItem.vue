@@ -50,11 +50,11 @@
 
       <div class="flex-none flex items-center gap-2 mx-4">
         <Button
-          label="Results"
+          :label="isCompleted ? 'View Results' : 'Enter Results'"
           icon="pi pi-list-check"
           text
           size="small"
-          severity="info"
+          :severity="isCompleted ? 'success' : 'info'"
           @click="handleEnterResults"
         />
         <div v-if="!isRoundCompleted" class="flex items-center gap-2">
