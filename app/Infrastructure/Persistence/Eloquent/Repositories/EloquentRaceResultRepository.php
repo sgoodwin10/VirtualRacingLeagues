@@ -77,6 +77,30 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
         return $entities;
     }
 
+    /**
+     * Find all race results for a round (batch fetch to avoid N+1 queries).
+     *
+     * @return RaceResultEntity[]
+     */
+    public function findByRoundId(int $roundId): array
+    {
+        // Use join to fetch results for a round efficiently
+        /** @var \Illuminate\Database\Eloquent\Collection<int, RaceResult> $models */
+        $models = RaceResult::join('races', 'race_results.race_id', '=', 'races.id')
+            ->where('races.round_id', $roundId)
+            ->orderBy('race_results.race_id')
+            ->orderBy('race_results.position')
+            ->select('race_results.*')
+            ->get();
+
+        $entities = [];
+        foreach ($models as $model) {
+            $entities[] = $this->toEntity($model);
+        }
+
+        return $entities;
+    }
+
     public function findByRaceAndDriver(int $raceId, int $driverId): ?RaceResultEntity
     {
         $model = RaceResult::where('race_id', $raceId)

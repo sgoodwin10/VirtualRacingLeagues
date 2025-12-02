@@ -32,6 +32,13 @@ interface DivisionRepositoryInterface
     public function findBySeasonId(int $seasonId): array;
 
     /**
+     * Find all divisions for a specific season, returning an array of [id => name].
+     *
+     * @return array<int, string> Division ID => Division Name
+     */
+    public function findNamesBySeasonId(int $seasonId): array;
+
+    /**
      * Delete a division.
      * This will cascade to set all season_drivers.division_id to NULL.
      */

@@ -18,6 +18,7 @@ use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
+use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Competition\ValueObjects\RoundName;
@@ -27,10 +28,10 @@ use App\Domain\Competition\ValueObjects\RoundStatus;
 use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
 use App\Application\Competition\Traits\BatchFetchHelpersTrait;
-use App\Infrastructure\Persistence\Eloquent\Models\Round as RoundEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\Division;
+use App\Infrastructure\Cache\RoundResultsCacheService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use DateTimeImmutable;
 
 /**
@@ -41,14 +42,21 @@ final class RoundApplicationService
 {
     use BatchFetchHelpersTrait;
 
+    /**
+     * Top positions limit for bonus points eligibility (e.g., top 10).
+     */
+    private const TOP_POSITIONS_LIMIT = 10;
+
     public function __construct(
         private readonly RoundRepositoryInterface $roundRepository,
         private readonly RaceRepositoryInterface $raceRepository,
         private readonly RaceResultRepositoryInterface $raceResultRepository,
         private readonly SeasonRepositoryInterface $seasonRepository,
         private readonly CompetitionRepositoryInterface $competitionRepository,
+        private readonly DivisionRepositoryInterface $divisionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
         private readonly RaceApplicationService $raceApplicationService,
+        private readonly RoundResultsCacheService $roundResultsCache,
     ) {
     }
 
@@ -126,16 +134,19 @@ final class RoundApplicationService
     public function updateRound(
         int $roundId,
         UpdateRoundData $data,
-        array $requestData = [],
-        int $userId = 0
+        int $userId,
+        array $requestData = []
     ): RoundData {
         return DB::transaction(function () use ($roundId, $data, $requestData, $userId) {
             $round = $this->roundRepository->findById($roundId);
 
-            // Authorize
-            if ($userId > 0) {
-                $this->authorizeLeagueOwner($round->seasonId(), $userId);
-            }
+            // Authorize - ALWAYS required, no bypassing with userId = 0
+            $this->authorizeLeagueOwner($round->seasonId(), $userId);
+
+            Log::info('Round update started', [
+                'round_id' => $roundId,
+                'user_id' => $userId,
+            ]);
 
             // Determine round number (use existing if not provided)
             $roundNumber = $data->round_number !== null
@@ -247,12 +258,20 @@ final class RoundApplicationService
             $this->roundRepository->save($round);
             $this->dispatchEvents($round);
 
+            Log::info('Round updated successfully', [
+                'round_id' => $roundId,
+                'user_id' => $userId,
+            ]);
+
             return RoundData::fromEntity($round);
         });
     }
 
     /**
      * Get a single round.
+     *
+     * Note: This is a public read method. No authorization required as round results
+     * are meant to be publicly viewable.
      */
     public function getRound(int $roundId): RoundData
     {
@@ -262,6 +281,9 @@ final class RoundApplicationService
 
     /**
      * Get all rounds for a season.
+     *
+     * Note: This is a public read method. No authorization required as round listings
+     * are meant to be publicly viewable.
      *
      * @return array<RoundData>
      */
@@ -288,6 +310,11 @@ final class RoundApplicationService
             // Authorize
             $this->authorizeLeagueOwner($round->seasonId(), $userId);
 
+            Log::info('Round deleted', [
+                'round_id' => $roundId,
+                'user_id' => $userId,
+            ]);
+
             $round->delete();
             $this->roundRepository->delete($round);
             $this->dispatchEvents($round);
@@ -296,11 +323,24 @@ final class RoundApplicationService
 
     /**
      * Change round status.
+     *
+     * @throws UnauthorizedException
      */
-    public function changeRoundStatus(int $roundId, string $status): RoundData
+    public function changeRoundStatus(int $roundId, string $status, int $userId): RoundData
     {
-        return DB::transaction(function () use ($roundId, $status) {
+        return DB::transaction(function () use ($roundId, $status, $userId) {
             $round = $this->roundRepository->findById($roundId);
+
+            // Authorize - only league owner can change round status
+            $this->authorizeLeagueOwner($round->seasonId(), $userId);
+
+            Log::info('Round status changed', [
+                'round_id' => $roundId,
+                'old_status' => $round->status()->value,
+                'new_status' => $status,
+                'user_id' => $userId,
+            ]);
+
             $round->changeStatus(RoundStatus::from($status));
             $this->roundRepository->save($round);
             $this->dispatchEvents($round);
@@ -326,10 +366,15 @@ final class RoundApplicationService
      */
     public function completeRound(int $roundId, int $userId, ?CompleteRoundData $data = null): RoundData
     {
-        return DB::transaction(function () use ($roundId, $userId, $data) {
+        $result = DB::transaction(function () use ($roundId, $userId, $data) {
             // Fetch round and authorize
             $round = $this->roundRepository->findById($roundId);
             $this->authorizeLeagueOwner($round->seasonId(), $userId);
+
+            Log::info('Round completion started', [
+                'round_id' => $roundId,
+                'user_id' => $userId,
+            ]);
 
             // Fetch season to check divisions
             $season = $this->seasonRepository->findById($round->seasonId());
@@ -339,7 +384,7 @@ final class RoundApplicationService
             $races = $this->raceRepository->findAllByRoundId($roundId);
 
             // Cascade completion to all races
-            $this->cascadeRaceCompletion($races);
+            $this->cascadeRaceCompletion($races, $roundId);
 
             // Calculate and store round results
             $this->calculateAndStoreRoundResults($round, $races, $hasDivisions, $data);
@@ -349,20 +394,45 @@ final class RoundApplicationService
             $this->roundRepository->save($round);
             $this->dispatchEvents($round);
 
+            Log::info('Round completed successfully', [
+                'round_id' => $roundId,
+                'user_id' => $userId,
+            ]);
+
             return RoundData::fromEntity($round);
         });
+
+        // Invalidate cache AFTER successful transaction commit
+        $this->roundResultsCache->forget($roundId);
+
+        return $result;
     }
 
     /**
      * Cascade completion to all races (including qualifiers).
+     * Uses batch fetching to avoid N+1 queries.
      *
      * @param array<\App\Domain\Competition\Entities\Race> $races
+     * @param int $roundId Round ID for batch fetching results
      */
-    private function cascadeRaceCompletion(array $races): void
+    private function cascadeRaceCompletion(array $races, int $roundId): void
     {
         // Sort races by race_number to ensure qualifiers are processed first
         // This is important because non-qualifier races may depend on qualifier positions for grid_source
         usort($races, fn($a, $b) => $a->raceNumber() <=> $b->raceNumber());
+
+        // Batch fetch all race results for the round to avoid N+1 queries
+        $allRaceResults = $this->raceResultRepository->findByRoundId($roundId);
+
+        // Group results by race_id for efficient lookup
+        $resultsByRaceId = [];
+        foreach ($allRaceResults as $result) {
+            $raceId = $result->raceId();
+            if (!isset($resultsByRaceId[$raceId])) {
+                $resultsByRaceId[$raceId] = [];
+            }
+            $resultsByRaceId[$raceId][] = $result;
+        }
 
         foreach ($races as $race) {
             // Mark race as completed
@@ -377,9 +447,10 @@ final class RoundApplicationService
             }
 
             // Mark all race results as confirmed
+            // IMPORTANT: Fetch fresh results after calculateRacePoints to avoid overwriting updated positions
             if ($raceId !== null) {
-                $raceResults = $this->raceResultRepository->findByRaceId($raceId);
-                foreach ($raceResults as $result) {
+                $freshResults = $this->raceResultRepository->findByRaceId($raceId);
+                foreach ($freshResults as $result) {
                     if ($result->status() !== RaceResultStatus::CONFIRMED) {
                         $result->updateStatus(RaceResultStatus::CONFIRMED);
                         $this->raceResultRepository->save($result);
@@ -451,121 +522,185 @@ final class RoundApplicationService
      */
     public function uncompleteRound(int $roundId, int $userId): RoundData
     {
-        return DB::transaction(function () use ($roundId, $userId) {
+        $result = DB::transaction(function () use ($roundId, $userId) {
             $round = $this->roundRepository->findById($roundId);
 
             // Authorize
             $this->authorizeLeagueOwner($round->seasonId(), $userId);
+
+            Log::info('Round uncompleted', [
+                'round_id' => $roundId,
+                'user_id' => $userId,
+            ]);
 
             $round->uncomplete();
             $this->roundRepository->save($round);
             $this->dispatchEvents($round);
             return RoundData::fromEntity($round);
         });
+
+        // Invalidate cache AFTER successful transaction commit
+        $this->roundResultsCache->forget($roundId);
+
+        return $result;
     }
 
     /**
      * Get round results with all race events and their results.
      * Fetches the round with races, divisions, and race results with driver names.
+     * Results are cached in Redis for cross-subdomain access.
+     *
+     * Note: This is a public read method. No authorization required as round results
+     * are meant to be publicly viewable (for displaying on public site).
      */
     public function getRoundResults(int $roundId): RoundResultsData
     {
-        // Fetch round with races and season data
-        $roundEloquent = RoundEloquent::with([
-            'races' => function ($query) {
-                $query->orderBy('created_at', 'asc');
-            },
-            'races.results' => function ($query) {
-                $query->orderBy('position', 'asc');
-            },
-            'races.results.driver.leagueDriver.driver',
-            'races.results.division',
-            'season',
-        ])->findOrFail($roundId);
-
-        assert($roundEloquent instanceof RoundEloquent);
-
-        // Fetch divisions for the season
-        $divisions = [];
-        /** @phpstan-ignore-next-line property.notFound (loaded via eager loading) */
-        if ($roundEloquent->season->race_divisions_enabled) {
-            /** @var \Illuminate\Database\Eloquent\Collection<int, Division> $divisionsCollection */
-            $divisionsCollection = Division::where('season_id', $roundEloquent->season_id)
-                ->orderBy('name', 'asc')
-                ->get();
-
-            $divisions = $divisionsCollection->map(function (Division $division) {
-                return new DivisionData(
-                    id: $division->id,
-                    name: $division->name,
-                    description: $division->description,
-                );
-            })->all();
+        // Try to get from cache first
+        $cached = $this->roundResultsCache->get($roundId);
+        if ($cached !== null) {
+            return $cached;
         }
 
-        // Build round summary
-        $round = [
-            'id' => $roundEloquent->id,
-            'round_number' => $roundEloquent->round_number,
-            'name' => $roundEloquent->name,
-            'status' => $roundEloquent->status,
-            'round_results' => $roundEloquent->round_results,
-            'qualifying_results' => $roundEloquent->qualifying_results,
-            'race_time_results' => $roundEloquent->race_time_results,
-            'fastest_lap_results' => $roundEloquent->fastest_lap_results,
+        // Fetch round with season data using repository
+        $roundData = $this->roundRepository->findByIdWithRelations($roundId);
+        $round = $roundData['round'];
+        $season = $roundData['season'];
+
+        // Get all races for the round
+        $races = $this->raceRepository->findAllByRoundId($roundId);
+
+        // Batch fetch all race results for the round to avoid N+1 queries
+        $allRaceResults = $this->raceResultRepository->findByRoundId($roundId);
+
+        // Group results by race_id for efficient lookup
+        $resultsByRaceId = [];
+        foreach ($allRaceResults as $result) {
+            $raceId = $result->raceId();
+            if (!isset($resultsByRaceId[$raceId])) {
+                $resultsByRaceId[$raceId] = [];
+            }
+            $resultsByRaceId[$raceId][] = $result;
+        }
+
+        // Batch fetch driver names
+        $driverIds = array_unique(array_map(fn($r) => $r->driverId(), $allRaceResults));
+        $driverNames = $this->batchFetchDriverNames($driverIds);
+
+        // Fetch divisions for the season using repository
+        $divisions = [];
+        if ($season['race_divisions_enabled']) {
+            $divisionEntities = $this->divisionRepository->findBySeasonId($season['id']);
+
+            foreach ($divisionEntities as $divisionEntity) {
+                $divisions[] = new DivisionData(
+                    id: $divisionEntity->id() ?? 0,
+                    name: $divisionEntity->name()->value(),
+                    description: $divisionEntity->description()->value(),
+                );
+            }
+        }
+
+        // Build round summary from entity
+        $roundSummary = [
+            'id' => $round->id(),
+            'round_number' => $round->roundNumber()->value(),
+            'name' => $round->name()?->value(),
+            'status' => $round->status()->value,
+            'round_results' => $round->roundResults(),
+            'qualifying_results' => $round->qualifyingResults(),
+            'race_time_results' => $round->raceTimeResults(),
+            'fastest_lap_results' => $round->fastestLapResults(),
         ];
 
-        // Build race events with results
-        /** @phpstan-ignore-next-line property.notFound (loaded via eager loading) */
-        $raceEvents = $roundEloquent->races->map(function ($race) {
-            $results = $race->results->map(function ($result) {
-                // Get driver name from nested relationship
-                $driverName = 'Unknown';
-                if ($result->driver?->leagueDriver?->driver) {
-                    $driverName = $result->driver->leagueDriver->driver->name;
-                }
+        // Build race events with results using entities
+        $raceEvents = [];
+        foreach ($races as $race) {
+            $raceId = $race->id();
+            if ($raceId === null) {
+                continue;
+            }
 
-                return new RaceResultData(
-                    id: $result->id,
-                    race_id: $result->race_id,
-                    driver_id: $result->driver_id,
-                    division_id: $result->division_id,
-                    position: $result->position,
-                    race_time: $result->race_time,
-                    race_time_difference: $result->race_time_difference,
-                    fastest_lap: $result->fastest_lap,
-                    penalties: $result->penalties,
-                    has_fastest_lap: $result->has_fastest_lap,
-                    has_pole: $result->has_pole,
-                    dnf: $result->dnf,
-                    status: $result->status,
-                    race_points: $result->race_points,
-                    positions_gained: $result->positions_gained,
-                    created_at: $result->created_at->format('Y-m-d H:i:s'),
-                    updated_at: $result->updated_at->format('Y-m-d H:i:s'),
+            // Get results for this race from pre-fetched data
+            $raceResults = $resultsByRaceId[$raceId] ?? [];
+
+            // Sort results by position
+            usort($raceResults, function ($a, $b) {
+                $posA = $a->position() ?? PHP_INT_MAX;
+                $posB = $b->position() ?? PHP_INT_MAX;
+                return $posA <=> $posB;
+            });
+
+            // Build result DTOs
+            $resultDtos = [];
+            foreach ($raceResults as $result) {
+                $driverId = $result->driverId();
+                $driverName = $driverNames[$driverId] ?? 'Unknown';
+
+                $resultDtos[] = new RaceResultData(
+                    id: $result->id() ?? 0,
+                    race_id: $result->raceId(),
+                    driver_id: $driverId,
+                    division_id: $result->divisionId(),
+                    position: $result->position(),
+                    race_time: $result->raceTime()->value(),
+                    race_time_difference: $result->raceTimeDifference()->value(),
+                    fastest_lap: $result->fastestLap()->value(),
+                    penalties: $result->penalties()->value(),
+                    has_fastest_lap: $result->hasFastestLap(),
+                    has_pole: $result->hasPole(),
+                    dnf: $result->dnf(),
+                    status: $result->status()->value,
+                    race_points: $result->racePoints(),
+                    positions_gained: $result->positionsGained(),
+                    created_at: $result->createdAt()->format('Y-m-d H:i:s'),
+                    updated_at: $result->updatedAt()->format('Y-m-d H:i:s'),
                     driver: [
-                        'id' => $result->driver_id,
+                        'id' => $driverId,
                         'name' => $driverName,
                     ],
                 );
-            })->all();
+            }
 
-            return new RaceEventResultData(
-                id: $race->id,
-                race_number: $race->race_number ?? 0,
-                name: $race->name,
-                is_qualifier: $race->is_qualifier,
-                status: $race->status,
-                race_points: $race->race_points,
-                results: $results,
+            $raceName = $race->name();
+            $raceEvents[] = new RaceEventResultData(
+                id: $raceId,
+                race_number: $race->raceNumber() ?? 0,
+                name: $raceName !== null ? $raceName->value() : '',
+                is_qualifier: $race->isQualifier(),
+                status: $race->status()->value,
+                race_points: $race->racePoints(),
+                results: $resultDtos,
             );
-        })->all();
+        }
 
-        return new RoundResultsData(
-            round: $round,
+        // Ensure round ID is set (should always be the case for fetched entities)
+        $roundIdValue = $round->id();
+        if ($roundIdValue === null) {
+            throw new \RuntimeException('Round ID cannot be null when fetching results');
+        }
+
+        /** @var array{id: int, round_number: int, name: string|null, status: string, round_results: array<mixed>|null, qualifying_results: array<mixed>|null, race_time_results: array<mixed>|null, fastest_lap_results: array<mixed>|null} $roundSummaryTyped */
+        $roundSummaryTyped = [
+            'id' => $roundIdValue,
+            'round_number' => $roundSummary['round_number'],
+            'name' => $roundSummary['name'],
+            'status' => $roundSummary['status'],
+            'round_results' => $roundSummary['round_results'],
+            'qualifying_results' => $roundSummary['qualifying_results'],
+            'race_time_results' => $roundSummary['race_time_results'],
+            'fastest_lap_results' => $roundSummary['fastest_lap_results'],
+        ];
+
+        $resultData = new RoundResultsData(
+            round: $roundSummaryTyped,
             divisions: $divisions,
             race_events: $raceEvents,
         );
+
+        // Cache the results for cross-subdomain access
+        $this->roundResultsCache->put($roundId, $resultData);
+
+        return $resultData;
     }
 
     /**
@@ -1164,7 +1299,7 @@ final class RoundApplicationService
             return $standings;
         }
 
-        // Check top 10 restriction BEFORE awarding (based on race_points position)
+        // Check top positions restriction BEFORE awarding (based on race_points position)
         if ($round->fastestLapTop10()) {
             $driverPosition = null;
             foreach ($standings as $standing) {
@@ -1173,8 +1308,8 @@ final class RoundApplicationService
                     break;
                 }
             }
-            if ($driverPosition !== null && $driverPosition > 10) {
-                // Driver is outside top 10, no bonus awarded
+            if ($driverPosition !== null && $driverPosition > self::TOP_POSITIONS_LIMIT) {
+                // Driver is outside top positions, no bonus awarded
                 return $standings;
             }
         }
@@ -1247,7 +1382,7 @@ final class RoundApplicationService
             return $standings;
         }
 
-        // Check top 10 restriction BEFORE awarding (based on race_points position)
+        // Check top positions restriction BEFORE awarding (based on race_points position)
         if ($round->qualifyingPoleTop10()) {
             $driverPosition = null;
             foreach ($standings as $standing) {
@@ -1256,8 +1391,8 @@ final class RoundApplicationService
                     break;
                 }
             }
-            if ($driverPosition !== null && $driverPosition > 10) {
-                // Driver is outside top 10, no bonus awarded
+            if ($driverPosition !== null && $driverPosition > self::TOP_POSITIONS_LIMIT) {
+                // Driver is outside top positions, no bonus awarded
                 return $standings;
             }
         }
@@ -1277,7 +1412,11 @@ final class RoundApplicationService
     /**
      * Apply round points based on final standings positions.
      * Round points are stored separately and NOT added to total_points.
-     * Drivers with ANY DNF in the round receive 0 round points.
+     *
+     * BUSINESS LOGIC: Drivers with ANY DNF in the round receive 0 round points.
+     * This is intentional - even if a driver wins other races in the round, having
+     * a DNF in any race disqualifies them from earning round points. This ensures
+     * consistency and rewards drivers who complete all races successfully.
      *
      * @param Round $round
      * @param array<mixed> $standings
@@ -1293,7 +1432,8 @@ final class RoundApplicationService
         $pointsArray = $pointsSystem->toArray();
 
         foreach ($standings as &$standing) {
-            // Drivers with ANY DNF in the round should NOT receive round points
+            // IMPORTANT: Drivers with ANY DNF in the round should NOT receive round points.
+            // This is intentional business logic to ensure consistency and reward completion.
             if ($standing['has_any_dnf'] ?? false) {
                 $standing['round_points'] = 0;
                 continue;

@@ -12,7 +12,7 @@
 
     <!-- Results Table -->
     <div v-if="results && results.length > 0" class="overflow-x-auto">
-      <DataTable :value="enrichedResults" :rows="50" :row-class="getRowClass" :row-hover="true">
+      <DataTable :value="enrichedResults" :rows="50" :row-hover="true">
         <Column field="position" header="#" class="w-16" :pt="{ header: { class: 'text-center' } }">
           <template #body="{ data }">
             <div class="text-center font-medium">
@@ -29,7 +29,11 @@
 
         <Column field="divisionName" header="Division" class="w-32">
           <template #body="{ data }">
-            <Tag v-if="data.divisionName" severity="secondary" :value="data.divisionName" />
+            <Tag
+              v-if="data.divisionName"
+              :value="data.divisionName"
+              :class="getDivisionTagClass(data.divisionId)"
+            />
             <span v-else class="text-gray-400">-</span>
           </template>
         </Column>
@@ -60,7 +64,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import { PhTimer, PhClipboardText } from '@phosphor-icons/vue';
-import { getPodiumRowClass } from '@app/constants/podiumColors';
+import { getDivisionTagClass } from '@app/constants/divisionColors';
 import type { CrossDivisionResult, RaceEventResults } from '@app/types/roundResult';
 
 // Constants for time formatting
@@ -78,6 +82,7 @@ interface EnrichedResult {
   position: number;
   race_result_id: number;
   driverName: string;
+  divisionId: number | null;
   divisionName: string | null;
   formattedTime: string;
 }
@@ -108,12 +113,14 @@ const enrichedResults = computed<EnrichedResult[]>(() => {
 
   // Get first place time for calculating differences
   // Explicit check: if first place time is 0 or undefined, we can't calculate differences
+  // This can occur when results haven't been properly calculated yet
   const firstPlaceTimeMs = props.results[0]?.time_ms ?? 0;
   const canCalculateDifferences = firstPlaceTimeMs > 0;
 
   return props.results.map((result) => {
     // Find the race result using the Map lookup
     let driverName = 'Unknown Driver';
+    let divisionId: number | null = null;
     let divisionName: string | null = null;
 
     const raceResult = raceResultsMap.value.get(result.race_result_id);
@@ -121,11 +128,14 @@ const enrichedResults = computed<EnrichedResult[]>(() => {
       driverName = raceResult.driver?.name || 'Unknown Driver';
       // Find division name from division_id using Map lookup
       if (raceResult.division_id) {
+        divisionId = raceResult.division_id;
         divisionName = divisionsMap.value.get(raceResult.division_id) || null;
       }
     }
 
     // For position 1, show absolute time. For others, show difference from first place
+    // When firstPlaceTimeMs is 0, we display absolute times for all positions
+    // as a fallback (indicates data is incomplete or being processed)
     let formattedTime: string;
     if (result.position === 1 || !canCalculateDifferences) {
       formattedTime = formatTime(result.time_ms);
@@ -138,6 +148,7 @@ const enrichedResults = computed<EnrichedResult[]>(() => {
       position: result.position,
       race_result_id: result.race_result_id,
       driverName,
+      divisionId,
       divisionName,
       formattedTime,
     };
@@ -182,9 +193,5 @@ function formatTimeDifference(differenceMs: number): string {
   } else {
     return `+${formattedSeconds}.${formattedMs}`;
   }
-}
-
-function getRowClass(data: EnrichedResult): string {
-  return getPodiumRowClass(data.position);
 }
 </script>

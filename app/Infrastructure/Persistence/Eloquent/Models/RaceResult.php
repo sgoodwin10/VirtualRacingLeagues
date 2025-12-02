@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\Carbon $updated_at
  * @method static RaceResult|null find(int $id, $columns = ['*'])
  * @method static \Illuminate\Database\Eloquent\Builder<RaceResult> where(mixed $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder<RaceResult> join(string $table, string $first, string $operator = null, string $second = null, string $type = 'inner', bool $where = false)
  */
 class RaceResult extends Model
 {

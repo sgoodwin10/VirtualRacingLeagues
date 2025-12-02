@@ -15,9 +15,9 @@
         <div class="overflow-x-auto">
           <DataTable :value="filteredResults" :rows="50" :row-class="getRowClass" class="">
             <Column field="position" header="#" class="w-16">
-              <template #body="{ index }">
+              <template #body="{ data }">
                 <div class="text-center font-medium">
-                  {{ index + 1 }}
+                  {{ data.position }}
                 </div>
               </template>
             </Column>
@@ -54,9 +54,11 @@
               class="w-42"
             >
               <template #body="{ data }">
-                <span v-if="data.race_time_difference !== null && data.race_time_difference !== ''" class="font-mono text-gray-600">+{{
-                  formatRaceTime(data.race_time_difference)
-                }}</span>
+                <span
+                  v-if="data.race_time_difference !== null && data.race_time_difference !== ''"
+                  class="font-mono text-gray-600"
+                  >+{{ formatRaceTime(data.race_time_difference) }}</span
+                >
               </template>
             </Column>
 
@@ -168,6 +170,9 @@ const raceEventTitle = computed(() => {
 
 /**
  * Check if a qualifying result is valid (has lap time)
+ * Note: Qualifying only requires fastest_lap to be valid, as it's the primary
+ * timing metric for qualification. Unlike races, qualifying has no DNF status,
+ * race_time, or penalties to validate.
  */
 function isValidQualifyingResult(result: RaceResultWithDriver): boolean {
   return result.fastest_lap !== null && result.fastest_lap !== '';
@@ -175,6 +180,10 @@ function isValidQualifyingResult(result: RaceResultWithDriver): boolean {
 
 /**
  * Check if a race result is valid (has time, DNF, or fastest lap)
+ * Note: Race results require at least one meaningful field populated. A result
+ * is valid if it has any of: race_time (finish time), dnf (did not finish status),
+ * or fastest_lap (lap time). This is more permissive than qualifying because
+ * races have multiple ways to record results.
  */
 function isValidRaceResult(result: RaceResultWithDriver): boolean {
   return (

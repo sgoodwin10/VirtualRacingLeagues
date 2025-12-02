@@ -1,3 +1,0 @@
-## Issue
-
-the datatables in resources/app/js/components/driver/ReadOnlyDriverTable.vue, resources/app/js/components/season/AvailableDriversTable.vue, resources/app/js/components/season/AvailableDriversTable.vue and resources/app/js/components/driver/DriverTable.vue are not working correctly. Pagination does not work. i want the page options to be 10, 25, 50 for all datatables. use dev-fe-user and dev-be

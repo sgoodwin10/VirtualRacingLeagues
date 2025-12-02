@@ -41,7 +41,7 @@
           <div v-if="league.owner">
             <dt class="text-sm font-medium text-gray-500">Owner</dt>
             <dd class="mt-1 text-sm text-gray-900">
-              {{ getOwnerName(league.owner) }}
+              {{ getFullName(league.owner) }}
             </dd>
           </div>
         </dl>
@@ -57,6 +57,7 @@
 import { computed } from 'vue';
 import Drawer from 'primevue/drawer';
 import type { League } from '@admin/types/league';
+import { useNameHelpers } from '@admin/composables/useNameHelpers';
 
 /**
  * Props interface for ViewLeagueDrawer component
@@ -89,18 +90,14 @@ const props = defineProps<ViewLeagueDrawerProps>();
 // Emits
 const emit = defineEmits<ViewLeagueDrawerEmits>();
 
+// Composables
+const { getFullName } = useNameHelpers();
+
 // Computed visibility for two-way binding
 const isVisible = computed({
   get: () => props.visible,
   set: (value: boolean) => emit('update:visible', value),
 });
-
-/**
- * Get owner full name
- */
-const getOwnerName = (owner: { first_name: string; last_name: string; name?: string }): string => {
-  return owner.name || `${owner.first_name} ${owner.last_name}`.trim();
-};
 </script>
 
 <style scoped>

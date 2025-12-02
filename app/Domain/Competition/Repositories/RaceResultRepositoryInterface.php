@@ -22,6 +22,13 @@ interface RaceResultRepositoryInterface
      */
     public function findByRaceId(int $raceId): array;
 
+    /**
+     * Find all race results for a round (batch fetch to avoid N+1 queries).
+     *
+     * @return RaceResult[]
+     */
+    public function findByRoundId(int $roundId): array;
+
     public function findByRaceAndDriver(int $raceId, int $driverId): ?RaceResult;
 
     public function delete(RaceResult $result): void;

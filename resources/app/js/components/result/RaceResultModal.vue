@@ -82,6 +82,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
 import Button from 'primevue/button';
+import { useToast } from 'primevue/usetoast';
 import { PhTrophy } from '@phosphor-icons/vue';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import ResultCsvImport from '@app/components/result/ResultCsvImport.vue';
@@ -123,6 +124,7 @@ const raceResultStore = useRaceResultStore();
 const seasonStore = useSeasonStore();
 const divisionStore = useDivisionStore();
 const seasonDriverStore = useSeasonDriverStore();
+const toast = useToast();
 const { calculatePositions, parseTimeToMs, normalizeTimeInput } = useRaceTimeCalculation();
 
 // Local state
@@ -136,7 +138,7 @@ const localDrivers = ref<SeasonDriver[]>([]);
 // Determine modal width for qualifying or race
 const modalWidth = computed(() => {
   if (isQualifying.value) {
-    return '3xl';
+    return 'xl';
   }
   return '5xl';
 });
@@ -214,7 +216,7 @@ function initializeForm(): void {
   const drivers = allDrivers.value;
   formResults.value = drivers.map((driver) => ({
     driver_id: driver.id,
-    division_id: driver.division_id ?? null,
+    division_id: hasDivisions.value ? (driver.division_id ?? null) : null,
     position: null,
     race_time: '',
     race_time_difference: '',
@@ -523,6 +525,8 @@ function populateFormWithResults(): void {
     return;
   }
 
+  let missingDriverCount = 0;
+
   // Populate form with existing results by matching driver_id
   for (const result of raceResultStore.results) {
     // Find the form row for this driver by matching driver_id
@@ -544,7 +548,18 @@ function populateFormWithResults(): void {
       console.warn(
         `Saved result for driver_id ${result.driver_id} not found in current season drivers`,
       );
+      missingDriverCount++;
     }
+  }
+
+  // Show toast notification if any drivers were not found
+  if (missingDriverCount > 0) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Missing Drivers',
+      detail: `${missingDriverCount} saved result${missingDriverCount > 1 ? 's' : ''} could not be matched to current season drivers. The driver may have been removed from the season.`,
+      life: 5000,
+    });
   }
 }
 
@@ -553,16 +568,46 @@ async function loadData(): Promise<void> {
   isLoadingDrivers.value = true;
 
   try {
-    // Fetch ALL season drivers first (max 100 per page allowed by backend)
+    // Fetch ALL season drivers with pagination
     // Reset filters to ensure we get all drivers
     seasonDriverStore.resetFilters();
-    await seasonDriverStore.fetchSeasonDrivers(props.seasonId, {
-      per_page: 100, // Max allowed by backend validation
-      page: 1,
-    });
+
+    const perPage = 100; // Max allowed by backend validation
+    let currentPage = 1;
+    let hasMorePages = true;
+    const allDrivers: SeasonDriver[] = [];
+
+    // Fetch all pages of drivers
+    while (hasMorePages) {
+      await seasonDriverStore.fetchSeasonDrivers(props.seasonId, {
+        per_page: perPage,
+        page: currentPage,
+      });
+
+      // Add drivers from current page
+      allDrivers.push(...seasonDriverStore.seasonDrivers);
+
+      // Check if there are more pages
+      // Assuming the store has pagination info; if not, we need to check the returned data length
+      const returnedCount = seasonDriverStore.seasonDrivers.length;
+      hasMorePages = returnedCount === perPage;
+      currentPage++;
+
+      // Safety check to prevent infinite loops
+      if (currentPage > 100) {
+        console.warn('Reached maximum page limit (100) while fetching season drivers');
+        toast.add({
+          severity: 'warn',
+          summary: 'Driver Fetch Limit',
+          detail: 'Could not fetch all drivers. Maximum pagination limit reached (10,000 drivers).',
+          life: 5000,
+        });
+        break;
+      }
+    }
 
     // Copy drivers to local state to ensure reactivity
-    localDrivers.value = [...seasonDriverStore.seasonDrivers];
+    localDrivers.value = allDrivers;
 
     // Wait for the next tick to ensure computed properties are updated
     await nextTick();
@@ -580,14 +625,10 @@ async function loadData(): Promise<void> {
   }
 }
 
-// Load data when modal opens - use immediate: true to catch first open
-watch(
-  isVisible,
-  async (visible) => {
-    if (visible) {
-      await loadData();
-    }
-  },
-  { immediate: true },
-);
+// Load data when modal opens
+watch(isVisible, async (visible) => {
+  if (visible) {
+    await loadData();
+  }
+});
 </script>

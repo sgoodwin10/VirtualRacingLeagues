@@ -65,6 +65,19 @@ final class EloquentDivisionRepository implements DivisionRepositoryInterface
         )->all();
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public function findNamesBySeasonId(int $seasonId): array
+    {
+        /** @var \Illuminate\Database\Eloquent\Collection<int, DivisionEloquent> $eloquentDivisions */
+        $eloquentDivisions = DivisionEloquent::where('season_id', $seasonId)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']);
+
+        return $eloquentDivisions->pluck('name', 'id')->all();
+    }
+
     public function delete(Division $division): void
     {
         if ($division->id() === null) {

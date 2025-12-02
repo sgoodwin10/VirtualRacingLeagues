@@ -64,7 +64,7 @@ final class RoundController extends Controller
         /** @var int $userId */
         $userId = auth('web')->id() ?? 0;
 
-        $round = $this->roundService->updateRound($roundId, $data, $request->all(), $userId);
+        $round = $this->roundService->updateRound($roundId, $data, $userId, $request->all());
         return ApiResponse::success($round->toArray(), 'Round updated successfully');
     }
 

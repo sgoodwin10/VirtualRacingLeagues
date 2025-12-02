@@ -652,7 +652,7 @@ async function handleRefresh(): Promise<void> {
         <div class="flex items-center justify-between w-full px-4 py-2">
           <!-- Left: Record info -->
           <span class="text-sm text-gray-600">
-            Showing {{ first }} to {{ last }} of {{ total }} drivers
+            Showing {{ first }} to {{ last }} of {{ total ?? 0 }} drivers
           </span>
 
           <!-- Center: Rows per page -->
@@ -668,8 +668,8 @@ async function handleRefresh(): Promise<void> {
                     page: 0,
                     rows: e.value,
                     first: 0,
-                    pageCount: Math.ceil(total / e.value),
-                  })
+                    pageCount: Math.ceil((total ?? 0) / e.value),
+                  } as DataTablePageEvent)
               "
             />
           </div>
@@ -680,31 +680,33 @@ async function handleRefresh(): Promise<void> {
               icon="pi pi-angle-double-left"
               text
               rounded
-              :disabled="page === 0"
+              :disabled="(page ?? 0) === 0"
               aria-label="First page"
               @click="
                 onPage({
                   page: 0,
                   rows: perPage,
                   first: 0,
-                  pageCount,
-                })
+                  pageCount: pageCount ?? 0,
+                } as DataTablePageEvent)
               "
             />
             <Button
               icon="pi pi-angle-left"
               text
               rounded
-              :disabled="page === 0"
+              :disabled="(page ?? 0) === 0"
               aria-label="Previous page"
               @click="prevPageCallback"
             />
-            <span class="text-sm text-gray-600 mx-2"> Page {{ page + 1 }} of {{ pageCount }} </span>
+            <span class="text-sm text-gray-600 mx-2">
+              Page {{ (page ?? 0) + 1 }} of {{ pageCount ?? 0 }}
+            </span>
             <Button
               icon="pi pi-angle-right"
               text
               rounded
-              :disabled="page === pageCount - 1"
+              :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
               aria-label="Next page"
               @click="nextPageCallback"
             />
@@ -712,15 +714,15 @@ async function handleRefresh(): Promise<void> {
               icon="pi pi-angle-double-right"
               text
               rounded
-              :disabled="page === pageCount - 1"
+              :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
               aria-label="Last page"
               @click="
                 onPage({
-                  page: pageCount - 1,
+                  page: (pageCount ?? 1) - 1,
                   rows: perPage,
-                  first: (pageCount - 1) * perPage,
-                  pageCount,
-                })
+                  first: ((pageCount ?? 1) - 1) * perPage,
+                  pageCount: pageCount ?? 0,
+                } as DataTablePageEvent)
               "
             />
           </div>

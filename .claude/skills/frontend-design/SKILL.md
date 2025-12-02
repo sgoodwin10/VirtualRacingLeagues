@@ -18,11 +18,17 @@ Before coding, understand the context and commit to a BOLD aesthetic direction:
 
 **CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
 
-Then implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
+Then implement working code (HTML/CSS/JS, Tailwind CSS, Vue, etc.) that is:
 - Production-grade and functional
 - Visually striking and memorable
 - Cohesive with a clear aesthetic point-of-view
 - Meticulously refined in every detail
+
+## Development Stack
+- VueJS
+- Tailwind CSS
+- PrimeVue
+- PhosPhor Icons
 
 ## Frontend Aesthetics Guidelines
 

@@ -61,6 +61,38 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
     }
 
     /**
+     * Find a round by ID with eager-loaded relationships for results display.
+     *
+     * @return array{round: Round, season: array<string, mixed>}
+     * @throws RoundNotFoundException
+     */
+    public function findByIdWithRelations(int $id): array
+    {
+        /** @var RoundEloquent|null $eloquent */
+        $eloquent = RoundEloquent::with('season')->find($id);
+
+        if ($eloquent === null) {
+            throw RoundNotFoundException::withId($id);
+        }
+
+        $round = $this->toDomainEntity($eloquent);
+
+        // Extract season data without accessing property dynamically
+        /** @phpstan-ignore-next-line property.notFound (loaded via eager loading) */
+        $seasonModel = $eloquent->season;
+
+        $season = [
+            'id' => $seasonModel->id,
+            'race_divisions_enabled' => $seasonModel->race_divisions_enabled,
+        ];
+
+        return [
+            'round' => $round,
+            'season' => $season,
+        ];
+    }
+
+    /**
      * Find all rounds for a season.
      *
      * @return array<Round>

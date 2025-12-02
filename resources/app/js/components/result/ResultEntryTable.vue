@@ -11,7 +11,10 @@
           <th v-if="!isQualifying" class="px-2 py-2 text-right font-medium text-gray-700 w-42">
             Time Diff
           </th>
-          <th class="px-2 py-2 text-right font-medium text-gray-700 w-42">
+          <th
+            class="px-2 py-2 text-right font-medium text-gray-700 w-42"
+            :class="{ 'pr-6': isQualifying }"
+          >
             {{ isQualifying ? 'Lap Time' : 'Fastest Lap' }}
           </th>
           <th v-if="!isQualifying" class="px-2 py-2 text-right font-medium text-gray-700 w-42">
@@ -66,9 +69,11 @@
           <td v-if="!isQualifying" class="px-2 py-2 text-end">
             <!-- Read-only: show time diff as text -->
             <template v-if="readOnly">
-              <span v-if="row.race_time_difference !== null && row.race_time_difference !== ''" class="text-gray-900 font-mono">+{{
-                formatRaceTime(row.race_time_difference)
-              }}</span>
+              <span
+                v-if="row.race_time_difference !== null && row.race_time_difference !== ''"
+                class="text-gray-900 font-mono"
+                >+{{ formatRaceTime(row.race_time_difference) }}</span
+              >
             </template>
             <!-- Edit mode: show input -->
             <template v-else>
@@ -79,7 +84,7 @@
               />
             </template>
           </td>
-          <td class="px-2 py-2 text-end">
+          <td class="px-2 py-2 text-end" :class="{ 'pr-6': isQualifying }">
             <!-- Read-only: show fastest lap as text -->
             <template v-if="readOnly">
               <Tag
@@ -96,7 +101,6 @@
                 }"
                 >{{ formatRaceTime(row.fastest_lap) }}</span
               >
-              
             </template>
             <!-- Edit mode: show input -->
             <template v-else>
@@ -205,6 +209,12 @@ const sortedResults = computed(() => {
   // In read-only mode, filter out drivers without any result data
   const resultsToProcess = props.readOnly ? props.results.filter(hasResultData) : props.results;
 
+  // In edit mode (!readOnly), don't sort - it's confusing for users as rows reorder while entering data
+  if (!props.readOnly) {
+    return resultsToProcess;
+  }
+
+  // In read-only mode, sort by time
   // Check if any results have times entered - if not, keep original order
   const hasAnyTimes = resultsToProcess.some((r) =>
     props.isQualifying ? r.fastest_lap : r.race_time || r.race_time_difference,
@@ -287,15 +297,9 @@ function handleRemoveRow(index: number): void {
     return;
   }
 
-  // Find the index in the original props.results array
-  const originalIndex = props.results.findIndex((r) => r.driver_id === rowToRemove.driver_id);
-
-  if (originalIndex === -1) {
-    return;
-  }
-
-  const updatedResults = [...props.results];
-  updatedResults.splice(originalIndex, 1);
+  // Use driver_id as the key to remove the correct result
+  // Filter out the result with matching driver_id instead of using index
+  const updatedResults = props.results.filter((r) => r.driver_id !== rowToRemove.driver_id);
   emit('update:results', updatedResults);
 }
 

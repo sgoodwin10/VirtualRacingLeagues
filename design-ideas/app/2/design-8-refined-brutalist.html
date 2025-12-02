@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League Management - Refined Brutalist Design (Tailwind + Phosphor)</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vrl: {
+                            'header': '#0d0d0d',
+                            'header-secondary': '#1a1a1a',
+                            'accent-yellow': '#fbbf24',
+                            'accent-amber': '#d97706',
+                            'accent-orange': '#f97316',
+                            'bg-white': '#ffffff',
+                            'bg-off-white': '#fafafa',
+                            'bg-light': '#f5f5f5',
+                            'text-black': '#0a0a0a',
+                            'text-dark': '#1a1a1a',
+                            'text-medium': '#4a4a4a',
+                            'text-light': '#8a8a8a',
+                            'text-placeholder': '#a3a3a3',
+                            'accent-blue': '#1d3557',
+                            'accent-red': '#dc2626',
+                            'success': '#16a34a',
+                            'warning': '#d97706',
+                            'info': '#0284c7',
+                            'border-light': '#e5e5e5',
+                            'border-medium': '#d4d4d4',
+                            'border-dark': '#333333',
+                        }
+                    },
+                    fontFamily: {
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Fira Code', 'monospace'],
+                        'serif': ['Fraunces', 'Playfair Display', 'Georgia', 'serif'],
+                        'sans': ['DM Sans', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    },
+                    spacing: {
+                        '2.75': '11px',
+                        '4.5': '18px',
+                        '5.5': '22px',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-vrl-bg-off-white min-h-screen">
+    <!-- Site Header - Dark Brutalist (Preserved) -->
+    <!-- PrimeVue: Use custom header component or Menubar -->
+    <header class="bg-vrl-header border-b-[3px] border-vrl-accent-yellow sticky top-0 z-[100]">
+        <div class="max-w-[1280px] mx-auto px-12 flex items-center justify-between h-16">
+            <!-- Brand -->
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-vrl-accent-yellow flex items-center justify-center font-mono text-sm font-bold text-vrl-header">
+                    VRL
+                </div>
+                <span class="font-mono text-base font-semibold text-neutral-200 tracking-wide">
+                    Virtual Racing Leagues
+                </span>
+            </div>
+
+            <!-- Navigation -->
+            <!-- PrimeVue: Menubar component -->
+            <nav class="flex items-center gap-2">
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-mono text-xs font-medium tracking-wide uppercase no-underline bg-transparent border border-transparent cursor-pointer transition-all text-vrl-accent-yellow bg-vrl-header-secondary border-vrl-accent-yellow">
+                    <i class="ph ph-house text-base"></i>
+                    Leagues
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-mono text-xs font-medium tracking-wide uppercase no-underline bg-transparent border border-transparent cursor-pointer transition-all text-neutral-400 hover:text-neutral-200 hover:bg-vrl-header-secondary hover:border-vrl-border-dark">
+                    <i class="ph ph-question text-base"></i>
+                    Help
+                </a>
+
+                <div class="w-px h-6 bg-vrl-border-dark mx-2"></div>
+
+                <button class="flex items-center gap-2 px-4 py-2.5 font-mono text-xs font-medium tracking-wide uppercase bg-transparent border border-transparent text-neutral-400 cursor-pointer transition-all hover:text-neutral-200 hover:bg-vrl-header-secondary hover:border-vrl-border-dark">
+                    <i class="ph ph-user text-base"></i>
+                    Profile
+                </button>
+                <button class="flex items-center gap-2 px-4 py-2.5 font-mono text-xs font-medium tracking-wide uppercase bg-transparent border border-transparent text-neutral-400 cursor-pointer transition-all hover:text-neutral-200 hover:bg-vrl-header-secondary hover:border-vrl-border-dark">
+                    <i class="ph ph-sign-out text-base"></i>
+                    Logout
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="max-w-[1280px] mx-auto px-12 py-12">
+        <!-- Page Header - Refined -->
+        <header class="grid grid-cols-[1fr_auto] gap-12 items-end mb-10 pb-8 border-b-2 border-vrl-text-black">
+            <div>
+                <div class="font-mono text-[11px] tracking-[3px] uppercase text-vrl-accent-amber mb-2 font-semibold">
+                    League Management
+                </div>
+                <h1 class="font-serif text-[44px] font-bold leading-tight -tracking-wider text-vrl-text-black">
+                    Your Leagues
+                </h1>
+                <p class="text-[15px] text-vrl-text-medium mt-2.5 max-w-[400px]">
+                    Configure and manage your racing leagues, competitions, and driver rosters
+                </p>
+            </div>
+            
+            <!-- Stats -->
+            <div class="flex gap-4">
+                <div class="text-center py-5 px-7 bg-vrl-bg-white border border-vrl-border-light min-w-[100px]">
+                    <div class="font-serif text-4xl font-bold text-vrl-text-black leading-none">3</div>
+                    <div class="font-mono text-[10px] tracking-wide uppercase text-vrl-text-light mt-1.5">Leagues</div>
+                </div>
+                <div class="text-center py-5 px-7 bg-vrl-bg-white border border-vrl-border-light min-w-[100px]">
+                    <div class="font-serif text-4xl font-bold text-vrl-text-black leading-none">12</div>
+                    <div class="font-mono text-[10px] tracking-wide uppercase text-vrl-text-light mt-1.5">Competitions</div>
+                </div>
+                <div class="text-center py-5 px-7 bg-vrl-bg-white border border-vrl-border-light min-w-[100px]">
+                    <div class="font-serif text-4xl font-bold text-vrl-text-black leading-none">156</div>
+                    <div class="font-mono text-[10px] tracking-wide uppercase text-vrl-text-light mt-1.5">Drivers</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tier Notice - Softer amber/warning style -->
+        <!-- PrimeVue: Message component with severity="warn" -->
+        <div class="flex items-center gap-4 px-5 py-4 mb-8 bg-amber-50 border border-amber-200 border-l-4 border-l-vrl-accent-amber rounded-sm">
+            <div class="w-9 h-9 bg-vrl-accent-amber rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="ph ph-warning text-white text-lg"></i>
+            </div>
+            <div class="flex-1">
+                <div class="font-mono font-semibold text-[13px] text-vrl-accent-amber tracking-wide mb-0.5">
+                    Free Tier Limit Reached
+                </div>
+                <div class="text-sm text-amber-900">
+                    You've reached 3/3 leagues. Upgrade your plan to create more.
+                </div>
+            </div>
+            <button class="inline-flex items-center gap-2 px-2.5 py-2 bg-vrl-accent-amber text-white border-0 rounded-sm font-mono text-xs font-semibold tracking-wider uppercase cursor-pointer transition-all hover:bg-[#b45309]">
+                Upgrade
+            </button>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="flex justify-between items-center mb-6">
+            <!-- Filter Tabs -->
+            <!-- PrimeVue: TabView component -->
+            <div class="flex gap-0 bg-vrl-bg-white border border-vrl-border-medium">
+                <button class="px-5.5 py-2.75 font-mono text-xs font-medium tracking-wide cursor-pointer transition-all border-r border-vrl-border-light bg-vrl-text-black text-vrl-bg-white">
+                    All
+                </button>
+                <button class="px-5.5 py-2.75 font-mono text-xs font-medium tracking-wide cursor-pointer transition-all border-r border-vrl-border-light text-vrl-text-medium bg-transparent hover:bg-vrl-bg-light hover:text-vrl-text-dark">
+                    Public
+                </button>
+                <button class="px-5.5 py-2.75 font-mono text-xs font-medium tracking-wide cursor-pointer transition-all border-r border-vrl-border-light text-vrl-text-medium bg-transparent hover:bg-vrl-bg-light hover:text-vrl-text-dark">
+                    Private
+                </button>
+                <button class="px-5.5 py-2.75 font-mono text-xs font-medium tracking-wide cursor-pointer transition-all text-vrl-text-medium bg-transparent hover:bg-vrl-bg-light hover:text-vrl-text-dark">
+                    Archived
+                </button>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex gap-3 items-center">
+                <!-- Search -->
+                <!-- PrimeVue: InputText with icon -->
+                <input 
+                    type="text" 
+                    placeholder="Search leagues..." 
+                    class="w-60 px-4 py-2.75 border border-vrl-border-medium rounded-sm font-mono text-[13px] bg-vrl-bg-white text-vrl-text-dark placeholder:text-vrl-text-light transition-all focus:outline-none focus:border-vrl-text-black"
+                />
+                
+                <!-- Create Button -->
+                <!-- PrimeVue: Button component -->
+                <button class="inline-flex items-center gap-2 px-5.5 py-2.75 bg-vrl-text-black text-white border-0 rounded-sm font-mono text-xs font-semibold tracking-wide uppercase cursor-pointer transition-all hover:bg-vrl-accent-amber">
+                    <i class="ph ph-plus text-sm"></i>
+                    Create League
+                </button>
+            </div>
+        </div>
+
+        <!-- Swiss Table -->
+        <!-- PrimeVue: DataTable component highly recommended -->
+        <div class="bg-vrl-bg-white border border-vrl-border-light shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <!-- Table Header -->
+            <div class="bg-vrl-bg-light border-b border-vrl-border-light px-6">
+                <div class="grid grid-cols-[56px_2fr_100px_140px_100px_100px_160px] gap-0">
+                    <div class="px-3 py-3.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-vrl-text-light">#</div>
+                    <div class="px-3 py-3.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-vrl-text-light">League</div>
+                    <div class="px-3 py-3.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-vrl-text-light">Status</div>
+                    <div class="px-3 py-3.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-vrl-text-light">Platforms</div>
+                    <div class="px-3 py-3.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-vrl-text-light">Comps</div>
+                    <div class="px-3 py-3.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-vrl-text-light">Drivers</div>
+                    <div class="px-3 py-3.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-vrl-text-light">Actions</div>
+                </div>
+            </div>
+
+            <!-- Table Row 1 -->
+            <div class="border-b border-vrl-border-light px-6 hover:bg-vrl-bg-off-white transition-colors">
+                <div class="grid grid-cols-[56px_2fr_100px_140px_100px_100px_160px] gap-0 items-center">
+                    <div class="px-3 py-4.5">
+                        <span class="font-serif text-xl font-semibold text-vrl-border-medium">01</span>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-vrl-bg-light border border-vrl-border-light flex items-center justify-center font-serif text-base font-semibold text-vrl-text-dark flex-shrink-0">
+                                SRL
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-[15px] text-vrl-text-black mb-0.5">Simracing League Pro</div>
+                                <div class="text-[13px] text-vrl-text-light truncate">Where champions are made</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <!-- PrimeVue: Tag component -->
+                        <span class="inline-flex items-center px-3 py-1.25 font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm bg-blue-50 text-blue-800">Public</span>
+                    </div>
+                    <div class="px-3 py-4.5 text-sm text-vrl-text-dark">iRacing, ACC</div>
+                    <div class="px-3 py-4.5">
+                        <span class="font-serif text-xl font-semibold text-vrl-text-black">4</span>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <span class="font-serif text-xl font-semibold text-vrl-text-black">52</span>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <div class="flex gap-2">
+                            <!-- PrimeVue: Button components -->
+                            <button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-vrl-bg-white text-vrl-text-medium border border-vrl-border-medium rounded-sm font-mono text-[11px] font-medium tracking-wide cursor-pointer transition-all hover:border-vrl-text-dark hover:text-vrl-text-dark hover:bg-vrl-bg-light">
+                                <i class="ph ph-pencil text-xs"></i>
+                                Edit
+                            </button>
+                            <button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-vrl-accent-blue text-white border border-vrl-accent-blue rounded-sm font-mono text-[11px] font-semibold tracking-wide cursor-pointer transition-all hover:bg-[#152a45] hover:border-[#152a45]">
+                                <i class="ph ph-eye text-xs"></i>
+                                View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Row 2 -->
+            <div class="border-b border-vrl-border-light px-6 hover:bg-vrl-bg-off-white transition-colors">
+                <div class="grid grid-cols-[56px_2fr_100px_140px_100px_100px_160px] gap-0 items-center">
+                    <div class="px-3 py-4.5">
+                        <span class="font-serif text-xl font-semibold text-vrl-border-medium">02</span>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-vrl-bg-light border border-vrl-border-light flex items-center justify-center font-serif text-base font-semibold text-vrl-text-dark flex-shrink-0">
+                                GT
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-[15px] text-vrl-text-black mb-0.5">GT Masters Cup</div>
+                                <div class="text-[13px] text-vrl-text-light truncate">Elite GT racing series</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <span class="inline-flex items-center px-3 py-1.25 font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm bg-pink-50 text-pink-800">Private</span>
+                    </div>
+                    <div class="px-3 py-4.5 text-sm text-vrl-text-dark">ACC, rFactor2</div>
+                    <div class="px-3 py-4.5">
+                        <span class="font-serif text-xl font-semibold text-vrl-text-black">6</span>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <span class="font-serif text-xl font-semibold text-vrl-text-black">78</span>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <div class="flex gap-2">
+                            <button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-vrl-bg-white text-vrl-text-medium border border-vrl-border-medium rounded-sm font-mono text-[11px] font-medium tracking-wide cursor-pointer transition-all hover:border-vrl-text-dark hover:text-vrl-text-dark hover:bg-vrl-bg-light">
+                                <i class="ph ph-pencil text-xs"></i>
+                                Edit
+                            </button>
+                            <button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-vrl-accent-blue text-white border border-vrl-accent-blue rounded-sm font-mono text-[11px] font-semibold tracking-wide cursor-pointer transition-all hover:bg-[#152a45] hover:border-[#152a45]">
+                                <i class="ph ph-eye text-xs"></i>
+                                View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Row 3 -->
+            <div class="px-6 hover:bg-vrl-bg-off-white transition-colors">
+                <div class="grid grid-cols-[56px_2fr_100px_140px_100px_100px_160px] gap-0 items-center">
+                    <div class="px-3 py-4.5">
+                        <span class="font-serif text-xl font-semibold text-vrl-border-medium">03</span>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-vrl-bg-light border border-vrl-border-light flex items-center justify-center font-serif text-base font-semibold text-vrl-text-dark flex-shrink-0">
+                                F1
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-[15px] text-vrl-text-black mb-0.5">Formula One Esports</div>
+                                <div class="text-[13px] text-vrl-text-light truncate">Official F1 sim racing</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <span class="inline-flex items-center px-3 py-1.25 font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm bg-blue-50 text-blue-800">Public</span>
+                    </div>
+                    <div class="px-3 py-4.5 text-sm text-vrl-text-dark">F1 24</div>
+                    <div class="px-3 py-4.5">
+                        <span class="font-serif text-xl font-semibold text-vrl-text-black">2</span>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <span class="font-serif text-xl font-semibold text-vrl-text-black">26</span>
+                    </div>
+                    <div class="px-3 py-4.5">
+                        <div class="flex gap-2">
+                            <button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-vrl-bg-white text-vrl-text-medium border border-vrl-border-medium rounded-sm font-mono text-[11px] font-medium tracking-wide cursor-pointer transition-all hover:border-vrl-text-dark hover:text-vrl-text-dark hover:bg-vrl-bg-light">
+                                <i class="ph ph-pencil text-xs"></i>
+                                Edit
+                            </button>
+                            <button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-vrl-accent-blue text-white border border-vrl-accent-blue rounded-sm font-mono text-[11px] font-semibold tracking-wide cursor-pointer transition-all hover:bg-[#152a45] hover:border-[#152a45]">
+                                <i class="ph ph-eye text-xs"></i>
+                                View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Implementation Notes -->
+        <div class="mt-12 p-6 bg-vrl-bg-white border-l-4 border-l-vrl-info rounded-sm">
+            <div class="flex items-start gap-3">
+                <i class="ph ph-info text-vrl-info text-2xl flex-shrink-0 mt-0.5"></i>
+                <div>
+                    <h3 class="font-mono text-xs font-semibold tracking-wide uppercase text-vrl-text-black mb-2">
+                        Implementation with PrimeVue 4 + Tailwind CSS 4
+                    </h3>
+                    <div class="text-sm text-vrl-text-medium leading-relaxed space-y-2">
+                        <p>
+                            <strong>Header:</strong> Use custom component or PrimeVue <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">Menubar</code> with custom styling
+                        </p>
+                        <p>
+                            <strong>Alert:</strong> PrimeVue <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">Message</code> component with <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">severity="warn"</code>
+                        </p>
+                        <p>
+                            <strong>Tabs:</strong> PrimeVue <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">TabView</code> and <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">TabPanel</code> components
+                        </p>
+                        <p>
+                            <strong>Search:</strong> PrimeVue <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">InputText</code> with icon slot
+                        </p>
+                        <p>
+                            <strong>Buttons:</strong> PrimeVue <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">Button</code> component with Tailwind classes
+                        </p>
+                        <p>
+                            <strong>Table:</strong> PrimeVue <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">DataTable</code> and <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">Column</code> components (highly recommended)
+                        </p>
+                        <p>
+                            <strong>Badges:</strong> PrimeVue <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">Tag</code> component
+                        </p>
+                        <p>
+                            <strong>Icons:</strong> Phosphor Icons via <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">&lt;i class="ph ph-{icon-name}"&gt;&lt;/i&gt;</code>
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-vrl-border-light">
+                        <p class="text-sm text-vrl-text-medium">
+                            <strong>All Tailwind classes shown are production-ready.</strong> See <code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">design-system.md</code> for complete component examples with Vue 3 Composition API and TypeScript.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-[1280px] mx-auto px-12 py-8 mt-16 border-t border-vrl-border-light">
+        <div class="flex items-center justify-between">
+            <p class="font-mono text-xs text-vrl-text-light">
+                Virtual Racing Leagues Design System - Refined Brutalist
+            </p>
+            <div class="flex gap-6">
+                <a href="https://tailwindcss.com" class="font-mono text-xs text-vrl-accent-blue hover:text-vrl-accent-amber transition-colors">Tailwind CSS</a>
+                <a href="https://primevue.org" class="font-mono text-xs text-vrl-accent-blue hover:text-vrl-accent-amber transition-colors">PrimeVue</a>
+                <a href="https://phosphoricons.com" class="font-mono text-xs text-vrl-accent-blue hover:text-vrl-accent-amber transition-colors">Phosphor Icons</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

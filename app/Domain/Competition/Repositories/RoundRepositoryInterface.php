@@ -24,6 +24,15 @@ interface RoundRepositoryInterface
     public function findById(int $id): Round;
 
     /**
+     * Find a round by ID with eager-loaded relationships for results display.
+     * Returns [Round entity, season data array].
+     *
+     * @return array{round: Round, season: array<string, mixed>}
+     * @throws \App\Domain\Competition\Exceptions\RoundNotFoundException
+     */
+    public function findByIdWithRelations(int $id): array;
+
+    /**
      * Find all rounds for a season.
      *
      * @return array<Round>

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
+import ToastService from 'primevue/toastservice';
 import RaceResultModal from '@app/components/result/RaceResultModal.vue';
 import { useRaceResultStore } from '@app/stores/raceResultStore';
 import { useSeasonStore } from '@app/stores/seasonStore';
@@ -278,7 +279,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           visible: true,
         },
         global: {
-          plugins: [pinia],
+          plugins: [pinia, ToastService],
           stubs: {
             BaseModal: {
               template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
@@ -353,7 +354,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           visible: true,
         },
         global: {
-          plugins: [pinia],
+          plugins: [pinia, ToastService],
           stubs: {
             BaseModal: {
               template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
@@ -426,7 +427,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           visible: true,
         },
         global: {
-          plugins: [pinia],
+          plugins: [pinia, ToastService],
           stubs: {
             BaseModal: {
               template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
@@ -507,7 +508,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           visible: true,
         },
         global: {
-          plugins: [pinia],
+          plugins: [pinia, ToastService],
           stubs: {
             BaseModal: {
               template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
@@ -599,7 +600,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           visible: true,
         },
         global: {
-          plugins: [pinia],
+          plugins: [pinia, ToastService],
           stubs: {
             BaseModal: {
               template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
@@ -706,7 +707,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           visible: true,
         },
         global: {
-          plugins: [pinia],
+          plugins: [pinia, ToastService],
           stubs: {
             BaseModal: {
               template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
@@ -788,7 +789,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           visible: true,
         },
         global: {
-          plugins: [pinia],
+          plugins: [pinia, ToastService],
           stubs: {
             BaseModal: {
               template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
@@ -862,7 +863,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           visible: true,
         },
         global: {
-          plugins: [pinia],
+          plugins: [pinia, ToastService],
           stubs: {
             BaseModal: {
               template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',

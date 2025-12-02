@@ -89,7 +89,7 @@
     <Column field="owner" header="Manager" style="min-width: 180px">
       <template #body="{ data }">
         <div v-if="data.owner">
-          <p class="text-sm text-gray-900">{{ getOwnerName(data.owner) }}</p>
+          <p class="text-sm text-gray-900">{{ getFullName(data.owner) }}</p>
           <p class="text-xs text-gray-500">{{ data.owner.email }}</p>
         </div>
         <span v-else class="text-gray-400">-</span>
@@ -268,13 +268,6 @@ const getStatusIcon = (status: LeagueStatus): string => {
     archived: 'pi pi-times-circle',
   };
   return icons[status] || '';
-};
-
-/**
- * Get owner full name
- */
-const getOwnerName = (owner: { first_name: string; last_name: string; name?: string }): string => {
-  return owner.name || `${owner.first_name} ${owner.last_name}`.trim();
 };
 
 /**
