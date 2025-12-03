@@ -622,10 +622,10 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
               <template #header>
                 <PanelHeader
                   :icon="PhGear"
-                  icon-class="text-gray-600"
+                  icon-class="text-blue-600"
                   title="Season Settings"
                   description="Configure season preferences and manage archiving"
-                  gradient="from-gray-50 to-zinc-50"
+                  gradient="from-blue-50 to-indigo-50"
                 />
               </template>
               <div class="p-4">

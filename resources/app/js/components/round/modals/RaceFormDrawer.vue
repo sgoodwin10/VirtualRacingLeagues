@@ -346,7 +346,34 @@
                 <!-- Horizontal Rule -->
                 <hr class="border-gray-300" />
 
-                <h3 class="text-sm font-semibold text-gray-900">Points System</h3>
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-semibold text-gray-900">Points System</h3>
+                  <!-- Copy Points Buttons -->
+                  <div class="flex gap-2">
+                    <!-- Copy Round Points (only for Race #1) -->
+                    <Button
+                      v-if="isFirstRace"
+                      label="Copy Round Points"
+                      icon="pi pi-copy"
+                      size="small"
+                      severity="secondary"
+                      outlined
+                      :disabled="!canCopyRoundPoints"
+                      @click="copyRoundPoints"
+                    />
+                    <!-- Copy Race 1 Points (only for Race #2+) -->
+                    <Button
+                      v-if="!isFirstRace && !isQualifying"
+                      label="Copy Race 1 Points"
+                      icon="pi pi-copy"
+                      size="small"
+                      severity="secondary"
+                      outlined
+                      :disabled="!canCopyRace1Points"
+                      @click="copyRace1Points"
+                    />
+                  </div>
+                </div>
 
                 <!-- Points Grid -->
                 <FormInputGroup>
@@ -518,7 +545,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue';
+import { useToast } from 'primevue/usetoast';
 import { useRaceStore } from '@app/stores/raceStore';
+import { useRoundStore } from '@app/stores/roundStore';
 import { useRaceSettingsStore } from '@app/stores/raceSettingsStore';
 import { useRaceValidation } from '@app/composables/useRaceValidation';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
@@ -548,6 +577,7 @@ import type {
   UpdateRaceRequest,
   PlatformRaceSettings,
 } from '@app/types/race';
+import type { PointsSystemMap } from '@app/types/round';
 import {
   RACE_TYPE_OPTIONS,
   QUALIFYING_FORMAT_OPTIONS,
@@ -578,7 +608,9 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>();
 
 const raceStore = useRaceStore();
+const roundStore = useRoundStore();
 const raceSettingsStore = useRaceSettingsStore();
+const toast = useToast();
 
 const form = reactive<RaceForm>({
   race_number: 1,
@@ -731,6 +763,111 @@ const hasQualifyingPole = computed({
     }
   },
 });
+
+// Computed property to check if this is the first race (race_number === 1)
+const isFirstRace = computed(() => {
+  if (props.mode === 'create') {
+    // In create mode, check how many non-qualifier races exist in this round
+    const races = raceStore.racesByRoundId(props.roundId);
+    const nonQualifierRaces = races.filter((race) => !race.is_qualifier);
+    return nonQualifierRaces.length === 0; // This will be the first race
+  } else if (props.race) {
+    // In edit mode, check the race_number
+    return props.race.race_number === 1;
+  }
+  return false;
+});
+
+// Get the current round
+const currentRound = computed(() => {
+  return roundStore.getRoundById(props.roundId);
+});
+
+// Check if round points system is available
+const canCopyRoundPoints = computed(() => {
+  const round = currentRound.value;
+  if (!round || !round.points_system) {
+    return false;
+  }
+  try {
+    const parsed = JSON.parse(round.points_system) as PointsSystemMap;
+    return Object.keys(parsed).length > 0;
+  } catch {
+    return false;
+  }
+});
+
+// Get race 1 (first non-qualifier race) for this round
+const race1 = computed(() => {
+  const races = raceStore.racesByRoundId(props.roundId);
+  const nonQualifierRaces = races
+    .filter((race) => !race.is_qualifier)
+    .sort((a, b) => a.race_number - b.race_number);
+  return nonQualifierRaces[0] || null;
+});
+
+// Check if race 1 points system is available
+const canCopyRace1Points = computed(() => {
+  const firstRace = race1.value;
+  if (!firstRace || !firstRace.race_points) {
+    return false;
+  }
+  return Object.keys(firstRace.points_system).length > 0;
+});
+
+// Function to copy round points to race
+function copyRoundPoints(): void {
+  const round = currentRound.value;
+  if (!round || !round.points_system) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Warning',
+      detail: 'Round points system is not available',
+      life: 3000,
+    });
+    return;
+  }
+
+  try {
+    const roundPoints = JSON.parse(round.points_system) as PointsSystemMap;
+    form.points_system = { ...roundPoints };
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Round points copied successfully',
+      life: 3000,
+    });
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to parse round points system',
+      life: 3000,
+    });
+  }
+}
+
+// Function to copy race 1 points to current race
+function copyRace1Points(): void {
+  const firstRace = race1.value;
+  if (!firstRace || !firstRace.race_points) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Warning',
+      detail: 'Race 1 points system is not available',
+      life: 3000,
+    });
+    return;
+  }
+
+  form.points_system = { ...firstRace.points_system };
+  toast.add({
+    severity: 'success',
+    summary: 'Success',
+    detail: 'Race 1 points copied successfully',
+    life: 3000,
+  });
+}
 
 watch(
   () => props.visible,

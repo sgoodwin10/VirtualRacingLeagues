@@ -181,17 +181,6 @@ function handleSeasonDeleted(): void {
       <div class="lg:col-span-2">
         <!-- Season Status Panel -->
         <BasePanel v-if="!season.is_archived" class="h-full">
-          <template #header>
-            <PanelHeader
-              :icon="PhGear"
-              :icon-size="20"
-              icon-class="text-blue-600"
-              title="Season Status"
-              description="Manage your season lifecycle"
-              gradient="from-blue-50 to-indigo-50"
-            />
-          </template>
-
           <div class="p-4">
             <!-- Current Status Display -->
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">

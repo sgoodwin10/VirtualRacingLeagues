@@ -7,6 +7,17 @@ import { useRaceSettingsStore } from '@app/stores/raceSettingsStore';
 import type { Race } from '@app/types/race';
 import { F1_STANDARD_POINTS } from '@app/types/race';
 
+// Mock useToast
+const mockToast = {
+  add: vi.fn(),
+  removeGroup: vi.fn(),
+  removeAllGroups: vi.fn(),
+};
+
+vi.mock('primevue/usetoast', () => ({
+  useToast: () => mockToast,
+}));
+
 // Mock BaseModal component
 vi.mock('@app/components/common/modals/BaseModal.vue', () => ({
   default: {
@@ -792,6 +803,380 @@ describe('RaceFormDrawer', () => {
 
       // Verify qualifying pole is set back to 1
       expect(vm.form.qualifying_pole).toBe(1);
+    });
+  });
+
+  describe('Copy Points System', () => {
+    it('should copy round points to race for first race', async () => {
+      const pinia = createPinia();
+      setActivePinia(pinia);
+
+      const { useRoundStore } = await import('@app/stores/roundStore');
+      const { useRaceStore } = await import('@app/stores/raceStore');
+
+      const roundStore = useRoundStore();
+      const raceStore = useRaceStore();
+      const raceSettingsStore = useRaceSettingsStore();
+
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      // Mock round with points system
+      const mockRoundPoints = { 1: 25, 2: 18, 3: 15, 4: 12, 5: 10 };
+      roundStore.rounds = [
+        {
+          id: 1,
+          season_id: 1,
+          round_number: 1,
+          name: 'Test Round',
+          slug: 'test-round',
+          scheduled_at: null,
+          timezone: 'UTC',
+          platform_track_id: null,
+          track_layout: null,
+          track_conditions: null,
+          technical_notes: null,
+          stream_url: null,
+          internal_notes: null,
+          fastest_lap: null,
+          fastest_lap_top_10: false,
+          qualifying_pole: null,
+          qualifying_pole_top_10: false,
+          points_system: JSON.stringify(mockRoundPoints),
+          round_points: true,
+          status: 'scheduled',
+          status_label: 'Scheduled',
+          created_by_user_id: 1,
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          deleted_at: null,
+        },
+      ];
+
+      // No existing races (this will be race 1)
+      raceStore.races = [];
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          plugins: [pinia],
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          points_system: Record<number, number>;
+          race_points: boolean;
+        };
+        copyRoundPoints: () => void;
+        isFirstRace: boolean;
+        canCopyRoundPoints: boolean;
+      };
+
+      // Enable race points
+      vm.form.race_points = true;
+      await nextTick();
+
+      // Verify this is identified as first race
+      expect(vm.isFirstRace).toBe(true);
+      expect(vm.canCopyRoundPoints).toBe(true);
+
+      // Copy round points
+      vm.copyRoundPoints();
+      await nextTick();
+
+      // Verify points were copied
+      expect(vm.form.points_system).toEqual(mockRoundPoints);
+    });
+
+    it('should copy race 1 points to race 2', async () => {
+      const pinia = createPinia();
+      setActivePinia(pinia);
+
+      const { useRoundStore } = await import('@app/stores/roundStore');
+      const { useRaceStore } = await import('@app/stores/raceStore');
+
+      const roundStore = useRoundStore();
+      const raceStore = useRaceStore();
+      const raceSettingsStore = useRaceSettingsStore();
+
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      // Mock round
+      roundStore.rounds = [
+        {
+          id: 1,
+          season_id: 1,
+          round_number: 1,
+          name: 'Test Round',
+          slug: 'test-round',
+          scheduled_at: null,
+          timezone: 'UTC',
+          platform_track_id: null,
+          track_layout: null,
+          track_conditions: null,
+          technical_notes: null,
+          stream_url: null,
+          internal_notes: null,
+          fastest_lap: null,
+          fastest_lap_top_10: false,
+          qualifying_pole: null,
+          qualifying_pole_top_10: false,
+          points_system: null,
+          round_points: false,
+          status: 'scheduled',
+          status_label: 'Scheduled',
+          created_by_user_id: 1,
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          deleted_at: null,
+        },
+      ];
+
+      // Mock race 1 with custom points
+      const race1Points = { 1: 30, 2: 25, 3: 20, 4: 15, 5: 10 };
+      const race1: Race = {
+        ...mockRace,
+        id: 1,
+        round_id: 1,
+        race_number: 1,
+        race_points: true,
+        points_system: race1Points,
+        is_qualifier: false,
+      };
+
+      raceStore.races = [race1];
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          plugins: [pinia],
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          points_system: Record<number, number>;
+          race_points: boolean;
+        };
+        copyRace1Points: () => void;
+        isFirstRace: boolean;
+        canCopyRace1Points: boolean;
+      };
+
+      // Enable race points
+      vm.form.race_points = true;
+      await nextTick();
+
+      // Verify this is not identified as first race (race 1 already exists)
+      expect(vm.isFirstRace).toBe(false);
+      expect(vm.canCopyRace1Points).toBe(true);
+
+      // Copy race 1 points
+      vm.copyRace1Points();
+      await nextTick();
+
+      // Verify points were copied
+      expect(vm.form.points_system).toEqual(race1Points);
+    });
+
+    it('should disable copy round points button when round has no points system', async () => {
+      const pinia = createPinia();
+      setActivePinia(pinia);
+
+      const { useRoundStore } = await import('@app/stores/roundStore');
+      const { useRaceStore } = await import('@app/stores/raceStore');
+
+      const roundStore = useRoundStore();
+      const raceStore = useRaceStore();
+      const raceSettingsStore = useRaceSettingsStore();
+
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      // Mock round without points system
+      roundStore.rounds = [
+        {
+          id: 1,
+          season_id: 1,
+          round_number: 1,
+          name: 'Test Round',
+          slug: 'test-round',
+          scheduled_at: null,
+          timezone: 'UTC',
+          platform_track_id: null,
+          track_layout: null,
+          track_conditions: null,
+          technical_notes: null,
+          stream_url: null,
+          internal_notes: null,
+          fastest_lap: null,
+          fastest_lap_top_10: false,
+          qualifying_pole: null,
+          qualifying_pole_top_10: false,
+          points_system: null,
+          round_points: false,
+          status: 'scheduled',
+          status_label: 'Scheduled',
+          created_by_user_id: 1,
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          deleted_at: null,
+        },
+      ];
+
+      raceStore.races = [];
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          plugins: [pinia],
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        isFirstRace: boolean;
+        canCopyRoundPoints: boolean;
+      };
+
+      // Verify this is first race but can't copy points (no round points)
+      expect(vm.isFirstRace).toBe(true);
+      expect(vm.canCopyRoundPoints).toBe(false);
+    });
+
+    it('should disable copy race 1 points button when race 1 has no points', async () => {
+      const pinia = createPinia();
+      setActivePinia(pinia);
+
+      const { useRoundStore } = await import('@app/stores/roundStore');
+      const { useRaceStore } = await import('@app/stores/raceStore');
+
+      const roundStore = useRoundStore();
+      const raceStore = useRaceStore();
+      const raceSettingsStore = useRaceSettingsStore();
+
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      // Mock round
+      roundStore.rounds = [
+        {
+          id: 1,
+          season_id: 1,
+          round_number: 1,
+          name: 'Test Round',
+          slug: 'test-round',
+          scheduled_at: null,
+          timezone: 'UTC',
+          platform_track_id: null,
+          track_layout: null,
+          track_conditions: null,
+          technical_notes: null,
+          stream_url: null,
+          internal_notes: null,
+          fastest_lap: null,
+          fastest_lap_top_10: false,
+          qualifying_pole: null,
+          qualifying_pole_top_10: false,
+          points_system: null,
+          round_points: false,
+          status: 'scheduled',
+          status_label: 'Scheduled',
+          created_by_user_id: 1,
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          deleted_at: null,
+        },
+      ];
+
+      // Mock race 1 without race points enabled
+      const race1: Race = {
+        ...mockRace,
+        id: 1,
+        round_id: 1,
+        race_number: 1,
+        race_points: false,
+        is_qualifier: false,
+      };
+
+      raceStore.races = [race1];
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          plugins: [pinia],
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        isFirstRace: boolean;
+        canCopyRace1Points: boolean;
+      };
+
+      // Verify this is not first race but can't copy points (race 1 has no points)
+      expect(vm.isFirstRace).toBe(false);
+      expect(vm.canCopyRace1Points).toBe(false);
     });
   });
 

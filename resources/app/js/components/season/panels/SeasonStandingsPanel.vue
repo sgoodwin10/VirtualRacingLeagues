@@ -99,7 +99,7 @@ const standingsData = ref<SeasonStandingsResponse | null>(null);
 const activeDivisionId = ref<number>(0);
 
 /**
- * Get divisions with standings (only when divisions enabled)
+ * Get divisions with standings (only when divisions enabled), sorted alphabetically
  */
 const divisionsWithStandings = computed<readonly SeasonStandingDivision[]>(() => {
   if (!standingsData.value) {
@@ -107,7 +107,9 @@ const divisionsWithStandings = computed<readonly SeasonStandingDivision[]>(() =>
   }
 
   if (isDivisionStandings(standingsData.value)) {
-    return standingsData.value.standings;
+    return [...standingsData.value.standings].sort((a, b) =>
+      a.division_name.localeCompare(b.division_name),
+    );
   }
 
   return [];
