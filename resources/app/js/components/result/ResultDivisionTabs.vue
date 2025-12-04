@@ -28,6 +28,7 @@
             :is-qualifying="isQualifying"
             :selected-driver-ids="selectedDriverIdsByDivision[division.id] ?? new Set()"
             :read-only="readOnly"
+            :race-times-required="raceTimesRequired"
             @update:results="(results) => handleDivisionUpdate(division.id, results)"
           />
         </TabPanel>
@@ -56,6 +57,7 @@ interface Props {
   isQualifying: boolean;
   selectedDriverIds: Set<number>;
   readOnly?: boolean;
+  raceTimesRequired?: boolean;
 }
 
 interface Emits {
@@ -63,7 +65,10 @@ interface Emits {
   (e: 'reset-all'): void;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  readOnly: false,
+  raceTimesRequired: true,
+});
 const emit = defineEmits<Emits>();
 
 const confirm = useConfirm();

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\Competition\Services;
 
 use App\Application\Competition\DTOs\CreateSeasonData;
-use App\Application\Competition\DTOs\PlatformData;
 use App\Application\Competition\DTOs\SeasonCompetitionData;
 use App\Application\Competition\DTOs\SeasonData;
 use App\Application\Competition\DTOs\SeasonLeagueData;
@@ -25,8 +24,10 @@ use App\Domain\Competition\ValueObjects\SeasonSlug;
 use App\Domain\Competition\ValueObjects\SeasonStatus;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -51,6 +52,7 @@ final class SeasonApplicationService
         private readonly SeasonDriverRepositoryInterface $seasonDriverRepository,
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
+        private readonly PlatformRepositoryInterface $platformRepository,
         private readonly DivisionRepositoryInterface $divisionRepository,
         private readonly TeamRepositoryInterface $teamRepository,
         private readonly RoundRepositoryInterface $roundRepository,
@@ -111,6 +113,7 @@ final class SeasonApplicationService
                     bannerPath: $bannerPath,
                     teamChampionshipEnabled: $data->team_championship_enabled,
                     raceDivisionsEnabled: $data->race_divisions_enabled,
+                    raceTimesRequired: $data->race_times_required,
                 );
 
                 // 7. Save via repository
@@ -196,6 +199,15 @@ final class SeasonApplicationService
                     $season->enableRaceDivisions();
                 } else {
                     $season->disableRaceDivisions();
+                }
+            }
+
+            // 5c. Handle race times required toggle
+            if ($data->race_times_required !== null) {
+                if ($data->race_times_required) {
+                    $season->enableRaceTimes();
+                } else {
+                    $season->disableRaceTimes();
                 }
             }
 
@@ -463,7 +475,7 @@ final class SeasonApplicationService
     /**
      * Store a season image (logo or banner).
      */
-    private function storeSeasonImage($file, string $type, ?int $seasonId): string
+    private function storeSeasonImage(UploadedFile $file, string $type, ?int $seasonId): string
     {
         $directory = $seasonId
             ? "seasons/{$seasonId}"
@@ -521,11 +533,8 @@ final class SeasonApplicationService
         $totalRounds = count($rounds);
         $completedRounds = count(array_filter($rounds, fn($round) => $round->status()->isCompleted()));
 
-        // Get platform data
-        $platformModel = \App\Infrastructure\Persistence\Eloquent\Models\Platform::find($competition->platformId());
-        if (!$platformModel) {
-            throw new \RuntimeException('Platform not found for competition');
-        }
+        // Get platform data via repository
+        $platformData = $this->platformRepository->findById($competition->platformId());
 
         // Build nested competition data with league and platform
         $competitionData = new SeasonCompetitionData(
@@ -539,11 +548,7 @@ final class SeasonApplicationService
                 name: $league->name()->value(),
                 slug: $league->slug()->value(),
             ),
-            platform: new PlatformData(
-                id: $platformModel->id,
-                name: $platformModel->name,
-                slug: $platformModel->slug,
-            ),
+            platform: $platformData,
         );
 
         return SeasonData::fromEntity(

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRL Dashboard - Refined Slate Design</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            'bg': '#121418',
+                            'surface': '#1e2128',
+                            'surface-2': '#282d36',
+                            'surface-3': '#343b47',
+                            'surface-elevated': '#3f4756',
+                            'border': '#3a4150',
+                            'border-strong': '#4d5566',
+                            'text': '#f8fafc',
+                            'text-muted': '#94a3b8',
+                            'text-dim': '#64748b',
+                            'accent': '#f97316',
+                            'accent-hover': '#fb923c',
+                            'accent-muted': '#ea580c',
+                            'success': '#22c55e',
+                            'warning': '#f59e0b',
+                            'danger': '#ef4444',
+                            'info': '#3b82f6',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Archivo', 'sans-serif'],
+                        'mono': ['IBM Plex Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Archivo', sans-serif;
+            background: #121418;
+            color: #f8fafc;
+        }
+
+        /* Ambient gradient */
+        .ambient-bg {
+            background:
+                radial-gradient(circle at 0% 0%, rgba(249, 115, 22, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.04) 0%, transparent 40%),
+                #121418;
+        }
+
+        /* Card elevation */
+        .card-elevated {
+            background: linear-gradient(180deg, #1e2128 0%, #1a1e24 100%);
+            box-shadow:
+                0 1px 2px rgba(0, 0, 0, 0.2),
+                0 4px 16px rgba(0, 0, 0, 0.15),
+                0 0 1px rgba(255, 255, 255, 0.05) inset;
+        }
+
+        /* Highlight border top */
+        .highlight-top {
+            position: relative;
+        }
+        .highlight-top::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        /* Glass navigation */
+        .glass-nav {
+            background: rgba(30, 33, 40, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+        }
+
+        /* Smooth transitions */
+        .transition-smooth {
+            transition: all 0.2s ease-out;
+        }
+
+        /* Data row hover */
+        .data-row {
+            position: relative;
+        }
+        .data-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #f97316;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .data-row:hover::before {
+            opacity: 1;
+        }
+        .data-row:hover {
+            background: rgba(249, 115, 22, 0.03);
+        }
+
+        /* Subtle pulse */
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
+        }
+        .status-online {
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        /* Input styling */
+        input:focus, select:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12), 0 0 0 1px #f97316;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e2128;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3a4150;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f97316;
+        }
+
+        /* Badge pill */
+        .badge-pill {
+            border-radius: 20px;
+        }
+
+        /* Shine effect on buttons */
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0) 40%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(45deg);
+            transition: transform 0.5s ease;
+        }
+        .btn-shine:hover::after {
+            transform: rotate(45deg) translateY(-100%);
+        }
+
+        /* Avatar ring */
+        .avatar-ring {
+            box-shadow: 0 0 0 2px #282d36, 0 0 0 3px #3a4150;
+        }
+
+        /* Stat card gradient border */
+        .stat-card {
+            position: relative;
+            background: #1e2128;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), transparent 50%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+    </style>
+</head>
+<body class="min-h-screen ambient-bg">
+    <!-- Top Navigation Bar -->
+    <header class="h-16 glass-nav border-b border-slate-border/50 flex items-center justify-between px-6 sticky top-0 z-50 highlight-top">
+        <div class="flex items-center gap-8">
+            <!-- Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-slate-accent rounded-xl flex items-center justify-center shadow-lg shadow-slate-accent/25">
+                    <span class="font-mono text-[11px] font-bold text-white">VRL</span>
+                </div>
+                <div class="hidden sm:block">
+                    <span class="font-display text-sm font-bold tracking-wide text-slate-text">VIRTUAL RACING</span>
+                    <span class="font-display text-sm font-medium tracking-wide text-slate-text-muted ml-1">LEAGUES</span>
+                </div>
+            </div>
+
+            <!-- Nav Links -->
+            <nav class="flex items-center gap-1">
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider bg-slate-accent/15 text-slate-accent rounded-xl border border-slate-accent/20">
+                    <i class="ph-fill ph-flag-checkered text-sm"></i>
+                    Leagues
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-slate-text-muted hover:text-slate-text hover:bg-slate-surface-2/50 rounded-xl transition-smooth">
+                    <i class="ph ph-calendar-blank text-sm"></i>
+                    Schedule
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-slate-text-muted hover:text-slate-text hover:bg-slate-surface-2/50 rounded-xl transition-smooth">
+                    <i class="ph ph-users-three text-sm"></i>
+                    Drivers
+                </a>
+            </nav>
+        </div>
+
+        <div class="flex items-center gap-5">
+            <!-- Status indicator -->
+            <div class="flex items-center gap-2.5 px-3.5 py-2 bg-slate-surface-2/60 rounded-full">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-success status-online"></span>
+                <span class="text-[11px] font-medium text-slate-text-muted">System Online</span>
+            </div>
+
+            <!-- User -->
+            <button class="flex items-center gap-3 px-2 py-1 hover:bg-slate-surface-2/50 rounded-xl transition-smooth">
+                <div class="w-9 h-9 bg-gradient-to-br from-slate-surface-3 to-slate-surface-2 rounded-xl flex items-center justify-center avatar-ring">
+                    <i class="ph ph-user text-base text-slate-text-muted"></i>
+                </div>
+                <i class="ph ph-caret-down text-xs text-slate-text-dim"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="min-h-[calc(100vh-64px)]">
+        <div class="max-w-6xl mx-auto px-6 py-8">
+            <!-- Page Header -->
+            <div class="flex items-start justify-between mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.12em] text-slate-accent bg-slate-accent/10 rounded-md">Dashboard</span>
+                        <i class="ph ph-caret-right text-xs text-slate-text-dim"></i>
+                        <span class="text-[11px] font-mono uppercase tracking-wider text-slate-text-muted">Leagues</span>
+                    </div>
+                    <h1 class="font-display text-3xl font-black uppercase tracking-tight text-slate-text mb-2">
+                        League Management
+                    </h1>
+                    <p class="text-sm text-slate-text-muted">Configure and manage your racing leagues</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="flex gap-3">
+                    <div class="stat-card px-5 py-4 rounded-xl text-center min-w-[80px]">
+                        <div class="font-display text-2xl font-black text-slate-text">03</div>
+                        <div class="text-[9px] font-mono uppercase tracking-wider text-slate-text-dim mt-1">Leagues</div>
+                    </div>
+                    <div class="stat-card px-5 py-4 rounded-xl text-center min-w-[80px]">
+                        <div class="font-display text-2xl font-black text-slate-text">12</div>
+                        <div class="text-[9px] font-mono uppercase tracking-wider text-slate-text-dim mt-1">Comps</div>
+                    </div>
+                    <div class="stat-card px-5 py-4 rounded-xl text-center min-w-[80px]">
+                        <div class="font-display text-2xl font-black text-slate-accent">156</div>
+                        <div class="text-[9px] font-mono uppercase tracking-wider text-slate-text-dim mt-1">Drivers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tier Warning -->
+            <div class="flex items-center gap-5 px-5 py-4 mb-8 bg-slate-warning/5 border border-slate-warning/15 rounded-2xl">
+                <div class="w-11 h-11 bg-slate-warning/10 rounded-xl flex items-center justify-center">
+                    <i class="ph-fill ph-warning-circle text-slate-warning text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-warning mb-1">Free Tier Limit Reached</div>
+                    <div class="text-sm text-slate-text-muted">You've used all 3 available leagues. Upgrade your plan to create more.</div>
+                </div>
+                <button class="px-6 py-3 bg-slate-warning text-slate-bg font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-amber-400 transition-smooth btn-shine">
+                    Upgrade Plan
+                </button>
+            </div>
+
+            <!-- Controls Bar -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <!-- Filter Tabs -->
+                    <div class="flex bg-slate-surface/80 rounded-xl p-1.5 border border-slate-border/50">
+                        <button class="px-5 py-2 text-[11px] font-bold uppercase tracking-wider bg-slate-accent text-white rounded-lg shadow-sm btn-shine">All</button>
+                        <button class="px-5 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-text-muted hover:text-slate-text transition-smooth">Public</button>
+                        <button class="px-5 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-text-muted hover:text-slate-text transition-smooth">Private</button>
+                        <button class="px-5 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-text-muted hover:text-slate-text transition-smooth">Archived</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <!-- Search -->
+                    <div class="relative">
+                        <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-text-dim"></i>
+                        <input
+                            type="text"
+                            placeholder="Search leagues..."
+                            class="w-64 pl-11 pr-4 py-3 bg-slate-surface border border-slate-border/50 rounded-xl text-sm text-slate-text placeholder:text-slate-text-dim transition-smooth"
+                        />
+                    </div>
+
+                    <!-- Create Button -->
+                    <button class="flex items-center gap-2.5 px-6 py-3 bg-slate-accent text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-slate-accent-hover transition-smooth shadow-lg shadow-slate-accent/20 btn-shine">
+                        <i class="ph-bold ph-plus text-sm"></i>
+                        New League
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="card-elevated rounded-2xl border border-slate-border/30 overflow-hidden">
+                <!-- Table Header -->
+                <div class="grid grid-cols-[55px_2fr_110px_150px_85px_85px_130px] gap-0 bg-slate-surface-2/50 border-b border-slate-border/30">
+                    <div class="px-4 py-4 text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-text-dim">#</div>
+                    <div class="px-4 py-4 text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-text-dim">League</div>
+                    <div class="px-4 py-4 text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-text-dim">Status</div>
+                    <div class="px-4 py-4 text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-text-dim">Platforms</div>
+                    <div class="px-4 py-4 text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-text-dim text-center">Comps</div>
+                    <div class="px-4 py-4 text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-text-dim text-center">Drivers</div>
+                    <div class="px-4 py-4 text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-text-dim">Actions</div>
+                </div>
+
+                <!-- Row 1 -->
+                <div class="grid grid-cols-[55px_2fr_110px_150px_85px_85px_130px] gap-0 border-b border-slate-border/20 data-row transition-smooth">
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="font-display text-base font-black text-slate-border-strong">01</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-slate-surface-3 to-slate-surface-2 rounded-xl border border-slate-border/50 flex items-center justify-center font-display text-sm font-bold text-slate-text">
+                            SRL
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-display font-bold text-slate-text truncate">Simracing League Pro</div>
+                            <div class="text-xs text-slate-text-dim truncate mt-1">Where champions are made</div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-slate-info/10 text-slate-info rounded-full badge-pill">Public</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center">
+                        <div class="flex gap-1.5">
+                            <span class="px-2 py-1 text-[9px] font-medium bg-slate-surface-3/60 text-slate-text-muted rounded">iRacing</span>
+                            <span class="px-2 py-1 text-[9px] font-medium bg-slate-surface-3/60 text-slate-text-muted rounded">ACC</span>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-slate-text">4</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-slate-accent">52</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-2">
+                        <button class="p-2.5 bg-slate-surface-2 rounded-xl border border-slate-border/40 hover:border-slate-accent hover:text-slate-accent transition-smooth">
+                            <i class="ph ph-pencil-simple text-sm"></i>
+                        </button>
+                        <button class="p-2.5 bg-slate-accent rounded-xl text-white hover:bg-slate-accent-hover transition-smooth shadow-md shadow-slate-accent/20">
+                            <i class="ph ph-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="grid grid-cols-[55px_2fr_110px_150px_85px_85px_130px] gap-0 border-b border-slate-border/20 data-row transition-smooth">
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="font-display text-base font-black text-slate-border-strong">02</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-slate-surface-3 to-slate-surface-2 rounded-xl border border-slate-border/50 flex items-center justify-center font-display text-sm font-bold text-slate-text">
+                            GT
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-display font-bold text-slate-text truncate">GT Masters Cup</div>
+                            <div class="text-xs text-slate-text-dim truncate mt-1">Elite GT racing series</div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-pink-500/10 text-pink-400 rounded-full badge-pill">Private</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center">
+                        <div class="flex gap-1.5">
+                            <span class="px-2 py-1 text-[9px] font-medium bg-slate-surface-3/60 text-slate-text-muted rounded">ACC</span>
+                            <span class="px-2 py-1 text-[9px] font-medium bg-slate-surface-3/60 text-slate-text-muted rounded">rFactor2</span>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-slate-text">6</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-slate-accent">78</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-2">
+                        <button class="p-2.5 bg-slate-surface-2 rounded-xl border border-slate-border/40 hover:border-slate-accent hover:text-slate-accent transition-smooth">
+                            <i class="ph ph-pencil-simple text-sm"></i>
+                        </button>
+                        <button class="p-2.5 bg-slate-accent rounded-xl text-white hover:bg-slate-accent-hover transition-smooth shadow-md shadow-slate-accent/20">
+                            <i class="ph ph-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 3 -->
+                <div class="grid grid-cols-[55px_2fr_110px_150px_85px_85px_130px] gap-0 data-row transition-smooth">
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="font-display text-base font-black text-slate-border-strong">03</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-slate-surface-3 to-slate-surface-2 rounded-xl border border-slate-border/50 flex items-center justify-center font-display text-sm font-bold text-slate-text">
+                            F1
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-display font-bold text-slate-text truncate">Formula One Esports</div>
+                            <div class="text-xs text-slate-text-dim truncate mt-1">Official F1 sim racing</div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-slate-info/10 text-slate-info rounded-full badge-pill">Public</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center">
+                        <div class="flex gap-1.5">
+                            <span class="px-2 py-1 text-[9px] font-medium bg-slate-surface-3/60 text-slate-text-muted rounded">F1 24</span>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-slate-text">2</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-slate-accent">26</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-2">
+                        <button class="p-2.5 bg-slate-surface-2 rounded-xl border border-slate-border/40 hover:border-slate-accent hover:text-slate-accent transition-smooth">
+                            <i class="ph ph-pencil-simple text-sm"></i>
+                        </button>
+                        <button class="p-2.5 bg-slate-accent rounded-xl text-white hover:bg-slate-accent-hover transition-smooth shadow-md shadow-slate-accent/20">
+                            <i class="ph ph-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Info -->
+            <div class="flex items-center justify-between mt-6">
+                <div class="text-[11px] font-mono text-slate-text-dim">
+                    Showing <span class="text-slate-text-muted font-medium">3</span> of <span class="text-slate-text-muted font-medium">3</span> leagues
+                </div>
+                <div class="flex items-center gap-3 text-[11px] font-mono text-slate-text-dim">
+                    <i class="ph ph-clock text-sm"></i>
+                    <span>Last updated</span>
+                    <span class="text-slate-accent font-medium">2 min ago</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Design Notes -->
+    <div class="max-w-6xl mx-auto px-6 py-8 mt-8 border-t border-slate-border/30">
+        <div class="text-xs font-mono text-slate-text-dim space-y-2">
+            <p class="text-slate-accent font-semibold uppercase tracking-wider">Design 3: Refined Slate</p>
+            <p><strong>Aesthetic:</strong> A more sophisticated, bluish-slate dark theme with significantly lighter elements. Less raw industrial, more polished tech.</p>
+            <p><strong>Changes from Original:</strong></p>
+            <ul class="list-disc list-inside ml-2 space-y-1">
+                <li>Slate-blue undertones instead of pure gray (#121418, #1e2128 vs #0a0a0a, #141414)</li>
+                <li>Much lighter surface colors - creating more visible contrast</li>
+                <li>Generous border radius throughout (xl and 2xl)</li>
+                <li>Ambient gradient background with subtle orange/blue tones</li>
+                <li>Platform tags displayed as individual chips</li>
+                <li>Pill-style badges instead of squared</li>
+                <li>Glass-effect navigation with blur</li>
+                <li>Shine effect on primary buttons</li>
+                <li>Gradient stat cards with subtle border highlights</li>
+                <li>Row hover shows accent bar on left edge</li>
+                <li>Glow animation on online status indicator</li>
+            </ul>
+            <p><strong>Best For:</strong> Users who want a refined, premium dark interface that feels modern and polished rather than raw industrial</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -28,11 +28,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $banner_path
  * @property bool $team_championship_enabled
  * @property bool $race_divisions_enabled
+ * @property bool $race_times_required
  * @property string $status
  * @property int $created_by_user_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @method static SeasonEloquent firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  */
 final class SeasonEloquent extends Model
 {
@@ -60,6 +62,7 @@ final class SeasonEloquent extends Model
         'banner_path',
         'team_championship_enabled',
         'race_divisions_enabled',
+        'race_times_required',
         'status',
         'created_by_user_id',
     ];
@@ -72,6 +75,7 @@ final class SeasonEloquent extends Model
     protected $casts = [
         'team_championship_enabled' => 'boolean',
         'race_divisions_enabled' => 'boolean',
+        'race_times_required' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

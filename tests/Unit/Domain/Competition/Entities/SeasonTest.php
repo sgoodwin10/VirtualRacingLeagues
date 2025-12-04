@@ -258,4 +258,148 @@ final class SeasonTest extends TestCase
         $this->assertNotEmpty($events);
         $this->assertFalse($season->hasEvents());
     }
+
+    public function test_can_enable_race_times(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            raceTimesRequired: false,
+        );
+
+        $this->assertFalse($season->raceTimesRequired());
+
+        $season->enableRaceTimes();
+
+        $this->assertTrue($season->raceTimesRequired());
+        $this->assertTrue($season->hasEvents());
+    }
+
+    public function test_can_disable_race_times(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            raceTimesRequired: true,
+        );
+
+        $this->assertTrue($season->raceTimesRequired());
+
+        $season->disableRaceTimes();
+
+        $this->assertFalse($season->raceTimesRequired());
+        $this->assertTrue($season->hasEvents());
+    }
+
+    public function test_cannot_enable_race_times_on_archived_season(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            raceTimesRequired: false,
+        );
+
+        $season->setId(1);
+        $season->archive();
+
+        $this->expectException(SeasonIsArchivedException::class);
+
+        $season->enableRaceTimes();
+    }
+
+    public function test_cannot_disable_race_times_on_archived_season(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            raceTimesRequired: true,
+        );
+
+        $season->setId(1);
+        $season->archive();
+
+        $this->expectException(SeasonIsArchivedException::class);
+
+        $season->disableRaceTimes();
+    }
+
+    public function test_cannot_enable_team_championship_on_archived_season(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            teamChampionshipEnabled: false,
+        );
+
+        $season->setId(1);
+        $season->archive();
+
+        $this->expectException(SeasonIsArchivedException::class);
+
+        $season->enableTeamChampionship();
+    }
+
+    public function test_cannot_disable_team_championship_on_archived_season(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            teamChampionshipEnabled: true,
+        );
+
+        $season->setId(1);
+        $season->archive();
+
+        $this->expectException(SeasonIsArchivedException::class);
+
+        $season->disableTeamChampionship();
+    }
+
+    public function test_cannot_enable_race_divisions_on_archived_season(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            raceDivisionsEnabled: false,
+        );
+
+        $season->setId(1);
+        $season->archive();
+
+        $this->expectException(SeasonIsArchivedException::class);
+
+        $season->enableRaceDivisions();
+    }
+
+    public function test_cannot_disable_race_divisions_on_archived_season(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            raceDivisionsEnabled: true,
+        );
+
+        $season->setId(1);
+        $season->archive();
+
+        $this->expectException(SeasonIsArchivedException::class);
+
+        $season->disableRaceDivisions();
+    }
 }

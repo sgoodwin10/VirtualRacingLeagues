@@ -13,6 +13,7 @@ use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Repositories\AdminReadModelService;
@@ -21,6 +22,7 @@ use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetitionRepo
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDivisionRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDriverRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentLeagueRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentPlatformRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRaceRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRaceResultRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonDriverRepository;
@@ -55,6 +57,12 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             LeagueRepositoryInterface::class,
             EloquentLeagueRepository::class
+        );
+
+        // Bind Platform Repository
+        $this->app->bind(
+            PlatformRepositoryInterface::class,
+            EloquentPlatformRepository::class
         );
 
         // Bind Driver Repository

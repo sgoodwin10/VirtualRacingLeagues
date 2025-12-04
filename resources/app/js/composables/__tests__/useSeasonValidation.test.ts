@@ -18,6 +18,7 @@ describe('useSeasonValidation', () => {
       banner_url: null,
       race_divisions_enabled: false,
       team_championship_enabled: false,
+      race_times_required: true,
     });
   });
 

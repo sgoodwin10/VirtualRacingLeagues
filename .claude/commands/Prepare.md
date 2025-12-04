@@ -1,3 +1,3 @@
-Read #$ARGUMENTS. Understand the instructions, and ask questions if needing clarification. Research the codebase as needed to understand the files and functionality. 
+Read $ARGUMENTS. Understand the instructions, and ask questions if needing clarification. Research the codebase as needed to understand the files and functionality. Ask any questions one at a time.
 Explain what the feature is, and suggest what agents you will use to implement. Confirm before implementing.
-Use the dev-be, dev-fe-app, dev-fe-public and dev-fe-admin agents as needed.
+Use the @agent-dev-be, @agent-dev-fe-app, @agent-dev-fe-public and @agent-dev-fe-admin agents as needed.

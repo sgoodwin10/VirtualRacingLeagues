@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRL Dashboard - Soft Industrial Design</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        soft: {
+                            'bg': '#0d0d0d',
+                            'surface': '#1c1c1c',
+                            'surface-2': '#262626',
+                            'surface-3': '#333333',
+                            'surface-elevated': '#404040',
+                            'border': '#3d3d3d',
+                            'border-strong': '#525252',
+                            'text': '#f5f5f5',
+                            'text-muted': '#a3a3a3',
+                            'text-dim': '#737373',
+                            'accent': '#ff7a4d',
+                            'accent-hover': '#ff9166',
+                            'accent-soft': 'rgba(255, 122, 77, 0.15)',
+                            'success': '#4ade80',
+                            'warning': '#fbbf24',
+                            'danger': '#f87171',
+                            'info': '#60a5fa',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Archivo', 'sans-serif'],
+                        'mono': ['IBM Plex Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Archivo', sans-serif;
+            background: #0d0d0d;
+            color: #f5f5f5;
+        }
+
+        /* Subtle gradient overlay */
+        .gradient-bg {
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 122, 77, 0.08) 0%, transparent 50%),
+                #0d0d0d;
+        }
+
+        /* Soft glow on elevated surfaces */
+        .surface-glow {
+            box-shadow:
+                0 1px 3px rgba(0, 0, 0, 0.3),
+                0 4px 20px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        /* Frosted glass effect */
+        .frosted {
+            background: rgba(38, 38, 38, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Soft inner border */
+        .inner-border {
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+        }
+
+        /* Smooth transitions */
+        .transition-smooth {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Data row hover */
+        .data-row:hover {
+            background: rgba(255, 122, 77, 0.04);
+        }
+
+        /* Subtle pulse */
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .pulse-indicator {
+            animation: pulse-subtle 2.5s ease-in-out infinite;
+        }
+
+        /* Input focus states */
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ff7a4d;
+            box-shadow: 0 0 0 3px rgba(255, 122, 77, 0.15);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1c1c1c;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #525252;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff7a4d;
+        }
+
+        /* Soft corner accents */
+        .corner-accent {
+            position: relative;
+        }
+        .corner-accent::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, #ff7a4d 0%, transparent 100%);
+            border-radius: 2px 0 0 2px;
+        }
+
+        /* Badge styles */
+        .badge {
+            border-radius: 6px;
+        }
+
+        /* Button hover lift */
+        .btn-lift:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 122, 77, 0.25);
+        }
+
+        /* Card hover */
+        .card-hover:hover {
+            border-color: rgba(255, 122, 77, 0.3);
+            box-shadow: 0 0 20px rgba(255, 122, 77, 0.08);
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Top Navigation Bar -->
+    <header class="h-14 bg-soft-surface/95 border-b border-soft-border frosted flex items-center justify-between px-5 sticky top-0 z-50">
+        <div class="flex items-center gap-6">
+            <!-- Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-soft-accent to-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-soft-accent/20">
+                    <span class="font-mono text-xs font-bold text-white">VRL</span>
+                </div>
+                <span class="font-display text-sm font-semibold tracking-wide text-soft-text hidden sm:block">VIRTUAL RACING LEAGUES</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="w-px h-6 bg-soft-border"></div>
+
+            <!-- Nav Links -->
+            <nav class="flex items-center gap-1">
+                <a href="#" class="flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider bg-soft-accent-soft text-soft-accent rounded-lg">
+                    <i class="ph ph-flag-checkered text-sm"></i>
+                    Leagues
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider text-soft-text-muted hover:text-soft-text hover:bg-soft-surface-2 rounded-lg transition-smooth">
+                    <i class="ph ph-calendar text-sm"></i>
+                    Schedule
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider text-soft-text-muted hover:text-soft-text hover:bg-soft-surface-2 rounded-lg transition-smooth">
+                    <i class="ph ph-users text-sm"></i>
+                    Drivers
+                </a>
+            </nav>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Status indicator -->
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-soft-surface-2 rounded-full border border-soft-border">
+                <span class="w-2 h-2 rounded-full bg-soft-success pulse-indicator"></span>
+                <span class="text-[11px] font-medium uppercase tracking-wider text-soft-text-muted">Online</span>
+            </div>
+
+            <!-- User -->
+            <button class="flex items-center gap-2 px-2 py-1.5 hover:bg-soft-surface-2 rounded-lg transition-smooth">
+                <div class="w-8 h-8 bg-soft-surface-3 rounded-lg border border-soft-border flex items-center justify-center">
+                    <i class="ph ph-user text-sm text-soft-text-muted"></i>
+                </div>
+                <i class="ph ph-caret-down text-xs text-soft-text-dim"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="min-h-[calc(100vh-56px)]">
+        <div class="max-w-6xl mx-auto px-6 py-8">
+            <!-- Page Header -->
+            <div class="flex items-start justify-between mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-[11px] font-mono uppercase tracking-[0.15em] text-soft-accent">Dashboard / Leagues</span>
+                    </div>
+                    <h1 class="font-display text-3xl font-black uppercase tracking-tight text-soft-text">
+                        League Management
+                    </h1>
+                    <p class="text-sm text-soft-text-muted mt-2">Configure and manage your racing leagues</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="flex gap-6 bg-soft-surface rounded-xl p-4 border border-soft-border surface-glow">
+                    <div class="text-center px-2">
+                        <div class="font-display text-2xl font-black text-soft-text">03</div>
+                        <div class="text-[10px] font-mono uppercase tracking-wider text-soft-text-dim mt-1">Leagues</div>
+                    </div>
+                    <div class="w-px bg-soft-border"></div>
+                    <div class="text-center px-2">
+                        <div class="font-display text-2xl font-black text-soft-text">12</div>
+                        <div class="text-[10px] font-mono uppercase tracking-wider text-soft-text-dim mt-1">Comps</div>
+                    </div>
+                    <div class="w-px bg-soft-border"></div>
+                    <div class="text-center px-2">
+                        <div class="font-display text-2xl font-black text-soft-accent">156</div>
+                        <div class="text-[10px] font-mono uppercase tracking-wider text-soft-text-dim mt-1">Drivers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tier Warning -->
+            <div class="flex items-center gap-4 px-5 py-4 mb-8 bg-soft-warning/5 border border-soft-warning/20 rounded-xl corner-accent">
+                <div class="w-10 h-10 bg-soft-warning/15 rounded-lg flex items-center justify-center">
+                    <i class="ph ph-warning text-soft-warning text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="text-xs font-semibold uppercase tracking-wider text-soft-warning mb-0.5">Free Tier Limit</div>
+                    <div class="text-sm text-soft-text-muted">3/3 leagues used. Upgrade to create more.</div>
+                </div>
+                <button class="px-5 py-2.5 bg-soft-warning text-soft-bg font-semibold text-xs uppercase tracking-wider rounded-lg hover:bg-yellow-400 transition-smooth btn-lift">
+                    Upgrade
+                </button>
+            </div>
+
+            <!-- Controls Bar -->
+            <div class="flex items-center justify-between mb-6 pb-6 border-b border-soft-border">
+                <div class="flex items-center gap-3">
+                    <!-- Filter Tabs -->
+                    <div class="flex bg-soft-surface rounded-lg p-1 border border-soft-border">
+                        <button class="px-4 py-2 text-xs font-semibold uppercase tracking-wider bg-soft-accent text-white rounded-md shadow-sm">All</button>
+                        <button class="px-4 py-2 text-xs font-medium uppercase tracking-wider text-soft-text-muted hover:text-soft-text transition-smooth">Public</button>
+                        <button class="px-4 py-2 text-xs font-medium uppercase tracking-wider text-soft-text-muted hover:text-soft-text transition-smooth">Private</button>
+                        <button class="px-4 py-2 text-xs font-medium uppercase tracking-wider text-soft-text-muted hover:text-soft-text transition-smooth">Archived</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <!-- Search -->
+                    <div class="relative">
+                        <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-soft-text-dim text-sm"></i>
+                        <input
+                            type="text"
+                            placeholder="Search leagues..."
+                            class="w-60 pl-10 pr-4 py-2.5 bg-soft-surface border border-soft-border rounded-lg text-sm text-soft-text placeholder:text-soft-text-dim transition-smooth"
+                        />
+                    </div>
+
+                    <!-- Create Button -->
+                    <button class="flex items-center gap-2 px-5 py-2.5 bg-soft-accent text-white font-semibold text-xs uppercase tracking-wider rounded-lg hover:bg-soft-accent-hover transition-smooth btn-lift">
+                        <i class="ph ph-plus text-sm"></i>
+                        New League
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="bg-soft-surface rounded-xl border border-soft-border surface-glow overflow-hidden card-hover transition-smooth">
+                <!-- Table Header -->
+                <div class="grid grid-cols-[50px_2fr_100px_140px_80px_80px_120px] gap-0 bg-soft-surface-2 border-b border-soft-border">
+                    <div class="px-4 py-4 text-[11px] font-mono uppercase tracking-wider text-soft-text-dim">#</div>
+                    <div class="px-4 py-4 text-[11px] font-mono uppercase tracking-wider text-soft-text-dim">League</div>
+                    <div class="px-4 py-4 text-[11px] font-mono uppercase tracking-wider text-soft-text-dim">Status</div>
+                    <div class="px-4 py-4 text-[11px] font-mono uppercase tracking-wider text-soft-text-dim">Platforms</div>
+                    <div class="px-4 py-4 text-[11px] font-mono uppercase tracking-wider text-soft-text-dim text-center">Comps</div>
+                    <div class="px-4 py-4 text-[11px] font-mono uppercase tracking-wider text-soft-text-dim text-center">Drivers</div>
+                    <div class="px-4 py-4 text-[11px] font-mono uppercase tracking-wider text-soft-text-dim">Actions</div>
+                </div>
+
+                <!-- Row 1 -->
+                <div class="grid grid-cols-[50px_2fr_100px_140px_80px_80px_120px] gap-0 border-b border-soft-border/50 data-row transition-smooth">
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="font-display text-lg font-black text-soft-border-strong">01</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-4">
+                        <div class="w-11 h-11 bg-soft-surface-3 rounded-lg border border-soft-border flex items-center justify-center font-display text-sm font-bold text-soft-text inner-border">
+                            SRL
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-display font-bold text-soft-text truncate">Simracing League Pro</div>
+                            <div class="text-xs text-soft-text-dim truncate mt-0.5">Where champions are made</div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-soft-info/10 text-soft-info rounded-md badge">Public</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center text-sm text-soft-text-muted">iRacing, ACC</div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-soft-text">4</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-soft-accent">52</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-2">
+                        <button class="p-2.5 bg-soft-surface-2 rounded-lg border border-soft-border hover:border-soft-accent hover:text-soft-accent transition-smooth">
+                            <i class="ph ph-pencil text-sm"></i>
+                        </button>
+                        <button class="p-2.5 bg-soft-accent rounded-lg text-white hover:bg-soft-accent-hover transition-smooth">
+                            <i class="ph ph-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="grid grid-cols-[50px_2fr_100px_140px_80px_80px_120px] gap-0 border-b border-soft-border/50 data-row transition-smooth">
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="font-display text-lg font-black text-soft-border-strong">02</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-4">
+                        <div class="w-11 h-11 bg-soft-surface-3 rounded-lg border border-soft-border flex items-center justify-center font-display text-sm font-bold text-soft-text inner-border">
+                            GT
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-display font-bold text-soft-text truncate">GT Masters Cup</div>
+                            <div class="text-xs text-soft-text-dim truncate mt-0.5">Elite GT racing series</div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-pink-500/10 text-pink-400 rounded-md badge">Private</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center text-sm text-soft-text-muted">ACC, rFactor2</div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-soft-text">6</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-soft-accent">78</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-2">
+                        <button class="p-2.5 bg-soft-surface-2 rounded-lg border border-soft-border hover:border-soft-accent hover:text-soft-accent transition-smooth">
+                            <i class="ph ph-pencil text-sm"></i>
+                        </button>
+                        <button class="p-2.5 bg-soft-accent rounded-lg text-white hover:bg-soft-accent-hover transition-smooth">
+                            <i class="ph ph-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 3 -->
+                <div class="grid grid-cols-[50px_2fr_100px_140px_80px_80px_120px] gap-0 data-row transition-smooth">
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="font-display text-lg font-black text-soft-border-strong">03</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-4">
+                        <div class="w-11 h-11 bg-soft-surface-3 rounded-lg border border-soft-border flex items-center justify-center font-display text-sm font-bold text-soft-text inner-border">
+                            F1
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-display font-bold text-soft-text truncate">Formula One Esports</div>
+                            <div class="text-xs text-soft-text-dim truncate mt-0.5">Official F1 sim racing</div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 flex items-center">
+                        <span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-soft-info/10 text-soft-info rounded-md badge">Public</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center text-sm text-soft-text-muted">F1 24</div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-soft-text">2</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-soft-accent">26</span>
+                    </div>
+                    <div class="px-4 py-5 flex items-center gap-2">
+                        <button class="p-2.5 bg-soft-surface-2 rounded-lg border border-soft-border hover:border-soft-accent hover:text-soft-accent transition-smooth">
+                            <i class="ph ph-pencil text-sm"></i>
+                        </button>
+                        <button class="p-2.5 bg-soft-accent rounded-lg text-white hover:bg-soft-accent-hover transition-smooth">
+                            <i class="ph ph-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Info -->
+            <div class="flex items-center justify-between mt-5 pt-5 border-t border-soft-border/50">
+                <div class="text-[11px] font-mono uppercase tracking-wider text-soft-text-dim">
+                    Showing 3 of 3 leagues
+                </div>
+                <div class="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-soft-text-dim">
+                    <span>Last updated</span>
+                    <span class="text-soft-accent font-medium">2 min ago</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Design Notes -->
+    <div class="max-w-6xl mx-auto px-6 py-8 mt-8 border-t border-soft-border">
+        <div class="text-xs font-mono text-soft-text-dim space-y-2">
+            <p class="text-soft-accent font-semibold uppercase tracking-wider">Design 2: Soft Industrial</p>
+            <p><strong>Aesthetic:</strong> Retains the dark industrial base but with softer, lighter surface colors and rounded corners. Less harsh contrast.</p>
+            <p><strong>Changes from Original:</strong></p>
+            <ul class="list-disc list-inside ml-2 space-y-1">
+                <li>Lighter surface colors (#1c1c1c, #262626, #333333 vs #141414, #1a1a1a, #222222)</li>
+                <li>Rounded corners throughout (lg radius) vs sharp edges</li>
+                <li>Softer orange accent (#ff7a4d vs #ff6b35)</li>
+                <li>Removed corner brackets, replaced with subtle gradient accent bars</li>
+                <li>Added subtle surface glow and inner borders for depth</li>
+                <li>Frosted glass navigation header</li>
+                <li>Subtle gradient background overlay</li>
+                <li>Softer text colors for better readability</li>
+            </ul>
+            <p><strong>Best For:</strong> Users who like dark themes but prefer a less stark, more approachable feel</p>
+        </div>
+    </div>
+</body>
+</html>

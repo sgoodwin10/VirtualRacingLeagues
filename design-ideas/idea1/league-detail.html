@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GT Masters Cup - League Detail - VRL Design System</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vrl: {
+                            'header': '#0d0d0d',
+                            'header-secondary': '#1a1a1a',
+                            'accent-yellow': '#fbbf24',
+                            'accent-amber': '#d97706',
+                            'accent-orange': '#f97316',
+                            'bg-white': '#ffffff',
+                            'bg-off-white': '#fafafa',
+                            'bg-light': '#f5f5f5',
+                            'text-black': '#0a0a0a',
+                            'text-dark': '#1a1a1a',
+                            'text-medium': '#4a4a4a',
+                            'text-light': '#8a8a8a',
+                            'text-placeholder': '#a3a3a3',
+                            'accent-blue': '#1d3557',
+                            'accent-red': '#dc2626',
+                            'success': '#16a34a',
+                            'warning': '#d97706',
+                            'info': '#0284c7',
+                            'border-light': '#e5e5e5',
+                            'border-medium': '#d4d4d4',
+                            'border-dark': '#333333',
+                        }
+                    },
+                    fontFamily: {
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Fira Code', 'monospace'],
+                        'serif': ['Fraunces', 'Playfair Display', 'Georgia', 'serif'],
+                        'sans': ['DM Sans', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    },
+                    spacing: {
+                        '2.75': '11px',
+                        '4.5': '18px',
+                        '5.5': '22px',
+                    },
+                    keyframes: {
+                        'fade-in-up': {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        'slide-in-right': {
+                            '0%': { opacity: '0', transform: 'translateX(30px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' }
+                        },
+                        'scale-in': {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' }
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { boxShadow: '0 0 0 0 rgba(251, 191, 36, 0.4)' },
+                            '50%': { boxShadow: '0 0 20px 4px rgba(251, 191, 36, 0.2)' }
+                        },
+                        'expand': {
+                            '0%': { opacity: '0', maxHeight: '0', paddingTop: '0', paddingBottom: '0' },
+                            '100%': { opacity: '1', maxHeight: '500px', paddingTop: '16px', paddingBottom: '16px' }
+                        },
+                        'modal-fade': {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        'modal-slide': {
+                            '0%': { opacity: '0', transform: 'translateY(-20px) scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+                        'slide-in-right': 'slide-in-right 0.5s ease-out forwards',
+                        'scale-in': 'scale-in 0.4s ease-out forwards',
+                        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+                        'expand': 'expand 0.3s ease-out forwards',
+                        'modal-fade': 'modal-fade 0.2s ease-out forwards',
+                        'modal-slide': 'modal-slide 0.3s ease-out forwards'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for the page */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fafafa;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d4d4d4;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8a8a8a;
+        }
+
+        /* Animation delays for staggered entrance */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+        .delay-600 { animation-delay: 600ms; }
+
+        /* Subtle noise texture overlay */
+        .noise-texture::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        /* Hero gradient mask */
+        .hero-gradient {
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                rgba(10, 10, 10, 0.4) 60%,
+                rgba(10, 10, 10, 0.85) 100%
+            );
+        }
+
+        /* Tab underline animation */
+        .tab-active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #fbbf24;
+            transform: scaleX(1);
+            transition: transform 0.3s ease;
+        }
+        .tab-inactive::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #fbbf24;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        .tab-inactive:hover::after {
+            transform: scaleX(1);
+        }
+
+        /* Competition card hover effect */
+        .competition-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .competition-card:hover {
+            box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.12);
+        }
+        .competition-card .competition-icon {
+            transition: transform 0.3s ease;
+        }
+        .competition-card:hover .competition-icon {
+            transform: scale(1.05);
+        }
+
+        /* Season row hover */
+        .season-row {
+            transition: all 0.2s ease;
+        }
+        .season-row:hover {
+            background-color: #fafafa;
+        }
+
+        /* Expandable seasons panel */
+        .seasons-panel {
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+        .seasons-panel.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        .seasons-panel.expanded {
+            max-height: 800px;
+            opacity: 1;
+        }
+
+        /* Rotate chevron */
+        .chevron-rotate {
+            transition: transform 0.3s ease;
+        }
+        .expanded .chevron-rotate {
+            transform: rotate(180deg);
+        }
+
+        /* Action menu dropdown */
+        .action-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
+        }
+        .action-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        /* Season status dot pulse for active */
+        .status-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Modal backdrop blur */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-vrl-bg-off-white min-h-screen">
+    <!-- Site Header -->
+    <header class="bg-vrl-header border-b-[3px] border-vrl-accent-yellow sticky top-0 z-[100]">
+        <div class="max-w-[1280px] mx-auto px-12 flex items-center justify-between h-16">
+            <!-- Brand -->
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-vrl-accent-yellow flex items-center justify-center font-mono text-sm font-bold text-vrl-header">
+                    VRL
+                </div>
+                <span class="font-mono text-base font-semibold text-neutral-200 tracking-wide">
+                    Virtual Racing Leagues
+                </span>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex items-center gap-2">
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-mono text-xs font-medium tracking-wide uppercase no-underline bg-transparent border border-transparent cursor-pointer transition-all text-vrl-accent-yellow bg-vrl-header-secondary border-vrl-accent-yellow">
+                    <i class="ph ph-house text-base"></i>
+                    Leagues
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-mono text-xs font-medium tracking-wide uppercase no-underline bg-transparent border border-transparent cursor-pointer transition-all text-neutral-400 hover:text-neutral-200 hover:bg-vrl-header-secondary hover:border-vrl-border-dark">
+                    <i class="ph ph-question text-base"></i>
+                    Help
+                </a>
+                <div class="w-px h-6 bg-vrl-border-dark mx-2"></div>
+                <button class="flex items-center gap-2 px-4 py-2.5 font-mono text-xs font-medium tracking-wide uppercase bg-transparent border border-transparent text-neutral-400 cursor-pointer transition-all hover:text-neutral-200 hover:bg-vrl-header-secondary hover:border-vrl-border-dark">
+                    <i class="ph ph-user text-base"></i>
+                    Profile
+                </button>
+                <button class="flex items-center gap-2 px-4 py-2.5 font-mono text-xs font-medium tracking-wide uppercase bg-transparent border border-transparent text-neutral-400 cursor-pointer transition-all hover:text-neutral-200 hover:bg-vrl-header-secondary hover:border-vrl-border-dark">
+                    <i class="ph ph-sign-out text-base"></i>
+                    Logout
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="max-w-[1280px] mx-auto px-12 py-8">
+
+        <!-- Breadcrumbs -->
+        <nav class="flex items-center gap-2 mb-6 opacity-0 animate-fade-in-up" aria-label="Breadcrumb">
+            <a href="#" class="font-mono text-xs text-vrl-text-light hover:text-vrl-accent-amber transition-colors flex items-center gap-1.5">
+                <i class="ph ph-house text-sm"></i>
+                Leagues
+            </a>
+            <i class="ph ph-caret-right text-xs text-vrl-border-medium"></i>
+            <span class="font-mono text-xs text-vrl-text-dark font-medium">GT Masters Cup</span>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="relative mb-10 overflow-hidden bg-vrl-header rounded-sm opacity-0 animate-scale-in delay-100">
+            <!-- Hero Background Image -->
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1400&h=400&fit=crop&q=80');">
+                <div class="hero-gradient absolute inset-0"></div>
+            </div>
+
+            <!-- Decorative Grid Overlay -->
+            <div class="absolute inset-0 opacity-[0.03]" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.5) 39px, rgba(255,255,255,0.5) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.5) 39px, rgba(255,255,255,0.5) 40px);"></div>
+
+            <!-- Hero Content -->
+            <div class="relative z-10 px-10 py-12">
+                <div class="flex items-end justify-between gap-8">
+                    <!-- Left: League Info -->
+                    <div class="flex items-end gap-8">
+                        <!-- League Logo -->
+                        <div class="relative flex-shrink-0">
+                            <div class="w-32 h-32 bg-vrl-bg-white border-4 border-vrl-accent-yellow flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                                <span class="font-serif text-5xl font-black text-vrl-header tracking-tight">GT</span>
+                            </div>
+                            <!-- Live indicator -->
+                            <div class="absolute -top-2 -right-2 px-2 py-1 bg-vrl-success rounded-sm flex items-center gap-1.5 animate-pulse-glow">
+                                <span class="w-2 h-2 bg-white rounded-full"></span>
+                                <span class="font-mono text-[9px] font-bold uppercase tracking-wider text-white">Live</span>
+                            </div>
+                        </div>
+
+                        <!-- League Title & Meta -->
+                        <div class="pb-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="inline-flex items-center px-3 py-1 font-mono text-[10px] font-semibold tracking-wide uppercase bg-pink-500/20 text-pink-300 border border-pink-500/30 rounded-sm">
+                                    Private
+                                </span>
+                                <span class="font-mono text-[11px] text-neutral-400">
+                                    Created Dec 2024
+                                </span>
+                            </div>
+                            <h1 class="font-serif text-[52px] font-black text-white leading-none tracking-tight mb-3">
+                                GT Masters Cup
+                            </h1>
+                            <p class="font-sans text-lg text-neutral-300 max-w-xl">
+                                Elite GT racing series for the most dedicated sim racers.
+                                Where precision meets passion.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Quick Actions -->
+                    <div class="flex flex-col items-end gap-3 pb-1">
+                        <button class="inline-flex items-center gap-2 px-6 py-3 bg-vrl-accent-yellow text-vrl-header font-mono text-xs font-bold tracking-wide uppercase cursor-pointer transition-all hover:bg-white rounded-sm shadow-lg">
+                            <i class="ph ph-pencil-simple text-base"></i>
+                            Edit League
+                        </button>
+                        <div class="flex gap-2">
+                            <button class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 text-white font-mono text-xs font-medium tracking-wide uppercase cursor-pointer transition-all hover:bg-white/20 border border-white/20 rounded-sm backdrop-blur-sm">
+                                <i class="ph ph-share-network text-base"></i>
+                                Share
+                            </button>
+                            <button class="inline-flex items-center gap-2 px-4 py-2.5 bg-red-500/20 text-red-300 font-mono text-xs font-medium tracking-wide uppercase cursor-pointer transition-all hover:bg-red-500/30 border border-red-500/30 rounded-sm backdrop-blur-sm">
+                                <i class="ph ph-trash text-base"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Bar -->
+        <section class="grid grid-cols-4 gap-0 mb-10 bg-vrl-bg-white border border-vrl-border-light shadow-sm opacity-0 animate-fade-in-up delay-200">
+            <!-- Stat: Competitions -->
+            <div class="px-6 py-5 border-r border-vrl-border-light text-center group hover:bg-vrl-bg-off-white transition-colors">
+                <div class="flex items-center justify-center gap-3">
+                    <div class="w-10 h-10 bg-vrl-bg-light border border-vrl-border-light flex items-center justify-center group-hover:bg-vrl-accent-yellow group-hover:border-vrl-accent-yellow transition-colors">
+                        <i class="ph ph-flag-checkered text-xl text-vrl-text-medium group-hover:text-vrl-header transition-colors"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-serif text-3xl font-bold text-vrl-text-black leading-none">6</div>
+                        <div class="font-mono text-[10px] tracking-wide uppercase text-vrl-text-light mt-0.5">Competitions</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat: Active Seasons -->
+            <div class="px-6 py-5 border-r border-vrl-border-light text-center group hover:bg-vrl-bg-off-white transition-colors">
+                <div class="flex items-center justify-center gap-3">
+                    <div class="w-10 h-10 bg-vrl-bg-light border border-vrl-border-light flex items-center justify-center group-hover:bg-vrl-accent-yellow group-hover:border-vrl-accent-yellow transition-colors">
+                        <i class="ph ph-calendar-dots text-xl text-vrl-text-medium group-hover:text-vrl-header transition-colors"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-serif text-3xl font-bold text-vrl-text-black leading-none">4</div>
+                        <div class="font-mono text-[10px] tracking-wide uppercase text-vrl-text-light mt-0.5">Active Seasons</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat: Drivers -->
+            <div class="px-6 py-5 border-r border-vrl-border-light text-center group hover:bg-vrl-bg-off-white transition-colors">
+                <div class="flex items-center justify-center gap-3">
+                    <div class="w-10 h-10 bg-vrl-bg-light border border-vrl-border-light flex items-center justify-center group-hover:bg-vrl-accent-yellow group-hover:border-vrl-accent-yellow transition-colors">
+                        <i class="ph ph-users text-xl text-vrl-text-medium group-hover:text-vrl-header transition-colors"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-serif text-3xl font-bold text-vrl-text-black leading-none">78</div>
+                        <div class="font-mono text-[10px] tracking-wide uppercase text-vrl-text-light mt-0.5">Drivers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat: Platform -->
+            <div class="px-6 py-5 text-center group hover:bg-vrl-bg-off-white transition-colors">
+                <div class="flex items-center justify-center gap-3">
+                    <div class="w-10 h-10 bg-vrl-bg-light border border-vrl-border-light flex items-center justify-center group-hover:bg-vrl-accent-yellow group-hover:border-vrl-accent-yellow transition-colors">
+                        <i class="ph ph-game-controller text-xl text-vrl-text-medium group-hover:text-vrl-header transition-colors"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-sans text-base font-semibold text-vrl-text-black leading-tight">ACC</div>
+                        <div class="font-mono text-[10px] tracking-wide uppercase text-vrl-text-light mt-0.5">Platform</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-12 gap-8">
+
+            <!-- Left Column: Main Content -->
+            <div class="col-span-8 space-y-8">
+
+                <!-- Tabs Navigation -->
+                <div class="flex gap-0 bg-vrl-bg-white border border-vrl-border-light overflow-hidden opacity-0 animate-fade-in-up delay-300">
+                    <button class="relative px-6 py-4 font-mono text-xs font-semibold tracking-wide uppercase bg-vrl-text-black text-white transition-all tab-active">
+                        <i class="ph ph-flag-checkered mr-2"></i>
+                        Competitions
+                    </button>
+                    <button class="relative px-6 py-4 font-mono text-xs font-medium tracking-wide uppercase text-vrl-text-medium hover:bg-vrl-bg-light hover:text-vrl-text-dark transition-all border-l border-vrl-border-light tab-inactive">
+                        <i class="ph ph-users mr-2"></i>
+                        Drivers
+                        <span class="ml-2 px-1.5 py-0.5 bg-vrl-bg-light text-vrl-text-light text-[10px] rounded-sm">78</span>
+                    </button>
+                    <button class="relative px-6 py-4 font-mono text-xs font-medium tracking-wide uppercase text-vrl-text-medium hover:bg-vrl-bg-light hover:text-vrl-text-dark transition-all border-l border-vrl-border-light tab-inactive">
+                        <i class="ph ph-gear mr-2"></i>
+                        Settings
+                    </button>
+                </div>
+
+                <!-- Competitions Panel -->
+                <div class="bg-vrl-bg-white border border-vrl-border-light opacity-0 animate-fade-in-up delay-400">
+                    <!-- Panel Header -->
+                    <div class="flex items-center justify-between px-6 py-5 border-b border-vrl-border-light">
+                        <div>
+                            <h2 class="font-serif text-2xl font-bold text-vrl-text-black">Competitions</h2>
+                            <p class="font-sans text-sm text-vrl-text-medium mt-1">6 competitions with 13 total seasons</p>
+                        </div>
+                        <button class="inline-flex items-center gap-2 px-5 py-2.75 bg-vrl-text-black text-white border-0 rounded-sm font-mono text-xs font-semibold tracking-wide uppercase cursor-pointer transition-all hover:bg-vrl-accent-amber">
+                            <i class="ph ph-plus text-sm"></i>
+                            New Competition
+                        </button>
+                    </div>
+
+                    <!-- Competition List -->
+                    <div class="divide-y divide-vrl-border-light">
+
+                        <!-- Competition 1: Formula 1 (Expanded with Seasons) -->
+                        <div class="competition-card expanded" data-competition="f1">
+                            <!-- Competition Header (Clickable to Expand/Collapse) -->
+                            <div class="flex items-center gap-4 px-6 py-5 cursor-pointer hover:bg-vrl-bg-off-white transition-colors" onclick="toggleCompetition('f1')">
+                                <!-- Competition Icon -->
+                                <div class="competition-icon w-14 h-14 bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center flex-shrink-0 shadow-lg rounded-sm">
+                                    <span class="font-serif text-2xl font-black text-white">F1</span>
+                                </div>
+
+                                <!-- Competition Info -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h3 class="font-serif text-lg font-semibold text-vrl-text-black">
+                                            Formula 1
+                                        </h3>
+                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-50 text-green-700 font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm">
+                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full status-pulse"></span>
+                                            1 Active
+                                        </span>
+                                    </div>
+                                    <p class="font-sans text-sm text-vrl-text-medium">
+                                        Premier open-wheel racing championship
+                                    </p>
+                                </div>
+
+                                <!-- Season Count & Actions -->
+                                <div class="flex items-center gap-4">
+                                    <div class="text-right">
+                                        <div class="font-serif text-xl font-bold text-vrl-text-black">3</div>
+                                        <div class="font-mono text-[10px] text-vrl-text-light uppercase">Seasons</div>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="flex items-center gap-2">
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Competition">
+                                            <i class="ph ph-pencil text-base"></i>
+                                        </button>
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Competition">
+                                            <i class="ph ph-trash text-base"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Expand/Collapse Chevron -->
+                                    <i class="ph ph-caret-down text-lg text-vrl-text-light chevron-rotate"></i>
+                                </div>
+                            </div>
+
+                            <!-- Seasons Panel (Expandable) -->
+                            <div class="seasons-panel expanded bg-vrl-bg-off-white border-t border-vrl-border-light" id="seasons-f1">
+                                <!-- Active Season -->
+                                <div class="px-6 py-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-success flex items-center gap-1.5">
+                                            <i class="ph ph-play-circle text-sm"></i>
+                                            Active Season
+                                        </span>
+                                        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-vrl-text-black text-white font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm hover:bg-vrl-accent-amber transition-colors">
+                                            <i class="ph ph-plus text-xs"></i>
+                                            New Season
+                                        </button>
+                                    </div>
+
+                                    <!-- Active Season Card -->
+                                    <a href="#season-detail" class="block bg-vrl-bg-white border-2 border-vrl-success rounded-sm p-4 hover:shadow-md transition-all group">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-xs font-bold text-white">2025</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-sans text-base font-semibold text-vrl-text-black group-hover:text-vrl-accent-amber transition-colors">
+                                                        F1 Season 2025
+                                                    </h4>
+                                                    <div class="flex items-center gap-3 mt-1">
+                                                        <span class="font-mono text-[11px] text-vrl-text-medium">
+                                                            <i class="ph ph-flag mr-1"></i>
+                                                            Round 8/24
+                                                        </span>
+                                                        <span class="font-mono text-[11px] text-vrl-text-medium">
+                                                            <i class="ph ph-users mr-1"></i>
+                                                            22 drivers
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <!-- Progress Bar -->
+                                                <div class="w-24">
+                                                    <div class="flex items-center justify-between mb-1">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">Progress</span>
+                                                        <span class="font-mono text-[10px] font-semibold text-vrl-text-dark">33%</span>
+                                                    </div>
+                                                    <div class="h-1.5 bg-vrl-border-light rounded-full overflow-hidden">
+                                                        <div class="h-full bg-vrl-success rounded-full" style="width: 33%"></div>
+                                                    </div>
+                                                </div>
+                                                <!-- Actions -->
+                                                <div class="flex items-center gap-1">
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                        <i class="ph ph-pencil text-sm"></i>
+                                                    </button>
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Season">
+                                                        <i class="ph ph-trash text-sm"></i>
+                                                    </button>
+                                                </div>
+                                                <i class="ph ph-caret-right text-lg text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- Completed/Archived Seasons -->
+                                <div class="px-6 py-4 border-t border-vrl-border-light">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-text-light flex items-center gap-1.5">
+                                            <i class="ph ph-archive text-sm"></i>
+                                            Completed Seasons (2)
+                                        </span>
+                                        <button onclick="openArchivedModal('f1')" class="font-mono text-[10px] text-vrl-accent-blue hover:text-vrl-accent-amber transition-colors">
+                                            View All Archived
+                                        </button>
+                                    </div>
+
+                                    <!-- Recent Completed Seasons (show up to 2) -->
+                                    <div class="space-y-2">
+                                        <a href="#season-detail" class="season-row flex items-center justify-between p-3 bg-vrl-bg-white border border-vrl-border-light rounded-sm group">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 bg-vrl-bg-light flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-[10px] font-semibold text-vrl-text-medium">24</span>
+                                                </div>
+                                                <div>
+                                                    <span class="font-sans text-sm font-medium text-vrl-text-dark group-hover:text-vrl-accent-amber transition-colors">F1 Season 2024</span>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">24 rounds</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">|</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">20 drivers</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 bg-vrl-bg-light text-vrl-text-medium font-mono text-[9px] font-semibold tracking-wide uppercase rounded-sm">
+                                                    Completed
+                                                </span>
+                                                <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                    <i class="ph ph-pencil text-sm"></i>
+                                                </button>
+                                                <i class="ph ph-caret-right text-sm text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </a>
+
+                                        <a href="#season-detail" class="season-row flex items-center justify-between p-3 bg-vrl-bg-white border border-vrl-border-light rounded-sm group">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 bg-vrl-bg-light flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-[10px] font-semibold text-vrl-text-medium">23</span>
+                                                </div>
+                                                <div>
+                                                    <span class="font-sans text-sm font-medium text-vrl-text-dark group-hover:text-vrl-accent-amber transition-colors">F1 Season 2023</span>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">22 rounds</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">|</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">18 drivers</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 bg-vrl-bg-light text-vrl-text-medium font-mono text-[9px] font-semibold tracking-wide uppercase rounded-sm">
+                                                    Completed
+                                                </span>
+                                                <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                    <i class="ph ph-pencil text-sm"></i>
+                                                </button>
+                                                <i class="ph ph-caret-right text-sm text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Competition 2: GT World Challenge (Collapsed, Has Active Season) -->
+                        <div class="competition-card" data-competition="gt">
+                            <div class="flex items-center gap-4 px-6 py-5 cursor-pointer hover:bg-vrl-bg-off-white transition-colors" onclick="toggleCompetition('gt')">
+                                <div class="competition-icon w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-lg rounded-sm">
+                                    <span class="font-serif text-lg font-black text-white">GT</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h3 class="font-serif text-lg font-semibold text-vrl-text-black">
+                                            GT World Challenge
+                                        </h3>
+                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-50 text-green-700 font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm">
+                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full status-pulse"></span>
+                                            1 Active
+                                        </span>
+                                    </div>
+                                    <p class="font-sans text-sm text-vrl-text-medium">
+                                        GT3 sprint and endurance racing
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-right">
+                                        <div class="font-serif text-xl font-bold text-vrl-text-black">4</div>
+                                        <div class="font-mono text-[10px] text-vrl-text-light uppercase">Seasons</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Competition">
+                                            <i class="ph ph-pencil text-base"></i>
+                                        </button>
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Competition">
+                                            <i class="ph ph-trash text-base"></i>
+                                        </button>
+                                    </div>
+                                    <i class="ph ph-caret-down text-lg text-vrl-text-light chevron-rotate"></i>
+                                </div>
+                            </div>
+                            <div class="seasons-panel collapsed bg-vrl-bg-off-white border-t border-vrl-border-light" id="seasons-gt">
+                                <div class="px-6 py-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-success flex items-center gap-1.5">
+                                            <i class="ph ph-play-circle text-sm"></i>
+                                            Active Season
+                                        </span>
+                                        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-vrl-text-black text-white font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm hover:bg-vrl-accent-amber transition-colors">
+                                            <i class="ph ph-plus text-xs"></i>
+                                            New Season
+                                        </button>
+                                    </div>
+                                    <a href="#season-detail" class="block bg-vrl-bg-white border-2 border-vrl-success rounded-sm p-4 hover:shadow-md transition-all group">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-xs font-bold text-white">S4</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-sans text-base font-semibold text-vrl-text-black group-hover:text-vrl-accent-amber transition-colors">
+                                                        GT World Challenge Season 4
+                                                    </h4>
+                                                    <div class="flex items-center gap-3 mt-1">
+                                                        <span class="font-mono text-[11px] text-vrl-text-medium">
+                                                            <i class="ph ph-flag mr-1"></i>
+                                                            Round 5/12
+                                                        </span>
+                                                        <span class="font-mono text-[11px] text-vrl-text-medium">
+                                                            <i class="ph ph-users mr-1"></i>
+                                                            28 drivers
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-24">
+                                                    <div class="flex items-center justify-between mb-1">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">Progress</span>
+                                                        <span class="font-mono text-[10px] font-semibold text-vrl-text-dark">42%</span>
+                                                    </div>
+                                                    <div class="h-1.5 bg-vrl-border-light rounded-full overflow-hidden">
+                                                        <div class="h-full bg-vrl-success rounded-full" style="width: 42%"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-1">
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                        <i class="ph ph-pencil text-sm"></i>
+                                                    </button>
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Season">
+                                                        <i class="ph ph-trash text-sm"></i>
+                                                    </button>
+                                                </div>
+                                                <i class="ph ph-caret-right text-lg text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="px-6 py-4 border-t border-vrl-border-light">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-text-light flex items-center gap-1.5">
+                                            <i class="ph ph-archive text-sm"></i>
+                                            Completed Seasons (3)
+                                        </span>
+                                        <button onclick="openArchivedModal('gt')" class="font-mono text-[10px] text-vrl-accent-blue hover:text-vrl-accent-amber transition-colors">
+                                            View All Archived
+                                        </button>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <a href="#season-detail" class="season-row flex items-center justify-between p-3 bg-vrl-bg-white border border-vrl-border-light rounded-sm group">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 bg-vrl-bg-light flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-[10px] font-semibold text-vrl-text-medium">S3</span>
+                                                </div>
+                                                <div>
+                                                    <span class="font-sans text-sm font-medium text-vrl-text-dark group-hover:text-vrl-accent-amber transition-colors">GT World Challenge Season 3</span>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">12 rounds</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">|</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">24 drivers</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 bg-vrl-bg-light text-vrl-text-medium font-mono text-[9px] font-semibold tracking-wide uppercase rounded-sm">
+                                                    Completed
+                                                </span>
+                                                <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                    <i class="ph ph-pencil text-sm"></i>
+                                                </button>
+                                                <i class="ph ph-caret-right text-sm text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Competition 3: Le Mans Series (Collapsed, Has Active Season) -->
+                        <div class="competition-card" data-competition="lemans">
+                            <div class="flex items-center gap-4 px-6 py-5 cursor-pointer hover:bg-vrl-bg-off-white transition-colors" onclick="toggleCompetition('lemans')">
+                                <div class="competition-icon w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0 shadow-lg rounded-sm">
+                                    <span class="font-serif text-xs font-black text-white leading-none text-center">LE<br>MANS</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h3 class="font-serif text-lg font-semibold text-vrl-text-black">
+                                            Le Mans Series
+                                        </h3>
+                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-50 text-green-700 font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm">
+                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full status-pulse"></span>
+                                            1 Active
+                                        </span>
+                                    </div>
+                                    <p class="font-sans text-sm text-vrl-text-medium">
+                                        Endurance prototype racing
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-right">
+                                        <div class="font-serif text-xl font-bold text-vrl-text-black">2</div>
+                                        <div class="font-mono text-[10px] text-vrl-text-light uppercase">Seasons</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Competition">
+                                            <i class="ph ph-pencil text-base"></i>
+                                        </button>
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Competition">
+                                            <i class="ph ph-trash text-base"></i>
+                                        </button>
+                                    </div>
+                                    <i class="ph ph-caret-down text-lg text-vrl-text-light chevron-rotate"></i>
+                                </div>
+                            </div>
+                            <div class="seasons-panel collapsed bg-vrl-bg-off-white border-t border-vrl-border-light" id="seasons-lemans">
+                                <div class="px-6 py-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-success flex items-center gap-1.5">
+                                            <i class="ph ph-play-circle text-sm"></i>
+                                            Active Season
+                                        </span>
+                                        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-vrl-text-black text-white font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm hover:bg-vrl-accent-amber transition-colors">
+                                            <i class="ph ph-plus text-xs"></i>
+                                            New Season
+                                        </button>
+                                    </div>
+                                    <a href="#season-detail" class="block bg-vrl-bg-white border-2 border-vrl-success rounded-sm p-4 hover:shadow-md transition-all group">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-[10px] font-bold text-white">24/25</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-sans text-base font-semibold text-vrl-text-black group-hover:text-vrl-accent-amber transition-colors">
+                                                        Le Mans 2024/25
+                                                    </h4>
+                                                    <div class="flex items-center gap-3 mt-1">
+                                                        <span class="font-mono text-[11px] text-vrl-text-medium">
+                                                            <i class="ph ph-flag mr-1"></i>
+                                                            Round 3/8
+                                                        </span>
+                                                        <span class="font-mono text-[11px] text-vrl-text-medium">
+                                                            <i class="ph ph-users mr-1"></i>
+                                                            16 drivers
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-24">
+                                                    <div class="flex items-center justify-between mb-1">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">Progress</span>
+                                                        <span class="font-mono text-[10px] font-semibold text-vrl-text-dark">38%</span>
+                                                    </div>
+                                                    <div class="h-1.5 bg-vrl-border-light rounded-full overflow-hidden">
+                                                        <div class="h-full bg-vrl-success rounded-full" style="width: 38%"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-1">
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                        <i class="ph ph-pencil text-sm"></i>
+                                                    </button>
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Season">
+                                                        <i class="ph ph-trash text-sm"></i>
+                                                    </button>
+                                                </div>
+                                                <i class="ph ph-caret-right text-lg text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="px-6 py-4 border-t border-vrl-border-light">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-text-light flex items-center gap-1.5">
+                                            <i class="ph ph-archive text-sm"></i>
+                                            Completed Seasons (1)
+                                        </span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <a href="#season-detail" class="season-row flex items-center justify-between p-3 bg-vrl-bg-white border border-vrl-border-light rounded-sm group">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 bg-vrl-bg-light flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-[10px] font-semibold text-vrl-text-medium">23/24</span>
+                                                </div>
+                                                <div>
+                                                    <span class="font-sans text-sm font-medium text-vrl-text-dark group-hover:text-vrl-accent-amber transition-colors">Le Mans 2023/24</span>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">8 rounds</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">|</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">14 drivers</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 bg-vrl-bg-light text-vrl-text-medium font-mono text-[9px] font-semibold tracking-wide uppercase rounded-sm">
+                                                    Completed
+                                                </span>
+                                                <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                    <i class="ph ph-pencil text-sm"></i>
+                                                </button>
+                                                <i class="ph ph-caret-right text-sm text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Competition 4: Formula 3 (No Active Season - Upcoming) -->
+                        <div class="competition-card" data-competition="f3">
+                            <div class="flex items-center gap-4 px-6 py-5 cursor-pointer hover:bg-vrl-bg-off-white transition-colors" onclick="toggleCompetition('f3')">
+                                <div class="competition-icon w-14 h-14 bg-gradient-to-br from-cyan-500 to-cyan-700 flex items-center justify-center flex-shrink-0 shadow-lg rounded-sm">
+                                    <span class="font-serif text-2xl font-black text-white">F3</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h3 class="font-serif text-lg font-semibold text-vrl-text-black">
+                                            Formula 3
+                                        </h3>
+                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-sky-50 text-sky-700 font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm">
+                                            <i class="ph ph-clock text-xs"></i>
+                                            Upcoming
+                                        </span>
+                                    </div>
+                                    <p class="font-sans text-sm text-vrl-text-medium">
+                                        Junior single-seater championship
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-right">
+                                        <div class="font-serif text-xl font-bold text-vrl-text-black">1</div>
+                                        <div class="font-mono text-[10px] text-vrl-text-light uppercase">Season</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Competition">
+                                            <i class="ph ph-pencil text-base"></i>
+                                        </button>
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Competition">
+                                            <i class="ph ph-trash text-base"></i>
+                                        </button>
+                                    </div>
+                                    <i class="ph ph-caret-down text-lg text-vrl-text-light chevron-rotate"></i>
+                                </div>
+                            </div>
+                            <div class="seasons-panel collapsed bg-vrl-bg-off-white border-t border-vrl-border-light" id="seasons-f3">
+                                <div class="px-6 py-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-info flex items-center gap-1.5">
+                                            <i class="ph ph-clock text-sm"></i>
+                                            Upcoming Season
+                                        </span>
+                                        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-vrl-text-black text-white font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm hover:bg-vrl-accent-amber transition-colors">
+                                            <i class="ph ph-plus text-xs"></i>
+                                            New Season
+                                        </button>
+                                    </div>
+                                    <a href="#season-detail" class="block bg-vrl-bg-white border-2 border-vrl-info rounded-sm p-4 hover:shadow-md transition-all group">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-700 flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-xs font-bold text-white">2025</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-sans text-base font-semibold text-vrl-text-black group-hover:text-vrl-accent-amber transition-colors">
+                                                        F3 Season 2025
+                                                    </h4>
+                                                    <div class="flex items-center gap-3 mt-1">
+                                                        <span class="font-mono text-[11px] text-vrl-info">
+                                                            <i class="ph ph-calendar mr-1"></i>
+                                                            Starts Jan 15, 2025
+                                                        </span>
+                                                        <span class="font-mono text-[11px] text-vrl-text-medium">
+                                                            <i class="ph ph-users mr-1"></i>
+                                                            12 registered
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <span class="inline-flex items-center px-3 py-1.5 bg-sky-50 text-sky-700 font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm">
+                                                    <i class="ph ph-clock mr-1.5"></i>
+                                                    Registration Open
+                                                </span>
+                                                <div class="flex items-center gap-1">
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                        <i class="ph ph-pencil text-sm"></i>
+                                                    </button>
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Season">
+                                                        <i class="ph ph-trash text-sm"></i>
+                                                    </button>
+                                                </div>
+                                                <i class="ph ph-caret-right text-lg text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Competition 5: Formula 2 (Has Active Season) -->
+                        <div class="competition-card" data-competition="f2">
+                            <div class="flex items-center gap-4 px-6 py-5 cursor-pointer hover:bg-vrl-bg-off-white transition-colors" onclick="toggleCompetition('f2')">
+                                <div class="competition-icon w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0 shadow-lg rounded-sm">
+                                    <span class="font-serif text-2xl font-black text-white">F2</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h3 class="font-serif text-lg font-semibold text-vrl-text-black">
+                                            Formula 2
+                                        </h3>
+                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-50 text-green-700 font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm">
+                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full status-pulse"></span>
+                                            1 Active
+                                        </span>
+                                    </div>
+                                    <p class="font-sans text-sm text-vrl-text-medium">
+                                        F1 feeder series championship
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-right">
+                                        <div class="font-serif text-xl font-bold text-vrl-text-black">2</div>
+                                        <div class="font-mono text-[10px] text-vrl-text-light uppercase">Seasons</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Competition">
+                                            <i class="ph ph-pencil text-base"></i>
+                                        </button>
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Competition">
+                                            <i class="ph ph-trash text-base"></i>
+                                        </button>
+                                    </div>
+                                    <i class="ph ph-caret-down text-lg text-vrl-text-light chevron-rotate"></i>
+                                </div>
+                            </div>
+                            <div class="seasons-panel collapsed bg-vrl-bg-off-white border-t border-vrl-border-light" id="seasons-f2">
+                                <div class="px-6 py-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-success flex items-center gap-1.5">
+                                            <i class="ph ph-play-circle text-sm"></i>
+                                            Active Season
+                                        </span>
+                                        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-vrl-text-black text-white font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm hover:bg-vrl-accent-amber transition-colors">
+                                            <i class="ph ph-plus text-xs"></i>
+                                            New Season
+                                        </button>
+                                    </div>
+                                    <a href="#season-detail" class="block bg-vrl-bg-white border-2 border-vrl-success rounded-sm p-4 hover:shadow-md transition-all group">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-xs font-bold text-white">2025</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-sans text-base font-semibold text-vrl-text-black group-hover:text-vrl-accent-amber transition-colors">
+                                                        F2 Season 2025
+                                                    </h4>
+                                                    <div class="flex items-center gap-3 mt-1">
+                                                        <span class="font-mono text-[11px] text-vrl-text-medium">
+                                                            <i class="ph ph-flag mr-1"></i>
+                                                            Round 6/14
+                                                        </span>
+                                                        <span class="font-mono text-[11px] text-vrl-text-medium">
+                                                            <i class="ph ph-users mr-1"></i>
+                                                            18 drivers
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-24">
+                                                    <div class="flex items-center justify-between mb-1">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">Progress</span>
+                                                        <span class="font-mono text-[10px] font-semibold text-vrl-text-dark">43%</span>
+                                                    </div>
+                                                    <div class="h-1.5 bg-vrl-border-light rounded-full overflow-hidden">
+                                                        <div class="h-full bg-vrl-success rounded-full" style="width: 43%"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-1">
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                        <i class="ph ph-pencil text-sm"></i>
+                                                    </button>
+                                                    <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Season">
+                                                        <i class="ph ph-trash text-sm"></i>
+                                                    </button>
+                                                </div>
+                                                <i class="ph ph-caret-right text-lg text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="px-6 py-4 border-t border-vrl-border-light">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-text-light flex items-center gap-1.5">
+                                            <i class="ph ph-archive text-sm"></i>
+                                            Completed Seasons (1)
+                                        </span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <a href="#season-detail" class="season-row flex items-center justify-between p-3 bg-vrl-bg-white border border-vrl-border-light rounded-sm group">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 bg-vrl-bg-light flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-[10px] font-semibold text-vrl-text-medium">24</span>
+                                                </div>
+                                                <div>
+                                                    <span class="font-sans text-sm font-medium text-vrl-text-dark group-hover:text-vrl-accent-amber transition-colors">F2 Season 2024</span>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">14 rounds</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">|</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">16 drivers</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 bg-vrl-bg-light text-vrl-text-medium font-mono text-[9px] font-semibold tracking-wide uppercase rounded-sm">
+                                                    Completed
+                                                </span>
+                                                <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                    <i class="ph ph-pencil text-sm"></i>
+                                                </button>
+                                                <i class="ph ph-caret-right text-sm text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Competition 6: Bathurst 1000 (No Active Season - All Completed) -->
+                        <div class="competition-card" data-competition="bathurst">
+                            <div class="flex items-center gap-4 px-6 py-5 cursor-pointer hover:bg-vrl-bg-off-white transition-colors" onclick="toggleCompetition('bathurst')">
+                                <div class="competition-icon w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center flex-shrink-0 shadow-lg rounded-sm">
+                                    <span class="font-serif text-xs font-black text-white leading-none text-center">B<br>1000</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h3 class="font-serif text-lg font-semibold text-vrl-text-black">
+                                            Bathurst 1000
+                                        </h3>
+                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-vrl-bg-light text-vrl-text-medium font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm">
+                                            <i class="ph ph-check text-xs"></i>
+                                            Completed
+                                        </span>
+                                    </div>
+                                    <p class="font-sans text-sm text-vrl-text-medium">
+                                        The Great Race - V8 Supercars
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-right">
+                                        <div class="font-serif text-xl font-bold text-vrl-text-black">1</div>
+                                        <div class="font-mono text-[10px] text-vrl-text-light uppercase">Season</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Competition">
+                                            <i class="ph ph-pencil text-base"></i>
+                                        </button>
+                                        <button class="p-2 text-vrl-text-light hover:text-vrl-accent-red hover:bg-red-50 rounded-sm transition-colors" title="Delete Competition">
+                                            <i class="ph ph-trash text-base"></i>
+                                        </button>
+                                    </div>
+                                    <i class="ph ph-caret-down text-lg text-vrl-text-light chevron-rotate"></i>
+                                </div>
+                            </div>
+                            <div class="seasons-panel collapsed bg-vrl-bg-off-white border-t border-vrl-border-light" id="seasons-bathurst">
+                                <div class="px-6 py-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-text-light flex items-center gap-1.5">
+                                            <i class="ph ph-info text-sm"></i>
+                                            No Active Season
+                                        </span>
+                                        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-vrl-text-black text-white font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm hover:bg-vrl-accent-amber transition-colors">
+                                            <i class="ph ph-plus text-xs"></i>
+                                            New Season
+                                        </button>
+                                    </div>
+
+                                    <!-- Empty state for active season -->
+                                    <div class="bg-vrl-bg-white border border-dashed border-vrl-border-medium rounded-sm p-6 text-center">
+                                        <i class="ph ph-calendar-blank text-3xl text-vrl-border-medium mb-2"></i>
+                                        <p class="font-sans text-sm text-vrl-text-light mb-3">No active season for this competition</p>
+                                        <button class="inline-flex items-center gap-1.5 px-4 py-2 bg-vrl-bg-light text-vrl-text-dark font-mono text-[11px] font-semibold tracking-wide uppercase rounded-sm hover:bg-vrl-border-light transition-colors">
+                                            <i class="ph ph-plus text-xs"></i>
+                                            Create Season
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="px-6 py-4 border-t border-vrl-border-light">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-mono text-[10px] font-semibold tracking-wide uppercase text-vrl-text-light flex items-center gap-1.5">
+                                            <i class="ph ph-archive text-sm"></i>
+                                            Completed Seasons (1)
+                                        </span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <a href="#season-detail" class="season-row flex items-center justify-between p-3 bg-vrl-bg-white border border-vrl-border-light rounded-sm group">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 bg-vrl-bg-light flex items-center justify-center rounded-sm">
+                                                    <span class="font-mono text-[10px] font-semibold text-vrl-text-medium">24</span>
+                                                </div>
+                                                <div>
+                                                    <span class="font-sans text-sm font-medium text-vrl-text-dark group-hover:text-vrl-accent-amber transition-colors">Bathurst 1000 2024</span>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">1 round</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">|</span>
+                                                        <span class="font-mono text-[10px] text-vrl-text-light">32 drivers</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 bg-vrl-bg-light text-vrl-text-medium font-mono text-[9px] font-semibold tracking-wide uppercase rounded-sm">
+                                                    Completed
+                                                </span>
+                                                <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                                    <i class="ph ph-pencil text-sm"></i>
+                                                </button>
+                                                <i class="ph ph-caret-right text-sm text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Sidebar -->
+            <div class="col-span-4 space-y-6">
+
+                <!-- About Panel -->
+                <div class="bg-vrl-bg-white border border-vrl-border-light p-6 opacity-0 animate-slide-in-right delay-300">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="ph ph-info text-lg text-vrl-accent-amber"></i>
+                        <h3 class="font-mono text-[11px] font-semibold tracking-wide uppercase text-vrl-text-light">About This League</h3>
+                    </div>
+                    <p class="font-sans text-sm text-vrl-text-medium leading-relaxed mb-4">
+                        GT Masters Cup is an elite sim racing league focused on delivering the most authentic GT racing experience.
+                        We run professional-grade competitions with strict stewarding and fair play policies.
+                    </p>
+                    <p class="font-sans text-sm text-vrl-text-medium leading-relaxed">
+                        Founded in 2022, we've grown to become one of the premier ACC leagues with over
+                        70 active drivers across multiple skill divisions.
+                    </p>
+                </div>
+
+                <!-- Quick Stats Panel -->
+                <div class="bg-vrl-bg-white border border-vrl-border-light p-6 opacity-0 animate-slide-in-right delay-400">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="ph ph-chart-bar text-lg text-vrl-accent-amber"></i>
+                        <h3 class="font-mono text-[11px] font-semibold tracking-wide uppercase text-vrl-text-light">League Statistics</h3>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between py-2 border-b border-vrl-border-light">
+                            <span class="font-sans text-sm text-vrl-text-medium">Total Races Completed</span>
+                            <span class="font-serif text-lg font-bold text-vrl-text-black">156</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-vrl-border-light">
+                            <span class="font-sans text-sm text-vrl-text-medium">Total Seasons Run</span>
+                            <span class="font-serif text-lg font-bold text-vrl-text-black">13</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-vrl-border-light">
+                            <span class="font-sans text-sm text-vrl-text-medium">Average Drivers/Season</span>
+                            <span class="font-serif text-lg font-bold text-vrl-text-black">22</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2">
+                            <span class="font-sans text-sm text-vrl-text-medium">League Since</span>
+                            <span class="font-sans text-sm font-semibold text-vrl-text-black">March 2022</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Panel -->
+                <div class="bg-vrl-bg-white border border-vrl-border-light p-6 opacity-0 animate-slide-in-right delay-500">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="ph ph-address-book text-lg text-vrl-accent-amber"></i>
+                        <h3 class="font-mono text-[11px] font-semibold tracking-wide uppercase text-vrl-text-light">Contact</h3>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-vrl-bg-light border border-vrl-border-light flex items-center justify-center flex-shrink-0">
+                                <i class="ph ph-user text-lg text-vrl-text-medium"></i>
+                            </div>
+                            <div>
+                                <div class="font-mono text-[10px] uppercase tracking-wide text-vrl-text-light">Organizer</div>
+                                <div class="font-sans text-sm font-medium text-vrl-text-black">James Wilson</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-vrl-bg-light border border-vrl-border-light flex items-center justify-center flex-shrink-0">
+                                <i class="ph ph-envelope text-lg text-vrl-text-medium"></i>
+                            </div>
+                            <div>
+                                <div class="font-mono text-[10px] uppercase tracking-wide text-vrl-text-light">Email</div>
+                                <a href="mailto:contact@gtmasters.gg" class="font-sans text-sm font-medium text-vrl-accent-blue hover:text-vrl-accent-amber transition-colors">
+                                    contact@gtmasters.gg
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Media Panel -->
+                <div class="bg-vrl-bg-white border border-vrl-border-light p-6 opacity-0 animate-slide-in-right delay-600">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="ph ph-share-network text-lg text-vrl-accent-amber"></i>
+                        <h3 class="font-mono text-[11px] font-semibold tracking-wide uppercase text-vrl-text-light">Connect</h3>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="#" class="flex items-center gap-2.5 px-4 py-3 bg-[#5865F2]/10 border border-[#5865F2]/20 rounded-sm hover:bg-[#5865F2]/20 transition-all group">
+                            <i class="ph ph-discord-logo text-xl text-[#5865F2]"></i>
+                            <span class="font-mono text-xs font-medium text-[#5865F2] group-hover:text-[#4752C4]">Discord</span>
+                        </a>
+
+                        <a href="#" class="flex items-center gap-2.5 px-4 py-3 bg-[#1DA1F2]/10 border border-[#1DA1F2]/20 rounded-sm hover:bg-[#1DA1F2]/20 transition-all group">
+                            <i class="ph ph-twitter-logo text-xl text-[#1DA1F2]"></i>
+                            <span class="font-mono text-xs font-medium text-[#1DA1F2] group-hover:text-[#1a8cd8]">Twitter</span>
+                        </a>
+
+                        <a href="#" class="flex items-center gap-2.5 px-4 py-3 bg-[#FF0000]/10 border border-[#FF0000]/20 rounded-sm hover:bg-[#FF0000]/20 transition-all group">
+                            <i class="ph ph-youtube-logo text-xl text-[#FF0000]"></i>
+                            <span class="font-mono text-xs font-medium text-[#FF0000] group-hover:text-[#cc0000]">YouTube</span>
+                        </a>
+
+                        <a href="#" class="flex items-center gap-2.5 px-4 py-3 bg-[#6441a5]/10 border border-[#6441a5]/20 rounded-sm hover:bg-[#6441a5]/20 transition-all group">
+                            <i class="ph ph-twitch-logo text-xl text-[#6441a5]"></i>
+                            <span class="font-mono text-xs font-medium text-[#6441a5] group-hover:text-[#533696]">Twitch</span>
+                        </a>
+                    </div>
+
+                    <a href="#" class="flex items-center justify-center gap-2 mt-4 px-4 py-3 bg-vrl-bg-light border border-vrl-border-light rounded-sm hover:bg-vrl-bg-off-white hover:border-vrl-border-medium transition-all">
+                        <i class="ph ph-globe text-lg text-vrl-text-medium"></i>
+                        <span class="font-mono text-xs font-medium text-vrl-text-medium">gtmasters.gg</span>
+                        <i class="ph ph-arrow-square-out text-xs text-vrl-text-light ml-auto"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Archived Seasons Modal -->
+    <div id="archived-modal" class="fixed inset-0 z-[200] hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-vrl-header/60 modal-backdrop" onclick="closeArchivedModal()"></div>
+
+        <!-- Modal Content -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-vrl-bg-white shadow-2xl rounded-sm opacity-0 animate-modal-slide" id="modal-content">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-vrl-border-light">
+                <div>
+                    <h2 class="font-serif text-xl font-bold text-vrl-text-black" id="modal-title">Archived Seasons</h2>
+                    <p class="font-sans text-sm text-vrl-text-medium mt-1" id="modal-subtitle">Formula 1 - All completed seasons</p>
+                </div>
+                <button onclick="closeArchivedModal()" class="p-2 text-vrl-text-light hover:text-vrl-text-dark hover:bg-vrl-bg-light rounded-sm transition-colors">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="px-6 py-4 max-h-[60vh] overflow-y-auto" id="modal-body">
+                <!-- Seasons will be populated by JS -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-vrl-border-light bg-vrl-bg-off-white">
+                <button onclick="closeArchivedModal()" class="inline-flex items-center gap-2 px-5 py-2.75 bg-vrl-bg-white text-vrl-text-medium border border-vrl-border-medium rounded-sm font-mono text-xs font-semibold tracking-wide uppercase cursor-pointer transition-all hover:border-vrl-text-dark hover:text-vrl-text-dark">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-[1280px] mx-auto px-12 py-8 mt-16 border-t border-vrl-border-light">
+        <div class="flex items-center justify-between">
+            <p class="font-mono text-xs text-vrl-text-light">
+                Virtual Racing Leagues Design System - League Detail View with Seasons
+            </p>
+            <div class="flex gap-6">
+                <a href="https://tailwindcss.com" class="font-mono text-xs text-vrl-accent-blue hover:text-vrl-accent-amber transition-colors">Tailwind CSS</a>
+                <a href="https://primevue.org" class="font-mono text-xs text-vrl-accent-blue hover:text-vrl-accent-amber transition-colors">PrimeVue</a>
+                <a href="https://phosphoricons.com" class="font-mono text-xs text-vrl-accent-blue hover:text-vrl-accent-amber transition-colors">Phosphor Icons</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Implementation Notes -->
+    <div class="max-w-[1280px] mx-auto px-12 pb-12">
+        <div class="p-6 bg-vrl-bg-white border-l-4 border-l-vrl-info rounded-sm">
+            <div class="flex items-start gap-3">
+                <i class="ph ph-code text-vrl-info text-2xl flex-shrink-0 mt-0.5"></i>
+                <div>
+                    <h3 class="font-mono text-xs font-semibold tracking-wide uppercase text-vrl-text-black mb-3">
+                        Data Hierarchy & Design Notes
+                    </h3>
+                    <div class="text-sm text-vrl-text-medium leading-relaxed space-y-2">
+                        <p>
+                            <strong>League</strong> &rarr; <strong>Competitions</strong> (F1, F2, F3, Le Mans, Bathurst 1000, GT World Challenge)
+                        </p>
+                        <p>
+                            <strong>Competition</strong> &rarr; <strong>Seasons</strong> (F1 2025, F1 2024, Le Mans 2024/25, etc.) - Expandable/collapsible view
+                        </p>
+                        <p>
+                            <strong>Season</strong> &rarr; <strong>Rounds</strong> (Round 1, Round 2, etc.) - Lives on the Season Detail page (next to create)
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-vrl-border-light">
+                        <h4 class="font-mono text-[11px] font-semibold tracking-wide uppercase text-vrl-text-dark mb-2">Key Features in This Design:</h4>
+                        <ul class="text-sm text-vrl-text-medium space-y-1">
+                            <li><i class="ph ph-check text-vrl-success mr-2"></i>Expandable competition cards showing seasons</li>
+                            <li><i class="ph ph-check text-vrl-success mr-2"></i>Active season highlighted with green border and progress bar</li>
+                            <li><i class="ph ph-check text-vrl-success mr-2"></i>Completed seasons shown below active (limited to 2, with "View All" modal)</li>
+                            <li><i class="ph ph-check text-vrl-success mr-2"></i>Edit/Delete buttons for both competitions and seasons</li>
+                            <li><i class="ph ph-check text-vrl-success mr-2"></i>"New Season" button in each competition</li>
+                            <li><i class="ph ph-check text-vrl-success mr-2"></i>Season status indicators: Active (green pulse), Upcoming (blue), Completed (gray)</li>
+                            <li><i class="ph ph-check text-vrl-success mr-2"></i>All seasons link to Season Detail page</li>
+                            <li><i class="ph ph-check text-vrl-success mr-2"></i>Modal for viewing all archived/completed seasons</li>
+                            <li><i class="ph ph-check text-vrl-success mr-2"></i>Empty state for competitions with no active season</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-vrl-border-light">
+                        <h4 class="font-mono text-[11px] font-semibold tracking-wide uppercase text-vrl-text-dark mb-2">PrimeVue Components to Use:</h4>
+                        <ul class="text-sm text-vrl-text-medium space-y-1">
+                            <li><code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">Accordion</code> - For expandable competition cards</li>
+                            <li><code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">Dialog</code> - For archived seasons modal</li>
+                            <li><code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">Button</code> - All action buttons</li>
+                            <li><code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">ProgressBar</code> - Season progress</li>
+                            <li><code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">Tag</code> - Status badges</li>
+                            <li><code class="px-1.5 py-0.5 bg-vrl-bg-light rounded-sm font-mono text-xs">ConfirmDialog</code> - Delete confirmations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Interactions -->
+    <script>
+        // Toggle competition expand/collapse
+        function toggleCompetition(id) {
+            const card = document.querySelector(`[data-competition="${id}"]`);
+            const panel = document.getElementById(`seasons-${id}`);
+
+            if (card.classList.contains('expanded')) {
+                card.classList.remove('expanded');
+                panel.classList.remove('expanded');
+                panel.classList.add('collapsed');
+            } else {
+                card.classList.add('expanded');
+                panel.classList.remove('collapsed');
+                panel.classList.add('expanded');
+            }
+        }
+
+        // Archived seasons modal data
+        const archivedSeasons = {
+            f1: {
+                title: 'Formula 1',
+                seasons: [
+                    { id: '2024', name: 'F1 Season 2024', rounds: 24, drivers: 20 },
+                    { id: '2023', name: 'F1 Season 2023', rounds: 22, drivers: 18 },
+                ]
+            },
+            gt: {
+                title: 'GT World Challenge',
+                seasons: [
+                    { id: 's3', name: 'GT World Challenge Season 3', rounds: 12, drivers: 24 },
+                    { id: 's2', name: 'GT World Challenge Season 2', rounds: 10, drivers: 22 },
+                    { id: 's1', name: 'GT World Challenge Season 1', rounds: 8, drivers: 18 },
+                ]
+            },
+            lemans: {
+                title: 'Le Mans Series',
+                seasons: [
+                    { id: '23-24', name: 'Le Mans 2023/24', rounds: 8, drivers: 14 },
+                ]
+            }
+        };
+
+        function openArchivedModal(competitionId) {
+            const modal = document.getElementById('archived-modal');
+            const title = document.getElementById('modal-title');
+            const subtitle = document.getElementById('modal-subtitle');
+            const body = document.getElementById('modal-body');
+            const content = document.getElementById('modal-content');
+
+            const data = archivedSeasons[competitionId];
+
+            if (data) {
+                title.textContent = 'Archived Seasons';
+                subtitle.textContent = `${data.title} - All completed seasons`;
+
+                body.innerHTML = data.seasons.map(season => `
+                    <a href="#season-detail" class="season-row flex items-center justify-between p-4 bg-vrl-bg-white border border-vrl-border-light rounded-sm mb-3 last:mb-0 group hover:bg-vrl-bg-off-white transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-vrl-bg-light flex items-center justify-center rounded-sm">
+                                <span class="font-mono text-xs font-semibold text-vrl-text-medium">${season.id}</span>
+                            </div>
+                            <div>
+                                <span class="font-sans text-base font-medium text-vrl-text-dark group-hover:text-vrl-accent-amber transition-colors">${season.name}</span>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <span class="font-mono text-[11px] text-vrl-text-light">${season.rounds} rounds</span>
+                                    <span class="font-mono text-[11px] text-vrl-text-light">|</span>
+                                    <span class="font-mono text-[11px] text-vrl-text-light">${season.drivers} drivers</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center px-2.5 py-1 bg-vrl-bg-light text-vrl-text-medium font-mono text-[10px] font-semibold tracking-wide uppercase rounded-sm">
+                                Completed
+                            </span>
+                            <button onclick="event.preventDefault(); event.stopPropagation();" class="p-1.5 text-vrl-text-light hover:text-vrl-accent-amber hover:bg-vrl-bg-light rounded-sm transition-colors" title="Edit Season">
+                                <i class="ph ph-pencil text-sm"></i>
+                            </button>
+                            <i class="ph ph-caret-right text-base text-vrl-text-light group-hover:text-vrl-accent-amber transition-colors"></i>
+                        </div>
+                    </a>
+                `).join('');
+            }
+
+            modal.classList.remove('hidden');
+            // Trigger animation
+            setTimeout(() => {
+                content.classList.remove('opacity-0');
+            }, 10);
+        }
+
+        function closeArchivedModal() {
+            const modal = document.getElementById('archived-modal');
+            const content = document.getElementById('modal-content');
+
+            content.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeArchivedModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -34,11 +34,28 @@
                     class="text-xs bg-purple-200 text-purple-800"
                     :pt="{ root: { class: 'bg-purple-200 text-purple-800 border-purple-300' } }"
                   />
+                  <Tag
+                    v-if="data.has_fastest_lap && !raceEvent.is_qualifier && !raceTimesRequired"
+                    value="FL"
+                    class="text-xs bg-purple-500 text-white"
+                    :pt="{ root: { class: 'bg-purple-500 text-white border-purple-600' } }"
+                  />
+                  <Tag
+                    v-if="data.dnf && !raceTimesRequired"
+                    severity="danger"
+                    value="DNF"
+                    class="text-xs"
+                  />
                 </div>
               </template>
             </Column>
 
-            <Column v-if="!raceEvent.is_qualifier" field="race_time" header="Time" class="w-42">
+            <Column
+              v-if="!raceEvent.is_qualifier && raceTimesRequired"
+              field="race_time"
+              header="Time"
+              class="w-42"
+            >
               <template #body="{ data }">
                 <Tag v-if="data.dnf" severity="danger" value="DNF" class="text-xs" />
                 <span v-else class="font-mono text-gray-900">{{
@@ -48,7 +65,7 @@
             </Column>
 
             <Column
-              v-if="!raceEvent.is_qualifier"
+              v-if="!raceEvent.is_qualifier && raceTimesRequired"
               field="race_time_difference"
               header="Gap"
               class="w-42"
@@ -63,6 +80,7 @@
             </Column>
 
             <Column
+              v-if="raceTimesRequired"
               field="fastest_lap"
               :header="raceEvent.is_qualifier ? 'Lap Time' : 'Fastest Lap'"
               class="w-42"
@@ -89,7 +107,7 @@
             </Column>
 
             <Column
-              v-if="!raceEvent.is_qualifier"
+              v-if="!raceEvent.is_qualifier && raceTimesRequired"
               field="penalties"
               header="Penalties"
               class="w-42"
@@ -102,7 +120,7 @@
             </Column>
 
             <Column
-              v-if="!raceEvent.is_qualifier"
+              v-if="!raceEvent.is_qualifier && raceTimesRequired"
               field="positions_gained"
               header="+/-"
               class="w-24"
@@ -153,9 +171,14 @@ interface Props {
   raceEvent: RaceEventResults;
   divisionId?: number;
   isRoundCompleted?: boolean;
+  raceTimesRequired?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  divisionId: undefined,
+  isRoundCompleted: false,
+  raceTimesRequired: false, // Safer default - hide time features unless explicitly enabled
+});
 
 // Composables
 const { formatRaceTime } = useTimeFormat();

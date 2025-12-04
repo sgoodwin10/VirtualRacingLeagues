@@ -199,6 +199,10 @@ export function buildCreateSeasonFormData(data: CreateSeasonRequest): FormData {
     formData.append('team_championship_enabled', data.team_championship_enabled ? '1' : '0');
   }
 
+  if (data.race_times_required !== undefined) {
+    formData.append('race_times_required', data.race_times_required ? '1' : '0');
+  }
+
   return formData;
 }
 
@@ -250,6 +254,10 @@ export function buildUpdateSeasonFormData(data: UpdateSeasonRequest): FormData {
 
   if (data.team_championship_enabled !== undefined) {
     formData.append('team_championship_enabled', data.team_championship_enabled ? '1' : '0');
+  }
+
+  if (data.race_times_required !== undefined) {
+    formData.append('race_times_required', data.race_times_required ? '1' : '0');
   }
 
   return formData;

@@ -23,6 +23,7 @@ class CreateSeasonData extends Data
         public ?UploadedFile $banner = null,
         public bool $team_championship_enabled = false,
         public bool $race_divisions_enabled = false,
+        public bool $race_times_required = true,
     ) {
     }
 
@@ -34,6 +35,7 @@ class CreateSeasonData extends Data
     public static function rules(): array
     {
         return [
+            'competition_id' => ['required', 'integer', 'exists:competitions,id'],
             'name' => ['required', 'string', 'min:3', 'max:100'],
             'slug' => ['nullable', 'string', 'min:3', 'max:100', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
             'car_class' => ['nullable', 'string', 'max:100'],
@@ -43,6 +45,7 @@ class CreateSeasonData extends Data
             'banner' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:4096'],
             'team_championship_enabled' => ['boolean'],
             'race_divisions_enabled' => ['boolean'],
+            'race_times_required' => ['boolean'],
         ];
     }
 }

@@ -1,5 +1,5 @@
 ---
-name: admin
+name: frontend-admin
 description: Specialized frontend development for the admin dashboard (resources/admin/) using Vue 3, TypeScript, PrimeVue, and Pinia. Automatically invokes the dev-fe-admin agent for comprehensive Vue expertise.
 allowed-tools: Bash, Glob, Grep, Read, Edit, MultiEdit, Write, WebFetch, WebSearch, TodoWrite, Task, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 ---

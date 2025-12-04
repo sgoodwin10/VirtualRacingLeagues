@@ -20,6 +20,11 @@ This design system is implemented using:
 - **Vue 3 Composition API** - Modern Vue development patterns
 - **TypeScript** - Type-safe component development
 
+### Layouts
+- League Listing Page Layout: `design-ideas/app/2/design-8-guide/leagues.html`
+- League Detail Page Layout: `design-ideas/app/2/design-8-guide/league-detail.html`
+- Season Detail Page Layout: `design-ideas/app/2/design-8-guide/season-detail.html`
+- Component Guide: `design-ideas/app/2/design-8-guide/component-library.html`
 ---
 
 ## Color System

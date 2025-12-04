@@ -4,15 +4,50 @@ import { mount, flushPromises } from '@vue/test-utils';
 import RoundResultsModal from '../RoundResultsModal.vue';
 import type { Round } from '@app/types/round';
 import type { RoundResultsResponse } from '@app/types/roundResult';
+import type { Season } from '@app/types/season';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 import ToastService from 'primevue/toastservice';
 import * as roundService from '@app/services/roundService';
+import { useSeasonStore } from '@app/stores/seasonStore';
 
 // Mock the round service
 vi.mock('@app/services/roundService', () => ({
   getRoundResults: vi.fn(),
 }));
+
+const mockSeason: Season = {
+  id: 1,
+  competition_id: 1,
+  name: '2024 Championship Season',
+  slug: '2024-championship-season',
+  car_class: 'GT3',
+  description: 'Test season',
+  technical_specs: null,
+  logo_url: 'https://example.com/logo.png',
+  has_own_logo: true,
+  banner_url: null,
+  has_own_banner: false,
+  race_divisions_enabled: true,
+  team_championship_enabled: false,
+  race_times_required: true, // IMPORTANT: This controls visibility of time-related tabs
+  status: 'active',
+  is_setup: false,
+  is_active: true,
+  is_completed: false,
+  is_archived: false,
+  is_deleted: false,
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
+  deleted_at: null,
+  created_by_user_id: 1,
+  stats: {
+    total_drivers: 20,
+    active_drivers: 20,
+    total_races: 10,
+    completed_races: 5,
+  },
+};
 
 const mockRound: Round = {
   id: 1,
@@ -189,6 +224,10 @@ describe('RoundResultsModal', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+
+    // Set up the season store with mock season data
+    const seasonStore = useSeasonStore();
+    seasonStore.currentSeason = mockSeason;
   });
 
   const createWrapper = (props = {}) => {

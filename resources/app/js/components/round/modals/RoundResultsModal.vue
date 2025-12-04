@@ -31,9 +31,9 @@
           <Tabs v-model:value="activeMainTab">
             <TabList>
               <Tab value="round-results">Round Results</Tab>
-              <Tab value="qualifying-times">Qualifying Times</Tab>
-              <Tab value="race-times">Race Times</Tab>
-              <Tab value="fastest-laps">Fastest Laps</Tab>
+              <Tab v-if="raceTimesRequired" value="qualifying-times">Qualifying Times</Tab>
+              <Tab v-if="raceTimesRequired" value="race-times">Race Times</Tab>
+              <Tab v-if="raceTimesRequired" value="fastest-laps">Fastest Laps</Tab>
             </TabList>
             <TabPanels>
               <!-- Round Results Tab -->
@@ -67,6 +67,7 @@
                             :race-event="raceEvent"
                             :division-id="division.id"
                             :is-round-completed="isRoundCompleted"
+                            :race-times-required="raceTimesRequired"
                           />
                         </div>
                       </TabPanel>
@@ -92,12 +93,13 @@
                     :key="raceEvent.id"
                     :race-event="raceEvent"
                     :is-round-completed="isRoundCompleted"
+                    :race-times-required="raceTimesRequired"
                   />
                 </div>
               </TabPanel>
 
-              <!-- Qualifying Times Tab -->
-              <TabPanel value="qualifying-times">
+              <!-- Qualifying Times Tab (only shown if race times are required) -->
+              <TabPanel v-if="raceTimesRequired" value="qualifying-times">
                 <div class="p-4">
                   <CrossDivisionResultsSection
                     title="Qualifying Times - All Divisions"
@@ -108,8 +110,8 @@
                 </div>
               </TabPanel>
 
-              <!-- Race Times Tab -->
-              <TabPanel value="race-times">
+              <!-- Race Times Tab (only shown if race times are required) -->
+              <TabPanel v-if="raceTimesRequired" value="race-times">
                 <div class="p-4">
                   <CrossDivisionResultsSection
                     title="Race Times - All Divisions"
@@ -120,8 +122,8 @@
                 </div>
               </TabPanel>
 
-              <!-- Fastest Laps Tab -->
-              <TabPanel value="fastest-laps">
+              <!-- Fastest Laps Tab (only shown if race times are required) -->
+              <TabPanel v-if="raceTimesRequired" value="fastest-laps">
                 <div class="p-4">
                   <CrossDivisionResultsSection
                     title="Fastest Laps - All Divisions"
@@ -160,6 +162,7 @@ import RaceEventResultsSection from './RaceEventResultsSection.vue';
 import RoundStandingsSection from './RoundStandingsSection.vue';
 import CrossDivisionResultsSection from './CrossDivisionResultsSection.vue';
 import { getRoundResults } from '@app/services/roundService';
+import { useSeasonStore } from '@app/stores/seasonStore';
 import type { Round } from '@app/types/round';
 import type { RoundResultsResponse, RaceEventResults } from '@app/types/roundResult';
 
@@ -177,6 +180,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const toast = useToast();
+const seasonStore = useSeasonStore();
 
 // Constants
 const NO_DIVISION_SELECTED = -1;
@@ -210,11 +214,24 @@ const isRoundCompleted = computed(() => {
   return props.round.status === 'completed';
 });
 
+const raceTimesRequired = computed(() => {
+  // Default to false (safer) - only show time features if season is loaded and explicitly enabled
+  if (!seasonStore.currentSeason) {
+    return false;
+  }
+  return seasonStore.currentSeason.race_times_required;
+});
+
 // Methods
 async function loadResults(): Promise<void> {
   isLoading.value = true;
 
   try {
+    // Ensure season data is loaded for race_times_required setting
+    if (!seasonStore.currentSeason || seasonStore.currentSeason.id !== props.seasonId) {
+      await seasonStore.fetchSeason(props.seasonId);
+    }
+
     const response = await getRoundResults(props.round.id);
 
     roundData.value = response.round;
@@ -226,9 +243,8 @@ async function loadResults(): Promise<void> {
       activeDivisionId.value = divisions.value[0]?.id ?? NO_DIVISION_SELECTED;
     }
   } catch (error) {
-    console.error('Failed to load round results:', error);
-
     // Show user-friendly error notification
+    console.error('Failed to load round results:', error);
     toast.add({
       severity: 'error',
       summary: 'Error Loading Results',

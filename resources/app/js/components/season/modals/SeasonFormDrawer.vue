@@ -67,6 +67,7 @@ const form = reactive<SeasonForm>({
   banner_url: null,
   race_divisions_enabled: false,
   team_championship_enabled: false,
+  race_times_required: true,
 });
 
 const originalName = ref('');
@@ -131,8 +132,7 @@ const checkSlug = useDebounceFn(async () => {
     slugPreview.value = result.slug;
     slugStatus.value = result.available ? 'available' : 'taken';
     slugSuggestion.value = result.suggestion;
-  } catch (error) {
-    console.error('Slug check failed:', error);
+  } catch {
     slugStatus.value = 'error';
     slugPreview.value = '';
     slugSuggestion.value = null;
@@ -178,6 +178,7 @@ function loadSeasonData(): void {
   form.banner_url = props.season.banner_url;
   form.race_divisions_enabled = props.season.race_divisions_enabled;
   form.team_championship_enabled = props.season.team_championship_enabled;
+  form.race_times_required = props.season.race_times_required;
 
   originalName.value = props.season.name;
 
@@ -196,6 +197,7 @@ function resetForm(): void {
   form.banner_url = null;
   form.race_divisions_enabled = false;
   form.team_championship_enabled = false;
+  form.race_times_required = true;
   originalName.value = '';
   slugPreview.value = '';
   slugStatus.value = null;
@@ -241,6 +243,7 @@ async function submitForm(): Promise<void> {
         banner: form.banner,
         race_divisions_enabled: form.race_divisions_enabled,
         team_championship_enabled: form.team_championship_enabled,
+        race_times_required: form.race_times_required,
       });
 
       toast.add({
@@ -261,6 +264,7 @@ async function submitForm(): Promise<void> {
         banner: form.banner || undefined,
         race_divisions_enabled: form.race_divisions_enabled,
         team_championship_enabled: form.team_championship_enabled,
+        race_times_required: form.race_times_required,
       });
 
       toast.add({
@@ -276,8 +280,6 @@ async function submitForm(): Promise<void> {
     localVisible.value = false;
     resetForm();
   } catch (error: unknown) {
-    console.error('Failed to save season:', error);
-
     // Clear file inputs on error to prevent stale file objects
     form.logo = null;
     form.banner = null;
@@ -444,6 +446,24 @@ function cancelNameChange(): void {
               />
             </div>
             <FormOptionalText text="Track team standings alongside individual drivers" />
+          </FormInputGroup>
+
+          <!-- Race Times Required Toggle -->
+          <FormInputGroup>
+            <div class="flex items-center gap-3">
+              <Checkbox
+                v-model="form.race_times_required"
+                input-id="race_times_required"
+                :binary="true"
+                :disabled="isSubmitting"
+              />
+              <FormLabel
+                for="race_times_required"
+                text="Require Race Times"
+                class="mb-0 cursor-pointer"
+              />
+            </div>
+            <FormOptionalText text="Require lap times to be recorded for race results" />
           </FormInputGroup>
 
           <!-- Info Message -->

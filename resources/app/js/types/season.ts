@@ -59,6 +59,7 @@ export interface Season {
   // Settings
   race_divisions_enabled: boolean;
   team_championship_enabled: boolean;
+  race_times_required: boolean;
 
   // Status
   status: SeasonStatus;
@@ -112,6 +113,7 @@ export interface CreateSeasonRequest {
   banner?: File;
   race_divisions_enabled?: boolean;
   team_championship_enabled?: boolean;
+  race_times_required?: boolean;
 }
 
 /**
@@ -126,6 +128,7 @@ export interface UpdateSeasonRequest {
   banner?: File | null;
   race_divisions_enabled?: boolean;
   team_championship_enabled?: boolean;
+  race_times_required?: boolean;
 }
 
 /**
@@ -142,6 +145,7 @@ export interface SeasonForm {
   banner_url: string | null;
   race_divisions_enabled: boolean;
   team_championship_enabled: boolean;
+  race_times_required: boolean;
 }
 
 /**

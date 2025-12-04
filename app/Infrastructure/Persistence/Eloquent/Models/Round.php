@@ -41,6 +41,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @method static Round firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  *
  * @method static \Illuminate\Database\Eloquent\Builder<Round> where($column, $operator = null, $value = null)
  * @method static Round|null find(int $id, $columns = ['*'])

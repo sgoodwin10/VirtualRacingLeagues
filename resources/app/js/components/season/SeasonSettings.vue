@@ -5,7 +5,7 @@ import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import type { Season } from '@app/types/season';
 
-import { PhGear, PhPlay, PhFlag, PhArchive, PhTrash, PhWarning } from '@phosphor-icons/vue';
+import { PhPlay, PhFlag, PhArchive, PhTrash, PhWarning } from '@phosphor-icons/vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import PanelHeader from '@app/components/common/panels/PanelHeader.vue';
 import Button from 'primevue/button';

@@ -1,2 +1,2 @@
 Check all front end files files waiting to be added to git, and check the logic and report back anything that could be improved or any issues that need to be addressed. 
-Use agent @dev-fe-admin, @dev-fe-app and @dev-fe-public
+Use as many @agent-dev-fe-admin, @agent-dev-fe-app and @agent-dev-fe-public

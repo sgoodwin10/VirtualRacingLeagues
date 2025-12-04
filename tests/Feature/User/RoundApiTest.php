@@ -278,7 +278,8 @@ final class RoundApiTest extends TestCase
         $response = $this->deleteJson("http://app.virtualracingleagues.localhost/api/rounds/{$round->id}");
 
         $response->assertStatus(200);
-        $this->assertSoftDeleted('rounds', ['id' => $round->id]);
+        // Rounds are hard deleted (forceDelete), not soft deleted
+        $this->assertDatabaseMissing('rounds', ['id' => $round->id]);
     }
 
     #[Test]

@@ -35,6 +35,7 @@
           :is-qualifying="isQualifying"
           :selected-driver-ids="selectedDriverIds"
           :read-only="isReadOnly"
+          :race-times-required="raceTimesRequired"
           @update:results="handleResultsUpdate"
           @reset-all="handleResetAll"
         />
@@ -46,6 +47,7 @@
           :is-qualifying="isQualifying"
           :selected-driver-ids="selectedDriverIds"
           :read-only="isReadOnly"
+          :race-times-required="raceTimesRequired"
           @update:results="handleResultsUpdate"
         />
       </template>
@@ -160,6 +162,10 @@ const isReadOnly = computed(() => {
 
 const hasDivisions = computed(() => {
   return seasonStore.currentSeason?.race_divisions_enabled ?? false;
+});
+
+const raceTimesRequired = computed(() => {
+  return seasonStore.currentSeason?.race_times_required ?? true;
 });
 
 const divisions = computed<Division[]>(() => {
@@ -474,21 +480,86 @@ async function handleSave(): Promise<void> {
   isSaving.value = true;
 
   try {
-    // Calculate final positions
-    const sortedResults = calculatePositions(
-      formResults.value.filter((r) => r.driver_id !== null),
-      isQualifying.value,
-    );
+    let sortedResults: RaceResultFormData[];
 
-    // Calculate fastest laps (only for races, automatically handles divisions)
-    calculateFastestLaps(sortedResults);
+    if (!raceTimesRequired.value) {
+      // No-times mode: positions are based on row order per division
+      const resultsWithDrivers = formResults.value.filter((r) => r.driver_id !== null);
+
+      if (hasDivisions.value) {
+        // Group by division and assign positions within each division
+        const byDivision = new Map<number | null, RaceResultFormData[]>();
+        resultsWithDrivers.forEach((r) => {
+          const divId = r.division_id ?? null;
+          if (!byDivision.has(divId)) byDivision.set(divId, []);
+          byDivision.get(divId)!.push(r);
+        });
+
+        sortedResults = [];
+        Array.from(byDivision.values()).forEach((divResults) => {
+          // Separate finishers and DNF within each division
+          const finishers = divResults.filter((r) => !r.dnf);
+          const dnfDrivers = divResults.filter((r) => r.dnf);
+
+          // Assign positions: finishers first, then DNF
+          finishers.forEach((result, idx) => {
+            result.position = idx + 1;
+            sortedResults.push(result);
+          });
+          dnfDrivers.forEach((result, idx) => {
+            result.position = finishers.length + idx + 1;
+            sortedResults.push(result);
+          });
+        });
+      } else {
+        // No divisions: assign sequential positions with DNF at end
+        const finishers = resultsWithDrivers.filter((r) => !r.dnf);
+        const dnfDrivers = resultsWithDrivers.filter((r) => r.dnf);
+
+        sortedResults = [
+          ...finishers.map((result, idx) => ({ ...result, position: idx + 1 })),
+          ...dnfDrivers.map((result, idx) => ({
+            ...result,
+            position: finishers.length + idx + 1,
+          })),
+        ];
+      }
+      // Fastest lap is already set by checkbox - don't recalculate
+    } else {
+      // Times-required mode: calculate positions from times
+      const resultsWithDrivers = formResults.value.filter((r) => r.driver_id !== null);
+
+      if (hasDivisions.value) {
+        // Calculate positions per division
+        const byDivision = new Map<number | null, RaceResultFormData[]>();
+        resultsWithDrivers.forEach((r) => {
+          const divId = r.division_id ?? null;
+          if (!byDivision.has(divId)) byDivision.set(divId, []);
+          byDivision.get(divId)!.push(r);
+        });
+
+        sortedResults = [];
+        Array.from(byDivision.values()).forEach((divResults) => {
+          const sorted = calculatePositions(divResults, isQualifying.value);
+          sortedResults.push(...sorted);
+        });
+      } else {
+        // No divisions: calculate positions for all results together
+        sortedResults = calculatePositions(resultsWithDrivers, isQualifying.value);
+      }
+
+      // Calculate fastest laps (only for races, automatically handles divisions)
+      if (!isQualifying.value) {
+        calculateFastestLaps(sortedResults);
+      }
+    }
 
     // Build payload
     const payload: BulkRaceResultsPayload = {
-      results: sortedResults.map((r, index) => ({
+      results: sortedResults.map((r) => ({
         driver_id: r.driver_id!,
         division_id: r.division_id ?? null,
-        position: index + 1,
+        position: r.position!, // Use calculated position, not index
         race_time: r.race_time || null,
         race_time_difference: r.race_time_difference || null,
         fastest_lap: r.fastest_lap || null,

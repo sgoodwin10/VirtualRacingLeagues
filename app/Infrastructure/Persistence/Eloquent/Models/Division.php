@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereSeasonId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereUpdatedAt($value)
  * @method static DivisionFactory factory($count = null, $state = [])
+ * @method static Division firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  */
 class Division extends Model
 {

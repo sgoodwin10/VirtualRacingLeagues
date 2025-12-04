@@ -191,7 +191,7 @@ describe('RaceEventResultsSection', () => {
 
   describe('Results Table - Qualifying', () => {
     it('should display qualifying-specific columns', () => {
-      const wrapper = createWrapper({ raceEvent: mockQualifyingEvent });
+      const wrapper = createWrapper({ raceEvent: mockQualifyingEvent, raceTimesRequired: true });
 
       expect(wrapper.text()).toContain('Lap Time');
       // Should not have race-specific columns
@@ -214,7 +214,7 @@ describe('RaceEventResultsSection', () => {
     });
 
     it('should display lap times', () => {
-      const wrapper = createWrapper({ raceEvent: mockQualifyingEvent });
+      const wrapper = createWrapper({ raceEvent: mockQualifyingEvent, raceTimesRequired: true });
 
       expect(wrapper.text()).toContain('01:12.345');
       expect(wrapper.text()).toContain('01:12.567');
@@ -223,7 +223,7 @@ describe('RaceEventResultsSection', () => {
 
   describe('Results Table - Race', () => {
     it('should display race-specific columns', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       expect(wrapper.text()).toContain('Time');
       expect(wrapper.text()).toContain('Gap');
@@ -232,7 +232,7 @@ describe('RaceEventResultsSection', () => {
     });
 
     it('should display race times', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       // Times are formatted by useTimeFormat which removes leading zeros
       expect(wrapper.text()).toContain('1:42:05.123');
@@ -240,14 +240,14 @@ describe('RaceEventResultsSection', () => {
     });
 
     it('should display time differences', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       // Time differences are formatted by useTimeFormat which removes leading zeros
       expect(wrapper.text()).toContain('+02.767');
     });
 
     it('should display fastest lap tag', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       const tags = wrapper.findAllComponents({ name: 'Tag' });
       const fastestLapTags = tags.filter((tag) => tag.props('value') === 'FL');
@@ -256,7 +256,7 @@ describe('RaceEventResultsSection', () => {
     });
 
     it('should display penalties', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       // Penalties are formatted by useTimeFormat which removes leading zeros
       expect(wrapper.text()).toContain('05.000');
@@ -404,7 +404,7 @@ describe('RaceEventResultsSection', () => {
 
   describe('Null Value Handling', () => {
     it('should display dash for null race times', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       // Charles Leclerc has null race_time (DNF)
       const html = wrapper.html();
@@ -412,7 +412,7 @@ describe('RaceEventResultsSection', () => {
     });
 
     it('should display dash for null penalties', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       const html = wrapper.html();
       expect(html).toContain('-');
@@ -428,7 +428,10 @@ describe('RaceEventResultsSection', () => {
           },
         ],
       };
-      const wrapper = createWrapper({ raceEvent: eventWithNullFastestLap });
+      const wrapper = createWrapper({
+        raceEvent: eventWithNullFastestLap,
+        raceTimesRequired: true,
+      });
 
       const html = wrapper.html();
       expect(html).toContain('-');
@@ -565,7 +568,7 @@ describe('RaceEventResultsSection', () => {
 
   describe('Positions Gained Display', () => {
     it('should display +/- column header for races', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       expect(wrapper.text()).toContain('+/-');
     });
@@ -577,21 +580,21 @@ describe('RaceEventResultsSection', () => {
     });
 
     it('should display positive positions gained with + prefix', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       // Lewis Hamilton gained 2 positions
       expect(wrapper.text()).toContain('+2');
     });
 
     it('should display negative positions gained without extra prefix', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       // Max Verstappen lost 1 position
       expect(wrapper.text()).toContain('-1');
     });
 
     it('should display dash for null positions_gained', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       // Charles Leclerc has null positions_gained
       const html = wrapper.html();
@@ -608,13 +611,13 @@ describe('RaceEventResultsSection', () => {
           },
         ],
       };
-      const wrapper = createWrapper({ raceEvent: eventWithZeroGained });
+      const wrapper = createWrapper({ raceEvent: eventWithZeroGained, raceTimesRequired: true });
 
       expect(wrapper.text()).toContain('0');
     });
 
     it('should apply green color class for positive positions gained', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       const html = wrapper.html();
       // Check that green text class exists for Lewis Hamilton's +2
@@ -622,7 +625,7 @@ describe('RaceEventResultsSection', () => {
     });
 
     it('should apply red color class for negative positions gained', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       const html = wrapper.html();
       // Check that red text class exists for Max Verstappen's -1
@@ -630,7 +633,7 @@ describe('RaceEventResultsSection', () => {
     });
 
     it('should apply gray color class for null positions gained', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({ raceTimesRequired: true });
 
       const html = wrapper.html();
       // Check that gray text class exists for Charles Leclerc's null

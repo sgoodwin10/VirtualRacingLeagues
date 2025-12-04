@@ -22,12 +22,22 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Development-only seeders (test data)
+        // IMPORTANT: These seeders will ONLY run in local/development/testing environments
         if (app()->environment('local', 'development', 'testing')) {
             $this->call([
+                // Core configuration and users
                 SiteConfigSeeder::class,
                 UserSeeder::class,
+
+                // League structure (must be in this order due to foreign key dependencies)
                 LeagueSeeder::class,
                 DriverSeeder::class,
+                CompetitionSeeder::class,
+                SeasonSeeder::class,
+                DivisionSeeder::class,
+                RoundSeeder::class,
+                RaceSeeder::class,
+                RaceResultSeeder::class,
             ]);
         }
     }

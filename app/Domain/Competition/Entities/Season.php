@@ -46,6 +46,7 @@ final class Season
         private ?string $bannerPath,
         private bool $teamChampionshipEnabled,
         private bool $raceDivisionsEnabled,
+        private bool $raceTimesRequired,
         private SeasonStatus $status,
         private int $createdByUserId,
         private DateTimeImmutable $createdAt,
@@ -69,6 +70,7 @@ final class Season
         ?string $bannerPath = null,
         bool $teamChampionshipEnabled = false,
         bool $raceDivisionsEnabled = false,
+        bool $raceTimesRequired = true,
     ): self {
         $now = new DateTimeImmutable();
 
@@ -84,6 +86,7 @@ final class Season
             bannerPath: $bannerPath,
             teamChampionshipEnabled: $teamChampionshipEnabled,
             raceDivisionsEnabled: $raceDivisionsEnabled,
+            raceTimesRequired: $raceTimesRequired,
             status: SeasonStatus::SETUP,
             createdByUserId: $createdByUserId,
             createdAt: $now,
@@ -111,6 +114,7 @@ final class Season
         ?string $bannerPath = null,
         bool $teamChampionshipEnabled = false,
         bool $raceDivisionsEnabled = false,
+        bool $raceTimesRequired = true,
         ?DateTimeImmutable $deletedAt = null,
     ): self {
         return new self(
@@ -125,6 +129,7 @@ final class Season
             bannerPath: $bannerPath,
             teamChampionshipEnabled: $teamChampionshipEnabled,
             raceDivisionsEnabled: $raceDivisionsEnabled,
+            raceTimesRequired: $raceTimesRequired,
             status: $status,
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
@@ -214,6 +219,11 @@ final class Season
     public function raceDivisionsEnabled(): bool
     {
         return $this->raceDivisionsEnabled;
+    }
+
+    public function raceTimesRequired(): bool
+    {
+        return $this->raceTimesRequired;
     }
 
     public function status(): SeasonStatus
@@ -451,6 +461,54 @@ final class Season
                 seasonId: $this->id ?? 0,
                 competitionId: $this->competitionId,
                 changes: ['race_divisions_enabled' => ['old' => true, 'new' => false]],
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Enable race times requirement.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function enableRaceTimes(): void
+    {
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id ?? 0);
+        }
+
+        if (!$this->raceTimesRequired) {
+            $this->raceTimesRequired = true;
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonUpdated(
+                seasonId: $this->id ?? 0,
+                competitionId: $this->competitionId,
+                changes: ['race_times_required' => ['old' => false, 'new' => true]],
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Disable race times requirement.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function disableRaceTimes(): void
+    {
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id ?? 0);
+        }
+
+        if ($this->raceTimesRequired) {
+            $this->raceTimesRequired = false;
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonUpdated(
+                seasonId: $this->id ?? 0,
+                competitionId: $this->competitionId,
+                changes: ['race_times_required' => ['old' => true, 'new' => false]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
             ));
         }

@@ -1,5 +1,5 @@
 ---
-name: app
+name: frontend-app
 description: Specialized frontend development for the user dashboard (resources/app/) using Vue 3, TypeScript, PrimeVue, and Pinia. Automatically invokes the dev-fe-app agent for comprehensive Vue expertise.
 allowed-tools: Bash, Glob, Grep, Read, Edit, MultiEdit, Write, WebFetch, WebSearch, TodoWrite, Task, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 ---

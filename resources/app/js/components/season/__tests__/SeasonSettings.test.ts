@@ -53,6 +53,7 @@ describe('SeasonSettings', () => {
     has_own_banner: false,
     race_divisions_enabled: false,
     team_championship_enabled: false,
+    race_times_required: true,
     status: 'setup',
     is_setup: true,
     is_active: false,
@@ -112,7 +113,7 @@ describe('SeasonSettings', () => {
       wrapper = createWrapper(season);
 
       expect(wrapper.find('.season-settings').exists()).toBe(true);
-      expect(wrapper.text()).toContain('Season Status');
+      expect(wrapper.text()).toContain('Current Status');
       expect(wrapper.text()).toContain('Activate Season');
       expect(wrapper.text()).toContain('Complete Season');
       expect(wrapper.text()).toContain('Archive Season');
@@ -124,7 +125,7 @@ describe('SeasonSettings', () => {
       wrapper = createWrapper(season);
 
       expect(wrapper.find('.season-settings').exists()).toBe(true);
-      expect(wrapper.text()).toContain('Season Status');
+      expect(wrapper.text()).toContain('Current Status');
     });
 
     it('renders correctly with completed status', () => {
@@ -132,7 +133,7 @@ describe('SeasonSettings', () => {
       wrapper = createWrapper(season);
 
       expect(wrapper.find('.season-settings').exists()).toBe(true);
-      expect(wrapper.text()).toContain('Season Status');
+      expect(wrapper.text()).toContain('Current Status');
     });
 
     it('renders archived panel when season is archived', () => {
@@ -197,13 +198,10 @@ describe('SeasonSettings', () => {
       wrapper = createWrapper(season);
 
       const panelHeaders = wrapper.findAllComponents({ name: 'PanelHeader' });
+      // Only Danger Zone has a PanelHeader; Season Status uses direct content
       expect(panelHeaders.length).toBeGreaterThan(0);
 
       // Check that PanelHeader components receive icon props
-      const statusPanel = panelHeaders.find((ph) => ph.props('title') === 'Season Status');
-      expect(statusPanel).toBeDefined();
-      expect(statusPanel?.props('icon')).toBeDefined();
-
       const dangerPanel = panelHeaders.find((ph) => ph.props('title') === 'Danger Zone');
       expect(dangerPanel).toBeDefined();
       expect(dangerPanel?.props('icon')).toBeDefined();
@@ -214,9 +212,7 @@ describe('SeasonSettings', () => {
       wrapper = createWrapper(season);
 
       const panelHeaders = wrapper.findAllComponents({ name: 'PanelHeader' });
-      const statusPanel = panelHeaders.find((ph) => ph.props('title') === 'Season Status');
-      expect(statusPanel?.props('gradient')).toBe('from-blue-50 to-indigo-50');
-
+      // Only Danger Zone has a PanelHeader with gradient
       const dangerPanel = panelHeaders.find((ph) => ph.props('title') === 'Danger Zone');
       expect(dangerPanel?.props('gradient')).toBe('from-red-100 to-rose-100');
     });

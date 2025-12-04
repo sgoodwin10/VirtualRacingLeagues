@@ -46,6 +46,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $status
  * @property string $created_at
  * @property string $updated_at
+ * @method static Race firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  *
  * @method static \Illuminate\Database\Eloquent\Builder<Race> where($column, $operator = null, $value = null, $boolean = 'and')
  * @method static Race|null find(int $id, $columns = ['*'])

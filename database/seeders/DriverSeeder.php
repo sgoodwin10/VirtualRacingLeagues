@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Infrastructure\Persistence\Eloquent\Models\Driver;
+use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,14 @@ class DriverSeeder extends Seeder
         DB::table('drivers')->truncate();
         DB::table('league_drivers')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        // Get the default league
+        $league = League::where('slug', 'virtual-racing-league')->first();
+
+        if (!$league) {
+            $this->command->error('League not found. Please run LeagueSeeder first.');
+            return;
+        }
 
         $drivers = [
             ['discord_id' => 'Half-Byte', 'psn_id' => 'Half-Byte', 'race_number' => '21'],
@@ -51,9 +60,9 @@ class DriverSeeder extends Seeder
             ['discord_id' => 'Valymr_Blaize', 'psn_id' => 'Valymr_Blaize', 'race_number' => '212'],
             ['discord_id' => 'UrsineSaturn9', 'psn_id' => 'UrsineSaturn9', 'race_number' => '42'],
             ['discord_id' => 'Bluntman75', 'psn_id' => 'Blunty075', 'race_number' => '75'],
-            ['discord_id' => 'pokeeetus', 'psn_id' => 'Tanqr7286', 'race_number' => '44'],
+            ['discord_id' => 'pokeeetus', 'psn_id' => 'TanqR7286', 'race_number' => '44'],
             ['discord_id' => 'Snorxal', 'psn_id' => 'S2T_Snorxal', 'race_number' => '39'],
-            ['discord_id' => 'evilmoon', 'psn_id' => 'X-3vi1m00n', 'race_number' => '88'],
+            ['discord_id' => 'evilmoon', 'psn_id' => 'X-Evi1m00n', 'race_number' => '88'],
             ['discord_id' => 'Stinky', 'psn_id' => 'StinkyTaylor', 'race_number' => '66'],
             ['discord_id' => 'troll555', 'psn_id' => 'tolley__', 'race_number' => '28'],
             ['discord_id' => 'Donsflyup', 'psn_id' => 'wait6moreseconds', 'race_number' => '93'],
@@ -76,6 +85,21 @@ class DriverSeeder extends Seeder
             ['discord_id' => 'btwong10', 'psn_id' => 'btwong10', 'race_number' => '10'],
             ['discord_id' => 'isaacfog01', 'psn_id' => 'fogdog01', 'race_number' => '99'],
             ['discord_id' => 'ITZ_JZH17', 'psn_id' => 'ITZ_JOSH15', 'race_number' => '77'],
+            ['discord_id' => null, 'psn_id' => 'Viperzed', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'JimothyPayload', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'CaptainRisky21', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'MINT_Matt', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'BlockyRex1', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'sidawg2', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'johnnoclint', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'Selduin', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'K. Brown', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'B. CakePie', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'DRZ-Hatfield', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'arbee5555', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'TimAnt_46', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'arnoldwa', 'race_number' => null],
+            ['discord_id' => null, 'psn_id' => 'LuckyDenverM1nt', 'race_number' => null],
         ];
 
         foreach ($drivers as $driverData) {
@@ -98,9 +122,9 @@ class DriverSeeder extends Seeder
                 'discord_id' => $driverData['discord_id'],
             ]);
 
-            // Add driver to league with id = 1
+            // Add driver to the league
             LeagueDriverEloquent::create([
-                'league_id' => 1,
+                'league_id' => $league->id,
                 'driver_id' => $driver->id,
                 'driver_number' => $driverData['race_number'] ? (int) $driverData['race_number'] : null,
                 'status' => 'active',
