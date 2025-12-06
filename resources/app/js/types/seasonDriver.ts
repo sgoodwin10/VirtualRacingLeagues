@@ -55,6 +55,7 @@ export interface SeasonDriver {
 
   // Division and team IDs
   division_id: number | null;
+  team_id: number | null;
 
   // Season-specific metadata
   status: SeasonDriverStatus;

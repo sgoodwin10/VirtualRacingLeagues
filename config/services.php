@@ -39,4 +39,8 @@ return [
         'tracking_id' => env('GOOGLE_ANALYTICS_ID'),
     ],
 
+    'google_tag_manager' => [
+        'id' => env('GOOGLE_TAG_MANAGER'),
+    ],
+
 ];

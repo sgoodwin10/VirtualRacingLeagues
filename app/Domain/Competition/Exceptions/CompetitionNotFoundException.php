@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Domain\Competition\Exceptions;
 
+use App\Domain\Shared\Exceptions\DomainNotFoundException;
+
 /**
  * Exception thrown when a competition is not found.
  */
-class CompetitionNotFoundException extends \DomainException
+class CompetitionNotFoundException extends DomainNotFoundException
 {
     public static function withId(int $id): self
     {

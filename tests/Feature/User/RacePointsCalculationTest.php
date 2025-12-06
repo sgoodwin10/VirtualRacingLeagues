@@ -70,7 +70,7 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver1->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'fastest_lap' => '00:01:25.500',
             'dnf' => false,
             'status' => 'pending',
@@ -78,7 +78,7 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver2->id,
-            'race_time' => '00:30:20.500',
+            'original_race_time' => '00:30:20.500',
             'fastest_lap' => '00:01:26.000',
             'dnf' => false,
             'status' => 'pending',
@@ -86,7 +86,7 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver3->id,
-            'race_time' => '00:30:25.750',
+            'original_race_time' => '00:30:25.750',
             'fastest_lap' => '00:01:27.000',
             'dnf' => false,
             'status' => 'pending',
@@ -129,13 +129,13 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver1->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver2->id,
-            'race_time' => '00:15:00.000', // DNF - incomplete race time
+            'original_race_time' => '00:15:00.000', // DNF - incomplete race time
             'dnf' => true,
         ]);
 
@@ -173,13 +173,13 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver1->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver2->id,
-            'race_time' => null, // DNS - no race time
+            'original_race_time' => null, // DNS - no race time
             'dnf' => false,
         ]);
 
@@ -223,21 +223,21 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver1->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'fastest_lap' => '00:01:26.000',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver2->id,
-            'race_time' => '00:30:20.500',
+            'original_race_time' => '00:30:20.500',
             'fastest_lap' => '00:01:25.500', // Fastest lap
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver3->id,
-            'race_time' => '00:30:25.750',
+            'original_race_time' => '00:30:25.750',
             'fastest_lap' => '00:01:27.000',
             'dnf' => false,
         ]);
@@ -279,14 +279,14 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver1->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'fastest_lap' => '00:01:26.000',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver2->id,
-            'race_time' => '00:15:00.000',
+            'original_race_time' => '00:15:00.000',
             'fastest_lap' => '00:01:20.000', // DNF driver with fastest lap
             'dnf' => true,
         ]);
@@ -331,28 +331,28 @@ final class RacePointsCalculationTest extends TestCase
             'race_id' => $this->race->id,
             'driver_id' => $this->driver1->id,
             'division_id' => $division1->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver2->id,
             'division_id' => $division1->id,
-            'race_time' => '00:30:20.500',
+            'original_race_time' => '00:30:20.500',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver3->id,
             'division_id' => $division2->id,
-            'race_time' => '00:30:25.750', // Slower than division1 drivers
+            'original_race_time' => '00:30:25.750', // Slower than division1 drivers
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver4->id,
             'division_id' => $division2->id,
-            'race_time' => '00:30:30.000',
+            'original_race_time' => '00:30:30.000',
             'dnf' => false,
         ]);
 
@@ -408,7 +408,7 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver1->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'dnf' => false,
         ]);
 
@@ -437,37 +437,37 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver1->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver2->id,
-            'race_time' => '00:30:20.500',
+            'original_race_time' => '00:30:20.500',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver3->id,
-            'race_time' => '00:15:00.000',
+            'original_race_time' => '00:15:00.000',
             'dnf' => true, // DNF
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $this->driver4->id,
-            'race_time' => '00:10:00.000',
+            'original_race_time' => '00:10:00.000',
             'dnf' => true, // DNF
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $driver5->id,
-            'race_time' => null,
+            'original_race_time' => null,
             'dnf' => false, // DNS
         ]);
         RaceResult::create([
             'race_id' => $this->race->id,
             'driver_id' => $driver6->id,
-            'race_time' => null,
+            'original_race_time' => null,
             'dnf' => false, // DNS
         ]);
 
@@ -539,7 +539,7 @@ final class RacePointsCalculationTest extends TestCase
             'race_id' => $qualifier->id,
             'driver_id' => $this->driver1->id,
             'position' => 1,
-            'race_time' => '00:01:25.500',
+            'original_race_time' => '00:01:25.500',
             'fastest_lap' => '00:01:25.500',
             'dnf' => false,
             'status' => 'confirmed',
@@ -548,7 +548,7 @@ final class RacePointsCalculationTest extends TestCase
             'race_id' => $qualifier->id,
             'driver_id' => $this->driver2->id,
             'position' => 2,
-            'race_time' => '00:01:26.000',
+            'original_race_time' => '00:01:26.000',
             'fastest_lap' => '00:01:26.000',
             'dnf' => false,
             'status' => 'confirmed',
@@ -557,7 +557,7 @@ final class RacePointsCalculationTest extends TestCase
             'race_id' => $qualifier->id,
             'driver_id' => $this->driver3->id,
             'position' => 3,
-            'race_time' => '00:01:27.000',
+            'original_race_time' => '00:01:27.000',
             'fastest_lap' => '00:01:27.000',
             'dnf' => false,
             'status' => 'confirmed',
@@ -577,21 +577,21 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $raceWithoutPoints->id,
             'driver_id' => $this->driver2->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'fastest_lap' => '00:01:25.500',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $raceWithoutPoints->id,
             'driver_id' => $this->driver1->id,
-            'race_time' => '00:30:20.500',
+            'original_race_time' => '00:30:20.500',
             'fastest_lap' => '00:01:26.000',
             'dnf' => false,
         ]);
         RaceResult::create([
             'race_id' => $raceWithoutPoints->id,
             'driver_id' => $this->driver3->id,
-            'race_time' => '00:30:25.750',
+            'original_race_time' => '00:30:25.750',
             'fastest_lap' => '00:01:27.000',
             'dnf' => false,
         ]);
@@ -649,7 +649,7 @@ final class RacePointsCalculationTest extends TestCase
         RaceResult::create([
             'race_id' => $raceManualGrid->id,
             'driver_id' => $this->driver1->id,
-            'race_time' => '00:30:15.250',
+            'original_race_time' => '00:30:15.250',
             'dnf' => false,
         ]);
 

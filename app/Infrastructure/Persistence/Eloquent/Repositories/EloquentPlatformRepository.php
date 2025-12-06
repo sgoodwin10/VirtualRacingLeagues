@@ -28,4 +28,23 @@ final class EloquentPlatformRepository implements PlatformRepositoryInterface
             slug: $platform->slug,
         );
     }
+
+    public function findActiveByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+
+        return Platform::query()
+            ->whereIn('id', $ids)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'slug'])
+            ->map(fn($platform) => [
+                'id' => $platform->id,
+                'name' => $platform->name,
+                'slug' => $platform->slug,
+            ])
+            ->toArray();
+    }
 }

@@ -1,5 +1,11 @@
 import { apiService } from './api';
-import type { League, LeagueListParams, PaginatedResponse, ApiResponse } from '@admin/types/league';
+import type {
+  League,
+  LeagueDetails,
+  LeagueListParams,
+  PaginatedResponse,
+  ApiResponse,
+} from '@admin/types/league';
 import { handleServiceError } from '@admin/utils/errorHandler';
 
 /**
@@ -79,6 +85,7 @@ class LeagueService {
       };
     } catch (error) {
       handleServiceError(error);
+      throw error;
     }
   }
 
@@ -98,6 +105,29 @@ class LeagueService {
       throw new Error('Failed to fetch league');
     } catch (error) {
       handleServiceError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get detailed league information including competitions and stats
+   * @param id - League ID
+   * @param signal - Optional AbortSignal for request cancellation
+   * @returns Promise<LeagueDetails>
+   */
+  async getLeagueDetails(id: number, signal?: AbortSignal): Promise<LeagueDetails> {
+    try {
+      const response = await apiService.get<ApiResponse<LeagueDetails>>(`/leagues/${id}/details`, {
+        signal,
+      });
+      // Return the detailed league from the response
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error('Failed to fetch league details');
+    } catch (error) {
+      handleServiceError(error);
+      throw error;
     }
   }
 
@@ -112,6 +142,7 @@ class LeagueService {
       await apiService.post<ApiResponse<null>>(`/leagues/${id}/archive`, {}, { signal });
     } catch (error) {
       handleServiceError(error);
+      throw error;
     }
   }
 
@@ -127,6 +158,7 @@ class LeagueService {
       await apiService.delete<ApiResponse<null>>(`/leagues/${id}`, { signal });
     } catch (error) {
       handleServiceError(error);
+      throw error;
     }
   }
 }

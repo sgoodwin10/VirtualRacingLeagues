@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Division\Entities;
 use App\Domain\Division\Entities\Division;
 use App\Domain\Division\Events\DivisionCreated;
 use App\Domain\Division\Events\DivisionDeleted;
+use App\Domain\Division\Events\DivisionReordered;
 use App\Domain\Division\Events\DivisionUpdated;
 use App\Domain\Division\ValueObjects\DivisionDescription;
 use App\Domain\Division\ValueObjects\DivisionName;
@@ -30,6 +31,7 @@ class DivisionTest extends TestCase
         $this->assertEquals('Pro Division', $division->name()->value());
         $this->assertNull($division->description()->value());
         $this->assertNull($division->logoUrl());
+        $this->assertEquals(1, $division->order());
         $this->assertInstanceOf(DateTimeImmutable::class, $division->createdAt());
         $this->assertInstanceOf(DateTimeImmutable::class, $division->updatedAt());
     }
@@ -41,7 +43,8 @@ class DivisionTest extends TestCase
             seasonId: 1,
             name: DivisionName::from('Pro Division'),
             description: DivisionDescription::from('This is a description for the pro division'),
-            logoUrl: 'divisions/season-1/logo.png'
+            logoUrl: 'divisions/season-1/logo.png',
+            order: 5
         );
 
         $this->assertNull($division->id());
@@ -49,6 +52,7 @@ class DivisionTest extends TestCase
         $this->assertEquals('Pro Division', $division->name()->value());
         $this->assertEquals('This is a description for the pro division', $division->description()->value());
         $this->assertEquals('divisions/season-1/logo.png', $division->logoUrl());
+        $this->assertEquals(5, $division->order());
     }
 
     #[Test]
@@ -63,6 +67,7 @@ class DivisionTest extends TestCase
             name: DivisionName::from('Pro Division'),
             description: DivisionDescription::from('Division description'),
             logoUrl: 'divisions/season-1/logo.png',
+            order: 3,
             createdAt: $createdAt,
             updatedAt: $updatedAt
         );
@@ -72,6 +77,7 @@ class DivisionTest extends TestCase
         $this->assertEquals('Pro Division', $division->name()->value());
         $this->assertEquals('Division description', $division->description()->value());
         $this->assertEquals('divisions/season-1/logo.png', $division->logoUrl());
+        $this->assertEquals(3, $division->order());
         $this->assertEquals($createdAt, $division->createdAt());
         $this->assertEquals($updatedAt, $division->updatedAt());
     }
@@ -99,7 +105,8 @@ class DivisionTest extends TestCase
             seasonId: 1,
             name: DivisionName::from('Pro Division'),
             description: DivisionDescription::from('Division description'),
-            logoUrl: 'divisions/season-1/logo.png'
+            logoUrl: 'divisions/season-1/logo.png',
+            order: 2
         );
 
         $division->setId(123);
@@ -114,6 +121,7 @@ class DivisionTest extends TestCase
         $this->assertEquals('Pro Division', $events[0]->name);
         $this->assertEquals('Division description', $events[0]->description);
         $this->assertEquals('divisions/season-1/logo.png', $events[0]->logoUrl);
+        $this->assertEquals(2, $events[0]->order);
     }
 
     #[Test]
@@ -307,5 +315,98 @@ class DivisionTest extends TestCase
         $this->assertCount(1, $events);
         $this->assertFalse($division->hasEvents());
         $this->assertCount(0, $division->releaseEvents());
+    }
+
+    #[Test]
+    public function it_changes_order_and_records_event(): void
+    {
+        $division = Division::create(
+            seasonId: 1,
+            name: DivisionName::from('Pro Division'),
+            description: DivisionDescription::from(null),
+            order: 3
+        );
+
+        $division->setId(123);
+
+        $division->changeOrder(5);
+
+        $this->assertEquals(5, $division->order());
+
+        $events = $division->releaseEvents();
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(DivisionReordered::class, $events[0]);
+        $this->assertEquals(123, $events[0]->divisionId);
+        $this->assertEquals(1, $events[0]->seasonId);
+        $this->assertEquals(3, $events[0]->oldOrder);
+        $this->assertEquals(5, $events[0]->newOrder);
+    }
+
+    #[Test]
+    public function it_does_not_record_event_when_order_unchanged(): void
+    {
+        $division = Division::create(
+            seasonId: 1,
+            name: DivisionName::from('Pro Division'),
+            description: DivisionDescription::from(null),
+            order: 3
+        );
+
+        $division->setId(123);
+
+        $division->changeOrder(3);
+
+        $this->assertEquals(3, $division->order());
+
+        $events = $division->releaseEvents();
+        $this->assertCount(0, $events);
+    }
+
+    #[Test]
+    public function it_updates_order_value_when_changed(): void
+    {
+        $division = Division::create(
+            seasonId: 1,
+            name: DivisionName::from('Pro Division'),
+            description: DivisionDescription::from(null),
+            order: 1
+        );
+
+        $division->setId(123);
+
+        $this->assertEquals(1, $division->order());
+
+        $division->changeOrder(10);
+
+        $this->assertEquals(10, $division->order());
+    }
+
+    #[Test]
+    public function it_throws_exception_when_changing_order_to_less_than_one(): void
+    {
+        $division = Division::create(
+            seasonId: 1,
+            name: DivisionName::from('Pro Division'),
+            description: DivisionDescription::from(null),
+        );
+        $division->setId(123);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('must be a positive integer');
+        $division->changeOrder(0);
+    }
+
+    #[Test]
+    public function it_throws_exception_when_creating_division_with_invalid_order(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('must be a positive integer');
+
+        Division::create(
+            seasonId: 1,
+            name: DivisionName::from('Pro Division'),
+            description: DivisionDescription::from(null),
+            order: 0
+        );
     }
 }

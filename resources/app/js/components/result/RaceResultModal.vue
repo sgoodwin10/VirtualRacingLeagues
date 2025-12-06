@@ -24,7 +24,30 @@
 
       <template v-else>
         <!-- CSV Import Section (hidden in read-only mode) -->
-        <ResultCsvImport v-if="!isReadOnly" :is-qualifying="isQualifying" @parse="handleCsvParse" />
+        <ResultCsvImport
+          v-if="!isReadOnly"
+          :is-qualifying="isQualifying"
+          :race-times-required="raceTimesRequired"
+          @parse="handleCsvParse"
+        />
+
+        <!-- Missing Drivers Warning -->
+        <Message
+          v-if="missingDriverNames.length > 0"
+          severity="warn"
+          :closable="true"
+          @close="missingDriverNames = []"
+        >
+          <div>
+            <strong>{{ missingDriverNames.length }} driver(s) not found in this season:</strong>
+            <ul class="mt-2 mb-2 list-disc list-inside">
+              <li v-for="name in missingDriverNames" :key="name">{{ name }}</li>
+            </ul>
+            <p class="text-sm">
+              Please add these drivers to the season before importing their results.
+            </p>
+          </div>
+        </Message>
 
         <!-- Results Entry Section -->
         <ResultDivisionTabs
@@ -38,6 +61,7 @@
           :race-times-required="raceTimesRequired"
           @update:results="handleResultsUpdate"
           @reset-all="handleResetAll"
+          @penalty-change="handlePenaltyChange"
         />
 
         <ResultEntryTable
@@ -49,6 +73,7 @@
           :read-only="isReadOnly"
           :race-times-required="raceTimesRequired"
           @update:results="handleResultsUpdate"
+          @penalty-change="handlePenaltyChange"
         />
       </template>
     </div>
@@ -84,6 +109,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
 import Button from 'primevue/button';
+import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
 import { PhTrophy } from '@phosphor-icons/vue';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
@@ -127,12 +153,14 @@ const seasonStore = useSeasonStore();
 const divisionStore = useDivisionStore();
 const seasonDriverStore = useSeasonDriverStore();
 const toast = useToast();
-const { calculatePositions, parseTimeToMs, normalizeTimeInput } = useRaceTimeCalculation();
+const { parseTimeToMs, normalizeTimeInput } = useRaceTimeCalculation();
 
 // Local state
 const formResults = ref<RaceResultFormData[]>([]);
 const isSaving = ref(false);
 const isLoadingDrivers = ref(false);
+const isResetting = ref(false);
+const missingDriverNames = ref<string[]>([]);
 
 // Local copy of drivers to ensure reactivity
 const localDrivers = ref<SeasonDriver[]>([]);
@@ -201,6 +229,8 @@ const driversByDivision = computed<Record<number, DriverOption[]>>(() => {
   return byDivision;
 });
 
+// Computed property that creates a Set of selected driver IDs
+// Vue caches this computed property, so the Set is only recreated when formResults changes
 const selectedDriverIds = computed<Set<number>>(() => {
   const ids = new Set<number>();
   for (const result of formResults.value) {
@@ -218,38 +248,48 @@ const canSave = computed(() => {
 
 // Methods
 function initializeForm(): void {
-  // Initialize with a row for each driver, pre-populated with their ID
-  const drivers = allDrivers.value;
-  formResults.value = drivers.map((driver) => ({
-    driver_id: driver.id,
-    division_id: hasDivisions.value ? (driver.division_id ?? null) : null,
-    position: null,
-    race_time: '',
-    race_time_difference: '',
-    fastest_lap: '',
-    penalties: '',
-    has_fastest_lap: false,
-    has_pole: false,
-    dnf: false,
-  }));
+  // Initialize with empty array - user adds drivers manually
+  formResults.value = [];
 }
 
 function handleCsvParse(parsedRows: CsvResultRow[]): void {
+  // Reset missing drivers list
+  missingDriverNames.value = [];
+  const processedDriverNames = new Set<string>();
+
   // Match parsed CSV rows to drivers and populate form
   for (const csvRow of parsedRows) {
     const matchedDriver = findDriverByName(csvRow.driver);
-    if (!matchedDriver) continue;
-
-    // Find or create a form row for this driver
-    let formRow = formResults.value.find((r) => r.driver_id === matchedDriver.id);
-    if (!formRow) {
-      // Find first empty row
-      formRow = formResults.value.find((r) => r.driver_id === null);
+    if (!matchedDriver) {
+      // Track the missing driver name (avoid duplicates)
+      if (!processedDriverNames.has(csvRow.driver)) {
+        missingDriverNames.value.push(csvRow.driver);
+        processedDriverNames.add(csvRow.driver);
+      }
+      continue;
     }
-    if (!formRow) continue;
 
-    formRow.driver_id = matchedDriver.id;
-    formRow.division_id = matchedDriver.division_id ?? null;
+    // Check if this driver already exists in the form
+    let formRow = formResults.value.find((r) => r.driver_id === matchedDriver.id);
+
+    if (!formRow) {
+      // Create a new row for this driver
+      formRow = {
+        driver_id: matchedDriver.id,
+        division_id: matchedDriver.division_id ?? null,
+        position: null,
+        original_race_time: '',
+        original_race_time_difference: '',
+        fastest_lap: '',
+        penalties: '',
+        has_fastest_lap: false,
+        has_pole: false,
+        dnf: false,
+        _originalPenalties: '',
+        _penaltyChanged: false,
+      };
+      formResults.value.push(formRow);
+    }
 
     // Handle DNF flag from CSV
     if (csvRow.dnf !== undefined) {
@@ -257,21 +297,53 @@ function handleCsvParse(parsedRows: CsvResultRow[]): void {
     }
 
     // Normalize time values from CSV before assigning
-    // Use race_time if provided, otherwise use difference
-    if (csvRow.race_time) {
-      formRow.race_time = normalizeTimeInput(csvRow.race_time);
-      formRow.race_time_difference = '';
-    } else if (csvRow.race_time_difference) {
-      formRow.race_time_difference = normalizeTimeInput(csvRow.race_time_difference);
+    // Use race_time or original_race_time if provided, otherwise use difference
+    const raceTimeValue = csvRow.original_race_time || csvRow.race_time;
+    if (raceTimeValue) {
+      formRow.original_race_time = normalizeTimeInput(raceTimeValue);
+      formRow.original_race_time_difference = '';
+    } else if (csvRow.original_race_time_difference) {
+      formRow.original_race_time_difference = normalizeTimeInput(
+        csvRow.original_race_time_difference,
+      );
     }
 
     if (csvRow.fastest_lap_time) {
       formRow.fastest_lap = normalizeTimeInput(csvRow.fastest_lap_time);
     }
+
+    // Handle penalties from CSV
+    if (csvRow.penalties) {
+      formRow.penalties = normalizeTimeInput(csvRow.penalties);
+      formRow._originalPenalties = formRow.penalties;
+      formRow._penaltyChanged = false;
+    }
+  }
+
+  // Show warning if there are missing drivers
+  if (missingDriverNames.value.length > 0) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Drivers Not Found',
+      detail: `${missingDriverNames.value.length} driver(s) from CSV were not found in the season.`,
+      life: 5000,
+    });
   }
 
   // Recalculate times from differences
   recalculateTimesFromDifferences();
+
+  // ONE-TIME SORT after CSV import (only if times exist)
+  if (isQualifying.value) {
+    // Sort by fastest lap for qualifying
+    sortFormResultsByFastestLap();
+  } else {
+    // Sort by race time for races (if any have times)
+    const hasAnyTimes = formResults.value.some((r) => r.original_race_time);
+    if (hasAnyTimes) {
+      sortFormResultsByRaceTime();
+    }
+  }
 }
 
 // Map game platform slugs to their corresponding driver identity field
@@ -350,24 +422,52 @@ function findDriverByName(name: string): DriverOption | undefined {
 }
 
 function handleResultsUpdate(): void {
-  // Recalculate positions and times when results change
-  recalculateTimesFromDifferences();
+  // No automatic recalculation - times are set via CSV import or direct entry
 }
 
-function handleResetAll(): void {
-  // Clear all result data while keeping driver_id and division_id
-  formResults.value = formResults.value.map((result) => ({
-    driver_id: result.driver_id,
-    division_id: result.division_id,
-    position: null,
-    race_time: '',
-    race_time_difference: '',
-    fastest_lap: '',
-    penalties: '',
-    has_fastest_lap: false,
-    has_pole: false,
-    dnf: false,
-  }));
+/**
+ * Sort form results by race time (one-time sort after CSV import)
+ */
+function sortFormResultsByRaceTime(): void {
+  const { sortResultsByTime } = useRaceTimeCalculation();
+  formResults.value = sortResultsByTime(formResults.value, false);
+}
+
+/**
+ * Sort form results by fastest lap (one-time sort after CSV import for qualifying)
+ */
+function sortFormResultsByFastestLap(): void {
+  const { sortResultsByTime } = useRaceTimeCalculation();
+  formResults.value = sortResultsByTime(formResults.value, true);
+}
+
+async function handleResetAll(): Promise<void> {
+  isResetting.value = true;
+
+  try {
+    // Delete all results from the database
+    await raceResultStore.deleteResults(props.race.id);
+
+    // Reset the form to a completely fresh state (empty array)
+    formResults.value = [];
+
+    toast.add({
+      severity: 'success',
+      summary: 'Results Deleted',
+      detail: 'All results have been successfully deleted from the database.',
+      life: 3000,
+    });
+  } catch (error) {
+    console.error('Failed to delete results:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Delete Failed',
+      detail: 'Failed to delete results. Please try again.',
+      life: 5000,
+    });
+  } finally {
+    isResetting.value = false;
+  }
 }
 
 function recalculateTimesFromDifferences(): void {
@@ -389,8 +489,8 @@ function recalculateTimesFromDifferences(): void {
   for (const [divisionId, divisionResults] of resultsByDivision) {
     let divisionLeaderTime: number | null = null;
     for (const result of divisionResults) {
-      if (!result.race_time) continue;
-      const timeMs = parseTimeToMs(result.race_time);
+      if (!result.original_race_time) continue;
+      const timeMs = parseTimeToMs(result.original_race_time);
       if (timeMs !== null && (divisionLeaderTime === null || timeMs < divisionLeaderTime)) {
         divisionLeaderTime = timeMs;
       }
@@ -400,78 +500,24 @@ function recalculateTimesFromDifferences(): void {
     }
   }
 
-  // Calculate race_time for rows that only have difference, using their division's leader time
+  // Calculate original_race_time for rows that only have difference, using their division's leader time
   for (const result of formResults.value) {
     if (!result.driver_id) continue;
-    if (result.race_time) continue; // Already has race time
-    if (!result.race_time_difference) continue;
+    if (result.original_race_time) continue; // Already has race time
+    if (!result.original_race_time_difference) continue;
 
     const divisionId = result.division_id ?? null;
     const leaderTimeMs = leaderTimeByDivision.get(divisionId);
     if (leaderTimeMs === undefined) continue;
 
-    const diffMs = parseTimeToMs(result.race_time_difference);
+    const diffMs = parseTimeToMs(result.original_race_time_difference);
     if (diffMs !== null) {
       const totalMs = leaderTimeMs + diffMs;
       const hours = Math.floor(totalMs / 3600000);
       const mins = Math.floor((totalMs % 3600000) / 60000);
       const secs = Math.floor((totalMs % 60000) / 1000);
       const ms = totalMs % 1000;
-      result.race_time = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
-    }
-  }
-}
-
-/**
- * Calculate which driver(s) have the fastest lap for each division
- * Only applies to races (not qualifying)
- * Handles divisions if enabled, or processes all results as one group
- */
-function calculateFastestLaps(results: RaceResultFormData[]): void {
-  // Only apply to races, not qualifying
-  if (isQualifying.value) {
-    return;
-  }
-
-  // Reset all has_fastest_lap flags first
-  results.forEach((result) => {
-    result.has_fastest_lap = false;
-  });
-
-  // Group results by division (if divisions enabled) or process as single group
-  const resultsByDivision = new Map<number | null, RaceResultFormData[]>();
-  for (const result of results) {
-    if (!result.driver_id || !result.fastest_lap) continue;
-
-    const divisionKey = hasDivisions.value ? (result.division_id ?? null) : null;
-    if (!resultsByDivision.has(divisionKey)) {
-      resultsByDivision.set(divisionKey, []);
-    }
-    resultsByDivision.get(divisionKey)?.push(result);
-  }
-
-  // For each division (or single group), find the minimum fastest_lap time
-  for (const [, divisionResults] of resultsByDivision) {
-    let minFastestLapMs: number | null = null;
-
-    // Find the minimum fastest lap time in this division/group
-    for (const result of divisionResults) {
-      const fastestLapMs = parseTimeToMs(result.fastest_lap);
-      if (fastestLapMs !== null) {
-        if (minFastestLapMs === null || fastestLapMs < minFastestLapMs) {
-          minFastestLapMs = fastestLapMs;
-        }
-      }
-    }
-
-    // Set has_fastest_lap = true for all drivers with the minimum time (handles ties)
-    if (minFastestLapMs !== null) {
-      for (const result of divisionResults) {
-        const fastestLapMs = parseTimeToMs(result.fastest_lap);
-        if (fastestLapMs !== null && fastestLapMs === minFastestLapMs) {
-          result.has_fastest_lap = true;
-        }
-      }
+      result.original_race_time = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
     }
   }
 }
@@ -480,88 +526,46 @@ async function handleSave(): Promise<void> {
   isSaving.value = true;
 
   try {
+    // Filter to only results with drivers
+    const resultsWithDrivers = formResults.value.filter((r) => r.driver_id !== null);
+
+    // Assign positions based on current table order (respects drag-and-drop)
+    // Group by division if divisions are enabled
     let sortedResults: RaceResultFormData[];
 
-    if (!raceTimesRequired.value) {
-      // No-times mode: positions are based on row order per division
-      const resultsWithDrivers = formResults.value.filter((r) => r.driver_id !== null);
+    if (hasDivisions.value) {
+      // Group by division and assign positions within each division based on order
+      const byDivision = new Map<number | null, RaceResultFormData[]>();
+      resultsWithDrivers.forEach((r) => {
+        const divId = r.division_id ?? null;
+        if (!byDivision.has(divId)) byDivision.set(divId, []);
+        byDivision.get(divId)!.push(r);
+      });
 
-      if (hasDivisions.value) {
-        // Group by division and assign positions within each division
-        const byDivision = new Map<number | null, RaceResultFormData[]>();
-        resultsWithDrivers.forEach((r) => {
-          const divId = r.division_id ?? null;
-          if (!byDivision.has(divId)) byDivision.set(divId, []);
-          byDivision.get(divId)!.push(r);
+      sortedResults = [];
+      Array.from(byDivision.values()).forEach((divResults) => {
+        // Assign positions based on current order in each division
+        divResults.forEach((result, idx) => {
+          result.position = idx + 1;
+          sortedResults.push(result);
         });
-
-        sortedResults = [];
-        Array.from(byDivision.values()).forEach((divResults) => {
-          // Separate finishers and DNF within each division
-          const finishers = divResults.filter((r) => !r.dnf);
-          const dnfDrivers = divResults.filter((r) => r.dnf);
-
-          // Assign positions: finishers first, then DNF
-          finishers.forEach((result, idx) => {
-            result.position = idx + 1;
-            sortedResults.push(result);
-          });
-          dnfDrivers.forEach((result, idx) => {
-            result.position = finishers.length + idx + 1;
-            sortedResults.push(result);
-          });
-        });
-      } else {
-        // No divisions: assign sequential positions with DNF at end
-        const finishers = resultsWithDrivers.filter((r) => !r.dnf);
-        const dnfDrivers = resultsWithDrivers.filter((r) => r.dnf);
-
-        sortedResults = [
-          ...finishers.map((result, idx) => ({ ...result, position: idx + 1 })),
-          ...dnfDrivers.map((result, idx) => ({
-            ...result,
-            position: finishers.length + idx + 1,
-          })),
-        ];
-      }
-      // Fastest lap is already set by checkbox - don't recalculate
+      });
     } else {
-      // Times-required mode: calculate positions from times
-      const resultsWithDrivers = formResults.value.filter((r) => r.driver_id !== null);
-
-      if (hasDivisions.value) {
-        // Calculate positions per division
-        const byDivision = new Map<number | null, RaceResultFormData[]>();
-        resultsWithDrivers.forEach((r) => {
-          const divId = r.division_id ?? null;
-          if (!byDivision.has(divId)) byDivision.set(divId, []);
-          byDivision.get(divId)!.push(r);
-        });
-
-        sortedResults = [];
-        Array.from(byDivision.values()).forEach((divResults) => {
-          const sorted = calculatePositions(divResults, isQualifying.value);
-          sortedResults.push(...sorted);
-        });
-      } else {
-        // No divisions: calculate positions for all results together
-        sortedResults = calculatePositions(resultsWithDrivers, isQualifying.value);
-      }
-
-      // Calculate fastest laps (only for races, automatically handles divisions)
-      if (!isQualifying.value) {
-        calculateFastestLaps(sortedResults);
-      }
+      // No divisions: assign positions based on current order
+      sortedResults = resultsWithDrivers.map((result, idx) => ({
+        ...result,
+        position: idx + 1,
+      }));
     }
 
-    // Build payload
+    // Build payload (exclude transient fields)
     const payload: BulkRaceResultsPayload = {
       results: sortedResults.map((r) => ({
         driver_id: r.driver_id!,
         division_id: r.division_id ?? null,
         position: r.position!, // Use calculated position, not index
-        race_time: r.race_time || null,
-        race_time_difference: r.race_time_difference || null,
+        original_race_time: r.original_race_time || null,
+        original_race_time_difference: r.original_race_time_difference || null,
         fastest_lap: r.fastest_lap || null,
         penalties: r.penalties || null,
         has_fastest_lap: r.has_fastest_lap,
@@ -585,53 +589,50 @@ function handleClose(): void {
   isVisible.value = false;
   formResults.value = [];
   localDrivers.value = [];
+  missingDriverNames.value = [];
 }
 
 /**
  * Populate form with existing results from the store
- * Matches results to drivers by driver_id
+ * Only loads saved results (not all drivers), sorted by position
  */
 function populateFormWithResults(): void {
-  if (!raceResultStore.hasResults) {
+  // Check the actual results array directly to avoid reactivity timing issues
+  if (raceResultStore.results.length === 0) {
     return;
   }
 
-  let missingDriverCount = 0;
+  // Only load saved results (not all drivers)
+  // Sort by position to maintain saved order
+  const sortedResults = [...raceResultStore.results].sort(
+    (a, b) => (a.position ?? 999) - (b.position ?? 999),
+  );
 
-  // Populate form with existing results by matching driver_id
-  for (const result of raceResultStore.results) {
-    // Find the form row for this driver by matching driver_id
-    const formRow = formResults.value.find((r) => r.driver_id === result.driver_id);
+  formResults.value = sortedResults.map((result) => ({
+    driver_id: result.driver_id,
+    division_id: result.division_id ?? null,
+    position: result.position,
+    original_race_time: result.original_race_time || '',
+    final_race_time: result.final_race_time || '',
+    original_race_time_difference: result.original_race_time_difference || '',
+    final_race_time_difference: result.final_race_time_difference || '',
+    fastest_lap: result.fastest_lap || '',
+    penalties: result.penalties || '',
+    has_fastest_lap: result.has_fastest_lap,
+    has_pole: result.has_pole,
+    dnf: result.dnf,
+    _originalPenalties: result.penalties || '',
+    _penaltyChanged: false,
+  }));
+}
 
-    if (formRow) {
-      // Update the existing form row with saved result data
-      formRow.division_id = result.division_id ?? null;
-      formRow.position = result.position;
-      formRow.race_time = result.race_time || '';
-      formRow.race_time_difference = result.race_time_difference || '';
-      formRow.fastest_lap = result.fastest_lap || '';
-      formRow.penalties = result.penalties || '';
-      formRow.has_fastest_lap = result.has_fastest_lap;
-      formRow.has_pole = result.has_pole;
-      formRow.dnf = result.dnf;
-    } else {
-      // Handle case where saved result's driver is not in current driver list
-      console.warn(
-        `Saved result for driver_id ${result.driver_id} not found in current season drivers`,
-      );
-      missingDriverCount++;
-    }
-  }
-
-  // Show toast notification if any drivers were not found
-  if (missingDriverCount > 0) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Missing Drivers',
-      detail: `${missingDriverCount} saved result${missingDriverCount > 1 ? 's' : ''} could not be matched to current season drivers. The driver may have been removed from the season.`,
-      life: 5000,
-    });
-  }
+/**
+ * Handle penalty change - track if penalty was modified this session
+ */
+function handlePenaltyChange(row: RaceResultFormData): void {
+  const originalPenalty = row._originalPenalties ?? '';
+  const currentPenalty = row.penalties ?? '';
+  row._penaltyChanged = originalPenalty !== currentPenalty;
 }
 
 // Load drivers and results data
@@ -689,6 +690,9 @@ async function loadData(): Promise<void> {
     // Load existing results if any
     await raceResultStore.fetchResults(props.race.id);
 
+    // Wait for Vue's reactivity to settle after store update
+    await nextTick();
+
     // Populate form with existing results
     populateFormWithResults();
   } finally {
@@ -697,9 +701,13 @@ async function loadData(): Promise<void> {
 }
 
 // Load data when modal opens
-watch(isVisible, async (visible) => {
-  if (visible) {
-    await loadData();
-  }
-});
+watch(
+  isVisible,
+  async (visible) => {
+    if (visible) {
+      await loadData();
+    }
+  },
+  { immediate: true },
+);
 </script>

@@ -15,6 +15,7 @@ final readonly class DivisionCreated
         public string $name,
         public ?string $description,
         public ?string $logoUrl,
+        public int $order,
     ) {
     }
 }

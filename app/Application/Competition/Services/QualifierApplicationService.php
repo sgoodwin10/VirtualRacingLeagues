@@ -284,6 +284,21 @@ final class QualifierApplicationService
      */
     private function calculatePolePositionForResultSet(Race $qualifier, array $results): void
     {
+        // Check if ALL results have no fastest_lap data (fallback to submission order)
+        $allResultsHaveNoTime = true;
+        foreach ($results as $result) {
+            if (!$result->fastestLap()->isNull() && !$result->dnf()) {
+                $allResultsHaveNoTime = false;
+                break;
+            }
+        }
+
+        // If all results have no time, use submission order (database order by ID)
+        if ($allResultsHaveNoTime) {
+            $this->calculatePolePositionBySubmissionOrder($qualifier, $results);
+            return;
+        }
+
         // Separate results into two groups: valid times and DNF/no time
         $validResults = [];
         $invalidResults = [];
@@ -336,8 +351,8 @@ final class QualifierApplicationService
             // Update position, hasPole flag
             $result->update(
                 position: $position,
-                raceTime: $result->raceTime()->value(),
-                raceTimeDifference: $result->raceTimeDifference()->value(),
+                originalRaceTime: $result->originalRaceTime()->value(),
+                originalRaceTimeDifference: $result->originalRaceTimeDifference()->value(),
                 fastestLap: $result->fastestLap()->value(),
                 penalties: $result->penalties()->value(),
                 hasFastestLap: $result->hasFastestLap(),
@@ -356,8 +371,8 @@ final class QualifierApplicationService
         foreach ($invalidResults as $result) {
             $result->update(
                 position: $position,
-                raceTime: $result->raceTime()->value(),
-                raceTimeDifference: $result->raceTimeDifference()->value(),
+                originalRaceTime: $result->originalRaceTime()->value(),
+                originalRaceTimeDifference: $result->originalRaceTimeDifference()->value(),
                 fastestLap: $result->fastestLap()->value(),
                 penalties: $result->penalties()->value(),
                 hasFastestLap: false,
@@ -367,6 +382,58 @@ final class QualifierApplicationService
 
             // DNF/no time gets 0 points
             $result->setRacePoints(0);
+
+            $this->raceResultRepository->save($result);
+            $position++;
+        }
+    }
+
+    /**
+     * Calculate pole position based on submission order when all results have no fastest_lap data.
+     * This is a fallback mechanism - the first driver submitted gets P1 (pole position).
+     *
+     * @param array<\App\Domain\Competition\Entities\RaceResult> $results
+     */
+    private function calculatePolePositionBySubmissionOrder(Race $qualifier, array $results): void
+    {
+        // Sort by ID (which reflects submission order from the form)
+        usort($results, function ($a, $b) {
+            return $a->id() <=> $b->id();
+        });
+
+        // Get pole position bonus points configuration
+        $polePoints = $qualifier->qualifyingPole() ?? 0;
+        $poleTop10Only = $qualifier->qualifyingPoleTop10();
+
+        // Assign positions based on submission order
+        $position = 1;
+        foreach ($results as $result) {
+            $hasPole = ($position === 1);
+
+            // Award pole points conditionally:
+            // - Pole position holder gets hasPole flag set
+            // - If qualifying_pole_top_10 is true, points are NOT awarded here
+            //   (they will be awarded when the race completes if driver finishes top 10)
+            // - If qualifying_pole_top_10 is false, award points immediately
+            $points = 0;
+            if ($hasPole && $polePoints > 0 && !$poleTop10Only) {
+                $points = $polePoints;
+            }
+
+            // Update position and hasPole flag
+            $result->update(
+                position: $position,
+                originalRaceTime: $result->originalRaceTime()->value(),
+                originalRaceTimeDifference: $result->originalRaceTimeDifference()->value(),
+                fastestLap: $result->fastestLap()->value(),
+                penalties: $result->penalties()->value(),
+                hasFastestLap: false,
+                hasPole: $hasPole,
+                dnf: $result->dnf(),
+            );
+
+            // Set race points
+            $result->setRacePoints($points);
 
             $this->raceResultRepository->save($result);
             $position++;

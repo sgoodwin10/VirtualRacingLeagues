@@ -135,6 +135,11 @@ final class EloquentUserRepository implements UserRepositoryInterface
             $eloquentUser = new UserEloquent();
             $this->fillEloquentModel($eloquentUser, $user);
 
+            // If a hashed password is provided, use it (infrastructure concern)
+            if ($hashedPassword !== null) {
+                $eloquentUser->password = $hashedPassword;
+            }
+
             $eloquentUser->save();
 
             // Set ID on domain entity
@@ -143,6 +148,11 @@ final class EloquentUserRepository implements UserRepositoryInterface
             // Update existing
             $eloquentUser = UserEloquent::withTrashed()->findOrFail($user->id());
             $this->fillEloquentModel($eloquentUser, $user);
+
+            // If a hashed password is provided, use it (infrastructure concern)
+            if ($hashedPassword !== null) {
+                $eloquentUser->password = $hashedPassword;
+            }
 
             $eloquentUser->save();
         }
@@ -208,6 +218,28 @@ final class EloquentUserRepository implements UserRepositoryInterface
             ->get()
             ->values()
             ->all();
+    }
+
+    public function findMultipleByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+
+        $users = UserEloquent::whereIn('id', $ids)
+            ->get(['id', 'first_name', 'last_name', 'email']);
+
+        $result = [];
+        foreach ($users as $user) {
+            $result[$user->id] = [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+            ];
+        }
+
+        return $result;
     }
 
     /**

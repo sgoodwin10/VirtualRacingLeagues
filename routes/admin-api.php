@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\AdminActivityLogController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminLeagueController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\SiteConfigController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\AdminOrSuperAdminOnly;
@@ -34,17 +35,30 @@ $loginThrottle = app()->environment('local') ? 'throttle:60,1' : 'throttle:5,1';
 /** @var \Illuminate\Routing\Route $loginRoute */
 $loginRoute = Route::post('/login', [AdminAuthController::class, 'login'])
     ->middleware($loginThrottle);
-$loginRoute->name('login');
+$loginRoute->name('auth.login');
 
 // Auth check routes - these check if user is authenticated but don't require auth middleware
-Route::get('/auth/check', [AdminAuthController::class, 'check'])->name('check');
-Route::get('/auth/me', [AdminAuthController::class, 'me'])->name('me');
+/** @var \Illuminate\Routing\Route $checkRoute */
+$checkRoute = Route::get('/auth/check', [AdminAuthController::class, 'check']);
+$checkRoute->name('auth.check');
+
+/** @var \Illuminate\Routing\Route $meRoute */
+$meRoute = Route::get('/auth/me', [AdminAuthController::class, 'me']);
+$meRoute->name('auth.me');
 
 // Protected routes (authentication required)
 Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(function () {
-    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
-    Route::get('/profile', [AdminAuthController::class, 'profile'])->name('profile');
-    Route::put('/profile', [AdminAuthController::class, 'updateProfile'])->name('profile.update');
+    /** @var \Illuminate\Routing\Route $logoutRoute */
+    $logoutRoute = Route::post('/logout', [AdminAuthController::class, 'logout']);
+    $logoutRoute->name('auth.logout');
+
+    /** @var \Illuminate\Routing\Route $profileRoute */
+    $profileRoute = Route::get('/profile', [AdminAuthController::class, 'profile']);
+    $profileRoute->name('auth.profile');
+
+    /** @var \Illuminate\Routing\Route $profileUpdateRoute */
+    $profileUpdateRoute = Route::put('/profile', [AdminAuthController::class, 'updateProfile']);
+    $profileUpdateRoute->name('auth.profile.update');
 
     // Admin User Management
     Route::prefix('admins')->name('admins.')->group(function () {
@@ -64,6 +78,7 @@ Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(
         Route::get('/users', [AdminActivityLogController::class, 'userActivities'])->name('users');
         Route::get('/user/{userId}', [AdminActivityLogController::class, 'userActivity'])->name('user');
         Route::get('/{id}', [AdminActivityLogController::class, 'show'])->name('show');
+
         /** @var \Illuminate\Routing\Route $cleanRoute */
         $cleanRoute = Route::post('/clean', [AdminActivityLogController::class, 'clean'])
             ->middleware(SuperAdminOnly::class);
@@ -72,9 +87,11 @@ Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(
 
     // User Management
     Route::apiResource('users', UserController::class);
+
     /** @var \Illuminate\Routing\Route $restoreRoute */
     $restoreRoute = Route::post('users/{user}/restore', [UserController::class, 'restore']);
     $restoreRoute->name('users.restore');
+
     Route::patch('users/{user}/verify-email', [UserController::class, 'verifyEmail'])
         ->name('users.verify-email');
     Route::post('users/{user}/resend-verification', [UserController::class, 'resendVerification'])
@@ -96,7 +113,18 @@ Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(
     Route::prefix('leagues')->name('leagues.')->group(function () {
         Route::get('/', [AdminLeagueController::class, 'index'])->name('index');
         Route::get('/{id}', [AdminLeagueController::class, 'show'])->name('show');
+        Route::get('/{id}/details', [AdminLeagueController::class, 'details'])->name('details');
         Route::post('/{id}/archive', [AdminLeagueController::class, 'archive'])->name('archive');
         Route::delete('/{id}', [AdminLeagueController::class, 'destroy'])->name('destroy');
+    });
+
+    // Driver Management (Admin - global driver management)
+    Route::prefix('drivers')->name('drivers.')->group(function () {
+        Route::get('/', [DriverController::class, 'index'])->name('index');
+        Route::post('/', [DriverController::class, 'store'])->name('store');
+        Route::get('/{id}', [DriverController::class, 'show'])->name('show');
+        Route::get('/{id}/details', [DriverController::class, 'details'])->name('details');
+        Route::put('/{id}', [DriverController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DriverController::class, 'destroy'])->name('destroy');
     });
 });

@@ -10,17 +10,17 @@ use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        commands: __DIR__.'/../routes/console.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
         then: function () {
             // Load subdomain routes FIRST (primary routing)
-            require __DIR__.'/../routes/subdomain.php';
+            require __DIR__ . '/../routes/subdomain.php';
 
             // Load API routes (deprecated, kept for reference)
-            require __DIR__.'/../routes/api.php';
+            require __DIR__ . '/../routes/api.php';
 
             // Load web routes LAST (fallback only)
-            require __DIR__.'/../routes/web.php';
+            require __DIR__ . '/../routes/web.php';
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -42,36 +42,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Handle all domain NotFoundExceptions with 404 responses
-        $exceptions->render(function (\App\Domain\League\Exceptions\LeagueNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 404);
-        });
-
-        $exceptions->render(function (\App\Domain\Driver\Exceptions\DriverNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 404);
-        });
-
-        $exceptions->render(function (\App\Domain\User\Exceptions\UserNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 404);
-        });
-
-        $exceptions->render(function (\App\Domain\Admin\Exceptions\AdminNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 404);
-        });
-
-        $exceptions->render(function (\App\Domain\Competition\Exceptions\CompetitionNotFoundException $e) {
+        // Handle all domain "not found" exceptions with 404 responses
+        // All domain NotFoundException classes extend DomainNotFoundException for centralized handling
+        $exceptions->render(function (\App\Domain\Shared\Exceptions\DomainNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),

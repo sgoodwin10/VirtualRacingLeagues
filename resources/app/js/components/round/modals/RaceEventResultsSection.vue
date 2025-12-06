@@ -52,29 +52,50 @@
 
             <Column
               v-if="!raceEvent.is_qualifier && raceTimesRequired"
-              field="race_time"
+              field="final_race_time"
               header="Time"
               class="w-42"
             >
               <template #body="{ data }">
                 <Tag v-if="data.dnf" severity="danger" value="DNF" class="text-xs" />
-                <span v-else class="font-mono text-gray-900">{{
-                  formatRaceTime(data.race_time)
-                }}</span>
+                <span
+                  v-else
+                  class="font-mono text-gray-900"
+                  :class="{
+                    'text-red-600 font-semibold': data.penalties && data.penalties !== '',
+                  }"
+                  >{{ formatRaceTime(data.final_race_time) }}</span
+                >
               </template>
             </Column>
 
             <Column
               v-if="!raceEvent.is_qualifier && raceTimesRequired"
-              field="race_time_difference"
+              field="calculated_time_diff"
               header="Gap"
               class="w-42"
             >
               <template #body="{ data }">
                 <span
-                  v-if="data.race_time_difference !== null && data.race_time_difference !== ''"
-                  class="font-mono text-gray-600"
-                  >+{{ formatRaceTime(data.race_time_difference) }}</span
+                  v-if="
+                    (data.calculated_time_diff ??
+                      data.final_race_time_difference ??
+                      data.original_race_time_difference) !== null &&
+                    (data.calculated_time_diff ??
+                      data.final_race_time_difference ??
+                      data.original_race_time_difference) !== ''
+                  "
+                  class="font-mono text-gray-900"
+                  :class="{
+                    'text-red-600 font-semibold': data.penalties && data.penalties !== '',
+                  }"
+                  >+{{
+                    formatRaceTime(
+                      data.calculated_time_diff ??
+                        data.final_race_time_difference ??
+                        data.original_race_time_difference,
+                    )
+                  }}</span
                 >
               </template>
             </Column>
@@ -114,13 +135,19 @@
             >
               <template #body="{ data }">
                 <div class="flex items-center gap-2">
-                  <span class="font-mono text-gray-900">{{ formatRaceTime(data.penalties) }}</span>
+                  <span
+                    class="font-mono text-gray-900"
+                    :class="{
+                      'text-red-600 font-semibold': data.penalties && data.penalties !== '',
+                    }"
+                    >{{ formatRaceTime(data.penalties) }}</span
+                  >
                 </div>
               </template>
             </Column>
 
             <Column
-              v-if="!raceEvent.is_qualifier && raceTimesRequired"
+              v-if="!raceEvent.is_qualifier"
               field="positions_gained"
               header="+/-"
               class="w-24"
@@ -164,8 +191,14 @@ import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import { getPodiumRowClass } from '@app/constants/podiumColors';
 import { useTimeFormat } from '@app/composables/useTimeFormat';
+import { useRaceTimeCalculation } from '@app/composables/useRaceTimeCalculation';
 import type { RaceEventResults, RaceResultWithDriver } from '@app/types/roundResult';
 import { PhFlagCheckered, PhMedal } from '@phosphor-icons/vue';
+
+// Extended type for results with calculated time diff
+interface RaceResultWithCalculatedDiff extends RaceResultWithDriver {
+  calculated_time_diff?: string | null;
+}
 
 interface Props {
   raceEvent: RaceEventResults;
@@ -182,6 +215,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Composables
 const { formatRaceTime } = useTimeFormat();
+const { parseTimeToMs, calculateEffectiveTime, formatMsToTime } = useRaceTimeCalculation();
 
 // Computed
 const raceEventTitle = computed(() => {
@@ -190,31 +224,6 @@ const raceEventTitle = computed(() => {
   }
   return props.raceEvent.name || `Race ${props.raceEvent.race_number}`;
 });
-
-/**
- * Check if a qualifying result is valid (has lap time)
- * Note: Qualifying only requires fastest_lap to be valid, as it's the primary
- * timing metric for qualification. Unlike races, qualifying has no DNF status,
- * race_time, or penalties to validate.
- */
-function isValidQualifyingResult(result: RaceResultWithDriver): boolean {
-  return result.fastest_lap !== null && result.fastest_lap !== '';
-}
-
-/**
- * Check if a race result is valid (has time, DNF, or fastest lap)
- * Note: Race results require at least one meaningful field populated. A result
- * is valid if it has any of: race_time (finish time), dnf (did not finish status),
- * or fastest_lap (lap time). This is more permissive than qualifying because
- * races have multiple ways to record results.
- */
-function isValidRaceResult(result: RaceResultWithDriver): boolean {
-  return (
-    (result.race_time !== null && result.race_time !== '') ||
-    result.dnf === true ||
-    (result.fastest_lap !== null && result.fastest_lap !== '')
-  );
-}
 
 /**
  * Filter results by division (if divisionId provided)
@@ -229,37 +238,97 @@ function filterByDivision(
   return results.filter((result) => result.division_id === divisionId);
 }
 
-/**
- * Filter out invalid results (only when round is completed)
- */
-function filterValidResults(
-  results: RaceResultWithDriver[],
-  isQualifying: boolean,
-  isRoundCompleted: boolean,
-): RaceResultWithDriver[] {
-  if (!isRoundCompleted) {
-    return results;
-  }
-
-  return results.filter((result) => {
-    if (isQualifying) {
-      return isValidQualifyingResult(result);
-    } else {
-      return isValidRaceResult(result);
-    }
-  });
-}
-
-const filteredResults = computed<RaceResultWithDriver[]>(() => {
+const filteredResults = computed<RaceResultWithCalculatedDiff[]>(() => {
   let results = props.raceEvent.results;
 
   // Filter by division if provided
   results = filterByDivision(results, props.divisionId);
 
-  // Filter out invalid results when round is completed
-  results = filterValidResults(results, props.raceEvent.is_qualifier, props.isRoundCompleted);
+  // For races (not qualifying), calculate time differences dynamically
+  if (!props.raceEvent.is_qualifier && props.raceTimesRequired && results.length > 0) {
+    // Separate non-DNF results (those with valid race times)
+    const nonDnfResults = results.filter(
+      (r) => !r.dnf && r.original_race_time !== null && r.original_race_time !== '',
+    );
 
-  return results;
+    // Sort non-DNF results by effective time (original_race_time + penalties)
+    const sortedNonDnf = [...nonDnfResults].sort((a, b) => {
+      const effectiveA = calculateEffectiveTime(
+        parseTimeToMs(a.original_race_time),
+        parseTimeToMs(a.penalties),
+      );
+      const effectiveB = calculateEffectiveTime(
+        parseTimeToMs(b.original_race_time),
+        parseTimeToMs(b.penalties),
+      );
+      if (effectiveA === null && effectiveB === null) return 0;
+      if (effectiveA === null) return 1;
+      if (effectiveB === null) return -1;
+      return effectiveA - effectiveB;
+    });
+
+    // Find position 1 driver (first in sorted list)
+    const position1Driver = sortedNonDnf[0];
+
+    if (position1Driver) {
+      // Calculate position 1's effective time
+      const position1RaceTimeMs = parseTimeToMs(position1Driver.original_race_time);
+      const position1PenaltiesMs = parseTimeToMs(position1Driver.penalties);
+      const position1EffectiveTimeMs = calculateEffectiveTime(
+        position1RaceTimeMs,
+        position1PenaltiesMs,
+      );
+
+      // Calculate time differences for all drivers
+      return results.map((result): RaceResultWithCalculatedDiff => {
+        // DNF drivers have no time difference
+        if (result.dnf) {
+          return {
+            ...result,
+            calculated_time_diff: null,
+          };
+        }
+
+        // Driver without valid race time has no time difference
+        if (result.original_race_time === null || result.original_race_time === '') {
+          return {
+            ...result,
+            calculated_time_diff: null,
+          };
+        }
+
+        // Position 1 driver (same as position1Driver) has no time difference
+        if (result.id === position1Driver.id) {
+          return {
+            ...result,
+            calculated_time_diff: null,
+          };
+        }
+
+        // Calculate time difference for other drivers
+        const driverRaceTimeMs = parseTimeToMs(result.original_race_time);
+        const driverPenaltiesMs = parseTimeToMs(result.penalties);
+        const driverEffectiveTimeMs = calculateEffectiveTime(driverRaceTimeMs, driverPenaltiesMs);
+
+        let calculatedTimeDiff: string | null = null;
+        if (position1EffectiveTimeMs !== null && driverEffectiveTimeMs !== null) {
+          const timeDiffMs = driverEffectiveTimeMs - position1EffectiveTimeMs;
+          calculatedTimeDiff = formatMsToTime(timeDiffMs);
+        }
+
+        return {
+          ...result,
+          calculated_time_diff: calculatedTimeDiff,
+        };
+      });
+    }
+  }
+
+  // Return results without calculated diff for qualifying or when no valid results
+  return results.map((result) => ({
+    ...result,
+    calculated_time_diff: null,
+  }));
 });
 
 // Row class for podium positions (only for races, not qualifying)

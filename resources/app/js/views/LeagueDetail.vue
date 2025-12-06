@@ -101,16 +101,16 @@ async function loadLeague(): Promise<void> {
   }
 }
 
-function handleCompetitionCreated(competition: Competition): void {
-  console.log('Competition created:', competition);
+function handleCompetitionCreated(_competition: Competition): void {
+  // Competition created event handled by CompetitionList component
 }
 
-function handleCompetitionUpdated(competition: Competition): void {
-  console.log('Competition updated:', competition);
+function handleCompetitionUpdated(_competition: Competition): void {
+  // Competition updated event handled by CompetitionList component
 }
 
-function handleCompetitionDeleted(competitionId: number): void {
-  console.log('Competition deleted:', competitionId);
+function handleCompetitionDeleted(_competitionId: number): void {
+  // Competition deleted event handled by CompetitionList component
 }
 
 function handleEditLeague(): void {

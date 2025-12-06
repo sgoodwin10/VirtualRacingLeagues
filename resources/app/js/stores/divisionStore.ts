@@ -10,6 +10,7 @@ import type {
   CreateDivisionPayload,
   UpdateDivisionPayload,
   AssignDriverDivisionPayload,
+  ReorderDivisionsPayload,
 } from '@app/types/division';
 import {
   getDivisions,
@@ -18,6 +19,7 @@ import {
   deleteDivision as deleteDivisionApi,
   assignDriverDivision as assignDriverDivisionApi,
   getDriverCount as getDriverCountApi,
+  reorderDivisions as reorderDivisionsApi,
   buildCreateDivisionFormData,
   buildUpdateDivisionFormData,
 } from '@app/services/divisionService';
@@ -57,6 +59,10 @@ export const useDivisionStore = defineStore('division', () => {
 
   const hasDivisions = computed(() => divisions.value.length > 0);
 
+  const sortedDivisions = computed(() => {
+    return [...divisions.value].sort((a, b) => a.order - b.order);
+  });
+
   // Actions
 
   /**
@@ -70,7 +76,11 @@ export const useDivisionStore = defineStore('division', () => {
       const fetchedDivisions = await getDivisions(seasonId);
       setItems(fetchedDivisions);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load divisions';
+      // Preserve original error context while providing user-friendly message
+      const errorMessage =
+        err instanceof Error && err.message
+          ? `Failed to load divisions: ${err.message}`
+          : 'Failed to load divisions';
       setError(errorMessage);
       throw err;
     } finally {
@@ -94,7 +104,11 @@ export const useDivisionStore = defineStore('division', () => {
       addItem(division);
       return division;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create division';
+      // Preserve original error context while providing user-friendly message
+      const errorMessage =
+        err instanceof Error && err.message
+          ? `Failed to create division: ${err.message}`
+          : 'Failed to create division';
       setError(errorMessage);
       throw err;
     } finally {
@@ -119,7 +133,11 @@ export const useDivisionStore = defineStore('division', () => {
       updateItemInList(updatedDivision);
       return updatedDivision;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update division';
+      // Preserve original error context while providing user-friendly message
+      const errorMessage =
+        err instanceof Error && err.message
+          ? `Failed to update division: ${err.message}`
+          : 'Failed to update division';
       setError(errorMessage);
       throw err;
     } finally {
@@ -138,7 +156,11 @@ export const useDivisionStore = defineStore('division', () => {
       await deleteDivisionApi(seasonId, divisionId);
       removeItemFromList(divisionId);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete division';
+      // Preserve original error context while providing user-friendly message
+      const errorMessage =
+        err instanceof Error && err.message
+          ? `Failed to delete division: ${err.message}`
+          : 'Failed to delete division';
       setError(errorMessage);
       throw err;
     } finally {
@@ -153,7 +175,11 @@ export const useDivisionStore = defineStore('division', () => {
     try {
       return await getDriverCountApi(seasonId, divisionId);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to get driver count';
+      // Preserve original error context while providing user-friendly message
+      const errorMessage =
+        err instanceof Error && err.message
+          ? `Failed to get driver count: ${err.message}`
+          : 'Failed to get driver count';
       setError(errorMessage);
       throw err;
     }
@@ -172,8 +198,52 @@ export const useDivisionStore = defineStore('division', () => {
     try {
       await assignDriverDivisionApi(seasonId, seasonDriverId, payload);
     } catch (err: unknown) {
+      // Preserve original error context while providing user-friendly message
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to assign driver to division';
+        err instanceof Error && err.message
+          ? `Failed to assign driver to division: ${err.message}`
+          : 'Failed to assign driver to division';
+      setError(errorMessage);
+      throw err;
+    }
+  }
+
+  /**
+   * Reorder divisions
+   * Note: Loading state is NOT set here because we use optimistic updates
+   * and the component tracks reordering state locally for better UX
+   */
+  async function reorderDivisions(
+    seasonId: number,
+    newOrder: Array<{ id: number; order: number }>,
+  ): Promise<void> {
+    // Deep clone previous state for reliable rollback
+    const previousDivisions = divisions.value.map((division) => ({ ...division }));
+
+    setError(null);
+
+    try {
+      // Optimistic update - apply the new order to current divisions
+      const updatedDivisions = divisions.value.map((division) => {
+        const update = newOrder.find((u) => u.id === division.id);
+        return update ? { ...division, order: update.order } : division;
+      });
+      setItems(updatedDivisions);
+
+      // API call - use server response as source of truth
+      const payload: ReorderDivisionsPayload = { divisions: newOrder };
+      const serverDivisions = await reorderDivisionsApi(seasonId, payload);
+
+      // Always use server response to ensure consistency
+      setItems(serverDivisions);
+    } catch (err: unknown) {
+      // Rollback to exact previous state on any error
+      setItems(previousDivisions);
+      // Preserve original error context while providing user-friendly message
+      const errorMessage =
+        err instanceof Error && err.message
+          ? `Failed to reorder divisions: ${err.message}`
+          : 'Failed to reorder divisions';
       setError(errorMessage);
       throw err;
     }
@@ -190,6 +260,7 @@ export const useDivisionStore = defineStore('division', () => {
     getDivisionsBySeasonId,
     divisionCount,
     hasDivisions,
+    sortedDivisions,
 
     // Actions
     fetchDivisions,
@@ -198,6 +269,7 @@ export const useDivisionStore = defineStore('division', () => {
     deleteDivision,
     getDriverCount,
     assignDriverDivision,
+    reorderDivisions,
 
     // Utility
     clearError,

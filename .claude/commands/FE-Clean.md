@@ -1,2 +1,2 @@
-Run all eslint and prettier. Check all vuejs, js and ts files waiting to be added to git, and look for any unused variables, files, functions, etc, and fix and update. Check for correct imports, unused or duplicate and fix. 
+Fix any issues reported. Run all eslint and prettier. Check all vuejs, js and ts files waiting to be added to git, and look for any unused variables, files, functions, etc, and fix and update. Check for correct imports, unused or duplicate and fix. 
 Use as many @agent-dev-fe-admin, @agent-dev-fe-app and @agent-dev-fe-public as needed

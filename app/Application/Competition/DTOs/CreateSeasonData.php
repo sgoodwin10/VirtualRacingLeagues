@@ -30,12 +30,14 @@ class CreateSeasonData extends Data
     /**
      * Validation rules for request input.
      *
+     * Note: competition_id is not validated here because it comes from
+     * the route parameter and is added in the controller after validation.
+     *
      * @return array<string, array<int, mixed>>
      */
     public static function rules(): array
     {
         return [
-            'competition_id' => ['required', 'integer', 'exists:competitions,id'],
             'name' => ['required', 'string', 'min:3', 'max:100'],
             'slug' => ['nullable', 'string', 'min:3', 'max:100', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
             'car_class' => ['nullable', 'string', 'max:100'],

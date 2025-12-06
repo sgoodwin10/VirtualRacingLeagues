@@ -13,9 +13,14 @@ use App\Domain\Division\Exceptions\InvalidDivisionDescriptionException;
  */
 final readonly class DivisionDescription
 {
+    private ?string $value;
+
     private function __construct(
-        private ?string $value
+        ?string $value
     ) {
+        // Trim and convert empty strings to null
+        $trimmed = $value !== null ? trim($value) : null;
+        $this->value = ($trimmed === '' || $trimmed === null) ? null : $trimmed;
         $this->validate();
     }
 
@@ -31,19 +36,13 @@ final readonly class DivisionDescription
             return;
         }
 
-        $trimmed = trim($this->value);
-
-        // Empty string after trimming is treated as null
-        if ($trimmed === '') {
-            return;
+        // At this point, value is already trimmed and non-empty (handled in constructor)
+        if (mb_strlen($this->value) < 10) {
+            throw InvalidDivisionDescriptionException::tooShort($this->value);
         }
 
-        if (mb_strlen($trimmed) < 10) {
-            throw InvalidDivisionDescriptionException::tooShort($trimmed);
-        }
-
-        if (mb_strlen($trimmed) > 500) {
-            throw InvalidDivisionDescriptionException::tooLong($trimmed);
+        if (mb_strlen($this->value) > 500) {
+            throw InvalidDivisionDescriptionException::tooLong($this->value);
         }
     }
 

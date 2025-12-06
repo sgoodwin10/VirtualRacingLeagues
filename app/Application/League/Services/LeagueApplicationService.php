@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Application\League\Services;
 
+use App\Application\League\DTOs\CompetitionSummaryData;
 use App\Application\League\DTOs\CreateLeagueData;
 use App\Application\League\DTOs\LeagueData;
+use App\Application\League\DTOs\LeagueDetailsData;
 use App\Application\League\DTOs\LeaguePlatformData;
 use App\Application\League\DTOs\UpdateLeagueData;
+use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Driver\Services\DriverPlatformColumnService;
 use App\Domain\League\Entities\League;
 use App\Domain\League\Exceptions\InvalidPlatformException;
@@ -18,10 +21,13 @@ use App\Domain\League\ValueObjects\LeagueName;
 use App\Domain\League\ValueObjects\LeagueSlug;
 use App\Domain\League\ValueObjects\LeagueVisibility;
 use App\Domain\League\ValueObjects\Tagline;
+use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Shared\ValueObjects\EmailAddress;
-use App\Infrastructure\Persistence\Eloquent\Models\Platform;
-use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
+use App\Domain\User\Repositories\UserRepositoryInterface;
+use App\Helpers\FilterBuilder;
+use App\Helpers\PaginationHelper;
+use App\Http\Requests\Admin\IndexLeaguesRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +42,10 @@ final class LeagueApplicationService
 
     public function __construct(
         private readonly LeagueRepositoryInterface $leagueRepository,
+        private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly DriverPlatformColumnService $driverPlatformColumnService,
+        private readonly PlatformRepositoryInterface $platformRepository,
+        private readonly UserRepositoryInterface $userRepository,
     ) {
     }
 
@@ -250,30 +259,35 @@ final class LeagueApplicationService
 
             // Handle logo upload
             if ($data->logo !== null) {
-                // Delete old logo if it exists
+                // Store new logo first
+                $logoPath = $data->logo->store('leagues/logos', 'public');
+                if (!$logoPath) {
+                    throw new \RuntimeException('Failed to store league logo');
+                }
+
+                // Delete old logo only after successful upload
                 $oldLogoPath = $league->logoPath();
                 if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
                     Storage::disk('public')->delete($oldLogoPath);
                 }
 
-                $logoPath = $data->logo->store('leagues/logos', 'public');
-                if (!$logoPath) {
-                    throw new \RuntimeException('Failed to store league logo');
-                }
                 $league->updateLogo($logoPath);
             }
 
             // Handle header image upload
             if ($data->header_image !== null) {
-                // Delete old header image if exists
-                if ($league->headerImagePath() && Storage::disk('public')->exists($league->headerImagePath())) {
-                    Storage::disk('public')->delete($league->headerImagePath());
-                }
-
+                // Store new header image first
                 $headerImagePath = $data->header_image->store('leagues/headers', 'public');
                 if (!$headerImagePath) {
                     throw new \RuntimeException('Failed to store league header image');
                 }
+
+                // Delete old header image only after successful upload
+                $oldHeaderImagePath = $league->headerImagePath();
+                if ($oldHeaderImagePath && Storage::disk('public')->exists($oldHeaderImagePath)) {
+                    Storage::disk('public')->delete($oldHeaderImagePath);
+                }
+
                 $league->updateHeaderImage($headerImagePath);
             }
 
@@ -368,11 +382,8 @@ final class LeagueApplicationService
             throw InvalidPlatformException::forEmptyPlatforms();
         }
 
-        $validPlatformIds = Platform::query()
-            ->whereIn('id', $platformIds)
-            ->where('is_active', true)
-            ->pluck('id')
-            ->toArray();
+        $validPlatforms = $this->platformRepository->findActiveByIds($platformIds);
+        $validPlatformIds = array_map(fn($platform) => $platform['id'], $validPlatforms);
 
         $invalidIds = array_diff($platformIds, $validPlatformIds);
 
@@ -393,16 +404,7 @@ final class LeagueApplicationService
             return [];
         }
 
-        return Platform::query()
-            ->whereIn('id', $platformIds)
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'slug'])
-            ->map(fn($platform) => [
-                'id' => $platform->id,
-                'name' => $platform->name,
-                'slug' => $platform->slug,
-            ])
-            ->toArray();
+        return $this->platformRepository->findActiveByIds($platformIds);
     }
 
     /**
@@ -460,58 +462,61 @@ final class LeagueApplicationService
     /**
      * Get all leagues for admin with pagination and filters.
      *
-     * @param int $page
-     * @param int $perPage
+     * Accepts either a FormRequest or individual parameters.
+     *
+     * @param IndexLeaguesRequest|int $requestOrPage
+     * @param int|null $perPage
      * @param array<string, mixed> $filters
-     * @return array{data: array<int, LeagueData>, total: int, per_page: int, current_page: int, last_page: int}
+     * @return array<string, mixed>
      */
-    public function getAllLeaguesForAdmin(int $page, int $perPage, array $filters = []): array
-    {
-        return DB::transaction(function () use ($page, $perPage, $filters) {
-            // Get paginated leagues from repository (now includes counts)
-            $result = $this->leagueRepository->getPaginatedForAdmin($page, $perPage, $filters);
+    public function getAllLeaguesForAdmin(
+        IndexLeaguesRequest|int $requestOrPage,
+        ?int $perPage = null,
+        array $filters = []
+    ): array {
+        // Handle both signatures
+        if ($requestOrPage instanceof IndexLeaguesRequest) {
+            return $this->getAllLeaguesForAdminFromRequest($requestOrPage);
+        }
 
-            // Fetch owner data for all leagues
-            /** @var array<int, int> $ownerUserIds */
-            $ownerUserIds = array_map(fn(array $item) => $item['league']->ownerUserId(), $result['data']);
-            $owners = UserEloquent::whereIn('id', $ownerUserIds)
-                ->get()
-                ->keyBy('id');
+        // Old signature - for backward compatibility
+        $page = $requestOrPage;
+        // Get paginated leagues from repository (now includes counts)
+        $result = $this->leagueRepository->getPaginatedForAdmin($page, $perPage ?? 15, $filters);
 
-            // Convert to DTOs with platform, owner data, and counts
-            $leagueDTOs = array_map(
-                function (array $item) use ($owners) {
-                    $league = $item['league'];
-                    $platforms = $this->fetchPlatformData($league->platformIds());
+        // Fetch owner data for all leagues
+        /** @var array<int, int> $ownerUserIds */
+        $ownerUserIds = array_map(fn(array $item) => $item['league']->ownerUserId(), $result['data']);
+        $ownerUserIds = array_unique($ownerUserIds);
+        $owners = $this->userRepository->findMultipleByIds($ownerUserIds);
 
-                    // Get owner data
-                    $owner = $owners->get($league->ownerUserId());
-                    $ownerData = $owner ? [
-                        'id' => $owner->id,
-                        'first_name' => $owner->first_name,
-                        'last_name' => $owner->last_name,
-                        'email' => $owner->email,
-                    ] : null;
+        // Convert to DTOs with platform, owner data, and counts
+        $leagueDTOs = array_map(
+            function (array $item) use ($owners) {
+                $league = $item['league'];
+                $platforms = $this->fetchPlatformData($league->platformIds());
 
-                    return LeagueData::fromEntity(
-                        $league,
-                        $platforms,
-                        $ownerData,
-                        $item['competitions_count'],
-                        $item['drivers_count']
-                    );
-                },
-                $result['data']
-            );
+                // Get owner data
+                $ownerData = $owners[$league->ownerUserId()] ?? null;
 
-            return [
-                'data' => $leagueDTOs,
-                'total' => $result['total'],
-                'per_page' => $result['per_page'],
-                'current_page' => $result['current_page'],
-                'last_page' => $result['last_page'],
-            ];
-        });
+                return LeagueData::fromEntity(
+                    $league,
+                    $platforms,
+                    $ownerData,
+                    $item['competitions_count'],
+                    $item['drivers_count']
+                );
+            },
+            $result['data']
+        );
+
+        return [
+            'data' => $leagueDTOs,
+            'total' => $result['total'],
+            'per_page' => $result['per_page'],
+            'current_page' => $result['current_page'],
+            'last_page' => $result['last_page'],
+        ];
     }
 
     /**
@@ -526,13 +531,8 @@ final class LeagueApplicationService
         $platforms = $this->fetchPlatformData($league->platformIds());
 
         // Fetch owner data
-        $owner = UserEloquent::find($league->ownerUserId());
-        $ownerData = $owner ? [
-            'id' => $owner->id,
-            'first_name' => $owner->first_name,
-            'last_name' => $owner->last_name,
-            'email' => $owner->email,
-        ] : null;
+        $owners = $this->userRepository->findMultipleByIds([$league->ownerUserId()]);
+        $ownerData = $owners[$league->ownerUserId()] ?? null;
 
         return LeagueData::fromEntity(
             $league,
@@ -566,13 +566,8 @@ final class LeagueApplicationService
             // Fetch updated counts, platform, and owner data for response
             $result = $this->leagueRepository->findByIdWithCounts($leagueId);
             $platforms = $this->fetchPlatformData($league->platformIds());
-            $owner = UserEloquent::find($league->ownerUserId());
-            $ownerData = $owner ? [
-                'id' => $owner->id,
-                'first_name' => $owner->first_name,
-                'last_name' => $owner->last_name,
-                'email' => $owner->email,
-            ] : null;
+            $owners = $this->userRepository->findMultipleByIds([$league->ownerUserId()]);
+            $ownerData = $owners[$league->ownerUserId()] ?? null;
 
             return LeagueData::fromEntity(
                 $league,
@@ -585,6 +580,73 @@ final class LeagueApplicationService
     }
 
     /**
+     * Get detailed league information for admin (includes competitions, seasons summary, and stats).
+     *
+     * @throws LeagueNotFoundException
+     */
+    public function getLeagueDetailsForAdmin(int $leagueId): LeagueDetailsData
+    {
+        // Fetch league entity
+        $league = $this->leagueRepository->findById($leagueId);
+
+        // Fetch platforms
+        $platforms = $this->fetchPlatformData($league->platformIds());
+
+        // Fetch owner data
+        $owners = $this->userRepository->findMultipleByIds([$league->ownerUserId()]);
+        $ownerData = $owners[$league->ownerUserId()] ?? null;
+
+        // Get league statistics from repository (competitions, seasons, drivers, races)
+        $statistics = $this->leagueRepository->getLeagueStatistics($leagueId);
+
+        // Fetch competition entities from repository
+        $competitions = $this->competitionRepository->findByLeagueId($leagueId);
+
+        // Convert competition entities to DTOs with platform and season count data
+        $competitionDTOs = array_map(
+            function ($competition) use ($statistics) {
+                // Find matching competition data from statistics
+                $competitionData = collect($statistics['competitions'])
+                    ->firstWhere('competition.id', $competition->id());
+
+                return CompetitionSummaryData::fromEntity(
+                    $competition,
+                    $competitionData['platform_name'] ?? 'Unknown',
+                    $competitionData['platform_slug'] ?? 'unknown',
+                    $competitionData['seasons_count'] ?? 0
+                );
+            },
+            $competitions
+        );
+
+        $stats = [
+            'total_drivers' => $statistics['total_drivers'],
+            'total_races' => $statistics['total_races'],
+            'total_competitions' => $statistics['total_competitions'],
+        ];
+
+        // Generate URLs for logo and header image
+        $logoUrl = $league->logoPath()
+            ? Storage::disk('public')->url($league->logoPath())
+            : null;
+
+        $headerImageUrl = $league->headerImagePath()
+            ? Storage::disk('public')->url($league->headerImagePath())
+            : null;
+
+        return LeagueDetailsData::fromEntity(
+            $league,
+            $platforms,
+            $ownerData,
+            $competitionDTOs,
+            $statistics['seasons_summary'],
+            $stats,
+            $logoUrl,
+            $headerImageUrl
+        );
+    }
+
+    /**
      * Dispatch domain events.
      */
     private function dispatchEvents(League $league): void
@@ -594,5 +656,72 @@ final class LeagueApplicationService
         foreach ($events as $event) {
             Event::dispatch($event);
         }
+    }
+
+    /**
+     * Get all leagues for admin from a request object.
+     * Handles filter building, pagination parameter extraction, and link generation.
+     *
+     * @return array{data: array<int, mixed>, meta: array<string, int>, links: array<string, string|null>}
+     */
+    private function getAllLeaguesForAdminFromRequest(IndexLeaguesRequest $request): array
+    {
+        // Build filters from validated request data
+        $filters = FilterBuilder::build($request->validated());
+
+        // Ensure platform_ids are integers if provided
+        if (isset($filters['platform_ids'])) {
+            $filters['platform_ids'] = array_map('intval', $filters['platform_ids']);
+        }
+
+        // Extract pagination parameters
+        $perPage = (int) ($request->validated()['per_page'] ?? 15);
+        $page = (int) ($request->validated()['page'] ?? 1);
+
+        // Get paginated leagues from repository
+        $result = $this->leagueRepository->getPaginatedForAdmin($page, $perPage, $filters);
+
+        // Fetch owner data for all leagues
+        /** @var array<int, int> $ownerUserIds */
+        $ownerUserIds = array_map(fn(array $item) => $item['league']->ownerUserId(), $result['data']);
+        $ownerUserIds = array_unique($ownerUserIds);
+        $owners = $this->userRepository->findMultipleByIds($ownerUserIds);
+
+        // Convert to DTOs with platform, owner data, and counts
+        $leagueDTOs = array_map(
+            function (array $item) use ($owners) {
+                $league = $item['league'];
+                $platforms = $this->fetchPlatformData($league->platformIds());
+
+                // Get owner data
+                $ownerData = $owners[$league->ownerUserId()] ?? null;
+
+                return LeagueData::fromEntity(
+                    $league,
+                    $platforms,
+                    $ownerData,
+                    $item['competitions_count'],
+                    $item['drivers_count']
+                );
+            },
+            $result['data']
+        );
+
+        // Build pagination links
+        $links = PaginationHelper::buildLinks($request, $result['current_page'], $result['last_page']);
+
+        // Convert DTOs to arrays for response
+        $data = array_map(fn($item) => $item->toArray(), $leagueDTOs);
+
+        return [
+            'data' => $data,
+            'meta' => [
+                'total' => $result['total'],
+                'per_page' => $result['per_page'],
+                'current_page' => $result['current_page'],
+                'last_page' => $result['last_page'],
+            ],
+            'links' => $links,
+        ];
     }
 }

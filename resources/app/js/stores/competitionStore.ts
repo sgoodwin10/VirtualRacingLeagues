@@ -290,8 +290,12 @@ export const useCompetitionStore = defineStore('competition', () => {
       competition.stats.total_seasons += 1;
     }
 
-    // Also update currentCompetition if it matches
-    if (currentCompetition.value?.id === competitionId) {
+    // Also update currentCompetition if it matches AND it's a different object reference
+    // (to avoid duplicate additions when currentCompetition is the same reference as the one in competitions array)
+    if (
+      currentCompetition.value?.id === competitionId &&
+      currentCompetition.value !== competition
+    ) {
       if (!currentCompetition.value.seasons) {
         currentCompetition.value.seasons = [];
       }
@@ -313,8 +317,12 @@ export const useCompetitionStore = defineStore('competition', () => {
       }
     }
 
-    // Also update currentCompetition if it matches
-    if (currentCompetition.value?.id === competitionId && currentCompetition.value.seasons) {
+    // Also update currentCompetition if it matches AND it's a different object reference
+    if (
+      currentCompetition.value?.id === competitionId &&
+      currentCompetition.value !== competition &&
+      currentCompetition.value.seasons
+    ) {
       const index = currentCompetition.value.seasons.findIndex((s) => s.id === season.id);
       if (index !== -1) {
         currentCompetition.value.seasons[index] = season;
@@ -333,8 +341,12 @@ export const useCompetitionStore = defineStore('competition', () => {
       competition.stats.total_seasons = Math.max(0, competition.stats.total_seasons - 1);
     }
 
-    // Also update currentCompetition if it matches
-    if (currentCompetition.value?.id === competitionId && currentCompetition.value.seasons) {
+    // Also update currentCompetition if it matches AND it's a different object reference
+    if (
+      currentCompetition.value?.id === competitionId &&
+      currentCompetition.value !== competition &&
+      currentCompetition.value.seasons
+    ) {
       currentCompetition.value.seasons = currentCompetition.value.seasons.filter(
         (s) => s.id !== seasonId,
       );

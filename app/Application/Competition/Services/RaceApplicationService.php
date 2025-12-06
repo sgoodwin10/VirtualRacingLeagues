@@ -528,18 +528,18 @@ final class RaceApplicationService
         foreach ($results as $result) {
             if ($result->dnf()) {
                 $dnfDrivers[] = $result;
-            } elseif ($result->raceTime()->isNull()) {
-                // DNS = no race_time AND not DNF
+            } elseif ($result->originalRaceTime()->isNull()) {
+                // DNS = no original_race_time AND not DNF
                 $dnsDrivers[] = $result;
             } else {
                 $finishers[] = $result;
             }
         }
 
-        // Sort finishers by race_time ascending (fastest first)
+        // Sort finishers by final race_time ascending (fastest first, including penalties)
         usort($finishers, function ($a, $b) {
-            $timeA = $a->raceTime()->toMilliseconds();
-            $timeB = $b->raceTime()->toMilliseconds();
+            $timeA = $a->finalRaceTime()->toMilliseconds();
+            $timeB = $b->finalRaceTime()->toMilliseconds();
 
             if ($timeA === null && $timeB === null) {
                 return 0;
@@ -561,8 +561,8 @@ final class RaceApplicationService
             $points = $race->racePoints() ? $race->pointsSystem()->getPointsForPosition($position) : 0;
             $result->update(
                 position: $position,
-                raceTime: $result->raceTime()->value(),
-                raceTimeDifference: $result->raceTimeDifference()->value(),
+                originalRaceTime: $result->originalRaceTime()->value(),
+                originalRaceTimeDifference: $result->originalRaceTimeDifference()->value(),
                 fastestLap: $result->fastestLap()->value(),
                 penalties: $result->penalties()->value(),
                 hasFastestLap: false, // Will be updated below for fastest lap winner
@@ -579,8 +579,8 @@ final class RaceApplicationService
             $points = $race->racePoints() ? $race->dnfPoints() : 0;
             $result->update(
                 position: $position,
-                raceTime: $result->raceTime()->value(),
-                raceTimeDifference: $result->raceTimeDifference()->value(),
+                originalRaceTime: $result->originalRaceTime()->value(),
+                originalRaceTimeDifference: $result->originalRaceTimeDifference()->value(),
                 fastestLap: $result->fastestLap()->value(),
                 penalties: $result->penalties()->value(),
                 hasFastestLap: false,
@@ -597,8 +597,8 @@ final class RaceApplicationService
             $points = $race->racePoints() ? $race->dnsPoints() : 0;
             $result->update(
                 position: $position,
-                raceTime: $result->raceTime()->value(),
-                raceTimeDifference: $result->raceTimeDifference()->value(),
+                originalRaceTime: $result->originalRaceTime()->value(),
+                originalRaceTimeDifference: $result->originalRaceTimeDifference()->value(),
                 fastestLap: $result->fastestLap()->value(),
                 penalties: $result->penalties()->value(),
                 hasFastestLap: false,
@@ -690,8 +690,8 @@ final class RaceApplicationService
             // Update hasFastestLap flag
             $fastestLapDriver->update(
                 position: $fastestLapDriver->position(),
-                raceTime: $fastestLapDriver->raceTime()->value(),
-                raceTimeDifference: $fastestLapDriver->raceTimeDifference()->value(),
+                originalRaceTime: $fastestLapDriver->originalRaceTime()->value(),
+                originalRaceTimeDifference: $fastestLapDriver->originalRaceTimeDifference()->value(),
                 fastestLap: $fastestLapDriver->fastestLap()->value(),
                 penalties: $fastestLapDriver->penalties()->value(),
                 hasFastestLap: true,
@@ -719,8 +719,8 @@ final class RaceApplicationService
             if ($result->hasPole()) {
                 $result->update(
                     position: $result->position(),
-                    raceTime: $result->raceTime()->value(),
-                    raceTimeDifference: $result->raceTimeDifference()->value(),
+                    originalRaceTime: $result->originalRaceTime()->value(),
+                    originalRaceTimeDifference: $result->originalRaceTimeDifference()->value(),
                     fastestLap: $result->fastestLap()->value(),
                     penalties: $result->penalties()->value(),
                     hasFastestLap: $result->hasFastestLap(),
@@ -766,8 +766,8 @@ final class RaceApplicationService
             // Update hasPole flag
             $poleDriver->update(
                 position: $poleDriver->position(),
-                raceTime: $poleDriver->raceTime()->value(),
-                raceTimeDifference: $poleDriver->raceTimeDifference()->value(),
+                originalRaceTime: $poleDriver->originalRaceTime()->value(),
+                originalRaceTimeDifference: $poleDriver->originalRaceTimeDifference()->value(),
                 fastestLap: $poleDriver->fastestLap()->value(),
                 penalties: $poleDriver->penalties()->value(),
                 hasFastestLap: $poleDriver->hasFastestLap(),

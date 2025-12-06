@@ -62,7 +62,7 @@ function handleEditTeam(team: Team): void {
 function handleDeleteTeam(team: Team): void {
   // Count drivers assigned to this team
   const driversInTeam = seasonDriverStore.seasonDrivers.filter(
-    (driver) => driver.team_name === team.name,
+    (driver) => driver.team_id === team.id,
   );
   const driverCount = driversInTeam.length;
 
@@ -124,13 +124,6 @@ function handleTeamSaved(): void {
 
     <!-- Enabled State -->
     <div v-else>
-      <!-- Header Row -->
-      <div class="mb-3">
-        <span class="text-sm text-gray-600">
-          {{ teams.length }} team{{ teams.length !== 1 ? 's' : '' }}
-        </span>
-      </div>
-
       <!-- DataTable -->
       <DataTable
         :value="teams"

@@ -3,6 +3,12 @@ import { useUserStore } from '@app/stores/userStore';
 import LeagueList from '@app/views/LeagueList.vue';
 import LeagueDetail from '@app/views/LeagueDetail.vue';
 
+declare global {
+  interface Window {
+    dataLayer: Record<string, unknown>[];
+  }
+}
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -65,6 +71,16 @@ router.beforeEach(async (to, _from, next) => {
 
   // User is authenticated, allow navigation
   next();
+});
+
+// GTM DataLayer push for virtual page view tracking
+router.afterEach((to) => {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'virtual_page_view',
+    page_path: to.fullPath,
+    page_title: (to.meta.title as string) || document.title,
+  });
 });
 
 export default router;

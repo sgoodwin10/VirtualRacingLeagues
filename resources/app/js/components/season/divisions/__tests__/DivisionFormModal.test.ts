@@ -22,6 +22,7 @@ describe('DivisionFormModal', () => {
     name: 'Pro Division',
     description: 'Professional drivers division',
     logo_url: 'https://example.com/logo.png',
+    order: 1,
     created_at: '2024-01-01T00:00:00.000000Z',
     updated_at: '2024-01-01T00:00:00.000000Z',
   };

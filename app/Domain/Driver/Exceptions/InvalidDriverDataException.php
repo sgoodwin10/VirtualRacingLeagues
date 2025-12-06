@@ -39,4 +39,18 @@ final class InvalidDriverDataException extends InvalidArgumentException
     {
         return new self("Invalid driver number: {$number}. Must be between 1 and 999");
     }
+
+    public static function duplicatePlatformId(
+        ?string $psnId = null,
+        ?string $iracingId = null,
+        ?int $iracingCustomerId = null,
+        ?string $discordId = null
+    ): self {
+        $platformId = $psnId
+            ?? $iracingId
+            ?? ($iracingCustomerId !== null ? (string) $iracingCustomerId : $discordId)
+            ?? 'unknown';
+
+        return new self("A driver with platform ID '{$platformId}' already exists");
+    }
 }

@@ -69,7 +69,14 @@ vi.mock('primevue/tabpanel', () => ({
   },
 }));
 
-describe('RaceResultModal - Fastest Lap Detection', () => {
+vi.mock('primevue/message', () => ({
+  default: {
+    name: 'Message',
+    template: '<div><slot /></div>',
+  },
+}));
+
+describe('RaceResultModal - CSV Import and Time Calculations', () => {
   let pinia: ReturnType<typeof createPinia>;
   let mockRaceResultStore: ReturnType<typeof useRaceResultStore>;
   let mockSeasonStore: ReturnType<typeof useSeasonStore>;
@@ -154,6 +161,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
       nickname: 'JD',
       driver_number: '1',
       division_id: 1,
+      team_id: null,
       psn_id: 'john_psn',
       iracing_id: null,
       discord_id: null,
@@ -177,6 +185,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
       nickname: 'JS',
       driver_number: '2',
       division_id: 1,
+      team_id: null,
       psn_id: 'jane_psn',
       iracing_id: null,
       discord_id: null,
@@ -200,6 +209,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
       nickname: 'BJ',
       driver_number: '3',
       division_id: 2,
+      team_id: null,
       psn_id: 'bob_psn',
       iracing_id: null,
       discord_id: null,
@@ -222,6 +232,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
       name: 'Division A',
       description: 'Top division',
       logo_url: null,
+      order: 1,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
     },
@@ -231,6 +242,7 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
       name: 'Division B',
       description: 'Second division',
       logo_url: null,
+      order: 2,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
     },
@@ -262,15 +274,16 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
     });
   });
 
-  describe('Single Fastest Lap (No Divisions)', () => {
+  describe('Position Calculation and Payload Generation', () => {
     beforeEach(() => {
       mockSeasonStore.currentSeason = {
         id: 1,
         race_divisions_enabled: false,
+        race_times_required: true,
       } as any;
     });
 
-    it('should automatically set has_fastest_lap for driver with fastest lap', async () => {
+    it('should calculate positions based on race time', async () => {
       const wrapper = mount(RaceResultModal, {
         props: {
           race: mockRace,
@@ -296,161 +309,14 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
       // Access component instance
       const vm = wrapper.vm as any;
 
-      // Setup form results with fastest lap times
+      // Setup form results with race times
       vm.formResults = [
         {
           driver_id: 1,
           division_id: null,
           position: null,
-          race_time: '00:01:30.500',
-          race_time_difference: '',
-          fastest_lap: '00:01:25.123', // Fastest
-          penalties: '',
-          has_fastest_lap: false,
-          has_pole: false,
-          dnf: false,
-        },
-        {
-          driver_id: 2,
-          division_id: null,
-          position: null,
-          race_time: '00:01:31.000',
-          race_time_difference: '',
-          fastest_lap: '00:01:26.456', // Slower
-          penalties: '',
-          has_fastest_lap: false,
-          has_pole: false,
-          dnf: false,
-        },
-      ];
-
-      // Trigger save
-      await vm.handleSave();
-
-      // Verify saveResults was called with correct has_fastest_lap flags
-      expect(mockRaceResultStore.saveResults).toHaveBeenCalledWith(
-        mockRace.id,
-        expect.objectContaining({
-          results: expect.arrayContaining([
-            expect.objectContaining({
-              driver_id: 1,
-              has_fastest_lap: true, // Should be true for fastest lap
-            }),
-            expect.objectContaining({
-              driver_id: 2,
-              has_fastest_lap: false, // Should be false
-            }),
-          ]),
-        }),
-      );
-    });
-
-    it('should handle ties - multiple drivers with same fastest lap', async () => {
-      const wrapper = mount(RaceResultModal, {
-        props: {
-          race: mockRace,
-          round: mockRound,
-          seasonId: 1,
-          visible: true,
-        },
-        global: {
-          plugins: [pinia, ToastService],
-          stubs: {
-            BaseModal: {
-              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
-            },
-            ResultCsvImport: true,
-            ResultDivisionTabs: true,
-            ResultEntryTable: true,
-          },
-        },
-      });
-
-      await wrapper.vm.$nextTick();
-
-      const vm = wrapper.vm as any;
-
-      // Setup form results with tied fastest laps
-      vm.formResults = [
-        {
-          driver_id: 1,
-          division_id: null,
-          position: null,
-          race_time: '00:01:30.500',
-          race_time_difference: '',
-          fastest_lap: '00:01:25.123', // Tied for fastest
-          penalties: '',
-          has_fastest_lap: false,
-          has_pole: false,
-          dnf: false,
-        },
-        {
-          driver_id: 2,
-          division_id: null,
-          position: null,
-          race_time: '00:01:31.000',
-          race_time_difference: '',
-          fastest_lap: '00:01:25.123', // Tied for fastest
-          penalties: '',
-          has_fastest_lap: false,
-          has_pole: false,
-          dnf: false,
-        },
-      ];
-
-      await vm.handleSave();
-
-      // Both drivers should have has_fastest_lap = true
-      expect(mockRaceResultStore.saveResults).toHaveBeenCalledWith(
-        mockRace.id,
-        expect.objectContaining({
-          results: expect.arrayContaining([
-            expect.objectContaining({
-              driver_id: 1,
-              has_fastest_lap: true,
-            }),
-            expect.objectContaining({
-              driver_id: 2,
-              has_fastest_lap: true,
-            }),
-          ]),
-        }),
-      );
-    });
-
-    it('should ignore drivers without fastest lap times', async () => {
-      const wrapper = mount(RaceResultModal, {
-        props: {
-          race: mockRace,
-          round: mockRound,
-          seasonId: 1,
-          visible: true,
-        },
-        global: {
-          plugins: [pinia, ToastService],
-          stubs: {
-            BaseModal: {
-              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
-            },
-            ResultCsvImport: true,
-            ResultDivisionTabs: true,
-            ResultEntryTable: true,
-          },
-        },
-      });
-
-      await wrapper.vm.$nextTick();
-
-      const vm = wrapper.vm as any;
-
-      // Setup form results with one missing fastest lap
-      vm.formResults = [
-        {
-          driver_id: 1,
-          division_id: null,
-          position: null,
-          race_time: '00:01:30.500',
-          race_time_difference: '',
+          original_race_time: '00:01:30.500',
+          original_race_time_difference: '',
           fastest_lap: '00:01:25.123',
           penalties: '',
           has_fastest_lap: false,
@@ -461,9 +327,9 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           driver_id: 2,
           division_id: null,
           position: null,
-          race_time: '00:01:31.000',
-          race_time_difference: '',
-          fastest_lap: '', // No fastest lap time
+          original_race_time: '00:01:31.000',
+          original_race_time_difference: '',
+          fastest_lap: '00:01:26.456',
           penalties: '',
           has_fastest_lap: false,
           has_pole: false,
@@ -471,35 +337,30 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
         },
       ];
 
+      // Trigger save
       await vm.handleSave();
 
+      // Verify saveResults was called with positions
       expect(mockRaceResultStore.saveResults).toHaveBeenCalledWith(
         mockRace.id,
         expect.objectContaining({
           results: expect.arrayContaining([
             expect.objectContaining({
               driver_id: 1,
-              has_fastest_lap: true, // Only driver with fastest lap
+              position: 1, // Faster time
+              has_fastest_lap: false, // Backend calculates this
             }),
             expect.objectContaining({
               driver_id: 2,
-              has_fastest_lap: false,
+              position: 2, // Slower time
+              has_fastest_lap: false, // Backend calculates this
             }),
           ]),
         }),
       );
     });
-  });
 
-  describe('Fastest Lap Per Division', () => {
-    beforeEach(() => {
-      mockSeasonStore.currentSeason = {
-        id: 1,
-        race_divisions_enabled: true,
-      } as any;
-    });
-
-    it('should calculate fastest lap separately for each division', async () => {
+    it('should send fastest lap data to backend without calculating has_fastest_lap', async () => {
       const wrapper = mount(RaceResultModal, {
         props: {
           race: mockRace,
@@ -524,15 +385,15 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
 
       const vm = wrapper.vm as any;
 
-      // Setup form results with drivers in different divisions
+      // Setup form results - has_fastest_lap stays false (backend will calculate)
       vm.formResults = [
         {
           driver_id: 1,
-          division_id: 1, // Division A
+          division_id: null,
           position: null,
-          race_time: '00:01:30.500',
-          race_time_difference: '',
-          fastest_lap: '00:01:25.123', // Fastest in Division A
+          original_race_time: '00:01:30.500',
+          original_race_time_difference: '',
+          fastest_lap: '00:01:25.123',
           penalties: '',
           has_fastest_lap: false,
           has_pole: false,
@@ -540,23 +401,11 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
         },
         {
           driver_id: 2,
-          division_id: 1, // Division A
+          division_id: null,
           position: null,
-          race_time: '00:01:31.000',
-          race_time_difference: '',
-          fastest_lap: '00:01:26.456', // Slower in Division A
-          penalties: '',
-          has_fastest_lap: false,
-          has_pole: false,
-          dnf: false,
-        },
-        {
-          driver_id: 3,
-          division_id: 2, // Division B
-          position: null,
-          race_time: '00:01:32.000',
-          race_time_difference: '',
-          fastest_lap: '00:01:24.000', // Fastest in Division B (faster overall but different division)
+          original_race_time: '00:01:31.000',
+          original_race_time_difference: '',
+          fastest_lap: '00:01:26.456',
           penalties: '',
           has_fastest_lap: false,
           has_pole: false,
@@ -566,118 +415,20 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
 
       await vm.handleSave();
 
-      // Each division should have its own fastest lap holder
+      // Verify fastest lap times are sent but has_fastest_lap remains false
       expect(mockRaceResultStore.saveResults).toHaveBeenCalledWith(
         mockRace.id,
         expect.objectContaining({
           results: expect.arrayContaining([
             expect.objectContaining({
               driver_id: 1,
-              division_id: 1,
-              has_fastest_lap: true, // Fastest in Division A
+              fastest_lap: '00:01:25.123',
+              has_fastest_lap: false, // Backend will calculate
             }),
             expect.objectContaining({
               driver_id: 2,
-              division_id: 1,
-              has_fastest_lap: false,
-            }),
-            expect.objectContaining({
-              driver_id: 3,
-              division_id: 2,
-              has_fastest_lap: true, // Fastest in Division B
-            }),
-          ]),
-        }),
-      );
-    });
-
-    it('should handle ties within each division separately', async () => {
-      const wrapper = mount(RaceResultModal, {
-        props: {
-          race: mockRace,
-          round: mockRound,
-          seasonId: 1,
-          visible: true,
-        },
-        global: {
-          plugins: [pinia, ToastService],
-          stubs: {
-            BaseModal: {
-              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
-            },
-            ResultCsvImport: true,
-            ResultDivisionTabs: true,
-            ResultEntryTable: true,
-          },
-        },
-      });
-
-      await wrapper.vm.$nextTick();
-
-      const vm = wrapper.vm as any;
-
-      // Add a fourth driver for more complex scenario
-      vm.formResults = [
-        {
-          driver_id: 1,
-          division_id: 1,
-          position: null,
-          race_time: '00:01:30.500',
-          race_time_difference: '',
-          fastest_lap: '00:01:25.123', // Tied in Division A
-          penalties: '',
-          has_fastest_lap: false,
-          has_pole: false,
-          dnf: false,
-        },
-        {
-          driver_id: 2,
-          division_id: 1,
-          position: null,
-          race_time: '00:01:31.000',
-          race_time_difference: '',
-          fastest_lap: '00:01:25.123', // Tied in Division A
-          penalties: '',
-          has_fastest_lap: false,
-          has_pole: false,
-          dnf: false,
-        },
-        {
-          driver_id: 3,
-          division_id: 2,
-          position: null,
-          race_time: '00:01:32.000',
-          race_time_difference: '',
-          fastest_lap: '00:01:24.000', // Fastest in Division B
-          penalties: '',
-          has_fastest_lap: false,
-          has_pole: false,
-          dnf: false,
-        },
-      ];
-
-      await vm.handleSave();
-
-      // Both drivers in Division A should have has_fastest_lap = true
-      // Only the driver in Division B should have has_fastest_lap = true
-      expect(mockRaceResultStore.saveResults).toHaveBeenCalledWith(
-        mockRace.id,
-        expect.objectContaining({
-          results: expect.arrayContaining([
-            expect.objectContaining({
-              driver_id: 1,
-              division_id: 1,
-              has_fastest_lap: true, // Tied in Division A
-            }),
-            expect.objectContaining({
-              driver_id: 2,
-              division_id: 1,
-              has_fastest_lap: true, // Tied in Division A
-            }),
-            expect.objectContaining({
-              driver_id: 3,
-              division_id: 2,
-              has_fastest_lap: true, // Fastest in Division B
+              fastest_lap: '00:01:26.456',
+              has_fastest_lap: false, // Backend will calculate
             }),
           ]),
         }),
@@ -695,10 +446,11 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
       mockSeasonStore.currentSeason = {
         id: 1,
         race_divisions_enabled: false,
+        race_times_required: true,
       } as any;
     });
 
-    it('should NOT calculate fastest lap for qualifying sessions', async () => {
+    it('should calculate positions based on fastest lap for qualifying', async () => {
       const wrapper = mount(RaceResultModal, {
         props: {
           race: mockQualifyingRace,
@@ -729,9 +481,9 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           driver_id: 1,
           division_id: null,
           position: null,
-          race_time: '',
-          race_time_difference: '',
-          fastest_lap: '00:01:25.123', // Qualifying time
+          original_race_time: '',
+          original_race_time_difference: '',
+          fastest_lap: '00:01:25.123', // Fastest qualifying time
           penalties: '',
           has_fastest_lap: false,
           has_pole: false,
@@ -741,9 +493,9 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           driver_id: 2,
           division_id: null,
           position: null,
-          race_time: '',
-          race_time_difference: '',
-          fastest_lap: '00:01:26.456',
+          original_race_time: '',
+          original_race_time_difference: '',
+          fastest_lap: '00:01:26.456', // Slower qualifying time
           penalties: '',
           has_fastest_lap: false,
           has_pole: false,
@@ -753,22 +505,238 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
 
       await vm.handleSave();
 
-      // All should have has_fastest_lap = false in qualifying
+      // Positions should be calculated based on fastest lap time
       expect(mockRaceResultStore.saveResults).toHaveBeenCalledWith(
         mockQualifyingRace.id,
         expect.objectContaining({
           results: expect.arrayContaining([
             expect.objectContaining({
               driver_id: 1,
-              has_fastest_lap: false,
+              position: 1, // Faster lap
+              has_fastest_lap: false, // Backend calculates this
             }),
             expect.objectContaining({
               driver_id: 2,
-              has_fastest_lap: false,
+              position: 2, // Slower lap
+              has_fastest_lap: false, // Backend calculates this
             }),
           ]),
         }),
       );
+    });
+  });
+
+  describe('Loading Existing Results', () => {
+    beforeEach(() => {
+      mockSeasonStore.currentSeason = {
+        id: 1,
+        race_divisions_enabled: false,
+        race_times_required: true,
+      } as any;
+    });
+
+    it('should populate form with existing results on first modal open', async () => {
+      // Setup existing results in the store
+      const existingResults = [
+        {
+          id: 1,
+          race_id: 1,
+          driver_id: 1,
+          division_id: null,
+          position: 1,
+          original_race_time: '00:01:30.500',
+          original_race_time_difference: null,
+          fastest_lap: '00:01:25.123',
+          penalties: null,
+          has_fastest_lap: true,
+          has_pole: false,
+          dnf: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 2,
+          race_id: 1,
+          driver_id: 2,
+          division_id: null,
+          position: 2,
+          original_race_time: '00:01:31.000',
+          original_race_time_difference: null,
+          fastest_lap: '00:01:26.456',
+          penalties: null,
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      // Mock fetchResults to populate the store synchronously
+      (mockRaceResultStore as any).results = [];
+      vi.spyOn(mockRaceResultStore, 'fetchResults').mockImplementation(async () => {
+        (mockRaceResultStore as any).results = existingResults;
+      });
+
+      const wrapper = mount(RaceResultModal, {
+        props: {
+          race: mockRace,
+          round: mockRound,
+          seasonId: 1,
+          visible: false, // Start with modal closed
+        },
+        global: {
+          plugins: [pinia, ToastService],
+          stubs: {
+            BaseModal: {
+              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
+            },
+            ResultCsvImport: true,
+            ResultDivisionTabs: true,
+            ResultEntryTable: true,
+          },
+        },
+      });
+
+      // Open the modal by setting visible to true
+      await wrapper.setProps({ visible: true });
+
+      // Wait for the watcher to trigger and loadData to complete
+      await wrapper.vm.$nextTick();
+
+      const vm = wrapper.vm as any;
+
+      // Wait for isLoadingDrivers to become false
+      await vi.waitFor(() => {
+        expect(vm.isLoadingDrivers).toBe(false);
+      });
+
+      // Verify form was populated with existing results
+      expect(vm.formResults).toHaveLength(2);
+      expect(vm.formResults[0]).toMatchObject({
+        driver_id: 1,
+        position: 1,
+        original_race_time: '00:01:30.500',
+        fastest_lap: '00:01:25.123',
+        has_fastest_lap: true,
+      });
+      expect(vm.formResults[1]).toMatchObject({
+        driver_id: 2,
+        position: 2,
+        original_race_time: '00:01:31.000',
+        fastest_lap: '00:01:26.456',
+        has_fastest_lap: false,
+      });
+    });
+
+    it('should show empty form when no existing results', async () => {
+      // Mock fetchResults to return no results
+      vi.spyOn(mockRaceResultStore, 'fetchResults').mockImplementation(async () => {
+        (mockRaceResultStore as any).results = [];
+      });
+
+      const wrapper = mount(RaceResultModal, {
+        props: {
+          race: mockRace,
+          round: mockRound,
+          seasonId: 1,
+          visible: true,
+        },
+        global: {
+          plugins: [pinia, ToastService],
+          stubs: {
+            BaseModal: {
+              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
+            },
+            ResultCsvImport: true,
+            ResultDivisionTabs: true,
+            ResultEntryTable: true,
+          },
+        },
+      });
+
+      // Wait for loadData to complete
+      await wrapper.vm.$nextTick();
+      await wrapper.vm.$nextTick();
+
+      const vm = wrapper.vm as any;
+
+      // Verify form is empty
+      expect(vm.formResults).toHaveLength(0);
+    });
+
+    it('should load existing results immediately when mounted with visible=true (v-if scenario)', async () => {
+      // This tests the bug fix: when modal is rendered with v-if and visible=true,
+      // the watch should fire immediately due to { immediate: true }
+
+      // Setup existing results in the store
+      const existingResults = [
+        {
+          id: 1,
+          race_id: 1,
+          driver_id: 1,
+          division_id: null,
+          position: 1,
+          original_race_time: '00:01:30.500',
+          original_race_time_difference: null,
+          fastest_lap: '00:01:25.123',
+          penalties: null,
+          has_fastest_lap: true,
+          has_pole: false,
+          dnf: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      // Mock fetchResults to populate the store
+      vi.spyOn(mockRaceResultStore, 'fetchResults').mockImplementation(async () => {
+        (mockRaceResultStore as any).results = existingResults;
+      });
+
+      // Mount the component with visible=true from the start (simulates v-if behavior)
+      const wrapper = mount(RaceResultModal, {
+        props: {
+          race: mockRace,
+          round: mockRound,
+          seasonId: 1,
+          visible: true, // Already visible on mount
+        },
+        global: {
+          plugins: [pinia, ToastService],
+          stubs: {
+            BaseModal: {
+              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
+            },
+            ResultCsvImport: true,
+            ResultDivisionTabs: true,
+            ResultEntryTable: true,
+          },
+        },
+      });
+
+      // Wait for loadData to complete
+      await wrapper.vm.$nextTick();
+
+      const vm = wrapper.vm as any;
+
+      // Wait for isLoadingDrivers to become false
+      await vi.waitFor(() => {
+        expect(vm.isLoadingDrivers).toBe(false);
+      });
+
+      // Verify fetchResults was called immediately on mount (not waiting for prop change)
+      expect(mockRaceResultStore.fetchResults).toHaveBeenCalledWith(mockRace.id);
+
+      // Verify form was populated with existing results
+      expect(vm.formResults).toHaveLength(1);
+      expect(vm.formResults[0]).toMatchObject({
+        driver_id: 1,
+        position: 1,
+        original_race_time: '00:01:30.500',
+        fastest_lap: '00:01:25.123',
+        has_fastest_lap: true,
+      });
     });
   });
 
@@ -777,10 +745,11 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
       mockSeasonStore.currentSeason = {
         id: 1,
         race_divisions_enabled: false,
+        race_times_required: true,
       } as any;
     });
 
-    it('should reset has_fastest_lap to false before recalculating', async () => {
+    it('should send has_fastest_lap as-is without modification', async () => {
       const wrapper = mount(RaceResultModal, {
         props: {
           race: mockRace,
@@ -805,17 +774,17 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
 
       const vm = wrapper.vm as any;
 
-      // Setup form results with one already having has_fastest_lap = true (from previous save)
+      // Setup form results - has_fastest_lap field is preserved from form state
       vm.formResults = [
         {
           driver_id: 1,
           division_id: null,
           position: null,
-          race_time: '00:01:30.500',
-          race_time_difference: '',
-          fastest_lap: '00:01:26.000', // Slower now
+          original_race_time: '00:01:30.500',
+          original_race_time_difference: '',
+          fastest_lap: '00:01:26.000',
           penalties: '',
-          has_fastest_lap: true, // Previously had fastest lap
+          has_fastest_lap: true, // User manually set this or from previous backend response
           has_pole: false,
           dnf: false,
         },
@@ -823,9 +792,9 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           driver_id: 2,
           division_id: null,
           position: null,
-          race_time: '00:01:31.000',
-          race_time_difference: '',
-          fastest_lap: '00:01:25.123', // Now fastest
+          original_race_time: '00:01:31.000',
+          original_race_time_difference: '',
+          fastest_lap: '00:01:25.123',
           penalties: '',
           has_fastest_lap: false,
           has_pole: false,
@@ -835,26 +804,25 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
 
       await vm.handleSave();
 
-      // Driver 1 should have has_fastest_lap reset to false
-      // Driver 2 should now have has_fastest_lap = true
+      // Frontend sends has_fastest_lap as-is (backend will recalculate)
       expect(mockRaceResultStore.saveResults).toHaveBeenCalledWith(
         mockRace.id,
         expect.objectContaining({
           results: expect.arrayContaining([
             expect.objectContaining({
               driver_id: 1,
-              has_fastest_lap: false, // Should be reset
+              has_fastest_lap: true, // Sent as-is from form
             }),
             expect.objectContaining({
               driver_id: 2,
-              has_fastest_lap: true, // Should be set
+              has_fastest_lap: false, // Sent as-is from form
             }),
           ]),
         }),
       );
     });
 
-    it('should handle all drivers having no fastest lap times', async () => {
+    it('should handle drivers with no fastest lap times', async () => {
       const wrapper = mount(RaceResultModal, {
         props: {
           race: mockRace,
@@ -884,8 +852,8 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           driver_id: 1,
           division_id: null,
           position: null,
-          race_time: '00:01:30.500',
-          race_time_difference: '',
+          original_race_time: '00:01:30.500',
+          original_race_time_difference: '',
           fastest_lap: '', // No fastest lap
           penalties: '',
           has_fastest_lap: false,
@@ -896,8 +864,8 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
           driver_id: 2,
           division_id: null,
           position: null,
-          race_time: '00:01:31.000',
-          race_time_difference: '',
+          original_race_time: '00:01:31.000',
+          original_race_time_difference: '',
           fastest_lap: '', // No fastest lap
           penalties: '',
           has_fastest_lap: false,
@@ -908,22 +876,354 @@ describe('RaceResultModal - Fastest Lap Detection', () => {
 
       await vm.handleSave();
 
-      // All should remain false
+      // Should send null for empty fastest lap times
       expect(mockRaceResultStore.saveResults).toHaveBeenCalledWith(
         mockRace.id,
         expect.objectContaining({
           results: expect.arrayContaining([
             expect.objectContaining({
               driver_id: 1,
+              fastest_lap: null,
               has_fastest_lap: false,
             }),
             expect.objectContaining({
               driver_id: 2,
+              fastest_lap: null,
               has_fastest_lap: false,
             }),
           ]),
         }),
       );
+    });
+  });
+
+  describe('Missing Driver Detection', () => {
+    beforeEach(() => {
+      mockSeasonStore.currentSeason = {
+        id: 1,
+        race_divisions_enabled: false,
+        race_times_required: true,
+      } as any;
+    });
+
+    it('should track missing drivers when CSV contains unknown driver names', async () => {
+      const wrapper = mount(RaceResultModal, {
+        props: {
+          race: mockRace,
+          round: mockRound,
+          seasonId: 1,
+          visible: true,
+        },
+        global: {
+          plugins: [pinia, ToastService],
+          stubs: {
+            BaseModal: {
+              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
+            },
+            ResultCsvImport: true,
+            ResultDivisionTabs: true,
+            ResultEntryTable: true,
+            Message: {
+              name: 'Message',
+              template: '<div class="p-message"><slot /></div>',
+              props: ['severity', 'closable'],
+            },
+          },
+        },
+      });
+
+      await wrapper.vm.$nextTick();
+
+      const vm = wrapper.vm as any;
+
+      // Mock CSV parsed rows with some unknown drivers
+      const csvRows = [
+        {
+          driver: 'JD', // Should match John Doe by nickname
+          race_time: '00:01:30.500',
+          fastest_lap_time: '00:01:25.123',
+        },
+        {
+          driver: 'Unknown Driver 1', // Should not match anyone
+          race_time: '00:01:31.000',
+          fastest_lap_time: '00:01:26.456',
+        },
+        {
+          driver: 'JS', // Should match Jane Smith by nickname
+          race_time: '00:01:32.000',
+          fastest_lap_time: '00:01:27.789',
+        },
+        {
+          driver: 'Unknown Driver 2', // Should not match anyone
+          race_time: '00:01:33.000',
+          fastest_lap_time: '00:01:28.000',
+        },
+      ];
+
+      // Call handleCsvParse directly
+      vm.handleCsvParse(csvRows);
+
+      // Verify missing drivers are tracked
+      expect(vm.missingDriverNames).toHaveLength(2);
+      expect(vm.missingDriverNames).toContain('Unknown Driver 1');
+      expect(vm.missingDriverNames).toContain('Unknown Driver 2');
+
+      // Verify only known drivers were added to formResults
+      expect(vm.formResults).toHaveLength(2);
+      expect(vm.formResults[0].driver_id).toBe(1); // John Doe
+      expect(vm.formResults[1].driver_id).toBe(2); // Jane Smith
+    });
+
+    it('should show toast warning when missing drivers are detected', async () => {
+      const wrapper = mount(RaceResultModal, {
+        props: {
+          race: mockRace,
+          round: mockRound,
+          seasonId: 1,
+          visible: true,
+        },
+        global: {
+          plugins: [pinia, ToastService],
+          stubs: {
+            BaseModal: {
+              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
+            },
+            ResultCsvImport: true,
+            ResultDivisionTabs: true,
+            ResultEntryTable: true,
+          },
+        },
+      });
+
+      await wrapper.vm.$nextTick();
+
+      const vm = wrapper.vm as any;
+
+      // Spy on the toast instance used by the component
+      const toastAddSpy = vi.spyOn(vm.toast, 'add');
+
+      const csvRows = [
+        {
+          driver: 'Unknown Driver',
+          race_time: '00:01:30.500',
+          fastest_lap_time: '00:01:25.123',
+        },
+      ];
+
+      vm.handleCsvParse(csvRows);
+
+      // Verify toast warning was shown
+      expect(toastAddSpy).toHaveBeenCalledWith({
+        severity: 'warn',
+        summary: 'Drivers Not Found',
+        detail: '1 driver(s) from CSV were not found in the season.',
+        life: 5000,
+      });
+    });
+
+    it('should reset missing drivers list when parsing new CSV', async () => {
+      const wrapper = mount(RaceResultModal, {
+        props: {
+          race: mockRace,
+          round: mockRound,
+          seasonId: 1,
+          visible: true,
+        },
+        global: {
+          plugins: [pinia, ToastService],
+          stubs: {
+            BaseModal: {
+              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
+            },
+            ResultCsvImport: true,
+            ResultDivisionTabs: true,
+            ResultEntryTable: true,
+          },
+        },
+      });
+
+      await wrapper.vm.$nextTick();
+
+      const vm = wrapper.vm as any;
+
+      // First CSV parse with missing drivers
+      vm.handleCsvParse([
+        {
+          driver: 'Unknown Driver 1',
+          race_time: '00:01:30.500',
+          fastest_lap_time: '00:01:25.123',
+        },
+      ]);
+
+      expect(vm.missingDriverNames).toHaveLength(1);
+
+      // Second CSV parse with different missing drivers
+      vm.handleCsvParse([
+        {
+          driver: 'Unknown Driver 2',
+          race_time: '00:01:31.000',
+          fastest_lap_time: '00:01:26.456',
+        },
+        {
+          driver: 'Unknown Driver 3',
+          race_time: '00:01:32.000',
+          fastest_lap_time: '00:01:27.789',
+        },
+      ]);
+
+      // Should have replaced the old missing drivers list
+      expect(vm.missingDriverNames).toHaveLength(2);
+      expect(vm.missingDriverNames).toContain('Unknown Driver 2');
+      expect(vm.missingDriverNames).toContain('Unknown Driver 3');
+      expect(vm.missingDriverNames).not.toContain('Unknown Driver 1');
+    });
+
+    it('should clear missing drivers list when modal is closed', async () => {
+      const wrapper = mount(RaceResultModal, {
+        props: {
+          race: mockRace,
+          round: mockRound,
+          seasonId: 1,
+          visible: true,
+        },
+        global: {
+          plugins: [pinia, ToastService],
+          stubs: {
+            BaseModal: {
+              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
+            },
+            ResultCsvImport: true,
+            ResultDivisionTabs: true,
+            ResultEntryTable: true,
+          },
+        },
+      });
+
+      await wrapper.vm.$nextTick();
+
+      const vm = wrapper.vm as any;
+
+      // Parse CSV with missing drivers
+      vm.handleCsvParse([
+        {
+          driver: 'Unknown Driver',
+          race_time: '00:01:30.500',
+          fastest_lap_time: '00:01:25.123',
+        },
+      ]);
+
+      expect(vm.missingDriverNames).toHaveLength(1);
+
+      // Close the modal
+      vm.handleClose();
+
+      // Missing drivers list should be cleared
+      expect(vm.missingDriverNames).toHaveLength(0);
+    });
+
+    it('should not show warning or track missing drivers when all CSV drivers are found', async () => {
+      const wrapper = mount(RaceResultModal, {
+        props: {
+          race: mockRace,
+          round: mockRound,
+          seasonId: 1,
+          visible: true,
+        },
+        global: {
+          plugins: [pinia, ToastService],
+          stubs: {
+            BaseModal: {
+              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
+            },
+            ResultCsvImport: true,
+            ResultDivisionTabs: true,
+            ResultEntryTable: true,
+          },
+        },
+      });
+
+      await wrapper.vm.$nextTick();
+
+      const vm = wrapper.vm as any;
+
+      // Spy on the toast instance used by the component
+      const toastAddSpy = vi.spyOn(vm.toast, 'add');
+
+      // CSV with only known drivers
+      const csvRows = [
+        {
+          driver: 'JD',
+          race_time: '00:01:30.500',
+          fastest_lap_time: '00:01:25.123',
+        },
+        {
+          driver: 'JS',
+          race_time: '00:01:31.000',
+          fastest_lap_time: '00:01:26.456',
+        },
+      ];
+
+      vm.handleCsvParse(csvRows);
+
+      // No missing drivers
+      expect(vm.missingDriverNames).toHaveLength(0);
+
+      // No toast warning
+      expect(toastAddSpy).not.toHaveBeenCalled();
+    });
+
+    it('should avoid duplicate entries in missing drivers list', async () => {
+      const wrapper = mount(RaceResultModal, {
+        props: {
+          race: mockRace,
+          round: mockRound,
+          seasonId: 1,
+          visible: true,
+        },
+        global: {
+          plugins: [pinia, ToastService],
+          stubs: {
+            BaseModal: {
+              template: '<div><slot /><slot name="header" /><slot name="footer" /></div>',
+            },
+            ResultCsvImport: true,
+            ResultDivisionTabs: true,
+            ResultEntryTable: true,
+          },
+        },
+      });
+
+      await wrapper.vm.$nextTick();
+
+      const vm = wrapper.vm as any;
+
+      // CSV with duplicate unknown driver names
+      const csvRows = [
+        {
+          driver: 'Unknown Driver',
+          race_time: '00:01:30.500',
+          fastest_lap_time: '00:01:25.123',
+        },
+        {
+          driver: 'Unknown Driver', // Duplicate
+          race_time: '00:01:31.000',
+          fastest_lap_time: '00:01:26.456',
+        },
+        {
+          driver: 'Another Unknown',
+          race_time: '00:01:32.000',
+          fastest_lap_time: '00:01:27.789',
+        },
+      ];
+
+      vm.handleCsvParse(csvRows);
+
+      // Should have only 2 unique missing drivers
+      expect(vm.missingDriverNames).toHaveLength(2);
+      expect(
+        vm.missingDriverNames.filter((name: string) => name === 'Unknown Driver'),
+      ).toHaveLength(1);
+      expect(vm.missingDriverNames).toContain('Another Unknown');
     });
   });
 });

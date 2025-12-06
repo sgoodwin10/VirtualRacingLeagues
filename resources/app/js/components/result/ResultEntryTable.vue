@@ -3,42 +3,39 @@
     <table class="w-full">
       <thead class="bg-gray-100">
         <tr>
-          <!-- Drag handle column (only shown in no-times edit mode) -->
-          <th
-            v-if="!readOnly && !raceTimesRequired"
-            class="px-2 py-2 text-center font-medium text-gray-700 w-8"
-          ></th>
-          <th class="px-2 py-2 text-center font-medium text-gray-700 w-6">#</th>
-          <th class="px-2 py-2 text-left font-medium text-gray-700 min-w-[200px]">Driver</th>
+          <!-- Drag handle column (shown in edit mode, hidden in read-only) -->
+          <th v-if="!readOnly" class="px-1 py-1 text-center font-medium text-gray-700 w-8"></th>
+          <th class="px-1 py-1 text-center font-medium text-gray-700 w-6">#</th>
+          <th class="px-1 py-1 text-left font-medium text-gray-700 min-w-[180px]">Driver</th>
           <!-- Time columns (hidden in no-times mode) -->
           <th
             v-if="!isQualifying && raceTimesRequired"
-            class="px-2 py-2 text-right font-medium text-gray-700 w-42"
+            class="px-1 py-1 text-right font-medium text-gray-700 w-42"
           >
-            Race Time
+            {{ readOnly ? 'Race Time' : 'Original Time' }}
           </th>
           <th
             v-if="!isQualifying && raceTimesRequired"
-            class="px-2 py-2 text-right font-medium text-gray-700 w-42"
+            class="px-1 py-1 text-right font-medium text-gray-700 w-42"
           >
             Time Diff
           </th>
           <!-- Fastest Lap column: Show for qualifying OR for races with times -->
           <th
             v-if="isQualifying || raceTimesRequired"
-            class="px-2 py-2 text-right font-medium text-gray-700 w-42"
+            class="px-1 py-1 text-right font-medium text-gray-700 w-42"
             :class="{ 'pr-6': isQualifying }"
           >
             {{ isQualifying ? 'Lap Time' : 'Fastest Lap' }}
           </th>
           <th
             v-if="!isQualifying && raceTimesRequired"
-            class="px-2 py-2 text-right font-medium text-gray-700 w-42"
+            class="px-1 py-1 text-right font-medium text-gray-700 w-42"
           >
             Penalties
           </th>
           <!-- DNF/FL column -->
-          <th v-if="!isQualifying" class="px-2 py-2 text-right font-medium text-gray-700 w-20">
+          <th v-if="!isQualifying" class="px-1 py-1 text-right font-medium text-gray-700 w-20">
             <template v-if="raceTimesRequired">DNF</template>
             <template v-else>
               <div class="flex justify-center gap-4">
@@ -49,16 +46,16 @@
           </th>
           <th
             v-if="isQualifying && !raceTimesRequired"
-            class="px-2 py-2 text-center font-medium text-gray-700 w-20"
+            class="px-1 py-1 text-center font-medium text-gray-700 w-20"
           >
             Pole
           </th>
-          <th v-if="!readOnly" class="px-2 py-2 text-center font-medium text-gray-700 w-4"></th>
+          <th v-if="!readOnly" class="px-1 py-1 text-center font-medium text-gray-700 w-4"></th>
         </tr>
       </thead>
-      <!-- Draggable tbody for no-times mode -->
+      <!-- Draggable tbody for edit mode (both times-required and no-times modes) -->
       <draggable
-        v-if="!readOnly && !raceTimesRequired"
+        v-if="!readOnly"
         v-model="localResults"
         tag="tbody"
         item-key="driver_id"
@@ -69,21 +66,21 @@
           <tr
             :class="[
               'border-b border-gray-100',
-              row.dnf ? 'bg-red-50' : 'hover:bg-gray-50',
-              index === 0 && sortedFinishers.length > 0 && row.dnf
+              row.dnf || row.penalties ? 'bg-red-50' : 'hover:bg-gray-50',
+              index === 0 && sortedFinishers.length > 0 && (row.dnf || row.penalties)
                 ? 'border-t-2 border-red-200'
                 : '',
             ]"
           >
             <!-- Drag handle -->
-            <td class="px-2 py-2 text-center">
+            <td class="px-1 py-1 text-center">
               <PhDotsSixVertical
                 :size="20"
                 class="drag-handle cursor-move text-gray-400 hover:text-gray-600"
               />
             </td>
-            <td class="px-2 py-2 text-gray-500 text-center">{{ index + 1 }}</td>
-            <td class="px-2 py-2">
+            <td class="px-1 py-1 text-gray-500 text-center">{{ index + 1 }}</td>
+            <td class="px-1 py-1">
               <Select
                 v-model="row.driver_id"
                 :options="getAvailableDrivers(row.driver_id)"
@@ -95,21 +92,80 @@
                 @change="handleDriverChange"
               />
             </td>
-            <!-- DNF and FL checkboxes side by side -->
-            <td class="px-2 py-2 text-center">
-              <div class="flex justify-center gap-6">
+            <!-- Race Time column (shown if not qualifying and times required) -->
+            <td v-if="!isQualifying && raceTimesRequired" class="px-1 py-1 text-end">
+              <ResultTimeInput
+                v-model="row.original_race_time"
+                placeholder="00:00:00.000"
+                @update:model-value="handleTimeChange"
+              />
+            </td>
+            <!-- Time Difference column (shown if not qualifying and times required) -->
+            <td v-if="!isQualifying && raceTimesRequired" class="px-1 py-1 text-end">
+              <ResultTimeInput
+                v-model="row.original_race_time_difference"
+                placeholder="+00:00:00.000"
+                @update:model-value="handleTimeChange"
+              />
+            </td>
+            <!-- Fastest Lap column (shown if qualifying OR times required) -->
+            <td
+              v-if="isQualifying || raceTimesRequired"
+              class="px-1 py-1 text-end"
+              :class="{ 'pr-6': isQualifying }"
+            >
+              <ResultTimeInput
+                v-model="row.fastest_lap"
+                placeholder="00:00:00.000"
+                @update:model-value="handleTimeChange"
+              />
+            </td>
+            <!-- Penalties column (shown if not qualifying and times required) -->
+            <td v-if="!isQualifying && raceTimesRequired" class="px-1 py-1 text-end">
+              <div class="flex items-center gap-2">
+                <ResultTimeInput
+                  v-model="row.penalties"
+                  placeholder="00:00:00.000"
+                  class="flex-1"
+                  :class="{
+                    'border border-red-500': row.penalties && row.penalties !== '',
+                  }"
+                  @update:model-value="handlePenaltyChange(row)"
+                />
+                <span
+                  v-if="row._penaltyChanged"
+                  class="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0"
+                  title="Penalty modified this session"
+                  aria-label="Penalty modified this session"
+                ></span>
+              </div>
+            </td>
+            <!-- DNF column (for times-required mode) OR DNF/FL column (for no-times mode) -->
+            <td v-if="!isQualifying" class="px-1 py-1 text-center">
+              <template v-if="raceTimesRequired">
                 <Checkbox
                   v-model="row.dnf"
                   :binary="true"
-                  @change.stop="() => handleDnfChangeNoTimes(row)"
+                  @change.stop="() => handleDnfChange(row)"
                 />
-                <Checkbox v-model="row.has_fastest_lap" :binary="true" />
-              </div>
+              </template>
+              <template v-else>
+                <div class="flex justify-center gap-6">
+                  <Checkbox
+                    v-model="row.dnf"
+                    :binary="true"
+                    @change.stop="() => handleDnfChangeNoTimes(row)"
+                  />
+                  <Checkbox v-model="row.has_fastest_lap" :binary="true" />
+                </div>
+              </template>
             </td>
-            <td v-if="isQualifying" class="px-2 py-2 text-center">
+            <!-- Pole position checkbox (for qualifying and no-times mode) -->
+            <td v-if="isQualifying && !raceTimesRequired" class="px-1 py-1 text-center">
               <Checkbox v-model="row.has_pole" :binary="true" />
             </td>
-            <td class="px-2 py-2 text-center">
+            <!-- Delete button -->
+            <td class="px-1 py-1 text-center">
               <Button
                 icon="pi pi-trash"
                 size="small"
@@ -121,7 +177,7 @@
           </tr>
         </template>
       </draggable>
-      <!-- Standard tbody for times-required mode -->
+      <!-- Standard tbody for read-only mode -->
       <tbody v-else>
         <tr
           v-for="(row, index) in displayResults"
@@ -130,120 +186,78 @@
         >
           <td class="px-2 py-2 text-gray-500 text-center">{{ index + 1 }}</td>
           <td class="px-2 py-2">
-            <!-- Read-only: show driver name as text -->
-            <template v-if="readOnly">
-              <span class="text-gray-900">{{ getDriverName(row.driver_id) }}</span>
-            </template>
-            <!-- Edit mode: show select dropdown -->
-            <template v-else>
-              <Select
-                v-model="localResults[index]!.driver_id"
-                :options="getAvailableDrivers(row.driver_id)"
-                option-label="name"
-                option-value="id"
-                placeholder="Select driver"
-                class="w-full"
-                filter
-                @change="handleDriverChange"
-              />
-            </template>
+            <span class="text-gray-900">{{ getDriverName(row.driver_id) }}</span>
           </td>
-          <td v-if="!isQualifying" class="px-2 py-2 text-end">
-            <!-- Read-only: show time as text -->
-            <template v-if="readOnly">
-              <span class="text-gray-900 font-mono">{{ formatRaceTime(row.race_time) }}</span>
-            </template>
-            <!-- Edit mode: show input -->
-            <template v-else>
-              <ResultTimeInput
-                v-model="localResults[index]!.race_time"
-                placeholder="00:00:00.000"
-                @update:model-value="handleTimeChange"
-              />
-            </template>
-          </td>
-          <td v-if="!isQualifying" class="px-2 py-2 text-end">
-            <!-- Read-only: show time diff as text -->
-            <template v-if="readOnly">
+          <td v-if="!isQualifying && raceTimesRequired" class="px-2 py-2 text-end">
+            <div class="flex flex-col items-end">
               <span
-                v-if="row.race_time_difference !== null && row.race_time_difference !== ''"
                 class="text-gray-900 font-mono"
-                >+{{ formatRaceTime(row.race_time_difference) }}</span
-              >
-            </template>
-            <!-- Edit mode: show input -->
-            <template v-else>
-              <ResultTimeInput
-                v-model="localResults[index]!.race_time_difference"
-                placeholder="+00:00:00.000"
-                @update:model-value="handleTimeChange"
-              />
-            </template>
-          </td>
-          <td class="px-2 py-2 text-end" :class="{ 'pr-6': isQualifying }">
-            <!-- Read-only: show fastest lap as text -->
-            <template v-if="readOnly">
-              <Tag
-                v-if="row.has_fastest_lap && !isQualifying"
-                value="FL"
-                class="text-xs bg-purple-500 text-white mr-1"
-                :pt="{ root: { class: 'bg-purple-500 text-white border-purple-600' } }"
-              />
-              <span
-                class="font-mono"
                 :class="{
-                  'text-purple-600': row.has_pole || row.has_fastest_lap,
-                  'text-gray-900': !row.has_fastest_lap,
+                  'text-red-600 font-semibold': row.penalties && row.penalties !== '',
                 }"
-                >{{ formatRaceTime(row.fastest_lap) }}</span
               >
-            </template>
-            <!-- Edit mode: show input -->
-            <template v-else>
-              <ResultTimeInput
-                v-model="localResults[index]!.fastest_lap"
-                placeholder="00:00:00.000"
-                @update:model-value="handleTimeChange"
-              />
-            </template>
+                {{ formatRaceTime(row.final_race_time || row.original_race_time) }}
+              </span>
+            </div>
           </td>
-          <td v-if="!isQualifying" class="px-2 py-2 text-end">
-            <!-- Read-only: show penalties as text -->
-            <template v-if="readOnly">
-              <span class="text-gray-900 font-mono">{{ formatRaceTime(row.penalties) }}</span>
-            </template>
-            <!-- Edit mode: show input -->
-            <template v-else>
-              <ResultTimeInput
-                v-model="localResults[index]!.penalties"
-                placeholder="00:00:00.000"
-                @update:model-value="handleTimeChange"
-              />
-            </template>
+          <td v-if="!isQualifying && raceTimesRequired" class="px-2 py-2 text-end">
+            <span
+              v-if="
+                (row.calculated_time_diff ??
+                  row.final_race_time_difference ??
+                  row.original_race_time_difference) !== null &&
+                (row.calculated_time_diff ??
+                  row.final_race_time_difference ??
+                  row.original_race_time_difference) !== ''
+              "
+              class="text-gray-900 font-mono"
+              :class="{
+                'text-red-600 font-semibold': row.penalties && row.penalties !== '',
+                'text-gray-900': !row.penalties || row.penalties === '',
+              }"
+              >+{{
+                formatRaceTime(
+                  row.calculated_time_diff ??
+                    row.final_race_time_difference ??
+                    row.original_race_time_difference,
+                )
+              }}</span
+            >
+          </td>
+          <td
+            v-if="isQualifying || raceTimesRequired"
+            class="px-2 py-2 text-end"
+            :class="{ 'pr-6': isQualifying }"
+          >
+            <Tag
+              v-if="row.has_fastest_lap && !isQualifying"
+              value="FL"
+              class="text-xs bg-purple-500 text-white mr-1"
+              :pt="{ root: { class: 'bg-purple-500 text-white border-purple-600' } }"
+            />
+            <span
+              class="font-mono"
+              :class="{
+                'text-purple-600': row.has_pole || row.has_fastest_lap,
+                'text-gray-900': !row.has_fastest_lap,
+              }"
+              >{{ formatRaceTime(row.fastest_lap) }}</span
+            >
+          </td>
+          <td v-if="!isQualifying && raceTimesRequired" class="px-2 py-2 text-end">
+            <span
+              class="font-mono"
+              :class="{
+                'text-red-600 font-semibold': row.penalties && row.penalties !== '',
+                'text-gray-900': !row.penalties || row.penalties === '',
+              }"
+            >
+              {{ formatRaceTime(row.penalties) }}
+            </span>
           </td>
           <td v-if="!isQualifying" class="px-2 py-2 text-center">
-            <!-- Read-only: show status -->
-            <template v-if="readOnly">
-              <span v-if="row.dnf" class="text-red-600 font-medium">DNF</span>
-              <span v-else class="text-gray-400">-</span>
-            </template>
-            <!-- Edit mode: show checkbox -->
-            <template v-else>
-              <Checkbox
-                v-model="localResults[index]!.dnf"
-                :binary="true"
-                @change.stop="() => handleDnfChange(localResults[index]!)"
-              />
-            </template>
-          </td>
-          <td v-if="!readOnly" class="px-2 py-2 text-center">
-            <Button
-              icon="pi pi-trash"
-              size="small"
-              severity="danger"
-              text
-              @click="handleRemoveRow(index)"
-            />
+            <span v-if="row.dnf" class="text-red-600 font-medium">DNF</span>
+            <span v-else class="text-gray-400">-</span>
           </td>
         </tr>
       </tbody>
@@ -288,6 +302,7 @@ interface Props {
 
 interface Emits {
   (e: 'update:results', results: RaceResultFormData[]): void;
+  (e: 'penalty-change', row: RaceResultFormData): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -296,20 +311,22 @@ const props = withDefaults(defineProps<Props>(), {
 });
 const emit = defineEmits<Emits>();
 
-const { sortResultsByTime } = useRaceTimeCalculation();
+const { sortResultsByTime, parseTimeToMs, calculateEffectiveTime, formatMsToTime } =
+  useRaceTimeCalculation();
 const { formatRaceTime } = useTimeFormat();
 
 // Local results for both drag-and-drop and times-required modes
 const localResults = ref<RaceResultFormData[]>([...props.results]);
 
 // Flag to prevent watch from overwriting during internal updates
-let isInternalUpdate = false;
+// Using ref for proper reactivity and to avoid race conditions
+const isInternalUpdate = ref(false);
 
 // Watch for changes to props.results and update localResults
 watch(
   () => props.results,
   (newResults) => {
-    if (!isInternalUpdate) {
+    if (!isInternalUpdate.value) {
       localResults.value = [...newResults];
     }
   },
@@ -318,10 +335,15 @@ watch(
 
 /**
  * Check if a result row has meaningful data to display
- * A row is considered to have data if it has race_time, fastest_lap, or DNF
+ * A row is considered to have data if it has:
+ * - Time data: original_race_time, fastest_lap
+ * - Status flags: dnf, has_pole
+ * - Position (for qualifying without times)
  */
 function hasResultData(row: RaceResultFormData): boolean {
-  return Boolean(row.race_time || row.fastest_lap || row.dnf);
+  return Boolean(
+    row.original_race_time || row.fastest_lap || row.dnf || row.has_pole || row.position !== null,
+  );
 }
 
 /**
@@ -346,10 +368,10 @@ function sortDnfToBottom(): void {
  * Emit updated results with internal update flag to prevent watch race conditions
  */
 function emitUpdate(): void {
-  isInternalUpdate = true;
+  isInternalUpdate.value = true;
   emit('update:results', [...localResults.value]);
   nextTick(() => {
-    isInternalUpdate = false;
+    isInternalUpdate.value = false;
   });
 }
 
@@ -409,8 +431,8 @@ function handleDnfChangeNoTimes(row: RaceResultFormData): void {
 
 /**
  * Display results for the template
- * In read-only mode: filters and sorts data from props for display
- * In edit mode: uses localResults to avoid prop mutation
+ * In read-only mode: filters and sorts data from props for display WITH dynamically calculated time differences
+ * In edit mode: returns localResults directly (no sorting)
  */
 const displayResults = computed(() => {
   if (props.readOnly) {
@@ -421,7 +443,9 @@ const displayResults = computed(() => {
     if (props.raceTimesRequired) {
       // Check if any results have times entered - if not, keep original order
       const hasAnyTimes = resultsToProcess.some((r) =>
-        props.isQualifying ? r.fastest_lap : r.race_time || r.race_time_difference,
+        props.isQualifying
+          ? r.fastest_lap
+          : r.original_race_time || r.original_race_time_difference,
       );
 
       if (!hasAnyTimes) {
@@ -436,14 +460,72 @@ const displayResults = computed(() => {
       const nonDnfResults = sorted.filter((r) => !r.dnf);
       const dnfResults = sorted.filter((r) => r.dnf);
 
-      // Return non-DNF first, then DNF at the bottom
-      return [...nonDnfResults, ...dnfResults];
+      // Combine non-DNF first, then DNF at the bottom
+      const orderedResults = [...nonDnfResults, ...dnfResults];
+
+      // For race mode (non-qualifying), dynamically calculate time differences
+      if (!props.isQualifying && nonDnfResults.length > 0) {
+        // Find position 1 driver (first non-DNF driver after sorting)
+        const position1Driver = nonDnfResults[0];
+
+        if (position1Driver) {
+          // Calculate position 1's effective time (original_race_time + penalties)
+          const position1RaceTimeMs = parseTimeToMs(position1Driver.original_race_time);
+          const position1PenaltiesMs = parseTimeToMs(position1Driver.penalties);
+          const position1EffectiveTimeMs = calculateEffectiveTime(
+            position1RaceTimeMs,
+            position1PenaltiesMs,
+          );
+
+          // Calculate time differences for all drivers
+          return orderedResults.map((result, index) => {
+            // Position 1 driver has no time difference
+            if (index === 0 && !result.dnf) {
+              return {
+                ...result,
+                calculated_time_diff: null,
+              };
+            }
+
+            // DNF drivers have no time difference
+            if (result.dnf) {
+              return {
+                ...result,
+                calculated_time_diff: null,
+              };
+            }
+
+            // Calculate time difference for other drivers
+            const driverRaceTimeMs = parseTimeToMs(result.original_race_time);
+            const driverPenaltiesMs = parseTimeToMs(result.penalties);
+            const driverEffectiveTimeMs = calculateEffectiveTime(
+              driverRaceTimeMs,
+              driverPenaltiesMs,
+            );
+
+            // Calculate time difference
+            let calculatedTimeDiff: string | null = null;
+            if (position1EffectiveTimeMs !== null && driverEffectiveTimeMs !== null) {
+              const timeDiffMs = driverEffectiveTimeMs - position1EffectiveTimeMs;
+              calculatedTimeDiff = formatMsToTime(timeDiffMs);
+            }
+
+            return {
+              ...result,
+              calculated_time_diff: calculatedTimeDiff,
+            };
+          });
+        }
+      }
+
+      // Return ordered results without time difference calculation for qualifying
+      return orderedResults;
     }
 
     return resultsToProcess;
   }
 
-  // In edit mode, always use localResults to avoid prop mutation
+  // Edit mode: return localResults directly (no sorting)
   return localResults.value;
 });
 
@@ -486,17 +568,19 @@ function handleDriverChange(): void {
 }
 
 function handleTimeChange(): void {
+  // No automatic sorting - user controls order via drag/drop
   emitUpdate();
 }
 
 function handleDnfChange(row: RaceResultFormData): void {
   // When DNF is toggled on, clear race time fields but keep fastest lap
   if (row.dnf) {
-    row.race_time = '';
-    row.race_time_difference = '';
+    row.original_race_time = '';
+    row.original_race_time_difference = '';
     row.penalties = '';
+    row._penaltyChanged = false;
   }
-
+  // No automatic sorting - user controls order via drag/drop
   emitUpdate();
 }
 
@@ -526,16 +610,28 @@ function handleAddDriver(): void {
     driver_id: firstAvailableDriver.id,
     division_id: firstAvailableDriver.division_id,
     position: null,
-    race_time: '',
-    race_time_difference: '',
+    original_race_time: '',
+    original_race_time_difference: '',
     fastest_lap: '',
     penalties: '',
     has_fastest_lap: false,
     has_pole: false,
     dnf: false,
+    _originalPenalties: '',
+    _penaltyChanged: false,
   };
 
   localResults.value = [...localResults.value, newRow];
   emitUpdate();
+}
+
+/**
+ * Handle penalty change - emit to parent for tracking
+ */
+function handlePenaltyChange(row: RaceResultFormData): void {
+  const originalPenalty = row._originalPenalties ?? '';
+  const currentPenalty = row.penalties ?? '';
+  row._penaltyChanged = originalPenalty !== currentPenalty;
+  emit('penalty-change', row);
 }
 </script>

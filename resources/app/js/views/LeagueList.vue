@@ -80,12 +80,12 @@ async function handleLeagueSaved(): Promise<void> {
   await loadLeagues();
 }
 
-function handleLeagueView(leagueId: number): void {
-  console.log('League viewed:', leagueId);
+function handleLeagueView(_leagueId: number): void {
+  // View action handled by LeagueCard component
 }
 
-function handleLeagueDelete(leagueId: number): void {
-  console.log('League deleted:', leagueId);
+function handleLeagueDelete(_leagueId: number): void {
+  // Delete action handled by LeagueCard component
 }
 
 const breadcrumbItems = computed((): BreadcrumbItem[] => [

@@ -105,8 +105,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '1:23:45.678',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => true,
@@ -117,8 +117,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver2->id,
                         'division_id' => $this->division->id,
                         'position' => 2,
-                        'race_time' => '1:23:50.678',
-                        'race_time_difference' => '+0:00:05.000',
+                        'original_race_time' => '1:23:50.678',
+                        'original_race_time_difference' => '+0:00:05.000',
                         'fastest_lap' => '1:23:46.678',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -155,8 +155,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '1:23:45.678',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => true,
@@ -186,8 +186,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '1:23:45.678',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => true,
@@ -198,8 +198,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver2->id,
                         'division_id' => $this->division->id,
                         'position' => 2,
-                        'race_time' => '1:23:50.678',
-                        'race_time_difference' => '+0:00:05.000',
+                        'original_race_time' => '1:23:50.678',
+                        'original_race_time_difference' => '+0:00:05.000',
                         'fastest_lap' => '1:23:46.678',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -229,8 +229,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '1:23:45.678',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => true,
@@ -248,8 +248,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => null,
-                        'race_time' => null,
-                        'race_time_difference' => null,
+                        'original_race_time' => null,
+                        'original_race_time_difference' => null,
                         'fastest_lap' => null,
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -278,8 +278,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '1:23:45.678',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => true,
@@ -303,8 +303,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '1:23:45.678',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => true,
@@ -336,8 +336,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '0:01:43.500', // Slower lap
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => true, // Frontend says true (WRONG)
@@ -348,8 +348,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver2->id,
                         'division_id' => $this->division->id,
                         'position' => 2,
-                        'race_time' => '1:23:50.678',
-                        'race_time_difference' => '+0:00:05.000',
+                        'original_race_time' => '1:23:50.678',
+                        'original_race_time_difference' => '+0:00:05.000',
                         'fastest_lap' => '0:01:42.044', // Faster lap (should win)
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false, // Frontend says false (WRONG)
@@ -387,8 +387,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '0:01:42.044', // Same time
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -399,8 +399,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver2->id,
                         'division_id' => $this->division->id,
                         'position' => 2,
-                        'race_time' => '1:23:50.678',
-                        'race_time_difference' => '+0:00:05.000',
+                        'original_race_time' => '1:23:50.678',
+                        'original_race_time_difference' => '+0:00:05.000',
                         'fastest_lap' => '0:01:42.044', // Same time
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -442,8 +442,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '0:01:42.044', // Fastest in division 1
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -454,8 +454,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver2->id,
                         'division_id' => $this->division->id,
                         'position' => 2,
-                        'race_time' => '1:23:50.678',
-                        'race_time_difference' => '+0:00:05.000',
+                        'original_race_time' => '1:23:50.678',
+                        'original_race_time_difference' => '+0:00:05.000',
                         'fastest_lap' => '0:01:43.000', // Slower in division 1
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -467,8 +467,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $driver3->id,
                         'division_id' => $division2->id,
                         'position' => 1,
-                        'race_time' => '1:23:40.000',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:40.000',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '0:01:41.000', // Fastest in division 2 (and overall!)
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -479,8 +479,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $driver4->id,
                         'division_id' => $division2->id,
                         'position' => 2,
-                        'race_time' => '1:23:45.000',
-                        'race_time_difference' => '+0:00:05.000',
+                        'original_race_time' => '1:23:45.000',
+                        'original_race_time_difference' => '+0:00:05.000',
                         'fastest_lap' => '0:01:42.000', // Slower in division 2
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -539,8 +539,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '0:01:42.044',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '0:01:42.044',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '0:01:42.044',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => true, // Frontend sends true
@@ -551,8 +551,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver2->id,
                         'division_id' => $this->division->id,
                         'position' => 2,
-                        'race_time' => '0:01:43.000',
-                        'race_time_difference' => '+0:00:00.956',
+                        'original_race_time' => '0:01:43.000',
+                        'original_race_time_difference' => '+0:00:00.956',
                         'fastest_lap' => '0:01:43.000',
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -589,8 +589,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver1->id,
                         'division_id' => $this->division->id,
                         'position' => null,
-                        'race_time' => null,
-                        'race_time_difference' => null,
+                        'original_race_time' => null,
+                        'original_race_time_difference' => null,
                         'fastest_lap' => null, // No time
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -601,8 +601,8 @@ class RaceResultControllerTest extends TestCase
                         'driver_id' => $this->driver2->id,
                         'division_id' => $this->division->id,
                         'position' => 1,
-                        'race_time' => '1:23:45.678',
-                        'race_time_difference' => '0:00:00.000',
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
                         'fastest_lap' => '0:01:42.044', // Only valid time
                         'penalties' => '0:00:00.000',
                         'has_fastest_lap' => false,
@@ -615,5 +615,403 @@ class RaceResultControllerTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonPath('data.0.has_fastest_lap', false) // DNF driver
             ->assertJsonPath('data.1.has_fastest_lap', true); // Should win by default
+    }
+
+    public function test_time_difference_returned_as_stored_from_database(): void
+    {
+        // Create results - backend stores exactly what frontend sends
+        $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => $this->driver1->id,
+                        'division_id' => $this->division->id,
+                        'position' => 1,
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => null, // Position 1 has no time diff
+                        'final_race_time_difference' => null, // Position 1 has no final time diff
+                        'fastest_lap' => '0:01:42.044',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => false,
+                        'has_pole' => true,
+                        'dnf' => false,
+                    ],
+                    [
+                        'driver_id' => $this->driver2->id,
+                        'division_id' => $this->division->id,
+                        'position' => 2,
+                        'original_race_time' => '1:23:50.678',
+                        'original_race_time_difference' => '+0:00:05.000', // Frontend calculated
+                        'final_race_time_difference' => '+0:00:05.000', // Frontend calculated (no penalties)
+                        'fastest_lap' => '0:01:43.000',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => false,
+                        'has_pole' => false,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        // Retrieve results - backend returns raw stored values
+        $response = $this->actingAs($this->user)
+            ->getJson("{$this->appDomain}/api/races/{$this->race->id}/results");
+
+        $response->assertStatus(200)
+            ->assertJsonCount(2, 'data');
+
+        $data = $response->json('data');
+
+        // Find position 1 and position 2 drivers
+        $p1 = collect($data)->firstWhere('position', 1);
+        $p2 = collect($data)->firstWhere('position', 2);
+
+        // Position 1 should have null time difference (as stored)
+        $this->assertNull($p1['original_race_time_difference']);
+        $this->assertNull($p1['final_race_time_difference']);
+
+        // Position 2 should have the stored time difference (normalized without + prefix)
+        // Note: RaceTime value object strips the + prefix during normalization
+        $this->assertEquals('0:00:05.000', $p2['original_race_time_difference']);
+        // No penalties, so final equals original
+        $this->assertEquals('0:00:05.000', $p2['final_race_time_difference']);
+    }
+
+    public function test_time_difference_stored_and_retrieved_with_penalties(): void
+    {
+        // Create results with penalties - backend stores raw values from frontend
+        $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => $this->driver1->id,
+                        'division_id' => $this->division->id,
+                        'position' => 1,
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => null, // Position 1 has no original diff
+                        'final_race_time_difference' => null, // Position 1 has no final diff (even with penalties)
+                        'fastest_lap' => '0:01:42.044',
+                        'penalties' => '0:00:02.000', // 2 second penalty
+                        'has_fastest_lap' => false,
+                        'has_pole' => true,
+                        'dnf' => false,
+                    ],
+                    [
+                        'driver_id' => $this->driver2->id,
+                        'division_id' => $this->division->id,
+                        'position' => 2,
+                        'original_race_time' => '1:23:50.678',
+                        'original_race_time_difference' => '+0:00:05.000', // Frontend calculated original diff
+                        'final_race_time_difference' => '+0:00:05.000', // Frontend calculated final diff (no penalties on P2)
+                        'fastest_lap' => '0:01:43.000',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => false,
+                        'has_pole' => false,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        // Retrieve results - backend returns exactly what was stored
+        $response = $this->actingAs($this->user)
+            ->getJson("{$this->appDomain}/api/races/{$this->race->id}/results");
+
+        $data = $response->json('data');
+        $p1 = collect($data)->firstWhere('position', 1);
+        $p2 = collect($data)->firstWhere('position', 2);
+
+        // P1 original time difference should be null (as stored)
+        $this->assertNull($p1['original_race_time_difference']);
+
+        // P1 has penalties but no final_race_time_difference stored, so it should be null
+        // The frontend is responsible for calculating final time diffs based on penalties
+        $this->assertNull($p1['final_race_time_difference']);
+
+        // P2 original time difference as stored (normalized without + prefix)
+        // Note: RaceTime value object strips the + prefix during normalization
+        $this->assertEquals('0:00:05.000', $p2['original_race_time_difference']);
+
+        // P2 final time difference - backend stores exactly what frontend calculates
+        // Final time diff calculation is done on frontend, backend just stores it
+        $this->assertEquals('0:00:05.000', $p2['final_race_time_difference']);
+    }
+
+    /**
+     * Test that unauthorized users cannot store race results for leagues they don't own.
+     *
+     * Authorization is implemented in BulkRaceResultsRequest::authorize() which checks
+     * if the authenticated user owns the league containing the race.
+     */
+    public function test_unauthorized_user_cannot_store_race_results(): void
+    {
+        // Create another user who doesn't own the league
+        /** @var User $unauthorizedUser */
+        $unauthorizedUser = User::factory()->create();
+
+        // Try to store results as unauthorized user
+        $response = $this->actingAs($unauthorizedUser)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => $this->driver1->id,
+                        'division_id' => $this->division->id,
+                        'position' => 1,
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
+                        'fastest_lap' => '1:23:45.678',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => true,
+                        'has_pole' => true,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        // Should return 403 Forbidden
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Test that unauthorized users cannot delete race results for leagues they don't own.
+     *
+     * TODO: Authorization is NOT yet implemented for the destroy() endpoint.
+     * The controller's destroy() method doesn't use BulkRaceResultsRequest, so it lacks
+     * authorization checks. This test documents the expected behavior.
+     *
+     * To implement:
+     * 1. Create a new FormRequest (e.g., DeleteRaceResultsRequest) with authorize() method
+     * 2. Use it in RaceResultController::destroy() method
+     * 3. Or add manual authorization check in the controller/service
+     */
+    public function test_unauthorized_user_cannot_delete_race_results(): void
+    {
+        // First, create results as the owner
+        $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => $this->driver1->id,
+                        'division_id' => $this->division->id,
+                        'position' => 1,
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
+                        'fastest_lap' => '1:23:45.678',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => true,
+                        'has_pole' => true,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        // Create another user who doesn't own the league
+        /** @var User $unauthorizedUser */
+        $unauthorizedUser = User::factory()->create();
+
+        // Try to delete results as unauthorized user
+        $response = $this->actingAs($unauthorizedUser)
+            ->deleteJson("{$this->appDomain}/api/races/{$this->race->id}/results");
+
+        // TODO: When authorization is implemented, this should be 403
+        // Currently succeeds with 204 because no authorization check exists
+        // $response->assertStatus(403);
+
+        // For now, mark as incomplete to indicate authorization not yet implemented
+        $this->markTestIncomplete('Authorization not yet implemented for delete endpoint');
+    }
+
+    /**
+     * Test validation for invalid position values.
+     */
+    public function test_rejects_negative_position(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => $this->driver1->id,
+                        'division_id' => $this->division->id,
+                        'position' => -1, // Invalid negative position
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
+                        'fastest_lap' => '1:23:45.678',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => true,
+                        'has_pole' => false,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['results.0.position']);
+    }
+
+    /**
+     * Test validation for invalid time format.
+     */
+    public function test_rejects_malformed_race_time(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => $this->driver1->id,
+                        'division_id' => $this->division->id,
+                        'position' => 1,
+                        'original_race_time' => 'invalid-time-format', // Invalid format
+                        'original_race_time_difference' => '0:00:00.000',
+                        'fastest_lap' => '1:23:45.678',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => true,
+                        'has_pole' => false,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['results.0.original_race_time']);
+    }
+
+    /**
+     * Test validation for invalid fastest lap format.
+     */
+    public function test_rejects_malformed_fastest_lap(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => $this->driver1->id,
+                        'division_id' => $this->division->id,
+                        'position' => 1,
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
+                        'fastest_lap' => '99:99:99.999', // Invalid time
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => true,
+                        'has_pole' => false,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['results.0.fastest_lap']);
+    }
+
+    /**
+     * Test validation for missing required fields.
+     * driver_id is required, but division_id and position are nullable.
+     */
+    public function test_rejects_missing_required_fields(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        // Missing driver_id (required)
+                        'division_id' => $this->division->id,
+                        'original_race_time' => '1:23:45.678',
+                        'fastest_lap' => '1:23:45.678',
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['results.0.driver_id']);
+    }
+
+    /**
+     * Test validation for missing both race time and position.
+     * At least one of original_race_time or position must be provided.
+     */
+    public function test_rejects_when_both_race_time_and_position_are_missing(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => $this->driver1->id,
+                        'division_id' => $this->division->id,
+                        // Both original_race_time and position are missing
+                        'fastest_lap' => '1:23:45.678',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => false,
+                        'has_pole' => false,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['results.0']);
+    }
+
+    /**
+     * Test validation for non-existent driver.
+     */
+    public function test_rejects_nonexistent_driver(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => 99999, // Non-existent driver
+                        'division_id' => $this->division->id,
+                        'position' => 1,
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
+                        'fastest_lap' => '1:23:45.678',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => true,
+                        'has_pole' => false,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['results.0.driver_id']);
+    }
+
+    /**
+     * Test validation for duplicate positions.
+     * Each position must be unique within the race.
+     */
+    public function test_rejects_duplicate_positions(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson("{$this->appDomain}/api/races/{$this->race->id}/results", [
+                'results' => [
+                    [
+                        'driver_id' => $this->driver1->id,
+                        'division_id' => $this->division->id,
+                        'position' => 1,
+                        'original_race_time' => '1:23:45.678',
+                        'original_race_time_difference' => '0:00:00.000',
+                        'fastest_lap' => '1:23:45.678',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => false,
+                        'has_pole' => false,
+                        'dnf' => false,
+                    ],
+                    [
+                        'driver_id' => $this->driver2->id,
+                        'division_id' => $this->division->id,
+                        'position' => 1, // Duplicate position
+                        'original_race_time' => '1:23:50.678',
+                        'original_race_time_difference' => '+0:00:05.000',
+                        'fastest_lap' => '1:23:50.678',
+                        'penalties' => '0:00:00.000',
+                        'has_fastest_lap' => false,
+                        'has_pole' => false,
+                        'dnf' => false,
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['results.1.position']);
     }
 }

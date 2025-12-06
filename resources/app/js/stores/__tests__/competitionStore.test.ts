@@ -328,4 +328,146 @@ describe('competitionStore', () => {
       expect(store.currentCompetition).toBeNull();
     });
   });
+
+  describe('season management', () => {
+    const mockSeason = {
+      id: 1,
+      name: 'Season 1',
+      slug: 'season-1',
+      status: 'active' as const,
+      is_active: true,
+      is_archived: false,
+      created_at: '2025-01-01T00:00:00Z',
+      stats: {
+        driver_count: 10,
+        round_count: 5,
+        race_count: 5,
+      },
+    };
+
+    describe('addSeasonToCompetition', () => {
+      it('should add season to competition in competitions array', () => {
+        const store = useCompetitionStore();
+        const competition = { ...mockCompetition, seasons: [] };
+        store.competitions = [competition];
+
+        store.addSeasonToCompetition(competition.id, mockSeason);
+
+        expect(store.competitions[0]?.seasons).toHaveLength(1);
+        expect(store.competitions[0]?.seasons?.[0]).toEqual(mockSeason);
+        expect(store.competitions[0]?.stats.total_seasons).toBe(3); // Was 2, now 3
+      });
+
+      it('should add season to currentCompetition if it is a different object reference', () => {
+        const store = useCompetitionStore();
+        const competitionInList = { ...mockCompetition, seasons: [] };
+        const currentCompetition = { ...mockCompetition, seasons: [] };
+
+        store.competitions = [competitionInList];
+        store.currentCompetition = currentCompetition;
+
+        store.addSeasonToCompetition(mockCompetition.id, mockSeason);
+
+        // Should be added to both since they are different object references
+        expect(store.competitions[0]?.seasons).toHaveLength(1);
+        expect(store.currentCompetition?.seasons).toHaveLength(1);
+      });
+
+      it('should NOT duplicate season when currentCompetition is same reference as competition in array', () => {
+        const store = useCompetitionStore();
+        const competition = { ...mockCompetition, seasons: [] };
+
+        // Same reference in both places
+        store.competitions = [competition];
+        store.currentCompetition = competition;
+
+        store.addSeasonToCompetition(competition.id, mockSeason);
+
+        // Should only be added once, not duplicated
+        expect(store.competitions[0]?.seasons).toHaveLength(1);
+        expect(store.currentCompetition?.seasons).toHaveLength(1);
+        expect(store.competitions[0]?.seasons?.[0]).toEqual(mockSeason);
+      });
+
+      it('should initialize seasons array if it does not exist', () => {
+        const store = useCompetitionStore();
+        const competition = { ...mockCompetition };
+        delete competition.seasons;
+
+        store.competitions = [competition];
+
+        store.addSeasonToCompetition(competition.id, mockSeason);
+
+        expect(store.competitions[0]?.seasons).toBeDefined();
+        expect(store.competitions[0]?.seasons).toHaveLength(1);
+      });
+    });
+
+    describe('updateSeasonInCompetition', () => {
+      it('should update season in competition', () => {
+        const store = useCompetitionStore();
+        const competition = { ...mockCompetition, seasons: [mockSeason] };
+        store.competitions = [competition];
+
+        const updatedSeason = { ...mockSeason, name: 'Updated Season' };
+        store.updateSeasonInCompetition(competition.id, updatedSeason);
+
+        expect(store.competitions[0]?.seasons?.[0]?.name).toBe('Updated Season');
+      });
+
+      it('should NOT duplicate update when currentCompetition is same reference', () => {
+        const store = useCompetitionStore();
+        const competition = { ...mockCompetition, seasons: [mockSeason] };
+
+        store.competitions = [competition];
+        store.currentCompetition = competition; // Same reference
+
+        const updatedSeason = { ...mockSeason, name: 'Updated Season' };
+        store.updateSeasonInCompetition(competition.id, updatedSeason);
+
+        expect(store.competitions[0]?.seasons).toHaveLength(1);
+        expect(store.currentCompetition?.seasons).toHaveLength(1);
+        expect(store.competitions[0]?.seasons?.[0]?.name).toBe('Updated Season');
+      });
+    });
+
+    describe('removeSeasonFromCompetition', () => {
+      it('should remove season from competition', () => {
+        const store = useCompetitionStore();
+        const competition = {
+          ...mockCompetition,
+          seasons: [mockSeason],
+          stats: { ...mockCompetition.stats, total_seasons: 1 },
+        };
+        store.competitions = [competition];
+
+        store.removeSeasonFromCompetition(competition.id, mockSeason.id);
+
+        expect(store.competitions[0]?.seasons).toHaveLength(0);
+        expect(store.competitions[0]?.stats.total_seasons).toBe(0);
+      });
+
+      it('should NOT duplicate removal when currentCompetition is same reference', () => {
+        const store = useCompetitionStore();
+        const season1 = { ...mockSeason, id: 1 };
+        const season2 = { ...mockSeason, id: 2 };
+        const competition = {
+          ...mockCompetition,
+          seasons: [season1, season2],
+          stats: { ...mockCompetition.stats, total_seasons: 2 },
+        };
+
+        store.competitions = [competition];
+        store.currentCompetition = competition; // Same reference
+
+        store.removeSeasonFromCompetition(competition.id, season1.id);
+
+        // Should only be removed once, not duplicated
+        expect(store.competitions[0]?.seasons).toHaveLength(1);
+        expect(store.currentCompetition?.seasons).toHaveLength(1);
+        expect(store.competitions[0]?.seasons?.[0]?.id).toBe(2);
+        expect(store.competitions[0]?.stats.total_seasons).toBe(1);
+      });
+    });
+  });
 });

@@ -104,8 +104,8 @@ final class RoundResultsTest extends TestCase
             'driver_id' => $seasonDriver1->id,
             'division_id' => $division1->id,
             'position' => 1,
-            'race_time' => '01:23:45.678',
-            'race_time_difference' => null,
+            'original_race_time' => '01:23:45.678',
+            'original_race_time_difference' => null,
             'fastest_lap' => '01:12:34.567',
             'penalties' => null,
             'has_fastest_lap' => true,
@@ -120,8 +120,8 @@ final class RoundResultsTest extends TestCase
             'driver_id' => $seasonDriver2->id,
             'division_id' => $division1->id,
             'position' => 2,
-            'race_time' => '01:24:00.000',
-            'race_time_difference' => '00:00:14.322',
+            'original_race_time' => '01:24:00.000',
+            'original_race_time_difference' => '00:00:14.322',
             'fastest_lap' => '01:13:00.000',
             'penalties' => null,
             'has_fastest_lap' => false,
@@ -146,8 +146,8 @@ final class RoundResultsTest extends TestCase
             'driver_id' => $seasonDriver1->id,
             'division_id' => $division1->id,
             'position' => 1,
-            'race_time' => '00:45:30.123',
-            'race_time_difference' => null,
+            'original_race_time' => '00:45:30.123',
+            'original_race_time_difference' => null,
             'fastest_lap' => '01:10:00.000',
             'penalties' => null,
             'has_fastest_lap' => true,
@@ -189,8 +189,10 @@ final class RoundResultsTest extends TestCase
                                 'id',
                                 'driver_id',
                                 'position',
-                                'race_time',
-                                'race_time_difference',
+                                'original_race_time',
+                                'final_race_time',
+                                'original_race_time_difference',
+                                'final_race_time_difference',
                                 'fastest_lap',
                                 'has_fastest_lap',
                                 'has_pole',
@@ -271,13 +273,13 @@ final class RoundResultsTest extends TestCase
         $this->actingAs($user, 'web');
 
         // Act: Request non-existent round
-        // Note: The controller catches ModelNotFoundException but the repository throws
-        // RoundNotFoundException, so currently this returns 500 instead of 404.
-        // TODO: Fix the controller to catch RoundNotFoundException for proper 404 response
         $response = $this->getJson(self::APP_URL . '/api/rounds/99999/results');
 
-        // Assert: Currently returns 500 due to exception type mismatch in controller
-        // When fixed, this should assert 404 with success=false, message='Round not found'
-        $response->assertStatus(500);
+        // Assert: Should return 404 for non-existent round
+        $response->assertStatus(404)
+            ->assertJson([
+                'success' => false,
+            ])
+            ->assertJsonPath('message', 'Round with ID 99999 not found');
     }
 }

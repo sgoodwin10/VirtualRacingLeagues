@@ -322,6 +322,29 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function findDriverNamesByIds(array $seasonDriverIds): array
+    {
+        if (empty($seasonDriverIds)) {
+            return [];
+        }
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, SeasonDriverEloquent> $seasonDrivers */
+        $seasonDrivers = SeasonDriverEloquent::with('leagueDriver.driver')
+            ->whereIn('id', $seasonDriverIds)
+            ->get();
+
+        $driverNames = [];
+        foreach ($seasonDrivers as $seasonDriver) {
+            // @phpstan-ignore-next-line (nullCoalesce.expr is safe due to optional chaining)
+            $driverNames[$seasonDriver->id] = $seasonDriver->leagueDriver?->driver?->name ?? 'Unknown Driver';
+        }
+
+        return $driverNames;
+    }
+
+    /**
      * Map domain entity to Eloquent data array.
      *
      * @return array<string, mixed>

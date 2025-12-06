@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Domain\Team\Exceptions;
 
-use DomainException;
+use App\Domain\Shared\Exceptions\DomainNotFoundException;
 
 /**
  * Exception thrown when a team is not found.
  */
-final class TeamNotFoundException extends DomainException
+final class TeamNotFoundException extends DomainNotFoundException
 {
     public static function withId(int $id): self
     {

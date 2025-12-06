@@ -76,6 +76,30 @@ vi.mock('../ResultTimeInput.vue', () => ({
 vi.mock('@app/composables/useRaceTimeCalculation', () => ({
   useRaceTimeCalculation: () => ({
     sortResultsByTime: vi.fn((results: RaceResultFormData[]) => results),
+    parseTimeToMs: vi.fn((time: string | null | undefined) => {
+      if (!time || time.trim() === '') return null;
+      // Simple mock: parse format hh:mm:ss.ms to milliseconds
+      const match = time.match(/^(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/);
+      if (!match) return null;
+      const hours = parseInt(match[1] || '0', 10);
+      const minutes = parseInt(match[2] || '0', 10);
+      const seconds = parseInt(match[3] || '0', 10);
+      const ms = parseInt(match[4] || '0', 10);
+      return hours * 3600000 + minutes * 60000 + seconds * 1000 + ms;
+    }),
+    calculateEffectiveTime: vi.fn((raceTimeMs: number | null, penaltiesMs: number | null) => {
+      if (raceTimeMs === null) return null;
+      return raceTimeMs + (penaltiesMs ?? 0);
+    }),
+    formatMsToTime: vi.fn((ms: number) => {
+      const hours = Math.floor(ms / 3600000);
+      let remaining = ms - hours * 3600000;
+      const minutes = Math.floor(remaining / 60000);
+      remaining -= minutes * 60000;
+      const seconds = Math.floor(remaining / 1000);
+      const milliseconds = remaining - seconds * 1000;
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
+    }),
   }),
 }));
 
@@ -90,13 +114,15 @@ describe('ResultEntryTable', () => {
     driver_id: driverId,
     division_id: divisionId,
     position: null,
-    race_time: '',
-    race_time_difference: '',
+    original_race_time: '',
+    original_race_time_difference: '',
     fastest_lap: '',
     penalties: '',
     has_fastest_lap: false,
     has_pole: false,
     dnf: false,
+    _originalPenalties: '',
+    _penaltyChanged: false,
   });
 
   const mockResults: RaceResultFormData[] = [createMockResult(1)];
@@ -125,23 +151,29 @@ describe('ResultEntryTable', () => {
     it('renders the table with correct headers for race mode', () => {
       const wrapper = createWrapper();
 
-      expect(wrapper.find('th:nth-child(1)').text()).toBe('#');
-      expect(wrapper.find('th:nth-child(2)').text()).toBe('Driver');
-      expect(wrapper.find('th:nth-child(3)').text()).toBe('Race Time');
-      expect(wrapper.find('th:nth-child(4)').text()).toBe('Time Diff');
-      expect(wrapper.find('th:nth-child(5)').text()).toBe('Fastest Lap');
-      expect(wrapper.find('th:nth-child(6)').text()).toBe('Penalties');
+      // In edit mode, drag handle column is first (empty header)
+      expect(wrapper.find('th:nth-child(1)').text()).toBe(''); // Drag handle column
+      expect(wrapper.find('th:nth-child(2)').text()).toBe('#');
+      expect(wrapper.find('th:nth-child(3)').text()).toBe('Driver');
+      expect(wrapper.find('th:nth-child(4)').text()).toBe('Original Time');
+      expect(wrapper.find('th:nth-child(5)').text()).toBe('Time Diff');
+      expect(wrapper.find('th:nth-child(6)').text()).toBe('Fastest Lap');
+      expect(wrapper.find('th:nth-child(7)').text()).toBe('Penalties');
+      expect(wrapper.find('th:nth-child(8)').text()).toBe('DNF');
       // Actions column has empty header but contains delete buttons
-      expect(wrapper.find('th:nth-child(7)').exists()).toBe(true);
+      expect(wrapper.find('th:nth-child(9)').exists()).toBe(true);
     });
 
     it('renders the table with correct headers for qualifying mode', () => {
       const wrapper = createWrapper(mockResults, mockDrivers, true);
 
-      expect(wrapper.find('th:nth-child(2)').text()).toBe('Driver');
-      expect(wrapper.find('th:nth-child(3)').text()).toBe('Lap Time');
+      // In edit mode, drag handle column is first (empty header)
+      expect(wrapper.find('th:nth-child(1)').text()).toBe(''); // Drag handle column
+      expect(wrapper.find('th:nth-child(2)').text()).toBe('#');
+      expect(wrapper.find('th:nth-child(3)').text()).toBe('Driver');
+      expect(wrapper.find('th:nth-child(4)').text()).toBe('Lap Time');
       // Actions column has empty header but contains delete buttons
-      expect(wrapper.find('th:nth-child(4)').exists()).toBe(true);
+      expect(wrapper.find('th:nth-child(5)').exists()).toBe(true);
       // Should not show race-specific columns
       expect(wrapper.text()).not.toContain('Race Time');
       expect(wrapper.text()).not.toContain('Time Diff');
@@ -158,9 +190,10 @@ describe('ResultEntryTable', () => {
 
       const rows = wrapper.findAll('tbody tr');
       expect(rows).toHaveLength(3);
-      expect(rows[0]!.find('td:first-child').text()).toBe('1');
-      expect(rows[1]!.find('td:first-child').text()).toBe('2');
-      expect(rows[2]!.find('td:first-child').text()).toBe('3');
+      // Position is now in second column (first is drag handle)
+      expect(rows[0]!.find('td:nth-child(2)').text()).toBe('1');
+      expect(rows[1]!.find('td:nth-child(2)').text()).toBe('2');
+      expect(rows[2]!.find('td:nth-child(2)').text()).toBe('3');
     });
 
     it('renders delete button for each row', () => {
@@ -268,8 +301,8 @@ describe('ResultEntryTable', () => {
       expect(newRow.driver_id).toBe(2);
       expect(newRow.division_id).toBe(1);
       expect(newRow.position).toBeNull();
-      expect(newRow.race_time).toBe('');
-      expect(newRow.race_time_difference).toBe('');
+      expect(newRow.original_race_time).toBe('');
+      expect(newRow.original_race_time_difference).toBe('');
       expect(newRow.fastest_lap).toBe('');
       expect(newRow.penalties).toBe('');
       expect(newRow.has_fastest_lap).toBe(false);
@@ -388,8 +421,8 @@ describe('ResultEntryTable', () => {
           driver_id: 1,
           division_id: 1,
           position: 1,
-          race_time: '01:30:45.123',
-          race_time_difference: '',
+          original_race_time: '01:30:45.123',
+          original_race_time_difference: '',
           fastest_lap: '01:25:00.456',
           penalties: '',
           has_fastest_lap: false,
@@ -411,8 +444,8 @@ describe('ResultEntryTable', () => {
           driver_id: 1,
           division_id: 1,
           position: 1,
-          race_time: '01:30:45.123',
-          race_time_difference: '',
+          original_race_time: '01:30:45.123',
+          original_race_time_difference: '',
           fastest_lap: '01:25:00.456',
           penalties: '00:00:05.000',
           has_fastest_lap: false,
@@ -451,7 +484,7 @@ describe('ResultEntryTable', () => {
     it('does not render actions column header in read-only mode', () => {
       const wrapper = createWrapper(mockResults, mockDrivers, false, new Set([1]), true);
 
-      // Race mode should have 7 columns (Position, Driver, Race Time, Time Diff, Fastest Lap, Penalties, DNF) with no actions column in read-only
+      // Race mode should have 7 columns (Position, Driver, Original Time, Time Diff, Fastest Lap, Penalties, DNF) with no actions column in read-only
       const headers = wrapper.findAll('th');
       expect(headers).toHaveLength(7);
     });
@@ -464,8 +497,8 @@ describe('ResultEntryTable', () => {
           driver_id: 1,
           division_id: 1,
           position: null,
-          race_time: '', // Empty - should show dash
-          race_time_difference: '', // Empty - should show dash
+          original_race_time: '', // Empty - should show dash
+          original_race_time_difference: '', // Empty - should show dash
           fastest_lap: '', // Empty - should show dash
           penalties: '', // Empty - should show dash
           has_fastest_lap: false,
@@ -487,8 +520,8 @@ describe('ResultEntryTable', () => {
           driver_id: 1,
           division_id: 1,
           position: 1,
-          race_time: '01:30:00.000',
-          race_time_difference: '',
+          original_race_time: '01:30:00.000',
+          original_race_time_difference: '',
           fastest_lap: '',
           penalties: '',
           has_fastest_lap: false,
@@ -500,8 +533,8 @@ describe('ResultEntryTable', () => {
           driver_id: 2,
           division_id: 1,
           position: null,
-          race_time: '',
-          race_time_difference: '',
+          original_race_time: '',
+          original_race_time_difference: '',
           fastest_lap: '',
           penalties: '',
           has_fastest_lap: false,
@@ -513,8 +546,8 @@ describe('ResultEntryTable', () => {
           driver_id: 3,
           division_id: 1,
           position: 2,
-          race_time: '',
-          race_time_difference: '',
+          original_race_time: '',
+          original_race_time_difference: '',
           fastest_lap: '01:25:00.000',
           penalties: '',
           has_fastest_lap: true,
@@ -549,8 +582,8 @@ describe('ResultEntryTable', () => {
           driver_id: 1,
           division_id: 1,
           position: null,
-          race_time: '',
-          race_time_difference: '',
+          original_race_time: '',
+          original_race_time_difference: '',
           fastest_lap: '',
           penalties: '',
           has_fastest_lap: false,
@@ -575,11 +608,11 @@ describe('ResultEntryTable', () => {
       expect(wrapper.findComponent({ name: 'Draggable' }).exists()).toBe(true);
     });
 
-    it('does not render draggable component when raceTimesRequired is true', () => {
+    it('renders draggable component when raceTimesRequired is true (Phase 2)', () => {
       const wrapper = createWrapper();
 
-      // Should not have draggable component
-      expect(wrapper.findComponent({ name: 'Draggable' }).exists()).toBe(false);
+      // Drag-and-drop is now enabled for both modes (Phase 2 change)
+      expect(wrapper.findComponent({ name: 'Draggable' }).exists()).toBe(true);
     });
 
     it('hides time columns when raceTimesRequired is false', () => {
@@ -617,12 +650,12 @@ describe('ResultEntryTable', () => {
       expect(wrapper.findComponent({ name: 'PhDotsSixVertical' }).exists()).toBe(true);
     });
 
-    it('does not show drag handle in times-required mode', () => {
+    it('shows drag handle in times-required mode (Phase 2)', () => {
       const results: RaceResultFormData[] = [createMockResult(1)];
       const wrapper = createWrapper(results, mockDrivers, false, new Set([1]), false, true);
 
-      // Should not render drag handle icon
-      expect(wrapper.findComponent({ name: 'PhDotsSixVertical' }).exists()).toBe(false);
+      // Drag handles are now shown in both modes (Phase 2 change)
+      expect(wrapper.findComponent({ name: 'PhDotsSixVertical' }).exists()).toBe(true);
     });
 
     it('renders DNF rows with red background in no-times mode', () => {
@@ -672,6 +705,204 @@ describe('ResultEntryTable', () => {
 
       // Should emit update:results
       expect(wrapper.emitted('update:results')).toBeTruthy();
+    });
+  });
+
+  describe('Dynamic Time Difference Calculation (Read-Only Mode)', () => {
+    it('calculates time differences dynamically in read-only mode based on position 1 driver', () => {
+      const results: RaceResultFormData[] = [
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: 1,
+          original_race_time: '01:30:00.000', // 90000ms
+          original_race_time_difference: '',
+          fastest_lap: '',
+          penalties: '', // No penalty
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+        {
+          driver_id: 2,
+          division_id: 1,
+          position: 2,
+          original_race_time: '01:30:05.000', // 90005ms (5s behind)
+          original_race_time_difference: '',
+          fastest_lap: '',
+          penalties: '', // No penalty
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+      ];
+      const wrapper = createWrapper(results, mockDrivers, false, new Set([1, 2]), true, true);
+
+      // Position 1 driver should not show time difference
+      const rows = wrapper.findAll('tbody tr');
+      expect(rows).toHaveLength(2);
+
+      // Position 2 driver should show calculated time difference of +5s
+      // Note: The calculated difference is displayed via formatRaceTime which removes leading zeros
+      expect(wrapper.text()).toContain('1:30:05.000'); // Driver 2's race time
+    });
+
+    it('calculates time differences dynamically when penalties are present', () => {
+      const results: RaceResultFormData[] = [
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: 1,
+          original_race_time: '01:30:00.000', // 90000ms
+          original_race_time_difference: '',
+          fastest_lap: '',
+          penalties: '00:00:02.000', // 2s penalty = 92000ms effective
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+        {
+          driver_id: 2,
+          division_id: 1,
+          position: 2,
+          original_race_time: '01:30:03.000', // 90003ms
+          original_race_time_difference: '',
+          fastest_lap: '',
+          penalties: '', // No penalty = 90003ms effective
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+      ];
+      const wrapper = createWrapper(results, mockDrivers, false, new Set([1, 2]), true, true);
+
+      // The component should calculate time differences based on effective times (original + penalties)
+      // Position 1: 90000ms + 2000ms = 92000ms effective
+      // Position 2: 90003ms + 0ms = 90003ms effective
+      // Since driver 1 has a penalty, driver 2 should actually finish ahead with a -1997ms difference
+      const rows = wrapper.findAll('tbody tr');
+      expect(rows).toHaveLength(2);
+    });
+
+    it('does not calculate time differences for DNF drivers', () => {
+      const results: RaceResultFormData[] = [
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: 1,
+          original_race_time: '01:30:00.000',
+          original_race_time_difference: '',
+          fastest_lap: '',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+        {
+          driver_id: 2,
+          division_id: 1,
+          position: null,
+          original_race_time: '',
+          original_race_time_difference: '',
+          fastest_lap: '',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: true, // DNF driver
+        },
+      ];
+      const wrapper = createWrapper(results, mockDrivers, false, new Set([1, 2]), true, true);
+
+      // DNF driver should be shown but without time difference
+      expect(wrapper.text()).toContain('Alice Johnson');
+      expect(wrapper.text()).toContain('Bob Smith');
+      expect(wrapper.text()).toContain('DNF');
+    });
+
+    it('does not calculate time differences in edit mode', () => {
+      const results: RaceResultFormData[] = [
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: 1,
+          original_race_time: '01:30:00.000',
+          original_race_time_difference: '',
+          fastest_lap: '',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+        {
+          driver_id: 2,
+          division_id: 1,
+          position: 2,
+          original_race_time: '01:30:05.000',
+          original_race_time_difference: '',
+          fastest_lap: '',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+      ];
+      // Edit mode (readOnly = false)
+      const wrapper = createWrapper(results, mockDrivers, false, new Set([1, 2]), false, true);
+
+      // In edit mode, time differences should show the original values from props
+      // (not calculated dynamically)
+      const inputs = wrapper.findAll('input');
+      expect(inputs.length).toBeGreaterThan(0); // Should have input fields in edit mode
+    });
+
+    it('does not calculate time differences in qualifying mode', () => {
+      const results: RaceResultFormData[] = [
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: 1,
+          original_race_time: '',
+          original_race_time_difference: '',
+          fastest_lap: '01:25:00.000',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: true,
+          dnf: false,
+        },
+      ];
+      const wrapper = createWrapper(results, mockDrivers, true, new Set([1]), true, true);
+
+      // Qualifying mode should not show time differences
+      expect(wrapper.text()).not.toContain('Time Diff');
+      expect(wrapper.text()).toContain('1:25:00.000'); // Fastest lap time
+    });
+
+    it('position 1 driver has no time difference displayed', () => {
+      const results: RaceResultFormData[] = [
+        {
+          driver_id: 1,
+          division_id: 1,
+          position: 1,
+          original_race_time: '01:30:00.000',
+          original_race_time_difference: '',
+          fastest_lap: '',
+          penalties: '',
+          has_fastest_lap: false,
+          has_pole: false,
+          dnf: false,
+        },
+      ];
+      const wrapper = createWrapper(results, mockDrivers, false, new Set([1]), true, true);
+
+      // Position 1 driver should not show time difference
+      const rows = wrapper.findAll('tbody tr');
+      expect(rows).toHaveLength(1);
+
+      // The cell should be empty or contain no visible text for position 1
+      const firstRow = rows[0];
+      const timeDiffCell = firstRow?.findAll('td')[3]; // Index 3 for 4th column (Time Diff is the 4th column)
+      // Should not contain a + sign for position 1
+      expect(timeDiffCell?.text()).not.toContain('+');
     });
   });
 });

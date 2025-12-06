@@ -7,6 +7,7 @@ import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import type { Division } from '@app/types/division';
 
 import DataTable from 'primevue/datatable';
+import type { DataTableRowReorderEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
@@ -29,8 +30,9 @@ const seasonDriverStore = useSeasonDriverStore();
 const showDivisionModal = ref(false);
 const modalMode = ref<'add' | 'edit'>('add');
 const selectedDivision = ref<Division | null>(null);
+const isReordering = ref(false);
 
-const divisions = computed(() => divisionStore.divisions);
+const divisions = computed(() => divisionStore.sortedDivisions);
 const loading = computed(() => divisionStore.loading);
 
 onMounted(async () => {
@@ -42,8 +44,8 @@ onMounted(async () => {
 async function loadDivisions(): Promise<void> {
   try {
     await divisionStore.fetchDivisions(props.seasonId);
-  } catch (error) {
-    console.error('Failed to load divisions:', error);
+  } catch {
+    // Error handling happens in the store
   }
 }
 
@@ -62,7 +64,7 @@ function handleEditDivision(division: Division): void {
 function handleDeleteDivision(division: Division): void {
   // Count drivers assigned to this division
   const driversInDivision = seasonDriverStore.seasonDrivers.filter(
-    (driver) => driver.division_name === division.name,
+    (driver) => driver.division_id === division.id,
   );
   const driverCount = driversInDivision.length;
 
@@ -108,6 +110,56 @@ function handleDivisionSaved(): void {
   loadDivisions();
 }
 
+async function handleRowReorder(event: DataTableRowReorderEvent): Promise<void> {
+  // Guard against empty or invalid reorder event
+  if (!event.value || event.value.length === 0) {
+    return;
+  }
+
+  isReordering.value = true;
+  try {
+    // Create a defensive copy of the event data to avoid mutating DataTable's internal state
+    // PrimeVue's DataTableRowReorderEvent.value contains the reordered array of divisions
+    const reorderedDivisions = [...event.value] as Division[];
+
+    // Build new order array from reordered rows
+    const newOrder = reorderedDivisions.map((division: Division, index: number) => ({
+      id: division.id,
+      order: index + 1, // 1-based ordering
+    }));
+
+    await divisionStore.reorderDivisions(props.seasonId, newOrder);
+
+    toast.add({
+      severity: 'success',
+      summary: 'Order Updated',
+      detail: 'Division order has been updated successfully',
+      life: 3000,
+    });
+  } catch (error: unknown) {
+    // Extract error message from Axios response if available
+    let errorMessage = 'Failed to update division order';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    // Check for Axios error with response
+    if (typeof error === 'object' && error !== null && 'response' in error) {
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      if (axiosError.response?.data?.message) {
+        errorMessage = axiosError.response.data.message;
+      }
+    }
+    toast.add({
+      severity: 'error',
+      summary: 'Reorder Failed',
+      detail: errorMessage,
+      life: 5000,
+    });
+  } finally {
+    isReordering.value = false;
+  }
+}
+
 function truncateDescription(description: string | null, maxLength: number = 30): string {
   if (!description) return '';
   return description.length > maxLength ? description.substring(0, maxLength) + '...' : description;
@@ -139,10 +191,12 @@ function truncateDescription(description: string | null, maxLength: number = 30)
       <!-- DataTable -->
       <DataTable
         :value="divisions"
-        :loading="loading"
+        :loading="loading || isReordering"
+        :reorderable-rows="!isReordering"
         striped-rows
         responsive-layout="scroll"
         class="text-sm"
+        @row-reorder="handleRowReorder"
       >
         <template #empty>
           <div class="text-center py-8">
@@ -157,6 +211,9 @@ function truncateDescription(description: string | null, maxLength: number = 30)
         <template #loading>
           <div class="text-center py-6 text-gray-500">Loading divisions...</div>
         </template>
+
+        <!-- Drag Handle Column -->
+        <Column :row-reorder="true" header-style="width: 3rem" :reorderable-column="false" />
 
         <Column field="name" header="Division">
           <template #body="{ data }">
@@ -185,6 +242,7 @@ function truncateDescription(description: string | null, maxLength: number = 30)
                 size="small"
                 outlined
                 severity="secondary"
+                :disabled="isReordering"
                 @click="handleEditDivision(data)"
               />
               <Button
@@ -192,6 +250,7 @@ function truncateDescription(description: string | null, maxLength: number = 30)
                 size="small"
                 outlined
                 severity="danger"
+                :disabled="isReordering"
                 @click="handleDeleteDivision(data)"
               />
             </div>

@@ -6,6 +6,7 @@ namespace App\Domain\Division\Entities;
 
 use App\Domain\Division\Events\DivisionCreated;
 use App\Domain\Division\Events\DivisionDeleted;
+use App\Domain\Division\Events\DivisionReordered;
 use App\Domain\Division\Events\DivisionUpdated;
 use App\Domain\Division\ValueObjects\DivisionDescription;
 use App\Domain\Division\ValueObjects\DivisionName;
@@ -26,6 +27,7 @@ final class Division
         private DivisionName $name,
         private DivisionDescription $description,
         private ?string $logoUrl,
+        private int $order,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
     ) {
@@ -39,13 +41,21 @@ final class Division
         DivisionName $name,
         DivisionDescription $description,
         ?string $logoUrl = null,
+        int $order = 1,
     ): self {
+        if ($order < 1) {
+            throw new \InvalidArgumentException(
+                "Division order must be a positive integer (>= 1), got: {$order}"
+            );
+        }
+
         return new self(
             id: null,
             seasonId: $seasonId,
             name: $name,
             description: $description,
             logoUrl: $logoUrl,
+            order: $order,
             createdAt: new DateTimeImmutable(),
             updatedAt: new DateTimeImmutable(),
         );
@@ -67,6 +77,7 @@ final class Division
             name: $this->name->value(),
             description: $this->description->value(),
             logoUrl: $this->logoUrl,
+            order: $this->order,
         ));
     }
 
@@ -79,15 +90,23 @@ final class Division
         DivisionName $name,
         DivisionDescription $description,
         ?string $logoUrl,
+        int $order,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
     ): self {
+        if ($order < 1) {
+            throw new \InvalidArgumentException(
+                "Division order must be a positive integer (>= 1), got: {$order}"
+            );
+        }
+
         return new self(
             id: $id,
             seasonId: $seasonId,
             name: $name,
             description: $description,
             logoUrl: $logoUrl,
+            order: $order,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
         );
@@ -120,6 +139,11 @@ final class Division
         return $this->logoUrl;
     }
 
+    public function order(): int
+    {
+        return $this->order;
+    }
+
     public function createdAt(): DateTimeImmutable
     {
         return $this->createdAt;
@@ -132,9 +156,14 @@ final class Division
 
     /**
      * Exception: needed for persistence to set ID after creation.
+     * Can only be called once - prevents changing an existing ID.
      */
     public function setId(int $id): void
     {
+        if ($this->id !== null) {
+            throw new \LogicException('Cannot change ID of an already persisted division');
+        }
+
         $this->id = $id;
     }
 
@@ -166,9 +195,13 @@ final class Division
         }
 
         if (!empty($changes)) {
+            if ($this->id === null) {
+                throw new \LogicException('Cannot update details on unpersisted division');
+            }
+
             $this->updatedAt = new DateTimeImmutable();
             $this->recordEvent(new DivisionUpdated(
-                divisionId: $this->id ?? 0,
+                divisionId: $this->id,
                 changes: $changes,
             ));
         }
@@ -183,11 +216,15 @@ final class Division
             return;
         }
 
+        if ($this->id === null) {
+            throw new \LogicException('Cannot update name on unpersisted division');
+        }
+
         $this->name = $name;
         $this->updatedAt = new DateTimeImmutable();
 
         $this->recordEvent(new DivisionUpdated(
-            divisionId: $this->id ?? 0,
+            divisionId: $this->id,
             changes: ['name' => $name->value()],
         ));
     }
@@ -201,11 +238,15 @@ final class Division
             return;
         }
 
+        if ($this->id === null) {
+            throw new \LogicException('Cannot update description on unpersisted division');
+        }
+
         $this->description = $description;
         $this->updatedAt = new DateTimeImmutable();
 
         $this->recordEvent(new DivisionUpdated(
-            divisionId: $this->id ?? 0,
+            divisionId: $this->id,
             changes: ['description' => $description->value()],
         ));
     }
@@ -219,12 +260,49 @@ final class Division
             return;
         }
 
+        if ($this->id === null) {
+            throw new \LogicException('Cannot update logo on unpersisted division');
+        }
+
         $this->logoUrl = $logoUrl;
         $this->updatedAt = new DateTimeImmutable();
 
         $this->recordEvent(new DivisionUpdated(
-            divisionId: $this->id ?? 0,
+            divisionId: $this->id,
             changes: ['logo_url' => $logoUrl],
+        ));
+    }
+
+    /**
+     * Change division order.
+     *
+     * @throws \InvalidArgumentException if order is not a positive integer
+     */
+    public function changeOrder(int $newOrder): void
+    {
+        if ($newOrder < 1) {
+            throw new \InvalidArgumentException(
+                "Division order must be a positive integer (>= 1), got: {$newOrder}"
+            );
+        }
+
+        if ($newOrder === $this->order) {
+            return;
+        }
+
+        if ($this->id === null) {
+            throw new \LogicException('Cannot change order on unpersisted division');
+        }
+
+        $oldOrder = $this->order;
+        $this->order = $newOrder;
+        $this->updatedAt = new DateTimeImmutable();
+
+        $this->recordEvent(new DivisionReordered(
+            divisionId: $this->id,
+            seasonId: $this->seasonId,
+            oldOrder: $oldOrder,
+            newOrder: $newOrder,
         ));
     }
 
@@ -234,8 +312,12 @@ final class Division
      */
     public function delete(): void
     {
+        if ($this->id === null) {
+            throw new \LogicException('Cannot delete unpersisted division');
+        }
+
         $this->recordEvent(new DivisionDeleted(
-            divisionId: $this->id ?? 0,
+            divisionId: $this->id,
             seasonId: $this->seasonId,
         ));
     }

@@ -32,6 +32,12 @@ interface RaceRepositoryInterface
 
     public function exists(int $id): bool;
 
+    /**
+     * Check if a user owns the league that contains this race.
+     * Used for authorization in form requests.
+     */
+    public function isOwnedByUser(int $raceId, int $userId): bool;
+
     // Qualifier-specific methods
     public function findQualifierById(int $id): Race;
 

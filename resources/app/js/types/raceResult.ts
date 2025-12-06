@@ -8,8 +8,10 @@ export interface RaceResult {
   driver_id: number;
   division_id?: number | null;
   position: number | null;
-  race_time: string | null; // hh:mm:ss.ms format
-  race_time_difference: string | null;
+  original_race_time: string | null; // hh:mm:ss.ms format (driver's actual time)
+  final_race_time: string | null; // hh:mm:ss.ms format (original + penalties, calculated by backend)
+  original_race_time_difference: string | null; // Gap to leader before penalties
+  final_race_time_difference: string | null; // Gap to leader after penalties (calculated by backend)
   fastest_lap: string | null;
   penalties: string | null;
   has_fastest_lap: boolean;
@@ -33,13 +35,19 @@ export interface RaceResultFormData {
   driver_id: number | null;
   division_id?: number | null;
   position: number | null;
-  race_time: string;
-  race_time_difference: string;
+  original_race_time: string;
+  final_race_time?: string; // Calculated by backend (original + penalties), used for read-only display
+  original_race_time_difference: string; // User-entered gap to leader (before penalties)
+  final_race_time_difference?: string; // Calculated by backend (gap after penalties), used for read-only display
   fastest_lap: string;
   penalties: string;
   has_fastest_lap: boolean;
   has_pole: boolean;
   dnf: boolean;
+  // Transient fields (not sent to backend, used for UI state tracking)
+  _originalPenalties?: string; // Tracks original penalty value when loaded
+  _penaltyChanged?: boolean; // Tracks if penalty was modified this session
+  calculated_time_diff?: string | null; // Frontend-calculated time difference for read-only display
 }
 
 // Create/update payload for a single result
@@ -47,8 +55,8 @@ export interface CreateRaceResultPayload {
   driver_id: number;
   division_id?: number | null;
   position?: number | null;
-  race_time?: string | null;
-  race_time_difference?: string | null;
+  original_race_time?: string | null;
+  original_race_time_difference?: string | null;
   fastest_lap?: string | null;
   penalties?: string | null;
   has_fastest_lap?: boolean;
@@ -64,9 +72,11 @@ export interface BulkRaceResultsPayload {
 // CSV parsed row
 export interface CsvResultRow {
   driver: string;
-  race_time?: string;
-  race_time_difference?: string;
+  race_time?: string; // Maps to original_race_time
+  original_race_time?: string; // Alternative column name
+  original_race_time_difference?: string;
   fastest_lap_time?: string;
+  penalties?: string;
   dnf?: boolean;
 }
 

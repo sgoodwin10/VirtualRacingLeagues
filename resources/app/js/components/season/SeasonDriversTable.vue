@@ -335,7 +335,7 @@ const teamOptions = computed((): TeamOption[] => {
 function getDriverTeamId(driver: SeasonDriver): number | null {
   // Find the team by name (backend returns team_name string)
   const team = props.teams.find((t) => t.name === driver.team_name);
-  return team?.id || null;
+  return team?.id ?? null;
 }
 
 async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null): Promise<void> {
@@ -405,7 +405,7 @@ const divisionOptions = computed((): DivisionOption[] => {
 function getDriverDivisionId(driver: SeasonDriver): number | null {
   // Find the division by name (backend returns division_name string)
   const division = props.divisions.find((d) => d.name === driver.division_name);
-  return division?.id || null;
+  return division?.id ?? null;
 }
 
 async function handleDivisionChange(
@@ -554,16 +554,36 @@ async function handleRefresh(): Promise<void> {
       @edit="handleEditDriver"
     />
 
-    <!-- Search, Filters and Actions Bar -->
+    <!-- Actions Bar - Always visible -->
+    <div class="flex flex-row gap-3 mb-6 border border-slate-200 bg-slate-50 p-2 rounded-md">
+      <div class="flex items-center gap-3 flex-1 justify-end">
+        <!-- Manage Drivers Button -->
+        <Button
+          v-if="showManageButton"
+          label="Manage Drivers"
+          icon="pi pi-users"
+          size="medium"
+          :disabled="manageButtonDisabled"
+          @click="emit('manageDrivers')"
+        />
+
+        <!-- Refresh Drivers Table Button -->
+        <Button
+          label="Refresh Drivers Table"
+          icon="pi pi-refresh"
+          severity="warn"
+          size="medium"
+          @click="handleRefresh"
+        />
+      </div>
+    </div>
+
+    <!-- Search and Filters Bar - Only when divisions or teams are enabled -->
     <div
       v-if="raceDivisionsEnabled || teamChampionshipEnabled"
       class="flex flex-row gap-4 mb-6 border border-slate-200 bg-slate-50 p-2 rounded-md"
     >
-      <!-- Bottom Row: Filters -->
-      <div
-        v-if="raceDivisionsEnabled || teamChampionshipEnabled"
-        class="flex items-end gap-3 flex-wrap"
-      >
+      <div class="flex items-end gap-3 flex-wrap">
         <div class="flex-1 max-w-md">
           <IconField>
             <InputIcon :class="isSearching ? 'pi pi-spinner pi-spin' : 'pi pi-search'" />
@@ -603,25 +623,6 @@ async function handleRefresh(): Promise<void> {
             @change="onFilterChange"
           />
         </div>
-
-        <!-- Manage Drivers Button -->
-        <Button
-          v-if="showManageButton"
-          label="Manage Drivers"
-          icon="pi pi-users"
-          size="medium"
-          :disabled="manageButtonDisabled"
-          @click="emit('manageDrivers')"
-        />
-
-        <!-- Refresh Drivers Table Button -->
-        <Button
-          label="Refresh Drivers Table"
-          icon="pi pi-refresh"
-          severity="warn"
-          size="medium"
-          @click="handleRefresh"
-        />
       </div>
     </div>
 

@@ -66,8 +66,9 @@ final class RaceResultApplicationService
                     driverId: $resultData->driver_id,
                     divisionId: $resultData->division_id,
                     position: $resultData->position,
-                    raceTime: $resultData->race_time,
-                    raceTimeDifference: $resultData->race_time_difference,
+                    originalRaceTime: $resultData->original_race_time,
+                    originalRaceTimeDifference: $resultData->original_race_time_difference,
+                    finalRaceTimeDifference: $resultData->final_race_time_difference,
                     fastestLap: $resultData->fastest_lap,
                     penalties: $resultData->penalties,
                     hasFastestLap: false, // Always false initially - we calculate this

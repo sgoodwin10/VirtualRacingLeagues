@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Driver\Exceptions;
 
-use RuntimeException;
+use App\Domain\Shared\Exceptions\DomainNotFoundException;
 
-final class DriverNotFoundException extends RuntimeException
+final class DriverNotFoundException extends DomainNotFoundException
 {
     public static function withId(int $id): self
     {

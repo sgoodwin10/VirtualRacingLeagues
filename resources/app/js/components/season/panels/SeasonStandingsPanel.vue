@@ -67,7 +67,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, h, defineComponent } from 'vue';
-import type { PropType } from 'vue';
 import { PhTrophy, PhCheck } from '@phosphor-icons/vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import PanelHeader from '@app/components/common/panels/PanelHeader.vue';
@@ -99,7 +98,7 @@ const standingsData = ref<SeasonStandingsResponse | null>(null);
 const activeDivisionId = ref<number>(0);
 
 /**
- * Get divisions with standings (only when divisions enabled), sorted alphabetically
+ * Get divisions with standings (only when divisions enabled), sorted by order
  */
 const divisionsWithStandings = computed<readonly SeasonStandingDivision[]>(() => {
   if (!standingsData.value) {
@@ -107,9 +106,7 @@ const divisionsWithStandings = computed<readonly SeasonStandingDivision[]>(() =>
   }
 
   if (isDivisionStandings(standingsData.value)) {
-    return [...standingsData.value.standings].sort((a, b) =>
-      a.division_name.localeCompare(b.division_name),
-    );
+    return [...standingsData.value.standings].sort((a, b) => a.order - b.order);
   }
 
   return [];
@@ -132,18 +129,24 @@ const flatDriverStandings = computed<readonly SeasonStandingDriver[]>(() => {
 
 /**
  * Extract unique round numbers from drivers array
+ * Aggregates round numbers from ALL drivers to ensure all rounds are included
  */
 function getRoundNumbers(drivers: readonly SeasonStandingDriver[]): number[] {
   if (!drivers || drivers.length === 0) {
     return [];
   }
 
-  const firstDriver = drivers[0];
-  if (firstDriver && firstDriver.rounds && firstDriver.rounds.length > 0) {
-    return firstDriver.rounds.map((r) => r.round_number).sort((a, b) => a - b);
+  // Aggregate unique round numbers from all drivers
+  const roundNumbers = new Set<number>();
+  for (const driver of drivers) {
+    if (driver.rounds) {
+      for (const round of driver.rounds) {
+        roundNumbers.add(round.round_number);
+      }
+    }
   }
 
-  return [];
+  return Array.from(roundNumbers).sort((a, b) => a - b);
 }
 
 /**
@@ -182,11 +185,11 @@ const StandingsTable = defineComponent({
   name: 'StandingsTable',
   props: {
     drivers: {
-      type: Array as PropType<readonly SeasonStandingDriver[]>,
+      type: Array as () => readonly SeasonStandingDriver[],
       required: true,
     },
     rounds: {
-      type: Array as PropType<readonly number[]>,
+      type: Array as () => readonly number[],
       required: true,
     },
   },

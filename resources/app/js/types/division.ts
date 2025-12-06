@@ -11,6 +11,7 @@ export interface Division {
   name: string;
   description: string | null;
   logo_url: string | null;
+  order: number;
   created_at: string;
   updated_at: string;
 }
@@ -57,4 +58,11 @@ export interface DivisionFormErrors {
   name?: string;
   description?: string;
   logo?: string;
+}
+
+/**
+ * Reorder divisions request
+ */
+export interface ReorderDivisionsPayload {
+  divisions: Array<{ id: number; order: number }>;
 }

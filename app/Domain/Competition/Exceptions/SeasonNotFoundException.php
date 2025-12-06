@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Domain\Competition\Exceptions;
 
-use RuntimeException;
+use App\Domain\Shared\Exceptions\DomainNotFoundException;
 
 /**
  * Exception thrown when a season is not found.
  */
-final class SeasonNotFoundException extends RuntimeException
+final class SeasonNotFoundException extends DomainNotFoundException
 {
     public static function withId(int $id): self
     {

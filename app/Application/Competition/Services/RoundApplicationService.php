@@ -17,6 +17,7 @@ use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
+use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
@@ -52,6 +53,7 @@ final class RoundApplicationService
         private readonly RaceRepositoryInterface $raceRepository,
         private readonly RaceResultRepositoryInterface $raceResultRepository,
         private readonly SeasonRepositoryInterface $seasonRepository,
+        private readonly SeasonDriverRepositoryInterface $seasonDriverRepository,
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly DivisionRepositoryInterface $divisionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
@@ -636,28 +638,12 @@ final class RoundApplicationService
                 $driverId = $result->driverId();
                 $driverName = $driverNames[$driverId] ?? 'Unknown';
 
-                $resultDtos[] = new RaceResultData(
-                    id: $result->id() ?? 0,
-                    race_id: $result->raceId(),
-                    driver_id: $driverId,
-                    division_id: $result->divisionId(),
-                    position: $result->position(),
-                    race_time: $result->raceTime()->value(),
-                    race_time_difference: $result->raceTimeDifference()->value(),
-                    fastest_lap: $result->fastestLap()->value(),
-                    penalties: $result->penalties()->value(),
-                    has_fastest_lap: $result->hasFastestLap(),
-                    has_pole: $result->hasPole(),
-                    dnf: $result->dnf(),
-                    status: $result->status()->value,
-                    race_points: $result->racePoints(),
-                    positions_gained: $result->positionsGained(),
-                    created_at: $result->createdAt()->format('Y-m-d H:i:s'),
-                    updated_at: $result->updatedAt()->format('Y-m-d H:i:s'),
-                    driver: [
+                $resultDtos[] = RaceResultData::fromEntity(
+                    $result,
+                    [
                         'id' => $driverId,
                         'name' => $driverName,
-                    ],
+                    ]
                 );
             }
 
@@ -817,18 +803,10 @@ final class RoundApplicationService
             $result = $item['result'];
             $driverId = $result->driverId();
 
-            // Check if this result has ANY participation data (race time, fastest lap, or DNF flag)
-            // Skip results with no participation data - driver may still have valid
-            // participation in other races within this round
-            $hasParticipation = !$result->raceTime()->isNull()
-                || !$result->fastestLap()->isNull()
-                || $result->dnf();
+            // Having a race_result record means the driver participated in the race.
+            // No participation check needed - only drivers who competed have records.
 
-            if (!$hasParticipation) {
-                continue;
-            }
-
-            // Initialize driver data if not already set (only for drivers with participation)
+            // Initialize driver data if not already set
             if (!isset($driverPoints[$driverId])) {
                 $driverPoints[$driverId] = 0;
                 $driverData[$driverId] = [
@@ -859,20 +837,9 @@ final class RoundApplicationService
                 continue;
             }
 
-            // Check for DNS (no valid race time but has some participation like fastest lap)
-            // Driver gets 0 points but is included in standings
-            if (!$this->hasValidRaceTime($race, $result)) {
-                $driverHasDnfOrDns[$driverId] = true;
-                // Store result for reference but with 0 points
-                $raceResultsByDriver[$driverId][] = [
-                    'race_points' => 0,
-                    'is_qualifier' => $race->isQualifier(),
-                    'fastest_lap' => null,
-                    'is_dnf' => false,
-                    'is_dns' => true,
-                ];
-                continue;
-            }
+            // Note: Previously checked for DNS (no valid race time) but now having a race_result
+            // means the driver participated. Points are stored in racePoints field regardless
+            // of whether time data exists. Time data is only used for tie-breaking.
 
             // Accumulate points for valid finishes
             $driverPoints[$driverId] += $result->racePoints();
@@ -902,8 +869,8 @@ final class RoundApplicationService
                     }
                 }
             } else {
-                // For races, track the best race time
-                $raceTimeMs = $result->raceTime()->toMilliseconds();
+                // For races, track the best race time (including penalties)
+                $raceTimeMs = $result->finalRaceTime()->toMilliseconds();
                 if ($raceTimeMs !== null && $raceTimeMs > 0) {
                     $currentBest = $driverBestTimes[$driverId]['race_time_ms'];
                     if ($currentBest === null || $raceTimeMs < $currentBest) {
@@ -930,20 +897,6 @@ final class RoundApplicationService
             'driverBestTimes' => $driverBestTimes,
             'driverHasDnfOrDns' => $driverHasDnfOrDns,
         ];
-    }
-
-    /**
-     * Check if a race result has valid time data.
-     */
-    private function hasValidRaceTime(
-        \App\Domain\Competition\Entities\Race $race,
-        \App\Domain\Competition\Entities\RaceResult $result
-    ): bool {
-        if ($race->isQualifier()) {
-            return !$result->fastestLap()->isNull();
-        }
-
-        return !$result->raceTime()->isNull();
     }
 
     /**
@@ -1550,10 +1503,10 @@ final class RoundApplicationService
                     }
                 }
             } else {
-                // 2. Race time results: best race_time per driver from non-qualifiers
+                // 2. Race time results: best final race_time per driver from non-qualifiers
                 // Skip DNF entries (they may have null or empty race_time)
                 if (!$result->dnf()) {
-                    $raceTime = $result->raceTime();
+                    $raceTime = $result->finalRaceTime();
                     if (!$raceTime->isNull()) {
                         $raceTimeMs = $raceTime->toMilliseconds();
                         if ($raceTimeMs !== null && $raceTimeMs > 0) {

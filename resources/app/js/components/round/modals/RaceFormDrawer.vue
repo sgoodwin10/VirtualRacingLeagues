@@ -346,96 +346,158 @@
                 <!-- Horizontal Rule -->
                 <hr class="border-gray-300" />
 
-                <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-gray-900">Points System</h3>
-                  <!-- Copy Points Buttons -->
-                  <div class="flex gap-2">
-                    <!-- Copy Round Points (only for Race #1) -->
-                    <Button
-                      v-if="isFirstRace"
-                      label="Copy Round Points"
-                      icon="pi pi-copy"
-                      size="small"
-                      severity="secondary"
-                      outlined
-                      :disabled="!canCopyRoundPoints"
-                      @click="copyRoundPoints"
-                    />
-                    <!-- Copy Race 1 Points (only for Race #2+) -->
-                    <Button
-                      v-if="!isFirstRace && !isQualifying"
-                      label="Copy Race 1 Points"
-                      icon="pi pi-copy"
-                      size="small"
-                      severity="secondary"
-                      outlined
-                      :disabled="!canCopyRace1Points"
-                      @click="copyRace1Points"
-                    />
+                <!-- 2/3 - 1/3 Layout: Points System + Bonuses -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <!-- Left Column (66% width): Points System -->
+                  <div class="lg:col-span-2">
+                    <FormInputGroup>
+                      <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="grid grid-cols-5 gap-3">
+                          <InputGroup
+                            v-for="position in Object.keys(form.points_system).map(Number)"
+                            :key="position"
+                          >
+                            <InputGroupAddon class="bg-slate-100">P{{ position }}</InputGroupAddon>
+                            <InputNumber
+                              :id="`position_${position}`"
+                              v-model="form.points_system[position]"
+                              :max-fraction-digits="2"
+                              :min="0"
+                              :max="999"
+                              size="small"
+                              fluid
+                              class="w-full"
+                            />
+                          </InputGroup>
+                        </div>
+                        <div class="mt-3 flex gap-2">
+                          <Button
+                            label="Add Position"
+                            icon="pi pi-plus"
+                            size="small"
+                            severity="success"
+                            outlined
+                            @click="addPointsPosition"
+                          />
+                          <Button
+                            label="Remove Last"
+                            icon="pi pi-trash"
+                            size="small"
+                            severity="danger"
+                            outlined
+                            :disabled="Object.keys(form.points_system).length <= 1"
+                            @click="removeLastPointsPosition"
+                          />
+                          <!-- Copy Round Points (only for Race #1) -->
+                          <Button
+                            v-if="isFirstRace"
+                            label="Copy Round Points"
+                            icon="pi pi-copy"
+                            size="small"
+                            severity="secondary"
+                            outlined
+                            :disabled="!canCopyRoundPoints"
+                            @click="copyRoundPoints"
+                          />
+                          <!-- Copy Race 1 Points (only for Race #2+) -->
+                          <Button
+                            v-if="!isFirstRace && !isQualifying"
+                            label="Copy Race 1 Points"
+                            icon="pi pi-copy"
+                            size="small"
+                            severity="secondary"
+                            outlined
+                            :disabled="!canCopyRace1Points"
+                            @click="copyRace1Points"
+                          />
+                        </div>
+                      </div>
+                      <FormError :error="errors.points_system" />
+                    </FormInputGroup>
+                  </div>
+
+                  <!-- Right Column (33% width): Bonuses -->
+                  <div class="lg:col-span-1 space-y-3">
+                    <!-- Fastest Lap Bonus -->
+                    <FormInputGroup>
+                      <FormLabel text="Fastest Lap Bonus" />
+                      <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                          <Checkbox
+                            id="bonus_fastest_lap"
+                            v-model="hasFastestLapBonus"
+                            :binary="true"
+                          />
+                          <label for="bonus_fastest_lap" class="text-sm"
+                            >Enable fastest lap bonus</label
+                          >
+                          <InputNumber
+                            v-if="hasFastestLapBonus"
+                            v-model="form.fastest_lap"
+                            :min="1"
+                            :max="99"
+                            fluid
+                            placeholder="Pts"
+                            size="small"
+                            class="w-20"
+                          />
+                        </div>
+                        <div
+                          v-if="hasFastestLapBonus && form.fastest_lap && form.fastest_lap > 0"
+                          class="ml-6"
+                        >
+                          <Checkbox
+                            id="bonus_fastest_lap_top_10"
+                            v-model="form.fastest_lap_top_10"
+                            :binary="true"
+                          />
+                          <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
+                            >Only award if driver finishes in top 10</label
+                          >
+                        </div>
+                      </div>
+                      <FormOptionalText
+                        :show-optional="false"
+                        text="Award points for fastest lap in this race"
+                      />
+                    </FormInputGroup>
+
+                    <hr class="border-gray-300" />
+
+                    <!-- DNF Points -->
+                    <FormInputGroup>
+                      <FormLabel for="dnf_points" text="DNF Points" />
+                      <InputNumber
+                        id="dnf_points"
+                        v-model="form.dnf_points"
+                        :min="0"
+                        :max="99"
+                        size="small"
+                        fluid
+                        class="w-full"
+                      />
+                      <small class="text-xs text-gray-500">Points awarded for Did Not Finish</small>
+                    </FormInputGroup>
                   </div>
                 </div>
-
-                <!-- Points Grid -->
-                <FormInputGroup>
-                  <div class="bg-white rounded-lg border border-gray-200 p-4">
-                    <div class="grid grid-cols-6 gap-3">
-                      <InputGroup
-                        v-for="position in Object.keys(form.points_system).map(Number)"
-                        :key="position"
-                      >
-                        <InputGroupAddon class="bg-slate-100">P{{ position }}</InputGroupAddon>
-                        <InputNumber
-                          :id="`position_${position}`"
-                          v-model="form.points_system[position]"
-                          :max-fraction-digits="2"
-                          :min="0"
-                          :max="999"
-                          size="small"
-                          fluid
-                          class="w-full"
-                        />
-                      </InputGroup>
-                    </div>
-                    <div class="mt-3 flex gap-2">
-                      <Button
-                        label="Add Position"
-                        icon="pi pi-plus"
-                        size="small"
-                        severity="success"
-                        outlined
-                        @click="addPointsPosition"
-                      />
-                      <Button
-                        label="Remove Last"
-                        icon="pi pi-trash"
-                        size="small"
-                        severity="danger"
-                        outlined
-                        :disabled="Object.keys(form.points_system).length <= 1"
-                        @click="removeLastPointsPosition"
-                      />
-                    </div>
-                  </div>
-                  <FormError :error="errors.points_system" />
-                </FormInputGroup>
               </div>
 
               <!-- Horizontal Rule -->
               <hr v-if="!form.race_points" class="border-gray-300" />
 
-              <!-- Bonus Points Section -->
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <!-- Bonus Points Section (shown when race_points is disabled) -->
+              <div v-if="!form.race_points" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <!-- Fastest Lap Bonus (for non-qualifying races) -->
                 <div>
                   <h3 class="text-sm font-semibold text-gray-900 mb-2">Bonus Points</h3>
                   <div class="space-y-2">
                     <div class="flex items-center gap-2">
                       <Checkbox
-                        id="bonus_fastest_lap"
+                        id="bonus_fastest_lap_disabled"
                         v-model="hasFastestLapBonus"
                         :binary="true"
                       />
-                      <label for="bonus_fastest_lap" class="text-sm">Fastest lap</label>
+                      <label for="bonus_fastest_lap_disabled" class="text-sm">Fastest lap</label>
                       <InputNumber
                         v-if="hasFastestLapBonus"
                         v-model="form.fastest_lap"
@@ -450,11 +512,11 @@
                       class="ml-6"
                     >
                       <Checkbox
-                        id="bonus_fastest_lap_top_10"
+                        id="bonus_fastest_lap_top_10_disabled"
                         v-model="form.fastest_lap_top_10"
                         :binary="true"
                       />
-                      <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
+                      <label for="bonus_fastest_lap_top_10_disabled" class="ml-2 text-sm"
                         >Only award if driver finishes in top 10</label
                       >
                     </div>
@@ -466,9 +528,9 @@
                   <h3 class="text-sm font-semibold text-gray-900 mb-2">DNF Points</h3>
                   <div class="grid grid-cols-2 gap-2">
                     <FormInputGroup>
-                      <FormLabel for="dnf_points" text="DNF" />
+                      <FormLabel for="dnf_points_disabled" text="DNF" />
                       <InputNumber
-                        id="dnf_points"
+                        id="dnf_points_disabled"
                         v-model="form.dnf_points"
                         :min="0"
                         :max="99"
@@ -976,7 +1038,9 @@ function resetForm(): void {
 }
 
 function addPointsPosition(): void {
-  const maxPosition = Math.max(...Object.keys(form.points_system).map(Number));
+  const keys = Object.keys(form.points_system);
+  // Guard against empty object - start at position 1 if empty
+  const maxPosition = keys.length > 0 ? Math.max(...keys.map(Number)) : 0;
   form.points_system[maxPosition + 1] = 0;
 }
 

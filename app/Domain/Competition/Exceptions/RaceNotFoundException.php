@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Competition\Exceptions;
 
-use DomainException;
+use App\Domain\Shared\Exceptions\DomainNotFoundException;
 
-final class RaceNotFoundException extends DomainException
+final class RaceNotFoundException extends DomainNotFoundException
 {
     public static function withId(int $id): self
     {

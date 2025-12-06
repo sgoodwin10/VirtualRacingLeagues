@@ -95,4 +95,45 @@ interface DriverRepositoryInterface
      * @return array{total: int, active: int, inactive: int, banned: int}
      */
     public function getLeagueDriverCounts(int $leagueId): array;
+
+    /**
+     * Get all drivers (admin context) with pagination and filtering.
+     *
+     * @return array{data: array<Driver>, total: int, per_page: int, current_page: int, last_page: int}
+     */
+    public function getAllDriversPaginated(
+        ?string $search = null,
+        int $page = 1,
+        int $perPage = 15,
+        string $orderBy = 'created_at',
+        string $orderDirection = 'desc'
+    ): array;
+
+    /**
+     * Get all leagues a driver belongs to.
+     *
+     * @return array<int, array{id: int, name: string, status: string, role: string|null, joined_at: string|null}>
+     */
+    public function getDriverLeagues(int $driverId): array;
+
+    /**
+     * Get all seasons a driver has participated in.
+     *
+     * @return array<int, array{id: int, name: string, league_name: string, status: string}>
+     */
+    public function getDriverSeasons(int $driverId): array;
+
+    /**
+     * Get race statistics for a driver.
+     *
+     * @return array{races: int, wins: int, podiums: int, poles: int, fastest_laps: int, dnfs: int, best_finish: int|null}
+     */
+    public function getDriverRaceStats(int $driverId): array;
+
+    /**
+     * Get linked user account for a driver.
+     *
+     * @return array{id: int, name: string, email: string}|null
+     */
+    public function getLinkedUser(int $driverId): ?array;
 }

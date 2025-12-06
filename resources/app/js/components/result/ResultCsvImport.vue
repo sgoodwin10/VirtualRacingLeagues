@@ -8,12 +8,7 @@
     <Textarea
       v-model="csvText"
       :rows="5"
-      placeholder="Paste CSV data here...
-Example:
-driver,race_time,race_time_difference,fastest_lap_time
-John Smith,01:23:45.678,,01:32.456
-Jane Doe,,,01:33.123
-Bob Wilson,,DNF,01:35.000"
+      :placeholder="placeholderText"
       class="w-full font-mono"
       :invalid="!!parseError"
     />
@@ -24,12 +19,7 @@ Bob Wilson,,DNF,01:35.000"
 
     <div class="mt-3 flex items-center justify-between">
       <span class="text-sm text-gray-500">
-        Expected columns: driver,
-        {{
-          isQualifying
-            ? 'fastest_lap_time'
-            : 'race_time, race_time_difference (or DNF), fastest_lap_time'
-        }}
+        {{ expectedColumnsText }}
       </span>
       <div class="flex gap-2">
         <input
@@ -59,39 +49,114 @@ Bob Wilson,,DNF,01:35.000"
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
 import { PhFileCsv } from '@phosphor-icons/vue';
 import type { CsvResultRow } from '@app/types/raceResult';
+import { useRaceTimeCalculation } from '@app/composables/useRaceTimeCalculation';
 
 interface Props {
   isQualifying: boolean;
+  raceTimesRequired: boolean;
 }
 
 interface Emits {
   (e: 'parse', rows: CsvResultRow[]): void;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const csvText = ref('');
 const parseError = ref<string | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
+const { parseTimeToMs, formatMsToTime, normalizeTimeInput } = useRaceTimeCalculation();
+
+// Computed properties for dynamic text based on context
+const placeholderText = computed(() => {
+  if (!props.raceTimesRequired) {
+    // Race times not required - only need driver
+    return `Paste CSV data here...
+Example:
+driver
+John Smith
+Jane Doe
+Bob Wilson`;
+  } else if (props.isQualifying) {
+    // Qualifying with race times required - need driver and fastest_lap_time
+    return `Paste CSV data here...
+Example:
+driver,fastest_lap_time
+John Smith,01:32.456
+Jane Doe,01:33.123
+Bob Wilson,01:35.000`;
+  } else {
+    // Race with times required - need time columns
+    return `Paste CSV data here...
+Example:
+driver,race_time,original_race_time_difference,fastest_lap_time
+John Smith,01:23:45.678,,01:32.456
+Jane Doe,,,01:33.123
+Bob Wilson,,DNF,01:35.000`;
+  }
+});
+
+const expectedColumnsText = computed(() => {
+  if (!props.raceTimesRequired) {
+    return 'Expected columns: driver (times optional)';
+  } else if (props.isQualifying) {
+    return 'Expected columns: driver, fastest_lap_time';
+  } else {
+    return 'Expected columns: driver, race_time, original_race_time_difference (or DNF), fastest_lap_time';
+  }
+});
+
 function handleParse(): void {
   parseError.value = null;
 
   try {
-    const rows = parseCsv(csvText.value);
+    const rows = parseCsv(csvText.value, props.isQualifying, props.raceTimesRequired);
     emit('parse', rows);
   } catch (error) {
     parseError.value = error instanceof Error ? error.message : 'Failed to parse CSV';
   }
 }
 
-function parseCsv(text: string): CsvResultRow[] {
+/**
+ * Check if a value is in "X lap" or "X laps" format
+ * Returns the number of laps if matched, otherwise null
+ */
+function parseLapFormat(value: string): number | null {
+  const lapPattern = /^(\d+)\s*laps?$/i;
+  const match = value.trim().match(lapPattern);
+  return match ? parseInt(match[1] || '0', 10) : null;
+}
+
+/**
+ * Calculate race time based on laps down
+ * Formula: (fastest_lap_ms + 500ms) * number_of_laps
+ */
+function calculateRaceTimeFromLaps(fastestLapTime: string | undefined, lapsDown: number): string {
+  if (!fastestLapTime) {
+    throw new Error('Cannot calculate race time from laps: fastest lap time is required');
+  }
+
+  // Normalize the time format first (e.g., "01:30.000" -> "00:01:30.000")
+  const normalizedTime = normalizeTimeInput(fastestLapTime);
+  const fastestLapMs = parseTimeToMs(normalizedTime);
+
+  if (fastestLapMs === null) {
+    throw new Error('Cannot calculate race time from laps: invalid fastest lap time format');
+  }
+
+  // Add 500ms to the fastest lap, then multiply by number of laps
+  const calculatedMs = (fastestLapMs + 500) * lapsDown;
+  return formatMsToTime(calculatedMs);
+}
+
+function parseCsv(text: string, isQualifying: boolean, raceTimesRequired: boolean): CsvResultRow[] {
   const lines = text.trim().split('\n');
   if (lines.length < 2) {
     throw new Error('CSV must have at least a header row and one data row');
@@ -106,15 +171,29 @@ function parseCsv(text: string): CsvResultRow[] {
   }
 
   const raceTimeIndex = header.indexOf('race_time');
-  const diffIndex = header.indexOf('race_time_difference');
+  const diffIndex = header.indexOf('original_race_time_difference');
   const fastestLapIndex = header.findIndex((h) => h === 'fastest_lap_time' || h === 'fastest_lap');
 
-  // Ensure indices are valid
-  if (raceTimeIndex === -1 && diffIndex === -1 && fastestLapIndex === -1) {
-    throw new Error(
-      'CSV must have at least one of: race_time, race_time_difference, or fastest_lap_time',
-    );
+  // Validation logic depends on context:
+  // 1. If race times are NOT required: only driver column is needed (already validated above)
+  // 2. For qualifiers with race times required: only driver and fastest_lap_time are required
+  // 3. For races with race times required: need race_time OR original_race_time_difference (at minimum)
+  if (raceTimesRequired) {
+    if (isQualifying) {
+      // Qualifiers only require fastest_lap_time when race times are enabled
+      if (fastestLapIndex === -1) {
+        throw new Error('CSV must have a "fastest_lap_time" column for qualifying sessions');
+      }
+    } else {
+      // Races with times required need at least one time column
+      if (raceTimeIndex === -1 && diffIndex === -1 && fastestLapIndex === -1) {
+        throw new Error(
+          'CSV must have at least one of: race_time, original_race_time_difference, or fastest_lap_time',
+        );
+      }
+    }
   }
+  // If race times are NOT required, only driver column is needed (already validated above)
 
   // Parse data rows
   const results: CsvResultRow[] = [];
@@ -124,35 +203,68 @@ function parseCsv(text: string): CsvResultRow[] {
     if (!line) continue;
 
     const values = line.split(',').map((v) => v.trim());
-    const driver = values[driverIndex];
 
+    // Check bounds before accessing driver index
+    if (driverIndex >= values.length) continue;
+
+    const driver = values[driverIndex];
     if (!driver || driver === '') continue;
 
     const row: CsvResultRow = { driver };
 
-    if (raceTimeIndex !== -1 && values[raceTimeIndex] !== undefined) {
-      row.race_time = values[raceTimeIndex];
-    }
-
-    // Check if race_time_difference indicates DNF
-    const dnfIndicators = ['dnf', 'did not finish', 'retired', 'ret', 'dns', 'dsq'];
-    if (diffIndex !== -1 && values[diffIndex] !== undefined) {
-      const diffValue = values[diffIndex].toLowerCase().trim();
-      if (dnfIndicators.includes(diffValue)) {
-        row.dnf = true;
-        row.race_time_difference = ''; // Clear the time since it's DNF
-      } else {
-        // Remove leading '+' from time difference if present
-        let timeDiff = values[diffIndex];
-        if (timeDiff.startsWith('+')) {
-          timeDiff = timeDiff.substring(1);
-        }
-        row.race_time_difference = timeDiff;
+    // Check bounds before accessing race_time index
+    if (raceTimeIndex !== -1 && raceTimeIndex < values.length) {
+      const value = values[raceTimeIndex];
+      if (value !== undefined && value.trim() !== '') {
+        row.race_time = value.trim();
       }
     }
 
-    if (fastestLapIndex !== -1 && values[fastestLapIndex] !== undefined) {
-      row.fastest_lap_time = values[fastestLapIndex];
+    // Get fastest lap time first (needed for lap-based calculations)
+    // Check bounds before accessing fastest_lap index
+    if (fastestLapIndex !== -1 && fastestLapIndex < values.length) {
+      const value = values[fastestLapIndex];
+      if (value !== undefined && value.trim() !== '') {
+        row.fastest_lap_time = value.trim();
+      }
+    }
+
+    // Check if original_race_time_difference indicates DNF or lap count
+    const dnfIndicators = ['dnf', 'did not finish', 'retired', 'ret', 'dns', 'dsq'];
+    if (diffIndex !== -1 && diffIndex < values.length) {
+      const diffValue = values[diffIndex]?.trim() ?? '';
+
+      // Only process if diffValue is not empty
+      if (diffValue !== '') {
+        const diffValueLower = diffValue.toLowerCase();
+
+        if (dnfIndicators.includes(diffValueLower)) {
+          row.dnf = true;
+          row.original_race_time_difference = ''; // Clear the time since it's DNF
+        } else {
+          // Check if it's in "X lap" or "X laps" format
+          const lapsDown = parseLapFormat(diffValue);
+
+          if (lapsDown !== null) {
+            // Calculate race time based on laps and fastest lap
+            try {
+              const calculatedTime = calculateRaceTimeFromLaps(row.fastest_lap_time, lapsDown);
+              row.original_race_time_difference = calculatedTime;
+            } catch (error) {
+              throw new Error(
+                `Row ${i} (${driver}): ${error instanceof Error ? error.message : 'Failed to calculate time from laps'}`,
+              );
+            }
+          } else {
+            // Remove leading '+' from time difference if present
+            let timeDiff = diffValue;
+            if (timeDiff.startsWith('+')) {
+              timeDiff = timeDiff.substring(1);
+            }
+            row.original_race_time_difference = timeDiff;
+          }
+        }
+      }
     }
 
     results.push(row);

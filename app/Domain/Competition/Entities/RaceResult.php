@@ -23,8 +23,9 @@ final class RaceResult
         private int $driverId,
         private ?int $divisionId,
         private ?int $position,
-        private RaceTime $raceTime,
-        private RaceTime $raceTimeDifference,
+        private RaceTime $originalRaceTime,
+        private RaceTime $originalRaceTimeDifference,
+        private RaceTime $finalRaceTimeDifference,
         private RaceTime $fastestLap,
         private RaceTime $penalties,
         private bool $hasFastestLap,
@@ -43,14 +44,28 @@ final class RaceResult
         int $driverId,
         ?int $divisionId = null,
         ?int $position = null,
-        ?string $raceTime = null,
-        ?string $raceTimeDifference = null,
+        ?string $originalRaceTime = null,
+        ?string $originalRaceTimeDifference = null,
+        ?string $finalRaceTimeDifference = null,
         ?string $fastestLap = null,
         ?string $penalties = null,
         bool $hasFastestLap = false,
         bool $hasPole = false,
         bool $dnf = false,
     ): self {
+        // Domain invariant validation
+        if ($raceId <= 0) {
+            throw new \InvalidArgumentException('Race ID must be greater than 0');
+        }
+
+        if ($driverId <= 0) {
+            throw new \InvalidArgumentException('Driver ID must be greater than 0');
+        }
+
+        if ($position !== null && $position <= 0) {
+            throw new \InvalidArgumentException('Position must be greater than 0 when provided');
+        }
+
         $now = new DateTimeImmutable();
 
         $result = new self(
@@ -59,8 +74,9 @@ final class RaceResult
             driverId: $driverId,
             divisionId: $divisionId,
             position: $position,
-            raceTime: RaceTime::fromString($raceTime),
-            raceTimeDifference: RaceTime::fromString($raceTimeDifference),
+            originalRaceTime: RaceTime::fromString($originalRaceTime),
+            originalRaceTimeDifference: RaceTime::fromString($originalRaceTimeDifference),
+            finalRaceTimeDifference: RaceTime::fromString($finalRaceTimeDifference),
             fastestLap: RaceTime::fromString($fastestLap),
             penalties: RaceTime::fromString($penalties),
             hasFastestLap: $hasFastestLap,
@@ -82,8 +98,9 @@ final class RaceResult
         int $driverId,
         ?int $divisionId,
         ?int $position,
-        ?string $raceTime,
-        ?string $raceTimeDifference,
+        ?string $originalRaceTime,
+        ?string $originalRaceTimeDifference,
+        ?string $finalRaceTimeDifference,
         ?string $fastestLap,
         ?string $penalties,
         bool $hasFastestLap,
@@ -101,8 +118,9 @@ final class RaceResult
             driverId: $driverId,
             divisionId: $divisionId,
             position: $position,
-            raceTime: RaceTime::fromString($raceTime),
-            raceTimeDifference: RaceTime::fromString($raceTimeDifference),
+            originalRaceTime: RaceTime::fromString($originalRaceTime),
+            originalRaceTimeDifference: RaceTime::fromString($originalRaceTimeDifference),
+            finalRaceTimeDifference: RaceTime::fromString($finalRaceTimeDifference),
             fastestLap: RaceTime::fromString($fastestLap),
             penalties: RaceTime::fromString($penalties),
             hasFastestLap: $hasFastestLap,
@@ -162,14 +180,35 @@ final class RaceResult
         return $this->position;
     }
 
-    public function raceTime(): RaceTime
+    public function originalRaceTime(): RaceTime
     {
-        return $this->raceTime;
+        return $this->originalRaceTime;
     }
 
-    public function raceTimeDifference(): RaceTime
+    public function finalRaceTime(): RaceTime
     {
-        return $this->raceTimeDifference;
+        // If original race time is null, final is also null
+        if ($this->originalRaceTime->isNull()) {
+            return $this->originalRaceTime;
+        }
+
+        // If penalties are null or zero, final equals original
+        if ($this->penalties->isNull()) {
+            return $this->originalRaceTime;
+        }
+
+        // Calculate: original_race_time + penalties
+        return $this->originalRaceTime->add($this->penalties);
+    }
+
+    public function originalRaceTimeDifference(): RaceTime
+    {
+        return $this->originalRaceTimeDifference;
+    }
+
+    public function finalRaceTimeDifference(): RaceTime
+    {
+        return $this->finalRaceTimeDifference;
     }
 
     public function fastestLap(): RaceTime
@@ -225,34 +264,57 @@ final class RaceResult
     // Business Logic
     public function update(
         ?int $position,
-        ?string $raceTime,
-        ?string $raceTimeDifference,
+        ?string $originalRaceTime,
+        ?string $originalRaceTimeDifference,
         ?string $fastestLap,
         ?string $penalties,
         bool $hasFastestLap,
         bool $hasPole,
         bool $dnf,
     ): void {
+        // Prevent updates before ID is set
+        if ($this->id === null) {
+            throw new \LogicException('Cannot update race result before it has been persisted');
+        }
+
+        if ($position !== null && $position <= 0) {
+            throw new \InvalidArgumentException('Position must be greater than 0 when provided');
+        }
+
         $changes = [];
+        $needsRecalculation = false;
+
+        // Handle DNF state change
+        if ($this->dnf !== $dnf) {
+            $changes['dnf'] = ['old' => $this->dnf, 'new' => $dnf];
+            $this->dnf = $dnf;
+
+            // If marking as DNF, clear hasFastestLap (DNF drivers don't get fastest lap bonuses)
+            if ($dnf && $this->hasFastestLap) {
+                $changes['has_fastest_lap'] = ['old' => $this->hasFastestLap, 'new' => false];
+                $this->hasFastestLap = false;
+            }
+        }
 
         if ($this->position !== $position) {
             $changes['position'] = ['old' => $this->position, 'new' => $position];
             $this->position = $position;
         }
 
-        $newRaceTime = RaceTime::fromString($raceTime);
-        if (!$this->raceTime->equals($newRaceTime)) {
-            $changes['race_time'] = ['old' => $this->raceTime->value(), 'new' => $raceTime];
-            $this->raceTime = $newRaceTime;
+        $newOriginalRaceTime = RaceTime::fromString($originalRaceTime);
+        if (!$this->originalRaceTime->equals($newOriginalRaceTime)) {
+            $changes['original_race_time'] = ['old' => $this->originalRaceTime->value(), 'new' => $originalRaceTime];
+            $this->originalRaceTime = $newOriginalRaceTime;
         }
 
-        $newRaceTimeDifference = RaceTime::fromString($raceTimeDifference);
-        if (!$this->raceTimeDifference->equals($newRaceTimeDifference)) {
-            $changes['race_time_difference'] = [
-                'old' => $this->raceTimeDifference->value(),
-                'new' => $raceTimeDifference,
+        $newOriginalRaceTimeDifference = RaceTime::fromString($originalRaceTimeDifference);
+        if (!$this->originalRaceTimeDifference->equals($newOriginalRaceTimeDifference)) {
+            $changes['original_race_time_difference'] = [
+                'old' => $this->originalRaceTimeDifference->value(),
+                'new' => $originalRaceTimeDifference,
             ];
-            $this->raceTimeDifference = $newRaceTimeDifference;
+            $this->originalRaceTimeDifference = $newOriginalRaceTimeDifference;
+            $needsRecalculation = true;
         }
 
         $newFastestLap = RaceTime::fromString($fastestLap);
@@ -265,6 +327,7 @@ final class RaceResult
         if (!$this->penalties->equals($newPenalties)) {
             $changes['penalties'] = ['old' => $this->penalties->value(), 'new' => $penalties];
             $this->penalties = $newPenalties;
+            $needsRecalculation = true;
         }
 
         if ($this->hasFastestLap !== $hasFastestLap) {
@@ -277,9 +340,14 @@ final class RaceResult
             $this->hasPole = $hasPole;
         }
 
-        if ($this->dnf !== $dnf) {
-            $changes['dnf'] = ['old' => $this->dnf, 'new' => $dnf];
-            $this->dnf = $dnf;
+        // Recalculate final race time difference if penalties or original time difference changed
+        if ($needsRecalculation) {
+            $oldFinalTimeDiff = $this->finalRaceTimeDifference->value();
+            $this->recalculateFinalRaceTimeDifference();
+            $changes['final_race_time_difference'] = [
+                'old' => $oldFinalTimeDiff,
+                'new' => $this->finalRaceTimeDifference->value(),
+            ];
         }
 
         if (!empty($changes)) {
@@ -295,12 +363,20 @@ final class RaceResult
 
     public function setRacePoints(int $points): void
     {
+        if ($points < 0) {
+            throw new \InvalidArgumentException('Race points cannot be negative');
+        }
+
         $this->racePoints = $points;
         $this->updatedAt = new DateTimeImmutable();
     }
 
     public function setPositionsGained(?int $positions): void
     {
+        if ($positions !== null && ($positions < -99 || $positions > 99)) {
+            throw new \InvalidArgumentException('Positions gained must be between -99 and 99');
+        }
+
         $this->positionsGained = $positions;
         $this->updatedAt = new DateTimeImmutable();
     }
@@ -333,6 +409,27 @@ final class RaceResult
             $this->hasFastestLap = false;
             $this->updatedAt = new DateTimeImmutable();
         }
+    }
+
+    /**
+     * Recalculates the final race time difference by adding penalties to the original race time difference.
+     */
+    private function recalculateFinalRaceTimeDifference(): void
+    {
+        // If original race time difference is null, final is also null
+        if ($this->originalRaceTimeDifference->isNull()) {
+            $this->finalRaceTimeDifference = $this->originalRaceTimeDifference;
+            return;
+        }
+
+        // If penalties are null or zero, final equals original
+        if ($this->penalties->isNull()) {
+            $this->finalRaceTimeDifference = $this->originalRaceTimeDifference;
+            return;
+        }
+
+        // Calculate: original_race_time_difference + penalties
+        $this->finalRaceTimeDifference = $this->originalRaceTimeDifference->add($this->penalties);
     }
 
     // Domain Events

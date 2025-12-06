@@ -14,6 +14,11 @@ use App\Domain\League\ValueObjects\Tagline;
 use App\Domain\Shared\ValueObjects\EmailAddress;
 use App\Infrastructure\Persistence\Eloquent\Models\League as LeagueEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Platform;
+use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionModel;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\Round;
+use App\Infrastructure\Persistence\Eloquent\Models\Race;
 
 /**
  * Eloquent implementation of League Repository.
@@ -418,6 +423,93 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             'per_page' => $perPage,
             'current_page' => $page,
             'last_page' => $lastPage,
+        ];
+    }
+
+    public function getLeagueStatistics(int $leagueId): array
+    {
+        // Fetch competitions with their season counts
+        $competitions = CompetitionModel::where('league_id', $leagueId)
+            ->with('platform:id,name,slug')
+            ->withCount('seasons')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $competitionData = $competitions->map(function ($competition) {
+            return [
+                'competition' => $competition,
+                'platform_name' => $competition->platform->name ?? 'Unknown',
+                'platform_slug' => $competition->platform->slug ?? 'unknown',
+                'seasons_count' => $competition->seasons_count ?? 0,
+            ];
+        })->all();
+
+        // Calculate seasons summary
+        $competitionIds = $competitions->pluck('id')->toArray();
+
+        $totalSeasons = SeasonEloquent::query()
+            ->whereIn('competition_id', $competitionIds)
+            ->count();
+
+        $activeSeasons = SeasonEloquent::query()
+            ->whereIn('competition_id', $competitionIds)
+            ->where('status', 'active')
+            ->count();
+
+        $completedSeasons = SeasonEloquent::query()
+            ->whereIn('competition_id', $competitionIds)
+            ->where('status', 'completed')
+            ->count();
+
+        $seasonsSummary = [
+            'total' => $totalSeasons,
+            'active' => $activeSeasons,
+            'completed' => $completedSeasons,
+        ];
+
+        // Calculate stats
+        // Total drivers across all seasons
+        $totalDrivers = 0;
+        if (!empty($competitionIds)) {
+            $seasonIds = SeasonEloquent::query()
+                ->whereIn('competition_id', $competitionIds)
+                ->pluck('id')
+                ->toArray();
+
+            $totalDrivers = SeasonDriverEloquent::query()
+                ->whereIn('season_id', $seasonIds)
+                ->distinct('league_driver_id')
+                ->count('league_driver_id');
+        }
+
+        // Total races run
+        $totalRaces = 0;
+        if (!empty($competitionIds)) {
+            $seasonIds = SeasonEloquent::query()
+                ->whereIn('competition_id', $competitionIds)
+                ->pluck('id')
+                ->toArray();
+
+            if (!empty($seasonIds)) {
+                $roundIds = Round::query()
+                    ->whereIn('season_id', $seasonIds)
+                    ->pluck('id')
+                    ->toArray();
+
+                if (!empty($roundIds)) {
+                    $totalRaces = Race::query()
+                        ->whereIn('round_id', $roundIds)
+                        ->count();
+                }
+            }
+        }
+
+        return [
+            'total_drivers' => $totalDrivers,
+            'total_races' => $totalRaces,
+            'total_competitions' => $competitions->count(),
+            'seasons_summary' => $seasonsSummary,
+            'competitions' => $competitionData,
         ];
     }
 }

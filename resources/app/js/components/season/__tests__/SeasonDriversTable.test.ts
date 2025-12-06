@@ -67,7 +67,9 @@ vi.mock('primevue/column', () => ({
 vi.mock('primevue/button', () => ({
   default: {
     name: 'Button',
-    template: '<button><slot /></button>',
+    props: ['label', 'icon', 'size', 'severity', 'disabled'],
+    emits: ['click'],
+    template: '<button :disabled="disabled" @click="$emit(\'click\')">{{ label }}<slot /></button>',
   },
 }));
 
@@ -144,6 +146,7 @@ describe('SeasonDriversTable', () => {
     iracing_id: 'iR456',
     discord_id: 'Discord123',
     team_name: 'Team Alpha',
+    team_id: 1,
     division_id: null,
     division_name: null,
     status: 'active',
@@ -168,6 +171,7 @@ describe('SeasonDriversTable', () => {
     iracing_id: 'iR789',
     discord_id: null,
     team_name: null,
+    team_id: null,
     division_id: null,
     division_name: null,
     status: 'reserve',
@@ -557,6 +561,7 @@ describe('SeasonDriversTable', () => {
         name: 'Division A',
         description: null,
         logo_url: null,
+        order: 1,
         created_at: '2024-01-01',
         updated_at: '2024-01-01',
       },
@@ -566,6 +571,7 @@ describe('SeasonDriversTable', () => {
         name: 'Division B',
         description: null,
         logo_url: null,
+        order: 2,
         created_at: '2024-01-01',
         updated_at: '2024-01-01',
       },
@@ -730,5 +736,132 @@ describe('SeasonDriversTable', () => {
     expect(document.activeElement).toBe(searchInput.element);
 
     wrapper.unmount();
+  });
+
+  it('renders "Manage Drivers" button by default', () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const manageButton = wrapper.find('button');
+    expect(manageButton.exists()).toBe(true);
+    expect(manageButton.text()).toContain('Manage Drivers');
+  });
+
+  it('renders "Manage Drivers" button when neither divisions nor teams are enabled', () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        raceDivisionsEnabled: false,
+        teamChampionshipEnabled: false,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const manageButton = wrapper.find('button');
+    expect(manageButton.exists()).toBe(true);
+    expect(manageButton.text()).toContain('Manage Drivers');
+  });
+
+  it('renders "Manage Drivers" button when only divisions are enabled', () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        raceDivisionsEnabled: true,
+        teamChampionshipEnabled: false,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const buttons = wrapper.findAll('button');
+    const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
+    expect(manageButton).toBeDefined();
+  });
+
+  it('renders "Manage Drivers" button when only teams are enabled', () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        raceDivisionsEnabled: false,
+        teamChampionshipEnabled: true,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const buttons = wrapper.findAll('button');
+    const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
+    expect(manageButton).toBeDefined();
+  });
+
+  it('emits manageDrivers event when "Manage Drivers" button is clicked', async () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const buttons = wrapper.findAll('button');
+    const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
+
+    expect(manageButton).toBeDefined();
+    await manageButton!.trigger('click');
+
+    expect(wrapper.emitted('manageDrivers')).toBeTruthy();
+  });
+
+  it('disables "Manage Drivers" button when manageButtonDisabled is true', () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        manageButtonDisabled: true,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const buttons = wrapper.findAll('button');
+    const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
+
+    expect(manageButton).toBeDefined();
+    expect(manageButton!.attributes('disabled')).toBeDefined();
+  });
+
+  it('hides "Manage Drivers" button when showManageButton is false', () => {
+    wrapper = mount(SeasonDriversTable, {
+      props: {
+        seasonId: 1,
+        loading: false,
+        showManageButton: false,
+      },
+      global: {
+        plugins: [createPinia()],
+      },
+    });
+
+    const buttons = wrapper.findAll('button');
+    const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
+
+    expect(manageButton).toBeUndefined();
   });
 });

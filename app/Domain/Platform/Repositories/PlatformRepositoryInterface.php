@@ -18,4 +18,12 @@ interface PlatformRepositoryInterface
      * @throws \RuntimeException if platform not found
      */
     public function findById(int $id): PlatformData;
+
+    /**
+     * Find active platforms by IDs.
+     *
+     * @param array<int> $ids
+     * @return array<array{id: int, name: string, slug: string}>
+     */
+    public function findActiveByIds(array $ids): array;
 }

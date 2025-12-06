@@ -82,11 +82,11 @@ export function useRaceTimeCalculation() {
     const match = value.match(TIME_PATTERN);
     if (!match) return null;
 
-    const hours = parseInt(match[1] || '0', 10);
-    const minutes = parseInt(match[2] || '0', 10);
-    const seconds = parseInt(match[3] || '0', 10);
+    const hours = parseInt(match[1] ?? '0', 10);
+    const minutes = parseInt(match[2] ?? '0', 10);
+    const seconds = parseInt(match[3] ?? '0', 10);
     // Pad milliseconds to 3 digits for consistent calculation
-    const msStr = (match[4] || '0').padEnd(3, '0');
+    const msStr = (match[4] ?? '0').padEnd(3, '0');
     const milliseconds = parseInt(msStr, 10);
 
     return hours * 3600000 + minutes * 60000 + seconds * 1000 + milliseconds;
@@ -109,7 +109,7 @@ export function useRaceTimeCalculation() {
   }
 
   /**
-   * Calculate race_time from race_time_difference and leader's time
+   * Calculate race_time from original_race_time_difference and leader's time
    */
   function calculateRaceTimeFromDifference(
     leaderTimeMs: number | null,
@@ -149,11 +149,11 @@ export function useRaceTimeCalculation() {
         return timeA - timeB;
       } else {
         const effectiveA = calculateEffectiveTime(
-          parseTimeToMs(a.race_time),
+          parseTimeToMs(a.original_race_time),
           parseTimeToMs(a.penalties),
         );
         const effectiveB = calculateEffectiveTime(
-          parseTimeToMs(b.race_time),
+          parseTimeToMs(b.original_race_time),
           parseTimeToMs(b.penalties),
         );
         if (effectiveA === null && effectiveB === null) return 0;
@@ -190,7 +190,7 @@ export function useRaceTimeCalculation() {
 
       const timeMs = isQualifying
         ? parseTimeToMs(result.fastest_lap)
-        : parseTimeToMs(result.race_time);
+        : parseTimeToMs(result.original_race_time);
 
       if (timeMs !== null && (minTime === null || timeMs < minTime)) {
         minTime = timeMs;
@@ -201,7 +201,7 @@ export function useRaceTimeCalculation() {
   }
 
   /**
-   * Reactive calculation: Update race_time when race_time_difference changes
+   * Reactive calculation: Update original_race_time when original_race_time_difference changes
    * This is used for real-time recalculation in the form
    */
   function createReactiveTimeCalculation(
@@ -214,19 +214,19 @@ export function useRaceTimeCalculation() {
       return findLeaderTime(results.value, false);
     });
 
-    // Recalculate race_time for results that only have difference
+    // Recalculate original_race_time for results that only have difference
     function recalculateFromDifferences(): void {
       if (isQualifying.value || leaderTimeMs.value === null) return;
 
       for (const result of results.value) {
-        // Only recalculate if we have difference but no race_time
-        // OR if race_time should be derived from difference
-        const diffMs = parseTimeToMs(result.race_time_difference);
+        // Only recalculate if we have difference but no original_race_time
+        // OR if original_race_time should be derived from difference
+        const diffMs = parseTimeToMs(result.original_race_time_difference);
 
-        if (diffMs !== null && result.race_time_difference) {
+        if (diffMs !== null && result.original_race_time_difference) {
           const calculatedTime = calculateRaceTimeFromDifference(leaderTimeMs.value, diffMs);
           if (calculatedTime) {
-            result.race_time = calculatedTime;
+            result.original_race_time = calculatedTime;
           }
         }
       }

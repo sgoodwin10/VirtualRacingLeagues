@@ -9,7 +9,6 @@ import { useDivisionStore } from '@app/stores/divisionStore';
 import type { Season } from '@app/types/season';
 import type { SeasonDriver } from '@app/types/seasonDriver';
 import {
-  PhGauge,
   PhCalendar,
   PhUsers,
   PhFlagCheckered,
@@ -17,11 +16,6 @@ import {
   PhTrophy,
   PhCar,
   PhUsersThree,
-  PhFileText,
-  PhWrench,
-  PhInfo,
-  PhChartBar,
-  PhListBullets,
 } from '@phosphor-icons/vue';
 
 import Button from 'primevue/button';
@@ -49,7 +43,6 @@ import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import PanelHeader from '@app/components/common/panels/PanelHeader.vue';
 import HTag from '@app/components/common/HTag.vue';
 import InfoItem from '@app/components/common/InfoItem.vue';
-import FormLabel from '@app/components/common/forms/FormLabel.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -62,7 +55,7 @@ const divisionStore = useDivisionStore();
 const season = ref<Season | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const activeTab = ref('overview');
+const activeTab = ref('rounds');
 const showEditDrawer = ref(false);
 const showDriverManagementDrawer = ref(false);
 const showEditDriverDialog = ref(false);
@@ -77,8 +70,11 @@ const teams = computed(() => teamStore.teams);
 const divisions = computed(() => divisionStore.divisions);
 
 onMounted(async () => {
-  await loadSeason();
-  await loadDrivers();
+  const seasonLoaded = await loadSeason();
+  // Only load drivers if season loaded successfully
+  if (seasonLoaded) {
+    await loadDrivers();
+  }
 });
 
 // Watch active tab and load teams/divisions when Drivers tab becomes active
@@ -93,28 +89,23 @@ watch(activeTab, async (newTab) => {
   }
 });
 
-async function loadSeason(): Promise<void> {
+async function loadSeason(): Promise<boolean> {
   isLoading.value = true;
   error.value = null;
 
   try {
     season.value = await seasonStore.fetchSeason(seasonId.value);
-
-    // Debug logging for platform ID
-    console.log('[SeasonDetail] Season loaded:', {
-      seasonId: seasonId.value,
-      season: season.value,
-      platform_id: season.value?.competition?.platform_id,
-      competition: season.value?.competition,
-    });
-  } catch {
-    error.value = 'Failed to load season';
+    return true;
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to load season';
+    error.value = errorMessage;
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load season',
+      summary: 'Load Failed',
+      detail: errorMessage,
       life: 5000,
     });
+    return false;
   } finally {
     isLoading.value = false;
   }
@@ -126,24 +117,42 @@ async function loadDrivers(): Promise<void> {
       seasonDriverStore.fetchSeasonDrivers(seasonId.value),
       seasonDriverStore.fetchStats(seasonId.value),
     ]);
-  } catch (error) {
-    console.error('Failed to load drivers:', error);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to load drivers';
+    toast.add({
+      severity: 'error',
+      summary: 'Load Failed',
+      detail: errorMessage,
+      life: 5000,
+    });
   }
 }
 
 async function loadTeams(): Promise<void> {
   try {
     await teamStore.fetchTeams(seasonId.value);
-  } catch (error) {
-    console.error('Failed to load teams:', error);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
+    toast.add({
+      severity: 'error',
+      summary: 'Load Failed',
+      detail: errorMessage,
+      life: 5000,
+    });
   }
 }
 
 async function loadDivisions(): Promise<void> {
   try {
     await divisionStore.fetchDivisions(seasonId.value);
-  } catch (error) {
-    console.error('Failed to load divisions:', error);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to load divisions';
+    toast.add({
+      severity: 'error',
+      summary: 'Load Failed',
+      detail: errorMessage,
+      life: 5000,
+    });
   }
 }
 
@@ -342,22 +351,16 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
       <!-- Tabs -->
       <Tabs v-model:value="activeTab">
         <TabList>
-          <Tab value="overview">
+          <Tab value="rounds">
             <div class="flex items-center gap-2">
-              <PhGauge :size="20" />
-              <span>Overview</span>
+              <PhCalendar :size="20" />
+              <span>Rounds</span>
             </div>
           </Tab>
           <Tab value="standings">
             <div class="flex items-center gap-2">
               <PhTrophy :size="20" />
               <span>Standings</span>
-            </div>
-          </Tab>
-          <Tab value="rounds">
-            <div class="flex items-center gap-2">
-              <PhCalendar :size="20" />
-              <span>Rounds</span>
             </div>
           </Tab>
           <Tab value="drivers">
@@ -381,167 +384,60 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
         </TabList>
 
         <TabPanels>
-          <!-- Overview Tab -->
-          <TabPanel value="overview">
-            <!-- Main Content: Two-Column Layout (3/5 + 2/5) -->
-            <div class="grid grid-cols-1 lg:grid-cols-5">
-              <!-- Left Column: Main Content (3/5 width) -->
-              <div class="lg:col-span-3 space-y-4">
-                <!-- Description Panel -->
-                <BasePanel v-if="season.description">
-                  <template #header>
-                    <PanelHeader
-                      :icon="PhFileText"
-                      icon-class="text-blue-600"
-                      title="Description"
-                      description="Season overview and key information"
-                      gradient="from-blue-50 to-indigo-50"
-                    />
-                  </template>
-                  <div class="p-4">
-                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {{ season.description }}
-                    </p>
-                  </div>
-                </BasePanel>
-
-                <!-- Technical Specifications Panel -->
-                <BasePanel v-if="season.technical_specs">
-                  <template #header>
-                    <PanelHeader
-                      :icon="PhWrench"
-                      icon-class="text-slate-600"
-                      title="Technical Specifications"
-                      description="Vehicle and race configuration details"
-                      gradient="from-slate-50 to-gray-50"
-                    />
-                  </template>
-                  <div class="p-4">
-                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {{ season.technical_specs }}
-                    </p>
-                  </div>
-                </BasePanel>
-
-                <!-- Season Information Panel -->
-                <BasePanel>
-                  <template #header>
-                    <PanelHeader
-                      :icon="PhInfo"
-                      icon-class="text-indigo-600"
-                      title="Season Information"
-                      description="Competition details and championship settings"
-                      gradient="from-indigo-50 to-purple-50"
-                    />
-                  </template>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
-                    <div class="p-3 rounded-lg bg-slate-50">
-                      <FormLabel text="Competition" />
-                      <p class="text-gray-900 mt-1">
-                        {{ season.competition?.name || season.competition_name || 'N/A' }}
-                      </p>
-                    </div>
-                    <div v-if="season.car_class" class="p-3 rounded-lg bg-slate-50">
-                      <FormLabel text="Car Class" />
-                      <p class="text-gray-900 mt-1">{{ season.car_class }}</p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-slate-50">
-                      <FormLabel text="Team Championship" />
-                      <p class="text-gray-900 mt-1">
-                        {{ season.team_championship_enabled ? 'Enabled' : 'Disabled' }}
-                      </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-slate-50">
-                      <FormLabel text="Race Divisions" />
-                      <p class="text-gray-900 mt-1">
-                        {{ season.race_divisions_enabled ? 'Enabled' : 'Disabled' }}
-                      </p>
-                    </div>
-                  </div>
-                </BasePanel>
+          <!-- Rounds Tab -->
+          <TabPanel value="rounds">
+            <BasePanel>
+              <template #header>
+                <PanelHeader
+                  :icon="PhCalendar"
+                  icon-class="text-green-600"
+                  title="Race Rounds"
+                  description="View and manage all race rounds in this season"
+                  gradient="from-green-50 to-teal-50"
+                />
+              </template>
+              <div class="p-4">
+                <RoundsPanel
+                  v-if="season && season.competition?.platform_id"
+                  :season-id="seasonId"
+                  :platform-id="season.competition.platform_id"
+                  :competition-colour="season.competition.competition_colour"
+                />
               </div>
-
-              <!-- Right Column: Sidebar (2/5 width) -->
-              <div class="lg:col-span-2 space-y-4">
-                <!-- Driver Statistics Panel -->
-                <BasePanel>
-                  <template #header>
-                    <PanelHeader
-                      :icon="PhChartBar"
-                      icon-class="text-green-600"
-                      title="Driver Statistics"
-                      description="Current driver participation breakdown"
-                      gradient="from-green-50 to-emerald-50"
-                    />
-                  </template>
-                  <div class="p-4 space-y-4">
-                    <!-- Total Drivers -->
-                    <div class="p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-600">Total Drivers</span>
-                        <span class="text-3xl font-bold text-gray-900">{{ stats.total }}</span>
-                      </div>
-                    </div>
-
-                    <!-- Active Drivers -->
-                    <div class="p-4 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-green-700">Active</span>
-                        <span class="text-2xl font-bold text-green-600">{{ stats.active }}</span>
-                      </div>
-                    </div>
-
-                    <!-- Reserve Drivers -->
-                    <div class="p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-blue-700">Reserve</span>
-                        <span class="text-2xl font-bold text-blue-600">{{ stats.reserve }}</span>
-                      </div>
-                    </div>
-
-                    <!-- Withdrawn Drivers -->
-                    <div class="p-4 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors">
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-orange-700">Withdrawn</span>
-                        <span class="text-2xl font-bold text-orange-600">{{
-                          stats.withdrawn
-                        }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </BasePanel>
-
-                <!-- Metadata Panel -->
-                <BasePanel>
-                  <template #header>
-                    <PanelHeader
-                      :icon="PhListBullets"
-                      icon-class="text-gray-600"
-                      title="Details"
-                      description="Season status and metadata"
-                      gradient="from-gray-50 to-slate-50"
-                    />
-                  </template>
-                  <div class="p-4 space-y-3">
-                    <div>
-                      <FormLabel text="Status" />
-                      <p class="text-gray-900 mt-1 capitalize">{{ season.status }}</p>
-                    </div>
-                    <div>
-                      <FormLabel text="Created" />
-                      <p class="text-gray-600 text-sm mt-1">
-                        {{ new Date(season.created_at).toLocaleDateString() }}
-                      </p>
-                    </div>
-                  </div>
-                </BasePanel>
-              </div>
-            </div>
+            </BasePanel>
           </TabPanel>
 
           <!-- Standings Tab -->
           <TabPanel value="standings">
             <SeasonStandingsPanel :season-id="seasonId" />
+          </TabPanel>
+
+          <!-- Drivers Tab -->
+          <TabPanel value="drivers">
+            <BasePanel>
+              <template #header>
+                <PanelHeader
+                  :icon="PhUsers"
+                  icon-class="text-blue-600"
+                  title="Season Drivers"
+                  description="Manage all drivers registered for this season"
+                  gradient="from-blue-50 to-cyan-50"
+                />
+              </template>
+              <div class="p-4">
+                <SeasonDriversTable
+                  :season-id="seasonId"
+                  :platform-id="season.competition?.platform_id"
+                  :loading="seasonDriverStore.loading"
+                  :team-championship-enabled="season.team_championship_enabled"
+                  :teams="teams"
+                  :race-divisions-enabled="season.race_divisions_enabled"
+                  :divisions="divisions"
+                  :manage-button-disabled="season.is_archived"
+                  @manage-drivers="handleManageDrivers"
+                />
+              </div>
+            </BasePanel>
           </TabPanel>
 
           <!-- Divisions & Teams Tab -->
@@ -588,34 +484,6 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
             </BasePanel>
           </TabPanel>
 
-          <!-- Drivers Tab -->
-          <TabPanel value="drivers">
-            <BasePanel>
-              <template #header>
-                <PanelHeader
-                  :icon="PhUsers"
-                  icon-class="text-blue-600"
-                  title="Season Drivers"
-                  description="Manage all drivers registered for this season"
-                  gradient="from-blue-50 to-cyan-50"
-                />
-              </template>
-              <div class="p-4">
-                <SeasonDriversTable
-                  :season-id="seasonId"
-                  :platform-id="season.competition?.platform_id"
-                  :loading="seasonDriverStore.loading"
-                  :team-championship-enabled="season.team_championship_enabled"
-                  :teams="teams"
-                  :race-divisions-enabled="season.race_divisions_enabled"
-                  :divisions="divisions"
-                  :manage-button-disabled="season.is_archived"
-                  @manage-drivers="handleManageDrivers"
-                />
-              </div>
-            </BasePanel>
-          </TabPanel>
-
           <!-- Settings Tab -->
           <TabPanel value="settings">
             <BasePanel>
@@ -634,29 +502,6 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
                   @updated="loadSeason"
                   @archived="handleArchived"
                   @deleted="handleDeleted"
-                />
-              </div>
-            </BasePanel>
-          </TabPanel>
-
-          <!-- Rounds Tab -->
-          <TabPanel value="rounds">
-            <BasePanel>
-              <template #header>
-                <PanelHeader
-                  :icon="PhCalendar"
-                  icon-class="text-green-600"
-                  title="Race Rounds"
-                  description="View and manage all race rounds in this season"
-                  gradient="from-green-50 to-teal-50"
-                />
-              </template>
-              <div class="p-4">
-                <RoundsPanel
-                  v-if="season && season.competition?.platform_id"
-                  :season-id="seasonId"
-                  :platform-id="season.competition.platform_id"
-                  :competition-colour="season.competition.competition_colour"
                 />
               </div>
             </BasePanel>

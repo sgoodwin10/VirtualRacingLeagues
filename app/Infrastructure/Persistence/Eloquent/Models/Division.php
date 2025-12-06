@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string|null $description
  * @property string|null $logo_url
+ * @property int $order
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property-read SeasonEloquent $season
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division where($column, $operator = null, $value = null, $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereIn($column, $values, $boolean = 'and', $not = false)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division orderBy($column, $direction = 'asc')
  * @method static \Illuminate\Database\Eloquent\Collection<int, Division> get($columns = ['*'])
  * @method static Division|null find($id, $columns = ['*'])
@@ -36,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereLogoUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereSeasonId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereUpdatedAt($value)
  * @method static DivisionFactory factory($count = null, $state = [])
@@ -70,6 +73,7 @@ class Division extends Model
         'name',
         'description',
         'logo_url',
+        'order',
     ];
 
     /**
@@ -79,6 +83,7 @@ class Division extends Model
      */
     protected $casts = [
         'season_id' => 'integer',
+        'order' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

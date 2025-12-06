@@ -8,6 +8,15 @@ import { logger } from '@admin/utils/logger';
 import { useRoleHelpers } from '@admin/composables/useRoleHelpers';
 
 /**
+ * Extend Window interface for GTM dataLayer
+ */
+declare global {
+  interface Window {
+    dataLayer: Record<string, unknown>[];
+  }
+}
+
+/**
  * Extend route meta with authentication fields
  */
 declare module 'vue-router' {
@@ -71,6 +80,16 @@ const routes = [
         },
       },
       {
+        path: 'drivers',
+        name: 'drivers',
+        component: () => import('@admin/views/DriversView.vue'),
+        meta: {
+          title: 'Drivers',
+          breadcrumb: [{ label: 'Drivers' }],
+          requiresAuth: true,
+        },
+      },
+      {
         path: 'admin-users',
         name: 'admin-users',
         component: () => import('@admin/views/AdminUsersView.vue'),
@@ -123,6 +142,9 @@ const router = createRouter({
   routes,
 });
 
+// Initialize composables outside the navigation guard for efficiency
+const { hasRoleAccess } = useRoleHelpers();
+
 /**
  * Global navigation guard for authentication
  */
@@ -167,7 +189,6 @@ router.beforeEach(async (to, _from, next) => {
     const requiredRole = to.meta.requiredRole as AdminRole | undefined;
 
     if (requiredRole) {
-      const { hasRoleAccess } = useRoleHelpers();
       const hasRequiredRole = hasRoleAccess(adminStore.adminRole, requiredRole);
 
       if (!hasRequiredRole) {
@@ -181,6 +202,18 @@ router.beforeEach(async (to, _from, next) => {
 
   // Allow navigation
   next();
+});
+
+/**
+ * Global afterEach hook for GTM virtual page view tracking
+ */
+router.afterEach((to) => {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'virtual_page_view',
+    page_path: to.fullPath,
+    page_title: (to.meta.title as string) || document.title,
+  });
 });
 
 export default router;

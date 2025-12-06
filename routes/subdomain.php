@@ -26,8 +26,19 @@ use App\Http\Controllers\User\TrackController;
 use App\Http\Middleware\AdminSessionMiddleware;
 use Illuminate\Support\Facades\Route;
 
-// Admin subdomain routes (admin.virtualracingleagues.localhost)
-Route::domain('admin.virtualracingleagues.localhost')->middleware('web')->group(function () {
+// Configure domains from environment variables
+$baseDomain = config('app.domain', 'virtualracingleagues.localhost');
+$adminDomain = "admin.{$baseDomain}";
+$appDomain = "app.{$baseDomain}";
+
+/**
+ * Admin Subdomain Routes (admin.virtualracingleagues.localhost)
+ *
+ * This is the PRIMARY admin interface accessible at admin.{domain}.
+ * All admin API routes are also duplicated on the main domain (see below)
+ * for easier local development, testing, and CORS handling.
+ */
+Route::domain($adminDomain)->middleware('web')->group(function () {
     // Admin API routes - imported from admin-api.php to avoid duplication
     Route::prefix('api')->name('admin.api.')->middleware([AdminSessionMiddleware::class])->group(
         base_path('routes/admin-api.php')
@@ -39,11 +50,23 @@ Route::domain('admin.virtualracingleagues.localhost')->middleware('web')->group(
     })->where('any', '.*');
 });
 
-// App subdomain routes (app.virtualracingleagues.localhost)
-// IMPORTANT: This subdomain is for AUTHENTICATED USERS ONLY
-Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(function () {
-    // User impersonation (GET route for server-side redirect)
-    // Must come BEFORE API routes to avoid route conflicts
+/**
+ * App Subdomain Routes (app.virtualracingleagues.localhost)
+ *
+ * IMPORTANT: This subdomain is for AUTHENTICATED USERS ONLY.
+ * Users authenticate on the main domain, then access this subdomain
+ * with session cookies shared via SESSION_DOMAIN=.{domain}.
+ */
+Route::domain($appDomain)->middleware('web')->group(function () {
+    /**
+     * User Impersonation Route (GET)
+     *
+     * This route allows admins to impersonate users via a signed URL.
+     * It's duplicated on both app subdomain and main domain to support
+     * cross-subdomain impersonation (admin -> user).
+     *
+     * Must come BEFORE API routes to avoid route conflicts.
+     */
     Route::get('/login-as', [UserImpersonationController::class, 'impersonateViaGet'])
         ->middleware('throttle:10,1')
         ->name('login-as');
@@ -58,7 +81,14 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
         // Auth check route (checks authentication without requiring it)
         Route::get('/me', [LoginController::class, 'me'])->name('me');
 
-        // Impersonation endpoint (public, token-based) - DEPRECATED, use GET /login-as instead
+        /**
+         * User Impersonation Endpoint (POST - Token-based)
+         *
+         * DEPRECATED: This endpoint is maintained for backwards compatibility.
+         * New implementations should use GET /login-as instead.
+         *
+         * Accepts a signed token and authenticates the user.
+         */
         Route::post('/impersonate', [UserImpersonationController::class, 'impersonate'])
             ->middleware('throttle:10,1')
             ->name('impersonate');
@@ -150,12 +180,27 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
             Route::put('/seasons/{seasonId}/drivers/{seasonDriverId}/team', [TeamController::class, 'assignDriver'])->name('seasons.drivers.team.assign');
 
             // Divisions
-            Route::get('/seasons/{seasonId}/divisions', [DivisionController::class, 'index'])->name('seasons.divisions.index');
-            Route::post('/seasons/{seasonId}/divisions', [DivisionController::class, 'store'])->name('seasons.divisions.store');
-            Route::put('/seasons/{seasonId}/divisions/{divisionId}', [DivisionController::class, 'update'])->name('seasons.divisions.update');
-            Route::delete('/seasons/{seasonId}/divisions/{divisionId}', [DivisionController::class, 'destroy'])->name('seasons.divisions.destroy');
-            Route::get('/seasons/{seasonId}/divisions/{divisionId}/driver-count', [DivisionController::class, 'driverCount'])->name('seasons.divisions.driver-count');
-            Route::put('/seasons/{seasonId}/drivers/{seasonDriverId}/division', [DivisionController::class, 'assignDriver'])->name('seasons.drivers.division.assign');
+            Route::get('/seasons/{seasonId}/divisions', [DivisionController::class, 'index'])
+                ->whereNumber('seasonId')
+                ->name('seasons.divisions.index');
+            Route::post('/seasons/{seasonId}/divisions', [DivisionController::class, 'store'])
+                ->whereNumber('seasonId')
+                ->name('seasons.divisions.store');
+            Route::put('/seasons/{seasonId}/divisions/reorder', [DivisionController::class, 'reorder'])
+                ->whereNumber('seasonId')
+                ->name('seasons.divisions.reorder');
+            Route::put('/seasons/{seasonId}/divisions/{divisionId}', [DivisionController::class, 'update'])
+                ->whereNumber(['seasonId', 'divisionId'])
+                ->name('seasons.divisions.update');
+            Route::delete('/seasons/{seasonId}/divisions/{divisionId}', [DivisionController::class, 'destroy'])
+                ->whereNumber(['seasonId', 'divisionId'])
+                ->name('seasons.divisions.destroy');
+            Route::get('/seasons/{seasonId}/divisions/{divisionId}/driver-count', [DivisionController::class, 'driverCount'])
+                ->whereNumber(['seasonId', 'divisionId'])
+                ->name('seasons.divisions.driver-count');
+            Route::put('/seasons/{seasonId}/drivers/{seasonDriverId}/division', [DivisionController::class, 'assignDriver'])
+                ->whereNumber(['seasonId', 'seasonDriverId'])
+                ->name('seasons.drivers.division.assign');
 
             // Rounds
             Route::get('/seasons/{seasonId}/rounds', [\App\Http\Controllers\User\RoundController::class, 'index'])->name('seasons.rounds.index');
@@ -202,16 +247,36 @@ Route::domain('app.virtualracingleagues.localhost')->middleware('web')->group(fu
     })->where('any', '.*');
 });
 
-// Main domain routes (virtualracingleagues.localhost)
-Route::domain('virtualracingleagues.localhost')->middleware('web')->group(function () {
-    // User impersonation (GET route for server-side redirect)
-    // Must come BEFORE API routes to avoid route conflicts
+/**
+ * Main Domain Routes (virtualracingleagues.localhost)
+ *
+ * This is the public-facing domain with authentication flows (login, register).
+ * Admin API routes are also duplicated here for convenience.
+ */
+Route::domain($baseDomain)->middleware('web')->group(function () {
+    /**
+     * User Impersonation Route (GET)
+     *
+     * Duplicated on main domain to support admin-to-user impersonation
+     * from the admin subdomain to the main/app subdomains.
+     *
+     * Must come BEFORE API routes to avoid route conflicts.
+     */
     Route::get('/login-as', [UserImpersonationController::class, 'impersonateViaGet'])
         ->middleware('throttle:10,1')
         ->name('public.login-as');
 
-    // Admin API routes (on main domain for easier testing and CORS)
-    // Imported from admin-api.php to avoid duplication with admin subdomain
+    /**
+     * Admin API Routes (Main Domain)
+     *
+     * These routes are DUPLICATED from the admin subdomain for:
+     * 1. Easier local development (no need to configure multiple subdomains)
+     * 2. Simpler CORS handling in development
+     * 3. Testing convenience
+     *
+     * In production, the admin subdomain (admin.{domain}) should be used.
+     * Both route sets share the same route definitions from routes/admin-api.php.
+     */
     Route::prefix('api/admin')->name('admin.api.')->middleware([AdminSessionMiddleware::class])->group(
         base_path('routes/admin-api.php')
     );

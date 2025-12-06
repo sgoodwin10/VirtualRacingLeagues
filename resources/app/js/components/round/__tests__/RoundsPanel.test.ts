@@ -999,4 +999,231 @@ describe('RoundsPanel', () => {
     expect(tooltipText).toContain('Bonus Points:');
     expect(tooltipText).toContain('None');
   });
+
+  it('should not show skeleton loading after initial load when toggling completion status', async () => {
+    const mockRound: Round = {
+      id: 1,
+      season_id: 1,
+      platform_track_id: 1,
+      round_number: 1,
+      name: 'Test Round',
+      slug: 'test-round',
+      scheduled_at: '2025-01-15T10:00:00Z',
+      timezone: 'UTC',
+      track_layout: null,
+      track_conditions: null,
+      technical_notes: null,
+      stream_url: null,
+      internal_notes: null,
+      fastest_lap: null,
+      fastest_lap_top_10: false,
+      qualifying_pole: null,
+      qualifying_pole_top_10: false,
+      points_system: null,
+      round_points: false,
+      status: 'scheduled',
+      status_label: 'Scheduled',
+      created_by_user_id: 1,
+      created_at: '2025-01-01T10:00:00Z',
+      updated_at: '2025-01-01T10:00:00Z',
+      deleted_at: null,
+    };
+
+    roundStore.rounds = [mockRound];
+
+    // Mock completeRound to simulate loading behavior
+    vi.spyOn(roundStore, 'completeRound').mockImplementation(async (roundId: number) => {
+      const round = roundStore.rounds.find((r) => r.id === roundId);
+      if (round) {
+        round.status = 'completed';
+        round.status_label = 'Completed';
+      }
+
+      return round!;
+    });
+
+    const wrapper = mount(RoundsPanel, {
+      props: {
+        seasonId: 1,
+        platformId: 1,
+      },
+      global: {
+        stubs: {
+          BasePanel: true,
+          Button: true,
+          Tag: true,
+          Skeleton: true,
+          ConfirmDialog: true,
+          ToggleSwitch: true,
+          RoundFormDrawer: true,
+          RaceFormDrawer: true,
+          RaceListItem: true,
+          QualifierListItem: true,
+          Accordion: true,
+          AccordionPanel: true,
+          AccordionHeader: true,
+          AccordionContent: true,
+        },
+      },
+    });
+
+    await flushPromises();
+
+    // After initial mount, skeleton should not be visible
+    expect(wrapper.find('[class*="space-y-4"]').exists()).toBe(false);
+
+    const vm = wrapper.vm as unknown as {
+      handleToggleCompletion: (round: Round) => Promise<void>;
+      initialLoadComplete: boolean;
+    };
+
+    // Verify initialLoadComplete is true after mount
+    expect(vm.initialLoadComplete).toBe(true);
+
+    // Toggle completion status
+    await vm.handleToggleCompletion(mockRound);
+    await wrapper.vm.$nextTick();
+
+    // Even though roundStore.isLoading might temporarily be true during the toggle,
+    // the skeleton should NOT show because initialLoadComplete is true
+    expect(wrapper.find('[class*="space-y-4"]').exists()).toBe(false);
+  });
+
+  it('should preserve accordion state when toggling round completion status', async () => {
+    // Create two rounds to test accordion state preservation
+    const mockRounds: Round[] = [
+      {
+        id: 1,
+        season_id: 1,
+        platform_track_id: 1,
+        round_number: 1,
+        name: 'Round 1',
+        slug: 'round-1',
+        scheduled_at: '2025-01-15T10:00:00Z',
+        timezone: 'UTC',
+        track_layout: null,
+        track_conditions: null,
+        technical_notes: null,
+        stream_url: null,
+        internal_notes: null,
+        fastest_lap: null,
+        fastest_lap_top_10: false,
+        qualifying_pole: null,
+        qualifying_pole_top_10: false,
+        points_system: null,
+        round_points: false,
+        status: 'scheduled',
+        status_label: 'Scheduled',
+        created_by_user_id: 1,
+        created_at: '2025-01-01T10:00:00Z',
+        updated_at: '2025-01-01T10:00:00Z',
+        deleted_at: null,
+      },
+      {
+        id: 2,
+        season_id: 1,
+        platform_track_id: 1,
+        round_number: 2,
+        name: 'Round 2',
+        slug: 'round-2',
+        scheduled_at: '2025-01-22T10:00:00Z',
+        timezone: 'UTC',
+        track_layout: null,
+        track_conditions: null,
+        technical_notes: null,
+        stream_url: null,
+        internal_notes: null,
+        fastest_lap: null,
+        fastest_lap_top_10: false,
+        qualifying_pole: null,
+        qualifying_pole_top_10: false,
+        points_system: null,
+        round_points: false,
+        status: 'scheduled',
+        status_label: 'Scheduled',
+        created_by_user_id: 1,
+        created_at: '2025-01-01T10:00:00Z',
+        updated_at: '2025-01-01T10:00:00Z',
+        deleted_at: null,
+      },
+    ];
+
+    roundStore.rounds = mockRounds;
+
+    // Mock the completeRound and uncompleteRound methods
+    vi.spyOn(roundStore, 'completeRound').mockImplementation(async (roundId: number) => {
+      const round = roundStore.rounds.find((r) => r.id === roundId);
+      if (round) {
+        round.status = 'completed';
+        round.status_label = 'Completed';
+        return round;
+      }
+      throw new Error('Round not found');
+    });
+
+    vi.spyOn(roundStore, 'uncompleteRound').mockImplementation(async (roundId: number) => {
+      const round = roundStore.rounds.find((r) => r.id === roundId);
+      if (round) {
+        round.status = 'scheduled';
+        round.status_label = 'Scheduled';
+        return round;
+      }
+      throw new Error('Round not found');
+    });
+
+    const wrapper = mount(RoundsPanel, {
+      props: {
+        seasonId: 1,
+        platformId: 1,
+      },
+      global: {
+        stubs: {
+          BasePanel: true,
+          Button: true,
+          Tag: true,
+          Skeleton: true,
+          ConfirmDialog: true,
+          ToggleSwitch: true,
+          RoundFormDrawer: true,
+          RaceFormDrawer: true,
+          RaceListItem: true,
+          QualifierListItem: true,
+          RaceResultModal: true,
+          RoundResultsModal: true,
+        },
+      },
+    });
+
+    await flushPromises();
+
+    // Access the component's activeIndexes ref
+    const vm = wrapper.vm as unknown as {
+      activeIndexes: number[];
+      handleToggleCompletion: (round: Round) => Promise<void>;
+    };
+
+    // Initially no panels are open
+    expect(vm.activeIndexes).toEqual([]);
+
+    // Simulate opening the first round's accordion panel
+    vm.activeIndexes.push(1);
+    await wrapper.vm.$nextTick();
+
+    // Verify first round is now in activeIndexes
+    expect(vm.activeIndexes).toContain(1);
+    expect(vm.activeIndexes).toHaveLength(1);
+
+    // Toggle completion status of the second round (not the one that's open)
+    const round2 = mockRounds[1]!;
+    await vm.handleToggleCompletion(round2);
+    await wrapper.vm.$nextTick();
+    await flushPromises();
+
+    // The activeIndexes should still contain round 1 (the open accordion should stay open)
+    expect(vm.activeIndexes).toContain(1);
+    expect(vm.activeIndexes).toHaveLength(1);
+
+    // Verify the second round's status was actually updated
+    expect(round2.status).toBe('completed');
+  });
 });

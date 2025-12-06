@@ -98,6 +98,17 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
         return RaceEloquent::where('id', $id)->exists();
     }
 
+    public function isOwnedByUser(int $raceId, int $userId): bool
+    {
+        return RaceEloquent::where('races.id', $raceId)
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
+            ->join('competitions', 'seasons.competition_id', '=', 'competitions.id')
+            ->join('leagues', 'competitions.league_id', '=', 'leagues.id')
+            ->where('leagues.owner_user_id', $userId)
+            ->exists();
+    }
+
     private function fillEloquentModel(RaceEloquent $model, RaceEntity $race): void
     {
         $model->round_id = $race->roundId();

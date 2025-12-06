@@ -111,4 +111,12 @@ interface UserRepositoryInterface
      * @return array<int, mixed> Array of activity log data
      */
     public function getRecentActivities(int $userId, int $limit = 50): array;
+
+    /**
+     * Find multiple users by their IDs.
+     *
+     * @param array<int> $ids
+     * @return array<int, array{id: int, first_name: string, last_name: string, email: string}> Keyed by user ID
+     */
+    public function findMultipleByIds(array $ids): array;
 }

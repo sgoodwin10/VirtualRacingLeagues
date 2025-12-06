@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Domain\Admin\Exceptions;
 
-use DomainException;
+use App\Domain\Shared\Exceptions\DomainNotFoundException;
 
 /**
  * Exception thrown when an admin is not found.
  */
-final class AdminNotFoundException extends DomainException
+final class AdminNotFoundException extends DomainNotFoundException
 {
     public static function withId(int $id): self
     {

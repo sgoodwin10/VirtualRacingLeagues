@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Domain
+    |--------------------------------------------------------------------------
+    |
+    | This value is the base domain for your application. It is used by the
+    | routing system to configure subdomain-based routing for the public,
+    | user dashboard (app), and admin dashboard (admin) applications.
+    |
+    */
+
+    'domain' => env('APP_DOMAIN', 'virtualracingleagues.localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

@@ -32,6 +32,7 @@ export interface SeasonStandingDriver {
 export interface SeasonStandingDivision {
   readonly division_id: number;
   readonly division_name: string;
+  readonly order: number;
   readonly drivers: readonly SeasonStandingDriver[];
 }
 

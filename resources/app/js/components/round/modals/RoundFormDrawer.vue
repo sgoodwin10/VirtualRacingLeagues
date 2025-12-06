@@ -54,421 +54,413 @@
         </div>
       </div>
 
-      <!-- Accordion Section: More Information -->
-      <Accordion :value="['0']">
-        <AccordionPanel value="0">
-          <AccordionHeader>Optional Round Information</AccordionHeader>
-          <AccordionContent
-            :pt="{
-              root: { class: 'bg-inherit' },
-              content: { class: 'p-4 bg-inherit border border-slate-200 rounded-b bg-surface-50' },
-            }"
-          >
-            <div class="space-y-3">
-              <!-- First Section: Track and Details -->
-              <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <!-- Left Column (66% width) -->
-                <div class="lg:col-span-2 space-y-2.5">
-                  <!-- Track Selection (full width) -->
-                  <FormInputGroup>
-                    <FormLabel for="track" text="Track" />
-                    <AutoComplete
-                      id="track"
-                      v-model="selectedTrack"
-                      :suggestions="trackSuggestions"
-                      option-group-label="name"
-                      option-group-children="tracks"
-                      :option-label="formatTrackDisplay"
-                      placeholder="Search for a location..."
-                      :invalid="!!validationErrors.platform_track_id"
-                      force-selection
-                      size="small"
-                      fluid
-                      class="w-full"
-                      @complete="handleTrackSearch"
-                      @item-select="handleTrackSelect"
-                      @blur="validation.validatePlatformTrackId(form.platform_track_id)"
-                    >
-                      <template #optiongroup="slotProps">
-                        <div class="flex items-center gap-2">
-                          <span class="font-semibold text-surface-700">{{
-                            slotProps.option.name
-                          }}</span>
-                          <span v-if="slotProps.option.country" class="text-sm text-gray-500">
-                            ({{ slotProps.option.country }})
-                          </span>
-                        </div>
-                      </template>
-                      <template #option="slotProps">
-                        <div class="flex items-center gap-2">
-                          <span class="flex items-center gap-2">
-                            <PhArrowRight size="16" class="text-surface-500" />
-                            {{ formatTrackDisplay(slotProps.option) }}
-                          </span>
-                        </div>
-                      </template>
-                      <template #chip="slotProps">
-                        <span>{{ formatTrackDisplay(slotProps.value) }}</span>
-                      </template>
-                    </AutoComplete>
-                    <FormOptionalText
-                      :show-optional="false"
-                      text="Search and select the track for this round"
-                    />
-                    <FormError v-if="validationErrors.platform_track_id">
-                      {{ validationErrors.platform_track_id }}
-                    </FormError>
-                  </FormInputGroup>
-
-                  <!-- Track Conditions + Layout Row -->
-                  <div class="grid grid-cols-2 gap-3">
-                    <!-- Track Conditions -->
-                    <FormInputGroup class="hidden">
-                      <FormLabel for="track_conditions" text="Weather / Time of Day" />
-                      <InputText
-                        id="track_conditions"
-                        v-model="form.track_conditions"
-                        size="small"
-                        placeholder="e.g., Early Afternoon - Dry"
-                        :invalid="!!validationErrors.track_conditions"
-                        class="w-full"
-                        @blur="validation.validateTrackConditions(form.track_conditions)"
-                      />
-                      <FormOptionalText :show-optional="false" text="Weather and track surface" />
-                      <FormError v-if="validationErrors.track_conditions">
-                        {{ validationErrors.track_conditions }}
-                      </FormError>
-                    </FormInputGroup>
-
-                    <!-- Track Layout -->
-                    <FormInputGroup class="hidden">
-                      <FormLabel for="track_layout" text="Circuit Direction" />
-                      <InputText
-                        id="track_layout"
-                        v-model="form.track_layout"
-                        size="small"
-                        placeholder="e.g., Reverse, Forward"
-                        :invalid="!!validationErrors.track_layout"
-                        class="w-full"
-                        @blur="validation.validateTrackLayout(form.track_layout)"
-                      />
-                      <FormOptionalText
-                        :show-optional="false"
-                        text="Specific circuit configuration"
-                      />
-                      <FormError v-if="validationErrors.track_layout">
-                        {{ validationErrors.track_layout }}
-                      </FormError>
-                    </FormInputGroup>
-                  </div>
-
-                  <hr class="border-gray-300" />
-
-                  <div>
-                    <!-- Stream URL -->
-                    <FormInputGroup class="hidden">
-                      <FormLabel for="stream_url" text="Stream URL" />
-                      <InputText
-                        id="stream_url"
-                        v-model="form.stream_url"
-                        type="url"
-                        size="small"
-                        placeholder="https://..."
-                        :invalid="!!validationErrors.stream_url"
-                        class="w-full"
-                        @blur="validation.validateStreamUrl(form.stream_url)"
-                      />
-                      <FormOptionalText :show-optional="false" text="Link to live stream" />
-                      <FormError v-if="validationErrors.stream_url">
-                        {{ validationErrors.stream_url }}
-                      </FormError>
-                    </FormInputGroup>
-                  </div>
-                </div>
-
-                <!-- Right Column (33% width) -->
-                <div class="lg:col-span-1 space-y-3">
-                  <!-- Scheduled Date & Time -->
-                  <FormInputGroup>
-                    <FormLabel for="scheduled_at" text="Scheduled Date & Time" />
-                    <DatePicker
-                      id="scheduled_at"
-                      v-model="form.scheduled_at"
-                      show-time
-                      hour-format="24"
-                      date-format="yy-mm-dd"
-                      :invalid="!!validationErrors.scheduled_at"
-                      placeholder="Select date and time"
-                      size="small"
-                      fluid
-                      class="w-full"
-                      @blur="validation.validateScheduledAt(form.scheduled_at)"
-                    />
-                    <FormOptionalText
-                      :show-optional="false"
-                      text="When this round is scheduled to take place"
-                    />
-                    <FormError v-if="validationErrors.scheduled_at">
-                      {{ validationErrors.scheduled_at }}
-                    </FormError>
-                  </FormInputGroup>
-
-                  <!-- Fastest Lap Bonus -->
-                  <FormInputGroup>
-                    <FormLabel text="Fastest Lap Bonus" />
-                    <div class="space-y-2">
-                      <div class="flex items-center gap-2">
-                        <Checkbox
-                          id="bonus_fastest_lap"
-                          v-model="hasFastestLapBonus"
-                          :binary="true"
-                        />
-                        <label for="bonus_fastest_lap" class="text-sm"
-                          >Enable fastest lap bonus</label
-                        >
-                        <InputNumber
-                          v-if="hasFastestLapBonus"
-                          v-model="form.fastest_lap"
-                          :min="1"
-                          :max="99"
-                          fluid
-                          :invalid="!!validationErrors.fastest_lap"
-                          placeholder="Pts"
-                          size="small"
-                          class="w-20"
-                          @blur="validation.validateFastestLap(form.fastest_lap)"
-                        />
-                      </div>
-                      <div
-                        v-if="hasFastestLapBonus && form.fastest_lap && form.fastest_lap > 0"
-                        class="ml-6"
-                      >
-                        <Checkbox
-                          id="bonus_fastest_lap_top_10"
-                          v-model="form.fastest_lap_top_10"
-                          :binary="true"
-                        />
-                        <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
-                          >Only award if driver finishes in top 10</label
-                        >
-                      </div>
+      <!-- Track and Details Section -->
+      <div class="bg-white rounded-lg border border-slate-200 p-4">
+        <h3 class="text-sm font-semibold text-surface-900 mb-4">Round Details</h3>
+        <div class="space-y-3">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- Left Column (66% width) -->
+            <div class="lg:col-span-2 space-y-2.5">
+              <!-- Track Selection (full width) -->
+              <FormInputGroup>
+                <FormLabel for="track" text="Track" />
+                <AutoComplete
+                  id="track"
+                  v-model="selectedTrack"
+                  :suggestions="trackSuggestions"
+                  option-group-label="name"
+                  option-group-children="tracks"
+                  :option-label="formatTrackDisplay"
+                  placeholder="Search for a location..."
+                  :invalid="!!validationErrors.platform_track_id"
+                  force-selection
+                  size="small"
+                  fluid
+                  class="w-full"
+                  @complete="handleTrackSearch"
+                  @item-select="handleTrackSelect"
+                  @blur="validation.validatePlatformTrackId(form.platform_track_id)"
+                >
+                  <template #optiongroup="slotProps">
+                    <div class="flex items-center gap-2">
+                      <span class="font-semibold text-surface-700">{{
+                        slotProps.option.name
+                      }}</span>
+                      <span v-if="slotProps.option.country" class="text-sm text-gray-500">
+                        ({{ slotProps.option.country }})
+                      </span>
                     </div>
-                    <FormOptionalText
-                      :show-optional="false"
-                      text="Award points for fastest lap across all races in this round (excluding qualifying)"
-                    />
-                    <FormError v-if="validationErrors.fastest_lap">
-                      {{ validationErrors.fastest_lap }}
-                    </FormError>
-                  </FormInputGroup>
-
-                  <!-- Qualifying Pole Bonus -->
-                  <FormInputGroup>
-                    <FormLabel text="Qualifying Pole Bonus" />
-                    <div class="space-y-2">
-                      <div class="flex items-center gap-2">
-                        <Checkbox
-                          id="bonus_qualifying_pole"
-                          v-model="hasQualifyingPoleBonus"
-                          :binary="true"
-                        />
-                        <label for="bonus_qualifying_pole" class="text-sm"
-                          >Enable qualifying pole bonus</label
-                        >
-                        <InputNumber
-                          v-if="hasQualifyingPoleBonus"
-                          v-model="form.qualifying_pole"
-                          :min="1"
-                          :max="99"
-                          fluid
-                          :invalid="!!validationErrors.qualifying_pole"
-                          placeholder="Pts"
-                          size="small"
-                          class="w-20"
-                          @blur="validation.validateQualifyingPole(form.qualifying_pole)"
-                        />
-                      </div>
-                      <div
-                        v-if="
-                          hasQualifyingPoleBonus && form.qualifying_pole && form.qualifying_pole > 0
-                        "
-                        class="ml-6"
-                      >
-                        <Checkbox
-                          id="bonus_qualifying_pole_top_10"
-                          v-model="form.qualifying_pole_top_10"
-                          :binary="true"
-                        />
-                        <label for="bonus_qualifying_pole_top_10" class="ml-2 text-sm"
-                          >Only award if driver finishes in top 10</label
-                        >
-                      </div>
+                  </template>
+                  <template #option="slotProps">
+                    <div class="flex items-center gap-2">
+                      <span class="flex items-center gap-2">
+                        <PhArrowRight size="16" class="text-surface-500" />
+                        {{ formatTrackDisplay(slotProps.option) }}
+                      </span>
                     </div>
-                    <FormOptionalText
-                      :show-optional="false"
-                      text="Award points for qualifying pole position"
-                    />
-                    <FormError v-if="validationErrors.qualifying_pole">
-                      {{ validationErrors.qualifying_pole }}
-                    </FormError>
-                  </FormInputGroup>
+                  </template>
+                  <template #chip="slotProps">
+                    <span>{{ formatTrackDisplay(slotProps.value) }}</span>
+                  </template>
+                </AutoComplete>
+                <FormOptionalText
+                  :show-optional="false"
+                  text="Search and select the track for this round"
+                />
+                <FormError v-if="validationErrors.platform_track_id">
+                  {{ validationErrors.platform_track_id }}
+                </FormError>
+              </FormInputGroup>
 
-                  <hr class="border-gray-300" />
-
-                  <!-- Round Points -->
-                  <FormInputGroup>
-                    <FormLabel text="Round Points" />
-                    <div class="space-y-3">
-                      <div class="flex items-center gap-2">
-                        <ToggleSwitch
-                          id="round_points"
-                          v-model="form.round_points"
-                          aria-label="Enable round points"
-                          @change="validation.validateRoundPoints(form.round_points)"
-                        />
-                        <label for="round_points" class="text-sm font-medium"
-                          >Enable round-level points calculation</label
-                        >
-                      </div>
-                      <FormOptionalText
-                        :show-optional="false"
-                        text="When enabled, accumulated race results create a round standing using the round's points system"
-                      />
-                      <FormError v-if="validationErrors.round_points">
-                        {{ validationErrors.round_points }}
-                      </FormError>
-                    </div>
-                  </FormInputGroup>
-                </div>
-              </div>
-
-              <!-- Points System Section - Only show when round_points is enabled -->
-              <div v-if="form.round_points" class="space-y-3">
-                <!-- Horizontal Rule -->
-                <hr class="border-gray-300" />
-
-                <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-gray-900">Points System</h3>
-                  <Button
-                    v-if="canCopyFromRoundOne"
-                    v-tooltip.left="'Copy Round 1 points configuration'"
-                    label="Copy from Round 1"
-                    icon="pi pi-copy"
+              <!-- Track Conditions + Layout Row -->
+              <div class="grid grid-cols-2 gap-3">
+                <!-- Track Conditions -->
+                <FormInputGroup class="hidden">
+                  <FormLabel for="track_conditions" text="Weather / Time of Day" />
+                  <InputText
+                    id="track_conditions"
+                    v-model="form.track_conditions"
                     size="small"
-                    severity="secondary"
-                    outlined
-                    @click="copyFromRoundOne"
+                    placeholder="e.g., Early Afternoon - Dry"
+                    :invalid="!!validationErrors.track_conditions"
+                    class="w-full"
+                    @blur="validation.validateTrackConditions(form.track_conditions)"
                   />
-                </div>
+                  <FormOptionalText :show-optional="false" text="Weather and track surface" />
+                  <FormError v-if="validationErrors.track_conditions">
+                    {{ validationErrors.track_conditions }}
+                  </FormError>
+                </FormInputGroup>
 
-                <div class="space-y-3">
-                  <!-- Points Grid (always visible when round_points is enabled) -->
-                  <FormInputGroup>
-                    <div class="bg-white rounded-lg border border-gray-200 p-4">
-                      <div class="grid grid-cols-6 gap-3">
-                        <InputGroup
-                          v-for="position in Object.keys(form.points_system).map(Number)"
-                          :key="position"
-                        >
-                          <InputGroupAddon class="bg-slate-100">P{{ position }}</InputGroupAddon>
-                          <InputNumber
-                            :id="`position_${position}`"
-                            v-model="form.points_system[position]"
-                            :max-fraction-digits="2"
-                            :min="0"
-                            :max="999"
-                            size="small"
-                            fluid
-                            class="w-full"
-                          />
-                        </InputGroup>
-                      </div>
-                      <div class="mt-3 flex gap-2">
-                        <Button
-                          label="Add Position"
-                          icon="pi pi-plus"
-                          size="small"
-                          severity="success"
-                          outlined
-                          @click="addPointsPosition"
-                        />
-                        <Button
-                          label="Remove Last"
-                          icon="pi pi-trash"
-                          size="small"
-                          severity="danger"
-                          outlined
-                          :disabled="Object.keys(form.points_system).length <= 1"
-                          @click="removeLastPointsPosition"
-                        />
-                      </div>
-                    </div>
-                    <FormError v-if="validationErrors.points_system">
-                      {{ validationErrors.points_system }}
-                    </FormError>
-                  </FormInputGroup>
-                </div>
+                <!-- Track Layout -->
+                <FormInputGroup class="hidden">
+                  <FormLabel for="track_layout" text="Circuit Direction" />
+                  <InputText
+                    id="track_layout"
+                    v-model="form.track_layout"
+                    size="small"
+                    placeholder="e.g., Reverse, Forward"
+                    :invalid="!!validationErrors.track_layout"
+                    class="w-full"
+                    @blur="validation.validateTrackLayout(form.track_layout)"
+                  />
+                  <FormOptionalText :show-optional="false" text="Specific circuit configuration" />
+                  <FormError v-if="validationErrors.track_layout">
+                    {{ validationErrors.track_layout }}
+                  </FormError>
+                </FormInputGroup>
               </div>
 
-              <!-- Horizontal Rule -->
-              <hr v-if="!form.round_points" class="border-gray-300" />
-
-              <!-- Second Section: Notes -->
-              <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 hidden">
-                <!-- Left Column (66% width): Technical Notes -->
-                <div class="lg:col-span-2">
-                  <FormInputGroup>
-                    <FormLabel for="technical_notes" text="Technical Notes" />
-                    <Textarea
-                      id="technical_notes"
-                      v-model="form.technical_notes"
-                      rows="3"
-                      placeholder="Server settings, race parameters, etc."
-                      :invalid="!!validationErrors.technical_notes"
-                      class="w-full"
-                      @blur="validation.validateTechnicalNotes(form.technical_notes)"
-                    />
-                    <div class="flex justify-between items-center">
-                      <FormOptionalText
-                        :show-optional="false"
-                        text="Server settings, race parameters, etc."
-                      />
-                    </div>
-                    <FormError v-if="validationErrors.technical_notes">
-                      {{ validationErrors.technical_notes }}
-                    </FormError>
-                  </FormInputGroup>
-                </div>
-
-                <!-- Right Column (33% width): Internal Notes -->
-                <div class="lg:col-span-1">
-                  <FormInputGroup>
-                    <FormLabel for="internal_notes" text="Internal Notes" />
-                    <Textarea
-                      id="internal_notes"
-                      v-model="form.internal_notes"
-                      rows="3"
-                      placeholder="Private notes for managers only"
-                      :invalid="!!validationErrors.internal_notes"
-                      class="w-full"
-                      @blur="validation.validateInternalNotes(form.internal_notes)"
-                    />
-                    <div class="flex justify-between items-center">
-                      <FormOptionalText
-                        :show-optional="false"
-                        text="Private notes for managers only"
-                      />
-                    </div>
-                    <FormError v-if="validationErrors.internal_notes">
-                      {{ validationErrors.internal_notes }}
-                    </FormError>
-                  </FormInputGroup>
-                </div>
+              <div>
+                <!-- Stream URL -->
+                <FormInputGroup class="hidden">
+                  <FormLabel for="stream_url" text="Stream URL" />
+                  <InputText
+                    id="stream_url"
+                    v-model="form.stream_url"
+                    type="url"
+                    size="small"
+                    placeholder="https://..."
+                    :invalid="!!validationErrors.stream_url"
+                    class="w-full"
+                    @blur="validation.validateStreamUrl(form.stream_url)"
+                  />
+                  <FormOptionalText :show-optional="false" text="Link to live stream" />
+                  <FormError v-if="validationErrors.stream_url">
+                    {{ validationErrors.stream_url }}
+                  </FormError>
+                </FormInputGroup>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
+
+            <!-- Right Column (33% width) -->
+            <div class="lg:col-span-1 space-y-3">
+              <!-- Scheduled Date & Time -->
+              <FormInputGroup>
+                <FormLabel for="scheduled_at" text="Scheduled Date & Time" />
+                <DatePicker
+                  id="scheduled_at"
+                  v-model="form.scheduled_at"
+                  show-time
+                  hour-format="24"
+                  date-format="yy-mm-dd"
+                  :invalid="!!validationErrors.scheduled_at"
+                  placeholder="Select date and time"
+                  size="small"
+                  fluid
+                  class="w-full"
+                  @blur="validation.validateScheduledAt(form.scheduled_at)"
+                />
+                <FormOptionalText
+                  :show-optional="false"
+                  text="When this round is scheduled to take place"
+                />
+                <FormError v-if="validationErrors.scheduled_at">
+                  {{ validationErrors.scheduled_at }}
+                </FormError>
+              </FormInputGroup>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Round Points Section -->
+      <div class="bg-white rounded-lg border border-slate-200 p-4">
+        <div class="space-y-3">
+          <!-- Round Points Toggle -->
+          <FormInputGroup>
+            <FormLabel text="Round Points" />
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <ToggleSwitch
+                  id="round_points"
+                  v-model="form.round_points"
+                  aria-label="Enable round points"
+                  @change="validation.validateRoundPoints(form.round_points)"
+                />
+                <label for="round_points" class="text-sm font-medium"
+                  >Enable round-level points calculation</label
+                >
+              </div>
+              <FormOptionalText
+                :show-optional="false"
+                text="When enabled, accumulated race results create a round standing using the round's points system"
+              />
+              <FormError v-if="validationErrors.round_points">
+                {{ validationErrors.round_points }}
+              </FormError>
+            </div>
+          </FormInputGroup>
+
+          <!-- Points System Section - Only show when round_points is enabled -->
+          <div v-if="form.round_points" class="space-y-3">
+            <hr class="border-slate-300" />
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-surface-900">Points System</h3>
+            </div>
+
+            <!-- 2/3 - 1/3 Layout: Points System + Bonuses -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <!-- Left Column (66% width): Points System -->
+              <div class="lg:col-span-2">
+                <FormInputGroup>
+                  <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <div class="grid grid-cols-5 gap-3">
+                      <InputGroup
+                        v-for="position in Object.keys(form.points_system).map(Number)"
+                        :key="position"
+                      >
+                        <InputGroupAddon class="bg-slate-100">P{{ position }}</InputGroupAddon>
+                        <InputNumber
+                          :id="`position_${position}`"
+                          v-model="form.points_system[position]"
+                          :max-fraction-digits="2"
+                          :min="0"
+                          :max="999"
+                          size="small"
+                          fluid
+                          class="w-full"
+                        />
+                      </InputGroup>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                      <Button
+                        label="Add Position"
+                        icon="pi pi-plus"
+                        size="small"
+                        severity="success"
+                        outlined
+                        @click="addPointsPosition"
+                      />
+                      <Button
+                        label="Remove Last"
+                        icon="pi pi-trash"
+                        size="small"
+                        severity="danger"
+                        outlined
+                        :disabled="Object.keys(form.points_system).length <= 1"
+                        @click="removeLastPointsPosition"
+                      />
+                      <Button
+                        v-if="canCopyFromRoundOne"
+                        v-tooltip.left="'Copy Round 1 points configuration'"
+                        label="Copy from Round 1"
+                        icon="pi pi-copy"
+                        size="small"
+                        severity="secondary"
+                        outlined
+                        @click="copyFromRoundOne"
+                      />
+                    </div>
+                  </div>
+                  <FormError v-if="validationErrors.points_system">
+                    {{ validationErrors.points_system }}
+                  </FormError>
+                </FormInputGroup>
+              </div>
+
+              <!-- Right Column (33% width): Bonuses -->
+              <div class="lg:col-span-1 space-y-3">
+                <!-- Fastest Lap Bonus -->
+                <FormInputGroup>
+                  <FormLabel text="Fastest Lap Bonus" />
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <Checkbox
+                        id="bonus_fastest_lap"
+                        v-model="hasFastestLapBonus"
+                        :binary="true"
+                      />
+                      <label for="bonus_fastest_lap" class="text-sm"
+                        >Enable fastest lap bonus</label
+                      >
+                      <InputNumber
+                        v-if="hasFastestLapBonus"
+                        v-model="form.fastest_lap"
+                        :min="1"
+                        :max="99"
+                        fluid
+                        :invalid="!!validationErrors.fastest_lap"
+                        placeholder="Pts"
+                        size="small"
+                        class="w-20"
+                        @blur="validation.validateFastestLap(form.fastest_lap)"
+                      />
+                    </div>
+                    <div
+                      v-if="hasFastestLapBonus && form.fastest_lap && form.fastest_lap > 0"
+                      class="ml-6"
+                    >
+                      <Checkbox
+                        id="bonus_fastest_lap_top_10"
+                        v-model="form.fastest_lap_top_10"
+                        :binary="true"
+                      />
+                      <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
+                        >Only award if driver finishes in top 10</label
+                      >
+                    </div>
+                  </div>
+                  <FormOptionalText
+                    :show-optional="false"
+                    text="Award points for fastest lap across all races in this round (excluding qualifying)"
+                  />
+                  <FormError v-if="validationErrors.fastest_lap">
+                    {{ validationErrors.fastest_lap }}
+                  </FormError>
+                </FormInputGroup>
+
+                <hr class="border-gray-300" />
+                <!-- Qualifying Pole Bonus -->
+                <FormInputGroup>
+                  <FormLabel text="Qualifying Pole Bonus" />
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <Checkbox
+                        id="bonus_qualifying_pole"
+                        v-model="hasQualifyingPoleBonus"
+                        :binary="true"
+                      />
+                      <label for="bonus_qualifying_pole" class="text-sm"
+                        >Enable qualifying pole bonus</label
+                      >
+                      <InputNumber
+                        v-if="hasQualifyingPoleBonus"
+                        v-model="form.qualifying_pole"
+                        :min="1"
+                        :max="99"
+                        fluid
+                        :invalid="!!validationErrors.qualifying_pole"
+                        placeholder="Pts"
+                        size="small"
+                        class="w-20"
+                        @blur="validation.validateQualifyingPole(form.qualifying_pole)"
+                      />
+                    </div>
+                    <div
+                      v-if="
+                        hasQualifyingPoleBonus && form.qualifying_pole && form.qualifying_pole > 0
+                      "
+                      class="ml-6"
+                    >
+                      <Checkbox
+                        id="bonus_qualifying_pole_top_10"
+                        v-model="form.qualifying_pole_top_10"
+                        :binary="true"
+                      />
+                      <label for="bonus_qualifying_pole_top_10" class="ml-2 text-sm"
+                        >Only award if driver finishes in top 10</label
+                      >
+                    </div>
+                  </div>
+                  <FormOptionalText
+                    :show-optional="false"
+                    text="Award points for qualifying pole position"
+                  />
+                  <FormError v-if="validationErrors.qualifying_pole">
+                    {{ validationErrors.qualifying_pole }}
+                  </FormError>
+                </FormInputGroup>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes Section (Hidden) -->
+      <div class="bg-white rounded-lg border border-slate-200 p-4 hidden">
+        <h3 class="text-sm font-semibold text-surface-900 mb-4">Additional Notes</h3>
+        <div class="space-y-3">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <!-- Left Column (66% width): Technical Notes -->
+            <div class="lg:col-span-2">
+              <FormInputGroup>
+                <FormLabel for="technical_notes" text="Technical Notes" />
+                <Textarea
+                  id="technical_notes"
+                  v-model="form.technical_notes"
+                  rows="3"
+                  placeholder="Server settings, race parameters, etc."
+                  :invalid="!!validationErrors.technical_notes"
+                  class="w-full"
+                  @blur="validation.validateTechnicalNotes(form.technical_notes)"
+                />
+                <div class="flex justify-between items-center">
+                  <FormOptionalText
+                    :show-optional="false"
+                    text="Server settings, race parameters, etc."
+                  />
+                </div>
+                <FormError v-if="validationErrors.technical_notes">
+                  {{ validationErrors.technical_notes }}
+                </FormError>
+              </FormInputGroup>
+            </div>
+
+            <!-- Right Column (33% width): Internal Notes -->
+            <div class="lg:col-span-1">
+              <FormInputGroup>
+                <FormLabel for="internal_notes" text="Internal Notes" />
+                <Textarea
+                  id="internal_notes"
+                  v-model="form.internal_notes"
+                  rows="3"
+                  placeholder="Private notes for managers only"
+                  :invalid="!!validationErrors.internal_notes"
+                  class="w-full"
+                  @blur="validation.validateInternalNotes(form.internal_notes)"
+                />
+                <div class="flex justify-between items-center">
+                  <FormOptionalText :show-optional="false" text="Private notes for managers only" />
+                </div>
+                <FormError v-if="validationErrors.internal_notes">
+                  {{ validationErrors.internal_notes }}
+                </FormError>
+              </FormInputGroup>
+            </div>
+          </div>
+        </div>
+      </div>
     </form>
 
     <template #footer>
@@ -506,10 +498,6 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import DatePicker from 'primevue/datepicker';
 import AutoComplete from 'primevue/autocomplete';
 import Textarea from 'primevue/textarea';
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import AccordionHeader from 'primevue/accordionheader';
-import AccordionContent from 'primevue/accordioncontent';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
 import FormError from '@app/components/common/forms/FormError.vue';
@@ -570,7 +558,7 @@ const form = ref<RoundForm>({
   qualifying_pole: null,
   qualifying_pole_top_10: false,
   points_system: { ...F1_STANDARD_POINTS },
-  round_points: false,
+  round_points: true,
 });
 
 const isVisible = computed({
@@ -722,7 +710,7 @@ async function initializeForm(): Promise<void> {
       qualifying_pole: null,
       qualifying_pole_top_10: false,
       points_system: { ...F1_STANDARD_POINTS },
-      round_points: false,
+      round_points: true,
     };
     selectedTrack.value = null;
 

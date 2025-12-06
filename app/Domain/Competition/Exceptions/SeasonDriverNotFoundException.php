@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Domain\Competition\Exceptions;
 
-use RuntimeException;
+use App\Domain\Shared\Exceptions\DomainNotFoundException;
 
 /**
  * Exception thrown when a season driver is not found.
  */
-final class SeasonDriverNotFoundException extends RuntimeException
+final class SeasonDriverNotFoundException extends DomainNotFoundException
 {
     public static function withId(int $id): self
     {

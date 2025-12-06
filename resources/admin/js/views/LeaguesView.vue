@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { storeToRefs } from 'pinia';
 import { useDebounceFn } from '@vueuse/core';
@@ -10,7 +10,7 @@ import Card from 'primevue/card';
 import Skeleton from 'primevue/skeleton';
 import ConfirmDialog from 'primevue/confirmdialog';
 import LeaguesTable from '@admin/components/League/LeaguesTable.vue';
-import ViewLeagueDrawer from '@admin/components/League/ViewLeagueDrawer.vue';
+import ViewLeagueModal from '@admin/components/League/ViewLeagueModal.vue';
 import type { League } from '@admin/types/league';
 import { isRequestCancelled } from '@admin/types/errors';
 import { useRequestCancellation } from '@admin/composables/useRequestCancellation';
@@ -138,9 +138,33 @@ const handleDelete = (league: League) => {
   });
 };
 
+/**
+ * Handle visibility filter change with runtime validation
+ */
+const handleVisibilityFilterChange = (value: string) => {
+  const validValues = ['public', 'private', 'unlisted', 'all'] as const;
+  if (validValues.includes(value as (typeof validValues)[number])) {
+    leagueStore.setVisibilityFilter(value as 'public' | 'private' | 'unlisted' | 'all');
+  }
+};
+
+/**
+ * Handle status filter change with runtime validation
+ */
+const handleStatusFilterChange = (value: string) => {
+  const validValues = ['active', 'archived', 'all'] as const;
+  if (validValues.includes(value as (typeof validValues)[number])) {
+    leagueStore.setStatusFilter(value as 'active' | 'archived' | 'all');
+  }
+};
+
 onMounted(async () => {
   await loadLeagues();
   initialLoading.value = false;
+});
+
+onUnmounted(() => {
+  cancelRequests('Component unmounted');
 });
 </script>
 
@@ -188,12 +212,7 @@ onMounted(async () => {
                 option-value="value"
                 placeholder="Filter by visibility"
                 class="flex-1"
-                @update:model-value="
-                  (value: string) =>
-                    leagueStore.setVisibilityFilter(
-                      value as 'public' | 'private' | 'unlisted' | 'all',
-                    )
-                "
+                @update:model-value="handleVisibilityFilterChange"
               />
               <Select
                 :model-value="statusFilter"
@@ -202,10 +221,7 @@ onMounted(async () => {
                 option-value="value"
                 placeholder="Filter by status"
                 class="flex-1"
-                @update:model-value="
-                  (value: string) =>
-                    leagueStore.setStatusFilter(value as 'active' | 'archived' | 'all')
-                "
+                @update:model-value="handleStatusFilterChange"
               />
               <MultiSelect
                 :model-value="platformsFilter"
@@ -238,7 +254,7 @@ onMounted(async () => {
       </Card>
     </div>
 
-    <ViewLeagueDrawer v-model:visible="viewDrawerVisible" :league="selectedLeague" />
+    <ViewLeagueModal v-model:visible="viewDrawerVisible" :league="selectedLeague" />
     <ConfirmDialog />
   </div>
 </template>

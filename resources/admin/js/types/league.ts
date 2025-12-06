@@ -1,5 +1,30 @@
 export type LeagueVisibility = 'public' | 'private' | 'unlisted';
 export type LeagueStatus = 'active' | 'archived';
+export type CompetitionStatus = 'active' | 'archived';
+
+export interface CompetitionSummary {
+  id: number;
+  name: string;
+  slug: string;
+  status: CompetitionStatus;
+  platform_id: number;
+  platform_name: string;
+  platform_slug: string;
+  season_count: number;
+  created_at: string;
+}
+
+export interface SeasonsSummary {
+  total: number;
+  active: number;
+  completed: number;
+}
+
+export interface LeagueStats {
+  total_drivers: number;
+  total_races: number;
+  total_competitions: number;
+}
 
 export interface League {
   id: number;
@@ -34,6 +59,12 @@ export interface League {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+}
+
+export interface LeagueDetails extends League {
+  competitions?: CompetitionSummary[];
+  seasons_summary?: SeasonsSummary;
+  stats?: LeagueStats;
 }
 
 export interface LeagueListParams {

@@ -122,4 +122,23 @@ interface LeagueRepositoryInterface
      * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
      */
     public function getPaginatedForAdmin(int $page, int $perPage, array $filters = []): array;
+
+    /**
+     * Get league statistics (total drivers, races, competitions, and season summaries).
+     *
+     * @param int $leagueId
+     * @return array{
+     *     total_drivers: int,
+     *     total_races: int,
+     *     total_competitions: int,
+     *     seasons_summary: array{total: int, active: int, completed: int},
+     *     competitions: array<int, array{
+     *         competition: mixed,
+     *         platform_name: string,
+     *         platform_slug: string,
+     *         seasons_count: int
+     *     }>
+     * }
+     */
+    public function getLeagueStatistics(int $leagueId): array;
 }

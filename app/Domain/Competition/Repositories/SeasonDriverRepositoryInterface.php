@@ -125,4 +125,13 @@ interface SeasonDriverRepositoryInterface
     public function findByIdWithRelations(
         int $seasonDriverId
     ): \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+
+    /**
+     * Batch fetch driver names for multiple season driver IDs.
+     * Used to avoid N+1 queries when fetching driver names.
+     *
+     * @param array<int> $seasonDriverIds
+     * @return array<int, string> Map of season driver ID => driver name
+     */
+    public function findDriverNamesByIds(array $seasonDriverIds): array;
 }

@@ -8,6 +8,21 @@ import ResetPasswordView from '@public/views/auth/ResetPasswordView.vue';
 import VerifyEmailView from '@public/views/VerifyEmailView.vue';
 import VerifyEmailResultView from '@public/views/VerifyEmailResultView.vue';
 
+// Extend vue-router RouteMeta to include custom fields
+declare module 'vue-router' {
+  interface RouteMeta {
+    title?: string;
+    isAuthRoute?: boolean;
+  }
+}
+
+// Extend Window interface to include dataLayer for GTM
+declare global {
+  interface Window {
+    dataLayer: Record<string, unknown>[];
+  }
+}
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -77,7 +92,9 @@ const router = createRouter({
 // Helper to get app subdomain URL
 const getAppSubdomainUrl = (): string => {
   // VITE_APP_DOMAIN already includes 'app.' prefix
-  return `http://${import.meta.env.VITE_APP_DOMAIN}`;
+  // Use dynamic protocol detection to support both HTTP and HTTPS
+  const protocol = window.location.protocol;
+  return `${protocol}//${import.meta.env.VITE_APP_DOMAIN}`;
 };
 
 // Navigation guard
@@ -94,11 +111,10 @@ router.beforeEach(async (to, _from, next) => {
     // Clear the auth store to prevent redirect loop
     authStore.clearAuth();
 
-    // If already on login page, just remove query param and allow navigation
+    // If already on login page, just remove query param
     if (to.path === '/login') {
-      // Replace the URL to remove the query parameter
-      window.history.replaceState({}, '', '/login');
-      next();
+      // Use Vue Router's replace to remove the query parameter
+      next({ path: '/login', replace: true });
       return;
     }
 
@@ -120,6 +136,16 @@ router.beforeEach(async (to, _from, next) => {
 
   // Allow navigation
   next();
+});
+
+// GTM DataLayer tracking for virtual page views
+router.afterEach((to) => {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'virtual_page_view',
+    page_path: to.fullPath,
+    page_title: (to.meta.title as string) || document.title,
+  });
 });
 
 export default router;

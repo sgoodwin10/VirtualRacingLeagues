@@ -12,9 +12,13 @@ use App\Domain\Division\Exceptions\InvalidDivisionNameException;
  */
 final readonly class DivisionName
 {
-    private function __construct(
-        private string $value
-    ) {
+    private string $value;
+
+    private function __construct(string $value)
+    {
+        // Trim value BEFORE storing (PHP 8.1+ allows this in constructor before first read)
+        $trimmedValue = trim($value);
+        $this->value = $trimmedValue;
         $this->validate();
     }
 
@@ -25,14 +29,12 @@ final readonly class DivisionName
 
     private function validate(): void
     {
-        $trimmed = trim($this->value);
-
-        if (mb_strlen($trimmed) < 2) {
-            throw InvalidDivisionNameException::tooShort($trimmed);
+        if (mb_strlen($this->value) < 2) {
+            throw InvalidDivisionNameException::tooShort($this->value);
         }
 
-        if (mb_strlen($trimmed) > 60) {
-            throw InvalidDivisionNameException::tooLong($trimmed);
+        if (mb_strlen($this->value) > 60) {
+            throw InvalidDivisionNameException::tooLong($this->value);
         }
     }
 

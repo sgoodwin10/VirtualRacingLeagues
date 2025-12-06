@@ -16,6 +16,7 @@ describe('divisionStore', () => {
     name: 'Pro Division',
     description: 'Professional drivers division',
     logo_url: 'https://example.com/logo.png',
+    order: 1,
     created_at: '2024-01-01T00:00:00.000000Z',
     updated_at: '2024-01-01T00:00:00.000000Z',
   };
@@ -28,6 +29,7 @@ describe('divisionStore', () => {
       name: 'Amateur Division',
       description: null,
       logo_url: null,
+      order: 2,
       created_at: '2024-01-01T00:00:00.000000Z',
       updated_at: '2024-01-01T00:00:00.000000Z',
     },
@@ -112,7 +114,7 @@ describe('divisionStore', () => {
 
         await expect(store.fetchDivisions(1)).rejects.toThrow('Failed to fetch divisions');
 
-        expect(store.error).toBe('Failed to fetch divisions');
+        expect(store.error).toBe('Failed to load divisions: Failed to fetch divisions');
         expect(store.loading).toBe(false);
       });
     });
@@ -148,7 +150,7 @@ describe('divisionStore', () => {
           'Failed to create division',
         );
 
-        expect(store.error).toBe('Failed to create division');
+        expect(store.error).toBe('Failed to create division: Failed to create division');
       });
     });
 
@@ -178,7 +180,7 @@ describe('divisionStore', () => {
           'Failed to update division',
         );
 
-        expect(store.error).toBe('Failed to update division');
+        expect(store.error).toBe('Failed to update division: Failed to update division');
       });
     });
 
@@ -204,7 +206,7 @@ describe('divisionStore', () => {
 
         await expect(store.deleteDivision(1, 1)).rejects.toThrow('Failed to delete division');
 
-        expect(store.error).toBe('Failed to delete division');
+        expect(store.error).toBe('Failed to delete division: Failed to delete division');
         expect(store.divisions).toHaveLength(2); // Divisions unchanged
       });
     });
@@ -226,7 +228,7 @@ describe('divisionStore', () => {
 
         await expect(store.getDriverCount(1, 1)).rejects.toThrow('Failed to get driver count');
 
-        expect(store.error).toBe('Failed to get driver count');
+        expect(store.error).toBe('Failed to get driver count: Failed to get driver count');
       });
     });
 
@@ -248,7 +250,9 @@ describe('divisionStore', () => {
           'Failed to assign driver to division',
         );
 
-        expect(store.error).toBe('Failed to assign driver to division');
+        expect(store.error).toBe(
+          'Failed to assign driver to division: Failed to assign driver to division',
+        );
       });
     });
   });

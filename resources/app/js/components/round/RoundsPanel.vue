@@ -2,7 +2,7 @@
   <BasePanel>
     <template #default>
       <!-- Loading State -->
-      <div v-if="roundStore.isLoading" class="space-y-4">
+      <div v-if="roundStore.isLoading && !initialLoadComplete" class="space-y-4">
         <Skeleton height="4rem" class="mb-2" />
         <Skeleton height="4rem" class="mb-2" />
         <Skeleton height="4rem" class="mb-2" />
@@ -19,7 +19,7 @@
       </div>
 
       <!-- Rounds List -->
-      <Accordion v-else :multiple="true" :active-index="activeIndexes">
+      <Accordion v-else v-model:active-index="activeIndexes" :multiple="true">
         <AccordionPanel
           v-for="(round, index) in rounds"
           :key="round.id"
@@ -369,6 +369,7 @@ const showFormDrawer = ref(false);
 const selectedRound = ref<Round | null>(null);
 const formMode = ref<'create' | 'edit'>('create');
 const activeIndexes = ref<number[]>([]);
+const initialLoadComplete = ref(false);
 
 const showRaceFormDrawer = ref(false);
 const selectedRace = ref<Race | null>(null);
@@ -412,6 +413,9 @@ onMounted(async () => {
     // First, fetch rounds
     await roundStore.fetchRounds(props.seasonId);
 
+    // Mark initial load as complete after rounds are fetched
+    initialLoadComplete.value = true;
+
     // Also fetch tracks for this platform to display track names (non-blocking)
     try {
       await trackStore.fetchTracks({ platform_id: props.platformId, is_active: true });
@@ -431,6 +435,8 @@ onMounted(async () => {
     loadingRaces.value = false;
   } catch {
     loadingRaces.value = false;
+    // Mark initial load as complete even on error to prevent perpetual skeleton
+    initialLoadComplete.value = true;
     toast.add({
       severity: 'error',
       summary: 'Error',

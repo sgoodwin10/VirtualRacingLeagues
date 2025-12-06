@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\User;
 
+use App\Infrastructure\Persistence\Eloquent\Models\Competition;
 use App\Infrastructure\Persistence\Eloquent\Models\Division;
+use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Models\User;
@@ -30,7 +32,20 @@ class DivisionTest extends TestCase
         Storage::fake('public');
 
         $this->user = User::factory()->create();
+
+        // Create a league owned by the test user
+        $league = League::factory()->create([
+            'owner_user_id' => $this->user->id,
+        ]);
+
+        // Create a competition for that league
+        $competition = Competition::factory()->create([
+            'league_id' => $league->id,
+        ]);
+
+        // Create a season for that competition (owned by the test user through league ownership)
         $this->season = SeasonEloquent::factory()->create([
+            'competition_id' => $competition->id,
             'race_divisions_enabled' => true,
         ]);
     }

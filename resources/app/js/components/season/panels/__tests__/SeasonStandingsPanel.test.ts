@@ -145,6 +145,7 @@ describe('SeasonStandingsPanel', () => {
       {
         division_id: 1,
         division_name: 'Pro Division',
+        order: 1,
         drivers: [
           {
             position: 1,
@@ -171,6 +172,7 @@ describe('SeasonStandingsPanel', () => {
       {
         division_id: 2,
         division_name: 'Am Division',
+        order: 2,
         drivers: [
           {
             position: 1,
@@ -319,19 +321,19 @@ describe('SeasonStandingsPanel', () => {
     it('should have drivers in component data', () => {
       const vm = wrapper.vm as any;
       expect(vm.divisionsWithStandings).toHaveLength(2);
-      // Divisions are sorted alphabetically, so "Am Division" comes before "Pro Division"
-      expect(vm.divisionsWithStandings[0].division_name).toBe('Am Division');
-      expect(vm.divisionsWithStandings[0].drivers[0].driver_name).toBe('George Russell');
-      expect(vm.divisionsWithStandings[1].division_name).toBe('Pro Division');
-      expect(vm.divisionsWithStandings[1].drivers[0].driver_name).toBe('Lewis Hamilton');
-      expect(vm.divisionsWithStandings[1].drivers[1].driver_name).toBe('Max Verstappen');
+      // Divisions are sorted by order field, so "Pro Division" (order: 1) comes before "Am Division" (order: 2)
+      expect(vm.divisionsWithStandings[0].division_name).toBe('Pro Division');
+      expect(vm.divisionsWithStandings[0].drivers[0].driver_name).toBe('Lewis Hamilton');
+      expect(vm.divisionsWithStandings[0].drivers[1].driver_name).toBe('Max Verstappen');
+      expect(vm.divisionsWithStandings[1].division_name).toBe('Am Division');
+      expect(vm.divisionsWithStandings[1].drivers[0].driver_name).toBe('George Russell');
     });
 
     it('should set initial active division', () => {
-      // Component should set the first division (alphabetically sorted) as active
-      // "Am Division" (id=2) comes before "Pro Division" (id=1)
+      // Component should set the first division (sorted by order) as active
+      // "Pro Division" (order: 1, id: 1) comes before "Am Division" (order: 2, id: 2)
       const vm = wrapper.vm as any;
-      expect(vm.activeDivisionId).toBe(2); // First division alphabetically is "Am Division" with id=2
+      expect(vm.activeDivisionId).toBe(1); // First division by order is "Pro Division" with id=1
     });
   });
 

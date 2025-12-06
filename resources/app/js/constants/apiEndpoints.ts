@@ -73,6 +73,7 @@ export const API_ENDPOINTS = {
       `/seasons/${seasonId}/divisions/${divisionId}`,
     divisionDriverCount: (seasonId: number, divisionId: number) =>
       `/seasons/${seasonId}/divisions/${divisionId}/driver-count`,
+    reorderDivisions: (seasonId: number) => `/seasons/${seasonId}/divisions/reorder`,
     seasonDrivers: (seasonId: number) => `/seasons/${seasonId}/drivers`,
     seasonDriverDetail: (seasonId: number, seasonDriverId: number) =>
       `/seasons/${seasonId}/drivers/${seasonDriverId}`,

@@ -41,10 +41,28 @@ const localVisible = computed({
   set: (value) => emit('update:visible', value),
 });
 
+/**
+ * Reset local state and store filters when drawer opens
+ * This ensures fresh data and clean search inputs each time
+ */
+function resetState(): void {
+  // Reset local search inputs
+  availableSearch.value = '';
+  seasonSearch.value = '';
+
+  // Reset store filters and pagination
+  seasonDriverStore.resetFilters();
+
+  // Reset data loaded flag to force fresh data fetch
+  isDataLoaded.value = false;
+}
+
 watch(
   () => props.visible,
   async (visible) => {
-    if (visible && !isDataLoaded.value) {
+    if (visible) {
+      // Reset search inputs and filters when drawer opens
+      resetState();
       await loadData();
       isDataLoaded.value = true;
     }
@@ -52,7 +70,9 @@ watch(
 );
 
 onMounted(async () => {
-  if (props.visible && !isDataLoaded.value) {
+  if (props.visible) {
+    // Reset state and load fresh data on mount if visible
+    resetState();
     await loadData();
     isDataLoaded.value = true;
   }
@@ -191,9 +211,8 @@ watch(seasonSearch, () => {
  * Note: SeasonDriversTable now handles its own ViewDriverModal internally,
  * so this is only used by AvailableDriversTable
  */
-function handleViewDriver(driver: AvailableDriver): void {
+function handleViewDriver(_driver: AvailableDriver): void {
   // TODO: Implement view functionality for available drivers
-  console.log('View available driver:', driver);
 }
 </script>
 

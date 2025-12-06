@@ -18,8 +18,10 @@ final class RaceResultData extends Data
         public int $driver_id,
         public ?int $division_id,
         public ?int $position,
-        public ?string $race_time,
-        public ?string $race_time_difference,
+        public ?string $original_race_time,
+        public ?string $final_race_time,
+        public ?string $original_race_time_difference,
+        public ?string $final_race_time_difference,
         public ?string $fastest_lap,
         public ?string $penalties,
         public bool $has_fastest_lap,
@@ -36,17 +38,28 @@ final class RaceResultData extends Data
 
     /**
      * @param array<string, mixed>|null $driverData
+     *
+     * @throws \LogicException If entity ID is null
      */
-    public static function fromEntity(RaceResult $entity, ?array $driverData = null): self
-    {
+    public static function fromEntity(
+        RaceResult $entity,
+        ?array $driverData = null
+    ): self {
+        $entityId = $entity->id();
+        if ($entityId === null) {
+            throw new \LogicException('Cannot create RaceResultData from unsaved entity');
+        }
+
         return new self(
-            id: $entity->id() ?? 0,
+            id: $entityId,
             race_id: $entity->raceId(),
             driver_id: $entity->driverId(),
             division_id: $entity->divisionId(),
             position: $entity->position(),
-            race_time: $entity->raceTime()->value(),
-            race_time_difference: $entity->raceTimeDifference()->value(),
+            original_race_time: $entity->originalRaceTime()->value(),
+            final_race_time: $entity->finalRaceTime()->value(),
+            original_race_time_difference: $entity->originalRaceTimeDifference()->value(),
+            final_race_time_difference: $entity->finalRaceTimeDifference()->value(),
             fastest_lap: $entity->fastestLap()->value(),
             penalties: $entity->penalties()->value(),
             has_fastest_lap: $entity->hasFastestLap(),

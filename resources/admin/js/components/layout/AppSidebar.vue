@@ -191,6 +191,13 @@ const menuItems = computed<MenuItem[]>(() => {
       to: '/leagues',
       badge: null,
     },
+    {
+      name: 'drivers',
+      label: 'Drivers',
+      icon: 'pi pi-id-card',
+      to: '/drivers',
+      badge: null,
+    },
   ];
 
   // Settings menu - only show to Admins and Super Admins

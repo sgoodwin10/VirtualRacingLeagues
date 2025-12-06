@@ -7,8 +7,6 @@ namespace App\Http\Controllers\Admin;
 use App\Application\League\Services\LeagueApplicationService;
 use App\Domain\League\Exceptions\LeagueNotFoundException;
 use App\Helpers\ApiResponse;
-use App\Helpers\FilterBuilder;
-use App\Helpers\PaginationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\IndexLeaguesRequest;
 use Illuminate\Http\JsonResponse;
@@ -29,30 +27,12 @@ final class AdminLeagueController extends Controller
      */
     public function index(IndexLeaguesRequest $request): JsonResponse
     {
-        $filters = FilterBuilder::build($request->validated());
+        $result = $this->leagueService->getAllLeaguesForAdmin($request);
 
-        // Ensure platform_ids are integers if provided
-        if (isset($filters['platform_ids'])) {
-            $filters['platform_ids'] = array_map('intval', $filters['platform_ids']);
-        }
+        // PHPStan: Assert the array structure from the request-based call
+        /** @var array{data: array<int, mixed>, meta: array<string, int>, links: array<string, string|null>} $result */
 
-        $perPage = (int) ($request->validated()['per_page'] ?? 15);
-        $page = (int) ($request->validated()['page'] ?? 1);
-
-        $result = $this->leagueService->getAllLeaguesForAdmin($page, $perPage, $filters);
-
-        $links = PaginationHelper::buildLinks($request, $result['current_page'], $result['last_page']);
-
-        return ApiResponse::paginated(
-            data: array_map(fn($item) => $item->toArray(), $result['data']),
-            meta: [
-                'total' => $result['total'],
-                'per_page' => $result['per_page'],
-                'current_page' => $result['current_page'],
-                'last_page' => $result['last_page'],
-            ],
-            links: $links
-        );
+        return ApiResponse::paginated($result['data'], $result['meta'], $result['links']);
     }
 
     /**
@@ -63,6 +43,20 @@ final class AdminLeagueController extends Controller
         try {
             $leagueData = $this->leagueService->getLeagueForAdmin($id);
             return ApiResponse::success($leagueData->toArray());
+        } catch (LeagueNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
+        }
+    }
+
+    /**
+     * Display detailed league information (admin view).
+     * Includes competitions, seasons summary, and statistics.
+     */
+    public function details(int $id): JsonResponse
+    {
+        try {
+            $leagueDetails = $this->leagueService->getLeagueDetailsForAdmin($id);
+            return ApiResponse::success($leagueDetails->toArray());
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
         }

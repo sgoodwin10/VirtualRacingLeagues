@@ -13,8 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $driver_id
  * @property int|null $division_id
  * @property int|null $position
- * @property string|null $race_time
- * @property string|null $race_time_difference
+ * @property string|null $original_race_time
+ * @property string|null $original_race_time_difference
+ * @property string|null $final_race_time_difference
  * @property string|null $fastest_lap
  * @property string|null $penalties
  * @property bool $has_fastest_lap
@@ -26,6 +27,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @method static RaceResult|null find(int $id, $columns = ['*'])
+ * @method static RaceResult findOrFail(int $id, $columns = ['*'])
+ * @method static bool insert(array<int, array<string, mixed>> $values)
  * @method static \Illuminate\Database\Eloquent\Builder<RaceResult> where(mixed $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
  * @method static \Illuminate\Database\Eloquent\Builder<RaceResult> join(string $table, string $first, string $operator = null, string $second = null, string $type = 'inner', bool $where = false)
  */
@@ -38,8 +41,9 @@ class RaceResult extends Model
         'driver_id',
         'division_id',
         'position',
-        'race_time',
-        'race_time_difference',
+        'original_race_time',
+        'original_race_time_difference',
+        'final_race_time_difference',
         'fastest_lap',
         'penalties',
         'has_fastest_lap',
@@ -51,6 +55,9 @@ class RaceResult extends Model
     ];
 
     protected $casts = [
+        'race_id' => 'integer',
+        'driver_id' => 'integer',
+        'division_id' => 'integer',
         'has_fastest_lap' => 'boolean',
         'has_pole' => 'boolean',
         'dnf' => 'boolean',

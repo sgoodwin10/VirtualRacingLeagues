@@ -30,6 +30,7 @@
             :read-only="readOnly"
             :race-times-required="raceTimesRequired"
             @update:results="(results) => handleDivisionUpdate(division.id, results)"
+            @penalty-change="(row) => emit('penalty-change', row)"
           />
         </TabPanel>
       </TabPanels>
@@ -63,6 +64,7 @@ interface Props {
 interface Emits {
   (e: 'update:results', results: RaceResultFormData[]): void;
   (e: 'reset-all'): void;
+  (e: 'penalty-change', row: RaceResultFormData): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -151,7 +153,7 @@ function handleDivisionUpdate(divisionId: number, updatedResults: RaceResultForm
 function handleResetAllClick(): void {
   confirm.require({
     message:
-      'Are you sure you want to reset all results? This will clear all times, penalties, and DNF status for all drivers across all divisions.',
+      'Are you sure you want to reset all results? This will permanently delete all results from the database and cannot be undone.',
     header: 'Reset All Results',
     icon: 'pi pi-exclamation-triangle',
     rejectProps: {

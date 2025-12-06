@@ -738,9 +738,9 @@ final class SeasonApplicationService
         $driverIds = array_keys($driverIds);
         $divisionIds = array_keys($divisionIds);
 
-        // Batch fetch driver and division names
+        // Batch fetch driver names and division data (name + order)
         $driverNames = $this->batchFetchDriverNames($driverIds);
-        $divisionNames = $this->batchFetchDivisionNames($divisionIds);
+        $divisionData = $this->batchFetchDivisionData($divisionIds);
 
         // Aggregate points per driver per division
         $divisionDriverTotals = [];
@@ -757,14 +757,17 @@ final class SeasonApplicationService
 
             foreach ($roundResults['standings'] as $divisionStanding) {
                 $divisionId = $divisionStanding['division_id'] ?? 0;
+                $divisionInfo = $divisionData[$divisionId] ?? null;
                 $divisionName = $divisionId === 0
                     ? 'No Division'
-                    : ($divisionNames[$divisionId] ?? 'Unknown Division');
+                    : ($divisionInfo['name'] ?? 'Unknown Division');
+                $divisionOrder = $divisionId === 0 ? PHP_INT_MAX : ($divisionInfo['order'] ?? 0);
 
                 if (!isset($divisionDriverTotals[$divisionId])) {
                     $divisionDriverTotals[$divisionId] = [
                         'division_id' => $divisionId === 0 ? null : $divisionId,
                         'division_name' => $divisionName,
+                        'order' => $divisionOrder,
                         'drivers' => [],
                     ];
                     $divisionDriverRoundData[$divisionId] = [];
@@ -799,14 +802,14 @@ final class SeasonApplicationService
 
         // Build final standings with positions per division
         $standings = [];
-        foreach ($divisionDriverTotals as $divisionId => $divisionData) {
+        foreach ($divisionDriverTotals as $divisionId => $divisionTotals) {
             // Sort drivers by total points descending
-            uasort($divisionData['drivers'], fn($a, $b) => $b['total_points'] <=> $a['total_points']);
+            uasort($divisionTotals['drivers'], fn($a, $b) => $b['total_points'] <=> $a['total_points']);
 
             // Build driver standings with positions
             $drivers = [];
             $position = 1;
-            foreach ($divisionData['drivers'] as $driverId => $driverData) {
+            foreach ($divisionTotals['drivers'] as $driverId => $driverData) {
                 $drivers[] = [
                     'position' => $position++,
                     'driver_id' => $driverData['driver_id'],
@@ -817,11 +820,15 @@ final class SeasonApplicationService
             }
 
             $standings[] = [
-                'division_id' => $divisionData['division_id'],
-                'division_name' => $divisionData['division_name'],
+                'division_id' => $divisionTotals['division_id'],
+                'division_name' => $divisionTotals['division_name'],
+                'order' => $divisionTotals['order'],
                 'drivers' => $drivers,
             ];
         }
+
+        // Sort standings by division order
+        usort($standings, fn($a, $b) => $a['order'] <=> $b['order']);
 
         return $standings;
     }

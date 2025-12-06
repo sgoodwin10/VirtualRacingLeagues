@@ -9,26 +9,15 @@ import type {
   CreateDivisionPayload,
   UpdateDivisionPayload,
   AssignDriverDivisionPayload,
+  ReorderDivisionsPayload,
 } from '@app/types/division';
-import type { AxiosResponse } from 'axios';
 import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
-
-// API response wrapper
-interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}
-
-// Driver count response
-interface DriverCountResponse {
-  count: number;
-}
 
 /**
  * Get all divisions for a season
  */
 export async function getDivisions(seasonId: number): Promise<Division[]> {
-  const response: AxiosResponse<ApiResponse<Division[]>> = await apiClient.get(
+  const response = await apiClient.get<{ data: Division[] }>(
     API_ENDPOINTS.seasons.divisions(seasonId),
   );
   return response.data.data;
@@ -38,7 +27,7 @@ export async function getDivisions(seasonId: number): Promise<Division[]> {
  * Create a new division
  */
 export async function createDivision(seasonId: number, formData: FormData): Promise<Division> {
-  const response: AxiosResponse<ApiResponse<Division>> = await apiClient.post(
+  const response = await apiClient.post<{ data: Division }>(
     API_ENDPOINTS.seasons.divisions(seasonId),
     formData,
     {
@@ -61,7 +50,7 @@ export async function updateDivision(
   // Laravel method spoofing for PUT with multipart/form-data
   formData.append('_method', 'PUT');
 
-  const response: AxiosResponse<ApiResponse<Division>> = await apiClient.post(
+  const response = await apiClient.post<{ data: Division }>(
     API_ENDPOINTS.seasons.divisionDetail(seasonId, divisionId),
     formData,
     {
@@ -84,7 +73,7 @@ export async function deleteDivision(seasonId: number, divisionId: number): Prom
  * Get driver count for a division
  */
 export async function getDriverCount(seasonId: number, divisionId: number): Promise<number> {
-  const response: AxiosResponse<ApiResponse<DriverCountResponse>> = await apiClient.get(
+  const response = await apiClient.get<{ data: { count: number } }>(
     API_ENDPOINTS.seasons.divisionDriverCount(seasonId, divisionId),
   );
   return response.data.data.count;
@@ -142,9 +131,23 @@ export function buildUpdateDivisionFormData(data: UpdateDivisionPayload): FormDa
   }
 
   // Only send if it's an actual File object (new upload)
-  if (data.logo !== undefined && data.logo !== null) {
+  if (data.logo !== undefined && data.logo !== null && data.logo instanceof File) {
     formData.append('logo', data.logo);
   }
 
   return formData;
+}
+
+/**
+ * Reorder divisions
+ */
+export async function reorderDivisions(
+  seasonId: number,
+  payload: ReorderDivisionsPayload,
+): Promise<Division[]> {
+  const response = await apiClient.put<{ data: Division[] }>(
+    API_ENDPOINTS.seasons.reorderDivisions(seasonId),
+    payload,
+  );
+  return response.data.data;
 }

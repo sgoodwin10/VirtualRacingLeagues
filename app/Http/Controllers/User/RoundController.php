@@ -144,8 +144,8 @@ final class RoundController extends Controller
         try {
             $results = $this->roundService->getRoundResults($roundId);
             return ApiResponse::success($results->toArray());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return ApiResponse::error('Round not found', null, 404);
+        } catch (RoundNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
         }
     }
 }
