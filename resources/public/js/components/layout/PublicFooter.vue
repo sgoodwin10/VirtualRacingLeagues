@@ -1,56 +1,65 @@
 <template>
-  <footer class="bg-gray-900 text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <!-- Company info -->
-        <div class="col-span-1 md:col-span-2">
-          <h3 class="text-lg font-semibold mb-4">{{ appName }}</h3>
-          <p class="text-gray-400 mb-4">
-            Your description here. Build amazing applications with our platform.
+  <footer class="footer-racing">
+    <div class="container-racing">
+      <div class="footer-content">
+        <!-- Brand Column -->
+        <div class="footer-brand">
+          <router-link to="/" class="footer-logo">
+            <div class="nav-logo-icon">
+              <PhFlag :size="20" weight="fill" color="#0a0a0a" />
+            </div>
+            <span class="footer-logo-text">Virtual Racing Leagues</span>
+          </router-link>
+          <p class="footer-description">
+            The complete platform for sim racing league management. Create competitions,
+            track results, and share standings with your community.
           </p>
         </div>
 
-        <!-- Quick links -->
-        <div>
-          <h4 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
-            Quick Links
-          </h4>
-          <ul class="space-y-2">
-            <li>
-              <router-link to="/" class="text-gray-400 hover:text-white"> Home </router-link>
-            </li>
-            <li>
-              <router-link to="/login" class="text-gray-400 hover:text-white"> Login </router-link>
-            </li>
-            <li>
-              <router-link to="/register" class="text-gray-400 hover:text-white">
-                Register
-              </router-link>
-            </li>
+        <!-- Product Column -->
+        <div class="footer-column">
+          <h4 class="footer-title">Product</h4>
+          <ul class="footer-links">
+            <li><router-link to="/#features">Features</router-link></li>
+            <li><router-link to="/leagues">Public Leagues</router-link></li>
+            <li><router-link to="/#pricing">Pricing</router-link></li>
           </ul>
         </div>
 
-        <!-- Support -->
-        <div>
-          <h4 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Support</h4>
-          <ul class="space-y-2">
-            <li>
-              <a href="#" class="text-gray-400 hover:text-white"> Help Center </a>
-            </li>
-            <li>
-              <a href="#" class="text-gray-400 hover:text-white"> Contact Us </a>
-            </li>
-            <li>
-              <a href="#" class="text-gray-400 hover:text-white"> Privacy Policy </a>
-            </li>
+        <!-- Resources Column -->
+        <div class="footer-column">
+          <h4 class="footer-title">Resources</h4>
+          <ul class="footer-links">
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">API Reference</a></li>
+            <li><a href="#">Support</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal Column -->
+        <div class="footer-column">
+          <h4 class="footer-title">Legal</h4>
+          <ul class="footer-links">
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Cookie Policy</a></li>
           </ul>
         </div>
       </div>
 
-      <div class="border-t border-gray-800 mt-8 pt-8">
-        <p class="text-center text-gray-400">
-          &copy; {{ currentYear }} {{ appName }}. All rights reserved.
-        </p>
+      <div class="footer-bottom">
+        <p>&copy; {{ currentYear }} Virtual Racing Leagues. All rights reserved.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" aria-label="Discord">
+            <PhDiscordLogo :size="20" />
+          </a>
+          <a href="#" class="social-link" aria-label="Twitter">
+            <PhTwitterLogo :size="20" />
+          </a>
+          <a href="#" class="social-link" aria-label="YouTube">
+            <PhYoutubeLogo :size="20" />
+          </a>
+        </div>
       </div>
     </div>
   </footer>
@@ -58,10 +67,49 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { PhFlag, PhDiscordLogo, PhTwitterLogo, PhYoutubeLogo } from '@phosphor-icons/vue';
 
-const appName = computed(() => {
-  return import.meta.env.VITE_APP_NAME || 'Your App';
-});
-
-const currentYear = new Date().getFullYear();
+const currentYear = computed(() => new Date().getFullYear());
 </script>
+
+<style scoped>
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  text-decoration: none;
+}
+
+.footer-logo-text {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-pit-white);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.footer-column {
+  min-width: 120px;
+}
+
+.footer-social {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--color-tarmac);
+  color: var(--color-barrier);
+  transition: all var(--duration-fast);
+}
+
+.social-link:hover {
+  background: var(--color-gold);
+  color: var(--color-carbon);
+}
+</style>

@@ -1,51 +1,1092 @@
-/* Google Fonts - Zalando Sans */
-@import url('https://fonts.googleapis.com/css2?family=Zalando+Sans:wght@400;500;600;700&display=swap');
+/* ==========================================================================
+   VIRTUAL RACING LEAGUES - PUBLIC DASHBOARD
+   Design System: "Motorsport Editorial"
+   ========================================================================== */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @import 'tailwindcss';
 @plugin 'tailwindcss-primeui';
 
-/* Public site styles */
+/* ==========================================================================
+   CSS CUSTOM PROPERTIES
+   ========================================================================== */
+
+:root {
+  /* Primary - Racing Black */
+  --color-carbon: #0a0a0a;
+  --color-asphalt: #1a1a1a;
+  --color-tarmac: #2d2d2d;
+  --color-pit-lane: #3d3d3d;
+
+  /* Accent - Championship Gold */
+  --color-gold: #d4a853;
+  --color-gold-bright: #f5c866;
+  --color-gold-muted: #a08040;
+
+  /* Secondary - Safety Orange */
+  --color-safety: #ff6b35;
+  --color-safety-bright: #ff8a5c;
+  --color-safety-dark: #e55a2b;
+
+  /* Neutrals */
+  --color-pit-white: #fafafa;
+  --color-concrete: #e5e5e5;
+  --color-barrier: #9ca3af;
+  --color-gravel: #6b7280;
+
+  /* Semantic - Positions */
+  --color-pole: #d4a853;
+  --color-podium-2: #c0c0c0;
+  --color-podium-3: #cd7f32;
+  --color-fastest-lap: #a855f7;
+  --color-dnf: #ef4444;
+  --color-dns: #6b7280;
+
+  /* Typography */
+  --font-display: 'Racing Sans One', cursive;
+  --font-body: 'Source Serif 4', Georgia, serif;
+  --font-data: 'JetBrains Mono', monospace;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+
+  /* Layout */
+  --max-width: 1400px;
+  --header-height: 80px;
+
+  /* Animation */
+  --ease-racing: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+}
+
+/* ==========================================================================
+   BASE STYLES
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family:
-    'Zalando Sans',
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  font-size: var(--font-size-base);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-pit-white);
+  background-color: var(--color-carbon);
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Home page styles */
-.hero-section {
-  padding-top: 4rem;
-  padding-bottom: 4rem;
+/* ==========================================================================
+   TYPOGRAPHY
+   ========================================================================== */
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
 }
 
-.cta-button {
-  display: inline-block;
-  background-color: rgb(37 99 235);
-  color: white;
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-data {
+  font-family: var(--font-data);
+  font-feature-settings: 'tnum' 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.1;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.text-gold {
+  color: var(--color-gold);
+}
+
+.text-safety {
+  color: var(--color-safety);
+}
+
+/* ==========================================================================
+   LAYOUT
+   ========================================================================== */
+
+.container-racing {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.section-padding {
+  padding: var(--space-4xl) 0;
+}
+
+/* ==========================================================================
+   RACING PATTERNS & TEXTURES
+   ========================================================================== */
+
+.pattern-checkered {
+  background-image:
+    linear-gradient(45deg, var(--color-tarmac) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--color-tarmac) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--color-tarmac) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--color-tarmac) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.pattern-carbon {
+  background-image:
+    linear-gradient(135deg, var(--color-asphalt) 25%, transparent 25%),
+    linear-gradient(225deg, var(--color-asphalt) 25%, transparent 25%),
+    linear-gradient(45deg, var(--color-asphalt) 25%, transparent 25%),
+    linear-gradient(315deg, var(--color-asphalt) 25%, var(--color-carbon) 25%);
+  background-size: 8px 8px;
+}
+
+.pattern-stripes {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(212, 168, 83, 0.03) 2px,
+    rgba(212, 168, 83, 0.03) 4px
+  );
+}
+
+.gradient-fade-bottom {
+  background: linear-gradient(to bottom, transparent 0%, var(--color-carbon) 100%);
+}
+
+.gradient-hero {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 168, 83, 0.15) 0%, transparent 50%),
+    linear-gradient(180deg, var(--color-carbon) 0%, var(--color-asphalt) 100%);
+}
+
+/* Racing stripe accent */
+.racing-stripe {
+  position: relative;
+}
+
+.racing-stripe::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-safety) 100%);
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-md) var(--space-xl);
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-racing);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--color-safety);
+  color: var(--color-pit-white);
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+  padding-right: calc(var(--space-xl) + 8px);
+}
+
+.btn-primary:hover {
+  background: var(--color-safety-bright);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px -10px rgba(255, 107, 53, 0.5);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-gold);
+  border: 1px solid var(--color-gold);
+  clip-path: polygon(5% 0, 100% 0, 100% 100%, 0% 100%);
+  padding-left: calc(var(--space-xl) + 8px);
+}
+
+.btn-secondary:hover {
+  background: rgba(212, 168, 83, 0.1);
+  border-color: var(--color-gold-bright);
+  color: var(--color-gold-bright);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-pit-white);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.btn-ghost:hover {
+  color: var(--color-gold);
+}
+
+/* ==========================================================================
+   CARDS
+   ========================================================================== */
+
+.card-racing {
+  background: var(--color-asphalt);
+  border: 1px solid var(--color-tarmac);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-racing);
+}
+
+.card-racing:hover {
+  border-color: var(--color-gold-muted);
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 40px -20px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(212, 168, 83, 0.1);
+}
+
+.card-image {
+  aspect-ratio: 16 / 9;
+  background: var(--color-tarmac);
+  overflow: hidden;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-racing);
+}
+
+.card-racing:hover .card-image img {
+  transform: scale(1.05);
+}
+
+.card-content {
+  padding: var(--space-lg);
+}
+
+/* ==========================================================================
+   NAVIGATION
+   ========================================================================== */
+
+.nav-racing {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--header-height);
+  background: rgba(10, 10, 10, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(212, 168, 83, 0.1);
+  transition: all var(--duration-normal) var(--ease-racing);
+}
+
+.nav-racing.scrolled {
+  height: 60px;
+  background: rgba(10, 10, 10, 0.95);
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-pit-white);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.nav-logo-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--color-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.nav-link {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-barrier);
+  text-decoration: none;
+  transition: color var(--duration-fast);
+}
+
+.nav-link:hover {
+  color: var(--color-pit-white);
+}
+
+.nav-link.active {
+  color: var(--color-gold);
+}
+
+/* ==========================================================================
+   TABLES / STANDINGS
+   ========================================================================== */
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-data);
+  font-size: 0.875rem;
+}
+
+.standings-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--color-asphalt);
+  z-index: 10;
+}
+
+.standings-table th {
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-barrier);
+  padding: var(--space-md) var(--space-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--color-tarmac);
+}
+
+.standings-table td {
+  padding: var(--space-md) var(--space-sm);
+  border-bottom: 1px solid rgba(45, 45, 45, 0.5);
+  vertical-align: middle;
+}
+
+.standings-table tbody tr {
+  transition: background var(--duration-fast);
+}
+
+.standings-table tbody tr:hover {
+  background: rgba(212, 168, 83, 0.05);
+}
+
+/* Position styling */
+.position {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  width: 3rem;
+  text-align: center;
+}
+
+.position-1 {
+  color: var(--color-pole);
+}
+
+.position-2 {
+  color: var(--color-podium-2);
+}
+
+.position-3 {
+  color: var(--color-podium-3);
+}
+
+/* Driver name */
+.driver-name {
+  font-family: var(--font-body);
   font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s;
 }
 
-.cta-button:hover {
-  background-color: rgb(29 78 216);
+/* Points */
+.points {
+  font-weight: 600;
+  color: var(--color-pit-white);
+}
+
+/* Race time */
+.race-time {
+  font-family: var(--font-data);
+  letter-spacing: 0.05em;
+}
+
+/* Gap indicator */
+.gap {
+  color: var(--color-barrier);
+  font-size: 0.75rem;
+}
+
+.gap::before {
+  content: '+';
+}
+
+/* Fastest lap indicator */
+.fastest-lap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-fastest-lap);
+}
+
+/* DNF / DNS badges */
+.badge-dnf {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-dnf);
+  font-size: 0.625rem;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+}
+
+.badge-dns {
+  background: rgba(107, 114, 128, 0.2);
+  color: var(--color-dns);
+  font-size: 0.625rem;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+}
+
+/* ==========================================================================
+   HERO SECTION
+   ========================================================================== */
+
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+}
+
+.hero-tagline {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--color-gold);
+  margin-bottom: var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.hero-tagline::before {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--color-gold);
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  margin-bottom: var(--space-lg);
+  line-height: 0.95;
+}
+
+.hero-title .highlight {
+  color: var(--color-gold);
+  display: block;
+}
+
+.hero-description {
+  font-size: 1.125rem;
+  color: var(--color-barrier);
+  margin-bottom: var(--space-2xl);
+  max-width: 600px;
+}
+
+.hero-cta {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* Animated racing line */
+.racing-line {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+  animation: racingLine 3s ease-in-out infinite;
+}
+
+@keyframes racingLine {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-100%);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50%) translateX(100%);
+  }
+}
+
+/* ==========================================================================
+   FEATURES SECTION
+   ========================================================================== */
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-xl);
 }
 
 .feature-card {
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  background-color: white;
-  box-shadow:
-    0 1px 3px 0 rgb(0 0 0 / 0.1),
-    0 1px 2px -1px rgb(0 0 0 / 0.1);
+  padding: var(--space-xl);
+  background: var(--color-asphalt);
+  border: 1px solid var(--color-tarmac);
+  position: relative;
+  transition: all var(--duration-normal) var(--ease-racing);
 }
 
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-safety));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-normal) var(--ease-racing);
+}
+
+.feature-card:hover {
+  border-color: var(--color-tarmac);
+  transform: translateY(-4px);
+}
+
+.feature-card:hover::before {
+  transform: scaleX(1);
+}
+
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-lg);
+  color: var(--color-gold);
+}
+
+.feature-title {
+  font-size: 1rem;
+  margin-bottom: var(--space-sm);
+  color: var(--color-pit-white);
+}
+
+.feature-description {
+  font-size: 0.875rem;
+  color: var(--color-barrier);
+  line-height: 1.7;
+}
+
+/* ==========================================================================
+   PRICING SECTION
+   ========================================================================== */
+
+.pricing-card {
+  background: var(--color-asphalt);
+  border: 2px solid var(--color-gold);
+  padding: var(--space-2xl);
+  text-align: center;
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.pricing-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-gold);
+  color: var(--color-carbon);
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  padding: var(--space-xs) var(--space-lg);
+}
+
+.pricing-price {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  color: var(--color-pit-white);
+  margin-bottom: var(--space-md);
+}
+
+.pricing-period {
+  font-size: 1rem;
+  color: var(--color-barrier);
+  margin-bottom: var(--space-xl);
+}
+
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-xl) 0;
+  text-align: left;
+}
+
+.pricing-features li {
+  padding: var(--space-sm) 0;
+  color: var(--color-concrete);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.pricing-features li::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--color-gold);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+/* ==========================================================================
+   SEARCH & FILTERS
+   ========================================================================== */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--color-asphalt);
+  border: 1px solid var(--color-tarmac);
+  padding: var(--space-sm) var(--space-md);
+  transition: border-color var(--duration-fast);
+}
+
+.search-bar:focus-within {
+  border-color: var(--color-gold-muted);
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-pit-white);
+  padding: var(--space-sm);
+}
+
+.search-input::placeholder {
+  color: var(--color-gravel);
+}
+
+.search-icon {
+  color: var(--color-barrier);
+}
+
+/* Filter chips */
+.filter-chips {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-tarmac);
+  color: var(--color-barrier);
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.filter-chip:hover {
+  color: var(--color-pit-white);
+}
+
+.filter-chip.active {
+  background: var(--color-gold);
+  color: var(--color-carbon);
+}
+
+/* ==========================================================================
+   PAGINATION
+   ========================================================================== */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.pagination-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-asphalt);
+  border: 1px solid var(--color-tarmac);
+  color: var(--color-barrier);
+  font-family: var(--font-data);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.pagination-btn:hover {
+  border-color: var(--color-gold-muted);
+  color: var(--color-pit-white);
+}
+
+.pagination-btn.active {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-carbon);
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+
+.footer-racing {
+  background: var(--color-asphalt);
+  border-top: 1px solid var(--color-tarmac);
+  padding: var(--space-3xl) 0 var(--space-xl);
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--space-2xl);
+}
+
+.footer-brand {
+  max-width: 300px;
+}
+
+.footer-description {
+  font-size: 0.875rem;
+  color: var(--color-barrier);
+  margin-top: var(--space-md);
+  line-height: 1.7;
+}
+
+.footer-title {
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--color-gold);
+  margin-bottom: var(--space-md);
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: var(--space-sm);
+}
+
+.footer-links a {
+  font-size: 0.875rem;
+  color: var(--color-barrier);
+  text-decoration: none;
+  transition: color var(--duration-fast);
+}
+
+.footer-links a:hover {
+  color: var(--color-pit-white);
+}
+
+.footer-bottom {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--color-tarmac);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--color-gravel);
+}
+
+/* ==========================================================================
+   LEAGUE CARD
+   ========================================================================== */
+
+.league-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-asphalt);
+  border: 1px solid var(--color-tarmac);
+  transition: all var(--duration-normal) var(--ease-racing);
+}
+
+.league-card:hover {
+  border-color: var(--color-gold-muted);
+  transform: translateY(-4px);
+}
+
+.league-card-header {
+  position: relative;
+  height: 120px;
+  background: var(--color-tarmac);
+  overflow: hidden;
+}
+
+.league-card-header img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-racing);
+}
+
+.league-card:hover .league-card-header img {
+  transform: scale(1.05);
+}
+
+.league-card-logo {
+  position: absolute;
+  bottom: -30px;
+  left: var(--space-lg);
+  width: 60px;
+  height: 60px;
+  background: var(--color-asphalt);
+  border: 2px solid var(--color-tarmac);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.league-card-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.league-card-body {
+  padding: var(--space-xl) var(--space-lg) var(--space-lg);
+}
+
+.league-card-name {
+  font-size: 1rem;
+  margin-bottom: var(--space-xs);
+}
+
+.league-card-tagline {
+  font-size: 0.875rem;
+  color: var(--color-barrier);
+  margin-bottom: var(--space-md);
+}
+
+.league-card-stats {
+  display: flex;
+  gap: var(--space-lg);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--color-gravel);
+}
+
+.league-card-stat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.league-card-stat-value {
+  color: var(--color-pit-white);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp var(--duration-slow) var(--ease-racing) forwards;
+}
+
+.animate-fade-in-right {
+  animation: fadeInRight var(--duration-slow) var(--ease-racing) forwards;
+}
+
+.animate-delay-1 { animation-delay: 100ms; }
+.animate-delay-2 { animation-delay: 200ms; }
+.animate-delay-3 { animation-delay: 300ms; }
+.animate-delay-4 { animation-delay: 400ms; }
+.animate-delay-5 { animation-delay: 500ms; }
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xl);
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 60px;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 10vw, 3.5rem);
+  }
+
+  .hero-cta {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .footer-brand {
+    max-width: 100%;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: var(--space-md);
+    text-align: center;
+  }
+}
+
+/* ==========================================================================
+   UTILITY CLASSES
+   ========================================================================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}

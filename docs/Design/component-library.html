@@ -1,0 +1,2599 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRL Public Design System - Motorsport Editorial Component Library</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        racing: {
+                            // Primary - Racing Black
+                            'carbon': '#0a0a0a',
+                            'asphalt': '#1a1a1a',
+                            'tarmac': '#2d2d2d',
+                            'pit-lane': '#3d3d3d',
+                            // Accent - Championship Gold
+                            'gold': '#d4a853',
+                            'gold-bright': '#f5c866',
+                            'gold-muted': '#a08040',
+                            // Secondary - Safety Orange
+                            'safety': '#ff6b35',
+                            'safety-bright': '#ff8a5c',
+                            'safety-dark': '#e55a2b',
+                            // Neutrals
+                            'pit-white': '#fafafa',
+                            'concrete': '#e5e5e5',
+                            'barrier': '#9ca3af',
+                            'gravel': '#6b7280',
+                            // Semantic - Positions
+                            'pole': '#d4a853',
+                            'podium-2': '#c0c0c0',
+                            'podium-3': '#cd7f32',
+                            'fastest-lap': '#a855f7',
+                            'dnf': '#ef4444',
+                            'dns': '#6b7280',
+                            // Status
+                            'success': '#22c55e',
+                            'warning': '#f59e0b',
+                            'danger': '#ef4444',
+                            'info': '#3b82f6',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Racing Sans One', 'cursive'],
+                        'body': ['Source Serif 4', 'Georgia', 'serif'],
+                        'data': ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                        'racing-line': 'racingLine 3s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        racingLine: {
+                            '0%, 100%': { opacity: '0', transform: 'translateX(-100%)' },
+                            '50%': { opacity: '1' },
+                            '100%': { transform: 'translateX(100%)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 0 0 rgba(212, 168, 83, 0.4)' },
+                            '50%': { boxShadow: '0 0 0 6px rgba(212, 168, 83, 0.1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* CSS Custom Properties for Theme Switching */
+        :root {
+            /* Dark theme (default) */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2d2d2d;
+            --bg-elevated: #3d3d3d;
+            --bg-glass: rgba(10, 10, 10, 0.9);
+
+            --text-primary: #fafafa;
+            --text-secondary: #e5e5e5;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+
+            --border-primary: #2d2d2d;
+            --border-subtle: rgba(45, 45, 45, 0.5);
+
+            --accent-gold: #d4a853;
+            --accent-gold-bright: #f5c866;
+            --accent-gold-muted: #a08040;
+
+            --accent-safety: #ff6b35;
+            --accent-safety-bright: #ff8a5c;
+
+            --shadow-card: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+            --shadow-heavy: 0 10px 40px rgba(0, 0, 0, 0.5);
+
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 168, 83, 0.1) 0%, transparent 50%);
+
+            --pattern-checkered-color: #2d2d2d;
+            --scrollbar-track: #1a1a1a;
+            --scrollbar-thumb: #3d3d3d;
+
+            --data-row-hover: rgba(212, 168, 83, 0.03);
+            --card-hover-border: rgba(212, 168, 83, 0.3);
+        }
+
+        [data-theme="light"] {
+            /* Light theme */
+            --bg-primary: #f8f7f4;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0efe8;
+            --bg-elevated: #e8e6df;
+            --bg-glass: rgba(248, 247, 244, 0.95);
+
+            --text-primary: #0a0a0a;
+            --text-secondary: #1a1a1a;
+            --text-muted: #6b7280;
+            --text-dim: #9ca3af;
+
+            --border-primary: #d8d6cf;
+            --border-subtle: rgba(216, 214, 207, 0.5);
+
+            --accent-gold: #b8923f;
+            --accent-gold-bright: #d4a853;
+            --accent-gold-muted: #8a6e2f;
+
+            --accent-safety: #e55a2b;
+            --accent-safety-bright: #ff6b35;
+
+            --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184, 146, 63, 0.08) 0%, transparent 50%);
+
+            --pattern-checkered-color: #e8e6df;
+            --scrollbar-track: #f0efe8;
+            --scrollbar-thumb: #d8d6cf;
+
+            --data-row-hover: rgba(184, 146, 63, 0.05);
+            --card-hover-border: rgba(184, 146, 63, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Serif 4', Georgia, serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Ambient gradient background */
+        .ambient-bg {
+            background: var(--ambient-gradient), var(--bg-primary);
+            transition: background 0.3s ease;
+        }
+
+        /* Glass effect for navigation */
+        .glass {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: background 0.3s ease;
+        }
+
+        /* Card with racing edge effect */
+        .card-racing {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card-racing:hover {
+            border-color: var(--card-hover-border);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-card);
+        }
+
+        /* Racing stripe accent */
+        .racing-stripe {
+            position: relative;
+        }
+        .racing-stripe::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--accent-gold) 0%, var(--accent-safety) 100%);
+        }
+
+        /* Gradient border accent */
+        .gradient-border {
+            position: relative;
+        }
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--card-hover-border), transparent 50%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        /* Button shine effect */
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0) 40%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(45deg);
+            transition: transform 0.5s ease;
+        }
+        .btn-shine:hover::after {
+            transform: rotate(45deg) translateY(-100%);
+        }
+
+        /* Checkered pattern */
+        .pattern-checkered {
+            background-image:
+                linear-gradient(45deg, var(--pattern-checkered-color) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--pattern-checkered-color) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--pattern-checkered-color) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--pattern-checkered-color) 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-gold);
+        }
+
+        /* Data row hover */
+        .data-row {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .data-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-gold);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .data-row:hover::before {
+            opacity: 1;
+        }
+        .data-row:hover {
+            background: var(--data-row-hover);
+        }
+
+        /* Position badges */
+        .position-1 { color: #d4a853; }
+        .position-2 { color: #c0c0c0; }
+        .position-3 { color: #cd7f32; }
+
+        /* Component note */
+        .component-note {
+            margin-top: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: rgba(212, 168, 83, 0.08);
+            border-left: 3px solid var(--accent-gold);
+            border-radius: 0 4px 4px 0;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        [data-theme="light"] .component-note {
+            background: rgba(184, 146, 63, 0.1);
+        }
+        .component-note code {
+            background: rgba(212, 168, 83, 0.15);
+            padding: 0.125rem 0.5rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8125rem;
+            color: var(--accent-gold);
+        }
+        .component-note strong {
+            color: var(--text-secondary);
+        }
+
+        /* Input focus styles */
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.12), 0 0 0 1px var(--accent-gold);
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: var(--bg-tertiary);
+            border-radius: 14px;
+            border: 2px solid var(--border-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            border-color: var(--accent-gold);
+        }
+        .theme-toggle-indicator {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg-primary);
+            font-size: 12px;
+        }
+        [data-theme="light"] .theme-toggle-indicator {
+            transform: translateX(24px);
+        }
+
+        /* Responsive utilities */
+        @media (max-width: 768px) {
+            .mobile-stack { flex-direction: column !important; }
+            .mobile-full { width: 100% !important; }
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Modal content */
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+            transform: scale(0.95) translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        /* Drawer overlay */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Drawer content */
+        .drawer-content {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 400px;
+            max-width: 90vw;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-primary);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+        .drawer-content.right {
+            right: 0;
+            transform: translateX(100%);
+        }
+        .drawer-content.left {
+            left: 0;
+            border-left: none;
+            border-right: 1px solid var(--border-primary);
+            transform: translateX(-100%);
+        }
+        .drawer-overlay.active .drawer-content {
+            transform: translateX(0);
+        }
+
+        /* Dialog alert styles */
+        .dialog-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+        .dialog-icon-wrapper.danger {
+            background: rgba(239, 68, 68, 0.15);
+        }
+        .dialog-icon-wrapper.warning {
+            background: rgba(245, 158, 11, 0.15);
+        }
+        .dialog-icon-wrapper.success {
+            background: rgba(34, 197, 94, 0.15);
+        }
+        .dialog-icon-wrapper.info {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        /* Pagination styles */
+        .pagination-item {
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            border: 1px solid var(--border-primary);
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .pagination-item:hover:not(.disabled):not(.active) {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+        .pagination-item.active {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+        .pagination-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Toggle Switch styles */
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            border: 2px solid var(--border-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .toggle-switch:hover:not(.disabled) {
+            border-color: var(--accent-gold);
+        }
+        .toggle-switch .toggle-indicator {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .toggle-switch.active {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+        }
+        .toggle-switch.active .toggle-indicator {
+            transform: translateX(20px);
+            background: var(--bg-primary);
+        }
+        .toggle-switch.disabled {
+            cursor: not-allowed;
+        }
+        /* Toggle sizes */
+        .toggle-switch.small {
+            width: 36px;
+            height: 20px;
+            border-radius: 10px;
+        }
+        .toggle-switch.small .toggle-indicator {
+            width: 12px;
+            height: 12px;
+        }
+        .toggle-switch.small.active .toggle-indicator {
+            transform: translateX(16px);
+        }
+        .toggle-switch.large {
+            width: 52px;
+            height: 28px;
+            border-radius: 14px;
+        }
+        .toggle-switch.large .toggle-indicator {
+            width: 20px;
+            height: 20px;
+        }
+        .toggle-switch.large.active .toggle-indicator {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body class="min-h-screen ambient-bg">
+    <!-- Library Header -->
+    <header class="glass border-b px-4 sm:px-8 lg:px-12 py-6 lg:py-10" style="border-color: var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+                <div class="flex items-center gap-4 flex-1">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold flex items-center justify-center flex-shrink-0" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                        <span class="font-data text-xs sm:text-sm font-bold text-racing-carbon">VRL</span>
+                    </div>
+                    <div>
+                        <h1 class="font-display text-2xl sm:text-3xl tracking-wide uppercase" style="color: var(--text-primary);">
+                            Public Design System
+                        </h1>
+                        <p class="font-data text-xs sm:text-sm mt-1" style="color: var(--text-muted);">
+                            Motorsport Editorial — Racing Sans One + Source Serif 4 + JetBrains Mono
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+                    <div class="theme-toggle-indicator">
+                        <i class="ph-fill ph-sun theme-icon-light"></i>
+                        <i class="ph-fill ph-moon theme-icon-dark" style="display: none;"></i>
+                    </div>
+                </button>
+            </div>
+            <p class="max-w-2xl text-sm sm:text-base" style="color: var(--text-muted);">
+                A premium, editorial-style interface with support for both dark and light modes.
+                Inspired by motorsport heritage with championship gold accents.
+            </p>
+        </div>
+    </header>
+
+    <!-- Library Navigation -->
+    <nav class="glass border-b sticky top-0 z-50 px-4 sm:px-8 lg:px-12" style="border-color: var(--border-subtle);">
+        <div class="max-w-[1200px] mx-auto">
+            <ul class="flex gap-0 list-none m-0 p-0 overflow-x-auto">
+                <li><a href="#colors" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Colors</a></li>
+                <li><a href="#typography" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Typography</a></li>
+                <li><a href="#buttons" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Buttons</a></li>
+                <li><a href="#cards" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Cards</a></li>
+                <li><a href="#tables" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Tables</a></li>
+                <li><a href="#badges" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Badges</a></li>
+                <li><a href="#forms" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Forms</a></li>
+                <li><a href="#navigation" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Navigation</a></li>
+                <li><a href="#modals" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Modals</a></li>
+                <li><a href="#drawers" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Drawers</a></li>
+                <li><a href="#dialogs" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Dialogs</a></li>
+                <li><a href="#pagination" class="block px-3 sm:px-5 py-3 sm:py-4 font-display text-[9px] sm:text-[10px] tracking-[0.15em] uppercase no-underline border-b-2 border-transparent hover:bg-[var(--bg-tertiary)] transition-all whitespace-nowrap" style="color: var(--text-muted);">Pagination</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Library Content -->
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-12">
+
+        <!-- ========== COLORS SECTION ========== -->
+        <section id="colors" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-palette text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Color System</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Racing black palette with championship gold accent</p>
+                </div>
+            </div>
+
+            <!-- Background Colors -->
+            <div class="mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Background & Surface</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-carbon"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Carbon</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#0a0a0a</div>
+                            <div class="font-data text-[10px] text-racing-gold mt-2">racing-carbon</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-asphalt"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Asphalt</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#1a1a1a</div>
+                            <div class="font-data text-[10px] text-racing-gold mt-2">racing-asphalt</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-tarmac"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Tarmac</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#2d2d2d</div>
+                            <div class="font-data text-[10px] text-racing-gold mt-2">racing-tarmac</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-pit-lane"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Pit Lane</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#3d3d3d</div>
+                            <div class="font-data text-[10px] text-racing-gold mt-2">racing-pit-lane</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-pit-white"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Pit White</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#fafafa</div>
+                            <div class="font-data text-[10px] text-racing-gold mt-2">racing-pit-white</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accent & Semantic Colors -->
+            <div class="mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Accent & Semantic</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-gold"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Gold</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#d4a853</div>
+                            <div class="font-data text-[10px] text-racing-gold mt-2">racing-gold</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-safety"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Safety Orange</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#ff6b35</div>
+                            <div class="font-data text-[10px] text-racing-safety mt-2">racing-safety</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-success"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Success</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#22c55e</div>
+                            <div class="font-data text-[10px] text-racing-success mt-2">racing-success</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-danger"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Danger</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#ef4444</div>
+                            <div class="font-data text-[10px] text-racing-danger mt-2">racing-danger</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-16 sm:h-20 bg-racing-fastest-lap"></div>
+                        <div class="p-3 sm:p-4">
+                            <div class="font-data text-xs font-semibold mb-1" style="color: var(--text-primary);">Fastest Lap</div>
+                            <div class="font-data text-[10px] sm:text-[11px]" style="color: var(--text-dim);">#a855f7</div>
+                            <div class="font-data text-[10px] text-racing-fastest-lap mt-2">racing-fastest-lap</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Position Colors -->
+            <div class="mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Podium Positions</h3>
+                <div class="grid grid-cols-3 gap-3 sm:gap-4 max-w-lg">
+                    <div class="card-racing rounded overflow-hidden text-center">
+                        <div class="h-14 sm:h-16 bg-racing-pole flex items-center justify-center">
+                            <span class="font-display text-2xl sm:text-3xl text-racing-carbon">1</span>
+                        </div>
+                        <div class="p-2 sm:p-3">
+                            <div class="font-data text-[10px] text-racing-gold">POLE</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden text-center">
+                        <div class="h-14 sm:h-16 bg-racing-podium-2 flex items-center justify-center">
+                            <span class="font-display text-2xl sm:text-3xl text-racing-carbon">2</span>
+                        </div>
+                        <div class="p-2 sm:p-3">
+                            <div class="font-data text-[10px] text-racing-podium-2">SILVER</div>
+                        </div>
+                    </div>
+                    <div class="card-racing rounded overflow-hidden text-center">
+                        <div class="h-14 sm:h-16 bg-racing-podium-3 flex items-center justify-center">
+                            <span class="font-display text-2xl sm:text-3xl text-racing-carbon">3</span>
+                        </div>
+                        <div class="p-2 sm:p-3">
+                            <div class="font-data text-[10px] text-racing-podium-3">BRONZE</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Hierarchy -->
+            <div>
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Text Hierarchy</h3>
+                <div class="card-racing rounded p-4 sm:p-6 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                        <span class="w-28 sm:w-32 font-data text-[11px]" style="color: var(--text-dim);">pit-white</span>
+                        <span class="font-display text-base sm:text-lg uppercase" style="color: var(--text-primary);">Primary headings</span>
+                        <span class="font-data text-[11px] sm:ml-auto" style="color: var(--text-dim);">#fafafa</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                        <span class="w-28 sm:w-32 font-data text-[11px]" style="color: var(--text-dim);">concrete</span>
+                        <span class="text-base text-racing-concrete">Secondary body text</span>
+                        <span class="font-data text-[11px] sm:ml-auto" style="color: var(--text-dim);">#e5e5e5</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                        <span class="w-28 sm:w-32 font-data text-[11px]" style="color: var(--text-dim);">barrier</span>
+                        <span class="text-base text-racing-barrier">Muted supporting text</span>
+                        <span class="font-data text-[11px] sm:ml-auto" style="color: var(--text-dim);">#9ca3af</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                        <span class="w-28 sm:w-32 font-data text-[11px]" style="color: var(--text-dim);">gravel</span>
+                        <span class="text-base text-racing-gravel">Dim labels</span>
+                        <span class="font-data text-[11px] sm:ml-auto" style="color: var(--text-dim);">#6b7280</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-note">
+                <strong>CSS Variables:</strong> Colors use <code>--color-*</code> naming. Theme toggle switches between dark and light palettes automatically.
+            </div>
+        </section>
+
+        <!-- ========== TYPOGRAPHY SECTION ========== -->
+        <section id="typography" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-text-aa text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Typography</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Racing Sans One for display, Source Serif 4 for body, JetBrains Mono for data</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 sm:space-y-6">
+                <!-- Hero Title -->
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="font-data text-[10px] mb-3 uppercase tracking-wider" style="color: var(--text-dim);">Hero Title</div>
+                    <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl uppercase tracking-wide leading-tight" style="color: var(--text-primary);">
+                        Setup. Race.<br><span class="text-racing-gold">Share.</span>
+                    </h1>
+                    <div class="font-data text-xs text-racing-gold mt-4">
+                        font-display text-5xl uppercase tracking-wide
+                    </div>
+                </div>
+
+                <!-- Section Title -->
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="font-data text-[10px] mb-3 uppercase tracking-wider" style="color: var(--text-dim);">Section Title</div>
+                    <h2 class="font-display text-2xl sm:text-3xl uppercase tracking-wide" style="color: var(--text-primary);">
+                        Championship Standings
+                    </h2>
+                    <div class="font-data text-xs text-racing-gold mt-4">
+                        font-display text-3xl uppercase tracking-wide
+                    </div>
+                </div>
+
+                <!-- Card Title -->
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="font-data text-[10px] mb-3 uppercase tracking-wider" style="color: var(--text-dim);">Card Title</div>
+                    <h3 class="font-display text-base sm:text-lg uppercase tracking-wide" style="color: var(--text-primary);">
+                        Driver Statistics
+                    </h3>
+                    <div class="font-data text-xs text-racing-gold mt-4">
+                        font-display text-lg uppercase tracking-wide
+                    </div>
+                </div>
+
+                <!-- Body Text -->
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="font-data text-[10px] mb-3 uppercase tracking-wider" style="color: var(--text-dim);">Body Text (Editorial)</div>
+                    <p class="font-body text-base sm:text-lg leading-relaxed" style="color: var(--text-secondary);">
+                        The complete platform for sim racing league managers. Create competitions, track results,
+                        and share standings with your community in minutes.
+                    </p>
+                    <div class="font-data text-xs text-racing-gold mt-4">
+                        font-body text-lg leading-relaxed (Source Serif 4)
+                    </div>
+                </div>
+
+                <!-- Data Display -->
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="font-data text-[10px] mb-3 uppercase tracking-wider" style="color: var(--text-dim);">Data Display</div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-data text-2xl sm:text-3xl font-semibold text-racing-gold">1:32.456</span>
+                        <span class="font-data text-sm text-racing-fastest-lap">FL</span>
+                    </div>
+                    <div class="font-data text-xs text-racing-gold mt-4">
+                        font-data text-3xl font-semibold (JetBrains Mono)
+                    </div>
+                </div>
+
+                <!-- Labels -->
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="font-data text-[10px] mb-3 uppercase tracking-wider" style="color: var(--text-dim);">UI Labels & Navigation</div>
+                    <div class="font-display text-xs tracking-[0.15em] uppercase" style="color: var(--text-muted);">
+                        Browse Leagues
+                    </div>
+                    <div class="font-data text-xs text-racing-gold mt-4">
+                        font-display text-xs tracking-[0.15em] uppercase
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-note">
+                <strong>Font Usage:</strong> Use <code>font-display</code> (Racing Sans One) for all headings and navigation. Use <code>font-body</code> (Source Serif 4) for editorial content. Use <code>font-data</code> (JetBrains Mono) for times, stats, and UI elements.
+            </div>
+        </section>
+
+        <!-- ========== BUTTONS SECTION ========== -->
+        <section id="buttons" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-cursor-click text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Buttons</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Racing-styled interactive buttons with angled edges</p>
+                </div>
+            </div>
+
+            <!-- Button Sizes -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Button Sizes</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-end">
+                        <!-- Extra Small -->
+                        <div class="text-center">
+                            <button class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-racing-safety text-racing-pit-white font-display text-[9px] uppercase tracking-wider hover:bg-racing-safety-bright transition-all btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-[10px]"></i>
+                                Extra Small
+                            </button>
+                            <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">XS: h-28px</div>
+                        </div>
+                        <!-- Small -->
+                        <div class="text-center">
+                            <button class="inline-flex items-center gap-2 px-3.5 py-2 bg-racing-safety text-racing-pit-white font-display text-[10px] uppercase tracking-wider hover:bg-racing-safety-bright transition-all btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-xs"></i>
+                                Small
+                            </button>
+                            <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">SM: h-34px</div>
+                        </div>
+                        <!-- Medium (Default) -->
+                        <div class="text-center">
+                            <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-racing-safety text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-md shadow-racing-safety/20 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-sm"></i>
+                                Medium
+                            </button>
+                            <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">MD: h-40px</div>
+                        </div>
+                        <!-- Large -->
+                        <div class="text-center">
+                            <button class="inline-flex items-center gap-2.5 px-6 py-3 bg-racing-safety text-racing-pit-white font-display text-sm uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-lg shadow-racing-safety/30 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-base"></i>
+                                Large
+                            </button>
+                            <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">LG: h-48px</div>
+                        </div>
+                        <!-- Extra Large -->
+                        <div class="text-center">
+                            <button class="inline-flex items-center gap-3 px-8 py-4 bg-racing-safety text-racing-pit-white font-display text-base uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-lg shadow-racing-safety/30 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-lg"></i>
+                                Extra Large
+                            </button>
+                            <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">XL: h-56px</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="component-note">
+                    <strong>Sizes:</strong> XS (28px), SM (34px), MD (40px), LG (48px), XL (56px). Adjust padding and font-size accordingly.
+                </div>
+            </div>
+
+            <!-- Icon-Only Buttons -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Icon-Only Buttons</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-end mb-6">
+                        <!-- Icon sizes - Primary -->
+                        <div class="text-center">
+                            <button class="w-7 h-7 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-xs"></i>
+                            </button>
+                            <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">28px</div>
+                        </div>
+                        <div class="text-center">
+                            <button class="w-9 h-9 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-sm"></i>
+                            </button>
+                            <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">36px</div>
+                        </div>
+                        <div class="text-center">
+                            <button class="w-10 h-10 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all shadow-md shadow-racing-safety/20" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-base"></i>
+                            </button>
+                            <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">40px</div>
+                        </div>
+                        <div class="text-center">
+                            <button class="w-12 h-12 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all shadow-lg shadow-racing-safety/30" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-lg"></i>
+                            </button>
+                            <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">48px</div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-center mb-6">
+                        <!-- Icon variants - Secondary/Ghost -->
+                        <button class="w-10 h-10 flex items-center justify-center bg-transparent text-racing-gold border border-racing-gold hover:bg-racing-gold/10 transition-all rounded">
+                            <i class="ph ph-pencil-simple text-base"></i>
+                        </button>
+                        <button class="w-10 h-10 flex items-center justify-center bg-transparent hover:text-racing-gold transition-all rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                            <i class="ph ph-gear text-base"></i>
+                        </button>
+                        <button class="w-10 h-10 flex items-center justify-center bg-transparent text-racing-danger border border-racing-danger/50 hover:bg-racing-danger/10 transition-all rounded">
+                            <i class="ph ph-trash text-base"></i>
+                        </button>
+                        <button class="w-10 h-10 flex items-center justify-center bg-racing-gold text-racing-carbon hover:bg-racing-gold-bright transition-all rounded">
+                            <i class="ph-fill ph-star text-base"></i>
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                        <!-- Circular icon buttons -->
+                        <button class="w-10 h-10 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all rounded-full shadow-md shadow-racing-safety/20">
+                            <i class="ph-bold ph-plus text-base"></i>
+                        </button>
+                        <button class="w-10 h-10 flex items-center justify-center bg-transparent text-racing-gold border border-racing-gold hover:bg-racing-gold/10 transition-all rounded-full">
+                            <i class="ph ph-share-network text-base"></i>
+                        </button>
+                        <button class="w-10 h-10 flex items-center justify-center hover:text-racing-gold transition-all rounded-full" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                            <i class="ph ph-x text-base"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="component-note">
+                    <strong>Icon buttons:</strong> Use <code>clip-path</code> for angled or <code>rounded</code>/<code>rounded-full</code> for rectangular/circular variants.
+                </div>
+            </div>
+
+            <!-- Primary Buttons -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Primary (Safety Orange)</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                        <button class="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-racing-safety text-racing-pit-white font-display text-xs sm:text-sm uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-lg shadow-racing-safety/30 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                            <i class="ph-bold ph-plus text-xs sm:text-sm"></i>
+                            Get Started Free
+                        </button>
+                        <button class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-racing-safety text-racing-pit-white font-display text-[10px] sm:text-xs uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-md shadow-racing-safety/20 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                            <i class="ph-bold ph-plus text-xs"></i>
+                            Small
+                        </button>
+                        <button class="p-2.5 sm:p-3 bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all shadow-md shadow-racing-safety/20" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                            <i class="ph-bold ph-plus text-base sm:text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="component-note">
+                    <strong>Classes:</strong> <code>bg-racing-safety text-racing-pit-white shadow-lg shadow-racing-safety/30</code><br>
+                    <strong>Clip-path:</strong> <code>polygon(0 0, 100% 0, 95% 100%, 0% 100%)</code> for angled edge
+                </div>
+            </div>
+
+            <!-- Secondary Buttons -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Secondary (Gold Outline)</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                        <button class="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-transparent text-racing-gold font-display text-xs sm:text-sm uppercase tracking-wider border border-racing-gold hover:bg-racing-gold/10 hover:border-racing-gold-bright hover:text-racing-gold-bright transition-all" style="clip-path: polygon(5% 0, 100% 0, 100% 100%, 0% 100%);">
+                            <i class="ph ph-eye text-xs sm:text-sm"></i>
+                            Browse Leagues
+                        </button>
+                        <button class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-transparent text-racing-gold font-display text-[10px] sm:text-xs uppercase tracking-wider border border-racing-gold hover:bg-racing-gold/10 transition-all" style="clip-path: polygon(5% 0, 100% 0, 100% 100%, 0% 100%);">
+                            <i class="ph ph-eye text-xs"></i>
+                            Small
+                        </button>
+                    </div>
+                </div>
+                <div class="component-note">
+                    <strong>Classes:</strong> <code>bg-transparent text-racing-gold border border-racing-gold hover:bg-racing-gold/10</code>
+                </div>
+            </div>
+
+            <!-- Ghost Buttons -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Ghost / Text</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                        <button class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-transparent font-display text-[10px] sm:text-xs uppercase tracking-wider hover:text-racing-gold transition-all" style="color: var(--text-muted);">
+                            <i class="ph ph-dots-three text-sm"></i>
+                            More Options
+                        </button>
+                        <button class="p-2 sm:p-2.5 bg-transparent hover:text-racing-gold rounded transition-all" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                            <i class="ph ph-dots-three-vertical text-base"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Buttons -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Danger</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                        <button class="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-racing-danger text-racing-pit-white font-display text-xs sm:text-sm uppercase tracking-wider hover:bg-red-500 transition-all shadow-lg shadow-racing-danger/20">
+                            <i class="ph ph-trash text-xs sm:text-sm"></i>
+                            Delete
+                        </button>
+                        <button class="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-transparent text-racing-danger font-display text-xs sm:text-sm uppercase tracking-wider border border-racing-danger/50 hover:bg-racing-danger/10 transition-all">
+                            <i class="ph ph-trash text-xs sm:text-sm"></i>
+                            Delete Outline
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Buttons -->
+            <div>
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Social Links</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-2 sm:gap-3 items-center">
+                        <a href="#" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 font-display text-[10px] sm:text-xs uppercase tracking-wider hover:bg-racing-gold hover:text-racing-carbon transition-all" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                            <i class="ph-fill ph-discord-logo text-sm"></i>
+                            Discord
+                        </a>
+                        <a href="#" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 font-display text-[10px] sm:text-xs uppercase tracking-wider hover:bg-racing-gold hover:text-racing-carbon transition-all" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                            <i class="ph-fill ph-twitter-logo text-sm"></i>
+                            Twitter
+                        </a>
+                        <a href="#" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 font-display text-[10px] sm:text-xs uppercase tracking-wider hover:bg-racing-gold hover:text-racing-carbon transition-all" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                            <i class="ph-fill ph-youtube-logo text-sm"></i>
+                            YouTube
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== CARDS SECTION ========== -->
+        <section id="cards" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-cards text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Cards</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Content containers for leagues, competitions, and features</p>
+                </div>
+            </div>
+
+            <!-- League Card -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">League Card</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div class="card-racing rounded overflow-hidden cursor-pointer">
+                        <div class="relative h-28 sm:h-32" style="background: var(--bg-tertiary);">
+                            <div class="absolute inset-0 pattern-checkered opacity-10"></div>
+                            <div class="absolute bottom-0 left-0 right-0 h-16" style="background: linear-gradient(to top, var(--bg-secondary), transparent);"></div>
+                            <div class="absolute -bottom-5 sm:-bottom-6 left-4 w-12 h-12 sm:w-14 sm:h-14 rounded flex items-center justify-center" style="background: var(--bg-secondary); border: 2px solid var(--border-primary);">
+                                <i class="ph-fill ph-flag-checkered text-lg sm:text-xl text-racing-gold"></i>
+                            </div>
+                        </div>
+                        <div class="pt-8 sm:pt-10 pb-3 sm:pb-4 px-3 sm:px-4">
+                            <h3 class="font-display text-sm sm:text-base uppercase tracking-wide mb-1" style="color: var(--text-primary);">GT Masters Cup</h3>
+                            <p class="text-xs sm:text-sm mb-2 sm:mb-3" style="color: var(--text-muted);">Elite GT racing series</p>
+                            <div class="flex gap-3 sm:gap-4 font-data text-[10px] sm:text-xs" style="color: var(--text-dim);">
+                                <span><strong style="color: var(--text-primary);">6</strong> Competitions</span>
+                                <span><strong style="color: var(--text-primary);">78</strong> Drivers</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Stats Cards</h3>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="gradient-border card-racing rounded p-4 sm:p-5 text-center transition-all" style="background: var(--bg-secondary);">
+                        <div class="flex items-center justify-center gap-3 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold/10 rounded flex items-center justify-center">
+                                <i class="ph-fill ph-flag-checkered text-lg sm:text-xl text-racing-gold"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-display text-2xl sm:text-3xl leading-none" style="color: var(--text-primary);">6</div>
+                                <div class="font-data text-[9px] uppercase tracking-wider mt-1" style="color: var(--text-dim);">Competitions</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gradient-border card-racing rounded p-4 sm:p-5 text-center transition-all" style="background: var(--bg-secondary);">
+                        <div class="flex items-center justify-center gap-3 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold/10 rounded flex items-center justify-center">
+                                <i class="ph-fill ph-calendar-dots text-lg sm:text-xl text-racing-gold"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-display text-2xl sm:text-3xl leading-none" style="color: var(--text-primary);">4</div>
+                                <div class="font-data text-[9px] uppercase tracking-wider mt-1" style="color: var(--text-dim);">Active Seasons</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gradient-border card-racing rounded p-4 sm:p-5 text-center transition-all" style="background: var(--bg-secondary);">
+                        <div class="flex items-center justify-center gap-3 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold/10 rounded flex items-center justify-center">
+                                <i class="ph-fill ph-users text-lg sm:text-xl text-racing-gold"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-display text-2xl sm:text-3xl text-racing-gold leading-none">78</div>
+                                <div class="font-data text-[9px] uppercase tracking-wider mt-1" style="color: var(--text-dim);">Drivers</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gradient-border card-racing rounded p-4 sm:p-5 text-center transition-all" style="background: var(--bg-secondary);">
+                        <div class="flex items-center justify-center gap-3 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold/10 rounded flex items-center justify-center">
+                                <i class="ph-fill ph-game-controller text-lg sm:text-xl text-racing-gold"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-display text-lg leading-none" style="color: var(--text-primary);">GT7</div>
+                                <div class="font-data text-[9px] uppercase tracking-wider mt-1" style="color: var(--text-dim);">Platform</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Cards -->
+            <div>
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Feature Card</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div class="card-racing rounded p-4 sm:p-6 relative group">
+                        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-racing-gold to-racing-safety transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform"></div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold/10 rounded flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-racing-gold/20 transition-colors">
+                            <i class="ph-duotone ph-flag text-xl sm:text-2xl text-racing-gold"></i>
+                        </div>
+                        <h3 class="font-display text-xs sm:text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Leagues & Competitions</h3>
+                        <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--text-muted);">
+                            Organize multiple competitions and seasons under a single league. Perfect for running parallel championships.
+                        </p>
+                    </div>
+                    <div class="card-racing rounded p-4 sm:p-6 relative group">
+                        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-racing-gold to-racing-safety transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform"></div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold/10 rounded flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-racing-gold/20 transition-colors">
+                            <i class="ph-duotone ph-timer text-xl sm:text-2xl text-racing-gold"></i>
+                        </div>
+                        <h3 class="font-display text-xs sm:text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Qualifying & Race Times</h3>
+                        <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--text-muted);">
+                            Track qualifying poles, race times, gaps, and fastest laps. Automatic calculations for time differences.
+                        </p>
+                    </div>
+                    <div class="card-racing rounded p-4 sm:p-6 relative group">
+                        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-racing-gold to-racing-safety transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform"></div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold/10 rounded flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-racing-gold/20 transition-colors">
+                            <i class="ph-duotone ph-share-network text-xl sm:text-2xl text-racing-gold"></i>
+                        </div>
+                        <h3 class="font-display text-xs sm:text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Public Sharing</h3>
+                        <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--text-muted);">
+                            Generate shareable links for your community. Clean, responsive standings pages that look great on any device.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== TABLES SECTION ========== -->
+        <section id="tables" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-table text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Standings Tables</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Championship and race result displays</p>
+                </div>
+            </div>
+
+            <!-- Standings Table -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Championship Standings</h3>
+                <div class="card-racing rounded overflow-hidden">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--bg-primary);">
+                                <th style="color: var(--text-dim); border-bottom: 1px solid var(--border-primary); padding: 12px 16px; text-align: center; width: 60px; font-family: 'Racing Sans One', cursive; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em;">Pos</th>
+                                <th style="color: var(--text-dim); border-bottom: 1px solid var(--border-primary); padding: 12px 16px; text-align: left; font-family: 'Racing Sans One', cursive; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em;">Driver</th>
+                                <th style="color: var(--text-dim); border-bottom: 1px solid var(--border-primary); padding: 12px 16px; text-align: left; font-family: 'Racing Sans One', cursive; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em;">Team</th>
+                                <th style="color: var(--text-dim); border-bottom: 1px solid var(--border-primary); padding: 12px 16px; text-align: right; width: 80px; font-family: 'Racing Sans One', cursive; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em;">Points</th>
+                                <th style="color: var(--text-dim); border-bottom: 1px solid var(--border-primary); padding: 12px 16px; text-align: right; width: 70px; font-family: 'Racing Sans One', cursive; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em;">Gap</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-family: 'JetBrains Mono', monospace; font-size: 14px;">
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 12px 16px; text-align: center;"><span style="font-family: 'Racing Sans One', cursive; font-size: 20px; color: #d4a853;">1</span></td>
+                                <td style="padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-primary);">Alex Chen</td>
+                                <td style="padding: 12px 16px; text-align: left; color: var(--text-muted);">Red Bull Racing</td>
+                                <td style="padding: 12px 16px; text-align: right; font-weight: 600; color: var(--text-primary);">156</td>
+                                <td style="padding: 12px 16px; text-align: right; color: var(--text-dim);">-</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 12px 16px; text-align: center;"><span style="font-family: 'Racing Sans One', cursive; font-size: 20px; color: #c0c0c0;">2</span></td>
+                                <td style="padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-primary);">Marcus Weber</td>
+                                <td style="padding: 12px 16px; text-align: left; color: var(--text-muted);">Ferrari</td>
+                                <td style="padding: 12px 16px; text-align: right; font-weight: 600; color: var(--text-primary);">142</td>
+                                <td style="padding: 12px 16px; text-align: right; color: var(--text-dim);">+14</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 12px 16px; text-align: center;"><span style="font-family: 'Racing Sans One', cursive; font-size: 20px; color: #cd7f32;">3</span></td>
+                                <td style="padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-primary);">James Wilson</td>
+                                <td style="padding: 12px 16px; text-align: left; color: var(--text-muted);">McLaren</td>
+                                <td style="padding: 12px 16px; text-align: right; font-weight: 600; color: var(--text-primary);">128</td>
+                                <td style="padding: 12px 16px; text-align: right; color: var(--text-dim);">+28</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 12px 16px; text-align: center;"><span style="font-family: 'Racing Sans One', cursive; font-size: 20px; color: var(--text-dim);">4</span></td>
+                                <td style="padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-primary);">Sofia Martinez <span style="margin-left: 8px; font-size: 12px; color: #a855f7;"><i class="ph-fill ph-timer"></i> FL</span></td>
+                                <td style="padding: 12px 16px; text-align: left; color: var(--text-muted);">Mercedes</td>
+                                <td style="padding: 12px 16px; text-align: right; font-weight: 600; color: var(--text-primary);">115</td>
+                                <td style="padding: 12px 16px; text-align: right; color: var(--text-dim);">+41</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px 16px; text-align: center;"><span style="font-family: 'Racing Sans One', cursive; font-size: 20px; color: var(--text-dim);">5</span></td>
+                                <td style="padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-primary);">Kai Tanaka <span style="margin-left: 8px; padding: 2px 6px; font-size: 10px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 4px;">DNF</span></td>
+                                <td style="padding: 12px 16px; text-align: left; color: var(--text-muted);">Aston Martin</td>
+                                <td style="padding: 12px 16px; text-align: right; font-weight: 600; color: var(--text-primary);">98</td>
+                                <td style="padding: 12px 16px; text-align: right; color: var(--text-dim);">+58</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== BADGES SECTION ========== -->
+        <section id="badges" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-tag text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Badges & Tags</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Status indicators, platform tags, and labels</p>
+                </div>
+            </div>
+
+            <!-- Status Badges -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Status Badges</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-racing-success/10 text-racing-success font-display text-[10px] uppercase tracking-wider rounded-full">
+                            <span class="w-1.5 h-1.5 bg-racing-success rounded-full animate-pulse"></span>
+                            Active
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-racing-gold/10 text-racing-gold font-display text-[10px] uppercase tracking-wider rounded-full">
+                            <i class="ph-fill ph-star text-xs"></i>
+                            Featured
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-racing-warning/10 text-racing-warning font-display text-[10px] uppercase tracking-wider rounded-full">
+                            <i class="ph ph-clock text-xs"></i>
+                            Upcoming
+                        </span>
+                        <span class="inline-flex items-center px-2.5 sm:px-3 py-1 sm:py-1.5 font-display text-[10px] uppercase tracking-wider rounded-full" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                            Completed
+                        </span>
+                        <span class="inline-flex items-center px-2.5 sm:px-3 py-1 sm:py-1.5 bg-pink-500/20 text-pink-300 border border-pink-500/30 font-display text-[10px] uppercase tracking-wider rounded-full">
+                            Private
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Race Status -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Race Status</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                        <span class="px-2 py-1 bg-racing-danger/20 text-racing-danger font-display text-[10px] uppercase tracking-wider rounded">DNF</span>
+                        <span class="px-2 py-1 bg-racing-dns/20 text-racing-dns font-display text-[10px] uppercase tracking-wider rounded">DNS</span>
+                        <span class="px-2 py-1 bg-racing-fastest-lap/20 text-racing-fastest-lap font-display text-[10px] uppercase tracking-wider rounded">Fastest Lap</span>
+                        <span class="px-2 py-1 bg-racing-gold/20 text-racing-gold font-display text-[10px] uppercase tracking-wider rounded">Pole Position</span>
+                        <span class="px-2 py-1 bg-racing-warning/20 text-racing-warning font-display text-[10px] uppercase tracking-wider rounded">Penalty</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Tags -->
+            <div>
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Platform Tags</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-2 sm:gap-3 items-center">
+                        <span class="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-racing-gold text-racing-carbon font-display text-[10px] uppercase tracking-wider">GT7</span>
+                        <span class="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-racing-gold text-racing-carbon font-display text-[10px] uppercase tracking-wider">ACC</span>
+                        <span class="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-racing-gold text-racing-carbon font-display text-[10px] uppercase tracking-wider">iRacing</span>
+                        <span class="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-racing-gold text-racing-carbon font-display text-[10px] uppercase tracking-wider">F1 24</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== FORMS SECTION ========== -->
+        <section id="forms" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-textbox text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Form Elements</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Inputs, search bars, and filters</p>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Search Bar</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="max-w-lg">
+                        <div class="flex items-center px-3 sm:px-4 py-2 transition-colors" style="background: var(--bg-secondary); border: 1px solid var(--border-primary);">
+                            <i class="ph ph-magnifying-glass mr-2 sm:mr-3" style="color: var(--text-muted);"></i>
+                            <input
+                                type="text"
+                                placeholder="Search leagues, drivers, or competitions..."
+                                class="flex-1 bg-transparent border-none text-sm font-body min-h-[44px]"
+                                style="color: var(--text-primary);"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Chips -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Filter Chips</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-2">
+                        <button class="px-3 sm:px-4 py-2 bg-racing-gold text-racing-carbon font-display text-[10px] uppercase tracking-wider transition-all min-h-[44px]">All</button>
+                        <button class="px-3 sm:px-4 py-2 font-display text-[10px] uppercase tracking-wider transition-all min-h-[44px]" style="background: var(--bg-tertiary); color: var(--text-muted);">GT7</button>
+                        <button class="px-3 sm:px-4 py-2 font-display text-[10px] uppercase tracking-wider transition-all min-h-[44px]" style="background: var(--bg-tertiary); color: var(--text-muted);">ACC</button>
+                        <button class="px-3 sm:px-4 py-2 font-display text-[10px] uppercase tracking-wider transition-all min-h-[44px]" style="background: var(--bg-tertiary); color: var(--text-muted);">iRacing</button>
+                        <button class="px-3 sm:px-4 py-2 font-display text-[10px] uppercase tracking-wider transition-all min-h-[44px]" style="background: var(--bg-tertiary); color: var(--text-muted);">F1 24</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Input -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Text Input</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="max-w-md space-y-4">
+                        <div>
+                            <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                League Name <span class="text-racing-safety">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Enter league name"
+                                class="w-full px-3 sm:px-4 py-3 text-sm font-body transition-all min-h-[44px]"
+                                style="background: var(--bg-secondary); border: 1px solid var(--border-primary); color: var(--text-primary);"
+                            />
+                        </div>
+                        <div>
+                            <label class="block mb-2 font-display text-[10px] uppercase tracking-wider text-racing-danger">
+                                Error State
+                            </label>
+                            <input
+                                type="text"
+                                value="Invalid input"
+                                class="w-full px-3 sm:px-4 py-3 text-sm font-body min-h-[44px]"
+                                style="background: var(--bg-secondary); border: 1px solid rgba(239, 68, 68, 0.5); color: var(--text-primary); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);"
+                            />
+                            <small class="block mt-2 text-xs text-racing-danger">
+                                Please enter a valid league name
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Sizes -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Input Sizes</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="max-w-lg space-y-4">
+                        <!-- Small Input -->
+                        <div>
+                            <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                Small Input (32px)
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Small input..."
+                                class="w-full px-3 py-1.5 text-xs font-body transition-all h-8"
+                                style="background: var(--bg-secondary); border: 1px solid var(--border-primary); color: var(--text-primary);"
+                            />
+                        </div>
+                        <!-- Medium Input (Default) -->
+                        <div>
+                            <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                Medium Input (40px) — Default
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Medium input..."
+                                class="w-full px-4 py-2.5 text-sm font-body transition-all h-10"
+                                style="background: var(--bg-secondary); border: 1px solid var(--border-primary); color: var(--text-primary);"
+                            />
+                        </div>
+                        <!-- Large Input -->
+                        <div>
+                            <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                Large Input (48px)
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Large input..."
+                                class="w-full px-5 py-3 text-base font-body transition-all h-12"
+                                style="background: var(--bg-secondary); border: 1px solid var(--border-primary); color: var(--text-primary);"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div class="component-note">
+                    <strong>Input sizes:</strong> SM (32px), MD (40px), LG (48px). Ensure labels match the visual hierarchy.
+                </div>
+            </div>
+
+            <!-- Select / Dropdown -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Select / Dropdown</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="max-w-lg grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- Small Select -->
+                        <div>
+                            <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                Small
+                            </label>
+                            <select class="w-full px-3 py-1.5 text-xs font-body transition-all h-8 appearance-none cursor-pointer" style="background: var(--bg-secondary) url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%239ca3af%22 d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E') no-repeat right 10px center; border: 1px solid var(--border-primary); color: var(--text-primary);">
+                                <option>Select platform</option>
+                                <option>GT7</option>
+                                <option>ACC</option>
+                                <option>iRacing</option>
+                            </select>
+                        </div>
+                        <!-- Medium Select -->
+                        <div>
+                            <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                Medium
+                            </label>
+                            <select class="w-full px-4 py-2.5 text-sm font-body transition-all h-10 appearance-none cursor-pointer" style="background: var(--bg-secondary) url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%239ca3af%22 d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E') no-repeat right 12px center; border: 1px solid var(--border-primary); color: var(--text-primary);">
+                                <option>Select platform</option>
+                                <option>GT7</option>
+                                <option>ACC</option>
+                                <option>iRacing</option>
+                            </select>
+                        </div>
+                        <!-- Large Select -->
+                        <div>
+                            <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                Large
+                            </label>
+                            <select class="w-full px-5 py-3 text-base font-body transition-all h-12 appearance-none cursor-pointer" style="background: var(--bg-secondary) url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2214%22 height=%2214%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%239ca3af%22 d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E') no-repeat right 14px center; border: 1px solid var(--border-primary); color: var(--text-primary);">
+                                <option>Select platform</option>
+                                <option>GT7</option>
+                                <option>ACC</option>
+                                <option>iRacing</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Textarea -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Textarea</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="max-w-lg">
+                        <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                            Description
+                        </label>
+                        <textarea
+                            placeholder="Enter a description for your league..."
+                            rows="4"
+                            class="w-full px-4 py-3 text-sm font-body transition-all resize-y"
+                            style="background: var(--bg-secondary); border: 1px solid var(--border-primary); color: var(--text-primary);"
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkbox & Radio -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Checkbox & Radio</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <!-- Checkboxes -->
+                        <div>
+                            <div class="font-data text-[10px] uppercase tracking-wider mb-3" style="color: var(--text-dim);">Checkboxes</div>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="w-5 h-5 rounded border-2 appearance-none transition-all cursor-pointer" style="background: var(--bg-tertiary); border-color: var(--border-primary);" checked />
+                                    <span class="text-sm group-hover:text-racing-gold transition-colors" style="color: var(--text-primary);">Enable notifications</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="w-5 h-5 rounded border-2 appearance-none transition-all cursor-pointer" style="background: var(--bg-tertiary); border-color: var(--border-primary);" />
+                                    <span class="text-sm group-hover:text-racing-gold transition-colors" style="color: var(--text-primary);">Public league</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group opacity-50">
+                                    <input type="checkbox" class="w-5 h-5 rounded border-2 appearance-none transition-all cursor-not-allowed" style="background: var(--bg-tertiary); border-color: var(--border-primary);" disabled />
+                                    <span class="text-sm" style="color: var(--text-muted);">Disabled option</span>
+                                </label>
+                            </div>
+                        </div>
+                        <!-- Radio buttons -->
+                        <div>
+                            <div class="font-data text-[10px] uppercase tracking-wider mb-3" style="color: var(--text-dim);">Radio Buttons</div>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="radio" name="visibility" class="w-5 h-5 rounded-full border-2 appearance-none transition-all cursor-pointer" style="background: var(--bg-tertiary); border-color: var(--border-primary);" checked />
+                                    <span class="text-sm group-hover:text-racing-gold transition-colors" style="color: var(--text-primary);">Public</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="radio" name="visibility" class="w-5 h-5 rounded-full border-2 appearance-none transition-all cursor-pointer" style="background: var(--bg-tertiary); border-color: var(--border-primary);" />
+                                    <span class="text-sm group-hover:text-racing-gold transition-colors" style="color: var(--text-primary);">Private</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="radio" name="visibility" class="w-5 h-5 rounded-full border-2 appearance-none transition-all cursor-pointer" style="background: var(--bg-tertiary); border-color: var(--border-primary);" />
+                                    <span class="text-sm group-hover:text-racing-gold transition-colors" style="color: var(--text-primary);">Invite Only</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toggle Switches -->
+            <div>
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Toggle Switches</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="space-y-6">
+                        <!-- Standard Toggles -->
+                        <div class="space-y-4">
+                            <div class="font-data text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Standard Toggles</div>
+                            <div class="flex flex-wrap gap-6">
+                                <!-- Toggle On -->
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <div class="toggle-switch active" onclick="this.classList.toggle('active')">
+                                        <div class="toggle-indicator"></div>
+                                    </div>
+                                    <span class="text-sm" style="color: var(--text-primary);">Active</span>
+                                </label>
+                                <!-- Toggle Off -->
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <div class="toggle-switch" onclick="this.classList.toggle('active')">
+                                        <div class="toggle-indicator"></div>
+                                    </div>
+                                    <span class="text-sm" style="color: var(--text-primary);">Inactive</span>
+                                </label>
+                                <!-- Toggle Disabled -->
+                                <label class="flex items-center gap-3 cursor-not-allowed opacity-50">
+                                    <div class="toggle-switch disabled">
+                                        <div class="toggle-indicator"></div>
+                                    </div>
+                                    <span class="text-sm" style="color: var(--text-muted);">Disabled</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Toggle Sizes -->
+                        <div class="space-y-4">
+                            <div class="font-data text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Toggle Sizes</div>
+                            <div class="flex flex-wrap items-end gap-6">
+                                <!-- Small Toggle -->
+                                <div class="text-center">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <div class="toggle-switch small active" onclick="this.classList.toggle('active')">
+                                            <div class="toggle-indicator"></div>
+                                        </div>
+                                        <span class="text-xs" style="color: var(--text-primary);">Small</span>
+                                    </label>
+                                </div>
+                                <!-- Medium Toggle (Default) -->
+                                <div class="text-center">
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <div class="toggle-switch active" onclick="this.classList.toggle('active')">
+                                            <div class="toggle-indicator"></div>
+                                        </div>
+                                        <span class="text-sm" style="color: var(--text-primary);">Medium</span>
+                                    </label>
+                                </div>
+                                <!-- Large Toggle -->
+                                <div class="text-center">
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <div class="toggle-switch large active" onclick="this.classList.toggle('active')">
+                                            <div class="toggle-indicator"></div>
+                                        </div>
+                                        <span class="text-base" style="color: var(--text-primary);">Large</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Toggle with Description -->
+                        <div class="space-y-4">
+                            <div class="font-data text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">With Description</div>
+                            <div class="max-w-md space-y-4">
+                                <div class="flex items-start justify-between gap-4 p-4 rounded" style="background: var(--bg-tertiary);">
+                                    <div>
+                                        <div class="text-sm font-medium mb-1" style="color: var(--text-primary);">Email Notifications</div>
+                                        <div class="text-xs" style="color: var(--text-muted);">Receive email updates about race results and standings</div>
+                                    </div>
+                                    <div class="toggle-switch active flex-shrink-0" onclick="this.classList.toggle('active')">
+                                        <div class="toggle-indicator"></div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start justify-between gap-4 p-4 rounded" style="background: var(--bg-tertiary);">
+                                    <div>
+                                        <div class="text-sm font-medium mb-1" style="color: var(--text-primary);">Public Profile</div>
+                                        <div class="text-xs" style="color: var(--text-muted);">Allow other drivers to view your statistics</div>
+                                    </div>
+                                    <div class="toggle-switch flex-shrink-0" onclick="this.classList.toggle('active')">
+                                        <div class="toggle-indicator"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="component-note">
+                    <strong>Toggle sizes:</strong> Small (36x20px), Medium (44x24px), Large (52x28px). Use toggles for binary on/off settings.
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== NAVIGATION SECTION ========== -->
+        <section id="navigation" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-compass text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Navigation</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Headers, breadcrumbs, and tabs</p>
+                </div>
+            </div>
+
+            <!-- Breadcrumbs -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Breadcrumbs</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <nav class="flex items-center gap-2 flex-wrap">
+                        <a href="#" class="flex items-center gap-1.5 font-data text-[11px] hover:text-racing-gold transition-colors" style="color: var(--text-dim);">
+                            <i class="ph ph-house text-sm"></i>
+                            Home
+                        </a>
+                        <i class="ph ph-caret-right text-xs" style="color: var(--text-dim);"></i>
+                        <a href="#" class="font-data text-[11px] hover:text-racing-gold transition-colors" style="color: var(--text-dim);">Leagues</a>
+                        <i class="ph ph-caret-right text-xs" style="color: var(--text-dim);"></i>
+                        <span class="font-data text-[11px] font-medium" style="color: var(--text-primary);">GT Masters Cup</span>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div>
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Tabs</h3>
+                <div class="card-racing rounded overflow-hidden">
+                    <div class="flex overflow-x-auto" style="border-bottom: 1px solid var(--border-primary);">
+                        <button class="relative px-4 sm:px-6 py-3 sm:py-4 font-display text-[10px] sm:text-xs uppercase tracking-wider text-racing-gold whitespace-nowrap" style="background: rgba(212, 168, 83, 0.1);">
+                            <i class="ph-fill ph-flag-checkered mr-1 sm:mr-2"></i>
+                            Competitions
+                            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-racing-gold"></span>
+                        </button>
+                        <button class="relative px-4 sm:px-6 py-3 sm:py-4 font-display text-[10px] sm:text-xs uppercase tracking-wider transition-all whitespace-nowrap" style="color: var(--text-muted); border-left: 1px solid var(--border-primary);">
+                            <i class="ph ph-users mr-1 sm:mr-2"></i>
+                            Drivers
+                            <span class="ml-1 sm:ml-2 px-1.5 py-0.5 text-[10px] rounded" style="background: var(--bg-tertiary); color: var(--text-dim);">78</span>
+                        </button>
+                        <button class="relative px-4 sm:px-6 py-3 sm:py-4 font-display text-[10px] sm:text-xs uppercase tracking-wider transition-all whitespace-nowrap" style="color: var(--text-muted); border-left: 1px solid var(--border-primary);">
+                            <i class="ph ph-chart-line mr-1 sm:mr-2"></i>
+                            Statistics
+                        </button>
+                    </div>
+                    <div class="p-4 sm:p-6">
+                        <p class="text-sm" style="color: var(--text-muted);">Tab content area...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== MODALS SECTION ========== -->
+        <section id="modals" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-browsers text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Modals</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Overlay dialogs for focused user interactions</p>
+                </div>
+            </div>
+
+            <!-- Modal Sizes -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Modal Sizes</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="openModal('modal-sm')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                            <i class="ph ph-rectangle text-sm"></i>
+                            Small Modal
+                        </button>
+                        <button onclick="openModal('modal-md')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                            <i class="ph ph-rectangle text-sm"></i>
+                            Medium Modal
+                        </button>
+                        <button onclick="openModal('modal-lg')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                            <i class="ph ph-rectangle text-sm"></i>
+                            Large Modal
+                        </button>
+                        <button onclick="openModal('modal-full')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                            <i class="ph ph-arrows-out text-sm"></i>
+                            Fullscreen
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Preview (Static) -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Modal Structure</h3>
+                <div class="card-racing rounded overflow-hidden">
+                    <div class="p-6" style="background: rgba(0, 0, 0, 0.3);">
+                        <!-- Modal preview container -->
+                        <div class="modal-content w-full max-w-lg mx-auto rounded" style="transform: none;">
+                            <!-- Modal Header -->
+                            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Create New League</h3>
+                                <button class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                                    <i class="ph ph-x text-base"></i>
+                                </button>
+                            </div>
+                            <!-- Modal Body -->
+                            <div class="px-5 py-5">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                            League Name <span class="text-racing-safety">*</span>
+                                        </label>
+                                        <input type="text" placeholder="Enter league name" class="w-full px-4 py-2.5 text-sm font-body transition-all h-10" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);" />
+                                    </div>
+                                    <div>
+                                        <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                            Platform
+                                        </label>
+                                        <select class="w-full px-4 py-2.5 text-sm font-body transition-all h-10 appearance-none cursor-pointer" style="background: var(--bg-tertiary) url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%239ca3af%22 d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E') no-repeat right 12px center; border: 1px solid var(--border-primary); color: var(--text-primary);">
+                                            <option>Select platform</option>
+                                            <option>GT7</option>
+                                            <option>ACC</option>
+                                            <option>iRacing</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Modal Footer -->
+                            <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                                <button class="inline-flex items-center gap-2 px-4 py-2 font-display text-xs uppercase tracking-wider transition-all" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                                    Cancel
+                                </button>
+                                <button class="inline-flex items-center gap-2 px-5 py-2 bg-racing-safety text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-racing-safety-bright transition-all" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                                    <i class="ph-bold ph-plus text-xs"></i>
+                                    Create League
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-note">
+                <strong>Modal sizes:</strong> SM (400px), MD (500px), LG (700px), XL (900px), Full (100vw - 2rem). Always include close button and escape key handler.
+            </div>
+        </section>
+
+        <!-- ========== DRAWERS SECTION ========== -->
+        <section id="drawers" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-sidebar text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Slide-out Drawers</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Side panels for detailed views and actions</p>
+                </div>
+            </div>
+
+            <!-- Drawer Triggers -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Drawer Positions</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="openDrawer('drawer-right')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                            <i class="ph ph-arrow-right text-sm"></i>
+                            Right Drawer
+                        </button>
+                        <button onclick="openDrawer('drawer-left')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                            <i class="ph ph-arrow-left text-sm"></i>
+                            Left Drawer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawer Preview (Static) -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Drawer Structure</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- Right Drawer Preview -->
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-80 relative" style="background: var(--bg-tertiary);">
+                            <div class="absolute right-0 top-0 bottom-0 w-3/5" style="background: var(--bg-secondary); border-left: 1px solid var(--border-primary);">
+                                <!-- Drawer Header -->
+                                <div class="flex items-center justify-between px-4 py-3" style="border-bottom: 1px solid var(--border-primary);">
+                                    <h3 class="font-display text-xs uppercase tracking-wide" style="color: var(--text-primary);">Driver Details</h3>
+                                    <button class="w-7 h-7 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                                        <i class="ph ph-x text-sm"></i>
+                                    </button>
+                                </div>
+                                <!-- Drawer Content -->
+                                <div class="p-4">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: var(--bg-tertiary);">
+                                            <i class="ph-fill ph-user text-xl" style="color: var(--text-dim);"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-display text-sm uppercase" style="color: var(--text-primary);">Alex Chen</div>
+                                            <div class="font-data text-[10px]" style="color: var(--text-muted);">RED BULL RACING</div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span style="color: var(--text-dim);">Points</span>
+                                            <span class="font-data" style="color: var(--text-primary);">156</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span style="color: var(--text-dim);">Wins</span>
+                                            <span class="font-data" style="color: var(--text-primary);">5</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span style="color: var(--text-dim);">Podiums</span>
+                                            <span class="font-data" style="color: var(--text-primary);">8</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="absolute left-2 top-2 font-data text-[10px]" style="color: var(--text-dim);">Right Drawer</div>
+                        </div>
+                    </div>
+
+                    <!-- Left Drawer Preview -->
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="h-80 relative" style="background: var(--bg-tertiary);">
+                            <div class="absolute left-0 top-0 bottom-0 w-3/5" style="background: var(--bg-secondary); border-right: 1px solid var(--border-primary);">
+                                <!-- Drawer Header -->
+                                <div class="flex items-center justify-between px-4 py-3" style="border-bottom: 1px solid var(--border-primary);">
+                                    <h3 class="font-display text-xs uppercase tracking-wide" style="color: var(--text-primary);">Filter Results</h3>
+                                    <button class="w-7 h-7 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                                        <i class="ph ph-x text-sm"></i>
+                                    </button>
+                                </div>
+                                <!-- Drawer Content -->
+                                <div class="p-4 space-y-4">
+                                    <div>
+                                        <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Platform</label>
+                                        <select class="w-full px-3 py-2 text-xs h-8 appearance-none" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);">
+                                            <option>All Platforms</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Status</label>
+                                        <div class="space-y-2">
+                                            <label class="flex items-center gap-2 text-xs cursor-pointer">
+                                                <input type="checkbox" class="w-4 h-4" checked />
+                                                <span style="color: var(--text-primary);">Active</span>
+                                            </label>
+                                            <label class="flex items-center gap-2 text-xs cursor-pointer">
+                                                <input type="checkbox" class="w-4 h-4" />
+                                                <span style="color: var(--text-primary);">Completed</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="absolute right-2 top-2 font-data text-[10px]" style="color: var(--text-dim);">Left Drawer</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-note">
+                <strong>Drawer width:</strong> Default 400px, max 90vw on mobile. Slides from left or right with backdrop blur overlay.
+            </div>
+        </section>
+
+        <!-- ========== DIALOGS SECTION ========== -->
+        <section id="dialogs" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-warning-circle text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Alert & Confirmation Dialogs</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">System messages and user confirmations</p>
+                </div>
+            </div>
+
+            <!-- Dialog Triggers -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Dialog Types</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="openDialog('dialog-success')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-success text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-green-500 transition-all">
+                            <i class="ph-fill ph-check-circle text-sm"></i>
+                            Success
+                        </button>
+                        <button onclick="openDialog('dialog-warning')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-warning text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-yellow-400 transition-all">
+                            <i class="ph-fill ph-warning text-sm"></i>
+                            Warning
+                        </button>
+                        <button onclick="openDialog('dialog-danger')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-danger text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-red-500 transition-all">
+                            <i class="ph-fill ph-trash text-sm"></i>
+                            Delete Confirm
+                        </button>
+                        <button onclick="openDialog('dialog-info')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-info text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-blue-500 transition-all">
+                            <i class="ph-fill ph-info text-sm"></i>
+                            Info
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dialog Previews (Static) -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Dialog Variants</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Success Dialog -->
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="p-4" style="background: rgba(0, 0, 0, 0.3);">
+                            <div class="modal-content rounded p-6 text-center" style="transform: none; max-width: 320px; margin: 0 auto;">
+                                <div class="dialog-icon-wrapper success">
+                                    <i class="ph-fill ph-check-circle text-2xl text-racing-success"></i>
+                                </div>
+                                <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Success!</h3>
+                                <p class="text-sm mb-5" style="color: var(--text-muted);">Your league has been created successfully.</p>
+                                <button class="w-full px-4 py-2.5 bg-racing-success text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-green-500 transition-all rounded">
+                                    Continue
+                                </button>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 font-data text-[10px]" style="color: var(--text-dim); background: var(--bg-tertiary);">Success Dialog</div>
+                    </div>
+
+                    <!-- Warning Dialog -->
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="p-4" style="background: rgba(0, 0, 0, 0.3);">
+                            <div class="modal-content rounded p-6 text-center" style="transform: none; max-width: 320px; margin: 0 auto;">
+                                <div class="dialog-icon-wrapper warning">
+                                    <i class="ph-fill ph-warning text-2xl text-racing-warning"></i>
+                                </div>
+                                <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Warning</h3>
+                                <p class="text-sm mb-5" style="color: var(--text-muted);">You have unsaved changes. Are you sure you want to leave?</p>
+                                <div class="flex gap-3">
+                                    <button class="flex-1 px-4 py-2.5 font-display text-xs uppercase tracking-wider transition-all rounded" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                                        Stay
+                                    </button>
+                                    <button class="flex-1 px-4 py-2.5 bg-racing-warning text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-yellow-400 transition-all rounded">
+                                        Leave
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 font-data text-[10px]" style="color: var(--text-dim); background: var(--bg-tertiary);">Warning Dialog</div>
+                    </div>
+
+                    <!-- Danger/Delete Dialog -->
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="p-4" style="background: rgba(0, 0, 0, 0.3);">
+                            <div class="modal-content rounded p-6 text-center" style="transform: none; max-width: 320px; margin: 0 auto;">
+                                <div class="dialog-icon-wrapper danger">
+                                    <i class="ph-fill ph-trash text-2xl text-racing-danger"></i>
+                                </div>
+                                <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Delete League?</h3>
+                                <p class="text-sm mb-5" style="color: var(--text-muted);">This action cannot be undone. All data will be permanently deleted.</p>
+                                <div class="flex gap-3">
+                                    <button class="flex-1 px-4 py-2.5 font-display text-xs uppercase tracking-wider transition-all rounded" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                                        Cancel
+                                    </button>
+                                    <button class="flex-1 px-4 py-2.5 bg-racing-danger text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-red-500 transition-all rounded">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 font-data text-[10px]" style="color: var(--text-dim); background: var(--bg-tertiary);">Delete Confirmation</div>
+                    </div>
+
+                    <!-- Info Dialog -->
+                    <div class="card-racing rounded overflow-hidden">
+                        <div class="p-4" style="background: rgba(0, 0, 0, 0.3);">
+                            <div class="modal-content rounded p-6 text-center" style="transform: none; max-width: 320px; margin: 0 auto;">
+                                <div class="dialog-icon-wrapper info">
+                                    <i class="ph-fill ph-info text-2xl text-racing-info"></i>
+                                </div>
+                                <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">New Feature</h3>
+                                <p class="text-sm mb-5" style="color: var(--text-muted);">You can now export your standings to CSV format from the settings menu.</p>
+                                <button class="w-full px-4 py-2.5 bg-racing-info text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-blue-500 transition-all rounded">
+                                    Got It
+                                </button>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 font-data text-[10px]" style="color: var(--text-dim); background: var(--bg-tertiary);">Info Dialog</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast Notifications -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Toast Notifications</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="space-y-3 max-w-sm">
+                        <!-- Success Toast -->
+                        <div class="flex items-center gap-3 px-4 py-3 rounded" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
+                            <i class="ph-fill ph-check-circle text-lg text-racing-success"></i>
+                            <span class="text-sm flex-1" style="color: var(--text-primary);">Changes saved successfully</span>
+                            <button class="hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                                <i class="ph ph-x text-sm"></i>
+                            </button>
+                        </div>
+                        <!-- Error Toast -->
+                        <div class="flex items-center gap-3 px-4 py-3 rounded" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <i class="ph-fill ph-x-circle text-lg text-racing-danger"></i>
+                            <span class="text-sm flex-1" style="color: var(--text-primary);">Failed to save changes</span>
+                            <button class="hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                                <i class="ph ph-x text-sm"></i>
+                            </button>
+                        </div>
+                        <!-- Warning Toast -->
+                        <div class="flex items-center gap-3 px-4 py-3 rounded" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <i class="ph-fill ph-warning text-lg text-racing-warning"></i>
+                            <span class="text-sm flex-1" style="color: var(--text-primary);">Session expiring in 5 minutes</span>
+                            <button class="hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                                <i class="ph ph-x text-sm"></i>
+                            </button>
+                        </div>
+                        <!-- Info Toast -->
+                        <div class="flex items-center gap-3 px-4 py-3 rounded" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <i class="ph-fill ph-info text-lg text-racing-info"></i>
+                            <span class="text-sm flex-1" style="color: var(--text-primary);">New results available</span>
+                            <button class="hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                                <i class="ph ph-x text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-note">
+                <strong>Usage:</strong> Success/Info dialogs have single action. Warning/Danger dialogs always have cancel option. Toast notifications auto-dismiss after 5s.
+            </div>
+        </section>
+
+        <!-- ========== PAGINATION SECTION ========== -->
+        <section id="pagination" class="mb-16 sm:mb-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6" style="border-bottom: 1px solid var(--border-primary);">
+                <div class="w-10 h-10 flex items-center justify-center" style="background: rgba(212, 168, 83, 0.2); clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <i class="ph-fill ph-dots-three text-xl text-racing-gold"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl uppercase tracking-wide" style="color: var(--text-primary);">Pagination</h2>
+                    <p class="text-sm mt-1" style="color: var(--text-muted);">Navigate through data sets and result pages</p>
+                </div>
+            </div>
+
+            <!-- Standard Pagination -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Standard Pagination</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap items-center gap-1">
+                        <button class="pagination-item rounded disabled" disabled>
+                            <i class="ph ph-caret-left text-sm"></i>
+                        </button>
+                        <button class="pagination-item rounded active">1</button>
+                        <button class="pagination-item rounded">2</button>
+                        <button class="pagination-item rounded">3</button>
+                        <button class="pagination-item rounded">4</button>
+                        <button class="pagination-item rounded">5</button>
+                        <span class="pagination-item rounded cursor-default">...</span>
+                        <button class="pagination-item rounded">12</button>
+                        <button class="pagination-item rounded">
+                            <i class="ph ph-caret-right text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compact Pagination -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Compact Pagination</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex items-center gap-3">
+                        <button class="w-9 h-9 flex items-center justify-center transition-all rounded" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                            <i class="ph ph-caret-left text-sm"></i>
+                        </button>
+                        <span class="font-data text-sm" style="color: var(--text-primary);">
+                            Page <span class="text-racing-gold">3</span> of <span>12</span>
+                        </span>
+                        <button class="w-9 h-9 flex items-center justify-center transition-all rounded hover:text-racing-gold" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                            <i class="ph ph-caret-right text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination with Info -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">With Result Info</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <span class="font-data text-sm" style="color: var(--text-muted);">
+                            Showing <span style="color: var(--text-primary);">21-30</span> of <span style="color: var(--text-primary);">156</span> results
+                        </span>
+                        <div class="flex flex-wrap items-center gap-1">
+                            <button class="pagination-item rounded">
+                                <i class="ph ph-caret-double-left text-sm"></i>
+                            </button>
+                            <button class="pagination-item rounded">
+                                <i class="ph ph-caret-left text-sm"></i>
+                            </button>
+                            <button class="pagination-item rounded">2</button>
+                            <button class="pagination-item rounded active">3</button>
+                            <button class="pagination-item rounded">4</button>
+                            <button class="pagination-item rounded">
+                                <i class="ph ph-caret-right text-sm"></i>
+                            </button>
+                            <button class="pagination-item rounded">
+                                <i class="ph ph-caret-double-right text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Per Page Selector -->
+            <div class="mb-8 sm:mb-10">
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">With Per-Page Selector</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="font-data text-sm" style="color: var(--text-muted);">Show</span>
+                            <select class="px-3 py-1.5 text-sm font-data h-9 appearance-none cursor-pointer rounded" style="background: var(--bg-tertiary) url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%239ca3af%22 d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E') no-repeat right 8px center; border: 1px solid var(--border-primary); color: var(--text-primary); min-width: 70px;">
+                                <option>10</option>
+                                <option selected>25</option>
+                                <option>50</option>
+                                <option>100</option>
+                            </select>
+                            <span class="font-data text-sm" style="color: var(--text-muted);">per page</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1">
+                            <button class="pagination-item rounded disabled" disabled>
+                                <i class="ph ph-caret-left text-sm"></i>
+                            </button>
+                            <button class="pagination-item rounded active">1</button>
+                            <button class="pagination-item rounded">2</button>
+                            <button class="pagination-item rounded">3</button>
+                            <button class="pagination-item rounded">
+                                <i class="ph ph-caret-right text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Racing-Styled Pagination -->
+            <div>
+                <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Racing-Styled (Angled)</h3>
+                <div class="card-racing rounded p-4 sm:p-6">
+                    <div class="flex flex-wrap items-center gap-1">
+                        <button class="pagination-item disabled" disabled style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                            <i class="ph ph-caret-left text-sm"></i>
+                        </button>
+                        <button class="pagination-item" style="clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);">1</button>
+                        <button class="pagination-item active" style="clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);">2</button>
+                        <button class="pagination-item" style="clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);">3</button>
+                        <button class="pagination-item" style="clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);">4</button>
+                        <button class="pagination-item" style="clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);">5</button>
+                        <button class="pagination-item" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                            <i class="ph ph-caret-right text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-note mt-4">
+                <strong>Best practices:</strong> Show max 7 page numbers. Use ellipsis for gaps. Always show first/last pages. Include keyboard navigation support.
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modal Overlays -->
+    <div id="modal-sm" class="modal-overlay" onclick="closeModal('modal-sm')">
+        <div class="modal-content rounded w-[400px]" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Small Modal</h3>
+                <button onclick="closeModal('modal-sm')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                    <i class="ph ph-x text-base"></i>
+                </button>
+            </div>
+            <div class="px-5 py-5">
+                <p class="text-sm" style="color: var(--text-muted);">This is a small modal dialog. Perfect for simple confirmations or brief messages.</p>
+            </div>
+            <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                <button onclick="closeModal('modal-sm')" class="px-4 py-2 font-display text-xs uppercase tracking-wider transition-all" style="color: var(--text-muted); background: var(--bg-tertiary);">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-md" class="modal-overlay" onclick="closeModal('modal-md')">
+        <div class="modal-content rounded w-[500px]" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Medium Modal</h3>
+                <button onclick="closeModal('modal-md')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                    <i class="ph ph-x text-base"></i>
+                </button>
+            </div>
+            <div class="px-5 py-5">
+                <p class="text-sm mb-4" style="color: var(--text-muted);">This is the default modal size. Suitable for forms and moderate content.</p>
+                <div>
+                    <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Example Field</label>
+                    <input type="text" placeholder="Enter value..." class="w-full px-4 py-2.5 text-sm font-body h-10" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);" />
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                <button onclick="closeModal('modal-md')" class="px-4 py-2 font-display text-xs uppercase tracking-wider transition-all" style="color: var(--text-muted); background: var(--bg-tertiary);">Cancel</button>
+                <button class="px-5 py-2 bg-racing-safety text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-racing-safety-bright transition-all" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-lg" class="modal-overlay" onclick="closeModal('modal-lg')">
+        <div class="modal-content rounded w-[700px]" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Large Modal</h3>
+                <button onclick="closeModal('modal-lg')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                    <i class="ph ph-x text-base"></i>
+                </button>
+            </div>
+            <div class="px-5 py-5">
+                <p class="text-sm mb-4" style="color: var(--text-muted);">Large modals are ideal for complex forms, data tables, or detailed information.</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">First Name</label>
+                        <input type="text" placeholder="Enter first name..." class="w-full px-4 py-2.5 text-sm font-body h-10" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);" />
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Last Name</label>
+                        <input type="text" placeholder="Enter last name..." class="w-full px-4 py-2.5 text-sm font-body h-10" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);" />
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                <button onclick="closeModal('modal-lg')" class="px-4 py-2 font-display text-xs uppercase tracking-wider transition-all" style="color: var(--text-muted); background: var(--bg-tertiary);">Cancel</button>
+                <button class="px-5 py-2 bg-racing-safety text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-racing-safety-bright transition-all" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-full" class="modal-overlay" onclick="closeModal('modal-full')">
+        <div class="modal-content rounded" style="width: calc(100vw - 2rem); height: calc(100vh - 2rem);" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Fullscreen Modal</h3>
+                <button onclick="closeModal('modal-full')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                    <i class="ph ph-x text-base"></i>
+                </button>
+            </div>
+            <div class="px-5 py-5 overflow-auto" style="height: calc(100% - 120px);">
+                <p class="text-sm" style="color: var(--text-muted);">Fullscreen modals take up the entire viewport (minus margins). Perfect for immersive experiences, complex editors, or data-heavy interfaces.</p>
+            </div>
+            <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                <button onclick="closeModal('modal-full')" class="px-4 py-2 font-display text-xs uppercase tracking-wider transition-all" style="color: var(--text-muted); background: var(--bg-tertiary);">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawer Overlays -->
+    <div id="drawer-right" class="drawer-overlay" onclick="closeDrawer('drawer-right')">
+        <div class="drawer-content right" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Right Drawer</h3>
+                <button onclick="closeDrawer('drawer-right')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                    <i class="ph ph-x text-base"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <p class="text-sm mb-4" style="color: var(--text-muted);">Right-side drawers are commonly used for detail views, settings panels, or secondary actions.</p>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3 p-3 rounded" style="background: var(--bg-tertiary);">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: var(--bg-primary);">
+                            <i class="ph-fill ph-user text-lg" style="color: var(--text-dim);"></i>
+                        </div>
+                        <div>
+                            <div class="font-display text-xs uppercase" style="color: var(--text-primary);">Alex Chen</div>
+                            <div class="font-data text-[10px]" style="color: var(--text-muted);">Driver #1</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="drawer-left" class="drawer-overlay" onclick="closeDrawer('drawer-left')">
+        <div class="drawer-content left" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Left Drawer</h3>
+                <button onclick="closeDrawer('drawer-left')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                    <i class="ph ph-x text-base"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <p class="text-sm mb-4" style="color: var(--text-muted);">Left-side drawers work well for navigation menus, filters, or category selection.</p>
+                <div class="space-y-2">
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left font-display text-xs uppercase tracking-wider rounded transition-colors hover:bg-racing-gold/10 hover:text-racing-gold" style="color: var(--text-muted);">
+                        <i class="ph ph-house text-base"></i>
+                        Dashboard
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left font-display text-xs uppercase tracking-wider rounded transition-colors bg-racing-gold/10 text-racing-gold">
+                        <i class="ph ph-flag text-base"></i>
+                        Leagues
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left font-display text-xs uppercase tracking-wider rounded transition-colors hover:bg-racing-gold/10 hover:text-racing-gold" style="color: var(--text-muted);">
+                        <i class="ph ph-users text-base"></i>
+                        Drivers
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left font-display text-xs uppercase tracking-wider rounded transition-colors hover:bg-racing-gold/10 hover:text-racing-gold" style="color: var(--text-muted);">
+                        <i class="ph ph-gear text-base"></i>
+                        Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dialog Overlays -->
+    <div id="dialog-success" class="modal-overlay" onclick="closeDialog('dialog-success')">
+        <div class="modal-content rounded p-6 text-center w-[360px]" onclick="event.stopPropagation()" style="transform: none;">
+            <div class="dialog-icon-wrapper success">
+                <i class="ph-fill ph-check-circle text-2xl text-racing-success"></i>
+            </div>
+            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Success!</h3>
+            <p class="text-sm mb-5" style="color: var(--text-muted);">Your changes have been saved successfully.</p>
+            <button onclick="closeDialog('dialog-success')" class="w-full px-4 py-2.5 bg-racing-success text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-green-500 transition-all rounded">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <div id="dialog-warning" class="modal-overlay" onclick="closeDialog('dialog-warning')">
+        <div class="modal-content rounded p-6 text-center w-[360px]" onclick="event.stopPropagation()" style="transform: none;">
+            <div class="dialog-icon-wrapper warning">
+                <i class="ph-fill ph-warning text-2xl text-racing-warning"></i>
+            </div>
+            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Warning</h3>
+            <p class="text-sm mb-5" style="color: var(--text-muted);">You have unsaved changes. Are you sure you want to leave?</p>
+            <div class="flex gap-3">
+                <button onclick="closeDialog('dialog-warning')" class="flex-1 px-4 py-2.5 font-display text-xs uppercase tracking-wider transition-all rounded" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                    Stay
+                </button>
+                <button onclick="closeDialog('dialog-warning')" class="flex-1 px-4 py-2.5 bg-racing-warning text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-yellow-400 transition-all rounded">
+                    Leave
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialog-danger" class="modal-overlay" onclick="closeDialog('dialog-danger')">
+        <div class="modal-content rounded p-6 text-center w-[360px]" onclick="event.stopPropagation()" style="transform: none;">
+            <div class="dialog-icon-wrapper danger">
+                <i class="ph-fill ph-trash text-2xl text-racing-danger"></i>
+            </div>
+            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Delete League?</h3>
+            <p class="text-sm mb-5" style="color: var(--text-muted);">This action cannot be undone. All data will be permanently deleted.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDialog('dialog-danger')" class="flex-1 px-4 py-2.5 font-display text-xs uppercase tracking-wider transition-all rounded" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                    Cancel
+                </button>
+                <button onclick="closeDialog('dialog-danger')" class="flex-1 px-4 py-2.5 bg-racing-danger text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-red-500 transition-all rounded">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialog-info" class="modal-overlay" onclick="closeDialog('dialog-info')">
+        <div class="modal-content rounded p-6 text-center w-[360px]" onclick="event.stopPropagation()" style="transform: none;">
+            <div class="dialog-icon-wrapper info">
+                <i class="ph-fill ph-info text-2xl text-racing-info"></i>
+            </div>
+            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">New Feature</h3>
+            <p class="text-sm mb-5" style="color: var(--text-muted);">You can now export your standings to CSV format from the settings menu.</p>
+            <button onclick="closeDialog('dialog-info')" class="w-full px-4 py-2.5 bg-racing-info text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-blue-500 transition-all rounded">
+                Got It
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 sm:py-12" style="background: var(--bg-secondary); border-top: 1px solid var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12">
+            <div class="text-center">
+                <p class="font-data text-xs" style="color: var(--text-dim);">
+                    VRL Public Design System — Motorsport Editorial Theme with Dark & Light Modes
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('vrl-theme', newTheme);
+
+            // Update icons
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+
+            if (newTheme === 'light') {
+                lightIcon.style.display = 'none';
+                darkIcon.style.display = 'block';
+            } else {
+                lightIcon.style.display = 'block';
+                darkIcon.style.display = 'none';
+            }
+        }
+
+        // Initialize theme from localStorage or system preference
+        function initTheme() {
+            const savedTheme = localStorage.getItem('vrl-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+            document.documentElement.setAttribute('data-theme', theme);
+
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+
+            if (theme === 'light') {
+                lightIcon.style.display = 'none';
+                darkIcon.style.display = 'block';
+            }
+        }
+
+        // Run on page load
+        initTheme();
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('vrl-theme')) {
+                const theme = e.matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Modal functions
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Drawer functions
+        function openDrawer(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDrawer(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Dialog functions
+        function openDialog(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDialog(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close modals/drawers/dialogs on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active, .drawer-overlay.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+</body>
+</html>

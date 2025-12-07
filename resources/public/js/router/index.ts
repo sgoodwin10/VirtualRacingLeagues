@@ -86,6 +86,31 @@ const router = createRouter({
         title: 'Email Verification',
       },
     },
+    // Public Leagues routes
+    {
+      path: '/leagues',
+      name: 'leagues',
+      component: () => import('@public/views/leagues/PublicLeaguesView.vue'),
+      meta: {
+        title: 'Public Leagues',
+      },
+    },
+    {
+      path: '/leagues/:slug',
+      name: 'league-detail',
+      component: () => import('@public/views/leagues/LeagueDetailView.vue'),
+      meta: {
+        title: 'League',
+      },
+    },
+    {
+      path: '/leagues/:slug/seasons/:seasonSlug',
+      name: 'season-detail',
+      component: () => import('@public/views/leagues/SeasonView.vue'),
+      meta: {
+        title: 'Season',
+      },
+    },
   ],
 });
 

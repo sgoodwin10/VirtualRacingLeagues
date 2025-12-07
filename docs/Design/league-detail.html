@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GT Masters Cup - League Detail - VRL</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        racing: {
+                            // Primary - Racing Black
+                            'carbon': '#0a0a0a',
+                            'asphalt': '#1a1a1a',
+                            'tarmac': '#2d2d2d',
+                            'pit-lane': '#3d3d3d',
+                            // Accent - Championship Gold
+                            'gold': '#d4a853',
+                            'gold-bright': '#f5c866',
+                            'gold-muted': '#a08040',
+                            // Secondary - Safety Orange
+                            'safety': '#ff6b35',
+                            'safety-bright': '#ff8a5c',
+                            'safety-dark': '#e55a2b',
+                            // Neutrals
+                            'pit-white': '#fafafa',
+                            'concrete': '#e5e5e5',
+                            'barrier': '#9ca3af',
+                            'gravel': '#6b7280',
+                            // Semantic
+                            'success': '#22c55e',
+                            'warning': '#f59e0b',
+                            'danger': '#ef4444',
+                            'info': '#3b82f6',
+                            'fastest-lap': '#a855f7',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Racing Sans One', 'cursive'],
+                        'body': ['Source Serif 4', 'Georgia', 'serif'],
+                        'data': ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                        'scale-in': 'scaleIn 0.4s ease-out forwards',
+                        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        scaleIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 0 0 rgba(34, 197, 94, 0.4)' },
+                            '50%': { boxShadow: '0 0 0 6px rgba(34, 197, 94, 0.1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* CSS Custom Properties for Theme Switching */
+        :root {
+            /* Dark theme colors */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2d2d2d;
+            --bg-quaternary: #3d3d3d;
+            --text-primary: #fafafa;
+            --text-secondary: #e5e5e5;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+            --accent-gold: #d4a853;
+            --accent-gold-bright: #f5c866;
+            --accent-gold-muted: #a08040;
+            --accent-safety: #ff6b35;
+            --accent-safety-bright: #ff8a5c;
+            --border-primary: #2d2d2d;
+            --border-secondary: #3d3d3d;
+            --card-bg: #1a1a1a;
+            --card-border: #2d2d2d;
+            --glass-bg: rgba(10, 10, 10, 0.9);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 168, 83, 0.1) 0%, transparent 50%);
+            --hero-gradient-start: rgba(10, 10, 10, 0.4);
+            --hero-gradient-end: rgba(10, 10, 10, 0.95);
+            /* Semantic colors */
+            --color-success: #22c55e;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --color-info: #3b82f6;
+            --color-fastest-lap: #a855f7;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8f7f4;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0efe8;
+            --bg-quaternary: #e8e6df;
+            --text-primary: #0a0a0a;
+            --text-secondary: #1a1a1a;
+            --text-muted: #6b7280;
+            --text-dim: #9ca3af;
+            --accent-gold: #b8923f;
+            --accent-gold-bright: #d4a853;
+            --accent-gold-muted: #8a6e2f;
+            --accent-safety: #e55a2b;
+            --accent-safety-bright: #ff6b35;
+            --border-primary: #e8e6df;
+            --border-secondary: #d8d6cf;
+            --card-bg: #ffffff;
+            --card-border: #e8e6df;
+            --glass-bg: rgba(248, 247, 244, 0.95);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184, 146, 63, 0.08) 0%, transparent 50%);
+            --hero-gradient-start: rgba(248, 247, 244, 0.4);
+            --hero-gradient-end: rgba(248, 247, 244, 0.95);
+            --color-success: #16a34a;
+            --color-warning: #d97706;
+            --color-danger: #dc2626;
+            --color-info: #2563eb;
+            --color-fastest-lap: #9333ea;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Serif 4', Georgia, serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Ambient gradient background */
+        .ambient-bg {
+            background: var(--ambient-gradient), var(--bg-primary);
+            transition: background 0.3s ease;
+        }
+
+        /* Glass effect for navigation */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: background 0.3s ease;
+        }
+
+        /* Hero gradient overlay */
+        .hero-gradient {
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                var(--hero-gradient-start) 40%,
+                var(--hero-gradient-end) 100%
+            );
+        }
+
+        /* Card with racing edge effect */
+        .card-racing {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card-racing:hover {
+            border-color: var(--accent-gold);
+            opacity: 0.9;
+        }
+
+        /* Racing stripe accent */
+        .racing-stripe {
+            position: relative;
+        }
+        .racing-stripe::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--accent-gold) 0%, var(--accent-safety) 100%);
+        }
+
+        /* Gradient border accent */
+        .gradient-border {
+            position: relative;
+        }
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent-gold), transparent 50%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        /* Button shine effect */
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0) 40%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(45deg);
+            transition: transform 0.5s ease;
+        }
+        .btn-shine:hover::after {
+            transform: rotate(45deg) translateY(-100%);
+        }
+
+        /* Checkered pattern */
+        .pattern-checkered {
+            background-image:
+                linear-gradient(45deg, var(--bg-tertiary) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--bg-tertiary) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--bg-tertiary) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--bg-tertiary) 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* Grid pattern overlay */
+        .pattern-grid {
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border-primary) 39px, var(--border-primary) 40px),
+                              repeating-linear-gradient(90deg, transparent, transparent 39px, var(--border-primary) 39px, var(--border-primary) 40px);
+            opacity: 0.3;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-quaternary);
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-gold);
+        }
+
+        /* Competition card hover */
+        .competition-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .competition-card:hover {
+            background: var(--bg-tertiary);
+        }
+        .competition-card:hover .competition-icon {
+            transform: scale(1.05);
+        }
+        .competition-icon {
+            transition: transform 0.3s ease;
+        }
+
+        /* Seasons panel */
+        .seasons-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+        .seasons-panel.expanded {
+            max-height: 600px;
+            opacity: 1;
+        }
+
+        /* Chevron rotation */
+        .chevron {
+            transition: transform 0.3s ease;
+        }
+        .expanded .chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Data row hover */
+        .data-row {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .data-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-gold);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .data-row:hover::before {
+            opacity: 1;
+        }
+        .data-row:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Animation delays */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+
+        /* Tab active state */
+        .tab-active {
+            position: relative;
+        }
+        .tab-active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-gold);
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: var(--bg-tertiary);
+            border-radius: 13px;
+            border: 2px solid var(--border-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            border-color: var(--accent-gold);
+        }
+        .theme-toggle-indicator {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg-primary);
+            font-size: 11px;
+        }
+        [data-theme="light"] .theme-toggle-indicator {
+            transform: translateX(22px);
+        }
+        .theme-icon-light {
+            display: block;
+        }
+        .theme-icon-dark {
+            display: none;
+        }
+        [data-theme="light"] .theme-icon-light {
+            display: none;
+        }
+        [data-theme="light"] .theme-icon-dark {
+            display: block;
+        }
+
+        /* Mobile responsive utilities */
+        @media (max-width: 1024px) {
+            .hide-lg {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hide-mobile {
+                display: none !important;
+            }
+        }
+
+        /* Scrollable tables */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+</head>
+<body class="min-h-screen ambient-bg">
+    <!-- Top Navigation -->
+    <header class="h-16 md:h-20 glass border-b border-racing-tarmac/50 flex items-center justify-between px-4 md:px-6 fixed top-0 left-0 right-0 z-50" style="border-color: var(--border-primary);">
+        <div class="flex items-center gap-4 md:gap-8">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2 md:gap-3 no-underline">
+                <div class="w-8 h-8 md:w-10 md:h-10 bg-racing-gold flex items-center justify-center" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                    <span class="font-data text-[10px] md:text-[11px] font-bold text-racing-carbon">VRL</span>
+                </div>
+                <div class="hidden sm:block">
+                    <span class="font-display text-xs md:text-sm tracking-wider uppercase" style="color: var(--text-primary);">Virtual Racing</span>
+                    <span class="font-display text-xs md:text-sm tracking-wider uppercase ml-1" style="color: var(--text-muted);">Leagues</span>
+                </div>
+            </a>
+
+            <!-- Nav Links -->
+            <nav class="hidden lg:flex items-center gap-1">
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-display text-[10px] uppercase tracking-[0.15em] rounded border" style="background: var(--bg-tertiary); color: var(--accent-gold); border-color: var(--accent-gold);">
+                    <i class="ph-fill ph-flag-checkered text-sm"></i>
+                    Leagues
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-display text-[10px] uppercase tracking-[0.15em] rounded transition-all" style="color: var(--text-muted);" onmouseover="this.style.color='var(--text-primary)'; this.style.background='var(--bg-tertiary)';" onmouseout="this.style.color='var(--text-muted)'; this.style.background='transparent';">
+                    <i class="ph ph-calendar-blank text-sm"></i>
+                    <span class="hidden xl:inline">Schedule</span>
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-display text-[10px] uppercase tracking-[0.15em] rounded transition-all" style="color: var(--text-muted);" onmouseover="this.style.color='var(--text-primary)'; this.style.background='var(--bg-tertiary)';" onmouseout="this.style.color='var(--text-muted)'; this.style.background='transparent';">
+                    <i class="ph ph-users-three text-sm"></i>
+                    <span class="hidden xl:inline">Drivers</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="flex items-center gap-2 md:gap-4">
+            <!-- Status indicator -->
+            <div class="hidden md:flex items-center gap-2.5 px-3.5 py-2 rounded-full" style="background: var(--bg-tertiary);">
+                <span class="w-2.5 h-2.5 rounded-full animate-pulse-glow" style="background: var(--color-success);"></span>
+                <span class="font-data text-[11px]" style="color: var(--text-muted);">System Online</span>
+            </div>
+
+            <!-- Theme Toggle -->
+            <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+                <div class="theme-toggle-indicator">
+                    <i class="ph-fill ph-sun theme-icon-light"></i>
+                    <i class="ph-fill ph-moon theme-icon-dark"></i>
+                </div>
+            </button>
+
+            <!-- User -->
+            <button class="flex items-center gap-2 md:gap-3 px-2 py-1 rounded transition-all" style="background: transparent;" onmouseover="this.style.background='var(--bg-tertiary)';" onmouseout="this.style.background='transparent';">
+                <div class="w-8 h-8 md:w-9 md:h-9 rounded flex items-center justify-center border" style="background: var(--bg-tertiary); border-color: var(--border-primary);">
+                    <i class="ph ph-user text-sm md:text-base" style="color: var(--text-muted);"></i>
+                </div>
+                <i class="ph ph-caret-down text-xs hidden md:inline" style="color: var(--text-dim);"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="min-h-screen pt-16 md:pt-20">
+        <!-- Hero Section -->
+        <section class="relative overflow-hidden opacity-0 animate-scale-in delay-100">
+            <!-- Hero Background -->
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1400&h=500&fit=crop&q=80');">
+                <div class="hero-gradient absolute inset-0"></div>
+            </div>
+
+            <!-- Decorative grid overlay -->
+            <div class="absolute inset-0 pattern-grid"></div>
+
+            <!-- Hero Content -->
+            <div class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-16">
+                <!-- Breadcrumbs -->
+                <nav class="flex items-center gap-2 mb-6 md:mb-8 opacity-0 animate-fade-in-up">
+                    <a href="#" class="flex items-center gap-1.5 font-data text-[11px] transition-colors" style="color: var(--text-dim);" onmouseover="this.style.color='var(--accent-gold)';" onmouseout="this.style.color='var(--text-dim)';">
+                        <i class="ph ph-house text-sm"></i>
+                        Leagues
+                    </a>
+                    <i class="ph ph-caret-right text-xs" style="color: var(--bg-quaternary);"></i>
+                    <span class="font-data text-[11px] font-medium" style="color: var(--text-primary);">GT Masters Cup</span>
+                </nav>
+
+                <div class="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6 md:gap-8">
+                    <!-- Left: League Info -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4 md:gap-8 w-full lg:w-auto">
+                        <!-- League Logo -->
+                        <div class="relative flex-shrink-0">
+                            <div class="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 border-4 border-racing-gold flex items-center justify-center shadow-2xl" style="background: var(--bg-primary); box-shadow: 0 20px 40px var(--shadow-color);">
+                                <span class="font-display text-3xl sm:text-4xl md:text-5xl tracking-tight" style="color: var(--text-primary);">GT</span>
+                            </div>
+                            <!-- Live indicator -->
+                            <div class="absolute -top-2 -right-2 px-2 sm:px-2.5 py-1 rounded flex items-center gap-1.5 animate-pulse-glow" style="background: var(--color-success);">
+                                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></span>
+                                <span class="font-data text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-white">Live</span>
+                            </div>
+                        </div>
+
+                        <!-- League Title & Meta -->
+                        <div class="pb-1 flex-1">
+                            <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                                <span class="px-2.5 md:px-3 py-1 md:py-1.5 font-display text-[9px] md:text-[10px] uppercase tracking-wider bg-pink-500/20 text-pink-300 border border-pink-500/30 rounded-full">
+                                    Private
+                                </span>
+                                <span class="font-data text-[10px] md:text-[11px]" style="color: var(--text-dim);">
+                                    Created Dec 2024
+                                </span>
+                            </div>
+                            <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl leading-none tracking-wide uppercase mb-2 md:mb-3" style="color: var(--text-primary);">
+                                GT Masters Cup
+                            </h1>
+                            <p class="font-body text-base sm:text-lg max-w-xl" style="color: var(--text-muted);">
+                                Elite GT racing series for the most dedicated sim racers.
+                                Where precision meets passion.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Social Links -->
+                    <div class="hidden lg:flex gap-2 pb-1">
+                        <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-display text-[10px] uppercase tracking-wider transition-all" style="background: var(--bg-tertiary); color: var(--text-muted);" onmouseover="this.style.background='var(--accent-gold)'; this.style.color='var(--bg-primary)';" onmouseout="this.style.background='var(--bg-tertiary)'; this.style.color='var(--text-muted)';">
+                            <i class="ph-fill ph-discord-logo text-sm"></i>
+                            Discord
+                        </a>
+                        <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-display text-[10px] uppercase tracking-wider transition-all" style="background: var(--bg-tertiary); color: var(--text-muted);" onmouseover="this.style.background='var(--accent-gold)'; this.style.color='var(--bg-primary)';" onmouseout="this.style.background='var(--bg-tertiary)'; this.style.color='var(--text-muted)';">
+                            <i class="ph-fill ph-twitter-logo text-sm"></i>
+                            Twitter
+                        </a>
+                        <a href="#" class="flex items-center gap-2 px-4 py-2.5 font-display text-[10px] uppercase tracking-wider transition-all" style="background: var(--bg-tertiary); color: var(--text-muted);" onmouseover="this.style.background='var(--accent-gold)'; this.style.color='var(--bg-primary)';" onmouseout="this.style.background='var(--bg-tertiary)'; this.style.color='var(--text-muted)';">
+                            <i class="ph-fill ph-youtube-logo text-sm"></i>
+                            YouTube
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Bar -->
+        <section class="border-b py-4 md:py-6" style="background: var(--bg-secondary); border-color: var(--border-primary);">
+            <div class="max-w-6xl mx-auto px-4 md:px-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 opacity-0 animate-fade-in-up delay-200">
+                    <div class="gradient-border card-racing rounded p-5 text-center hover:bg-racing-tarmac/30 transition-all">
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="w-12 h-12 bg-racing-gold/10 rounded flex items-center justify-center">
+                                <i class="ph-fill ph-flag-checkered text-xl text-racing-gold"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-display text-3xl text-racing-pit-white leading-none">6</div>
+                                <div class="font-data text-[9px] uppercase tracking-wider text-racing-gravel mt-1">Competitions</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gradient-border card-racing rounded p-5 text-center hover:bg-racing-tarmac/30 transition-all">
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="w-12 h-12 bg-racing-gold/10 rounded flex items-center justify-center">
+                                <i class="ph-fill ph-calendar-dots text-xl text-racing-gold"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-display text-3xl text-racing-pit-white leading-none">4</div>
+                                <div class="font-data text-[9px] uppercase tracking-wider text-racing-gravel mt-1">Active Seasons</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gradient-border card-racing rounded p-5 text-center hover:bg-racing-tarmac/30 transition-all">
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="w-12 h-12 bg-racing-gold/10 rounded flex items-center justify-center">
+                                <i class="ph-fill ph-users text-xl text-racing-gold"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-display text-3xl text-racing-gold leading-none">78</div>
+                                <div class="font-data text-[9px] uppercase tracking-wider text-racing-gravel mt-1">Drivers</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gradient-border card-racing rounded p-5 text-center hover:bg-racing-tarmac/30 transition-all">
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="w-12 h-12 bg-racing-gold/10 rounded flex items-center justify-center">
+                                <i class="ph-fill ph-game-controller text-xl text-racing-gold"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-display text-lg text-racing-pit-white leading-none">GT7</div>
+                                <div class="font-data text-[9px] uppercase tracking-wider text-racing-gravel mt-1">Platform</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <section class="py-6 md:py-8">
+            <div class="max-w-6xl mx-auto px-4 md:px-6">
+                <div class="grid grid-cols-12 gap-6 md:gap-8">
+
+                    <!-- Left Column: Main Content -->
+                    <div class="col-span-12 lg:col-span-8 space-y-4 md:space-y-6">
+
+                        <!-- League Description -->
+                        <div class="racing-stripe card-racing rounded overflow-hidden opacity-0 animate-fade-in-up delay-300">
+                            <div class="p-4 md:p-6 pl-6 md:pl-8">
+                                <p class="font-body text-base md:text-lg leading-relaxed" style="color: var(--text-secondary);">
+                                    Welcome to GT Masters Cup! We host competitive GT racing events every Sunday evening across multiple championships.
+                                    All skill levels are welcome, from beginners to experienced racers. Join our Discord community to get started
+                                    and find your place on the grid.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Tabs Navigation -->
+                        <div class="flex gap-0 card-racing rounded overflow-hidden opacity-0 animate-fade-in-up delay-300 overflow-x-auto">
+                            <button class="relative px-4 md:px-6 py-3 md:py-4 font-display text-[9px] md:text-[10px] uppercase tracking-[0.15em] tab-active whitespace-nowrap" style="background: var(--bg-tertiary); color: var(--accent-gold);">
+                                <i class="ph-fill ph-flag-checkered mr-1 md:mr-2"></i>
+                                Competitions
+                            </button>
+                            <button class="relative px-4 md:px-6 py-3 md:py-4 font-display text-[9px] md:text-[10px] uppercase tracking-[0.15em] transition-all border-l whitespace-nowrap" style="color: var(--text-muted); border-color: var(--border-primary);" onmouseover="this.style.color='var(--text-primary)'; this.style.background='var(--bg-tertiary)';" onmouseout="this.style.color='var(--text-muted)'; this.style.background='transparent';">
+                                <i class="ph ph-users mr-1 md:mr-2"></i>
+                                Drivers
+                                <span class="ml-1 md:ml-2 px-1.5 py-0.5 text-[10px] rounded" style="background: var(--bg-tertiary); color: var(--text-dim);">78</span>
+                            </button>
+                            <button class="relative px-4 md:px-6 py-3 md:py-4 font-display text-[9px] md:text-[10px] uppercase tracking-[0.15em] transition-all border-l whitespace-nowrap" style="color: var(--text-muted); border-color: var(--border-primary);" onmouseover="this.style.color='var(--text-primary)'; this.style.background='var(--bg-tertiary)';" onmouseout="this.style.color='var(--text-muted)'; this.style.background='transparent';">
+                                <i class="ph ph-chart-line mr-1 md:mr-2"></i>
+                                <span class="hidden sm:inline">Statistics</span>
+                                <span class="sm:hidden">Stats</span>
+                            </button>
+                        </div>
+
+                        <!-- Competitions Panel -->
+                        <div class="card-racing rounded overflow-hidden opacity-0 animate-fade-in-up delay-400">
+                            <!-- Panel Header -->
+                            <div class="flex items-center justify-between px-6 py-5 border-b border-racing-tarmac">
+                                <div>
+                                    <h2 class="font-display text-xl text-racing-pit-white uppercase tracking-wide">Competitions</h2>
+                                    <p class="font-body text-sm text-racing-barrier mt-1">6 competitions with 13 total seasons</p>
+                                </div>
+                            </div>
+
+                            <!-- Competition List -->
+                            <div class="divide-y divide-racing-tarmac/50">
+
+                                <!-- Competition 1: Formula 1 (Expanded) -->
+                                <div class="competition-card expanded" id="comp-f1">
+                                    <!-- Competition Header -->
+                                    <div class="flex items-center gap-4 px-6 py-5 cursor-pointer" onclick="toggleCompetition('comp-f1')">
+                                        <div class="competition-icon w-14 h-14 bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center flex-shrink-0 shadow-lg rounded">
+                                            <span class="font-display text-xl text-white">F1</span>
+                                        </div>
+
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-3 mb-1">
+                                                <h3 class="font-display text-lg text-racing-pit-white uppercase tracking-wide">
+                                                    Formula 1
+                                                </h3>
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-racing-success/10 text-racing-success font-data text-[10px] font-bold uppercase tracking-wider rounded-full">
+                                                    <span class="w-1.5 h-1.5 bg-racing-success rounded-full animate-pulse"></span>
+                                                    1 Active
+                                                </span>
+                                            </div>
+                                            <p class="font-body text-sm text-racing-barrier">
+                                                Premier open-wheel racing championship
+                                            </p>
+                                        </div>
+
+                                        <div class="flex items-center gap-4">
+                                            <div class="text-right">
+                                                <div class="font-display text-xl text-racing-pit-white">3</div>
+                                                <div class="font-data text-[9px] text-racing-gravel uppercase">Seasons</div>
+                                            </div>
+
+                                            <i class="ph ph-caret-down text-lg text-racing-gravel chevron"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- Seasons Panel -->
+                                    <div class="seasons-panel expanded bg-racing-carbon/50">
+                                        <div class="px-6 py-4 space-y-3">
+                                            <!-- Season Row 1 -->
+                                            <a href="#" class="flex items-center gap-4 px-4 py-3 bg-racing-asphalt/50 rounded border border-racing-tarmac hover:border-racing-gold/30 transition-all no-underline">
+                                                <div class="w-10 h-10 bg-racing-success/10 rounded flex items-center justify-center">
+                                                    <i class="ph-fill ph-play text-racing-success"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="font-display text-base text-racing-pit-white uppercase">Season 5 - 2025</div>
+                                                    <div class="font-data text-xs text-racing-gravel mt-0.5">Round 8 of 22 • Next race in 3 days</div>
+                                                </div>
+                                                <span class="px-2.5 py-1 font-display text-[10px] uppercase tracking-wider bg-racing-success/10 text-racing-success rounded-full">Active</span>
+                                                <i class="ph ph-arrow-right text-base text-racing-gravel"></i>
+                                            </a>
+
+                                            <!-- Season Row 2 -->
+                                            <a href="#" class="flex items-center gap-4 px-4 py-3 bg-racing-asphalt/50 rounded border border-racing-tarmac hover:border-racing-gold/30 transition-all no-underline">
+                                                <div class="w-10 h-10 bg-racing-tarmac rounded flex items-center justify-center">
+                                                    <i class="ph ph-check text-racing-barrier"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="font-display text-base text-racing-pit-white uppercase">Season 4 - 2024</div>
+                                                    <div class="font-data text-xs text-racing-gravel mt-0.5">22 races completed • 32 drivers</div>
+                                                </div>
+                                                <span class="px-2.5 py-1 font-display text-[10px] uppercase tracking-wider bg-racing-tarmac text-racing-barrier rounded-full">Completed</span>
+                                                <i class="ph ph-arrow-right text-base text-racing-gravel"></i>
+                                            </a>
+
+                                            <!-- Season Row 3 -->
+                                            <a href="#" class="flex items-center gap-4 px-4 py-3 bg-racing-asphalt/50 rounded border border-racing-tarmac hover:border-racing-gold/30 transition-all no-underline">
+                                                <div class="w-10 h-10 bg-racing-tarmac rounded flex items-center justify-center">
+                                                    <i class="ph ph-check text-racing-barrier"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="font-display text-base text-racing-pit-white uppercase">Season 3 - 2023</div>
+                                                    <div class="font-data text-xs text-racing-gravel mt-0.5">20 races completed • 28 drivers</div>
+                                                </div>
+                                                <span class="px-2.5 py-1 font-display text-[10px] uppercase tracking-wider bg-racing-tarmac text-racing-barrier rounded-full">Completed</span>
+                                                <i class="ph ph-arrow-right text-base text-racing-gravel"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Competition 2: GT3 Sprint -->
+                                <div class="competition-card" id="comp-gt3">
+                                    <div class="flex items-center gap-4 px-6 py-5 cursor-pointer" onclick="toggleCompetition('comp-gt3')">
+                                        <div class="competition-icon w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0 shadow-lg rounded">
+                                            <span class="font-display text-lg text-white">GT3</span>
+                                        </div>
+
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-3 mb-1">
+                                                <h3 class="font-display text-lg text-racing-pit-white uppercase tracking-wide">
+                                                    GT3 Sprint Series
+                                                </h3>
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-racing-success/10 text-racing-success font-data text-[10px] font-bold uppercase tracking-wider rounded-full">
+                                                    <span class="w-1.5 h-1.5 bg-racing-success rounded-full animate-pulse"></span>
+                                                    1 Active
+                                                </span>
+                                            </div>
+                                            <p class="font-body text-sm text-racing-barrier">
+                                                High-intensity GT3 sprint racing
+                                            </p>
+                                        </div>
+
+                                        <div class="flex items-center gap-4">
+                                            <div class="text-right">
+                                                <div class="font-display text-xl text-racing-pit-white">2</div>
+                                                <div class="font-data text-[9px] text-racing-gravel uppercase">Seasons</div>
+                                            </div>
+
+                                            <i class="ph ph-caret-down text-lg text-racing-gravel chevron"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="seasons-panel bg-racing-carbon/50">
+                                        <div class="px-6 py-4 space-y-3">
+                                            <a href="#" class="flex items-center gap-4 px-4 py-3 bg-racing-asphalt/50 rounded border border-racing-tarmac no-underline">
+                                                <div class="w-10 h-10 bg-racing-success/10 rounded flex items-center justify-center">
+                                                    <i class="ph-fill ph-play text-racing-success"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="font-display text-base text-racing-pit-white uppercase">Season 2 - 2025</div>
+                                                    <div class="font-data text-xs text-racing-gravel mt-0.5">Round 4 of 12 • 24 drivers</div>
+                                                </div>
+                                                <span class="px-2.5 py-1 font-display text-[10px] uppercase tracking-wider bg-racing-success/10 text-racing-success rounded-full">Active</span>
+                                            </a>
+                                            <a href="#" class="flex items-center gap-4 px-4 py-3 bg-racing-asphalt/50 rounded border border-racing-tarmac no-underline">
+                                                <div class="w-10 h-10 bg-racing-tarmac rounded flex items-center justify-center">
+                                                    <i class="ph ph-check text-racing-barrier"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="font-display text-base text-racing-pit-white uppercase">Season 1 - 2024</div>
+                                                    <div class="font-data text-xs text-racing-gravel mt-0.5">12 races completed • 20 drivers</div>
+                                                </div>
+                                                <span class="px-2.5 py-1 font-display text-[10px] uppercase tracking-wider bg-racing-tarmac text-racing-barrier rounded-full">Completed</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Competition 3: Endurance -->
+                                <div class="competition-card" id="comp-endurance">
+                                    <div class="flex items-center gap-4 px-6 py-5 cursor-pointer" onclick="toggleCompetition('comp-endurance')">
+                                        <div class="competition-icon w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0 shadow-lg rounded">
+                                            <i class="ph-fill ph-timer text-2xl text-white"></i>
+                                        </div>
+
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-3 mb-1">
+                                                <h3 class="font-display text-lg text-racing-pit-white uppercase tracking-wide">
+                                                    Endurance Championship
+                                                </h3>
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-racing-warning/10 text-racing-warning font-data text-[10px] font-bold uppercase tracking-wider rounded-full">
+                                                    <i class="ph ph-clock text-xs"></i>
+                                                    Upcoming
+                                                </span>
+                                            </div>
+                                            <p class="font-body text-sm text-racing-barrier">
+                                                Long-distance endurance racing events
+                                            </p>
+                                        </div>
+
+                                        <div class="flex items-center gap-4">
+                                            <div class="text-right">
+                                                <div class="font-display text-xl text-racing-pit-white">1</div>
+                                                <div class="font-data text-[9px] text-racing-gravel uppercase">Seasons</div>
+                                            </div>
+
+                                            <i class="ph ph-caret-down text-lg text-racing-gravel chevron"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="seasons-panel bg-racing-carbon/50">
+                                        <div class="px-6 py-4 space-y-3">
+                                            <a href="#" class="flex items-center gap-4 px-4 py-3 bg-racing-asphalt/50 rounded border border-racing-tarmac no-underline">
+                                                <div class="w-10 h-10 bg-racing-warning/10 rounded flex items-center justify-center">
+                                                    <i class="ph ph-clock text-racing-warning"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="font-display text-base text-racing-pit-white uppercase">Season 1 - 2025</div>
+                                                    <div class="font-data text-xs text-racing-gravel mt-0.5">Starts Jan 15, 2025 • 6 events</div>
+                                                </div>
+                                                <span class="px-2.5 py-1 font-display text-[10px] uppercase tracking-wider bg-racing-warning/10 text-racing-warning rounded-full">Scheduled</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Competition 4: GT4 -->
+                                <div class="competition-card" id="comp-gt4">
+                                    <div class="flex items-center gap-4 px-6 py-5 cursor-pointer" onclick="toggleCompetition('comp-gt4')">
+                                        <div class="competition-icon w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-lg rounded">
+                                            <span class="font-display text-lg text-white">GT4</span>
+                                        </div>
+
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-3 mb-1">
+                                                <h3 class="font-display text-lg text-racing-pit-white uppercase tracking-wide">
+                                                    GT4 Challenge
+                                                </h3>
+                                            </div>
+                                            <p class="font-body text-sm text-racing-barrier">
+                                                Entry-level GT competition for new racers
+                                            </p>
+                                        </div>
+
+                                        <div class="flex items-center gap-4">
+                                            <div class="text-right">
+                                                <div class="font-display text-xl text-racing-pit-white">4</div>
+                                                <div class="font-data text-[9px] text-racing-gravel uppercase">Seasons</div>
+                                            </div>
+
+                                            <i class="ph ph-caret-down text-lg text-racing-gravel chevron"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="seasons-panel bg-racing-carbon/50">
+                                        <div class="px-6 py-4">
+                                            <p class="font-body text-sm text-racing-gravel text-center py-4">4 completed seasons</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Sidebar -->
+                    <div class="col-span-12 lg:col-span-4 space-y-4 md:space-y-6 opacity-0 animate-fade-in-up delay-500">
+
+                        <!-- Recent Activity -->
+                        <div class="card-racing rounded overflow-hidden">
+                            <div class="px-5 py-4 border-b border-racing-tarmac">
+                                <h3 class="font-display text-base text-racing-pit-white uppercase tracking-wide flex items-center gap-2">
+                                    <i class="ph ph-clock-counter-clockwise text-racing-gold"></i>
+                                    Recent Activity
+                                </h3>
+                            </div>
+                            <div class="p-4 space-y-3">
+                                <div class="flex items-start gap-3 p-3 rounded hover:bg-racing-tarmac/30 transition-all">
+                                    <div class="w-8 h-8 bg-racing-success/10 rounded flex items-center justify-center flex-shrink-0">
+                                        <i class="ph-fill ph-flag-checkered text-sm text-racing-success"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-body text-sm text-racing-pit-white">Race completed</div>
+                                        <div class="font-data text-xs text-racing-gravel mt-0.5">F1 Season 5 • Round 7</div>
+                                    </div>
+                                    <span class="font-data text-[10px] text-racing-gravel">2h ago</span>
+                                </div>
+
+                                <div class="flex items-start gap-3 p-3 rounded hover:bg-racing-tarmac/30 transition-all">
+                                    <div class="w-8 h-8 bg-racing-info/10 rounded flex items-center justify-center flex-shrink-0">
+                                        <i class="ph ph-user-plus text-sm text-racing-info"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-body text-sm text-racing-pit-white">New driver joined</div>
+                                        <div class="font-data text-xs text-racing-gravel mt-0.5">Marcus Weber • GT3 Sprint</div>
+                                    </div>
+                                    <span class="font-data text-[10px] text-racing-gravel">5h ago</span>
+                                </div>
+
+                                <div class="flex items-start gap-3 p-3 rounded hover:bg-racing-tarmac/30 transition-all">
+                                    <div class="w-8 h-8 bg-racing-gold/10 rounded flex items-center justify-center flex-shrink-0">
+                                        <i class="ph ph-calendar-plus text-sm text-racing-gold"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-body text-sm text-racing-pit-white">Season scheduled</div>
+                                        <div class="font-data text-xs text-racing-gravel mt-0.5">Endurance Season 1</div>
+                                    </div>
+                                    <span class="font-data text-[10px] text-racing-gravel">1d ago</span>
+                                </div>
+
+                                <div class="flex items-start gap-3 p-3 rounded hover:bg-racing-tarmac/30 transition-all">
+                                    <div class="w-8 h-8 bg-racing-fastest-lap/10 rounded flex items-center justify-center flex-shrink-0">
+                                        <i class="ph-fill ph-trophy text-sm text-racing-fastest-lap"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-body text-sm text-racing-pit-white">Championship leader</div>
+                                        <div class="font-data text-xs text-racing-gravel mt-0.5">Alex Chen • 156 points</div>
+                                    </div>
+                                    <span class="font-data text-[10px] text-racing-gravel">2d ago</span>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 border-t border-racing-tarmac">
+                                <button class="w-full text-center font-display text-xs text-racing-gold hover:text-racing-gold-bright transition-colors uppercase tracking-wider">
+                                    View All Activity
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Upcoming Races -->
+                        <div class="card-racing rounded overflow-hidden">
+                            <div class="px-5 py-4 border-b border-racing-tarmac">
+                                <h3 class="font-display text-base text-racing-pit-white uppercase tracking-wide flex items-center gap-2">
+                                    <i class="ph ph-calendar text-racing-gold"></i>
+                                    Upcoming Races
+                                </h3>
+                            </div>
+                            <div class="p-4 space-y-3">
+                                <div class="p-4 bg-racing-gold/5 border border-racing-gold/20 rounded">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-display text-base text-racing-pit-white uppercase">Spa-Francorchamps</span>
+                                        <span class="px-2 py-0.5 font-display text-[9px] uppercase tracking-wider bg-racing-gold/15 text-racing-gold rounded">In 3 days</span>
+                                    </div>
+                                    <div class="font-data text-xs text-racing-gravel">F1 Season 5 • Round 8</div>
+                                    <div class="flex items-center gap-2 mt-3">
+                                        <div class="flex -space-x-2">
+                                            <div class="w-6 h-6 rounded-full bg-racing-tarmac border-2 border-racing-asphalt flex items-center justify-center font-data text-[9px] font-bold text-racing-barrier">AC</div>
+                                            <div class="w-6 h-6 rounded-full bg-racing-tarmac border-2 border-racing-asphalt flex items-center justify-center font-data text-[9px] font-bold text-racing-barrier">MW</div>
+                                            <div class="w-6 h-6 rounded-full bg-racing-tarmac border-2 border-racing-asphalt flex items-center justify-center font-data text-[9px] font-bold text-racing-barrier">+30</div>
+                                        </div>
+                                        <span class="font-data text-[10px] text-racing-gravel">32 drivers registered</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-racing-asphalt/50 border border-racing-tarmac rounded">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-display text-base text-racing-pit-white uppercase">Monza</span>
+                                        <span class="font-data text-[10px] text-racing-gravel">Dec 18</span>
+                                    </div>
+                                    <div class="font-data text-xs text-racing-gravel">GT3 Sprint • Round 5</div>
+                                </div>
+
+                                <div class="p-4 bg-racing-asphalt/50 border border-racing-tarmac rounded">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-display text-base text-racing-pit-white uppercase">Suzuka</span>
+                                        <span class="font-data text-[10px] text-racing-gravel">Dec 22</span>
+                                    </div>
+                                    <div class="font-data text-xs text-racing-gravel">F1 Season 5 • Round 9</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Championship Leaders -->
+                        <div class="card-racing rounded overflow-hidden">
+                            <div class="px-5 py-4 border-b border-racing-tarmac">
+                                <h3 class="font-display text-base text-racing-pit-white uppercase tracking-wide flex items-center gap-2">
+                                    <i class="ph-fill ph-trophy text-racing-gold"></i>
+                                    Championship Leaders
+                                </h3>
+                            </div>
+                            <div class="divide-y divide-racing-tarmac/50">
+                                <div class="data-row px-5 py-4 flex items-center gap-3">
+                                    <span class="font-display text-2xl text-racing-gold w-8">1</span>
+                                    <div class="flex-1">
+                                        <div class="font-body text-sm font-semibold text-racing-pit-white">Alex Chen</div>
+                                        <div class="font-data text-xs text-racing-gravel">F1 Season 5</div>
+                                    </div>
+                                    <span class="font-data text-lg font-semibold text-racing-gold">156</span>
+                                </div>
+                                <div class="data-row px-5 py-4 flex items-center gap-3">
+                                    <span class="font-display text-2xl text-[#c0c0c0] w-8">2</span>
+                                    <div class="flex-1">
+                                        <div class="font-body text-sm font-semibold text-racing-pit-white">Marcus Weber</div>
+                                        <div class="font-data text-xs text-racing-gravel">F1 Season 5</div>
+                                    </div>
+                                    <span class="font-data text-lg font-semibold text-racing-pit-white">142</span>
+                                </div>
+                                <div class="data-row px-5 py-4 flex items-center gap-3">
+                                    <span class="font-display text-2xl text-[#cd7f32] w-8">3</span>
+                                    <div class="flex-1">
+                                        <div class="font-body text-sm font-semibold text-racing-pit-white">James Wilson</div>
+                                        <div class="font-data text-xs text-racing-gravel">F1 Season 5</div>
+                                    </div>
+                                    <span class="font-data text-lg font-semibold text-racing-pit-white">128</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Meta -->
+                <footer class="mt-12 pt-6 border-t border-racing-tarmac">
+                    <div class="flex items-center justify-between font-data text-[11px] text-racing-gravel">
+                        <span>Last updated <span class="text-racing-gold font-medium">2 min ago</span></span>
+                        <span>League ID: <span class="text-racing-barrier">LG-2024-002</span></span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-racing-asphalt border-t border-racing-tarmac py-12 mt-12">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid grid-cols-4 gap-8 mb-8">
+                <div class="col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-racing-gold flex items-center justify-center" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                            <span class="font-data text-[11px] font-bold text-racing-carbon">VRL</span>
+                        </div>
+                        <span class="font-display text-sm tracking-wider text-racing-pit-white uppercase">Virtual Racing Leagues</span>
+                    </div>
+                    <p class="font-body text-sm text-racing-barrier max-w-sm">
+                        The complete platform for sim racing league managers. Create competitions, track results, and share standings with your community.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-display text-[10px] tracking-[0.2em] uppercase text-racing-gold mb-4">Platform</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="font-body text-sm text-racing-barrier hover:text-racing-pit-white transition-colors">Browse Leagues</a></li>
+                        <li><a href="#" class="font-body text-sm text-racing-barrier hover:text-racing-pit-white transition-colors">Create League</a></li>
+                        <li><a href="#" class="font-body text-sm text-racing-barrier hover:text-racing-pit-white transition-colors">Features</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-display text-[10px] tracking-[0.2em] uppercase text-racing-gold mb-4">Connect</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="font-body text-sm text-racing-barrier hover:text-racing-pit-white transition-colors">Discord</a></li>
+                        <li><a href="#" class="font-body text-sm text-racing-barrier hover:text-racing-pit-white transition-colors">Twitter</a></li>
+                        <li><a href="#" class="font-body text-sm text-racing-barrier hover:text-racing-pit-white transition-colors">Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-6 border-t border-racing-tarmac flex items-center justify-between font-data text-xs text-racing-gravel">
+                <span>&copy; 2024 Virtual Racing Leagues. All rights reserved.</span>
+                <div class="flex gap-4">
+                    <a href="#" class="hover:text-racing-pit-white transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-racing-pit-white transition-colors">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Competition toggle functionality
+        function toggleCompetition(id) {
+            const card = document.getElementById(id);
+            const panel = card.querySelector('.seasons-panel');
+
+            card.classList.toggle('expanded');
+            panel.classList.toggle('expanded');
+        }
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('vrl-theme', newTheme);
+        }
+
+        // Initialize theme from localStorage or system preference
+        function initTheme() {
+            const savedTheme = localStorage.getItem('vrl-theme');
+            const systemPreference = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            const theme = savedTheme || systemPreference;
+
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        // Run on page load
+        initTheme();
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('vrl-theme')) {
+                const theme = e.matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+        });
+    </script>
+</body>
+</html>
