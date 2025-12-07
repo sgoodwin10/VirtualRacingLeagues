@@ -1,16 +1,16 @@
 ---
-name: frontend-app
-description: Specialized frontend development for the app and public dashboards (resources/app and rssources/publi) using Vue 3, TypeScript, PrimeVue, and Pinia. Automatically invokes the dev-fe-app or dev-fe-public agent for comprehensive Vue expertise.
+name: frontend-public
+description: Specialized frontend development for the app and public dashboards (resources/app and rssources/public) using Vue 3, TypeScript, PrimeVue, and Pinia. Automatically invokes the dev-fe-app or dev-fe-public agent for comprehensive Vue expertise.
 allowed-tools: Bash, Glob, Grep, Read, Edit, MultiEdit, Write, WebFetch, WebSearch, TodoWrite, Task, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 ---
 
 # User Dashboard Development Skill
 
-This skill activates specialized user dashboard development mode using the `dev-fe-app` agent.
+This skill activates specialized user dashboard development mode using the `dev-fe-public` agent.
 
 ## Automatic Agent Invocation
 
-When this skill is activated, **immediately invoke the dev-fe-app agent** using the Task tool:
+When this skill is activated, **immediately invoke the dev-fe-app or dev-fe-public agent** using the Task tool, depending on the working directory:
 
 ```
 Task(subagent_type: "dev-fe-app", prompt: "[user's request]")
@@ -27,49 +27,49 @@ The dev-fe-app agent is an elite Vue.js architect with expertise in:
 
 ## Working Directory
 
-**Primary Focus**: `resources/app/`
+**Primary Focus**: `resources/public/`
 
 All user dashboard development happens in this directory. Do not work outside without explicit permission.
 
 ## Import Alias
 
-Always use `@app/` for imports within the user application:
+Always use `@public/` for imports within the user application:
 
 ```typescript
-import MyComponent from '@app/components/MyComponent.vue';
-import { useAuthStore } from '@app/stores/auth';
-import type { User } from '@app/types/user';
+import MyComponent from '@public/components/MyComponent.vue';
+import { useAuthStore } from '@public/stores/auth';
+import type { User } from '@public/types/user';
 ```
 
 ## Subdomain Architecture
 
-- **Subdomain**: `app.{APP_DOMAIN}` (e.g., `app.virtualracingleagues.localhost`)
-- **Blade Template**: `resources/views/app.blade.php`
-- **Separate Application**: Completely independent from public and admin apps
+- **Subdomain**: `public.{PUBLIC_DOMAIN}` (e.g., `public.virtualracingleagues.localhost`)
+- **Blade Template**: `resources/views/public.blade.php`
+- **Separate Application**: Completely independent from app and admin apps
 - **Authentication**: All routes require authentication (users redirected to public site if not logged in)
 
 ## Key Development Workflows
 
 ### 1. Adding a New View
-1. Create view in `resources/app/js/views/`
-2. Add route in `resources/app/js/router/index.ts` with `requiresAuth: true` meta
-3. Create tests in `resources/app/js/views/__tests__/`
+1. Create view in `resources/public/js/views/`
+2. Add route in `resources/public/js/router/index.ts` with `requiresAuth: true` meta
+3. Create tests in `resources/public/js/views/__tests__/`
 4. Use PrimeVue components for UI
 
 ### 2. Adding a Component
-1. Create in `resources/app/js/components/`
+1. Create in `resources/public/js/components/`
 2. Use Composition API with `<script setup lang="ts">`
 3. Add props/emits with TypeScript types
 4. Create Vitest tests
 
 ### 3. Adding a Composable
-1. Create in `resources/app/js/composables/`
+1. Create in `resources/public/js/composables/`
 2. Prefix with `use` (e.g., `useUserProfile.ts`)
 3. Return reactive refs and methods
 4. Write unit tests
 
 ### 4. Adding API Integration
-1. Create service in `resources/app/js/services/`
+1. Create service in `resources/public/js/services/`
 2. Use axios with TypeScript types
 3. Handle errors with toast notifications
 4. Update Pinia store if needed
@@ -102,7 +102,7 @@ Before marking any task as complete, ALL of the following must pass 100%:
 
 ### 1. Vitest Tests
 ```bash
-npm run test:app
+npm run test:public
 ```
 All tests must pass. Create tests for all new components, composables, and views.
 
@@ -114,27 +114,26 @@ No TypeScript errors allowed.
 
 ### 3. Linting
 ```bash
-npm run lint:app
+npm run lint:public
 ```
 ESLint must pass with no errors.
 
 ### 4. Formatting
 ```bash
-npm run format:app
+npm run format:public
 ```
 Code must be properly formatted with Prettier.
 
 ### Run All Checks
 ```bash
-npm run type-check && npm run lint:app && npm run format:app && npm run test:app
+npm run type-check && npm run lint:public && npm run format:public && npm run test:public
 ```
 
 ## Essential Guides
 
 Refer to these comprehensive guides for detailed patterns and examples:
 
-- **[User Dashboard Development Guide](./.claude/guides/frontend/app/app-dashboard-development-guide.md)** - Complete development workflow
-- **[PrimeVue Usage Guide](./.claude/guides/primevue-usage.md)** - Local PrimeVue reference
+- **[PrimeVue Usage Guide](./.claude/guides/design/app-public/primevue-usage.md)** - Local PrimeVue reference
 
 ## Development Commands
 
@@ -143,15 +142,15 @@ Refer to these comprehensive guides for detailed patterns and examples:
 npm run dev                    # Start Vite dev server with HMR
 
 # Testing
-npm run test:app              # Run user dashboard tests
-npm run test:app -- --ui      # Run with Vitest UI
-npm run test:app -- --coverage  # Generate coverage report
+npm run test:public              # Run user dashboard tests
+npm run test:public -- --ui      # Run with Vitest UI
+npm run test:public -- --coverage  # Generate coverage report
 
 # Quality Checks
 npm run type-check            # TypeScript type checking
-npm run lint:app              # ESLint
-npm run lint:app -- --fix     # Auto-fix linting issues
-npm run format:app            # Prettier formatting
+npm run lint:public              # ESLint
+npm run lint:public -- --fix     # Auto-fix linting issues
+npm run format:public            # Prettier formatting
 
 # Build
 npm run build                 # Production build (runs type-check + vite build)
@@ -190,7 +189,7 @@ The user dashboard is **authenticated-only**:
 - This is a **separate Vue application** from public and admin dashboards
 - Components are **NOT shared** between applications
 - Each app has its **own Pinia instance**
-- Use the `dev-fe-app` agent for all Vue/TypeScript/PrimeVue work
+- Use the `dev-fe-public` agent for all Vue/TypeScript/PrimeVue work
 - Never compromise on quality gates - all checks must pass 100%
 - This is the **user-facing** application, not the admin dashboard
 
