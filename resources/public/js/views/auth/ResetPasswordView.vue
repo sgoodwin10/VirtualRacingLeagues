@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { authService } from '@public/services/authService';
 import { useToast } from 'primevue/usetoast';
 import Password from 'primevue/password';
-import Button from 'primevue/button';
 import Message from 'primevue/message';
 
 const route = useRoute();
@@ -86,20 +85,20 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4"
-  >
+  <div class="min-h-screen flex items-center justify-center pattern-carbon p-4 md:p-8">
     <div class="w-full max-w-md">
-      <div class="bg-white rounded-lg shadow-lg p-8">
+      <div class="card-racing p-8 md:p-10">
         <!-- Header -->
         <div class="text-center mb-8">
           <div
-            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4"
+            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-tarmac mb-4"
           >
-            <i class="pi pi-key text-3xl text-blue-600"></i>
+            <i class="pi pi-key text-3xl text-gold"></i>
           </div>
-          <h1 class="text-2xl font-bold text-gray-900 mb-2">Reset Password</h1>
-          <p class="text-gray-600">Enter your new password below</p>
+          <h1 class="font-display text-3xl md:text-4xl mb-3 text-gold uppercase tracking-wider">
+            Reset Password
+          </h1>
+          <p class="font-body text-barrier">Enter your new password below</p>
         </div>
 
         <!-- Error Message -->
@@ -108,10 +107,13 @@ const handleSubmit = async (): Promise<void> => {
         </Message>
 
         <!-- Form -->
-        <form class="space-y-5" @submit.prevent="handleSubmit">
+        <form class="space-y-6" @submit.prevent="handleSubmit">
           <!-- Password Field -->
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="password"
+              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
+            >
               New Password
             </label>
             <Password
@@ -119,7 +121,7 @@ const handleSubmit = async (): Promise<void> => {
               v-model="password"
               placeholder="Enter your new password"
               :class="{ 'p-invalid': passwordError }"
-              input-class="w-full"
+              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
                 root: { class: 'w-full' },
                 input: { class: 'w-full' },
@@ -127,23 +129,27 @@ const handleSubmit = async (): Promise<void> => {
               :disabled="isSubmitting"
               :toggle-mask="true"
               autocomplete="new-password"
+              aria-label="New Password"
               @input="passwordError = ''"
             />
-            <small v-if="passwordError" class="text-red-600 mt-1 block">
+            <small v-if="passwordError" class="text-dnf mt-1 block font-body text-sm">
               {{ passwordError }}
             </small>
           </div>
 
           <!-- Confirm Password Field -->
           <div>
-            <label for="password-confirmation" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="password-confirmation"
+              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
+            >
               Confirm New Password
             </label>
             <Password
               id="password-confirmation"
               v-model="passwordConfirmation"
               placeholder="Confirm your new password"
-              input-class="w-full"
+              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
                 root: { class: 'w-full' },
                 input: { class: 'w-full' },
@@ -152,25 +158,29 @@ const handleSubmit = async (): Promise<void> => {
               :feedback="false"
               :toggle-mask="true"
               autocomplete="new-password"
+              aria-label="Confirm New Password"
               @input="passwordError = ''"
             />
           </div>
 
           <!-- Submit Button -->
-          <Button
+          <button
             type="submit"
-            label="Reset Password"
-            icon="pi pi-check"
-            :loading="isSubmitting"
             :disabled="!isFormValid || isSubmitting"
-            class="w-full"
-            severity="primary"
-          />
+            class="w-full btn btn-primary"
+            :aria-busy="isSubmitting"
+          >
+            <span v-if="!isSubmitting">Reset Password</span>
+            <span v-else>Resetting...</span>
+          </button>
         </form>
 
         <!-- Back to Login -->
-        <div class="mt-6 text-center">
-          <router-link to="/login" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+        <div class="mt-8 text-center">
+          <router-link
+            to="/login"
+            class="font-body text-sm text-gold hover:text-gold-bright transition-colors"
+          >
             Back to Login
           </router-link>
         </div>

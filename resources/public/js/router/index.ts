@@ -111,6 +111,14 @@ const router = createRouter({
         title: 'Season',
       },
     },
+    {
+      path: '/component-demo',
+      name: 'component-demo',
+      component: () => import('@public/views/ComponentDemoView.vue'),
+      meta: {
+        title: 'Component Demo',
+      },
+    },
   ],
 });
 

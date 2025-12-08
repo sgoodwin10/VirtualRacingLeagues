@@ -1,7 +1,5 @@
 <template>
   <div class="league-detail-page">
-    <PublicHeader />
-
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
@@ -13,9 +11,7 @@
       <PhWarningCircle :size="64" weight="duotone" class="error-icon" />
       <h2>League Not Found</h2>
       <p>{{ error }}</p>
-      <router-link to="/leagues" class="btn btn-primary">
-        Browse All Leagues
-      </router-link>
+      <router-link to="/leagues" class="btn btn-primary"> Browse All Leagues </router-link>
     </div>
 
     <!-- League Content -->
@@ -36,11 +32,7 @@
         <div class="container-racing league-hero-content">
           <div class="league-hero-info">
             <div class="league-logo">
-              <img
-                v-if="league.logo_url"
-                :src="league.logo_url"
-                :alt="league.name"
-              />
+              <img v-if="league.logo_url" :src="league.logo_url" :alt="league.name" />
               <PhFlag v-else :size="40" weight="duotone" />
             </div>
 
@@ -49,11 +41,7 @@
               <p v-if="league.tagline" class="league-tagline">{{ league.tagline }}</p>
 
               <div class="league-platforms">
-                <span
-                  v-for="platform in league.platforms"
-                  :key="platform.id"
-                  class="platform-tag"
-                >
+                <span v-for="platform in league.platforms" :key="platform.id" class="platform-tag">
                   {{ platform.name }}
                 </span>
               </div>
@@ -63,11 +51,15 @@
           <div class="league-stats-bar">
             <div class="stat-item">
               <span class="stat-value font-data">{{ league.competitions_count }}</span>
-              <span class="stat-label">{{ league.competitions_count === 1 ? 'Competition' : 'Competitions' }}</span>
+              <span class="stat-label">{{
+                league.competitions_count === 1 ? 'Competition' : 'Competitions'
+              }}</span>
             </div>
             <div class="stat-item">
               <span class="stat-value font-data">{{ league.drivers_count }}</span>
-              <span class="stat-label">{{ league.drivers_count === 1 ? 'Driver' : 'Drivers' }}</span>
+              <span class="stat-label">{{
+                league.drivers_count === 1 ? 'Driver' : 'Drivers'
+              }}</span>
             </div>
             <div v-if="totalSeasons > 0" class="stat-item">
               <span class="stat-value font-data">{{ totalSeasons }}</span>
@@ -189,10 +181,7 @@
                     :class="{ 'is-active': season.is_active }"
                   >
                     <div class="season-status">
-                      <span
-                        class="status-badge"
-                        :class="`status-${season.status}`"
-                      >
+                      <span class="status-badge" :class="`status-${season.status}`">
                         {{ season.status }}
                       </span>
                     </div>
@@ -208,7 +197,9 @@
                         <span>Drivers</span>
                       </div>
                       <div class="season-stat">
-                        <span class="font-data">{{ season.stats.completed_races }}/{{ season.stats.total_races }}</span>
+                        <span class="font-data"
+                          >{{ season.stats.completed_races }}/{{ season.stats.total_races }}</span
+                        >
                         <span>Races</span>
                       </div>
                     </div>
@@ -222,8 +213,6 @@
         </div>
       </section>
     </template>
-
-    <PublicFooter />
   </div>
 </template>
 
@@ -241,8 +230,6 @@ import {
   PhGlobe,
   PhWarningCircle,
 } from '@phosphor-icons/vue';
-import PublicHeader from '@public/components/layout/PublicHeader.vue';
-import PublicFooter from '@public/components/layout/PublicFooter.vue';
 import type { PublicLeague, PublicCompetition } from '@public/types/public';
 import { parseRGBColor, rgbToCss } from '@public/types/public';
 
@@ -290,14 +277,15 @@ const fetchLeagueData = async () => {
     // const competitionsData = await publicApi.getLeagueCompetitions(_slug);
 
     // Mock data for now
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     league.value = {
       id: 1,
       name: 'GT7 Racing League',
       slug: 'gt7-racing-league',
       tagline: 'Competitive Gran Turismo 7 racing every Sunday',
-      description: 'Welcome to the GT7 Racing League! We host competitive racing events every Sunday evening. All skill levels are welcome, from beginners to experienced racers. Join our Discord community to get started.',
+      description:
+        'Welcome to the GT7 Racing League! We host competitive racing events every Sunday evening. All skill levels are welcome, from beginners to experienced racers. Join our Discord community to get started.',
       logo_url: null,
       header_image_url: null,
       platforms: [{ id: 1, name: 'GT7', slug: 'gt7' }],
@@ -445,7 +433,9 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-icon {

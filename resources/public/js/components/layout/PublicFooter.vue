@@ -6,13 +6,13 @@
         <div class="footer-brand">
           <router-link to="/" class="footer-logo">
             <div class="nav-logo-icon">
-              <PhFlag :size="20" weight="fill" color="#0a0a0a" />
+              <PhFlag :size="20" weight="fill" :color="iconColor" />
             </div>
             <span class="footer-logo-text">Virtual Racing Leagues</span>
           </router-link>
           <p class="footer-description">
-            The complete platform for sim racing league management. Create competitions,
-            track results, and share standings with your community.
+            The complete platform for sim racing league management. Create competitions, track
+            results, and share standings with your community.
           </p>
         </div>
 
@@ -68,8 +68,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { PhFlag, PhDiscordLogo, PhTwitterLogo, PhYoutubeLogo } from '@phosphor-icons/vue';
+import { useTheme } from '@public/composables/useTheme';
 
+const { theme } = useTheme();
 const currentYear = computed(() => new Date().getFullYear());
+const iconColor = computed(() => (theme.value === 'dark' ? '#0a0a0a' : '#fafafa'));
 </script>
 
 <style scoped>
@@ -83,7 +86,7 @@ const currentYear = computed(() => new Date().getFullYear());
 .footer-logo-text {
   font-family: var(--font-display);
   font-size: 1rem;
-  color: var(--color-pit-white);
+  color: var(--text-primary);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -103,13 +106,14 @@ const currentYear = computed(() => new Date().getFullYear());
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: var(--color-tarmac);
-  color: var(--color-barrier);
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
   transition: all var(--duration-fast);
+  border-radius: 2px;
 }
 
 .social-link:hover {
-  background: var(--color-gold);
-  color: var(--color-carbon);
+  background: var(--accent-gold);
+  color: var(--text-inverse);
 }
 </style>

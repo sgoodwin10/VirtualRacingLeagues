@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buttons - VRL Public Design System</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        racing: {
+                            'carbon': '#0a0a0a', 'asphalt': '#1a1a1a', 'tarmac': '#2d2d2d', 'pit-lane': '#3d3d3d',
+                            'gold': '#d4a853', 'gold-bright': '#f5c866', 'gold-muted': '#a08040',
+                            'safety': '#ff6b35', 'safety-bright': '#ff8a5c', 'safety-dark': '#e55a2b',
+                            'pit-white': '#fafafa', 'concrete': '#e5e5e5', 'barrier': '#9ca3af', 'gravel': '#6b7280',
+                            'danger': '#ef4444',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Racing Sans One', 'cursive'],
+                        'body': ['Source Serif 4', 'Georgia', 'serif'],
+                        'data': ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a; --bg-secondary: #1a1a1a; --bg-tertiary: #2d2d2d; --bg-elevated: #3d3d3d;
+            --bg-glass: rgba(10, 10, 10, 0.9);
+            --text-primary: #fafafa; --text-secondary: #e5e5e5; --text-muted: #9ca3af; --text-dim: #6b7280;
+            --border-primary: #2d2d2d; --border-subtle: rgba(45, 45, 45, 0.5);
+            --accent-gold: #d4a853; --accent-safety: #ff6b35;
+            --shadow-card: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 168, 83, 0.1) 0%, transparent 50%);
+            --card-hover-border: rgba(212, 168, 83, 0.3);
+        }
+        [data-theme="light"] {
+            --bg-primary: #f8f7f4; --bg-secondary: #ffffff; --bg-tertiary: #f0efe8; --bg-elevated: #e8e6df;
+            --bg-glass: rgba(248, 247, 244, 0.95);
+            --text-primary: #0a0a0a; --text-secondary: #1a1a1a; --text-muted: #6b7280; --text-dim: #9ca3af;
+            --border-primary: #d8d6cf; --border-subtle: rgba(216, 214, 207, 0.5);
+            --accent-gold: #b8923f; --accent-safety: #e55a2b;
+            --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184, 146, 63, 0.08) 0%, transparent 50%);
+            --card-hover-border: rgba(184, 146, 63, 0.4);
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Source Serif 4', Georgia, serif; background: var(--bg-primary); color: var(--text-primary); }
+        .ambient-bg { background: var(--ambient-gradient), var(--bg-primary); }
+        .glass { background: var(--bg-glass); backdrop-filter: blur(10px); }
+        .card-racing { background: var(--bg-secondary); border: 1px solid var(--border-primary); }
+        .theme-toggle { position: relative; width: 52px; height: 28px; background: var(--bg-tertiary); border-radius: 14px; border: 2px solid var(--border-primary); cursor: pointer; }
+        .theme-toggle:hover { border-color: var(--accent-gold); }
+        .theme-toggle-indicator { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: var(--accent-gold); border-radius: 50%; transition: transform 0.3s ease; display: flex; align-items: center; justify-content: center; color: var(--bg-primary); font-size: 12px; }
+        [data-theme="light"] .theme-toggle-indicator { transform: translateX(24px); }
+        .component-note { margin-top: 0.75rem; padding: 1rem 1.25rem; background: rgba(212, 168, 83, 0.08); border-left: 3px solid var(--accent-gold); border-radius: 0 4px 4px 0; font-size: 0.875rem; color: var(--text-muted); }
+        .component-note code { background: rgba(212, 168, 83, 0.15); padding: 0.125rem 0.5rem; border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; color: var(--accent-gold); }
+        .component-note strong { color: var(--text-secondary); }
+        .nav-link { display: block; padding: 12px 20px; font-family: 'Racing Sans One', cursive; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border-bottom: 2px solid transparent; color: var(--text-muted); transition: all 0.2s ease; white-space: nowrap; }
+        .nav-link:hover { background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
+        .btn-shine { position: relative; overflow: hidden; }
+        .btn-shine::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to bottom right, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%); transform: rotate(45deg); transition: transform 0.5s ease; }
+        .btn-shine:hover::after { transform: rotate(45deg) translateY(-100%); }
+    </style>
+</head>
+<body class="min-h-screen ambient-bg">
+    <!-- Header -->
+    <header class="glass border-b px-4 sm:px-8 lg:px-12 py-6 lg:py-10" style="border-color: var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+                <div class="flex items-center gap-4 flex-1">
+                    <a href="index.html" class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold flex items-center justify-center flex-shrink-0" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                        <span class="font-data text-xs sm:text-sm font-bold text-racing-carbon">VRL</span>
+                    </a>
+                    <div>
+                        <h1 class="font-display text-2xl sm:text-3xl tracking-wide uppercase" style="color: var(--text-primary);">Buttons</h1>
+                        <p class="font-data text-xs sm:text-sm mt-1" style="color: var(--text-muted);">Racing-styled interactive buttons with angled edges</p>
+                    </div>
+                </div>
+                <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+                    <div class="theme-toggle-indicator">
+                        <i class="ph-fill ph-sun theme-icon-light"></i>
+                        <i class="ph-fill ph-moon theme-icon-dark" style="display: none;"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="glass border-b sticky top-0 z-50 px-4 sm:px-8 lg:px-12" style="border-color: var(--border-subtle);">
+        <div class="max-w-[1200px] mx-auto">
+            <ul class="flex gap-0 list-none m-0 p-0 overflow-x-auto">
+                <li><a href="index.html" class="nav-link"><i class="ph ph-house mr-1"></i> Home</a></li>
+                <li><a href="colors.html" class="nav-link">Colors</a></li>
+                <li><a href="typography.html" class="nav-link">Typography</a></li>
+                <li><a href="buttons.html" class="nav-link active">Buttons</a></li>
+                <li><a href="cards.html" class="nav-link">Cards</a></li>
+                <li><a href="tables.html" class="nav-link">Tables</a></li>
+                <li><a href="badges.html" class="nav-link">Badges</a></li>
+                <li><a href="forms.html" class="nav-link">Forms</a></li>
+                <li><a href="navigation.html" class="nav-link">Navigation</a></li>
+                <li><a href="modals.html" class="nav-link">Modals</a></li>
+                <li><a href="drawers.html" class="nav-link">Drawers</a></li>
+                <li><a href="dialogs.html" class="nav-link">Dialogs</a></li>
+                <li><a href="pagination.html" class="nav-link">Pagination</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-12">
+        <!-- Button Sizes -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Button Sizes</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-3 sm:gap-4 items-end">
+                    <div class="text-center">
+                        <button class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-racing-safety text-racing-pit-white font-display text-[9px] uppercase tracking-wider hover:bg-racing-safety-bright transition-all btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                            <i class="ph-bold ph-plus text-[10px]"></i> Extra Small
+                        </button>
+                        <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">XS: h-28px</div>
+                    </div>
+                    <div class="text-center">
+                        <button class="inline-flex items-center gap-2 px-3.5 py-2 bg-racing-safety text-racing-pit-white font-display text-[10px] uppercase tracking-wider hover:bg-racing-safety-bright transition-all btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                            <i class="ph-bold ph-plus text-xs"></i> Small
+                        </button>
+                        <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">SM: h-34px</div>
+                    </div>
+                    <div class="text-center">
+                        <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-racing-safety text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-md shadow-racing-safety/20 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                            <i class="ph-bold ph-plus text-sm"></i> Medium
+                        </button>
+                        <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">MD: h-40px</div>
+                    </div>
+                    <div class="text-center">
+                        <button class="inline-flex items-center gap-2.5 px-6 py-3 bg-racing-safety text-racing-pit-white font-display text-sm uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-lg shadow-racing-safety/30 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                            <i class="ph-bold ph-plus text-base"></i> Large
+                        </button>
+                        <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">LG: h-48px</div>
+                    </div>
+                    <div class="text-center">
+                        <button class="inline-flex items-center gap-3 px-8 py-4 bg-racing-safety text-racing-pit-white font-display text-base uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-lg shadow-racing-safety/30 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                            <i class="ph-bold ph-plus text-lg"></i> Extra Large
+                        </button>
+                        <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">XL: h-56px</div>
+                    </div>
+                </div>
+            </div>
+            <div class="component-note">
+                <strong>Sizes:</strong> XS (28px), SM (34px), MD (40px), LG (48px), XL (56px). Adjust padding and font-size accordingly.
+            </div>
+        </div>
+
+        <!-- Icon-Only Buttons -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Icon-Only Buttons</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-3 sm:gap-4 items-end mb-6">
+                    <div class="text-center">
+                        <button class="w-7 h-7 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);"><i class="ph-bold ph-plus text-xs"></i></button>
+                        <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">28px</div>
+                    </div>
+                    <div class="text-center">
+                        <button class="w-9 h-9 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);"><i class="ph-bold ph-plus text-sm"></i></button>
+                        <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">36px</div>
+                    </div>
+                    <div class="text-center">
+                        <button class="w-10 h-10 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all shadow-md shadow-racing-safety/20" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);"><i class="ph-bold ph-plus text-base"></i></button>
+                        <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">40px</div>
+                    </div>
+                    <div class="text-center">
+                        <button class="w-12 h-12 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all shadow-lg shadow-racing-safety/30" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);"><i class="ph-bold ph-plus text-lg"></i></button>
+                        <div class="font-data text-[10px] mt-2" style="color: var(--text-dim);">48px</div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-3 sm:gap-4 items-center mb-6">
+                    <button class="w-10 h-10 flex items-center justify-center bg-transparent text-racing-gold border border-racing-gold hover:bg-racing-gold/10 transition-all rounded"><i class="ph ph-pencil-simple text-base"></i></button>
+                    <button class="w-10 h-10 flex items-center justify-center bg-transparent hover:text-racing-gold transition-all rounded" style="color: var(--text-muted); background: var(--bg-tertiary);"><i class="ph ph-gear text-base"></i></button>
+                    <button class="w-10 h-10 flex items-center justify-center bg-transparent text-racing-danger border border-racing-danger/50 hover:bg-racing-danger/10 transition-all rounded"><i class="ph ph-trash text-base"></i></button>
+                    <button class="w-10 h-10 flex items-center justify-center bg-racing-gold text-racing-carbon hover:bg-racing-gold-bright transition-all rounded"><i class="ph-fill ph-star text-base"></i></button>
+                </div>
+                <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                    <button class="w-10 h-10 flex items-center justify-center bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all rounded-full shadow-md shadow-racing-safety/20"><i class="ph-bold ph-plus text-base"></i></button>
+                    <button class="w-10 h-10 flex items-center justify-center bg-transparent text-racing-gold border border-racing-gold hover:bg-racing-gold/10 transition-all rounded-full"><i class="ph ph-share-network text-base"></i></button>
+                    <button class="w-10 h-10 flex items-center justify-center hover:text-racing-gold transition-all rounded-full" style="color: var(--text-muted); background: var(--bg-tertiary);"><i class="ph ph-x text-base"></i></button>
+                </div>
+            </div>
+            <div class="component-note">
+                <strong>Icon buttons:</strong> Use <code>clip-path</code> for angled or <code>rounded</code>/<code>rounded-full</code> for rectangular/circular variants.
+            </div>
+        </div>
+
+        <!-- Primary Buttons -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Primary (Safety Orange)</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                    <button class="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-racing-safety text-racing-pit-white font-display text-xs sm:text-sm uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-lg shadow-racing-safety/30 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                        <i class="ph-bold ph-plus text-xs sm:text-sm"></i> Get Started Free
+                    </button>
+                    <button class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-racing-safety text-racing-pit-white font-display text-[10px] sm:text-xs uppercase tracking-wider hover:bg-racing-safety-bright transition-all shadow-md shadow-racing-safety/20 btn-shine" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                        <i class="ph-bold ph-plus text-xs"></i> Small
+                    </button>
+                    <button class="p-2.5 sm:p-3 bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright transition-all shadow-md shadow-racing-safety/20" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                        <i class="ph-bold ph-plus text-base sm:text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="component-note">
+                <strong>Classes:</strong> <code>bg-racing-safety text-racing-pit-white shadow-lg shadow-racing-safety/30</code><br>
+                <strong>Clip-path:</strong> <code>polygon(0 0, 100% 0, 95% 100%, 0% 100%)</code> for angled edge
+            </div>
+        </div>
+
+        <!-- Secondary Buttons -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Secondary (Gold Outline)</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                    <button class="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-transparent text-racing-gold font-display text-xs sm:text-sm uppercase tracking-wider border border-racing-gold hover:bg-racing-gold/10 hover:border-racing-gold-bright hover:text-racing-gold-bright transition-all" style="clip-path: polygon(5% 0, 100% 0, 100% 100%, 0% 100%);">
+                        <i class="ph ph-eye text-xs sm:text-sm"></i> Browse Leagues
+                    </button>
+                    <button class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-transparent text-racing-gold font-display text-[10px] sm:text-xs uppercase tracking-wider border border-racing-gold hover:bg-racing-gold/10 transition-all" style="clip-path: polygon(5% 0, 100% 0, 100% 100%, 0% 100%);">
+                        <i class="ph ph-eye text-xs"></i> Small
+                    </button>
+                </div>
+            </div>
+            <div class="component-note">
+                <strong>Classes:</strong> <code>bg-transparent text-racing-gold border border-racing-gold hover:bg-racing-gold/10</code>
+            </div>
+        </div>
+
+        <!-- Ghost Buttons -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Ghost / Text</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                    <button class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-transparent font-display text-[10px] sm:text-xs uppercase tracking-wider hover:text-racing-gold transition-all" style="color: var(--text-muted);">
+                        <i class="ph ph-dots-three text-sm"></i> More Options
+                    </button>
+                    <button class="p-2 sm:p-2.5 bg-transparent hover:text-racing-gold rounded transition-all" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                        <i class="ph ph-dots-three-vertical text-base"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Buttons -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Danger</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+                    <button class="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-racing-danger text-racing-pit-white font-display text-xs sm:text-sm uppercase tracking-wider hover:bg-red-500 transition-all shadow-lg shadow-racing-danger/20">
+                        <i class="ph ph-trash text-xs sm:text-sm"></i> Delete
+                    </button>
+                    <button class="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-transparent text-racing-danger font-display text-xs sm:text-sm uppercase tracking-wider border border-racing-danger/50 hover:bg-racing-danger/10 transition-all">
+                        <i class="ph ph-trash text-xs sm:text-sm"></i> Delete Outline
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Buttons -->
+        <div>
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Social Links</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-2 sm:gap-3 items-center">
+                    <a href="#" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 font-display text-[10px] sm:text-xs uppercase tracking-wider hover:bg-racing-gold hover:text-racing-carbon transition-all" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                        <i class="ph-fill ph-discord-logo text-sm"></i> Discord
+                    </a>
+                    <a href="#" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 font-display text-[10px] sm:text-xs uppercase tracking-wider hover:bg-racing-gold hover:text-racing-carbon transition-all" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                        <i class="ph-fill ph-twitter-logo text-sm"></i> Twitter
+                    </a>
+                    <a href="#" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 font-display text-[10px] sm:text-xs uppercase tracking-wider hover:bg-racing-gold hover:text-racing-carbon transition-all" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                        <i class="ph-fill ph-youtube-logo text-sm"></i> YouTube
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 sm:py-12" style="background: var(--bg-secondary); border-top: 1px solid var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12">
+            <div class="flex justify-between items-center">
+                <a href="typography.html" class="font-display text-xs uppercase tracking-wider hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                    <i class="ph ph-arrow-left mr-2"></i> Typography
+                </a>
+                <a href="cards.html" class="font-display text-xs uppercase tracking-wider hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                    Cards <i class="ph ph-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('vrl-theme', newTheme);
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+            if (newTheme === 'light') { lightIcon.style.display = 'none'; darkIcon.style.display = 'block'; }
+            else { lightIcon.style.display = 'block'; darkIcon.style.display = 'none'; }
+        }
+        function initTheme() {
+            const savedTheme = localStorage.getItem('vrl-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+            if (theme === 'light') { lightIcon.style.display = 'none'; darkIcon.style.display = 'block'; }
+        }
+        initTheme();
+    </script>
+</body>
+</html>

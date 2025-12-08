@@ -6,12 +6,7 @@
           <th class="col-pos">Pos</th>
           <th class="col-driver">Driver</th>
           <th class="col-points">Points</th>
-          <th
-            v-for="round in rounds"
-            :key="round.round_id"
-            class="col-round"
-            :title="round.name"
-          >
+          <th v-for="round in rounds" :key="round.round_id" class="col-round" :title="round.name">
             R{{ round.round_number }}
           </th>
         </tr>
@@ -24,10 +19,7 @@
           :class="{ 'is-leader': driver.position === 1 }"
         >
           <td class="col-pos">
-            <span
-              class="position"
-              :class="`position-${driver.position}`"
-            >
+            <span class="position" :class="`position-${driver.position}`">
               {{ driver.position }}
             </span>
           </td>
@@ -37,11 +29,7 @@
           <td class="col-points">
             <span class="points">{{ driver.total_points }}</span>
           </td>
-          <td
-            v-for="round in rounds"
-            :key="round.round_id"
-            class="col-round"
-          >
+          <td v-for="round in rounds" :key="round.round_id" class="col-round">
             <div class="round-result">
               <span class="round-points">
                 {{ getRoundPoints(driver, round.round_id) }}
@@ -87,17 +75,17 @@ interface Props {
 const { drivers, rounds } = defineProps<Props>();
 
 const getRoundPoints = (driver: SeasonStandingDriver, roundId: number): string => {
-  const roundData = driver.rounds.find(r => r.round_id === roundId);
+  const roundData = driver.rounds.find((r) => r.round_id === roundId);
   return roundData ? roundData.points.toString() : '-';
 };
 
 const hasPole = (driver: SeasonStandingDriver, roundId: number): boolean => {
-  const roundData = driver.rounds.find(r => r.round_id === roundId);
+  const roundData = driver.rounds.find((r) => r.round_id === roundId);
   return roundData?.has_pole ?? false;
 };
 
 const hasFastestLap = (driver: SeasonStandingDriver, roundId: number): boolean => {
-  const roundData = driver.rounds.find(r => r.round_id === roundId);
+  const roundData = driver.rounds.find((r) => r.round_id === roundId);
   return roundData?.has_fastest_lap ?? false;
 };
 </script>

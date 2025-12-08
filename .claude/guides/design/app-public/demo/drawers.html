@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawers - VRL Public Design System</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        racing: {
+                            'carbon': '#0a0a0a', 'asphalt': '#1a1a1a', 'tarmac': '#2d2d2d', 'pit-lane': '#3d3d3d',
+                            'gold': '#d4a853', 'gold-bright': '#f5c866',
+                            'pit-white': '#fafafa', 'barrier': '#9ca3af', 'gravel': '#6b7280',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Racing Sans One', 'cursive'],
+                        'body': ['Source Serif 4', 'Georgia', 'serif'],
+                        'data': ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a; --bg-secondary: #1a1a1a; --bg-tertiary: #2d2d2d;
+            --bg-glass: rgba(10, 10, 10, 0.9);
+            --text-primary: #fafafa; --text-secondary: #e5e5e5; --text-muted: #9ca3af; --text-dim: #6b7280;
+            --border-primary: #2d2d2d; --border-subtle: rgba(45, 45, 45, 0.5);
+            --accent-gold: #d4a853;
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 168, 83, 0.1) 0%, transparent 50%);
+        }
+        [data-theme="light"] {
+            --bg-primary: #f8f7f4; --bg-secondary: #ffffff; --bg-tertiary: #f0efe8;
+            --bg-glass: rgba(248, 247, 244, 0.95);
+            --text-primary: #0a0a0a; --text-secondary: #1a1a1a; --text-muted: #6b7280; --text-dim: #9ca3af;
+            --border-primary: #d8d6cf; --border-subtle: rgba(216, 214, 207, 0.5);
+            --accent-gold: #b8923f;
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184, 146, 63, 0.08) 0%, transparent 50%);
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Source Serif 4', Georgia, serif; background: var(--bg-primary); color: var(--text-primary); }
+        .ambient-bg { background: var(--ambient-gradient), var(--bg-primary); }
+        .glass { background: var(--bg-glass); backdrop-filter: blur(10px); }
+        .card-racing { background: var(--bg-secondary); border: 1px solid var(--border-primary); }
+        .theme-toggle { position: relative; width: 52px; height: 28px; background: var(--bg-tertiary); border-radius: 14px; border: 2px solid var(--border-primary); cursor: pointer; }
+        .theme-toggle:hover { border-color: var(--accent-gold); }
+        .theme-toggle-indicator { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: var(--accent-gold); border-radius: 50%; transition: transform 0.3s ease; display: flex; align-items: center; justify-content: center; color: var(--bg-primary); font-size: 12px; }
+        [data-theme="light"] .theme-toggle-indicator { transform: translateX(24px); }
+        .nav-link { display: block; padding: 12px 20px; font-family: 'Racing Sans One', cursive; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border-bottom: 2px solid transparent; color: var(--text-muted); transition: all 0.2s ease; white-space: nowrap; }
+        .nav-link:hover { background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
+        .component-note { padding: 12px 16px; font-data text-xs; border-left: 3px solid var(--accent-gold); background: rgba(212, 168, 83, 0.05); color: var(--text-muted); margin-top: 16px; }
+
+        /* Drawer styles */
+        .drawer-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); z-index: 100; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .drawer-overlay.active { opacity: 1; visibility: visible; }
+        .drawer-content { position: fixed; top: 0; bottom: 0; width: 400px; max-width: 90vw; background: var(--bg-secondary); transition: transform 0.3s ease; }
+        .drawer-content.right { right: 0; transform: translateX(100%); border-left: 1px solid var(--border-primary); }
+        .drawer-content.left { left: 0; transform: translateX(-100%); border-right: 1px solid var(--border-primary); }
+        .drawer-overlay.active .drawer-content { transform: translateX(0); }
+    </style>
+</head>
+<body class="min-h-screen ambient-bg">
+    <!-- Header -->
+    <header class="glass border-b px-4 sm:px-8 lg:px-12 py-6 lg:py-10" style="border-color: var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+                <div class="flex items-center gap-4 flex-1">
+                    <a href="index.html" class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold flex items-center justify-center flex-shrink-0" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                        <span class="font-data text-xs sm:text-sm font-bold text-racing-carbon">VRL</span>
+                    </a>
+                    <div>
+                        <h1 class="font-display text-2xl sm:text-3xl tracking-wide uppercase" style="color: var(--text-primary);">Slide-out Drawers</h1>
+                        <p class="font-data text-xs sm:text-sm mt-1" style="color: var(--text-muted);">Side panels for detailed views and actions</p>
+                    </div>
+                </div>
+                <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+                    <div class="theme-toggle-indicator">
+                        <i class="ph-fill ph-sun theme-icon-light"></i>
+                        <i class="ph-fill ph-moon theme-icon-dark" style="display: none;"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="glass border-b sticky top-0 z-50 px-4 sm:px-8 lg:px-12" style="border-color: var(--border-subtle);">
+        <div class="max-w-[1200px] mx-auto">
+            <ul class="flex gap-0 list-none m-0 p-0 overflow-x-auto">
+                <li><a href="index.html" class="nav-link"><i class="ph ph-house mr-1"></i> Home</a></li>
+                <li><a href="colors.html" class="nav-link">Colors</a></li>
+                <li><a href="typography.html" class="nav-link">Typography</a></li>
+                <li><a href="buttons.html" class="nav-link">Buttons</a></li>
+                <li><a href="cards.html" class="nav-link">Cards</a></li>
+                <li><a href="tables.html" class="nav-link">Tables</a></li>
+                <li><a href="badges.html" class="nav-link">Badges</a></li>
+                <li><a href="forms.html" class="nav-link">Forms</a></li>
+                <li><a href="navigation.html" class="nav-link">Navigation</a></li>
+                <li><a href="modals.html" class="nav-link">Modals</a></li>
+                <li><a href="drawers.html" class="nav-link active">Drawers</a></li>
+                <li><a href="dialogs.html" class="nav-link">Dialogs</a></li>
+                <li><a href="pagination.html" class="nav-link">Pagination</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-12">
+        <!-- Drawer Triggers -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Drawer Positions</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="openDrawer('drawer-right')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                        <i class="ph ph-arrow-right text-sm"></i>
+                        Right Drawer
+                    </button>
+                    <button onclick="openDrawer('drawer-left')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                        <i class="ph ph-arrow-left text-sm"></i>
+                        Left Drawer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drawer Preview (Static) -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Drawer Structure</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Right Drawer Preview -->
+                <div class="card-racing rounded overflow-hidden">
+                    <div class="h-80 relative" style="background: var(--bg-tertiary);">
+                        <div class="absolute right-0 top-0 bottom-0 w-3/5" style="background: var(--bg-secondary); border-left: 1px solid var(--border-primary);">
+                            <!-- Drawer Header -->
+                            <div class="flex items-center justify-between px-4 py-3" style="border-bottom: 1px solid var(--border-primary);">
+                                <h3 class="font-display text-xs uppercase tracking-wide" style="color: var(--text-primary);">Driver Details</h3>
+                                <button class="w-7 h-7 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                                    <i class="ph ph-x text-sm"></i>
+                                </button>
+                            </div>
+                            <!-- Drawer Content -->
+                            <div class="p-4">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: var(--bg-tertiary);">
+                                        <i class="ph-fill ph-user text-xl" style="color: var(--text-dim);"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-display text-sm uppercase" style="color: var(--text-primary);">Alex Chen</div>
+                                        <div class="font-data text-[10px]" style="color: var(--text-muted);">RED BULL RACING</div>
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-xs">
+                                        <span style="color: var(--text-dim);">Points</span>
+                                        <span class="font-data" style="color: var(--text-primary);">156</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span style="color: var(--text-dim);">Wins</span>
+                                        <span class="font-data" style="color: var(--text-primary);">5</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span style="color: var(--text-dim);">Podiums</span>
+                                        <span class="font-data" style="color: var(--text-primary);">8</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="absolute left-2 top-2 font-data text-[10px]" style="color: var(--text-dim);">Right Drawer</div>
+                    </div>
+                </div>
+
+                <!-- Left Drawer Preview -->
+                <div class="card-racing rounded overflow-hidden">
+                    <div class="h-80 relative" style="background: var(--bg-tertiary);">
+                        <div class="absolute left-0 top-0 bottom-0 w-3/5" style="background: var(--bg-secondary); border-right: 1px solid var(--border-primary);">
+                            <!-- Drawer Header -->
+                            <div class="flex items-center justify-between px-4 py-3" style="border-bottom: 1px solid var(--border-primary);">
+                                <h3 class="font-display text-xs uppercase tracking-wide" style="color: var(--text-primary);">Filter Results</h3>
+                                <button class="w-7 h-7 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                                    <i class="ph ph-x text-sm"></i>
+                                </button>
+                            </div>
+                            <!-- Drawer Content -->
+                            <div class="p-4 space-y-4">
+                                <div>
+                                    <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Platform</label>
+                                    <select class="w-full px-3 py-2 text-xs h-8 appearance-none" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);">
+                                        <option>All Platforms</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Status</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center gap-2 text-xs cursor-pointer">
+                                            <input type="checkbox" class="w-4 h-4" checked />
+                                            <span style="color: var(--text-primary);">Active</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 text-xs cursor-pointer">
+                                            <input type="checkbox" class="w-4 h-4" />
+                                            <span style="color: var(--text-primary);">Completed</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="absolute right-2 top-2 font-data text-[10px]" style="color: var(--text-dim);">Left Drawer</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-note">
+            <strong>Drawer width:</strong> Default 400px, max 90vw on mobile. Slides from left or right with backdrop blur overlay.
+        </div>
+    </div>
+
+    <!-- Drawer Overlays -->
+    <div id="drawer-right" class="drawer-overlay" onclick="closeDrawer('drawer-right')">
+        <div class="drawer-content right" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Right Drawer</h3>
+                <button onclick="closeDrawer('drawer-right')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                    <i class="ph ph-x text-base"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <p class="text-sm mb-4" style="color: var(--text-muted);">Right-side drawers are commonly used for detail views, settings panels, or secondary actions.</p>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3 p-3 rounded" style="background: var(--bg-tertiary);">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: var(--bg-primary);">
+                            <i class="ph-fill ph-user text-lg" style="color: var(--text-dim);"></i>
+                        </div>
+                        <div>
+                            <div class="font-display text-xs uppercase" style="color: var(--text-primary);">Alex Chen</div>
+                            <div class="font-data text-[10px]" style="color: var(--text-muted);">Driver #1</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="drawer-left" class="drawer-overlay" onclick="closeDrawer('drawer-left')">
+        <div class="drawer-content left" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Left Drawer</h3>
+                <button onclick="closeDrawer('drawer-left')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                    <i class="ph ph-x text-base"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <p class="text-sm mb-4" style="color: var(--text-muted);">Left-side drawers work well for navigation menus, filters, or category selection.</p>
+                <div class="space-y-2">
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left font-display text-xs uppercase tracking-wider rounded transition-colors hover:bg-racing-gold/10 hover:text-racing-gold" style="color: var(--text-muted);">
+                        <i class="ph ph-house text-base"></i>
+                        Dashboard
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left font-display text-xs uppercase tracking-wider rounded transition-colors bg-racing-gold/10 text-racing-gold">
+                        <i class="ph ph-flag text-base"></i>
+                        Leagues
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left font-display text-xs uppercase tracking-wider rounded transition-colors hover:bg-racing-gold/10 hover:text-racing-gold" style="color: var(--text-muted);">
+                        <i class="ph ph-users text-base"></i>
+                        Drivers
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left font-display text-xs uppercase tracking-wider rounded transition-colors hover:bg-racing-gold/10 hover:text-racing-gold" style="color: var(--text-muted);">
+                        <i class="ph ph-gear text-base"></i>
+                        Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 sm:py-12" style="background: var(--bg-secondary); border-top: 1px solid var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12">
+            <div class="flex justify-between items-center">
+                <a href="modals.html" class="font-display text-xs uppercase tracking-wider hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                    <i class="ph ph-arrow-left mr-2"></i> Modals
+                </a>
+                <a href="dialogs.html" class="font-display text-xs uppercase tracking-wider hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                    Dialogs <i class="ph ph-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('vrl-theme', newTheme);
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+            if (newTheme === 'light') { lightIcon.style.display = 'none'; darkIcon.style.display = 'block'; }
+            else { lightIcon.style.display = 'block'; darkIcon.style.display = 'none'; }
+        }
+        function initTheme() {
+            const savedTheme = localStorage.getItem('vrl-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+            if (theme === 'light') { lightIcon.style.display = 'none'; darkIcon.style.display = 'block'; }
+        }
+        initTheme();
+
+        // Drawer functions
+        function openDrawer(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDrawer(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close drawers on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.drawer-overlay.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+</body>
+</html>

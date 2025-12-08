@@ -5,7 +5,6 @@ import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/type
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Checkbox from 'primevue/checkbox';
-import Button from 'primevue/button';
 import Message from 'primevue/message';
 
 const authStore = useAuthStore();
@@ -94,15 +93,15 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4"
-  >
+  <div class="min-h-screen flex items-center justify-center pattern-carbon p-4 md:p-8">
     <div class="w-full max-w-md">
-      <div class="bg-white rounded-lg shadow-lg p-8">
+      <div class="card-racing p-8 md:p-10">
         <!-- Header -->
         <div class="text-center mb-8">
-          <h1 class="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p class="text-gray-600">Sign in to your account</p>
+          <h1 class="font-display text-3xl md:text-4xl mb-3 text-gold uppercase tracking-wider">
+            Welcome Back
+          </h1>
+          <p class="font-body text-barrier">Sign in to your account</p>
         </div>
 
         <!-- Error Message -->
@@ -111,10 +110,13 @@ const handleSubmit = async (): Promise<void> => {
         </Message>
 
         <!-- Login Form -->
-        <form class="space-y-5" @submit.prevent="handleSubmit">
+        <form class="space-y-6" @submit.prevent="handleSubmit">
           <!-- Email Field -->
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="email"
+              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
+            >
               Email Address
             </label>
             <InputText
@@ -123,19 +125,23 @@ const handleSubmit = async (): Promise<void> => {
               type="email"
               placeholder="john@example.com"
               :class="{ 'p-invalid': emailError }"
-              class="w-full"
+              class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold transition-colors"
               :disabled="isSubmitting"
               autocomplete="email"
+              aria-label="Email Address"
               @input="emailError = ''"
             />
-            <small v-if="emailError" class="text-red-600 mt-1 block">
+            <small v-if="emailError" class="text-dnf mt-1 block font-body text-sm">
               {{ emailError }}
             </small>
           </div>
 
           <!-- Password Field -->
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="password"
+              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
+            >
               Password
             </label>
             <Password
@@ -143,7 +149,7 @@ const handleSubmit = async (): Promise<void> => {
               v-model="password"
               placeholder="Enter your password"
               :class="{ 'p-invalid': passwordError }"
-              input-class="w-full"
+              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
                 root: { class: 'w-full' },
                 input: { class: 'w-full' },
@@ -152,51 +158,56 @@ const handleSubmit = async (): Promise<void> => {
               :feedback="false"
               :toggle-mask="true"
               autocomplete="current-password"
+              aria-label="Password"
               @input="passwordError = ''"
             />
-            <small v-if="passwordError" class="text-red-600 mt-1 block">
+            <small v-if="passwordError" class="text-dnf mt-1 block font-body text-sm">
               {{ passwordError }}
             </small>
           </div>
 
           <!-- Remember Me & Forgot Password -->
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between flex-wrap gap-4">
             <div class="flex items-center">
               <Checkbox
                 v-model="remember"
                 input-id="remember"
                 :binary="true"
                 :disabled="isSubmitting"
+                aria-label="Remember me"
               />
-              <label for="remember" class="ml-2 text-sm text-gray-700 cursor-pointer">
+              <label for="remember" class="ml-2 font-body text-sm text-barrier cursor-pointer">
                 Remember me
               </label>
             </div>
             <router-link
               to="/forgot-password"
-              class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              class="font-body text-sm text-gold hover:text-gold-bright transition-colors"
             >
               Forgot password?
             </router-link>
           </div>
 
           <!-- Submit Button -->
-          <Button
+          <button
             type="submit"
-            label="Sign In"
-            icon="pi pi-sign-in"
-            :loading="isSubmitting"
             :disabled="!isFormValid || isSubmitting"
-            class="w-full"
-            severity="primary"
-          />
+            class="w-full btn btn-primary"
+            :aria-busy="isSubmitting"
+          >
+            <span v-if="!isSubmitting">Sign In</span>
+            <span v-else>Signing In...</span>
+          </button>
         </form>
 
         <!-- Register Link -->
-        <div class="mt-6 text-center">
-          <p class="text-sm text-gray-600">
+        <div class="mt-8 text-center">
+          <p class="font-body text-sm text-barrier">
             Don't have an account?
-            <router-link to="/register" class="text-blue-600 hover:text-blue-700 font-medium">
+            <router-link
+              to="/register"
+              class="text-gold hover:text-gold-bright transition-colors font-medium"
+            >
               Sign up
             </router-link>
           </p>

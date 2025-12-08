@@ -6,7 +6,6 @@ import { useToast } from 'primevue/usetoast';
 import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/types/errors';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
-import Button from 'primevue/button';
 import Message from 'primevue/message';
 
 const router = useRouter();
@@ -141,15 +140,15 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4"
-  >
+  <div class="min-h-screen flex items-center justify-center pattern-carbon p-4 md:p-8">
     <div class="w-full max-w-md">
-      <div class="bg-white rounded-lg shadow-lg p-8">
+      <div class="card-racing p-8 md:p-10">
         <!-- Header -->
         <div class="text-center mb-8">
-          <h1 class="text-2xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p class="text-gray-600">Sign up to get started</p>
+          <h1 class="font-display text-3xl md:text-4xl mb-3 text-gold uppercase tracking-wider">
+            Create Account
+          </h1>
+          <p class="font-body text-barrier">Sign up to get started</p>
         </div>
 
         <!-- Error Message -->
@@ -161,7 +160,10 @@ const handleSubmit = async (): Promise<void> => {
         <form class="space-y-5" @submit.prevent="handleSubmit">
           <!-- First Name Field -->
           <div>
-            <label for="first-name" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="first-name"
+              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
+            >
               First Name
             </label>
             <InputText
@@ -170,18 +172,22 @@ const handleSubmit = async (): Promise<void> => {
               type="text"
               placeholder="John"
               :class="{ 'p-invalid': firstNameError }"
-              class="w-full"
+              class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold transition-colors"
               :disabled="isSubmitting"
+              aria-label="First Name"
               @input="firstNameError = ''"
             />
-            <small v-if="firstNameError" class="text-red-600 mt-1 block">
+            <small v-if="firstNameError" class="text-dnf mt-1 block font-body text-sm">
               {{ firstNameError }}
             </small>
           </div>
 
           <!-- Last Name Field -->
           <div>
-            <label for="last-name" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="last-name"
+              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
+            >
               Last Name
             </label>
             <InputText
@@ -190,18 +196,22 @@ const handleSubmit = async (): Promise<void> => {
               type="text"
               placeholder="Doe"
               :class="{ 'p-invalid': lastNameError }"
-              class="w-full"
+              class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold transition-colors"
               :disabled="isSubmitting"
+              aria-label="Last Name"
               @input="lastNameError = ''"
             />
-            <small v-if="lastNameError" class="text-red-600 mt-1 block">
+            <small v-if="lastNameError" class="text-dnf mt-1 block font-body text-sm">
               {{ lastNameError }}
             </small>
           </div>
 
           <!-- Email Field -->
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="email"
+              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
+            >
               Email Address
             </label>
             <InputText
@@ -210,19 +220,23 @@ const handleSubmit = async (): Promise<void> => {
               type="email"
               placeholder="john@example.com"
               :class="{ 'p-invalid': emailError }"
-              class="w-full"
+              class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold transition-colors"
               :disabled="isSubmitting"
               autocomplete="email"
+              aria-label="Email Address"
               @input="emailError = ''"
             />
-            <small v-if="emailError" class="text-red-600 mt-1 block">
+            <small v-if="emailError" class="text-dnf mt-1 block font-body text-sm">
               {{ emailError }}
             </small>
           </div>
 
           <!-- Password Field -->
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="password"
+              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
+            >
               Password
             </label>
             <Password
@@ -230,7 +244,7 @@ const handleSubmit = async (): Promise<void> => {
               v-model="password"
               placeholder="Enter your password"
               :class="{ 'p-invalid': passwordError }"
-              input-class="w-full"
+              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
                 root: { class: 'w-full' },
                 input: { class: 'w-full' },
@@ -238,23 +252,27 @@ const handleSubmit = async (): Promise<void> => {
               :disabled="isSubmitting"
               :toggle-mask="true"
               autocomplete="new-password"
+              aria-label="Password"
               @input="passwordError = ''"
             />
-            <small v-if="passwordError" class="text-red-600 mt-1 block">
+            <small v-if="passwordError" class="text-dnf mt-1 block font-body text-sm">
               {{ passwordError }}
             </small>
           </div>
 
           <!-- Confirm Password Field -->
           <div>
-            <label for="password-confirmation" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="password-confirmation"
+              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
+            >
               Confirm Password
             </label>
             <Password
               id="password-confirmation"
               v-model="passwordConfirmation"
               placeholder="Confirm your password"
-              input-class="w-full"
+              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
                 root: { class: 'w-full' },
                 input: { class: 'w-full' },
@@ -263,27 +281,31 @@ const handleSubmit = async (): Promise<void> => {
               :feedback="false"
               :toggle-mask="true"
               autocomplete="new-password"
+              aria-label="Confirm Password"
               @input="passwordError = ''"
             />
           </div>
 
           <!-- Submit Button -->
-          <Button
+          <button
             type="submit"
-            label="Create Account"
-            icon="pi pi-user-plus"
-            :loading="isSubmitting"
             :disabled="!isFormValid || isSubmitting"
-            class="w-full"
-            severity="primary"
-          />
+            class="w-full btn btn-primary"
+            :aria-busy="isSubmitting"
+          >
+            <span v-if="!isSubmitting">Create Account</span>
+            <span v-else>Creating Account...</span>
+          </button>
         </form>
 
         <!-- Login Link -->
-        <div class="mt-6 text-center">
-          <p class="text-sm text-gray-600">
+        <div class="mt-8 text-center">
+          <p class="font-body text-sm text-barrier">
             Already have an account?
-            <router-link to="/login" class="text-blue-600 hover:text-blue-700 font-medium">
+            <router-link
+              to="/login"
+              class="text-gold hover:text-gold-bright transition-colors font-medium"
+            >
               Sign in
             </router-link>
           </p>

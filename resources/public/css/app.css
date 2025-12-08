@@ -10,6 +10,53 @@
 @plugin 'tailwindcss-primeui';
 
 /* ==========================================================================
+   TAILWIND V4 THEME CONFIGURATION
+   ========================================================================== */
+
+@theme {
+  /* Racing Colors - Primary (Racing Black) */
+  --color-racing-carbon: #0a0a0a;
+  --color-racing-asphalt: #1a1a1a;
+  --color-racing-tarmac: #2d2d2d;
+  --color-racing-pit-lane: #3d3d3d;
+
+  /* Racing Colors - Accent (Championship Gold) */
+  --color-racing-gold: #d4a853;
+  --color-racing-gold-bright: #f5c866;
+  --color-racing-gold-muted: #a08040;
+
+  /* Racing Colors - Secondary (Safety Orange) */
+  --color-racing-safety: #ff6b35;
+  --color-racing-safety-bright: #ff8a5c;
+  --color-racing-safety-dark: #e55a2b;
+
+  /* Racing Colors - Neutrals */
+  --color-racing-pit-white: #fafafa;
+  --color-racing-concrete: #e5e5e5;
+  --color-racing-barrier: #9ca3af;
+  --color-racing-gravel: #6b7280;
+
+  /* Racing Colors - Semantic (Positions) */
+  --color-racing-pole: #d4a853;
+  --color-racing-podium-2: #c0c0c0;
+  --color-racing-podium-3: #cd7f32;
+  --color-racing-fastest-lap: #a855f7;
+  --color-racing-dnf: #ef4444;
+  --color-racing-dns: #6b7280;
+
+  /* Typography */
+  --font-display: 'Racing Sans One', cursive;
+  --font-body: 'Source Serif 4', Georgia, serif;
+  --font-data: 'JetBrains Mono', monospace;
+
+  /* Semantic Status Colors */
+  --color-racing-success: #22c55e;
+  --color-racing-warning: #f59e0b;
+  --color-racing-danger: #ef4444;
+  --color-racing-info: #3b82f6;
+}
+
+/* ==========================================================================
    CSS CUSTOM PROPERTIES
    ========================================================================== */
 
@@ -44,6 +91,28 @@
   --color-dnf: #ef4444;
   --color-dns: #6b7280;
 
+  /* Tailwind v4 Custom Theme Colors */
+  --color-racing-carbon: var(--color-carbon);
+  --color-racing-asphalt: var(--color-asphalt);
+  --color-racing-tarmac: var(--color-tarmac);
+  --color-racing-pit-lane: var(--color-pit-lane);
+  --color-racing-gold: var(--color-gold);
+  --color-racing-gold-bright: var(--color-gold-bright);
+  --color-racing-gold-muted: var(--color-gold-muted);
+  --color-racing-safety: var(--color-safety);
+  --color-racing-safety-bright: var(--color-safety-bright);
+  --color-racing-safety-dark: var(--color-safety-dark);
+  --color-racing-pit-white: var(--color-pit-white);
+  --color-racing-concrete: var(--color-concrete);
+  --color-racing-barrier: var(--color-barrier);
+  --color-racing-gravel: var(--color-gravel);
+  --color-racing-pole: var(--color-pole);
+  --color-racing-podium-2: var(--color-podium-2);
+  --color-racing-podium-3: var(--color-podium-3);
+  --color-racing-fastest-lap: var(--color-fastest-lap);
+  --color-racing-dnf: var(--color-dnf);
+  --color-racing-dns: var(--color-dns);
+
   /* Typography */
   --font-display: 'Racing Sans One', cursive;
   --font-body: 'Source Serif 4', Georgia, serif;
@@ -71,33 +140,204 @@
 }
 
 /* ==========================================================================
-   BASE STYLES
+   THEME SYSTEM - Dark/Light Mode Support
+
+   This system provides comprehensive theming with CSS custom properties that
+   automatically adapt between dark and light modes based on [data-theme] attribute.
+
+   USAGE GUIDE:
+
+   1. BACKGROUND UTILITIES:
+      .theme-bg-primary    - Main page background
+      .theme-bg-secondary  - Elevated surface (cards, panels)
+      .theme-bg-tertiary   - More elevated elements (dropdowns, tooltips)
+      .theme-bg-elevated   - Highest elevation elements
+      .theme-bg-glass      - Frosted glass effect with backdrop blur
+      .theme-bg-hover      - Subtle hover background state
+      .theme-bg-active     - Active/pressed background state
+      .theme-bg-input      - Form input backgrounds
+
+   2. TEXT UTILITIES:
+      .theme-text-primary    - Primary text (headings, important content)
+      .theme-text-secondary  - Secondary text (body copy)
+      .theme-text-muted      - Muted text (captions, metadata)
+      .theme-text-dim        - Dimmed text (disabled states)
+      .theme-text-inverse    - Inverted text color (for colored backgrounds)
+
+   3. BORDER UTILITIES:
+      .theme-border         - Standard border color
+      .theme-border-subtle  - Subtle border (dividers, separators)
+      .theme-border-hover   - Border color on hover
+      .theme-border-focus   - Border color on focus
+
+   4. ACCENT UTILITIES:
+      .theme-accent-gold          - Championship gold accent
+      .theme-accent-gold-bright   - Brighter gold (hover states)
+      .theme-accent-gold-muted    - Muted gold (backgrounds)
+      .theme-accent-safety        - Safety orange accent
+      .theme-bg-accent-gold       - Gold background
+      .theme-bg-accent-safety     - Safety orange background
+
+   5. INTERACTIVE UTILITIES:
+      .theme-btn-primary    - Primary button styling
+      .theme-btn-secondary  - Secondary button styling
+      .theme-btn-ghost      - Ghost button (transparent)
+      .theme-link           - Standard link styling
+      .theme-link-hover     - Link hover state
+
+   6. CARD/SURFACE UTILITIES:
+      .theme-card           - Standard card styling
+      .theme-card-hover     - Card with hover effect
+      .theme-surface        - Generic elevated surface
+
+   7. FORM UTILITIES:
+      .theme-input          - Input field styling
+      .theme-input-focus    - Input focus state
+      .theme-label          - Form label styling
+
+   8. SHADOW UTILITIES:
+      .theme-shadow-card    - Card shadow
+      .theme-shadow-heavy   - Heavy shadow for modals
+      .theme-shadow-subtle  - Subtle shadow
+
+   9. RESPONSIVE TO THEME:
+      All utilities automatically adapt when [data-theme="light"] is applied
+      to the <html> or <body> element. The theme is managed by useTheme() composable.
+
    ========================================================================== */
 
-* {
-  box-sizing: border-box;
+/* Dark theme (default) */
+:root {
+  /* Theme-aware backgrounds */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2d2d2d;
+  --bg-elevated: #3d3d3d;
+  --bg-glass: rgba(10, 10, 10, 0.9);
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-active: rgba(255, 255, 255, 0.1);
+  --bg-input: #1a1a1a;
+
+  /* Theme-aware text */
+  --text-primary: #fafafa;
+  --text-secondary: #e5e5e5;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
+  --text-inverse: #0a0a0a;
+
+  /* Theme-aware borders */
+  --border-primary: #2d2d2d;
+  --border-subtle: rgba(45, 45, 45, 0.5);
+  --border-hover: #3d3d3d;
+  --border-focus: rgba(212, 168, 83, 0.5);
+
+  /* Theme-aware accents */
+  --accent-gold: #d4a853;
+  --accent-gold-bright: #f5c866;
+  --accent-gold-muted: #a08040;
+  --accent-safety: #ff6b35;
+  --accent-safety-bright: #ff8a5c;
+
+  /* Theme-aware shadows */
+  --shadow-card: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+  --shadow-heavy: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  /* Theme-aware gradients */
+  --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 168, 83, 0.1) 0%, transparent 50%);
+  --card-hover-border: rgba(212, 168, 83, 0.3);
+
+  /* Theme-aware patterns */
+  --pattern-checkered-color: #2d2d2d;
+
+  /* Theme-aware icon color */
+  --icon-primary: #fafafa;
+  --icon-secondary: #9ca3af;
+  --icon-inverse: #0a0a0a;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* Light theme */
+[data-theme="light"] {
+  --bg-primary: #f8f7f4;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0efe8;
+  --bg-elevated: #e8e6df;
+  --bg-glass: rgba(248, 247, 244, 0.95);
+  --bg-hover: rgba(0, 0, 0, 0.03);
+  --bg-active: rgba(0, 0, 0, 0.06);
+  --bg-input: #ffffff;
 
-body {
-  font-family: var(--font-body);
-  font-size: 1rem;
-  line-height: 1.6;
-  color: var(--color-pit-white);
-  background-color: var(--color-carbon);
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --text-primary: #0a0a0a;
+  --text-secondary: #1a1a1a;
+  --text-muted: #6b7280;
+  --text-dim: #9ca3af;
+  --text-inverse: #fafafa;
+
+  --border-primary: #d8d6cf;
+  --border-subtle: rgba(216, 214, 207, 0.5);
+  --border-hover: #c8c6bf;
+  --border-focus: rgba(184, 146, 63, 0.6);
+
+  --accent-gold: #b8923f;
+  --accent-gold-bright: #d4a853;
+  --accent-gold-muted: #8a6e2f;
+  --accent-safety: #e55a2b;
+  --accent-safety-bright: #ff6b35;
+
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-subtle: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+  --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184, 146, 63, 0.08) 0%, transparent 50%);
+  --card-hover-border: rgba(184, 146, 63, 0.4);
+
+  --pattern-checkered-color: #e8e6df;
+
+  --icon-primary: #0a0a0a;
+  --icon-secondary: #6b7280;
+  --icon-inverse: #fafafa;
 }
 
 /* ==========================================================================
-   TYPOGRAPHY
+   BASE STYLES
    ========================================================================== */
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.1;
+    margin: 0;
+    text-transform: uppercase;
+  }
+}
+
+/* ==========================================================================
+   TYPOGRAPHY & COMPONENT STYLES
+   ========================================================================== */
+
+@layer components {
 
 .font-display {
   font-family: var(--font-display);
@@ -111,14 +351,6 @@ body {
 .font-data {
   font-family: var(--font-data);
   font-feature-settings: 'tnum' 1;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  font-weight: 400;
-  line-height: 1.1;
-  margin: 0;
-  text-transform: uppercase;
 }
 
 .text-gold {
@@ -147,22 +379,27 @@ h1, h2, h3, h4, h5, h6 {
    RACING PATTERNS & TEXTURES
    ========================================================================== */
 
+/* VRL Clip Path - Racing angled edge */
+.vrl-clip-path {
+  clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
+}
+
 .pattern-checkered {
   background-image:
-    linear-gradient(45deg, var(--color-tarmac) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--color-tarmac) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--color-tarmac) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--color-tarmac) 75%);
+    linear-gradient(45deg, var(--pattern-checkered-color) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--pattern-checkered-color) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--pattern-checkered-color) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--pattern-checkered-color) 75%);
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
 .pattern-carbon {
   background-image:
-    linear-gradient(135deg, var(--color-asphalt) 25%, transparent 25%),
-    linear-gradient(225deg, var(--color-asphalt) 25%, transparent 25%),
-    linear-gradient(45deg, var(--color-asphalt) 25%, transparent 25%),
-    linear-gradient(315deg, var(--color-asphalt) 25%, var(--color-carbon) 25%);
+    linear-gradient(135deg, var(--bg-secondary) 25%, transparent 25%),
+    linear-gradient(225deg, var(--bg-secondary) 25%, transparent 25%),
+    linear-gradient(45deg, var(--bg-secondary) 25%, transparent 25%),
+    linear-gradient(315deg, var(--bg-secondary) 25%, var(--bg-primary) 25%);
   background-size: 8px 8px;
 }
 
@@ -177,13 +414,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gradient-fade-bottom {
-  background: linear-gradient(to bottom, transparent 0%, var(--color-carbon) 100%);
+  background: linear-gradient(to bottom, transparent 0%, var(--bg-primary) 100%);
 }
 
 .gradient-hero {
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 168, 83, 0.15) 0%, transparent 50%),
-    linear-gradient(180deg, var(--color-carbon) 0%, var(--color-asphalt) 100%);
+  background: var(--ambient-gradient);
 }
 
 /* Racing stripe accent */
@@ -198,7 +433,7 @@ h1, h2, h3, h4, h5, h6 {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-safety) 100%);
+  background: linear-gradient(180deg, var(--accent-gold) 0%, var(--accent-safety) 100%);
 }
 
 /* ==========================================================================
@@ -222,40 +457,40 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary {
-  background: var(--color-safety);
-  color: var(--color-pit-white);
+  background: var(--accent-safety);
+  color: var(--text-inverse);
   clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
   padding-right: calc(var(--space-xl) + 8px);
 }
 
 .btn-primary:hover {
-  background: var(--color-safety-bright);
+  background: var(--accent-safety-bright);
   transform: translateY(-2px);
-  box-shadow: 0 10px 40px -10px rgba(255, 107, 53, 0.5);
+  box-shadow: 0 10px 40px -10px var(--accent-safety);
 }
 
 .btn-secondary {
   background: transparent;
-  color: var(--color-gold);
-  border: 1px solid var(--color-gold);
+  color: var(--accent-gold);
+  border: 1px solid var(--accent-gold);
   clip-path: polygon(5% 0, 100% 0, 100% 100%, 0% 100%);
   padding-left: calc(var(--space-xl) + 8px);
 }
 
 .btn-secondary:hover {
-  background: rgba(212, 168, 83, 0.1);
-  border-color: var(--color-gold-bright);
-  color: var(--color-gold-bright);
+  background: var(--bg-hover);
+  border-color: var(--accent-gold-bright);
+  color: var(--accent-gold-bright);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--color-pit-white);
+  color: var(--text-primary);
   padding: var(--space-sm) var(--space-md);
 }
 
 .btn-ghost:hover {
-  color: var(--color-gold);
+  color: var(--accent-gold);
 }
 
 /* ==========================================================================
@@ -263,24 +498,22 @@ h1, h2, h3, h4, h5, h6 {
    ========================================================================== */
 
 .card-racing {
-  background: var(--color-asphalt);
-  border: 1px solid var(--color-tarmac);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
   border-radius: 2px;
   overflow: hidden;
   transition: all var(--duration-normal) var(--ease-racing);
 }
 
 .card-racing:hover {
-  border-color: var(--color-gold-muted);
+  border-color: var(--accent-gold-muted);
   transform: translateY(-4px);
-  box-shadow:
-    0 20px 40px -20px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(212, 168, 83, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .card-image {
   aspect-ratio: 16 / 9;
-  background: var(--color-tarmac);
+  background: var(--bg-tertiary);
   overflow: hidden;
 }
 
@@ -310,15 +543,16 @@ h1, h2, h3, h4, h5, h6 {
   right: 0;
   z-index: 100;
   height: var(--header-height);
-  background: rgba(10, 10, 10, 0.9);
+  background: var(--bg-glass);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(212, 168, 83, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-subtle);
   transition: all var(--duration-normal) var(--ease-racing);
 }
 
 .nav-racing.scrolled {
   height: 60px;
-  background: rgba(10, 10, 10, 0.95);
+  box-shadow: var(--shadow-subtle);
 }
 
 .nav-content {
@@ -331,7 +565,7 @@ h1, h2, h3, h4, h5, h6 {
 .nav-logo {
   font-family: var(--font-display);
   font-size: 1.25rem;
-  color: var(--color-pit-white);
+  color: var(--text-primary);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -341,7 +575,7 @@ h1, h2, h3, h4, h5, h6 {
 .nav-logo-icon {
   width: 40px;
   height: 40px;
-  background: var(--color-gold);
+  background: var(--accent-gold);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -359,17 +593,17 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-barrier);
+  color: var(--text-muted);
   text-decoration: none;
   transition: color var(--duration-fast);
 }
 
 .nav-link:hover {
-  color: var(--color-pit-white);
+  color: var(--text-primary);
 }
 
 .nav-link.active {
-  color: var(--color-gold);
+  color: var(--accent-gold);
 }
 
 /* ==========================================================================
@@ -386,7 +620,7 @@ h1, h2, h3, h4, h5, h6 {
 .standings-table thead {
   position: sticky;
   top: 0;
-  background: var(--color-asphalt);
+  background: var(--bg-secondary);
   z-index: 10;
 }
 
@@ -395,15 +629,15 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: var(--color-barrier);
+  color: var(--text-muted);
   padding: var(--space-md) var(--space-sm);
   text-align: left;
-  border-bottom: 1px solid var(--color-tarmac);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .standings-table td {
   padding: var(--space-md) var(--space-sm);
-  border-bottom: 1px solid rgba(45, 45, 45, 0.5);
+  border-bottom: 1px solid var(--border-subtle);
   vertical-align: middle;
 }
 
@@ -412,7 +646,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .standings-table tbody tr:hover {
-  background: rgba(212, 168, 83, 0.05);
+  background: var(--bg-hover);
 }
 
 /* Position styling */
@@ -444,7 +678,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Points */
 .points {
   font-weight: 600;
-  color: var(--color-pit-white);
+  color: var(--text-primary);
 }
 
 /* Race time */
@@ -455,7 +689,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Gap indicator */
 .gap {
-  color: var(--color-barrier);
+  color: var(--text-muted);
   font-size: 0.75rem;
 }
 
@@ -521,7 +755,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.3em;
-  color: var(--color-gold);
+  color: var(--accent-gold);
   margin-bottom: var(--space-lg);
   display: flex;
   align-items: center;
@@ -532,7 +766,7 @@ h1, h2, h3, h4, h5, h6 {
   content: '';
   width: 40px;
   height: 1px;
-  background: var(--color-gold);
+  background: var(--accent-gold);
 }
 
 .hero-title {
@@ -542,13 +776,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-title .highlight {
-  color: var(--color-gold);
+  color: var(--accent-gold);
   display: block;
 }
 
 .hero-description {
   font-size: 1.125rem;
-  color: var(--color-barrier);
+  color: var(--text-muted);
   margin-bottom: var(--space-2xl);
   max-width: 600px;
 }
@@ -567,7 +801,7 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-50%);
   width: 40%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
   animation: racingLine 3s ease-in-out infinite;
 }
 
@@ -596,8 +830,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .feature-card {
   padding: var(--space-xl);
-  background: var(--color-asphalt);
-  border: 1px solid var(--color-tarmac);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
   position: relative;
   transition: all var(--duration-normal) var(--ease-racing);
 }
@@ -609,15 +843,16 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--color-gold), var(--color-safety));
+  background: linear-gradient(90deg, var(--accent-gold), var(--accent-safety));
   transform: scaleX(0);
   transform-origin: left;
   transition: transform var(--duration-normal) var(--ease-racing);
 }
 
 .feature-card:hover {
-  border-color: var(--color-tarmac);
+  border-color: var(--border-hover);
   transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
 }
 
 .feature-card:hover::before {
@@ -628,18 +863,18 @@ h1, h2, h3, h4, h5, h6 {
   width: 48px;
   height: 48px;
   margin-bottom: var(--space-lg);
-  color: var(--color-gold);
+  color: var(--accent-gold);
 }
 
 .feature-title {
   font-size: 1rem;
   margin-bottom: var(--space-sm);
-  color: var(--color-pit-white);
+  color: var(--text-primary);
 }
 
 .feature-description {
   font-size: 0.875rem;
-  color: var(--color-barrier);
+  color: var(--text-muted);
   line-height: 1.7;
 }
 
@@ -648,8 +883,8 @@ h1, h2, h3, h4, h5, h6 {
    ========================================================================== */
 
 .pricing-card {
-  background: var(--color-asphalt);
-  border: 2px solid var(--color-gold);
+  background: var(--bg-secondary);
+  border: 2px solid var(--accent-gold);
   padding: var(--space-2xl);
   text-align: center;
   position: relative;
@@ -662,8 +897,8 @@ h1, h2, h3, h4, h5, h6 {
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--color-gold);
-  color: var(--color-carbon);
+  background: var(--accent-gold);
+  color: var(--text-inverse);
   font-family: var(--font-display);
   font-size: 0.625rem;
   text-transform: uppercase;
@@ -674,13 +909,13 @@ h1, h2, h3, h4, h5, h6 {
 .pricing-price {
   font-family: var(--font-display);
   font-size: 4rem;
-  color: var(--color-pit-white);
+  color: var(--text-primary);
   margin-bottom: var(--space-md);
 }
 
 .pricing-period {
   font-size: 1rem;
-  color: var(--color-barrier);
+  color: var(--text-muted);
   margin-bottom: var(--space-xl);
 }
 
@@ -693,7 +928,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .pricing-features li {
   padding: var(--space-sm) 0;
-  color: var(--color-concrete);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: var(--space-sm);
@@ -703,7 +938,7 @@ h1, h2, h3, h4, h5, h6 {
   content: '';
   width: 8px;
   height: 8px;
-  background: var(--color-gold);
+  background: var(--accent-gold);
   clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
 
@@ -714,14 +949,15 @@ h1, h2, h3, h4, h5, h6 {
 .search-bar {
   display: flex;
   align-items: center;
-  background: var(--color-asphalt);
-  border: 1px solid var(--color-tarmac);
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
   padding: var(--space-sm) var(--space-md);
   transition: border-color var(--duration-fast);
 }
 
 .search-bar:focus-within {
-  border-color: var(--color-gold-muted);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.1);
 }
 
 .search-input {
@@ -731,16 +967,16 @@ h1, h2, h3, h4, h5, h6 {
   outline: none;
   font-family: var(--font-body);
   font-size: 1rem;
-  color: var(--color-pit-white);
+  color: var(--text-primary);
   padding: var(--space-sm);
 }
 
 .search-input::placeholder {
-  color: var(--color-gravel);
+  color: var(--text-dim);
 }
 
 .search-icon {
-  color: var(--color-barrier);
+  color: var(--text-muted);
 }
 
 /* Filter chips */
@@ -756,20 +992,21 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: var(--space-sm) var(--space-md);
-  background: var(--color-tarmac);
-  color: var(--color-barrier);
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
   border: none;
   cursor: pointer;
   transition: all var(--duration-fast);
 }
 
 .filter-chip:hover {
-  color: var(--color-pit-white);
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .filter-chip.active {
-  background: var(--color-gold);
-  color: var(--color-carbon);
+  background: var(--accent-gold);
+  color: var(--text-inverse);
 }
 
 /* ==========================================================================
@@ -789,9 +1026,9 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-asphalt);
-  border: 1px solid var(--color-tarmac);
-  color: var(--color-barrier);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-muted);
   font-family: var(--font-data);
   font-size: 0.875rem;
   cursor: pointer;
@@ -799,14 +1036,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .pagination-btn:hover {
-  border-color: var(--color-gold-muted);
-  color: var(--color-pit-white);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .pagination-btn.active {
-  background: var(--color-gold);
-  border-color: var(--color-gold);
-  color: var(--color-carbon);
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: var(--text-inverse);
 }
 
 /* ==========================================================================
@@ -814,8 +1052,8 @@ h1, h2, h3, h4, h5, h6 {
    ========================================================================== */
 
 .footer-racing {
-  background: var(--color-asphalt);
-  border-top: 1px solid var(--color-tarmac);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-primary);
   padding: var(--space-3xl) 0 var(--space-xl);
 }
 
@@ -831,7 +1069,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .footer-description {
   font-size: 0.875rem;
-  color: var(--color-barrier);
+  color: var(--text-muted);
   margin-top: var(--space-md);
   line-height: 1.7;
 }
@@ -839,7 +1077,7 @@ h1, h2, h3, h4, h5, h6 {
 .footer-title {
   font-size: 0.625rem;
   letter-spacing: 0.2em;
-  color: var(--color-gold);
+  color: var(--accent-gold);
   margin-bottom: var(--space-md);
 }
 
@@ -855,24 +1093,24 @@ h1, h2, h3, h4, h5, h6 {
 
 .footer-links a {
   font-size: 0.875rem;
-  color: var(--color-barrier);
+  color: var(--text-muted);
   text-decoration: none;
   transition: color var(--duration-fast);
 }
 
 .footer-links a:hover {
-  color: var(--color-pit-white);
+  color: var(--text-primary);
 }
 
 .footer-bottom {
   margin-top: var(--space-2xl);
   padding-top: var(--space-xl);
-  border-top: 1px solid var(--color-tarmac);
+  border-top: 1px solid var(--border-primary);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 0.75rem;
-  color: var(--color-gravel);
+  color: var(--text-dim);
 }
 
 /* ==========================================================================
@@ -882,20 +1120,21 @@ h1, h2, h3, h4, h5, h6 {
 .league-card {
   position: relative;
   overflow: hidden;
-  background: var(--color-asphalt);
-  border: 1px solid var(--color-tarmac);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
   transition: all var(--duration-normal) var(--ease-racing);
 }
 
 .league-card:hover {
-  border-color: var(--color-gold-muted);
+  border-color: var(--accent-gold-muted);
   transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
 }
 
 .league-card-header {
   position: relative;
   height: 120px;
-  background: var(--color-tarmac);
+  background: var(--bg-tertiary);
   overflow: hidden;
 }
 
@@ -916,8 +1155,8 @@ h1, h2, h3, h4, h5, h6 {
   left: var(--space-lg);
   width: 60px;
   height: 60px;
-  background: var(--color-asphalt);
-  border: 2px solid var(--color-tarmac);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-primary);
   border-radius: 4px;
   overflow: hidden;
   display: flex;
@@ -942,7 +1181,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .league-card-tagline {
   font-size: 0.875rem;
-  color: var(--color-barrier);
+  color: var(--text-muted);
   margin-bottom: var(--space-md);
 }
 
@@ -951,7 +1190,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: var(--space-lg);
   font-family: var(--font-data);
   font-size: 0.75rem;
-  color: var(--color-gravel);
+  color: var(--text-dim);
 }
 
 .league-card-stat {
@@ -961,7 +1200,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .league-card-stat-value {
-  color: var(--color-pit-white);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -1090,3 +1329,274 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
   width: 1px;
 }
+
+/* ==========================================================================
+   THEME UTILITIES
+   ========================================================================== */
+
+/* Background Utilities */
+.theme-bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.theme-bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.theme-bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.theme-bg-elevated {
+  background-color: var(--bg-elevated);
+}
+
+.theme-bg-glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.theme-bg-hover {
+  background-color: var(--bg-hover);
+}
+
+.theme-bg-active {
+  background-color: var(--bg-active);
+}
+
+.theme-bg-input {
+  background-color: var(--bg-input);
+}
+
+.theme-bg-accent-gold {
+  background-color: var(--accent-gold);
+}
+
+.theme-bg-accent-safety {
+  background-color: var(--accent-safety);
+}
+
+/* Text Utilities */
+.theme-text-primary {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-text-muted {
+  color: var(--text-muted);
+}
+
+.theme-text-dim {
+  color: var(--text-dim);
+}
+
+.theme-text-inverse {
+  color: var(--text-inverse);
+}
+
+/* Border Utilities */
+.theme-border {
+  border-color: var(--border-primary);
+}
+
+.theme-border-subtle {
+  border-color: var(--border-subtle);
+}
+
+.theme-border-hover {
+  border-color: var(--border-hover);
+}
+
+.theme-border-focus {
+  border-color: var(--border-focus);
+}
+
+/* Accent Color Utilities */
+.theme-accent-gold {
+  color: var(--accent-gold);
+}
+
+.theme-accent-gold-bright {
+  color: var(--accent-gold-bright);
+}
+
+.theme-accent-gold-muted {
+  color: var(--accent-gold-muted);
+}
+
+.theme-accent-safety {
+  color: var(--accent-safety);
+}
+
+/* Interactive Utilities */
+.theme-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--duration-fast);
+}
+
+.theme-link:hover {
+  color: var(--text-primary);
+}
+
+.theme-link-accent {
+  color: var(--accent-gold);
+  text-decoration: none;
+  transition: color var(--duration-fast);
+}
+
+.theme-link-accent:hover {
+  color: var(--accent-gold-bright);
+}
+
+/* Card/Surface Utilities */
+.theme-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  transition: all var(--duration-normal) var(--ease-racing);
+}
+
+.theme-card:hover {
+  border-color: var(--card-hover-border);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.theme-surface {
+  background-color: var(--bg-secondary);
+  box-shadow: var(--shadow-subtle);
+}
+
+/* Form Utilities */
+.theme-input {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  transition: border-color var(--duration-fast);
+}
+
+.theme-input:hover {
+  border-color: var(--border-hover);
+}
+
+.theme-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.1);
+}
+
+.theme-label {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Shadow Utilities */
+.theme-shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+.theme-shadow-heavy {
+  box-shadow: var(--shadow-heavy);
+}
+
+.theme-shadow-subtle {
+  box-shadow: var(--shadow-subtle);
+}
+
+/* Icon Color Utilities */
+.theme-icon-primary {
+  color: var(--icon-primary);
+}
+
+.theme-icon-secondary {
+  color: var(--icon-secondary);
+}
+
+.theme-icon-inverse {
+  color: var(--icon-inverse);
+}
+
+/* Enhanced Glass Effect */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Gradient Border Effect */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--card-hover-border), transparent 50%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Button Shine Effect */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(to bottom right, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%);
+  transform: rotate(45deg);
+  transition: transform 0.5s ease;
+}
+
+.btn-shine:hover::after {
+  transform: rotate(45deg) translateY(-100%);
+}
+
+/* Hover State Utilities */
+.theme-hover-bg:hover {
+  background-color: var(--bg-hover);
+}
+
+.theme-hover-border:hover {
+  border-color: var(--border-hover);
+}
+
+.theme-hover-text:hover {
+  color: var(--text-primary);
+}
+
+.theme-hover-accent:hover {
+  color: var(--accent-gold);
+}
+
+/* Active State Utilities */
+.theme-active-bg:active {
+  background-color: var(--bg-active);
+}
+
+/* Divider Utility */
+.theme-divider {
+  border-color: var(--border-primary);
+}
+
+.theme-divider-subtle {
+  border-color: var(--border-subtle);
+}
+
+} /* End @layer components */

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialogs - VRL Public Design System</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        racing: {
+                            'carbon': '#0a0a0a', 'asphalt': '#1a1a1a', 'tarmac': '#2d2d2d', 'pit-lane': '#3d3d3d',
+                            'gold': '#d4a853', 'gold-bright': '#f5c866',
+                            'pit-white': '#fafafa', 'barrier': '#9ca3af', 'gravel': '#6b7280',
+                            'success': '#22c55e', 'warning': '#f59e0b', 'danger': '#ef4444', 'info': '#3b82f6',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Racing Sans One', 'cursive'],
+                        'body': ['Source Serif 4', 'Georgia', 'serif'],
+                        'data': ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a; --bg-secondary: #1a1a1a; --bg-tertiary: #2d2d2d;
+            --bg-glass: rgba(10, 10, 10, 0.9);
+            --text-primary: #fafafa; --text-secondary: #e5e5e5; --text-muted: #9ca3af; --text-dim: #6b7280;
+            --border-primary: #2d2d2d; --border-subtle: rgba(45, 45, 45, 0.5);
+            --accent-gold: #d4a853;
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 168, 83, 0.1) 0%, transparent 50%);
+        }
+        [data-theme="light"] {
+            --bg-primary: #f8f7f4; --bg-secondary: #ffffff; --bg-tertiary: #f0efe8;
+            --bg-glass: rgba(248, 247, 244, 0.95);
+            --text-primary: #0a0a0a; --text-secondary: #1a1a1a; --text-muted: #6b7280; --text-dim: #9ca3af;
+            --border-primary: #d8d6cf; --border-subtle: rgba(216, 214, 207, 0.5);
+            --accent-gold: #b8923f;
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184, 146, 63, 0.08) 0%, transparent 50%);
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Source Serif 4', Georgia, serif; background: var(--bg-primary); color: var(--text-primary); }
+        .ambient-bg { background: var(--ambient-gradient), var(--bg-primary); }
+        .glass { background: var(--bg-glass); backdrop-filter: blur(10px); }
+        .card-racing { background: var(--bg-secondary); border: 1px solid var(--border-primary); }
+        .theme-toggle { position: relative; width: 52px; height: 28px; background: var(--bg-tertiary); border-radius: 14px; border: 2px solid var(--border-primary); cursor: pointer; }
+        .theme-toggle:hover { border-color: var(--accent-gold); }
+        .theme-toggle-indicator { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: var(--accent-gold); border-radius: 50%; transition: transform 0.3s ease; display: flex; align-items: center; justify-content: center; color: var(--bg-primary); font-size: 12px; }
+        [data-theme="light"] .theme-toggle-indicator { transform: translateX(24px); }
+        .nav-link { display: block; padding: 12px 20px; font-family: 'Racing Sans One', cursive; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border-bottom: 2px solid transparent; color: var(--text-muted); transition: all 0.2s ease; white-space: nowrap; }
+        .nav-link:hover { background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
+        .component-note { padding: 12px 16px; font-data text-xs; border-left: 3px solid var(--accent-gold); background: rgba(212, 168, 83, 0.05); color: var(--text-muted); margin-top: 16px; }
+
+        /* Modal/Dialog styles */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); z-index: 100; opacity: 0; visibility: hidden; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--bg-secondary); border: 1px solid var(--border-primary); max-width: 90vw; max-height: 90vh; overflow: auto; transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .dialog-icon-wrapper { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+        .dialog-icon-wrapper.success { background: rgba(34, 197, 94, 0.15); }
+        .dialog-icon-wrapper.warning { background: rgba(245, 158, 11, 0.15); }
+        .dialog-icon-wrapper.danger { background: rgba(239, 68, 68, 0.15); }
+        .dialog-icon-wrapper.info { background: rgba(59, 130, 246, 0.15); }
+    </style>
+</head>
+<body class="min-h-screen ambient-bg">
+    <!-- Header -->
+    <header class="glass border-b px-4 sm:px-8 lg:px-12 py-6 lg:py-10" style="border-color: var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+                <div class="flex items-center gap-4 flex-1">
+                    <a href="index.html" class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold flex items-center justify-center flex-shrink-0" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                        <span class="font-data text-xs sm:text-sm font-bold text-racing-carbon">VRL</span>
+                    </a>
+                    <div>
+                        <h1 class="font-display text-2xl sm:text-3xl tracking-wide uppercase" style="color: var(--text-primary);">Alert & Confirmation Dialogs</h1>
+                        <p class="font-data text-xs sm:text-sm mt-1" style="color: var(--text-muted);">System messages and user confirmations</p>
+                    </div>
+                </div>
+                <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+                    <div class="theme-toggle-indicator">
+                        <i class="ph-fill ph-sun theme-icon-light"></i>
+                        <i class="ph-fill ph-moon theme-icon-dark" style="display: none;"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="glass border-b sticky top-0 z-50 px-4 sm:px-8 lg:px-12" style="border-color: var(--border-subtle);">
+        <div class="max-w-[1200px] mx-auto">
+            <ul class="flex gap-0 list-none m-0 p-0 overflow-x-auto">
+                <li><a href="index.html" class="nav-link"><i class="ph ph-house mr-1"></i> Home</a></li>
+                <li><a href="colors.html" class="nav-link">Colors</a></li>
+                <li><a href="typography.html" class="nav-link">Typography</a></li>
+                <li><a href="buttons.html" class="nav-link">Buttons</a></li>
+                <li><a href="cards.html" class="nav-link">Cards</a></li>
+                <li><a href="tables.html" class="nav-link">Tables</a></li>
+                <li><a href="badges.html" class="nav-link">Badges</a></li>
+                <li><a href="forms.html" class="nav-link">Forms</a></li>
+                <li><a href="navigation.html" class="nav-link">Navigation</a></li>
+                <li><a href="modals.html" class="nav-link">Modals</a></li>
+                <li><a href="drawers.html" class="nav-link">Drawers</a></li>
+                <li><a href="dialogs.html" class="nav-link active">Dialogs</a></li>
+                <li><a href="pagination.html" class="nav-link">Pagination</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-12">
+        <!-- Dialog Triggers -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Dialog Types</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="openDialog('dialog-success')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-success text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-green-500 transition-all">
+                        <i class="ph-fill ph-check-circle text-sm"></i>
+                        Success
+                    </button>
+                    <button onclick="openDialog('dialog-warning')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-warning text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-yellow-400 transition-all">
+                        <i class="ph-fill ph-warning text-sm"></i>
+                        Warning
+                    </button>
+                    <button onclick="openDialog('dialog-danger')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-danger text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-red-500 transition-all">
+                        <i class="ph-fill ph-trash text-sm"></i>
+                        Delete Confirm
+                    </button>
+                    <button onclick="openDialog('dialog-info')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-info text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-blue-500 transition-all">
+                        <i class="ph-fill ph-info text-sm"></i>
+                        Info
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dialog Previews (Static) -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Dialog Variants</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Success Dialog -->
+                <div class="card-racing rounded overflow-hidden">
+                    <div class="p-4" style="background: rgba(0, 0, 0, 0.3);">
+                        <div class="modal-content rounded p-6 text-center" style="transform: none; max-width: 320px; margin: 0 auto;">
+                            <div class="dialog-icon-wrapper success">
+                                <i class="ph-fill ph-check-circle text-2xl text-racing-success"></i>
+                            </div>
+                            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Success!</h3>
+                            <p class="text-sm mb-5" style="color: var(--text-muted);">Your league has been created successfully.</p>
+                            <button class="w-full px-4 py-2.5 bg-racing-success text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-green-500 transition-all rounded">
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+                    <div class="px-4 py-2 font-data text-[10px]" style="color: var(--text-dim); background: var(--bg-tertiary);">Success Dialog</div>
+                </div>
+
+                <!-- Warning Dialog -->
+                <div class="card-racing rounded overflow-hidden">
+                    <div class="p-4" style="background: rgba(0, 0, 0, 0.3);">
+                        <div class="modal-content rounded p-6 text-center" style="transform: none; max-width: 320px; margin: 0 auto;">
+                            <div class="dialog-icon-wrapper warning">
+                                <i class="ph-fill ph-warning text-2xl text-racing-warning"></i>
+                            </div>
+                            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Warning</h3>
+                            <p class="text-sm mb-5" style="color: var(--text-muted);">You have unsaved changes. Are you sure you want to leave?</p>
+                            <div class="flex gap-3">
+                                <button class="flex-1 px-4 py-2.5 font-display text-xs uppercase tracking-wider transition-all rounded" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                                    Stay
+                                </button>
+                                <button class="flex-1 px-4 py-2.5 bg-racing-warning text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-yellow-400 transition-all rounded">
+                                    Leave
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-2 font-data text-[10px]" style="color: var(--text-dim); background: var(--bg-tertiary);">Warning Dialog</div>
+                </div>
+
+                <!-- Danger/Delete Dialog -->
+                <div class="card-racing rounded overflow-hidden">
+                    <div class="p-4" style="background: rgba(0, 0, 0, 0.3);">
+                        <div class="modal-content rounded p-6 text-center" style="transform: none; max-width: 320px; margin: 0 auto;">
+                            <div class="dialog-icon-wrapper danger">
+                                <i class="ph-fill ph-trash text-2xl text-racing-danger"></i>
+                            </div>
+                            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Delete League?</h3>
+                            <p class="text-sm mb-5" style="color: var(--text-muted);">This action cannot be undone. All data will be permanently deleted.</p>
+                            <div class="flex gap-3">
+                                <button class="flex-1 px-4 py-2.5 font-display text-xs uppercase tracking-wider transition-all rounded" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                                    Cancel
+                                </button>
+                                <button class="flex-1 px-4 py-2.5 bg-racing-danger text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-red-500 transition-all rounded">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-2 font-data text-[10px]" style="color: var(--text-dim); background: var(--bg-tertiary);">Delete Confirmation</div>
+                </div>
+
+                <!-- Info Dialog -->
+                <div class="card-racing rounded overflow-hidden">
+                    <div class="p-4" style="background: rgba(0, 0, 0, 0.3);">
+                        <div class="modal-content rounded p-6 text-center" style="transform: none; max-width: 320px; margin: 0 auto;">
+                            <div class="dialog-icon-wrapper info">
+                                <i class="ph-fill ph-info text-2xl text-racing-info"></i>
+                            </div>
+                            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">New Feature</h3>
+                            <p class="text-sm mb-5" style="color: var(--text-muted);">You can now export your standings to CSV format from the settings menu.</p>
+                            <button class="w-full px-4 py-2.5 bg-racing-info text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-blue-500 transition-all rounded">
+                                Got It
+                            </button>
+                        </div>
+                    </div>
+                    <div class="px-4 py-2 font-data text-[10px]" style="color: var(--text-dim); background: var(--bg-tertiary);">Info Dialog</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Toast Notifications</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="space-y-3 max-w-sm">
+                    <!-- Success Toast -->
+                    <div class="flex items-center gap-3 px-4 py-3 rounded" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
+                        <i class="ph-fill ph-check-circle text-lg text-racing-success"></i>
+                        <span class="text-sm flex-1" style="color: var(--text-primary);">Changes saved successfully</span>
+                        <button class="hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                            <i class="ph ph-x text-sm"></i>
+                        </button>
+                    </div>
+                    <!-- Error Toast -->
+                    <div class="flex items-center gap-3 px-4 py-3 rounded" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <i class="ph-fill ph-x-circle text-lg text-racing-danger"></i>
+                        <span class="text-sm flex-1" style="color: var(--text-primary);">Failed to save changes</span>
+                        <button class="hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                            <i class="ph ph-x text-sm"></i>
+                        </button>
+                    </div>
+                    <!-- Warning Toast -->
+                    <div class="flex items-center gap-3 px-4 py-3 rounded" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                        <i class="ph-fill ph-warning text-lg text-racing-warning"></i>
+                        <span class="text-sm flex-1" style="color: var(--text-primary);">Session expiring in 5 minutes</span>
+                        <button class="hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                            <i class="ph ph-x text-sm"></i>
+                        </button>
+                    </div>
+                    <!-- Info Toast -->
+                    <div class="flex items-center gap-3 px-4 py-3 rounded" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <i class="ph-fill ph-info text-lg text-racing-info"></i>
+                        <span class="text-sm flex-1" style="color: var(--text-primary);">New results available</span>
+                        <button class="hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                            <i class="ph ph-x text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-note">
+            <strong>Usage:</strong> Success/Info dialogs have single action. Warning/Danger dialogs always have cancel option. Toast notifications auto-dismiss after 5s.
+        </div>
+    </div>
+
+    <!-- Dialog Overlays -->
+    <div id="dialog-success" class="modal-overlay" onclick="closeDialog('dialog-success')">
+        <div class="modal-content rounded p-6 text-center w-[360px]" onclick="event.stopPropagation()" style="transform: none;">
+            <div class="dialog-icon-wrapper success">
+                <i class="ph-fill ph-check-circle text-2xl text-racing-success"></i>
+            </div>
+            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Success!</h3>
+            <p class="text-sm mb-5" style="color: var(--text-muted);">Your changes have been saved successfully.</p>
+            <button onclick="closeDialog('dialog-success')" class="w-full px-4 py-2.5 bg-racing-success text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-green-500 transition-all rounded">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <div id="dialog-warning" class="modal-overlay" onclick="closeDialog('dialog-warning')">
+        <div class="modal-content rounded p-6 text-center w-[360px]" onclick="event.stopPropagation()" style="transform: none;">
+            <div class="dialog-icon-wrapper warning">
+                <i class="ph-fill ph-warning text-2xl text-racing-warning"></i>
+            </div>
+            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Warning</h3>
+            <p class="text-sm mb-5" style="color: var(--text-muted);">You have unsaved changes. Are you sure you want to leave?</p>
+            <div class="flex gap-3">
+                <button onclick="closeDialog('dialog-warning')" class="flex-1 px-4 py-2.5 font-display text-xs uppercase tracking-wider transition-all rounded" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                    Stay
+                </button>
+                <button onclick="closeDialog('dialog-warning')" class="flex-1 px-4 py-2.5 bg-racing-warning text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-yellow-400 transition-all rounded">
+                    Leave
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialog-danger" class="modal-overlay" onclick="closeDialog('dialog-danger')">
+        <div class="modal-content rounded p-6 text-center w-[360px]" onclick="event.stopPropagation()" style="transform: none;">
+            <div class="dialog-icon-wrapper danger">
+                <i class="ph-fill ph-trash text-2xl text-racing-danger"></i>
+            </div>
+            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">Delete League?</h3>
+            <p class="text-sm mb-5" style="color: var(--text-muted);">This action cannot be undone. All data will be permanently deleted.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDialog('dialog-danger')" class="flex-1 px-4 py-2.5 font-display text-xs uppercase tracking-wider transition-all rounded" style="background: var(--bg-tertiary); color: var(--text-muted);">
+                    Cancel
+                </button>
+                <button onclick="closeDialog('dialog-danger')" class="flex-1 px-4 py-2.5 bg-racing-danger text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-red-500 transition-all rounded">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialog-info" class="modal-overlay" onclick="closeDialog('dialog-info')">
+        <div class="modal-content rounded p-6 text-center w-[360px]" onclick="event.stopPropagation()" style="transform: none;">
+            <div class="dialog-icon-wrapper info">
+                <i class="ph-fill ph-info text-2xl text-racing-info"></i>
+            </div>
+            <h3 class="font-display text-sm uppercase tracking-wide mb-2" style="color: var(--text-primary);">New Feature</h3>
+            <p class="text-sm mb-5" style="color: var(--text-muted);">You can now export your standings to CSV format from the settings menu.</p>
+            <button onclick="closeDialog('dialog-info')" class="w-full px-4 py-2.5 bg-racing-info text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-blue-500 transition-all rounded">
+                Got It
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 sm:py-12" style="background: var(--bg-secondary); border-top: 1px solid var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12">
+            <div class="flex justify-between items-center">
+                <a href="drawers.html" class="font-display text-xs uppercase tracking-wider hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                    <i class="ph ph-arrow-left mr-2"></i> Drawers
+                </a>
+                <a href="pagination.html" class="font-display text-xs uppercase tracking-wider hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                    Pagination <i class="ph ph-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('vrl-theme', newTheme);
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+            if (newTheme === 'light') { lightIcon.style.display = 'none'; darkIcon.style.display = 'block'; }
+            else { lightIcon.style.display = 'block'; darkIcon.style.display = 'none'; }
+        }
+        function initTheme() {
+            const savedTheme = localStorage.getItem('vrl-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+            if (theme === 'light') { lightIcon.style.display = 'none'; darkIcon.style.display = 'block'; }
+        }
+        initTheme();
+
+        // Dialog functions
+        function openDialog(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDialog(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close dialogs on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+</body>
+</html>

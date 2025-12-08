@@ -1,7 +1,5 @@
 <template>
   <div class="leagues-page">
-    <PublicHeader />
-
     <!-- Page Header -->
     <section class="page-header">
       <div class="container-racing">
@@ -9,7 +7,8 @@
           <span class="page-label">Directory</span>
           <h1 class="page-title">Public Leagues</h1>
           <p class="page-description">
-            Discover sim racing leagues from the community. View standings, results, and race schedules.
+            Discover sim racing leagues from the community. View standings, results, and race
+            schedules.
           </p>
         </div>
       </div>
@@ -65,11 +64,13 @@
           <PhFlagCheckered class="empty-icon" :size="64" weight="duotone" />
           <h3 class="empty-title">No Leagues Found</h3>
           <p class="empty-description">
-            {{ searchQuery ? 'Try adjusting your search terms.' : 'No public leagues are available yet.' }}
+            {{
+              searchQuery
+                ? 'Try adjusting your search terms.'
+                : 'No public leagues are available yet.'
+            }}
           </p>
-          <router-link to="/register" class="btn btn-primary">
-            Create Your Own League
-          </router-link>
+          <router-link to="/register" class="btn btn-primary"> Create Your Own League </router-link>
         </div>
 
         <!-- Leagues Grid -->
@@ -92,11 +93,7 @@
             </div>
 
             <div class="league-card-logo">
-              <img
-                v-if="league.logo_url"
-                :src="league.logo_url"
-                :alt="league.name"
-              />
+              <img v-if="league.logo_url" :src="league.logo_url" :alt="league.name" />
               <PhFlag v-else :size="28" weight="duotone" class="logo-placeholder" />
             </div>
 
@@ -107,7 +104,9 @@
               <div class="league-card-stats">
                 <div class="league-card-stat">
                   <span class="league-card-stat-value">{{ league.competitions_count }}</span>
-                  <span>{{ league.competitions_count === 1 ? 'Competition' : 'Competitions' }}</span>
+                  <span>{{
+                    league.competitions_count === 1 ? 'Competition' : 'Competitions'
+                  }}</span>
                 </div>
                 <div class="league-card-stat">
                   <span class="league-card-stat-value">{{ league.drivers_count }}</span>
@@ -160,8 +159,6 @@
         </div>
       </div>
     </section>
-
-    <PublicFooter />
   </div>
 </template>
 
@@ -175,8 +172,6 @@ import {
   PhCaretLeft,
   PhCaretRight,
 } from '@phosphor-icons/vue';
-import PublicHeader from '@public/components/layout/PublicHeader.vue';
-import PublicFooter from '@public/components/layout/PublicFooter.vue';
 import type { PublicLeague, Platform } from '@public/types/public';
 
 const route = useRoute();
@@ -192,9 +187,7 @@ const totalPages = ref(1);
 // perPage will be used for future API pagination (12 items per page)
 
 // Mock platforms for now - this would come from API
-const platforms = ref<Platform[]>([
-  { id: 1, name: 'GT7', slug: 'gt7' },
-]);
+const platforms = ref<Platform[]>([{ id: 1, name: 'GT7', slug: 'gt7' }]);
 
 // Computed
 const visiblePages = computed(() => {
@@ -250,7 +243,7 @@ const fetchLeagues = async () => {
     // totalPages.value = response.meta.last_page;
 
     // Mock data for now
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
     leagues.value = [
       {
         id: 1,

@@ -139,48 +139,6 @@ export interface SeasonStandingDivision {
 }
 
 /**
- * Season Standings Response (discriminated union)
- */
-export type SeasonStandingsResponse =
-  | { standings: SeasonStandingDriver[]; has_divisions: false }
-  | { standings: SeasonStandingDivision[]; has_divisions: true };
-
-/**
- * Race Result
- */
-export interface PublicRaceResult {
-  position: number;
-  driver_id: number;
-  driver_name: string;
-  race_time: string | null;
-  gap: string | null;
-  points: number;
-  has_fastest_lap: boolean;
-  has_pole: boolean;
-  is_dnf: boolean;
-  is_dns: boolean;
-  penalty_time: string | null;
-}
-
-/**
- * Pagination Meta
- */
-export interface PaginationMeta {
-  current_page: number;
-  per_page: number;
-  total: number;
-  last_page: number;
-}
-
-/**
- * Paginated Response
- */
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: PaginationMeta;
-}
-
-/**
  * RGB Color interface for parsing competition_colour
  */
 export interface RGBColor {

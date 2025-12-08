@@ -1,7 +1,5 @@
 <template>
   <div class="season-page">
-    <PublicHeader />
-
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
@@ -46,7 +44,7 @@
           </nav>
 
           <div class="season-hero-info">
-            <div class="season-logo" v-if="season.logo_url">
+            <div v-if="season.logo_url" class="season-logo">
               <img :src="season.logo_url" :alt="season.name" />
             </div>
 
@@ -71,7 +69,9 @@
               <span class="stat-label">Active Drivers</span>
             </div>
             <div class="stat-item">
-              <span class="stat-value font-data">{{ season.stats.completed_races }}/{{ season.stats.total_races }}</span>
+              <span class="stat-value font-data"
+                >{{ season.stats.completed_races }}/{{ season.stats.total_races }}</span
+              >
               <span class="stat-label">Races Completed</span>
             </div>
             <div class="stat-item">
@@ -118,13 +118,16 @@
 
             <!-- Flat Standings (No Divisions) -->
             <div v-else-if="!hasDivisions" class="standings-wrapper">
-              <StandingsTable :drivers="standings as SeasonStandingDriver[]" :rounds="roundHeaders" />
+              <StandingsTable
+                :drivers="standings as SeasonStandingDriver[]"
+                :rounds="roundHeaders"
+              />
             </div>
 
             <!-- Division Standings -->
             <div v-else class="divisions-standings">
               <div
-                v-for="division in (standings as SeasonStandingDivision[])"
+                v-for="division in standings as SeasonStandingDivision[]"
                 :key="division.division_id"
                 class="division-section"
               >
@@ -150,10 +153,7 @@
               >
                 <div class="round-number">
                   <span class="round-num font-display">R{{ round.round_number }}</span>
-                  <span
-                    class="round-status-badge"
-                    :class="`status-${round.status}`"
-                  >
+                  <span class="round-status-badge" :class="`status-${round.status}`">
                     {{ round.status_label }}
                   </span>
                 </div>
@@ -191,8 +191,6 @@
         </div>
       </section>
     </template>
-
-    <PublicFooter />
   </div>
 </template>
 
@@ -207,8 +205,6 @@ import {
   PhCalendar,
   PhWarningCircle,
 } from '@phosphor-icons/vue';
-import PublicHeader from '@public/components/layout/PublicHeader.vue';
-import PublicFooter from '@public/components/layout/PublicFooter.vue';
 import StandingsTable from '@public/components/leagues/StandingsTable.vue';
 import type {
   PublicSeason,
@@ -231,7 +227,7 @@ const activeTab = ref<'standings' | 'rounds'>('standings');
 
 // Computed
 const roundHeaders = computed(() => {
-  return rounds.value.map(r => ({
+  return rounds.value.map((r) => ({
     round_id: r.id,
     round_number: r.round_number,
     name: r.name || `R${r.round_number}`,
@@ -259,7 +255,7 @@ const fetchSeasonData = async () => {
 
   try {
     // TODO: Replace with actual API calls using route.params.slug and route.params.seasonSlug
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     leagueName.value = 'GT7 Racing League';
 
@@ -268,7 +264,8 @@ const fetchSeasonData = async () => {
       name: 'Season 3',
       slug: 'season-3',
       car_class: 'GT3',
-      description: 'The third season of our GT3 Championship. Featuring 8 rounds across iconic circuits.',
+      description:
+        'The third season of our GT3 Championship. Featuring 8 rounds across iconic circuits.',
       logo_url: '',
       banner_url: null,
       status: 'active',
@@ -295,8 +292,20 @@ const fetchSeasonData = async () => {
         status: 'completed',
         status_label: 'Completed',
         races: [
-          { id: 1, race_number: 1, name: 'Qualifying', race_type: 'qualifying', status: 'completed' },
-          { id: 2, race_number: 2, name: 'Feature Race', race_type: 'feature', status: 'completed' },
+          {
+            id: 1,
+            race_number: 1,
+            name: 'Qualifying',
+            race_type: 'qualifying',
+            status: 'completed',
+          },
+          {
+            id: 2,
+            race_number: 2,
+            name: 'Feature Race',
+            race_type: 'feature',
+            status: 'completed',
+          },
         ],
       },
       {
@@ -325,7 +334,13 @@ const fetchSeasonData = async () => {
         status: 'completed',
         status_label: 'Completed',
         races: [
-          { id: 5, race_number: 1, name: 'Feature Race', race_type: 'feature', status: 'completed' },
+          {
+            id: 5,
+            race_number: 1,
+            name: 'Feature Race',
+            race_type: 'feature',
+            status: 'completed',
+          },
         ],
       },
       {
@@ -339,7 +354,13 @@ const fetchSeasonData = async () => {
         status: 'completed',
         status_label: 'Completed',
         races: [
-          { id: 6, race_number: 1, name: 'Feature Race', race_type: 'feature', status: 'completed' },
+          {
+            id: 6,
+            race_number: 1,
+            name: 'Feature Race',
+            race_type: 'feature',
+            status: 'completed',
+          },
         ],
       },
       {
@@ -460,7 +481,9 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-icon {

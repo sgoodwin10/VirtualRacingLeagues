@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modals - VRL Public Design System</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        racing: {
+                            'carbon': '#0a0a0a', 'asphalt': '#1a1a1a', 'tarmac': '#2d2d2d', 'pit-lane': '#3d3d3d',
+                            'gold': '#d4a853', 'gold-bright': '#f5c866',
+                            'safety': '#ff6b35', 'safety-bright': '#ff8a5c',
+                            'pit-white': '#fafafa', 'barrier': '#9ca3af', 'gravel': '#6b7280',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Racing Sans One', 'cursive'],
+                        'body': ['Source Serif 4', 'Georgia', 'serif'],
+                        'data': ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a; --bg-secondary: #1a1a1a; --bg-tertiary: #2d2d2d;
+            --bg-glass: rgba(10, 10, 10, 0.9);
+            --text-primary: #fafafa; --text-secondary: #e5e5e5; --text-muted: #9ca3af; --text-dim: #6b7280;
+            --border-primary: #2d2d2d; --border-subtle: rgba(45, 45, 45, 0.5);
+            --accent-gold: #d4a853;
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 168, 83, 0.1) 0%, transparent 50%);
+        }
+        [data-theme="light"] {
+            --bg-primary: #f8f7f4; --bg-secondary: #ffffff; --bg-tertiary: #f0efe8;
+            --bg-glass: rgba(248, 247, 244, 0.95);
+            --text-primary: #0a0a0a; --text-secondary: #1a1a1a; --text-muted: #6b7280; --text-dim: #9ca3af;
+            --border-primary: #d8d6cf; --border-subtle: rgba(216, 214, 207, 0.5);
+            --accent-gold: #b8923f;
+            --ambient-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184, 146, 63, 0.08) 0%, transparent 50%);
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Source Serif 4', Georgia, serif; background: var(--bg-primary); color: var(--text-primary); }
+        .ambient-bg { background: var(--ambient-gradient), var(--bg-primary); }
+        .glass { background: var(--bg-glass); backdrop-filter: blur(10px); }
+        .card-racing { background: var(--bg-secondary); border: 1px solid var(--border-primary); }
+        .theme-toggle { position: relative; width: 52px; height: 28px; background: var(--bg-tertiary); border-radius: 14px; border: 2px solid var(--border-primary); cursor: pointer; }
+        .theme-toggle:hover { border-color: var(--accent-gold); }
+        .theme-toggle-indicator { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: var(--accent-gold); border-radius: 50%; transition: transform 0.3s ease; display: flex; align-items: center; justify-content: center; color: var(--bg-primary); font-size: 12px; }
+        [data-theme="light"] .theme-toggle-indicator { transform: translateX(24px); }
+        .nav-link { display: block; padding: 12px 20px; font-family: 'Racing Sans One', cursive; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border-bottom: 2px solid transparent; color: var(--text-muted); transition: all 0.2s ease; white-space: nowrap; }
+        .nav-link:hover { background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--bg-secondary); border: 1px solid var(--border-primary); max-width: 90vw; max-height: 90vh; overflow: auto; transform: scale(0.95) translateY(20px); transition: transform 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .component-note { margin-top: 0.75rem; padding: 1rem 1.25rem; background: rgba(212, 168, 83, 0.08); border-left: 3px solid var(--accent-gold); border-radius: 0 4px 4px 0; font-size: 0.875rem; color: var(--text-muted); }
+        .component-note strong { color: var(--text-secondary); }
+    </style>
+</head>
+<body class="min-h-screen ambient-bg">
+    <!-- Header -->
+    <header class="glass border-b px-4 sm:px-8 lg:px-12 py-6 lg:py-10" style="border-color: var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+                <div class="flex items-center gap-4 flex-1">
+                    <a href="index.html" class="w-10 h-10 sm:w-12 sm:h-12 bg-racing-gold flex items-center justify-center flex-shrink-0" style="clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);">
+                        <span class="font-data text-xs sm:text-sm font-bold text-racing-carbon">VRL</span>
+                    </a>
+                    <div>
+                        <h1 class="font-display text-2xl sm:text-3xl tracking-wide uppercase" style="color: var(--text-primary);">Modals</h1>
+                        <p class="font-data text-xs sm:text-sm mt-1" style="color: var(--text-muted);">Overlay dialogs for focused user interactions</p>
+                    </div>
+                </div>
+                <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+                    <div class="theme-toggle-indicator">
+                        <i class="ph-fill ph-sun theme-icon-light"></i>
+                        <i class="ph-fill ph-moon theme-icon-dark" style="display: none;"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="glass border-b sticky top-0 z-50 px-4 sm:px-8 lg:px-12" style="border-color: var(--border-subtle);">
+        <div class="max-w-[1200px] mx-auto">
+            <ul class="flex gap-0 list-none m-0 p-0 overflow-x-auto">
+                <li><a href="index.html" class="nav-link"><i class="ph ph-house mr-1"></i> Home</a></li>
+                <li><a href="colors.html" class="nav-link">Colors</a></li>
+                <li><a href="typography.html" class="nav-link">Typography</a></li>
+                <li><a href="buttons.html" class="nav-link">Buttons</a></li>
+                <li><a href="cards.html" class="nav-link">Cards</a></li>
+                <li><a href="tables.html" class="nav-link">Tables</a></li>
+                <li><a href="badges.html" class="nav-link">Badges</a></li>
+                <li><a href="forms.html" class="nav-link">Forms</a></li>
+                <li><a href="navigation.html" class="nav-link">Navigation</a></li>
+                <li><a href="modals.html" class="nav-link active">Modals</a></li>
+                <li><a href="drawers.html" class="nav-link">Drawers</a></li>
+                <li><a href="dialogs.html" class="nav-link">Dialogs</a></li>
+                <li><a href="pagination.html" class="nav-link">Pagination</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-12">
+        <!-- Modal Sizes -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Modal Sizes</h3>
+            <div class="card-racing rounded p-4 sm:p-6">
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="openModal('modal-sm')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                        <i class="ph ph-rectangle text-sm"></i> Small Modal
+                    </button>
+                    <button onclick="openModal('modal-md')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                        <i class="ph ph-rectangle text-sm"></i> Medium Modal
+                    </button>
+                    <button onclick="openModal('modal-lg')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                        <i class="ph ph-rectangle text-sm"></i> Large Modal
+                    </button>
+                    <button onclick="openModal('modal-full')" class="inline-flex items-center gap-2 px-4 py-2 bg-racing-gold text-racing-carbon font-display text-xs uppercase tracking-wider hover:bg-racing-gold-bright transition-all">
+                        <i class="ph ph-arrows-out text-sm"></i> Fullscreen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Preview (Static) -->
+        <div class="mb-8 sm:mb-10">
+            <h3 class="font-display text-xs tracking-[0.2em] uppercase mb-4" style="color: var(--text-dim);">Modal Structure</h3>
+            <div class="card-racing rounded overflow-hidden">
+                <div class="p-6" style="background: rgba(0, 0, 0, 0.3);">
+                    <div class="modal-content w-full max-w-lg mx-auto rounded" style="transform: none;">
+                        <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                            <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Create New League</h3>
+                            <button class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);">
+                                <i class="ph ph-x text-base"></i>
+                            </button>
+                        </div>
+                        <div class="px-5 py-5">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">
+                                        League Name <span class="text-racing-safety">*</span>
+                                    </label>
+                                    <input type="text" placeholder="Enter league name" class="w-full px-4 py-2.5 text-sm font-body h-10" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);" />
+                                </div>
+                                <div>
+                                    <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Platform</label>
+                                    <select class="w-full px-4 py-2.5 text-sm font-body h-10 appearance-none cursor-pointer" style="background: var(--bg-tertiary) url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%239ca3af%22 d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E') no-repeat right 12px center; border: 1px solid var(--border-primary); color: var(--text-primary);">
+                                        <option>Select platform</option>
+                                        <option>GT7</option>
+                                        <option>ACC</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                            <button class="inline-flex items-center gap-2 px-4 py-2 font-display text-xs uppercase tracking-wider transition-all" style="color: var(--text-muted); background: var(--bg-tertiary);">Cancel</button>
+                            <button class="inline-flex items-center gap-2 px-5 py-2 bg-racing-safety text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-racing-safety-bright transition-all" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">
+                                <i class="ph-bold ph-plus text-xs"></i> Create League
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-note">
+            <strong>Modal sizes:</strong> SM (400px), MD (500px), LG (700px), XL (900px), Full (100vw - 2rem). Always include close button and escape key handler.
+        </div>
+    </div>
+
+    <!-- Modal Overlays -->
+    <div id="modal-sm" class="modal-overlay" onclick="closeModal('modal-sm')">
+        <div class="modal-content rounded w-[400px]" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Small Modal</h3>
+                <button onclick="closeModal('modal-sm')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);"><i class="ph ph-x text-base"></i></button>
+            </div>
+            <div class="px-5 py-5"><p class="text-sm" style="color: var(--text-muted);">This is a small modal dialog. Perfect for simple confirmations.</p></div>
+            <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                <button onclick="closeModal('modal-sm')" class="px-4 py-2 font-display text-xs uppercase tracking-wider" style="color: var(--text-muted); background: var(--bg-tertiary);">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-md" class="modal-overlay" onclick="closeModal('modal-md')">
+        <div class="modal-content rounded w-[500px]" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Medium Modal</h3>
+                <button onclick="closeModal('modal-md')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);"><i class="ph ph-x text-base"></i></button>
+            </div>
+            <div class="px-5 py-5">
+                <p class="text-sm mb-4" style="color: var(--text-muted);">This is the default modal size. Suitable for forms.</p>
+                <div>
+                    <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Example Field</label>
+                    <input type="text" placeholder="Enter value..." class="w-full px-4 py-2.5 text-sm font-body h-10" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);" />
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                <button onclick="closeModal('modal-md')" class="px-4 py-2 font-display text-xs uppercase tracking-wider" style="color: var(--text-muted); background: var(--bg-tertiary);">Cancel</button>
+                <button class="px-5 py-2 bg-racing-safety text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-racing-safety-bright" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-lg" class="modal-overlay" onclick="closeModal('modal-lg')">
+        <div class="modal-content rounded w-[700px]" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Large Modal</h3>
+                <button onclick="closeModal('modal-lg')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);"><i class="ph ph-x text-base"></i></button>
+            </div>
+            <div class="px-5 py-5">
+                <p class="text-sm mb-4" style="color: var(--text-muted);">Large modals are ideal for complex forms or detailed information.</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">First Name</label>
+                        <input type="text" placeholder="Enter first name..." class="w-full px-4 py-2.5 text-sm font-body h-10" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);" />
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-display text-[10px] uppercase tracking-wider" style="color: var(--text-dim);">Last Name</label>
+                        <input type="text" placeholder="Enter last name..." class="w-full px-4 py-2.5 text-sm font-body h-10" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); color: var(--text-primary);" />
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                <button onclick="closeModal('modal-lg')" class="px-4 py-2 font-display text-xs uppercase tracking-wider" style="color: var(--text-muted); background: var(--bg-tertiary);">Cancel</button>
+                <button class="px-5 py-2 bg-racing-safety text-racing-pit-white font-display text-xs uppercase tracking-wider hover:bg-racing-safety-bright" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-full" class="modal-overlay" onclick="closeModal('modal-full')">
+        <div class="modal-content rounded" style="width: calc(100vw - 2rem); height: calc(100vh - 2rem);" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-primary);">
+                <h3 class="font-display text-sm uppercase tracking-wide" style="color: var(--text-primary);">Fullscreen Modal</h3>
+                <button onclick="closeModal('modal-full')" class="w-8 h-8 flex items-center justify-center hover:text-racing-gold transition-colors rounded" style="color: var(--text-muted); background: var(--bg-tertiary);"><i class="ph ph-x text-base"></i></button>
+            </div>
+            <div class="px-5 py-5 overflow-auto" style="height: calc(100% - 120px);">
+                <p class="text-sm" style="color: var(--text-muted);">Fullscreen modals take up the entire viewport. Perfect for immersive experiences.</p>
+            </div>
+            <div class="flex items-center justify-end gap-3 px-5 py-4" style="border-top: 1px solid var(--border-primary); background: var(--bg-primary);">
+                <button onclick="closeModal('modal-full')" class="px-4 py-2 font-display text-xs uppercase tracking-wider" style="color: var(--text-muted); background: var(--bg-tertiary);">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 sm:py-12" style="background: var(--bg-secondary); border-top: 1px solid var(--border-primary);">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12">
+            <div class="flex justify-between items-center">
+                <a href="navigation.html" class="font-display text-xs uppercase tracking-wider hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                    <i class="ph ph-arrow-left mr-2"></i> Navigation
+                </a>
+                <a href="drawers.html" class="font-display text-xs uppercase tracking-wider hover:text-racing-gold transition-colors" style="color: var(--text-muted);">
+                    Drawers <i class="ph ph-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('vrl-theme', newTheme);
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+            if (newTheme === 'light') { lightIcon.style.display = 'none'; darkIcon.style.display = 'block'; }
+            else { lightIcon.style.display = 'block'; darkIcon.style.display = 'none'; }
+        }
+        function initTheme() {
+            const savedTheme = localStorage.getItem('vrl-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+            if (theme === 'light') { lightIcon.style.display = 'none'; darkIcon.style.display = 'block'; }
+        }
+        initTheme();
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow = ''; }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(el => el.classList.remove('active'));
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+</body>
+</html>

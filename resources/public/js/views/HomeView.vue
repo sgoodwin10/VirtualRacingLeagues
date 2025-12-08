@@ -1,15 +1,12 @@
 <template>
   <div class="landing-page">
-    <!-- Navigation -->
-    <PublicHeader />
-
     <!-- Hero Section -->
     <section class="hero gradient-hero">
       <div class="hero-background">
         <div class="pattern-stripes absolute inset-0 opacity-50"></div>
         <div class="racing-line"></div>
-        <div class="racing-line" style="top: 30%; animation-delay: 1s;"></div>
-        <div class="racing-line" style="top: 70%; animation-delay: 2s;"></div>
+        <div class="racing-line" style="top: 30%; animation-delay: 1s"></div>
+        <div class="racing-line" style="top: 70%; animation-delay: 2s"></div>
       </div>
 
       <div class="container-racing">
@@ -24,17 +21,13 @@
           </h1>
 
           <p class="hero-description">
-            The complete platform for sim racing league managers. Create competitions, track results,
-            and share standings with your community in minutes.
+            The complete platform for sim racing league managers. Create competitions, track
+            results, and share standings with your community in minutes.
           </p>
 
           <div class="hero-cta">
-            <router-link to="/register" class="btn btn-primary">
-              Get Started Free
-            </router-link>
-            <router-link to="/leagues" class="btn btn-secondary">
-              Browse Leagues
-            </router-link>
+            <router-link to="/register" class="btn btn-primary"> Get Started Free </router-link>
+            <router-link to="/leagues" class="btn btn-secondary"> Browse Leagues </router-link>
           </div>
 
           <div class="hero-stats">
@@ -56,7 +49,7 @@
     </section>
 
     <!-- How It Works Section -->
-    <section class="section-padding" style="background: var(--color-asphalt);">
+    <section class="section-padding" style="background: var(--color-asphalt)">
       <div class="container-racing">
         <div class="section-header">
           <span class="section-label">How It Works</span>
@@ -69,7 +62,8 @@
             <div class="step-content">
               <h3 class="step-title">Create Your League</h3>
               <p class="step-description">
-                Set up your league with custom branding, invite your drivers, and configure your settings.
+                Set up your league with custom branding, invite your drivers, and configure your
+                settings.
               </p>
             </div>
           </div>
@@ -174,7 +168,7 @@
     </section>
 
     <!-- Pricing Section -->
-    <section class="section-padding" style="background: var(--color-carbon);">
+    <section class="section-padding" style="background: var(--color-carbon)">
       <div class="container-racing">
         <div class="section-header">
           <span class="section-label">Pricing</span>
@@ -196,7 +190,7 @@
             <li>CSV import for drivers & results</li>
           </ul>
 
-          <router-link to="/register" class="btn btn-primary" style="width: 100%;">
+          <router-link to="/register" class="btn btn-primary" style="width: 100%">
             Create Your League
           </router-link>
         </div>
@@ -204,7 +198,7 @@
     </section>
 
     <!-- Coming Soon Section -->
-    <section class="section-padding" style="background: var(--color-asphalt);">
+    <section class="section-padding" style="background: var(--color-asphalt)">
       <div class="container-racing">
         <div class="section-header">
           <span class="section-label">Roadmap</span>
@@ -251,18 +245,13 @@
           Join league managers who trust Virtual Racing Leagues to power their competitions.
         </p>
         <div class="cta-buttons">
-          <router-link to="/register" class="btn btn-primary">
-            Create Free Account
-          </router-link>
+          <router-link to="/register" class="btn btn-primary"> Create Free Account </router-link>
           <router-link to="/leagues" class="btn btn-secondary">
             Explore Public Leagues
           </router-link>
         </div>
       </div>
     </section>
-
-    <!-- Footer -->
-    <PublicFooter />
   </div>
 </template>
 
@@ -281,8 +270,6 @@ import {
   PhScan,
   PhGameController,
 } from '@phosphor-icons/vue';
-import PublicHeader from '@public/components/layout/PublicHeader.vue';
-import PublicFooter from '@public/components/layout/PublicFooter.vue';
 </script>
 
 <style scoped>

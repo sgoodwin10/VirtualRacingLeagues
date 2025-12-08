@@ -110,7 +110,6 @@ export const useAuthStore = defineStore(
       // State
       user,
       isAuthenticated,
-      isLoading,
 
       // Getters
       userName,
@@ -122,7 +121,6 @@ export const useAuthStore = defineStore(
       checkAuth,
       resendVerificationEmail,
       clearAuth,
-      setUser, // Expose for testing
     };
   },
   {
