@@ -28,7 +28,7 @@ class EmailVerificationTest extends TestCase
             ['id' => $user->id, 'hash' => sha1($user->email)]
         );
 
-        $response = $this->get($verificationUrl);
+        $response = $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class)->get($verificationUrl);
 
         $response->assertRedirect('/verify-email-result?status=success');
 
@@ -47,7 +47,7 @@ class EmailVerificationTest extends TestCase
             ['id' => $user->id, 'hash' => 'invalid-hash']
         );
 
-        $response = $this->get($verificationUrl);
+        $response = $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class)->get($verificationUrl);
 
         $response->assertRedirect();
         $response->assertRedirectContains('/verify-email-result?status=error');
@@ -66,7 +66,7 @@ class EmailVerificationTest extends TestCase
             ['id' => $user->id, 'hash' => sha1($user->email)]
         );
 
-        $response = $this->get($verificationUrl);
+        $response = $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class)->get($verificationUrl);
 
         $response->assertRedirect('/verify-email-result?status=success');
     }
@@ -122,7 +122,7 @@ class EmailVerificationTest extends TestCase
             'hash' => sha1($user->email),
         ]);
 
-        $response = $this->get($invalidUrl);
+        $response = $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class)->get($invalidUrl);
 
         // Laravel's signed middleware will return 403 for invalid signatures
         $response->assertStatus(403);
@@ -142,7 +142,7 @@ class EmailVerificationTest extends TestCase
             ['id' => $user->id, 'hash' => sha1($user->email)]
         );
 
-        $response = $this->get($expiredUrl);
+        $response = $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class)->get($expiredUrl);
 
         // Laravel's signed middleware will return 403 for expired signatures
         $response->assertStatus(403);
@@ -159,7 +159,7 @@ class EmailVerificationTest extends TestCase
             ['id' => $nonexistentId, 'hash' => 'some-hash']
         );
 
-        $response = $this->get($verificationUrl);
+        $response = $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class)->get($verificationUrl);
 
         $response->assertRedirect();
         $response->assertRedirectContains('/verify-email-result?status=error');

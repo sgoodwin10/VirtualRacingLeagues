@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import VrlHeading from '@public/components/typography/VrlHeading.vue';
-import VrlSearchBar from '@public/components/forms/VrlSearchBar.vue';
-import VrlFilterChips from '@public/components/forms/VrlFilterChips.vue';
-import VrlInput from '@public/components/forms/VrlInput.vue';
-import VrlTextarea from '@public/components/forms/VrlTextarea.vue';
-import VrlSelect from '@public/components/forms/VrlSelect.vue';
-import VrlCheckbox from '@public/components/forms/VrlCheckbox.vue';
-import VrlRadio from '@public/components/forms/VrlRadio.vue';
-import VrlToggle from '@public/components/forms/VrlToggle.vue';
+import VrlHeading from '@public/components/common/typography/VrlHeading.vue';
+import VrlSearchBar from '@public/components/common/forms/VrlSearchBar.vue';
+import VrlFilterChips from '@public/components/common/forms/VrlFilterChips.vue';
+import VrlInput from '@public/components/common/forms/VrlInput.vue';
+import VrlTextarea from '@public/components/common/forms/VrlTextarea.vue';
+import VrlSelect from '@public/components/common/forms/VrlSelect.vue';
+import VrlCheckbox from '@public/components/common/forms/VrlCheckbox.vue';
+import VrlRadio from '@public/components/common/forms/VrlRadio.vue';
+import VrlToggle from '@public/components/common/forms/VrlToggle.vue';
 
 // Form demo states - separate refs for each distinct input
 // Search demo

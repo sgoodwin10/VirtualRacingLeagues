@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import VrlHeading from '@public/components/typography/VrlHeading.vue';
+import VrlHeading from '@public/components/common/typography/VrlHeading.vue';
 </script>
 
 <template>

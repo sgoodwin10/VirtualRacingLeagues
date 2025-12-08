@@ -20,6 +20,10 @@ class LeagueControllerTest extends UserControllerTestCase
     private UserEloquent $user;
     private UserEloquent $otherUser;
 
+    private Platform $gt7Platform;
+    private Platform $iracingPlatform;
+    private Platform $accPlatform;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -30,56 +34,26 @@ class LeagueControllerTest extends UserControllerTestCase
         $this->otherUser = UserEloquent::factory()->create(['status' => 'active']);
 
         // Create platforms for tests
-        Platform::create([
-            'name' => 'iRacing',
-            'slug' => 'iracing',
+        $this->gt7Platform = Platform::create([
+            'name' => 'Gran Turismo 7',
+            'slug' => 'gran-turismo-7',
             'is_active' => true,
             'sort_order' => 1,
         ]);
 
-        Platform::create([
-            'name' => 'Assetto Corsa Competizione',
-            'slug' => 'acc',
+        $this->iracingPlatform = Platform::create([
+            'name' => 'iRacing',
+            'slug' => 'iracing',
             'is_active' => true,
             'sort_order' => 2,
         ]);
-    }
 
-    /**
-     * Override to use app subdomain for all requests
-     */
-    public function getJson($uri, array $headers = [], $options = 0)
-    {
-        // Set the base URL to the app subdomain
-        $url = 'http://app.virtualracingleagues.localhost' . $uri;
-        return parent::getJson($url, $headers, $options);
-    }
-
-    /**
-     * Override to use app subdomain for all requests
-     */
-    public function postJson($uri, array $data = [], array $headers = [], $options = 0)
-    {
-        $url = 'http://app.virtualracingleagues.localhost' . $uri;
-        return parent::postJson($url, $data, $headers, $options);
-    }
-
-    /**
-     * Override to use app subdomain for all requests
-     */
-    public function deleteJson($uri, array $data = [], array $headers = [], $options = 0)
-    {
-        $url = 'http://app.virtualracingleagues.localhost' . $uri;
-        return parent::deleteJson($url, $data, $headers, $options);
-    }
-
-    /**
-     * Override to use app subdomain for all requests
-     */
-    public function putJson($uri, array $data = [], array $headers = [], $options = 0)
-    {
-        $url = 'http://app.virtualracingleagues.localhost' . $uri;
-        return parent::putJson($url, $data, $headers, $options);
+        $this->accPlatform = Platform::create([
+            'name' => 'Assetto Corsa Competizione',
+            'slug' => 'acc',
+            'is_active' => true,
+            'sort_order' => 3,
+        ]);
     }
 
     #[Test]
@@ -98,7 +72,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'timezone' => 'Europe/London',
             'contact_email' => 'contact@league.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [1, 2],
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id],
             'discord_url' => 'https://discord.gg/league',
             'website_url' => 'https://league.example.com',
             'twitter_handle' => 'f1league',
@@ -178,7 +152,7 @@ class LeagueControllerTest extends UserControllerTestCase
         $data = [
             'name' => 'Minimal League',
             'logo' => UploadedFile::fake()->image('logo.png'),
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'timezone' => 'UTC',
             'contact_email' => 'contact@minimal.com',
             'organizer_name' => 'Jane Doe',
@@ -223,7 +197,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'contact_email' => 'contact@second.com',
             'organizer_name' => 'Jane Doe',
             'visibility' => 'public',
-            'platform_ids' => [1, 2], // Include required platform_ids
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id], // Include required platform_ids
         ];
 
         $response = $this->actingAs($this->user, 'web')
@@ -234,7 +208,8 @@ class LeagueControllerTest extends UserControllerTestCase
                 'success' => false,
             ])
             ->assertJsonFragment([
-                'message' => 'You have reached the maximum number of leagues (1) for the free tier. Please upgrade your account to create more leagues.',
+                'message' => 'You have reached the maximum number of leagues (1) for the free tier. ' .
+                    'Please upgrade your account to create more leagues.',
             ]);
     }
 
@@ -259,7 +234,7 @@ class LeagueControllerTest extends UserControllerTestCase
         $data = [
             'name' => 'Test League',
             'logo' => UploadedFile::fake()->create('document.pdf', 100),
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'timezone' => 'UTC',
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
@@ -279,7 +254,7 @@ class LeagueControllerTest extends UserControllerTestCase
         $data = [
             'name' => 'Test League',
             'logo' => UploadedFile::fake()->image('logo.png')->size(3000), // > 2MB (2048KB)
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'timezone' => 'UTC',
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
@@ -300,7 +275,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'name' => 'Test League',
             'logo' => UploadedFile::fake()->image('logo.png'),
             'header_image' => UploadedFile::fake()->create('document.pdf', 100),
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'timezone' => 'UTC',
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
@@ -340,7 +315,7 @@ class LeagueControllerTest extends UserControllerTestCase
         $data = [
             'name' => 'Test League',
             'logo' => UploadedFile::fake()->image('logo.png'),
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'timezone' => 'UTC',
             'contact_email' => 'invalid-email',
             'organizer_name' => 'John Doe',
@@ -361,7 +336,7 @@ class LeagueControllerTest extends UserControllerTestCase
         $data1 = [
             'name' => 'F1 Racing League',
             'logo' => UploadedFile::fake()->image('logo1.png'),
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'timezone' => 'UTC',
             'contact_email' => 'contact1@test.com',
             'organizer_name' => 'John Doe',
@@ -381,7 +356,7 @@ class LeagueControllerTest extends UserControllerTestCase
         $data2 = [
             'name' => 'F1 Racing League',
             'logo' => UploadedFile::fake()->image('logo2.png'),
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'timezone' => 'UTC',
             'contact_email' => 'contact2@test.com',
             'organizer_name' => 'Jane Doe',
@@ -461,7 +436,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [1, 2],
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id],
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -599,11 +574,8 @@ class LeagueControllerTest extends UserControllerTestCase
         $response = $this->actingAs($this->user, 'web')
             ->postJson('/api/leagues/check-slug', []);
 
-        $response->assertStatus(400)
-            ->assertJson([
-                'success' => false,
-                'message' => 'Name is required',
-            ]);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['name']);
     }
 
     #[Test]
@@ -716,7 +688,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [1], // Gran Turismo 7
+            'platform_ids' => [$this->gt7Platform->id], // Gran Turismo 7
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -745,7 +717,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [2], // iRacing
+            'platform_ids' => [$this->iracingPlatform->id], // iRacing
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -775,7 +747,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [1, 2], // GT7 + iRacing
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id], // GT7 + iRacing
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -798,16 +770,6 @@ class LeagueControllerTest extends UserControllerTestCase
     #[Test]
     public function it_returns_empty_columns_for_platform_without_fields(): void
     {
-        // Create platform 3 if it doesn't exist
-        Platform::firstOrCreate(
-            ['slug' => 'acc'],
-            [
-                'name' => 'Assetto Corsa Competizione',
-                'is_active' => true,
-                'sort_order' => 3,
-            ]
-        );
-
         $league = League::create([
             'name' => 'ACC League',
             'slug' => 'acc-league',
@@ -816,7 +778,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [3], // ACC (no fields defined yet)
+            'platform_ids' => [$this->accPlatform->id], // ACC (no fields defined yet)
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -856,7 +818,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [1, 2],
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id],
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -895,7 +857,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [1, 2],
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id],
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -939,6 +901,152 @@ class LeagueControllerTest extends UserControllerTestCase
     }
 
     #[Test]
+    public function it_prevents_accessing_driver_columns_for_another_users_league(): void
+    {
+        $league = League::create([
+            'name' => 'Other User League',
+            'slug' => 'other-user-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->otherUser->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'Jane Doe',
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/driver-columns");
+
+        $response->assertStatus(403); // Forbidden
+    }
+
+    #[Test]
+    public function it_prevents_accessing_driver_form_fields_for_another_users_league(): void
+    {
+        $league = League::create([
+            'name' => 'Other User League',
+            'slug' => 'other-user-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->otherUser->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'Jane Doe',
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/driver-form-fields");
+
+        $response->assertStatus(403); // Forbidden
+    }
+
+    #[Test]
+    public function it_prevents_accessing_driver_csv_headers_for_another_users_league(): void
+    {
+        $league = League::create([
+            'name' => 'Other User League',
+            'slug' => 'other-user-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->otherUser->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'Jane Doe',
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/driver-csv-headers");
+
+        $response->assertStatus(403); // Forbidden
+    }
+
+    #[Test]
+    public function it_returns_platforms_for_league(): void
+    {
+        $league = League::create([
+            'name' => 'Test League',
+            'slug' => 'test-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/platforms");
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonCount(2, 'data')
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'id',
+                        'name',
+                        'slug',
+                        'description',
+                        'logo_url',
+                    ],
+                ],
+            ]);
+    }
+
+    #[Test]
+    public function it_requires_authentication_for_platforms(): void
+    {
+        $league = League::create([
+            'name' => 'Test League',
+            'slug' => 'test-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->user->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'John Doe',
+            'platform_ids' => [$this->gt7Platform->id],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->getJson("/api/leagues/{$league->id}/platforms");
+
+        $response->assertUnauthorized();
+    }
+
+    #[Test]
+    public function it_prevents_accessing_platforms_for_other_users_league(): void
+    {
+        $league = League::create([
+            'name' => 'Other User League',
+            'slug' => 'other-user-league',
+            'logo_path' => 'leagues/logos/logo.png',
+            'timezone' => 'UTC',
+            'owner_user_id' => $this->otherUser->id,
+            'contact_email' => 'contact@test.com',
+            'organizer_name' => 'Jane Doe',
+            'platform_ids' => [$this->gt7Platform->id, $this->iracingPlatform->id],
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$league->id}/platforms");
+
+        $response->assertStatus(403); // Forbidden
+    }
+
+    #[Test]
     public function it_updates_league_successfully(): void
     {
         $league = League::create([
@@ -951,7 +1059,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'original@test.com',
             'organizer_name' => 'Original Organizer',
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -992,7 +1100,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact1@test.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -1006,7 +1114,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact2@test.com',
             'organizer_name' => 'Jane Doe',
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -1050,7 +1158,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->user->id,
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'John Doe',
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'visibility' => 'public',
             'status' => 'active',
         ]);
@@ -1081,7 +1189,7 @@ class LeagueControllerTest extends UserControllerTestCase
             'owner_user_id' => $this->otherUser->id,
             'contact_email' => 'contact@test.com',
             'organizer_name' => 'Jane Doe',
-            'platform_ids' => [1],
+            'platform_ids' => [$this->gt7Platform->id],
             'visibility' => 'public',
             'status' => 'active',
         ]);

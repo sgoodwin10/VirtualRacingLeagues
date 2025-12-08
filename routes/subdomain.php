@@ -8,6 +8,8 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UserImpersonationController;
+use App\Http\Controllers\Public\PublicLeagueController;
+use App\Http\Controllers\Public\PublicPlatformController;
 use App\Http\Controllers\User\CompetitionController;
 use App\Http\Controllers\User\DivisionController;
 use App\Http\Controllers\User\DriverController;
@@ -78,9 +80,6 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             return response()->json(['message' => 'CSRF cookie set']);
         })->name('csrf-cookie');
 
-        // Auth check route (checks authentication without requiring it)
-        Route::get('/me', [LoginController::class, 'me'])->name('me');
-
         /**
          * User Impersonation Endpoint (POST - Token-based)
          *
@@ -95,6 +94,9 @@ Route::domain($appDomain)->middleware('web')->group(function () {
 
         // Authenticated routes (web guard) - ALL app subdomain API routes require auth
         Route::middleware(['auth:web', 'user.authenticate'])->group(function () {
+            // Auth check route (requires authentication on app subdomain)
+            Route::get('/me', [LoginController::class, 'me'])->name('me');
+
             Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
             // Email verification resend
@@ -116,7 +118,9 @@ Route::domain($appDomain)->middleware('web')->group(function () {
 
             // Leagues
             Route::get('/leagues', [LeagueController::class, 'index'])->name('leagues.index');
-            Route::post('/leagues', [LeagueController::class, 'store'])->name('leagues.store');
+            Route::post('/leagues', [LeagueController::class, 'store'])
+                ->middleware('throttle:10,1')
+                ->name('leagues.store');
             Route::get('/leagues/{id}', [LeagueController::class, 'show'])->name('leagues.show');
             Route::put('/leagues/{id}', [LeagueController::class, 'update'])->name('leagues.update');
             Route::delete('/leagues/{id}', [LeagueController::class, 'destroy'])->name('leagues.destroy');
@@ -132,7 +136,9 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::get('/leagues/{league}/drivers/{driver}', [DriverController::class, 'show'])->name('leagues.drivers.show');
             Route::put('/leagues/{league}/drivers/{driver}', [DriverController::class, 'update'])->name('leagues.drivers.update');
             Route::delete('/leagues/{league}/drivers/{driver}', [DriverController::class, 'destroy'])->name('leagues.drivers.destroy');
-            Route::post('/leagues/{league}/drivers/import-csv', [DriverController::class, 'importCsv'])->name('leagues.drivers.import-csv');
+            Route::post('/leagues/{league}/drivers/import-csv', [DriverController::class, 'importCsv'])
+                ->middleware('throttle:5,1')
+                ->name('leagues.drivers.import-csv');
 
             // League Competitions
             Route::get('/leagues/{leagueId}/competitions', [CompetitionController::class, 'index'])->name('leagues.competitions.index');
@@ -143,7 +149,9 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::get('/competitions/{id}', [CompetitionController::class, 'show'])->name('competitions.show');
             Route::put('/competitions/{id}', [CompetitionController::class, 'update'])->name('competitions.update');
             Route::delete('/competitions/{id}', [CompetitionController::class, 'destroy'])->name('competitions.destroy');
-            Route::post('/competitions/{id}/archive', [CompetitionController::class, 'archive'])->name('competitions.archive');
+            Route::post('/competitions/{id}/archive', [CompetitionController::class, 'archive'])
+                ->middleware('throttle:20,1')
+                ->name('competitions.archive');
 
             // Competition Seasons
             Route::get('/competitions/{competitionId}/seasons', [SeasonController::class, 'index'])->name('competitions.seasons.index');
@@ -157,18 +165,30 @@ Route::domain($appDomain)->middleware('web')->group(function () {
                 ->name('seasons.standings');
             Route::put('/seasons/{id}', [SeasonController::class, 'update'])->name('seasons.update');
             Route::delete('/seasons/{id}', [SeasonController::class, 'destroy'])->name('seasons.destroy');
-            Route::post('/seasons/{id}/archive', [SeasonController::class, 'archive'])->name('seasons.archive');
-            Route::post('/seasons/{id}/unarchive', [SeasonController::class, 'unarchive'])->name('seasons.unarchive');
-            Route::post('/seasons/{id}/activate', [SeasonController::class, 'activate'])->name('seasons.activate');
-            Route::post('/seasons/{id}/complete', [SeasonController::class, 'complete'])->name('seasons.complete');
-            Route::post('/seasons/{id}/restore', [SeasonController::class, 'restore'])->name('seasons.restore');
+            Route::post('/seasons/{id}/archive', [SeasonController::class, 'archive'])
+                ->middleware('throttle:20,1')
+                ->name('seasons.archive');
+            Route::post('/seasons/{id}/unarchive', [SeasonController::class, 'unarchive'])
+                ->middleware('throttle:20,1')
+                ->name('seasons.unarchive');
+            Route::post('/seasons/{id}/activate', [SeasonController::class, 'activate'])
+                ->middleware('throttle:20,1')
+                ->name('seasons.activate');
+            Route::post('/seasons/{id}/complete', [SeasonController::class, 'complete'])
+                ->middleware('throttle:20,1')
+                ->name('seasons.complete');
+            Route::post('/seasons/{id}/restore', [SeasonController::class, 'restore'])
+                ->middleware('throttle:20,1')
+                ->name('seasons.restore');
 
             // Season Drivers
             Route::get('/seasons/{seasonId}/drivers', [SeasonDriverController::class, 'index'])->name('seasons.drivers.index');
             Route::post('/seasons/{seasonId}/drivers', [SeasonDriverController::class, 'store'])->name('seasons.drivers.store');
             Route::get('/seasons/{seasonId}/available-drivers', [SeasonDriverController::class, 'available'])->name('seasons.drivers.available');
             Route::get('/seasons/{seasonId}/drivers/stats', [SeasonDriverController::class, 'stats'])->name('seasons.drivers.stats');
-            Route::post('/seasons/{seasonId}/drivers/bulk', [SeasonDriverController::class, 'bulk'])->name('seasons.drivers.bulk');
+            Route::post('/seasons/{seasonId}/drivers/bulk', [SeasonDriverController::class, 'bulk'])
+                ->middleware('throttle:10,1')
+                ->name('seasons.drivers.bulk');
             Route::put('/seasons/{seasonId}/drivers/{leagueDriverId}', [SeasonDriverController::class, 'update'])->name('seasons.drivers.update');
             Route::delete('/seasons/{seasonId}/drivers/{leagueDriverId}', [SeasonDriverController::class, 'destroy'])->name('seasons.drivers.destroy');
 
@@ -210,8 +230,12 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::get('/rounds/{roundId}/results', [\App\Http\Controllers\User\RoundController::class, 'results'])->name('rounds.results');
             Route::put('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'update'])->name('rounds.update');
             Route::delete('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'destroy'])->name('rounds.destroy');
-            Route::put('/rounds/{roundId}/complete', [\App\Http\Controllers\User\RoundController::class, 'complete'])->name('rounds.complete');
-            Route::put('/rounds/{roundId}/uncomplete', [\App\Http\Controllers\User\RoundController::class, 'uncomplete'])->name('rounds.uncomplete');
+            Route::put('/rounds/{roundId}/complete', [\App\Http\Controllers\User\RoundController::class, 'complete'])
+                ->middleware('throttle:20,1')
+                ->name('rounds.complete');
+            Route::put('/rounds/{roundId}/uncomplete', [\App\Http\Controllers\User\RoundController::class, 'uncomplete'])
+                ->middleware('throttle:20,1')
+                ->name('rounds.uncomplete');
 
             // Races
             Route::get('/rounds/{roundId}/races', [RaceController::class, 'index'])->name('rounds.races.index');
@@ -294,8 +318,14 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
         Route::post('/forgot-password', [PasswordResetController::class, 'requestReset'])->name('password.request');
         Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.reset');
 
+        // Public data endpoints (no authentication required)
+        Route::prefix('public')->name('public.')->group(function () {
+            Route::get('/leagues', [PublicLeagueController::class, 'index'])->name('leagues.index');
+            Route::get('/platforms', [PublicPlatformController::class, 'index'])->name('platforms.index');
+        });
+
         // Authenticated routes (web guard)
-        Route::middleware(['auth:web'])->group(function () {
+        Route::middleware(['auth:web', 'user.authenticate'])->group(function () {
             Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
             Route::get('/me', [LoginController::class, 'me'])->name('me');
 
@@ -311,7 +341,7 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
 
     // Email verification (signed route) - must come BEFORE catch-all routes
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-        ->middleware(['signed'])
+        ->middleware(['auth:web', 'signed', 'throttle:10,1'])
         ->name('verification.verify');
 
     // Public SPA - catch all public routes and let Vue Router handle them

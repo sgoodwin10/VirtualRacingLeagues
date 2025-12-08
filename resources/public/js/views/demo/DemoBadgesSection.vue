@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import VrlHeading from '@public/components/typography/VrlHeading.vue';
-import VrlBadge from '@public/components/badges/VrlBadge.vue';
+import VrlHeading from '@public/components/common/typography/VrlHeading.vue';
+import VrlBadge from '@public/components/common/badges/VrlBadge.vue';
 </script>
 
 <template>

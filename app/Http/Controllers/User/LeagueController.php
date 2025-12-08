@@ -7,14 +7,16 @@ namespace App\Http\Controllers\User;
 use App\Application\League\DTOs\CreateLeagueData;
 use App\Application\League\DTOs\UpdateLeagueData;
 use App\Application\League\Services\LeagueApplicationService;
+use App\Domain\League\Exceptions\InvalidPlatformException;
 use App\Domain\League\Exceptions\LeagueLimitReachedException;
 use App\Domain\League\Exceptions\LeagueNotFoundException;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\CheckSlugRequest;
 use App\Http\Requests\User\CreateLeagueRequest;
 use App\Http\Requests\User\UpdateLeagueRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LeagueController extends Controller
@@ -25,13 +27,25 @@ class LeagueController extends Controller
     }
 
     /**
-     * Get all leagues for the authenticated user.
+     * Get the authenticated user.
+     *
+     * @return \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent
      */
-    public function index(): JsonResponse
+    private function authenticatedUser(): \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent
     {
         /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent $user */
         $user = Auth::guard('web')->user();
         assert($user instanceof \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent);
+
+        return $user;
+    }
+
+    /**
+     * Get all leagues for the authenticated user.
+     */
+    public function index(): JsonResponse
+    {
+        $user = $this->authenticatedUser();
 
         $leagues = $this->leagueService->getUserLeagues($user->id);
         return ApiResponse::success($leagues);
@@ -42,9 +56,7 @@ class LeagueController extends Controller
      */
     public function store(CreateLeagueRequest $request): JsonResponse
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent $user */
-        $user = Auth::guard('web')->user();
-        assert($user instanceof \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent);
+        $user = $this->authenticatedUser();
 
         try {
             $data = CreateLeagueData::from($request->validated());
@@ -60,11 +72,15 @@ class LeagueController extends Controller
      */
     public function show(int $id): JsonResponse
     {
+        $user = $this->authenticatedUser();
+
         try {
-            $league = $this->leagueService->getLeagueById($id);
+            $league = $this->leagueService->getLeagueById($id, $user->id);
             return ApiResponse::success($league->toArray());
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
         }
     }
 
@@ -73,13 +89,19 @@ class LeagueController extends Controller
      */
     public function update(UpdateLeagueRequest $request, int $id): JsonResponse
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent $user */
-        $user = Auth::guard('web')->user();
-        assert($user instanceof \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent);
+        $user = $this->authenticatedUser();
 
-        $data = UpdateLeagueData::from($request->validated());
-        $league = $this->leagueService->updateLeague($id, $data, $user->id);
-        return ApiResponse::success($league->toArray(), 'League updated successfully');
+        try {
+            $data = UpdateLeagueData::from($request->validated());
+            $league = $this->leagueService->updateLeague($id, $data, $user->id);
+            return ApiResponse::success($league->toArray(), 'League updated successfully');
+        } catch (LeagueNotFoundException $e) {
+            return ApiResponse::notFound('League not found.');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        } catch (InvalidPlatformException $e) {
+            return ApiResponse::error($e->getMessage(), null, 422);
+        }
     }
 
     /**
@@ -87,26 +109,26 @@ class LeagueController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent $user */
-        $user = Auth::guard('web')->user();
-        assert($user instanceof \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent);
+        $user = $this->authenticatedUser();
 
-        $this->leagueService->deleteLeague($id, $user->id);
-        return ApiResponse::success(null, 'League deleted successfully');
+        try {
+            $this->leagueService->deleteLeague($id, $user->id);
+            return ApiResponse::success(null, 'League deleted successfully');
+        } catch (LeagueNotFoundException $e) {
+            return ApiResponse::notFound('League not found.');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        }
     }
 
     /**
      * Check slug availability (for blur validation).
      */
-    public function checkSlug(Request $request): JsonResponse
+    public function checkSlug(CheckSlugRequest $request): JsonResponse
     {
-        $name = $request->input('name');
-        if (!$name) {
-            return ApiResponse::error('Name is required', null, 400);
-        }
-
-        $excludeLeagueId = $request->input('league_id') ? (int) $request->input('league_id') : null;
-        $result = $this->leagueService->checkSlugAvailability($name, $excludeLeagueId);
+        $validated = $request->validated();
+        $excludeLeagueId = isset($validated['league_id']) ? (int) $validated['league_id'] : null;
+        $result = $this->leagueService->checkSlugAvailability($validated['name'], $excludeLeagueId);
         return ApiResponse::success($result);
     }
 
@@ -115,11 +137,15 @@ class LeagueController extends Controller
      */
     public function platforms(int $id): JsonResponse
     {
+        $user = $this->authenticatedUser();
+
         try {
-            $platforms = $this->leagueService->getLeaguePlatforms($id);
+            $platforms = $this->leagueService->getLeaguePlatforms($id, $user->id);
             return ApiResponse::success($platforms);
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
         }
     }
 
@@ -128,11 +154,15 @@ class LeagueController extends Controller
      */
     public function driverColumns(int $id): JsonResponse
     {
+        $user = $this->authenticatedUser();
+
         try {
-            $columns = $this->leagueService->getDriverColumnsForLeague($id);
+            $columns = $this->leagueService->getDriverColumnsForLeague($id, $user->id);
             return ApiResponse::success($columns);
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
         }
     }
 
@@ -141,11 +171,15 @@ class LeagueController extends Controller
      */
     public function driverFormFields(int $id): JsonResponse
     {
+        $user = $this->authenticatedUser();
+
         try {
-            $formFields = $this->leagueService->getDriverFormFieldsForLeague($id);
+            $formFields = $this->leagueService->getDriverFormFieldsForLeague($id, $user->id);
             return ApiResponse::success($formFields);
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
         }
     }
 
@@ -154,11 +188,15 @@ class LeagueController extends Controller
      */
     public function driverCsvHeaders(int $id): JsonResponse
     {
+        $user = $this->authenticatedUser();
+
         try {
-            $csvHeaders = $this->leagueService->getDriverCsvHeadersForLeague($id);
+            $csvHeaders = $this->leagueService->getDriverCsvHeadersForLeague($id, $user->id);
             return ApiResponse::success($csvHeaders);
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
         }
     }
 }

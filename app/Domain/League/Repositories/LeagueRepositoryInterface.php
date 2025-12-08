@@ -28,8 +28,8 @@ interface LeagueRepositoryInterface
     /**
      * Get a league by ID with counts.
      *
-     * @throws LeagueNotFoundException
      * @return array{league: League, competitions_count: int, drivers_count: int}
+     * @throws LeagueNotFoundException
      */
     public function findByIdWithCounts(int $id): array;
 
@@ -110,6 +110,7 @@ interface LeagueRepositoryInterface
      *
      * @param int $leagueId
      * @return array<int, array{id: int, name: string, slug: string, description: ?string, logo_url: ?string}>
+     * @throws LeagueNotFoundException
      */
     public function getPlatformsByLeagueId(int $leagueId): array;
 
@@ -120,6 +121,7 @@ interface LeagueRepositoryInterface
      * @param int $perPage
      * @param array<string, mixed> $filters
      * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
+     * @throws LeagueNotFoundException
      */
     public function getPaginatedForAdmin(int $page, int $perPage, array $filters = []): array;
 
@@ -133,7 +135,23 @@ interface LeagueRepositoryInterface
      *     total_competitions: int,
      *     seasons_summary: array{total: int, active: int, completed: int},
      *     competitions: array<int, array{
-     *         competition: mixed,
+     *         competition: array{
+     *             id: int,
+     *             league_id: int,
+     *             platform_id: int,
+     *             created_by_user_id: int,
+     *             name: string,
+     *             slug: string,
+     *             description: ?string,
+     *             logo_path: ?string,
+     *             competition_colour: ?string,
+     *             status: string,
+     *             archived_at: ?\Illuminate\Support\Carbon,
+     *             created_at: ?\Illuminate\Support\Carbon,
+     *             updated_at: ?\Illuminate\Support\Carbon,
+     *             deleted_at: ?\Illuminate\Support\Carbon,
+     *             seasons_count: int
+     *         },
      *         platform_name: string,
      *         platform_slug: string,
      *         seasons_count: int
@@ -141,4 +159,14 @@ interface LeagueRepositoryInterface
      * }
      */
     public function getLeagueStatistics(int $leagueId): array;
+
+    /**
+     * Get paginated public leagues (visibility = public, status = active).
+     *
+     * @param int $page Current page number
+     * @param int $perPage Number of items per page
+     * @param array<string, mixed> $filters Search and filter criteria
+     * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
+     */
+    public function getPaginatedPublic(int $page, int $perPage = 12, array $filters = []): array;
 }

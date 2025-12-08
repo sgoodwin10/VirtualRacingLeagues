@@ -23,6 +23,7 @@
         <button
           class="theme-toggle-btn"
           :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+          aria-live="polite"
           @click="toggleTheme"
         >
           <PhSun v-if="theme === 'dark'" :size="20" weight="bold" />
@@ -33,19 +34,25 @@
 
         <!-- Show when NOT authenticated -->
         <template v-if="!authStore.isAuthenticated">
-          <router-link to="/login" class="btn btn-ghost"> Sign In </router-link>
-          <router-link to="/register" class="btn btn-primary btn-sm"> Get Started </router-link>
+          <router-link to="/login" class="nav-link-button">
+            <VrlButton variant="ghost" size="sm"> Sign In </VrlButton>
+          </router-link>
+          <router-link to="/register" class="nav-link-button">
+            <VrlButton variant="primary" size="sm"> Get Started </VrlButton>
+          </router-link>
         </template>
 
         <!-- Show when authenticated -->
         <template v-else>
-          <span class="user-greeting">
+          <span class="user-greeting theme-text-muted">
             {{ authStore.userName }}
           </span>
-          <a :href="appSubdomainUrl" class="btn btn-ghost"> Dashboard </a>
-          <button :disabled="isLoggingOut" class="btn btn-ghost" @click="handleLogout">
+          <a :href="appSubdomainUrl" class="nav-link-button">
+            <VrlButton variant="ghost" size="sm"> Dashboard </VrlButton>
+          </a>
+          <VrlButton variant="ghost" size="sm" :disabled="isLoggingOut" @click="handleLogout">
             {{ isLoggingOut ? 'Logging out...' : 'Logout' }}
-          </button>
+          </VrlButton>
         </template>
       </nav>
 
@@ -87,23 +94,27 @@
           <router-link to="/login" class="mobile-nav-link" @click="closeMobileMenu">
             Sign In
           </router-link>
-          <router-link
-            to="/register"
-            class="btn btn-primary mobile-nav-cta"
-            @click="closeMobileMenu"
-          >
-            Get Started Free
+          <router-link to="/register" class="mobile-nav-cta" @click="closeMobileMenu">
+            <VrlButton variant="primary" size="md" class="w-full"> Get Started Free </VrlButton>
           </router-link>
         </template>
 
         <template v-else>
-          <span class="mobile-user-greeting"> Welcome, {{ authStore.userName }} </span>
+          <span class="mobile-user-greeting theme-text-muted">
+            Welcome, {{ authStore.userName }}
+          </span>
           <a :href="appSubdomainUrl" class="mobile-nav-link" @click="closeMobileMenu">
             Dashboard
           </a>
-          <button class="mobile-nav-link" @click="handleLogout">
+          <VrlButton
+            variant="ghost"
+            size="sm"
+            class="w-full justify-start"
+            :disabled="isLoggingOut"
+            @click="handleLogout"
+          >
             {{ isLoggingOut ? 'Logging out...' : 'Logout' }}
-          </button>
+          </VrlButton>
         </template>
       </nav>
     </Transition>
@@ -111,11 +122,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { PhFlag, PhList, PhX, PhSun, PhMoon } from '@phosphor-icons/vue';
 import { useAuthStore } from '@public/stores/authStore';
 import { useTheme } from '@public/composables/useTheme';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -160,11 +172,21 @@ const handleLogout = async (): Promise<void> => {
   isLoggingOut.value = true;
   try {
     await authStore.logout();
+    // Logout redirects, component unmounts - but add safety reset
   } catch (error) {
     console.error('Logout failed:', error);
+    // Could show toast notification here
+  } finally {
     isLoggingOut.value = false;
   }
 };
+
+// Prevent body scroll when mobile menu is open
+watch(mobileMenuOpen, (isOpen) => {
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  }
+});
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
@@ -173,6 +195,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
+  // Ensure body scroll is restored when component unmounts
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = '';
+  }
 });
 </script>
 
@@ -180,6 +206,8 @@ onUnmounted(() => {
 .nav-logo-text {
   font-size: 1rem;
   letter-spacing: 0.1em;
+  font-family: var(--font-display);
+  text-transform: uppercase;
 }
 
 .nav-divider {
@@ -189,15 +217,14 @@ onUnmounted(() => {
   margin: 0 var(--space-sm);
 }
 
-.btn-sm {
-  padding: var(--space-sm) var(--space-lg);
-  font-size: 0.75rem;
+.nav-link-button {
+  text-decoration: none;
+  display: inline-flex;
 }
 
 .user-greeting {
   font-family: var(--font-body);
   font-size: 0.875rem;
-  color: var(--text-muted);
   margin-right: var(--space-sm);
 }
 
@@ -263,7 +290,7 @@ onUnmounted(() => {
 
 .mobile-nav-cta {
   display: block;
-  text-align: center;
+  text-decoration: none;
   margin-top: var(--space-md);
 }
 
@@ -272,7 +299,6 @@ onUnmounted(() => {
   padding: var(--space-md);
   font-family: var(--font-body);
   font-size: 0.875rem;
-  color: var(--accent-gold);
 }
 
 .theme-toggle-btn {

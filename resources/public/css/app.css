@@ -61,58 +61,6 @@
    ========================================================================== */
 
 :root {
-  /* Primary - Racing Black */
-  --color-carbon: #0a0a0a;
-  --color-asphalt: #1a1a1a;
-  --color-tarmac: #2d2d2d;
-  --color-pit-lane: #3d3d3d;
-
-  /* Accent - Championship Gold */
-  --color-gold: #d4a853;
-  --color-gold-bright: #f5c866;
-  --color-gold-muted: #a08040;
-
-  /* Secondary - Safety Orange */
-  --color-safety: #ff6b35;
-  --color-safety-bright: #ff8a5c;
-  --color-safety-dark: #e55a2b;
-
-  /* Neutrals */
-  --color-pit-white: #fafafa;
-  --color-concrete: #e5e5e5;
-  --color-barrier: #9ca3af;
-  --color-gravel: #6b7280;
-
-  /* Semantic - Positions */
-  --color-pole: #d4a853;
-  --color-podium-2: #c0c0c0;
-  --color-podium-3: #cd7f32;
-  --color-fastest-lap: #a855f7;
-  --color-dnf: #ef4444;
-  --color-dns: #6b7280;
-
-  /* Tailwind v4 Custom Theme Colors */
-  --color-racing-carbon: var(--color-carbon);
-  --color-racing-asphalt: var(--color-asphalt);
-  --color-racing-tarmac: var(--color-tarmac);
-  --color-racing-pit-lane: var(--color-pit-lane);
-  --color-racing-gold: var(--color-gold);
-  --color-racing-gold-bright: var(--color-gold-bright);
-  --color-racing-gold-muted: var(--color-gold-muted);
-  --color-racing-safety: var(--color-safety);
-  --color-racing-safety-bright: var(--color-safety-bright);
-  --color-racing-safety-dark: var(--color-safety-dark);
-  --color-racing-pit-white: var(--color-pit-white);
-  --color-racing-concrete: var(--color-concrete);
-  --color-racing-barrier: var(--color-barrier);
-  --color-racing-gravel: var(--color-gravel);
-  --color-racing-pole: var(--color-pole);
-  --color-racing-podium-2: var(--color-podium-2);
-  --color-racing-podium-3: var(--color-podium-3);
-  --color-racing-fastest-lap: var(--color-fastest-lap);
-  --color-racing-dnf: var(--color-dnf);
-  --color-racing-dns: var(--color-dns);
-
   /* Typography */
   --font-display: 'Racing Sans One', cursive;
   --font-body: 'Source Serif 4', Georgia, serif;
@@ -372,7 +320,7 @@
 }
 
 .section-padding {
-  padding: var(--space-4xl) 0;
+  padding: var(--space-2xl) 0;
 }
 
 /* ==========================================================================

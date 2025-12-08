@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import VrlHeading from '@public/components/typography/VrlHeading.vue';
-import VrlButton from '@public/components/buttons/VrlButton.vue';
-import VrlIconButton from '@public/components/buttons/VrlIconButton.vue';
+import VrlHeading from '@public/components/common/typography/VrlHeading.vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
+import VrlIconButton from '@public/components/common/buttons/VrlIconButton.vue';
+import PropTable, { type PropDefinition } from '@public/components/common/demo/PropTable.vue';
+import CodeExample from '@public/components/common/demo/CodeExample.vue';
 
 const loadingDemo = ref(false);
 const disabledDemo = ref(false);
@@ -13,6 +15,88 @@ const handleLoadingToggle = () => {
     loadingDemo.value = false;
   }, 2000);
 };
+
+// VrlButton prop definitions
+const buttonProps: PropDefinition[] = [
+  {
+    name: 'variant',
+    type: "'primary' | 'secondary' | 'ghost' | 'text' | 'danger' | 'danger-outline' | 'social'",
+    default: "'primary'",
+    description:
+      'Button visual style. Primary has safety orange color with angled clip-path, secondary has gold outline.',
+  },
+  {
+    name: 'size',
+    type: "'xs' | 'sm' | 'md' | 'lg' | 'xl'",
+    default: "'md'",
+    description: 'Button size: xs (28px), sm (34px), md (40px), lg (48px), xl (56px).',
+  },
+  {
+    name: 'icon',
+    type: 'string',
+    description:
+      "Phosphor icon name to display. Available: 'plus', 'eye', 'trash', 'dots-three', 'pencil-simple', 'gear', 'share-network', 'x', 'star', 'discord-logo', 'twitter-logo', 'youtube-logo'.",
+  },
+  {
+    name: 'iconPos',
+    type: "'left' | 'right'",
+    default: "'left'",
+    description: 'Icon position relative to button text.',
+  },
+  {
+    name: 'loading',
+    type: 'boolean',
+    default: 'false',
+    description: 'Show loading state and disable interaction.',
+  },
+  {
+    name: 'disabled',
+    type: 'boolean',
+    default: 'false',
+    description: 'Disable button interaction.',
+  },
+  {
+    name: 'type',
+    type: "'button' | 'submit' | 'reset'",
+    default: "'button'",
+    description: 'HTML button type attribute.',
+  },
+];
+
+// VrlIconButton prop definitions
+const iconButtonProps: PropDefinition[] = [
+  {
+    name: 'icon',
+    type: 'string',
+    required: true,
+    description: 'Phosphor icon name to display (required).',
+  },
+  {
+    name: 'aria-label',
+    type: 'string',
+    required: true,
+    description: 'ARIA label for accessibility (required).',
+  },
+  {
+    name: 'variant',
+    type: "'angled' | 'rounded' | 'circular' | 'gold-outline' | 'ghost' | 'danger'",
+    default: "'angled'",
+    description:
+      'Button visual style. Angled has clip-path polygon, circular is rounded-full, gold-outline has gold border.',
+  },
+  {
+    name: 'size',
+    type: "'xs' | 'sm' | 'md' | 'lg'",
+    default: "'md'",
+    description: 'Button size: xs (28px), sm (36px), md (40px), lg (48px).',
+  },
+  {
+    name: 'disabled',
+    type: 'boolean',
+    default: 'false',
+    description: 'Disable button interaction.',
+  },
+];
 </script>
 
 <template>
@@ -111,7 +195,7 @@ const handleLoadingToggle = () => {
       </div>
 
       <!-- Social Buttons -->
-      <div>
+      <div class="mb-8">
         <VrlHeading
           :level="4"
           as="div"
@@ -124,6 +208,41 @@ const handleLoadingToggle = () => {
           <VrlButton variant="social" icon="twitter-logo" size="sm">Twitter</VrlButton>
           <VrlButton variant="social" icon="youtube-logo" size="sm">YouTube</VrlButton>
         </div>
+      </div>
+
+      <!-- Code Examples -->
+      <div class="mb-8 space-y-4">
+        <VrlHeading
+          :level="4"
+          as="div"
+          class="text-sm font-display uppercase tracking-wider theme-text-secondary mb-4"
+        >
+          Code Examples
+        </VrlHeading>
+        <CodeExample
+          title="Basic Button"
+          :code="`<VrlButton variant=&quot;primary&quot;>Click Me</VrlButton>`"
+        />
+        <CodeExample
+          title="Button with Icon"
+          :code="`<VrlButton icon=&quot;plus&quot; icon-pos=&quot;left&quot; variant=&quot;secondary&quot;>\n  Add Item\n</VrlButton>`"
+        />
+        <CodeExample
+          title="Loading State"
+          :code="`<VrlButton :loading=&quot;isLoading&quot; @click=&quot;handleSubmit&quot;>\n  {{ isLoading ? 'Saving...' : 'Save Changes' }}\n</VrlButton>`"
+        />
+      </div>
+
+      <!-- Props Table -->
+      <div>
+        <VrlHeading
+          :level="4"
+          as="div"
+          class="text-sm font-display uppercase tracking-wider theme-text-secondary mb-4"
+        >
+          Props
+        </VrlHeading>
+        <PropTable :props="buttonProps" />
       </div>
     </div>
 
@@ -173,7 +292,7 @@ const handleLoadingToggle = () => {
       </div>
 
       <!-- Common Use Cases -->
-      <div>
+      <div class="mb-8">
         <VrlHeading
           :level="4"
           as="div"
@@ -190,6 +309,37 @@ const handleLoadingToggle = () => {
           <VrlIconButton icon="dots-three" variant="ghost" ariaLabel="More options" />
         </div>
         <!-- eslint-enable vue/attribute-hyphenation -->
+      </div>
+
+      <!-- Code Examples -->
+      <div class="mb-8 space-y-4">
+        <VrlHeading
+          :level="4"
+          as="div"
+          class="text-sm font-display uppercase tracking-wider theme-text-secondary mb-4"
+        >
+          Code Examples
+        </VrlHeading>
+        <CodeExample
+          title="Icon Button"
+          :code="`<VrlIconButton icon=&quot;plus&quot; variant=&quot;angled&quot; aria-label=&quot;Add&quot; />`"
+        />
+        <CodeExample
+          title="Multiple Variants"
+          :code="`<VrlIconButton icon=&quot;star&quot; variant=&quot;circular&quot; aria-label=&quot;Favorite&quot; />\n<VrlIconButton icon=&quot;pencil-simple&quot; variant=&quot;gold-outline&quot; aria-label=&quot;Edit&quot; />\n<VrlIconButton icon=&quot;trash&quot; variant=&quot;danger&quot; aria-label=&quot;Delete&quot; />`"
+        />
+      </div>
+
+      <!-- Props Table -->
+      <div>
+        <VrlHeading
+          :level="4"
+          as="div"
+          class="text-sm font-display uppercase tracking-wider theme-text-secondary mb-4"
+        >
+          Props
+        </VrlHeading>
+        <PropTable :props="iconButtonProps" />
       </div>
     </div>
   </section>

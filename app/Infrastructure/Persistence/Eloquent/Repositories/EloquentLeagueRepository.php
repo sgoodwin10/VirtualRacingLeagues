@@ -95,7 +95,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         /** @phpstan-ignore-next-line */
         $eloquentLeague = LeagueEloquent::withTrashed()
             ->withCount([
-                'seasons as competitions_count',
+                'competitions as competitions_count',
                 'drivers as drivers_count',
             ])
             ->find($id);
@@ -116,7 +116,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         /** @phpstan-ignore-next-line */
         $eloquentLeagues = LeagueEloquent::where('owner_user_id', $userId)
             ->withCount([
-                'seasons as competitions_count',
+                'competitions as competitions_count',
                 'drivers as drivers_count',
             ])
             ->orderBy('created_at', 'desc')
@@ -160,7 +160,12 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             $league->setId($eloquentLeague->id);
         } else {
             // Update existing
-            $eloquentLeague = LeagueEloquent::withTrashed()->findOrFail($league->id());
+            $eloquentLeague = LeagueEloquent::withTrashed()->find($league->id());
+
+            if ($eloquentLeague === null) {
+                throw LeagueNotFoundException::withId($league->id());
+            }
+
             $this->fillEloquentModel($eloquentLeague, $league);
 
             $eloquentLeague->save();
@@ -173,7 +178,11 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             throw new \InvalidArgumentException('Cannot update a league without an ID');
         }
 
-        $eloquentLeague = LeagueEloquent::findOrFail($league->id());
+        $eloquentLeague = LeagueEloquent::withTrashed()->find($league->id());
+
+        if ($eloquentLeague === null) {
+            throw LeagueNotFoundException::withId($league->id());
+        }
 
         $eloquentLeague->name = $league->name()->value();
         $eloquentLeague->slug = $league->slug()->value();
@@ -203,7 +212,12 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             return;
         }
 
-        $eloquentLeague = LeagueEloquent::findOrFail($league->id());
+        $eloquentLeague = LeagueEloquent::find($league->id());
+
+        if ($eloquentLeague === null) {
+            throw LeagueNotFoundException::withId($league->id());
+        }
+
         $eloquentLeague->delete();
     }
 
@@ -213,7 +227,12 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             return;
         }
 
-        $eloquentLeague = LeagueEloquent::withTrashed()->findOrFail($league->id());
+        $eloquentLeague = LeagueEloquent::withTrashed()->find($league->id());
+
+        if ($eloquentLeague === null) {
+            throw LeagueNotFoundException::withId($league->id());
+        }
+
         $eloquentLeague->restore();
     }
 
@@ -223,7 +242,12 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             return;
         }
 
-        $eloquentLeague = LeagueEloquent::withTrashed()->findOrFail($league->id());
+        $eloquentLeague = LeagueEloquent::withTrashed()->find($league->id());
+
+        if ($eloquentLeague === null) {
+            throw LeagueNotFoundException::withId($league->id());
+        }
+
         $eloquentLeague->forceDelete();
     }
 
@@ -259,8 +283,20 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         if (!isset($filters['order_by'])) {
             $query->orderBy('created_at', 'desc');
         } else {
-            $direction = $filters['order_direction'] ?? 'asc';
-            $query->orderBy($filters['order_by'], $direction);
+            // Validate order_by to prevent SQL injection
+            $allowedOrderFields = ['id', 'name', 'slug', 'visibility', 'status', 'created_at', 'updated_at'];
+            $orderBy = $filters['order_by'];
+            if (!in_array($orderBy, $allowedOrderFields, true)) {
+                $orderBy = 'created_at';
+            }
+
+            // Validate order_direction to prevent SQL injection
+            $direction = strtolower($filters['order_direction'] ?? 'asc');
+            if (!in_array($direction, ['asc', 'desc'], true)) {
+                $direction = 'asc';
+            }
+
+            $query->orderBy($orderBy, $direction);
         }
     }
 
@@ -321,7 +357,12 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
     public function getPlatformsByLeagueId(int $leagueId): array
     {
-        $league = LeagueEloquent::findOrFail($leagueId);
+        $league = LeagueEloquent::find($leagueId);
+
+        if ($league === null) {
+            throw LeagueNotFoundException::withId($leagueId);
+        }
+
         $platformIds = $league->platform_ids ?? [];
 
         if (empty($platformIds)) {
@@ -350,13 +391,14 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         $query = LeagueEloquent::query()
             ->with('owner:id,first_name,last_name,email')
             ->withCount([
-                'seasons as competitions_count',
+                'competitions as competitions_count',
                 'drivers as drivers_count',
             ]);
 
         // Apply search filter (search in name and slug)
         if (isset($filters['search']) && !empty($filters['search'])) {
-            $search = $filters['search'];
+            // Escape LIKE wildcards to prevent injection
+            $search = str_replace(['%', '_'], ['\\%', '\\_'], trim($filters['search']));
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('slug', 'LIKE', "%{$search}%");
@@ -385,7 +427,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
         // Apply sorting
         $sortBy = $filters['sort_by'] ?? 'id';
-        $sortDirection = $filters['sort_direction'] ?? 'desc';
+        $sortDirection = strtolower($filters['sort_direction'] ?? 'desc');
 
         // Validate sort_by to prevent SQL injection
         $allowedSortFields = ['id', 'name', 'visibility', 'status', 'created_at', 'updated_at'];
@@ -393,10 +435,15 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             $sortBy = 'id';
         }
 
+        // Validate sort_direction to prevent SQL injection
+        if (!in_array($sortDirection, ['asc', 'desc'], true)) {
+            $sortDirection = 'desc';
+        }
+
         $query->orderBy($sortBy, $sortDirection);
 
         // Get total count before pagination
-        $total = $query->count();
+        $total = (clone $query)->count();
 
         // Calculate pagination metadata
         $lastPage = (int) ceil($total / $perPage);
@@ -510,6 +557,62 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             'total_competitions' => $competitions->count(),
             'seasons_summary' => $seasonsSummary,
             'competitions' => $competitionData,
+        ];
+    }
+
+    public function getPaginatedPublic(int $page, int $perPage = 12, array $filters = []): array
+    {
+        /** @phpstan-ignore-next-line */
+        $query = LeagueEloquent::query()
+            ->withCount([
+                'competitions as competitions_count',
+                'drivers as drivers_count',
+            ])
+            ->where('visibility', 'public')
+            ->where('status', 'active');
+
+        // Apply search filter
+        if (!empty($filters['search'])) {
+            // Escape LIKE wildcards to prevent injection
+            $search = str_replace(['%', '_'], ['\\%', '\\_'], trim($filters['search']));
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        // Apply platform filter
+        if (!empty($filters['platform_id'])) {
+            $platformId = (int) $filters['platform_id'];
+            $query->whereJsonContains('platform_ids', $platformId);
+        }
+
+        // Order by name alphabetically
+        $query->orderBy('name', 'asc');
+
+        // Get total count before pagination
+        $total = (clone $query)->count();
+        $lastPage = (int) ceil($total / $perPage);
+
+        // Apply pagination
+        $offset = ($page - 1) * $perPage;
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, LeagueEloquent> $eloquentLeagues */
+        $eloquentLeagues = $query->skip($offset)->take($perPage)->get();
+
+        // Map to domain entities with counts
+        $leagues = [];
+        foreach ($eloquentLeagues as $eloquentLeague) {
+            $leagues[] = [
+                'league' => $this->toDomainEntity($eloquentLeague),
+                'competitions_count' => $eloquentLeague->competitions_count ?? 0,
+                'drivers_count' => $eloquentLeague->drivers_count ?? 0,
+            ];
+        }
+
+        return [
+            'data' => $leagues,
+            'total' => $total,
+            'per_page' => $perPage,
+            'current_page' => $page,
+            'last_page' => $lastPage,
         ];
     }
 }

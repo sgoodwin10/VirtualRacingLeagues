@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Competition\Services;
 
 use App\Application\Competition\DTOs\CreateSeasonData;
+use App\Application\Competition\DTOs\PlatformData;
 use App\Application\Competition\DTOs\SeasonCompetitionData;
 use App\Application\Competition\DTOs\SeasonData;
 use App\Application\Competition\DTOs\SeasonLeagueData;
@@ -533,8 +534,8 @@ final class SeasonApplicationService
         $totalRounds = count($rounds);
         $completedRounds = count(array_filter($rounds, fn($round) => $round->status()->isCompleted()));
 
-        // Get platform data via repository
-        $platformData = $this->platformRepository->findById($competition->platformId());
+        // Get platform data via repository (returns array)
+        $platformArray = $this->platformRepository->findById($competition->platformId());
 
         // Build nested competition data with league and platform
         $competitionData = new SeasonCompetitionData(
@@ -548,7 +549,11 @@ final class SeasonApplicationService
                 name: $league->name()->value(),
                 slug: $league->slug()->value(),
             ),
-            platform: $platformData,
+            platform: new PlatformData(
+                id: $platformArray['id'],
+                name: $platformArray['name'],
+                slug: $platformArray['slug'],
+            ),
         );
 
         return SeasonData::fromEntity(

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTheme } from '@public/composables/useTheme';
-import VrlHeading from '@public/components/typography/VrlHeading.vue';
+import VrlHeading from '@public/components/common/typography/VrlHeading.vue';
 import { PhMoon, PhSun } from '@phosphor-icons/vue';
 
 const { theme, toggleTheme } = useTheme();

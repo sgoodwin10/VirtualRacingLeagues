@@ -19,9 +19,6 @@ class EmailVerificationLoggingTest extends TestCase
 
     public function test_email_verification_request_is_logged(): void
     {
-        // Clear any existing activity
-        Activity::truncate();
-
         $this->postJson('/api/register', [
             'first_name' => 'John',
             'last_name' => 'Doe',
@@ -51,9 +48,6 @@ class EmailVerificationLoggingTest extends TestCase
 
     public function test_email_verification_completion_is_logged(): void
     {
-        // Clear any existing activity
-        Activity::truncate();
-
         $user = User::factory()->create([
             'email_verified_at' => null,
         ]);
@@ -64,7 +58,7 @@ class EmailVerificationLoggingTest extends TestCase
             ['id' => $user->id, 'hash' => sha1($user->email)]
         );
 
-        $response = $this->get($verificationUrl);
+        $response = $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class)->get($verificationUrl);
         $response->assertRedirect('/verify-email-result?status=success');
 
         // Check that email verified was logged
@@ -85,9 +79,6 @@ class EmailVerificationLoggingTest extends TestCase
 
     public function test_email_verification_resend_is_logged(): void
     {
-        // Clear any existing activity
-        Activity::truncate();
-
         $user = User::factory()->create([
             'email_verified_at' => null,
         ]);

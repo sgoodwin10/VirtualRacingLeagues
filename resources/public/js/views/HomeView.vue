@@ -15,10 +15,10 @@
             <span>Sim Racing League Management</span>
           </div>
 
-          <h1 class="hero-title">
+          <VrlHeading :level="1" variant="hero" class="hero-title">
             Setup. Race.
             <span class="highlight">Share.</span>
-          </h1>
+          </VrlHeading>
 
           <p class="hero-description">
             The complete platform for sim racing league managers. Create competitions, track
@@ -26,22 +26,26 @@
           </p>
 
           <div class="hero-cta">
-            <router-link to="/register" class="btn btn-primary"> Get Started Free </router-link>
-            <router-link to="/leagues" class="btn btn-secondary"> Browse Leagues </router-link>
+            <VrlButton variant="primary" size="lg" @click="navigateTo('/register')">
+              Get Started Free
+            </VrlButton>
+            <VrlButton variant="secondary" size="lg" @click="navigateTo('/leagues')">
+              Browse Leagues
+            </VrlButton>
           </div>
 
           <div class="hero-stats">
             <div class="hero-stat">
               <span class="hero-stat-value font-display">GT7</span>
-              <span class="hero-stat-label">Platform Support</span>
+              <VrlLabel class="hero-stat-label">Platform Support</VrlLabel>
             </div>
             <div class="hero-stat">
               <span class="hero-stat-value font-display">100%</span>
-              <span class="hero-stat-label">Free to Use</span>
+              <VrlLabel class="hero-stat-label">Free to Use</VrlLabel>
             </div>
             <div class="hero-stat">
               <span class="hero-stat-value font-display">Live</span>
-              <span class="hero-stat-label">Standings</span>
+              <VrlLabel class="hero-stat-label">Standings</VrlLabel>
             </div>
           </div>
         </div>
@@ -52,51 +56,75 @@
     <section class="section-padding" style="background: var(--color-asphalt)">
       <div class="container-racing">
         <div class="section-header">
-          <span class="section-label">How It Works</span>
-          <h2 class="section-title">Four Simple Steps</h2>
+          <VrlLabel class="section-label">How It Works</VrlLabel>
+          <VrlHeading :level="2" variant="section" class="section-title">
+            Four Simple Steps
+          </VrlHeading>
         </div>
 
         <div class="steps-grid">
-          <div class="step-card animate-fade-in-up animate-delay-1">
+          <VrlCard
+            variant="default"
+            :hoverable="false"
+            class="step-card animate-fade-in-up animate-delay-1"
+          >
             <div class="step-number">01</div>
             <div class="step-content">
-              <h3 class="step-title">Create Your League</h3>
+              <VrlHeading :level="3" variant="card" class="step-title">
+                Create Your League
+              </VrlHeading>
               <p class="step-description">
                 Set up your league with custom branding, invite your drivers, and configure your
                 settings.
               </p>
             </div>
-          </div>
+          </VrlCard>
 
-          <div class="step-card animate-fade-in-up animate-delay-2">
+          <VrlCard
+            variant="default"
+            :hoverable="false"
+            class="step-card animate-fade-in-up animate-delay-2"
+          >
             <div class="step-number">02</div>
             <div class="step-content">
-              <h3 class="step-title">Build Competitions</h3>
+              <VrlHeading :level="3" variant="card" class="step-title">
+                Build Competitions
+              </VrlHeading>
               <p class="step-description">
                 Create seasons with rounds, races, qualifying sessions, and custom points systems.
               </p>
             </div>
-          </div>
+          </VrlCard>
 
-          <div class="step-card animate-fade-in-up animate-delay-3">
+          <VrlCard
+            variant="default"
+            :hoverable="false"
+            class="step-card animate-fade-in-up animate-delay-3"
+          >
             <div class="step-number">03</div>
             <div class="step-content">
-              <h3 class="step-title">Enter Results</h3>
+              <VrlHeading :level="3" variant="card" class="step-title"> Enter Results </VrlHeading>
               <p class="step-description">
                 Record race times, positions, penalties, fastest laps, and DNF/DNS statuses.
               </p>
             </div>
-          </div>
+          </VrlCard>
 
-          <div class="step-card animate-fade-in-up animate-delay-4">
+          <VrlCard
+            variant="default"
+            :hoverable="false"
+            class="step-card animate-fade-in-up animate-delay-4"
+          >
             <div class="step-number">04</div>
             <div class="step-content">
-              <h3 class="step-title">Share With Everyone</h3>
+              <VrlHeading :level="3" variant="card" class="step-title">
+                Share With Everyone
+              </VrlHeading>
               <p class="step-description">
                 Generate a public link for your community to view live standings and results.
               </p>
             </div>
-          </div>
+          </VrlCard>
         </div>
       </div>
     </section>
@@ -105,64 +133,90 @@
     <section class="section-padding pattern-carbon">
       <div class="container-racing">
         <div class="section-header">
-          <span class="section-label">Features</span>
-          <h2 class="section-title">Everything You Need</h2>
+          <VrlLabel class="section-label">Features</VrlLabel>
+          <VrlHeading :level="2" variant="section" class="section-title">
+            Everything You Need
+          </VrlHeading>
         </div>
 
         <div class="feature-grid">
-          <div class="feature-card">
-            <PhFlag class="feature-icon" :size="48" weight="duotone" />
-            <h3 class="feature-title">Leagues & Competitions</h3>
+          <VrlCard variant="feature" class="p-4 sm:p-6">
+            <template #icon>
+              <PhFlag :size="26" weight="duotone" class="text-racing-gold" />
+            </template>
+            <VrlHeading :level="3" variant="card" class="feature-title">
+              Leagues & Competitions
+            </VrlHeading>
             <p class="feature-description">
               Organize multiple competitions and seasons under a single league. Perfect for running
               parallel championships or different car classes.
             </p>
-          </div>
+          </VrlCard>
 
-          <div class="feature-card">
-            <PhTimer class="feature-icon" :size="48" weight="duotone" />
-            <h3 class="feature-title">Qualifying & Race Times</h3>
+          <VrlCard variant="feature" class="p-4 sm:p-6">
+            <template #icon>
+              <PhTimer :size="26" weight="duotone" class="text-racing-gold" />
+            </template>
+            <VrlHeading :level="3" variant="card" class="feature-title">
+              Qualifying & Race Times
+            </VrlHeading>
             <p class="feature-description">
               Track qualifying poles, race times, gaps, and fastest laps. Automatic calculations for
               time differences and standings.
             </p>
-          </div>
+          </VrlCard>
 
-          <div class="feature-card">
-            <PhUsers class="feature-icon" :size="48" weight="duotone" />
-            <h3 class="feature-title">Teams & Divisions</h3>
+          <VrlCard variant="feature" class="p-4 sm:p-6">
+            <template #icon>
+              <PhUsers :size="26" weight="duotone" class="text-racing-gold" />
+            </template>
+            <VrlHeading :level="3" variant="card" class="feature-title">
+              Teams & Divisions
+            </VrlHeading>
             <p class="feature-description">
               Support for team championships and multiple racing divisions. Run Pro/Am splits or
               manufacturer battles with ease.
             </p>
-          </div>
+          </VrlCard>
 
-          <div class="feature-card">
-            <PhChartLine class="feature-icon" :size="48" weight="duotone" />
-            <h3 class="feature-title">Driver Tracking</h3>
+          <VrlCard variant="feature" class="p-4 sm:p-6">
+            <template #icon>
+              <PhChartLine :size="26" weight="duotone" class="text-racing-gold" />
+            </template>
+            <VrlHeading :level="3" variant="card" class="feature-title">
+              Driver Tracking
+            </VrlHeading>
             <p class="feature-description">
               Maintain driver databases with platform IDs, track statistics, and manage driver
               statuses across seasons.
             </p>
-          </div>
+          </VrlCard>
 
-          <div class="feature-card">
-            <PhWarning class="feature-icon" :size="48" weight="duotone" />
-            <h3 class="feature-title">Penalties & Incidents</h3>
+          <VrlCard variant="feature" class="p-4 sm:p-6">
+            <template #icon>
+              <PhWarning :size="26" weight="duotone" class="text-racing-gold" />
+            </template>
+            <VrlHeading :level="3" variant="card" class="feature-title">
+              Penalties & Incidents
+            </VrlHeading>
             <p class="feature-description">
               Apply time penalties, position penalties, and track DNF/DNS events. Automatic
               recalculation of final standings.
             </p>
-          </div>
+          </VrlCard>
 
-          <div class="feature-card">
-            <PhShareNetwork class="feature-icon" :size="48" weight="duotone" />
-            <h3 class="feature-title">Public Sharing</h3>
+          <VrlCard variant="feature" class="p-4 sm:p-6">
+            <template #icon>
+              <PhShareNetwork :size="26" weight="duotone" class="text-racing-gold" />
+            </template>
+            <VrlHeading :level="3" variant="card" class="feature-title">
+              Public Sharing
+            </VrlHeading>
             <p class="feature-description">
               Generate shareable links for your community. Clean, responsive standings pages that
               look great on any device.
             </p>
-          </div>
+          </VrlCard>
         </div>
       </div>
     </section>
@@ -171,12 +225,16 @@
     <section class="section-padding" style="background: var(--color-carbon)">
       <div class="container-racing">
         <div class="section-header">
-          <span class="section-label">Pricing</span>
-          <h2 class="section-title">Start Racing Today</h2>
+          <VrlLabel class="section-label">Pricing</VrlLabel>
+          <VrlHeading :level="2" variant="section" class="section-title">
+            Start Racing Today
+          </VrlHeading>
         </div>
 
-        <div class="pricing-card">
-          <div class="pricing-badge">Current Offer</div>
+        <VrlCard variant="default" :hoverable="false" class="pricing-card">
+          <div class="pricing-badge-wrapper">
+            <VrlBadge variant="featured" label="Current Offer" />
+          </div>
           <div class="pricing-price">FREE</div>
           <p class="pricing-period">No credit card required. No hidden fees.</p>
 
@@ -190,10 +248,10 @@
             <li>CSV import for drivers & results</li>
           </ul>
 
-          <router-link to="/register" class="btn btn-primary" style="width: 100%">
+          <VrlButton variant="primary" size="lg" class="w-full" @click="navigateTo('/register')">
             Create Your League
-          </router-link>
-        </div>
+          </VrlButton>
+        </VrlCard>
       </div>
     </section>
 
@@ -201,35 +259,35 @@
     <section class="section-padding" style="background: var(--color-asphalt)">
       <div class="container-racing">
         <div class="section-header">
-          <span class="section-label">Roadmap</span>
-          <h2 class="section-title">Coming Soon</h2>
+          <VrlLabel class="section-label">Roadmap</VrlLabel>
+          <VrlHeading :level="2" variant="section" class="section-title"> Coming Soon </VrlHeading>
         </div>
 
         <div class="coming-soon-grid">
-          <div class="coming-soon-item">
+          <VrlCard variant="default" class="coming-soon-item">
             <PhDatabase class="coming-soon-icon" :size="32" weight="duotone" />
             <span>GT7 Daily Race Data</span>
-          </div>
-          <div class="coming-soon-item">
+          </VrlCard>
+          <VrlCard variant="default" class="coming-soon-item">
             <PhMapPin class="coming-soon-icon" :size="32" weight="duotone" />
             <span>GT7 Track API</span>
-          </div>
-          <div class="coming-soon-item">
+          </VrlCard>
+          <VrlCard variant="default" class="coming-soon-item">
             <PhCar class="coming-soon-icon" :size="32" weight="duotone" />
             <span>GT7 Car Database</span>
-          </div>
-          <div class="coming-soon-item">
+          </VrlCard>
+          <VrlCard variant="default" class="coming-soon-item">
             <PhGarage class="coming-soon-icon" :size="32" weight="duotone" />
             <span>Season Car Selection</span>
-          </div>
-          <div class="coming-soon-item">
+          </VrlCard>
+          <VrlCard variant="default" class="coming-soon-item">
             <PhScan class="coming-soon-icon" :size="32" weight="duotone" />
             <span>AI OCR Result Reader</span>
-          </div>
-          <div class="coming-soon-item">
+          </VrlCard>
+          <VrlCard variant="default" class="coming-soon-item">
             <PhGameController class="coming-soon-icon" :size="32" weight="duotone" />
             <span>More Platforms</span>
-          </div>
+          </VrlCard>
         </div>
       </div>
     </section>
@@ -240,15 +298,19 @@
         <div class="pattern-checkered absolute inset-0 opacity-10"></div>
       </div>
       <div class="container-racing cta-content">
-        <h2 class="cta-title">Ready to Start Your Season?</h2>
+        <VrlHeading :level="2" variant="section" class="cta-title">
+          Ready to Start Your Season?
+        </VrlHeading>
         <p class="cta-description">
           Join league managers who trust Virtual Racing Leagues to power their competitions.
         </p>
         <div class="cta-buttons">
-          <router-link to="/register" class="btn btn-primary"> Create Free Account </router-link>
-          <router-link to="/leagues" class="btn btn-secondary">
+          <VrlButton variant="primary" size="lg" @click="navigateTo('/register')">
+            Create Free Account
+          </VrlButton>
+          <VrlButton variant="secondary" size="lg" @click="navigateTo('/leagues')">
             Explore Public Leagues
-          </router-link>
+          </VrlButton>
         </div>
       </div>
     </section>
@@ -256,6 +318,7 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import {
   PhFlag,
   PhTimer,
@@ -270,6 +333,36 @@ import {
   PhScan,
   PhGameController,
 } from '@phosphor-icons/vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
+import VrlCard from '@public/components/common/cards/VrlCard.vue';
+import VrlHeading from '@public/components/common/typography/VrlHeading.vue';
+import VrlLabel from '@public/components/common/typography/VrlLabel.vue';
+import VrlBadge from '@public/components/common/badges/VrlBadge.vue';
+import { useToast } from '@public/composables/useToast';
+
+const router = useRouter();
+const toast = useToast();
+
+const navigateTo = async (path: string) => {
+  try {
+    await router.push(path);
+  } catch (error) {
+    // Silently ignore NavigationDuplicated errors (user clicked same route)
+    if (
+      error &&
+      typeof error === 'object' &&
+      'name' in error &&
+      error.name === 'NavigationDuplicated'
+    ) {
+      return;
+    }
+    // Show toast notification for actual navigation failures
+    const errorMessage =
+      error instanceof Error ? error.message : 'Failed to navigate. Please try again.';
+    toast.error(errorMessage, 'Navigation Error');
+    console.error('Navigation failed:', error);
+  }
+};
 </script>
 
 <style scoped>
@@ -294,10 +387,9 @@ import {
 }
 
 .hero-stat-label {
-  font-size: 0.75rem;
-  color: var(--color-barrier);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-size: 0.75rem !important;
+  color: var(--color-barrier) !important;
+  margin-bottom: 0 !important;
 }
 
 /* Section Headers */
@@ -307,17 +399,11 @@ import {
 }
 
 .section-label {
-  font-family: var(--font-display);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.3em;
-  color: var(--color-gold);
+  font-size: 0.625rem !important;
+  letter-spacing: 0.3em !important;
+  color: var(--color-gold) !important;
   display: block;
-  margin-bottom: var(--space-sm);
-}
-
-.section-title {
-  font-size: clamp(2rem, 5vw, 3rem);
+  margin-bottom: var(--space-sm) !important;
 }
 
 /* Steps Grid */
@@ -327,12 +413,13 @@ import {
   gap: var(--space-md);
 }
 
-.step-card {
+.step-card :deep(.card-body) {
   display: flex;
   gap: var(--space-lg);
   padding: var(--space-xl);
-  background: var(--color-carbon);
-  border: 1px solid var(--color-tarmac);
+}
+
+.step-card {
   position: relative;
 }
 
@@ -344,6 +431,7 @@ import {
   width: 32px;
   height: 2px;
   background: linear-gradient(90deg, var(--color-gold), transparent);
+  z-index: 1;
 }
 
 .step-card:last-child::after {
@@ -363,9 +451,7 @@ import {
 }
 
 .step-title {
-  font-size: 0.875rem;
-  margin-bottom: var(--space-sm);
-  color: var(--color-pit-white);
+  margin-bottom: var(--space-sm) !important;
 }
 
 .step-description {
@@ -381,27 +467,116 @@ import {
   gap: var(--space-lg);
 }
 
-.coming-soon-item {
+.coming-soon-item :deep(.card-body) {
   display: flex;
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-lg);
-  background: var(--color-carbon);
-  border: 1px solid var(--color-tarmac);
   font-family: var(--font-body);
   font-size: 0.875rem;
   color: var(--color-barrier);
-  transition: all var(--duration-normal) var(--ease-racing);
 }
 
-.coming-soon-item:hover {
-  border-color: var(--color-gold-muted);
+.coming-soon-item:hover :deep(.card-body) {
   color: var(--color-pit-white);
 }
 
 .coming-soon-icon {
   color: var(--color-gold);
   opacity: 0.6;
+}
+
+/* Feature Grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.feature-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card :deep(.card-body) {
+  padding: var(--space-xl);
+}
+
+.feature-icon {
+  color: var(--color-gold);
+  opacity: 0.8;
+  margin-bottom: var(--space-md);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.feature-title {
+  margin-bottom: var(--space-sm) !important;
+  font-size: 0.875rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.feature-description {
+  font-size: 0.875rem;
+  color: var(--color-barrier);
+  line-height: 1.6;
+}
+
+/* Pricing Card */
+.pricing-card {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.pricing-card :deep(.card-body) {
+  padding: var(--space-3xl);
+  text-align: center;
+}
+
+.pricing-badge-wrapper {
+  margin-bottom: var(--space-lg);
+}
+
+.pricing-price {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  color: var(--color-gold);
+  margin-bottom: var(--space-sm);
+  line-height: 1;
+}
+
+.pricing-period {
+  font-size: 0.875rem;
+  color: var(--color-barrier);
+  margin-bottom: var(--space-2xl);
+}
+
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-2xl) 0;
+  text-align: left;
+}
+
+.pricing-features li {
+  padding: var(--space-sm) 0;
+  color: var(--color-concrete);
+  font-size: 0.875rem;
+  position: relative;
+  padding-left: var(--space-lg);
+}
+
+.pricing-features li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--color-gold);
+  font-weight: bold;
 }
 
 /* CTA Section */
@@ -423,8 +598,7 @@ import {
 }
 
 .cta-title {
-  font-size: clamp(2rem, 5vw, 3rem);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-md) !important;
 }
 
 .cta-description {
@@ -441,26 +615,6 @@ import {
   gap: var(--space-md);
   justify-content: center;
   flex-wrap: wrap;
-}
-
-.cta-section .btn-primary {
-  background: var(--color-pit-white);
-  color: var(--color-safety-dark);
-}
-
-.cta-section .btn-primary:hover {
-  background: var(--color-concrete);
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
-}
-
-.cta-section .btn-secondary {
-  border-color: rgba(255, 255, 255, 0.5);
-  color: var(--color-pit-white);
-}
-
-.cta-section .btn-secondary:hover {
-  border-color: var(--color-pit-white);
-  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Responsive */

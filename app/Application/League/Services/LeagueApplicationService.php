@@ -9,6 +9,7 @@ use App\Application\League\DTOs\CreateLeagueData;
 use App\Application\League\DTOs\LeagueData;
 use App\Application\League\DTOs\LeagueDetailsData;
 use App\Application\League\DTOs\LeaguePlatformData;
+use App\Application\League\DTOs\PublicLeagueData;
 use App\Application\League\DTOs\UpdateLeagueData;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Driver\Services\DriverPlatformColumnService;
@@ -70,57 +71,70 @@ final class LeagueApplicationService
             $baseSlug = LeagueSlug::fromName($data->name);
             $slug = $this->generateUniqueSlug($baseSlug);
 
-            // Store logo
-            $logoPath = $data->logo->store('leagues/logos', 'public');
-            if (!$logoPath) {
-                throw new \RuntimeException('Failed to store league logo');
-            }
+            // Track uploaded files for cleanup on failure
+            $uploadedFiles = [];
 
-            // Store header image if provided
-            $headerImagePath = null;
-            if ($data->header_image) {
-                $headerImagePath = $data->header_image->store('leagues/headers', 'public');
-                if (!$headerImagePath) {
-                    throw new \RuntimeException('Failed to store league header image');
+            try {
+                // Store logo
+                $logoPath = $data->logo->store('leagues/logos', 'public');
+                if (!$logoPath) {
+                    throw new \RuntimeException('Failed to store league logo');
                 }
+                $uploadedFiles[] = $logoPath;
+
+                // Store header image if provided
+                $headerImagePath = null;
+                if ($data->header_image) {
+                    $headerImagePath = $data->header_image->store('leagues/headers', 'public');
+                    if (!$headerImagePath) {
+                        throw new \RuntimeException('Failed to store league header image');
+                    }
+                    $uploadedFiles[] = $headerImagePath;
+                }
+
+                // Create domain entity
+                $league = League::create(
+                    name: LeagueName::from($data->name),
+                    slug: $slug,
+                    logoPath: $logoPath,
+                    ownerUserId: $userId,
+                    timezone: $data->timezone,
+                    contactEmail: $data->contact_email ? EmailAddress::from($data->contact_email) : null,
+                    organizerName: $data->organizer_name,
+                    tagline: Tagline::fromNullable($data->tagline),
+                    description: $data->description,
+                    headerImagePath: $headerImagePath,
+                    platformIds: $data->platform_ids,
+                    discordUrl: $data->discord_url,
+                    websiteUrl: $data->website_url,
+                    twitterHandle: $data->twitter_handle,
+                    instagramHandle: $data->instagram_handle,
+                    youtubeUrl: $data->youtube_url,
+                    twitchUrl: $data->twitch_url,
+                    visibility: LeagueVisibility::fromString($data->visibility),
+                );
+
+                // Persist
+                $this->leagueRepository->save($league);
+
+                // Record creation event now that ID is set
+                $league->recordCreationEvent();
+
+                // Dispatch domain events
+                $this->dispatchEvents($league);
+
+                // Fetch platform data for response
+                $platforms = $this->fetchPlatformData($league->platformIds());
+
+                // New leagues have 0 competitions and 0 drivers
+                return LeagueData::fromEntity($league, $platforms, null, 0, 0);
+            } catch (\Throwable $e) {
+                // Clean up any uploaded files on failure
+                $this->cleanupUploadedFiles($uploadedFiles);
+
+                // Re-throw the exception
+                throw $e;
             }
-
-            // Create domain entity
-            $league = League::create(
-                name: LeagueName::from($data->name),
-                slug: $slug,
-                logoPath: $logoPath,
-                ownerUserId: $userId,
-                timezone: $data->timezone,
-                contactEmail: $data->contact_email ? EmailAddress::from($data->contact_email) : null,
-                organizerName: $data->organizer_name,
-                tagline: Tagline::fromNullable($data->tagline),
-                description: $data->description,
-                headerImagePath: $headerImagePath,
-                platformIds: $data->platform_ids,
-                discordUrl: $data->discord_url,
-                websiteUrl: $data->website_url,
-                twitterHandle: $data->twitter_handle,
-                instagramHandle: $data->instagram_handle,
-                youtubeUrl: $data->youtube_url,
-                twitchUrl: $data->twitch_url,
-                visibility: LeagueVisibility::fromString($data->visibility),
-            );
-
-            // Persist
-            $this->leagueRepository->save($league);
-
-            // Record creation event now that ID is set
-            $league->recordCreationEvent();
-
-            // Dispatch domain events
-            $this->dispatchEvents($league);
-
-            // Fetch platform data for response
-            $platforms = $this->fetchPlatformData($league->platformIds());
-
-            // New leagues have 0 competitions and 0 drivers
-            return LeagueData::fromEntity($league, $platforms, null, 0, 0);
         });
     }
 
@@ -172,11 +186,16 @@ final class LeagueApplicationService
      * Get a league by ID.
      *
      * @throws LeagueNotFoundException
+     * @throws UnauthorizedException
      */
-    public function getLeagueById(int $leagueId): LeagueData
+    public function getLeagueById(int $leagueId, int $userId): LeagueData
     {
         $result = $this->leagueRepository->findByIdWithCounts($leagueId);
         $league = $result['league'];
+
+        // Authorization check
+        $this->authorizeLeagueAccess($league, $userId);
+
         $platforms = $this->fetchPlatformData($league->platformIds());
 
         return LeagueData::fromEntity(
@@ -201,9 +220,7 @@ final class LeagueApplicationService
             $league = $this->leagueRepository->findById($leagueId);
 
             // Authorization check
-            if ($league->ownerUserId() !== $userId) {
-                throw UnauthorizedException::forResource('league');
-            }
+            $this->authorizeLeagueAccess($league, $userId);
 
             // Validate platform IDs if provided
             if ($data->platform_ids !== null) {
@@ -257,38 +274,57 @@ final class LeagueApplicationService
                 $league->updateTimezone($data->timezone);
             }
 
-            // Handle logo upload
-            if ($data->logo !== null) {
-                // Store new logo first
-                $logoPath = $data->logo->store('leagues/logos', 'public');
-                if (!$logoPath) {
-                    throw new \RuntimeException('Failed to store league logo');
+            // Track uploaded files and old files for cleanup on failure
+            $uploadedFiles = [];
+            $oldFilesToDelete = [];
+
+            try {
+                // Handle logo upload
+                if ($data->logo !== null) {
+                    // Store new logo first
+                    $logoPath = $data->logo->store('leagues/logos', 'public');
+                    if (!$logoPath) {
+                        throw new \RuntimeException('Failed to store league logo');
+                    }
+                    $uploadedFiles[] = $logoPath;
+
+                    // Mark old logo for deletion only after successful upload
+                    $oldLogoPath = $league->logoPath();
+                    if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
+                        $oldFilesToDelete[] = $oldLogoPath;
+                    }
+
+                    $league->updateLogo($logoPath);
                 }
 
-                // Delete old logo only after successful upload
-                $oldLogoPath = $league->logoPath();
-                if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
-                    Storage::disk('public')->delete($oldLogoPath);
-                }
+                // Handle header image upload
+                if ($data->header_image !== null) {
+                    // Store new header image first
+                    $headerImagePath = $data->header_image->store('leagues/headers', 'public');
+                    if (!$headerImagePath) {
+                        throw new \RuntimeException('Failed to store league header image');
+                    }
+                    $uploadedFiles[] = $headerImagePath;
 
-                $league->updateLogo($logoPath);
+                    // Mark old header image for deletion only after successful upload
+                    $oldHeaderImagePath = $league->headerImagePath();
+                    if ($oldHeaderImagePath && Storage::disk('public')->exists($oldHeaderImagePath)) {
+                        $oldFilesToDelete[] = $oldHeaderImagePath;
+                    }
+
+                    $league->updateHeaderImage($headerImagePath);
+                }
+            } catch (\Throwable $e) {
+                // Clean up any newly uploaded files on failure
+                $this->cleanupUploadedFiles($uploadedFiles);
+
+                // Re-throw the exception
+                throw $e;
             }
 
-            // Handle header image upload
-            if ($data->header_image !== null) {
-                // Store new header image first
-                $headerImagePath = $data->header_image->store('leagues/headers', 'public');
-                if (!$headerImagePath) {
-                    throw new \RuntimeException('Failed to store league header image');
-                }
-
-                // Delete old header image only after successful upload
-                $oldHeaderImagePath = $league->headerImagePath();
-                if ($oldHeaderImagePath && Storage::disk('public')->exists($oldHeaderImagePath)) {
-                    Storage::disk('public')->delete($oldHeaderImagePath);
-                }
-
-                $league->updateHeaderImage($headerImagePath);
+            // Delete old files only after all uploads succeed
+            foreach ($oldFilesToDelete as $filePath) {
+                Storage::disk('public')->delete($filePath);
             }
 
             // Persist updates
@@ -320,9 +356,7 @@ final class LeagueApplicationService
             $league = $this->leagueRepository->findById($leagueId);
 
             // Authorization check
-            if ($league->ownerUserId() !== $userId) {
-                throw UnauthorizedException::forResource('league');
-            }
+            $this->authorizeLeagueAccess($league, $userId);
 
             $this->leagueRepository->delete($league);
         });
@@ -332,13 +366,18 @@ final class LeagueApplicationService
      * Get platforms associated with a league.
      *
      * @param int $leagueId
+     * @param int $userId
      * @return array<int, LeaguePlatformData>
      * @throws LeagueNotFoundException
+     * @throws UnauthorizedException
      */
-    public function getLeaguePlatforms(int $leagueId): array
+    public function getLeaguePlatforms(int $leagueId, int $userId): array
     {
-        // Verify league exists first
-        $this->leagueRepository->findById($leagueId);
+        // Verify league exists and belongs to user
+        $league = $this->leagueRepository->findById($leagueId);
+
+        // Authorization check
+        $this->authorizeLeagueAccess($league, $userId);
 
         // Get platforms from repository
         $platformsData = $this->leagueRepository->getPlatformsByLeagueId($leagueId);
@@ -353,15 +392,29 @@ final class LeagueApplicationService
     /**
      * Generate a unique slug by appending a counter if needed.
      *
+     * Note: There is a potential TOCTOU (Time-of-Check-Time-of-Use) race condition between
+     * checking slug availability and saving the league. However, the database unique constraint
+     * on the slug column is the ultimate source of truth and will prevent duplicate slugs.
+     * This method provides a best-effort attempt to generate a unique slug before hitting the
+     * database constraint.
+     *
      * @param LeagueSlug $baseSlug The base slug to make unique
      * @param int|null $excludeLeagueId Optional league ID to exclude from the check (for updates)
+     * @throws \RuntimeException If a unique slug cannot be generated after maximum attempts
      */
     private function generateUniqueSlug(LeagueSlug $baseSlug, ?int $excludeLeagueId = null): LeagueSlug
     {
+        $maxAttempts = 100;
         $slug = $baseSlug;
         $counter = 1;
 
         while (!$this->leagueRepository->isSlugAvailable($slug->value(), $excludeLeagueId)) {
+            if ($counter >= $maxAttempts) {
+                throw new \RuntimeException(
+                    "Unable to generate unique slug for '{$baseSlug->value()}' after {$maxAttempts} attempts"
+                );
+            }
+
             $newSlug = $baseSlug->value() . '-' . str_pad((string)$counter, 2, '0', STR_PAD_LEFT);
             $slug = LeagueSlug::from($newSlug);
             $counter++;
@@ -424,12 +477,18 @@ final class LeagueApplicationService
      * Get driver columns for a league's platforms.
      *
      * @param int $leagueId
+     * @param int $userId
      * @return array<int, array{field: string, label: string, type: string}>
      * @throws LeagueNotFoundException
+     * @throws UnauthorizedException
      */
-    public function getDriverColumnsForLeague(int $leagueId): array
+    public function getDriverColumnsForLeague(int $leagueId, int $userId): array
     {
         $league = $this->leagueRepository->findById($leagueId);
+
+        // Authorization check
+        $this->authorizeLeagueAccess($league, $userId);
+
         return $this->driverPlatformColumnService->getColumnsForLeague($league->platformIds());
     }
 
@@ -437,12 +496,18 @@ final class LeagueApplicationService
      * Get driver form fields for a league's platforms.
      *
      * @param int $leagueId
+     * @param int $userId
      * @return array<int, array{field: string, label: string, type: string}>
      * @throws LeagueNotFoundException
+     * @throws UnauthorizedException
      */
-    public function getDriverFormFieldsForLeague(int $leagueId): array
+    public function getDriverFormFieldsForLeague(int $leagueId, int $userId): array
     {
         $league = $this->leagueRepository->findById($leagueId);
+
+        // Authorization check
+        $this->authorizeLeagueAccess($league, $userId);
+
         return $this->driverPlatformColumnService->getFormFieldsForLeague($league->platformIds());
     }
 
@@ -450,12 +515,18 @@ final class LeagueApplicationService
      * Get driver CSV headers for a league's platforms.
      *
      * @param int $leagueId
+     * @param int $userId
      * @return array<int, array{field: string, label: string, type: string}>
      * @throws LeagueNotFoundException
+     * @throws UnauthorizedException
      */
-    public function getDriverCsvHeadersForLeague(int $leagueId): array
+    public function getDriverCsvHeadersForLeague(int $leagueId, int $userId): array
     {
         $league = $this->leagueRepository->findById($leagueId);
+
+        // Authorization check
+        $this->authorizeLeagueAccess($league, $userId);
+
         return $this->driverPlatformColumnService->getCsvHeadersForLeague($league->platformIds());
     }
 
@@ -605,9 +676,14 @@ final class LeagueApplicationService
         // Convert competition entities to DTOs with platform and season count data
         $competitionDTOs = array_map(
             function ($competition) use ($statistics) {
-                // Find matching competition data from statistics
-                $competitionData = collect($statistics['competitions'])
-                    ->firstWhere('competition.id', $competition->id());
+                // Find matching competition data from statistics using native PHP
+                $competitionData = null;
+                foreach ($statistics['competitions'] as $item) {
+                    if ($item['competition']['id'] === $competition->id()) {
+                        $competitionData = $item;
+                        break;
+                    }
+                }
 
                 return CompetitionSummaryData::fromEntity(
                     $competition,
@@ -723,5 +799,72 @@ final class LeagueApplicationService
             ],
             'links' => $links,
         ];
+    }
+
+    /**
+     * Get paginated public leagues (no authentication required).
+     *
+     * @param int $page Current page number
+     * @param int $perPage Number of items per page
+     * @param array<string, mixed> $filters Search and filter criteria
+     * @return array{data: array<int, mixed>, meta: array<string, int>}
+     */
+    public function getPublicLeagues(int $page, int $perPage = 12, array $filters = []): array
+    {
+        $result = $this->leagueRepository->getPaginatedPublic($page, $perPage, $filters);
+
+        // Convert to public DTOs with platform data
+        $leagueDTOs = array_map(
+            function (array $item) {
+                $league = $item['league'];
+                $platforms = $this->fetchPlatformData($league->platformIds());
+
+                return PublicLeagueData::fromEntity(
+                    $league,
+                    $platforms,
+                    $item['competitions_count'],
+                    $item['drivers_count']
+                );
+            },
+            $result['data']
+        );
+
+        return [
+            'data' => array_map(fn($dto) => $dto->toArray(), $leagueDTOs),
+            'meta' => [
+                'total' => $result['total'],
+                'per_page' => $result['per_page'],
+                'current_page' => $result['current_page'],
+                'last_page' => $result['last_page'],
+            ],
+        ];
+    }
+
+    /**
+     * Clean up uploaded files from storage.
+     *
+     * @param array<string> $filePaths Array of file paths to delete
+     */
+    private function cleanupUploadedFiles(array $filePaths): void
+    {
+        foreach ($filePaths as $filePath) {
+            if (Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
+            }
+        }
+    }
+
+    /**
+     * Verify that a league belongs to the specified user.
+     *
+     * @param League $league The league entity to check
+     * @param int $userId The user ID to verify ownership against
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    private function authorizeLeagueAccess(League $league, int $userId): void
+    {
+        if ($league->ownerUserId() !== $userId) {
+            throw UnauthorizedException::forResource('league');
+        }
     }
 }
