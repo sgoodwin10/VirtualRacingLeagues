@@ -319,8 +319,14 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
         Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.reset');
 
         // Public data endpoints (no authentication required)
-        Route::prefix('public')->name('public.')->group(function () {
+        Route::prefix('public')->name('public.')->middleware('throttle:60,1')->group(function () {
             Route::get('/leagues', [PublicLeagueController::class, 'index'])->name('leagues.index');
+            Route::get('/leagues/{slug}', [PublicLeagueController::class, 'show'])
+                ->where('slug', '[a-z0-9\-]+')
+                ->name('leagues.show');
+            Route::get('/leagues/{slug}/seasons/{seasonSlug}', [PublicLeagueController::class, 'seasonDetail'])
+                ->where(['slug' => '[a-z0-9\-]+', 'seasonSlug' => '[a-z0-9\-]+'])
+                ->name('leagues.seasons.show');
             Route::get('/platforms', [PublicPlatformController::class, 'index'])->name('platforms.index');
         });
 

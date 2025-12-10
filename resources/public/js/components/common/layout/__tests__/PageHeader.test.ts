@@ -91,7 +91,7 @@ describe('PageHeader', () => {
 
       const section = wrapper.find('section');
       const style = section.attributes('style');
-      expect(style).toContain('background-color: var(--color-asphalt)');
+      expect(style).toContain('background-color: var(--bg-secondary)');
     });
 
     it('applies background image when provided', () => {
@@ -173,13 +173,14 @@ describe('PageHeader', () => {
       expect(description.classes()).toContain('leading-relaxed');
     });
 
-    it('constrains content width', () => {
+    it('constrains content width with Tailwind classes', () => {
       const wrapper = mount(PageHeader, {
         props: {
           title: 'Test Title',
         },
       });
 
+      // The info section has max-w-[600px] Tailwind class
       const contentWrapper = wrapper.find('.max-w-\\[600px\\]');
       expect(contentWrapper.exists()).toBe(true);
     });
@@ -297,6 +298,218 @@ describe('PageHeader', () => {
       expect(style).toContain('background-size');
       expect(style).toContain('background-position');
       expect(style).toContain('background-repeat');
+    });
+  });
+
+  describe('logo', () => {
+    it('renders logo when logoUrl is provided', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          logoUrl: '/images/test-logo.png',
+        },
+      });
+
+      const logo = wrapper.find('img');
+      expect(logo.exists()).toBe(true);
+      expect(logo.attributes('src')).toBe('/images/test-logo.png');
+      expect(logo.attributes('alt')).toBe('Test Title logo');
+    });
+
+    it('does not render logo when logoUrl is not provided', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+        },
+      });
+
+      const logo = wrapper.find('img');
+      expect(logo.exists()).toBe(false);
+    });
+
+    it('applies correct Tailwind classes to logo image', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          logoUrl: '/images/test-logo.png',
+        },
+      });
+
+      const logoImg = wrapper.find('img');
+      expect(logoImg.exists()).toBe(true);
+      expect(logoImg.classes()).toContain('object-contain');
+      expect(logoImg.classes()).toContain('rounded-md');
+    });
+
+    it('accepts optional logoUrl prop', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          logoUrl: '/images/logo.png',
+        },
+      });
+
+      expect(wrapper.props('logoUrl')).toBe('/images/logo.png');
+    });
+  });
+
+  describe('security - XSS protection', () => {
+    it('blocks javascript: protocol URLs', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: 'javascript:alert(1)',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      expect(style).not.toContain('javascript:');
+      expect(style).toContain('background-color: var(--bg-secondary)');
+    });
+
+    it('blocks data: protocol URLs', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: 'data:text/html,<script>alert(1)</script>',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      expect(style).not.toContain('data:');
+      expect(style).toContain('background-color: var(--bg-secondary)');
+    });
+
+    it('blocks file: protocol URLs', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: 'file:///etc/passwd',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      expect(style).not.toContain('file:');
+      expect(style).toContain('background-color: var(--bg-secondary)');
+    });
+
+    it('blocks ftp: protocol URLs', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: 'ftp://example.com/image.jpg',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      expect(style).not.toContain('ftp:');
+      expect(style).toContain('background-color: var(--bg-secondary)');
+    });
+
+    it('allows valid http: protocol URLs', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: 'http://example.com/image.jpg',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      expect(style).toContain('background-image:');
+      expect(style).toContain('http://example.com/image.jpg');
+    });
+
+    it('allows valid https: protocol URLs', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: 'https://example.com/image.jpg',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      expect(style).toContain('background-image:');
+      expect(style).toContain('https://example.com/image.jpg');
+    });
+
+    it('validates URL structure through URL constructor', () => {
+      // The security fix uses URL constructor to validate URLs
+      // This test verifies that valid URLs with standard characters work
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: 'https://example.com/images/test-image_123.jpg',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      expect(style).toContain('background-image:');
+      expect(style).toContain('https://example.com/images/test-image_123.jpg');
+    });
+
+    it('handles relative URLs by converting to absolute', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: 'not-a-valid-url',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      // Relative URLs are converted to absolute URLs with current origin
+      expect(style).toContain('background-image:');
+      expect(style).toContain('http://localhost:3000/not-a-valid-url');
+    });
+
+    it('handles path-only URLs by converting to absolute', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: '://invalid',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      // Even malformed relative paths get converted to absolute URLs
+      expect(style).toContain('background-image:');
+      expect(style).toContain('http://localhost:3000/://invalid');
+    });
+
+    it('handles empty string URLs gracefully', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: '',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      expect(style).toContain('background-color: var(--bg-secondary)');
+    });
+
+    it('handles relative URLs by resolving them to current origin', () => {
+      const wrapper = mount(PageHeader, {
+        props: {
+          title: 'Test Title',
+          backgroundImage: '/images/test.jpg',
+        },
+      });
+
+      const section = wrapper.find('section');
+      const style = section.attributes('style');
+      expect(style).toContain('background-image:');
+      // Should be converted to absolute URL with current origin
+      expect(style).toContain('/images/test.jpg');
     });
   });
 });

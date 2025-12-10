@@ -74,6 +74,8 @@ export interface PublicSeason {
   stats: {
     total_drivers: number;
     active_drivers: number;
+    total_rounds: number;
+    completed_rounds: number;
     total_races: number;
     completed_races: number;
   };
@@ -114,6 +116,8 @@ export interface SeasonStandingDriver {
   driver_id: number;
   driver_name: string;
   total_points: number;
+  podiums: number;
+  poles: number;
   rounds: RoundPoints[];
 }
 
@@ -148,12 +152,22 @@ export interface RGBColor {
 }
 
 /**
- * Helper to parse RGB color string
+ * Helper to parse RGB color string with runtime validation
  */
 export function parseRGBColor(colorString: string | null): RGBColor | null {
   if (!colorString) return null;
   try {
-    return JSON.parse(colorString) as RGBColor;
+    const parsed = JSON.parse(colorString);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      typeof parsed.r === 'number' &&
+      typeof parsed.g === 'number' &&
+      typeof parsed.b === 'number'
+    ) {
+      return parsed as RGBColor;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -165,4 +179,120 @@ export function parseRGBColor(colorString: string | null): RGBColor | null {
 export function rgbToCss(color: RGBColor | null): string {
   if (!color) return 'transparent';
   return `rgb(${color.r}, ${color.g}, ${color.b})`;
+}
+
+/**
+ * League Detail API Response Types
+ */
+
+/**
+ * Response from GET /api/public/leagues/{slug}
+ */
+export interface PublicLeagueDetailResponse {
+  league: PublicLeagueInfo;
+  stats: LeagueStats;
+  competitions: PublicCompetitionDetail[];
+  recent_activity: RecentActivity[];
+  upcoming_races: UpcomingRace[];
+  championship_leaders: ChampionshipLeader[];
+}
+
+export interface PublicLeagueInfo {
+  id: number;
+  name: string;
+  slug: string;
+  tagline: string | null;
+  description: string | null;
+  logo_url: string | null;
+  header_image_url: string | null;
+  platforms: Platform[];
+  visibility: 'public' | 'unlisted';
+  discord_url: string | null;
+  website_url: string | null;
+  twitter_handle: string | null;
+  youtube_url: string | null;
+  twitch_url: string | null;
+  created_at: string;
+}
+
+export interface LeagueStats {
+  competitions_count: number;
+  active_seasons_count: number;
+  drivers_count: number;
+}
+
+export interface PublicCompetitionDetail {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  logo_url: string | null;
+  competition_colour: string | null;
+  platform: Platform;
+  stats: {
+    total_seasons: number;
+    active_seasons: number;
+    total_drivers: number;
+  };
+  seasons: PublicSeasonSummary[];
+}
+
+export interface PublicSeasonSummary {
+  id: number;
+  name: string;
+  slug: string;
+  car_class: string | null;
+  status: 'setup' | 'active' | 'completed' | 'archived';
+  stats: {
+    total_drivers: number;
+    active_drivers: number;
+    total_rounds: number;
+    completed_rounds: number;
+  };
+}
+
+// Sidebar types (for future use - will be empty arrays for now)
+export interface RecentActivity {
+  type: 'race_completed' | 'driver_joined' | 'season_started' | 'championship_leader';
+  title: string;
+  subtitle: string;
+  timestamp: string;
+  icon_type: 'success' | 'info' | 'warning' | 'gold' | 'purple';
+}
+
+export interface UpcomingRace {
+  id: number;
+  track_name: string;
+  season_name: string;
+  competition_name: string;
+  scheduled_at: string;
+  drivers_registered: number;
+  is_next: boolean;
+}
+
+export interface ChampionshipLeader {
+  position: number;
+  driver_name: string;
+  season_name: string;
+  points: number;
+}
+
+/**
+ * Response from GET /api/public/leagues/{slug}/seasons/{seasonSlug}
+ */
+export interface PublicSeasonDetailResponse {
+  league: {
+    name: string;
+    slug: string;
+    logo_url?: string | null;
+    header_image_url?: string | null;
+  };
+  competition: {
+    name: string;
+    slug: string;
+  };
+  season: PublicSeason;
+  rounds: PublicRound[];
+  standings: SeasonStandingDriver[] | SeasonStandingDivision[];
+  has_divisions: boolean;
 }

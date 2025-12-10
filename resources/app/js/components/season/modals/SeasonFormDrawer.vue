@@ -14,6 +14,7 @@ import Button from 'primevue/button';
 import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 import Checkbox from 'primevue/checkbox';
+import InputNumber from 'primevue/inputnumber';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
@@ -68,6 +69,8 @@ const form = reactive<SeasonForm>({
   race_divisions_enabled: false,
   team_championship_enabled: false,
   race_times_required: true,
+  drop_round: false,
+  total_drop_rounds: 0,
 });
 
 const originalName = ref('');
@@ -77,11 +80,11 @@ const showNameChangeDialog = ref(false);
 
 // Slug preview state
 const slugPreview = ref('');
-const slugStatus = ref<'checking' | 'available' | 'taken' | 'error' | null>(null);
+const slugStatus = ref<'checking' | 'available' | 'taken' | 'error' | 'timeout' | null>(null);
 const slugSuggestion = ref<string | null>(null);
 
 // Validation
-const { errors, validateAll, clearError } = useSeasonValidation(form);
+const { errors, validateAll, clearError, clearErrors } = useSeasonValidation(form);
 
 // Computed
 const localVisible = computed({
@@ -132,8 +135,12 @@ const checkSlug = useDebounceFn(async () => {
     slugPreview.value = result.slug;
     slugStatus.value = result.available ? 'available' : 'taken';
     slugSuggestion.value = result.suggestion;
-  } catch {
-    slugStatus.value = 'error';
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Slug check timeout') {
+      slugStatus.value = 'timeout';
+    } else {
+      slugStatus.value = 'error';
+    }
     slugPreview.value = '';
     slugSuggestion.value = null;
   }
@@ -179,6 +186,8 @@ function loadSeasonData(): void {
   form.race_divisions_enabled = props.season.race_divisions_enabled;
   form.team_championship_enabled = props.season.team_championship_enabled;
   form.race_times_required = props.season.race_times_required;
+  form.drop_round = props.season.drop_round;
+  form.total_drop_rounds = props.season.total_drop_rounds;
 
   originalName.value = props.season.name;
 
@@ -198,16 +207,13 @@ function resetForm(): void {
   form.race_divisions_enabled = false;
   form.team_championship_enabled = false;
   form.race_times_required = true;
+  form.drop_round = false;
+  form.total_drop_rounds = 0;
   originalName.value = '';
   slugPreview.value = '';
   slugStatus.value = null;
   slugSuggestion.value = null;
-  errors.name = undefined;
-  errors.car_class = undefined;
-  errors.description = undefined;
-  errors.technical_specs = undefined;
-  errors.logo = undefined;
-  errors.banner = undefined;
+  clearErrors();
 }
 
 function handleCancel(): void {
@@ -244,6 +250,8 @@ async function submitForm(): Promise<void> {
         race_divisions_enabled: form.race_divisions_enabled,
         team_championship_enabled: form.team_championship_enabled,
         race_times_required: form.race_times_required,
+        drop_round: form.drop_round,
+        total_drop_rounds: form.total_drop_rounds,
       });
 
       toast.add({
@@ -265,6 +273,8 @@ async function submitForm(): Promise<void> {
         race_divisions_enabled: form.race_divisions_enabled,
         team_championship_enabled: form.team_championship_enabled,
         race_times_required: form.race_times_required,
+        drop_round: form.drop_round,
+        total_drop_rounds: form.total_drop_rounds,
       });
 
       toast.add({
@@ -280,10 +290,6 @@ async function submitForm(): Promise<void> {
     localVisible.value = false;
     resetForm();
   } catch (error: unknown) {
-    // Clear file inputs on error to prevent stale file objects
-    form.logo = null;
-    form.banner = null;
-
     const errorMessage = error instanceof Error ? error.message : 'Failed to save season';
 
     toast.add({
@@ -354,6 +360,10 @@ function cancelNameChange(): void {
                 <small class="text-gray-600">
                   Will use: <span class="font-mono text-amber-700">{{ slugSuggestion }}</span>
                 </small>
+              </template>
+              <template v-else-if="slugStatus === 'timeout'">
+                <i class="pi pi-exclamation-triangle text-xs text-orange-500"></i>
+                <small class="text-gray-600">Slug check timed out. Please try again.</small>
               </template>
             </div>
           </FormInputGroup>
@@ -464,6 +474,37 @@ function cancelNameChange(): void {
               />
             </div>
             <FormOptionalText text="Require lap times to be recorded for race results" />
+          </FormInputGroup>
+
+          <!-- Drop Round Toggle -->
+          <FormInputGroup>
+            <div class="flex items-center gap-3">
+              <Checkbox
+                v-model="form.drop_round"
+                input-id="drop_round"
+                :binary="true"
+                :disabled="isSubmitting"
+              />
+              <FormLabel for="drop_round" text="Enable Drop Round" class="mb-0 cursor-pointer" />
+            </div>
+            <FormOptionalText text="Exclude lowest scoring rounds from championship" />
+          </FormInputGroup>
+
+          <!-- Total Drop Rounds Input -->
+          <FormInputGroup v-if="form.drop_round">
+            <FormLabel for="total_drop_rounds" text="Total Drop Rounds" />
+            <InputNumber
+              id="total_drop_rounds"
+              v-model="form.total_drop_rounds"
+              :min="0"
+              :max="10"
+              :disabled="isSubmitting"
+              show-buttons
+              button-layout="horizontal"
+              class="w-full"
+              size="small"
+            />
+            <FormOptionalText text="Number of lowest scoring rounds to exclude" />
           </FormInputGroup>
 
           <!-- Info Message -->

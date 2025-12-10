@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\DTOs;
 
+use App\Rules\ValidateDropRounds;
 use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Data;
 
@@ -24,6 +25,8 @@ class CreateSeasonData extends Data
         public bool $team_championship_enabled = false,
         public bool $race_divisions_enabled = false,
         public bool $race_times_required = true,
+        public bool $drop_round = false,
+        public int $total_drop_rounds = 0,
     ) {
     }
 
@@ -48,6 +51,8 @@ class CreateSeasonData extends Data
             'team_championship_enabled' => ['boolean'],
             'race_divisions_enabled' => ['boolean'],
             'race_times_required' => ['boolean'],
+            'drop_round' => ['boolean'],
+            'total_drop_rounds' => ['integer', 'min:0', 'max:20', new ValidateDropRounds()],
         ];
     }
 }

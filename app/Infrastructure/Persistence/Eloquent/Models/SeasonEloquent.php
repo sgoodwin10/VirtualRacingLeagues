@@ -29,6 +29,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $team_championship_enabled
  * @property bool $race_divisions_enabled
  * @property bool $race_times_required
+ * @property bool $drop_round
+ * @property int $total_drop_rounds
  * @property string $status
  * @property int $created_by_user_id
  * @property \Illuminate\Support\Carbon $created_at
@@ -63,6 +65,8 @@ final class SeasonEloquent extends Model
         'team_championship_enabled',
         'race_divisions_enabled',
         'race_times_required',
+        'drop_round',
+        'total_drop_rounds',
         'status',
         'created_by_user_id',
     ];
@@ -76,6 +80,8 @@ final class SeasonEloquent extends Model
         'team_championship_enabled' => 'boolean',
         'race_divisions_enabled' => 'boolean',
         'race_times_required' => 'boolean',
+        'drop_round' => 'boolean',
+        'total_drop_rounds' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -84,11 +90,11 @@ final class SeasonEloquent extends Model
     /**
      * Get the competition that owns the season.
      *
-     * @return BelongsTo<CompetitionEloquent, self>
+     * @return BelongsTo<Competition, self>
      */
     public function competition(): BelongsTo
     {
-        return $this->belongsTo(CompetitionEloquent::class, 'competition_id');
+        return $this->belongsTo(Competition::class, 'competition_id');
     }
 
     /**

@@ -50,6 +50,7 @@
             <StandingsTable
               :drivers="division.drivers"
               :rounds="getRoundNumbers(division.drivers)"
+              :drop-round-enabled="standingsData.drop_round_enabled"
             />
           </TabPanel>
         </TabPanels>
@@ -60,6 +61,7 @@
         v-else
         :drivers="flatDriverStandings"
         :rounds="getRoundNumbers(flatDriverStandings)"
+        :drop-round-enabled="standingsData.drop_round_enabled"
       />
     </div>
   </BasePanel>
@@ -95,6 +97,11 @@ const props = defineProps<Props>();
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const standingsData = ref<SeasonStandingsResponse | null>(null);
+/**
+ * Active division ID for tab selection
+ * Initialized to 0 as a placeholder (invalid division ID)
+ * Will be set to the first division's ID when standings data loads
+ */
 const activeDivisionId = ref<number>(0);
 
 /**
@@ -159,8 +166,12 @@ async function fetchStandings(): Promise<void> {
   try {
     standingsData.value = await getSeasonStandings(props.seasonId);
 
-    // Set initial active division if divisions exist
-    if (standingsData.value.has_divisions && divisionsWithStandings.value.length > 0) {
+    // Set initial active division if divisions exist (only if not already set to a valid ID)
+    if (
+      standingsData.value.has_divisions &&
+      divisionsWithStandings.value.length > 0 &&
+      activeDivisionId.value === 0
+    ) {
       const firstDivision = divisionsWithStandings.value[0];
       if (firstDivision) {
         activeDivisionId.value = firstDivision.division_id;
@@ -192,6 +203,10 @@ const StandingsTable = defineComponent({
       type: Array as () => readonly number[],
       required: true,
     },
+    dropRoundEnabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(tableProps) {
     /**
@@ -219,11 +234,20 @@ const StandingsTable = defineComponent({
               h(
                 'th',
                 {
-                  class:
-                    'px-3 py-2 text-left font-semibold text-gray-700 min-w-[160px] border-r border-gray-200',
+                  class: 'px-3 py-2 text-left font-semibold text-gray-700 min-w-[160px]',
                   rowspan: 2,
                 },
                 'Driver',
+              ),
+              h(
+                'th',
+                {
+                  class:
+                    'w-16 px-2 py-2 text-center font-semibold text-gray-700 border-r border-gray-200',
+                  rowspan: 2,
+                  title: 'Podium finishes (1st, 2nd, or 3rd place)',
+                },
+                'Podiums',
               ),
               ...tableProps.rounds.map((roundNum) =>
                 h(
@@ -244,6 +268,18 @@ const StandingsTable = defineComponent({
                 },
                 'Total',
               ),
+              ...(tableProps.dropRoundEnabled
+                ? [
+                    h(
+                      'th',
+                      {
+                        class: 'w-16 px-3 py-2 text-center font-bold text-gray-900 bg-blue-50',
+                        rowspan: 2,
+                      },
+                      'Drop',
+                    ),
+                  ]
+                : []),
             ]),
             // Sub-header row for P, FL, Pts
             h('tr', { class: 'bg-gray-50 border-b border-gray-300' }, [
@@ -294,10 +330,15 @@ const StandingsTable = defineComponent({
                   // Position
                   h('td', { class: 'px-3 py-2 text-center font-bold' }, driver.position),
                   // Driver name
+                  h('td', { class: 'px-3 py-2 font-medium text-gray-900' }, driver.driver_name),
+                  // Podiums count
                   h(
                     'td',
-                    { class: 'px-3 py-2 font-medium text-gray-900 border-r border-gray-200' },
-                    driver.driver_name,
+                    {
+                      class:
+                        'w-16 px-2 py-2 text-center font-semibold text-amber-700 border-r border-gray-200',
+                    },
+                    driver.podiums,
                   ),
                   // Round columns (P, FL, Pts for each round)
                   ...tableProps.rounds.flatMap((roundNum) => {
@@ -353,6 +394,19 @@ const StandingsTable = defineComponent({
                     },
                     driver.total_points,
                   ),
+                  // Drop total (conditional)
+                  ...(tableProps.dropRoundEnabled
+                    ? [
+                        h(
+                          'td',
+                          {
+                            class:
+                              'w-16 px-3 py-2 text-center font-bold text-lg text-blue-900 bg-blue-50',
+                          },
+                          driver.drop_total,
+                        ),
+                      ]
+                    : []),
                 ],
               ),
             ),

@@ -275,6 +275,8 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             teamChampionshipEnabled: $model->team_championship_enabled,
             raceDivisionsEnabled: $model->race_divisions_enabled ?? false,
             raceTimesRequired: $model->race_times_required ?? true,
+            dropRound: $model->drop_round ?? false,
+            totalDropRounds: $model->total_drop_rounds ?? 0,
             deletedAt: $model->deleted_at
                 ? new DateTimeImmutable($model->deleted_at->toDateTimeString())
                 : null,
@@ -300,6 +302,8 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             'team_championship_enabled' => $season->teamChampionshipEnabled(),
             'race_divisions_enabled' => $season->raceDivisionsEnabled(),
             'race_times_required' => $season->raceTimesRequired(),
+            'drop_round' => $season->hasDropRound(),
+            'total_drop_rounds' => $season->getTotalDropRounds(),
             'status' => $season->status()->value,
             'created_by_user_id' => $season->createdByUserId(),
             'updated_at' => $season->updatedAt()->format('Y-m-d H:i:s'),

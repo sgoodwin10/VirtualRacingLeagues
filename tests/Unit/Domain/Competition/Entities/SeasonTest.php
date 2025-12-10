@@ -402,4 +402,145 @@ final class SeasonTest extends TestCase
 
         $season->disableRaceDivisions();
     }
+
+    public function test_can_enable_drop_round(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            dropRound: false,
+        );
+
+        $this->assertFalse($season->hasDropRound());
+
+        $season->enableDropRound();
+
+        $this->assertTrue($season->hasDropRound());
+        $this->assertTrue($season->hasEvents());
+    }
+
+    public function test_can_disable_drop_round(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            dropRound: true,
+            totalDropRounds: 2,
+        );
+
+        $this->assertTrue($season->hasDropRound());
+        $this->assertEquals(2, $season->getTotalDropRounds());
+
+        $season->disableDropRound();
+
+        $this->assertFalse($season->hasDropRound());
+        $this->assertEquals(0, $season->getTotalDropRounds());
+        $this->assertTrue($season->hasEvents());
+    }
+
+    public function test_disabling_drop_round_resets_total_drop_rounds_to_zero(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            dropRound: true,
+            totalDropRounds: 3,
+        );
+
+        $this->assertEquals(3, $season->getTotalDropRounds());
+
+        $season->disableDropRound();
+
+        $this->assertEquals(0, $season->getTotalDropRounds());
+    }
+
+    public function test_can_update_total_drop_rounds_when_drop_round_enabled(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            dropRound: true,
+        );
+
+        $this->assertEquals(0, $season->getTotalDropRounds());
+
+        $season->updateTotalDropRounds(2);
+
+        $this->assertEquals(2, $season->getTotalDropRounds());
+        $this->assertTrue($season->hasEvents());
+    }
+
+    public function test_cannot_update_total_drop_rounds_when_drop_round_disabled(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            dropRound: false,
+        );
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Cannot set total drop rounds to a value greater than 0 when drop round feature is disabled'
+        );
+
+        $season->updateTotalDropRounds(2);
+    }
+
+    public function test_cannot_create_season_with_drop_round_disabled_and_total_drop_rounds_greater_than_zero(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Cannot set total drop rounds to a value greater than 0 when drop round feature is disabled'
+        );
+
+        Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            dropRound: false,
+            totalDropRounds: 2,
+        );
+    }
+
+    public function test_can_create_season_with_drop_round_enabled_and_total_drop_rounds_greater_than_zero(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            dropRound: true,
+            totalDropRounds: 2,
+        );
+
+        $this->assertTrue($season->hasDropRound());
+        $this->assertEquals(2, $season->getTotalDropRounds());
+    }
+
+    public function test_can_update_total_drop_rounds_to_zero_when_drop_round_disabled(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+            dropRound: false,
+        );
+
+        // Setting to 0 should always be allowed
+        $season->updateTotalDropRounds(0);
+
+        $this->assertEquals(0, $season->getTotalDropRounds());
+    }
 }

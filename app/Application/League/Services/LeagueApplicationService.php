@@ -9,8 +9,13 @@ use App\Application\League\DTOs\CreateLeagueData;
 use App\Application\League\DTOs\LeagueData;
 use App\Application\League\DTOs\LeagueDetailsData;
 use App\Application\League\DTOs\LeaguePlatformData;
+use App\Application\League\DTOs\PublicCompetitionDetailData;
 use App\Application\League\DTOs\PublicLeagueData;
+use App\Application\League\DTOs\PublicLeagueDetailData;
+use App\Application\League\DTOs\PublicSeasonDetailData;
+use App\Application\League\DTOs\PublicSeasonSummaryData;
 use App\Application\League\DTOs\UpdateLeagueData;
+use App\Application\Competition\Services\SeasonApplicationService;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Driver\Services\DriverPlatformColumnService;
 use App\Domain\League\Entities\League;
@@ -47,6 +52,7 @@ final class LeagueApplicationService
         private readonly DriverPlatformColumnService $driverPlatformColumnService,
         private readonly PlatformRepositoryInterface $platformRepository,
         private readonly UserRepositoryInterface $userRepository,
+        private readonly SeasonApplicationService $seasonApplicationService,
     ) {
     }
 
@@ -841,6 +847,169 @@ final class LeagueApplicationService
     }
 
     /**
+     * Get detailed league information for public viewing (no authentication required).
+     * Returns null if league is not found or not public/unlisted.
+     *
+     * @param string $slug The league slug
+     * @return PublicLeagueDetailData|null
+     */
+    public function getPublicLeagueDetail(string $slug): ?PublicLeagueDetailData
+    {
+        // Find league by slug (using Eloquent to get timestamps)
+        $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::where('slug', $slug)->first();
+
+        if ($eloquentLeague === null || $eloquentLeague->visibility === 'private') {
+            return null;
+        }
+
+        // Convert to entity for business logic checks
+        $league = $this->leagueRepository->findBySlug($slug);
+
+        // Fetch platforms
+        $platforms = $this->fetchPlatformData($league->platformIds());
+
+        // Fetch competitions with their seasons
+        $competitions = \App\Infrastructure\Persistence\Eloquent\Models\Competition::query()
+            ->where('league_id', $league->id())
+            ->with(['platform:id,name,slug', 'seasons' => function ($query) {
+                $query->withCount([
+                    'seasonDrivers as total_drivers',
+                    'seasonDrivers as active_drivers' => function ($q) {
+                        $q->where('status', 'active');
+                    },
+                    'rounds as total_rounds',
+                    'rounds as completed_rounds' => function ($q) {
+                        $q->where('status', 'completed');
+                    },
+                ]);
+            }])
+            ->withCount([
+                'seasons as total_seasons',
+                'seasons as active_seasons' => function ($query) {
+                    $query->where('status', 'active');
+                },
+                'seasonDrivers as total_drivers',
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Calculate league-wide stats
+        $totalCompetitions = $competitions->count();
+        $activeSeasons = 0;
+        $totalDrivers = 0;
+
+        foreach ($competitions as $competition) {
+            $activeSeasons += $competition->active_seasons ?? 0;
+        }
+
+        // Count unique drivers across all seasons
+        if ($totalCompetitions > 0) {
+            $seasonIds = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
+                ->whereIn('competition_id', $competitions->pluck('id'))
+                ->pluck('id')
+                ->toArray();
+
+            if (!empty($seasonIds)) {
+                $totalDrivers = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::query()
+                    ->whereIn('season_id', $seasonIds)
+                    ->distinct('league_driver_id')
+                    ->count('league_driver_id');
+            }
+        }
+
+        // Map competitions to DTOs
+        $competitionDTOs = [];
+        foreach ($competitions as $competition) {
+            // Get logo URL
+            $logoUrl = null;
+            if ($competition->logo_path) {
+                $logoUrl = Storage::disk('public')->url($competition->logo_path);
+            }
+
+            // Map seasons to DTOs
+            $seasonDTOs = [];
+            foreach ($competition->seasons as $season) {
+                $seasonDTOs[] = PublicSeasonSummaryData::from([
+                    'id' => $season->id,
+                    'name' => $season->name,
+                    'slug' => $season->slug,
+                    'car_class' => $season->car_class,
+                    'status' => $season->status,
+                    'stats' => [
+                        'total_drivers' => $season->total_drivers ?? 0,
+                        'active_drivers' => $season->active_drivers ?? 0,
+                        'total_rounds' => $season->total_rounds ?? 0,
+                        'completed_rounds' => $season->completed_rounds ?? 0,
+                    ],
+                ]);
+            }
+
+            $competitionDTOs[] = PublicCompetitionDetailData::from([
+                'id' => $competition->id,
+                'name' => $competition->name,
+                'slug' => $competition->slug,
+                'description' => $competition->description,
+                'logo_url' => $logoUrl,
+                'competition_colour' => $competition->competition_colour,
+                'platform' => new \App\Application\Platform\DTOs\PlatformData(
+                    id: $competition->platform->id,
+                    name: $competition->platform->name,
+                    slug: $competition->platform->slug,
+                ),
+                'stats' => [
+                    'total_seasons' => $competition->total_seasons ?? 0,
+                    'active_seasons' => $competition->active_seasons ?? 0,
+                    'total_drivers' => $competition->total_drivers ?? 0,
+                ],
+                'seasons' => $seasonDTOs,
+            ]);
+        }
+
+        // Generate URLs for logo and header image
+        $logoUrl = $league->logoPath()
+            ? Storage::disk('public')->url($league->logoPath())
+            : null;
+
+        $headerImageUrl = $league->headerImagePath()
+            ? Storage::disk('public')->url($league->headerImagePath())
+            : null;
+
+        // Build league data
+        $leagueData = [
+            'id' => $eloquentLeague->id,
+            'name' => $league->name()->value(),
+            'slug' => $league->slug()->value(),
+            'tagline' => $league->tagline()?->value(),
+            'description' => $league->description(),
+            'logo_url' => $logoUrl,
+            'header_image_url' => $headerImageUrl,
+            'platforms' => $platforms,
+            'visibility' => $league->visibility()->value,
+            'discord_url' => $league->discordUrl(),
+            'website_url' => $league->websiteUrl(),
+            'twitter_handle' => $league->twitterHandle(),
+            'youtube_url' => $league->youtubeUrl(),
+            'twitch_url' => $league->twitchUrl(),
+            'created_at' => $eloquentLeague->created_at->format('Y-m-d H:i:s'),
+        ];
+
+        $stats = [
+            'competitions_count' => $totalCompetitions,
+            'active_seasons_count' => $activeSeasons,
+            'drivers_count' => $totalDrivers,
+        ];
+
+        return new PublicLeagueDetailData(
+            league: $leagueData,
+            stats: $stats,
+            competitions: $competitionDTOs,
+            recent_activity: [],  // Placeholder - to be implemented later
+            upcoming_races: [],   // Placeholder - to be implemented later
+            championship_leaders: [],  // Placeholder - to be implemented later
+        );
+    }
+
+    /**
      * Clean up uploaded files from storage.
      *
      * @param array<string> $filePaths Array of file paths to delete
@@ -852,6 +1021,180 @@ final class LeagueApplicationService
                 Storage::disk('public')->delete($filePath);
             }
         }
+    }
+
+    /**
+     * Get detailed season information for public viewing by slug (no authentication required).
+     * Returns null if season/league is not found or not public/unlisted.
+     *
+     * @param string $leagueSlug The league slug
+     * @param string $seasonSlug The season slug
+     * @return PublicSeasonDetailData|null
+     */
+    public function getPublicSeasonDetail(string $leagueSlug, string $seasonSlug): ?PublicSeasonDetailData
+    {
+        // Find league by slug (Eloquent for visibility check)
+        $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::where('slug', $leagueSlug)->first();
+
+        if ($eloquentLeague === null || $eloquentLeague->visibility === 'private') {
+            return null;
+        }
+
+        // Find season by slug
+        $eloquentSeason = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
+            ->whereHas('competition', function ($query) use ($eloquentLeague) {
+                $query->where('league_id', $eloquentLeague->id);
+            })
+            ->where('slug', $seasonSlug)
+            ->with([
+                'competition:id,league_id,name,slug,logo_path',
+                'competition.league:id,name,slug,logo_path,header_image_path',
+            ])
+            ->withCount([
+                'seasonDrivers as total_drivers',
+                'seasonDrivers as active_drivers' => function ($q) {
+                    $q->where('status', 'active');
+                },
+                'rounds as total_rounds',
+                'rounds as completed_rounds' => function ($q) {
+                    $q->where('status', 'completed');
+                },
+            ])
+            ->first();
+
+        // Calculate total and completed races separately
+        $totalRaces = 0;
+        $completedRaces = 0;
+        if ($eloquentSeason) {
+            $raceStats = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+                ->whereIn('round_id', function ($query) use ($eloquentSeason) {
+                    $query->select('id')
+                        ->from('rounds')
+                        ->where('season_id', $eloquentSeason->id);
+                })
+                ->selectRaw('COUNT(*) as total_races')
+                ->selectRaw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed_races')
+                ->first();
+
+            $totalRaces = $raceStats->total_races ?? 0;
+            $completedRaces = $raceStats->completed_races ?? 0;
+        }
+
+        if ($eloquentSeason === null) {
+            return null;
+        }
+
+        // CRITICAL: Verify season belongs to the specified league
+        if ($eloquentSeason->competition->league->slug !== $leagueSlug) {
+            return null;
+        }
+
+        // Generate logo/banner URLs
+        $logoUrl = $eloquentSeason->logo_path
+            ? Storage::disk('public')->url($eloquentSeason->logo_path)
+            : ($eloquentSeason->competition->logo_path
+                ? Storage::disk('public')->url($eloquentSeason->competition->logo_path)
+                : null);
+
+        $bannerUrl = $eloquentSeason->banner_path
+            ? Storage::disk('public')->url($eloquentSeason->banner_path)
+            : null;
+
+        // Build league data with images
+        $leagueLogoUrl = $eloquentLeague->logo_path
+            ? Storage::disk('public')->url($eloquentLeague->logo_path)
+            : null;
+        $leagueHeaderUrl = $eloquentLeague->header_image_path
+            ? Storage::disk('public')->url($eloquentLeague->header_image_path)
+            : null;
+
+        $leagueData = [
+            'name' => $eloquentSeason->competition->league->name,
+            'slug' => $eloquentSeason->competition->league->slug,
+            'logo_url' => $leagueLogoUrl,
+            'header_image_url' => $leagueHeaderUrl,
+        ];
+
+        // Build competition data
+        $competitionData = [
+            'name' => $eloquentSeason->competition->name,
+            'slug' => $eloquentSeason->competition->slug,
+        ];
+
+        // Build season data
+        $seasonData = [
+            'id' => $eloquentSeason->id,
+            'name' => $eloquentSeason->name,
+            'slug' => $eloquentSeason->slug,
+            'car_class' => $eloquentSeason->car_class,
+            'description' => $eloquentSeason->description,
+            'logo_url' => $logoUrl,
+            'banner_url' => $bannerUrl,
+            'status' => $eloquentSeason->status,
+            'is_active' => $eloquentSeason->status === 'active',
+            'is_completed' => $eloquentSeason->status === 'completed',
+            'race_divisions_enabled' => $eloquentSeason->race_divisions_enabled,
+            'stats' => [
+                'total_drivers' => $eloquentSeason->total_drivers ?? 0,
+                'active_drivers' => $eloquentSeason->active_drivers ?? 0,
+                'total_rounds' => $eloquentSeason->total_rounds ?? 0,
+                'completed_rounds' => $eloquentSeason->completed_rounds ?? 0,
+                'total_races' => $totalRaces,
+                'completed_races' => $completedRaces,
+            ],
+        ];
+
+        // Fetch rounds with races
+        $eloquentRounds = \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
+            ->where('season_id', $eloquentSeason->id)
+            ->with([
+                'races:id,round_id,race_number,name,race_type,status',
+                'platformTrack:id,name,slug',
+            ])
+            ->orderBy('round_number')
+            ->get();
+
+        $rounds = [];
+        foreach ($eloquentRounds as $round) {
+            $trackName = $round->platformTrack->name ?? null;
+            $trackLayout = $round->track_layout;
+
+            $races = [];
+            foreach ($round->races as $race) {
+                $races[] = [
+                    'id' => $race->id,
+                    'race_number' => $race->race_number ?? 0,
+                    'name' => $race->name,
+                    'race_type' => $race->race_type ?? 'custom',
+                    'status' => $race->status,
+                ];
+            }
+
+            $rounds[] = [
+                'id' => $round->id,
+                'round_number' => $round->round_number,
+                'name' => $round->name,
+                'slug' => $round->slug,
+                'scheduled_at' => $round->scheduled_at?->format('Y-m-d H:i:s'),
+                'track_name' => $trackName,
+                'track_layout' => $trackLayout,
+                'status' => $round->status,
+                'status_label' => ucfirst(str_replace('_', ' ', $round->status)),
+                'races' => $races,
+            ];
+        }
+
+        // Get standings using existing method from SeasonApplicationService
+        $standingsData = $this->seasonApplicationService->getSeasonStandings($eloquentSeason->id);
+
+        return new PublicSeasonDetailData(
+            league: $leagueData,
+            competition: $competitionData,
+            season: $seasonData,
+            rounds: $rounds,
+            standings: $standingsData['standings'],
+            has_divisions: $standingsData['has_divisions'],
+        );
     }
 
     /**

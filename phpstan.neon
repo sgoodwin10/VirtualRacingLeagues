@@ -181,10 +181,6 @@ parameters:
         -
             message: '#Parameter \#1 .+ of method .+::(belongsTo|belongsToMany)\(\) expects class-string.+, string given#'
             path: app/Infrastructure/Persistence/Eloquent/Models/*
-        # Type string in generic type (for morph map)
-        -
-            message: '#Type string in generic type#'
-            path: app/Infrastructure/Persistence/Eloquent/Models/*
         # Property type mismatches
         -
             message: '#Property .+ does not accept .+#'

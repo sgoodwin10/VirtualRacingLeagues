@@ -166,12 +166,76 @@ describe('PublicApiService', () => {
       });
     });
 
-    it('handles API errors gracefully', async () => {
-      const mockError = new Error('Network error');
+    it('throws NotFoundError for 404 status', async () => {
+      const mockError = {
+        isAxiosError: true,
+        response: {
+          status: 404,
+          data: { message: 'Leagues not found' },
+        },
+      };
+      vi.mocked(axios.isAxiosError).mockReturnValue(true);
       mockGet.mockRejectedValue(mockError);
 
-      const { publicApi } = await import('../publicApi');
-      await expect(publicApi.fetchLeagues()).rejects.toThrow('Network error');
+      const { publicApi, NotFoundError } = await import('../publicApi');
+      await expect(publicApi.fetchLeagues()).rejects.toThrow(NotFoundError);
+      await expect(publicApi.fetchLeagues()).rejects.toThrow('Leagues not found');
+    });
+
+    it('throws NetworkError when no response received', async () => {
+      const mockError = {
+        isAxiosError: true,
+        response: undefined,
+      };
+      vi.mocked(axios.isAxiosError).mockReturnValue(true);
+      mockGet.mockRejectedValue(mockError);
+
+      const { publicApi, NetworkError } = await import('../publicApi');
+      await expect(publicApi.fetchLeagues()).rejects.toThrow(NetworkError);
+      await expect(publicApi.fetchLeagues()).rejects.toThrow(
+        'Network error occurred. Please check your connection.',
+      );
+    });
+
+    it('throws ApiError for 500 status with status code', async () => {
+      const mockError = {
+        isAxiosError: true,
+        response: {
+          status: 500,
+          data: { message: 'Internal server error' },
+        },
+      };
+      vi.mocked(axios.isAxiosError).mockReturnValue(true);
+      mockGet.mockRejectedValue(mockError);
+
+      const { publicApi, ApiError } = await import('../publicApi');
+      try {
+        await publicApi.fetchLeagues();
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as InstanceType<typeof ApiError>).statusCode).toBe(500);
+        expect((error as InstanceType<typeof ApiError>).message).toBe('Internal server error');
+      }
+    });
+
+    it('throws ApiError for unexpected errors', async () => {
+      const mockError = new Error('Unexpected error');
+      vi.mocked(axios.isAxiosError).mockReturnValue(false);
+      mockGet.mockRejectedValue(mockError);
+
+      const { publicApi, ApiError } = await import('../publicApi');
+      try {
+        await publicApi.fetchLeagues();
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as InstanceType<typeof ApiError>).message).toBe(
+          'Unexpected error while trying to fetch leagues',
+        );
+        expect((error as InstanceType<typeof ApiError>).statusCode).toBeUndefined();
+        expect((error as InstanceType<typeof ApiError>).originalError).toBe(mockError);
+      }
     });
   });
 
@@ -199,12 +263,77 @@ describe('PublicApiService', () => {
       expect(mockGet).toHaveBeenCalledWith('/platforms');
     });
 
-    it('handles API errors gracefully', async () => {
-      const mockError = new Error('Failed to fetch platforms');
+    it('throws NotFoundError for 404 status', async () => {
+      const mockError = {
+        isAxiosError: true,
+        response: {
+          status: 404,
+          data: { message: 'Platforms not found' },
+        },
+      };
+      vi.mocked(axios.isAxiosError).mockReturnValue(true);
+      mockGet.mockRejectedValue(mockError);
+
+      const { publicApi, NotFoundError } = await import('../publicApi');
+      await expect(publicApi.fetchPlatforms()).rejects.toThrow(NotFoundError);
+    });
+
+    it('uses default error message when API does not provide one', async () => {
+      const mockError = {
+        isAxiosError: true,
+        response: {
+          status: 500,
+          data: {},
+        },
+      };
+      vi.mocked(axios.isAxiosError).mockReturnValue(true);
       mockGet.mockRejectedValue(mockError);
 
       const { publicApi } = await import('../publicApi');
       await expect(publicApi.fetchPlatforms()).rejects.toThrow('Failed to fetch platforms');
+    });
+  });
+
+  describe('fetchLeague', () => {
+    it('throws NotFoundError with correct context when league not found', async () => {
+      const mockError = {
+        isAxiosError: true,
+        response: {
+          status: 404,
+          data: {},
+        },
+      };
+      vi.mocked(axios.isAxiosError).mockReturnValue(true);
+      mockGet.mockRejectedValue(mockError);
+
+      const { publicApi } = await import('../publicApi');
+      await expect(publicApi.fetchLeague('test-slug')).rejects.toThrow(
+        'Failed to fetch league details',
+      );
+    });
+  });
+
+  describe('fetchSeasonDetail', () => {
+    it('throws NotFoundError with correct context when season not found', async () => {
+      const mockError = {
+        isAxiosError: true,
+        response: {
+          status: 404,
+          data: {
+            message: 'Season not found',
+          },
+        },
+      };
+      vi.mocked(axios.isAxiosError).mockReturnValue(true);
+      mockGet.mockRejectedValue(mockError);
+
+      const { publicApi, NotFoundError } = await import('../publicApi');
+      await expect(publicApi.fetchSeasonDetail('league-slug', 'season-slug')).rejects.toThrow(
+        NotFoundError,
+      );
+      await expect(publicApi.fetchSeasonDetail('league-slug', 'season-slug')).rejects.toThrow(
+        'Season not found',
+      );
     });
   });
 });

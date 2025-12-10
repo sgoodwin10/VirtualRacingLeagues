@@ -54,6 +54,8 @@ describe('SeasonSettings', () => {
     race_divisions_enabled: false,
     team_championship_enabled: false,
     race_times_required: true,
+    drop_round: false,
+    total_drop_rounds: 0,
     status: 'setup',
     is_setup: true,
     is_active: false,

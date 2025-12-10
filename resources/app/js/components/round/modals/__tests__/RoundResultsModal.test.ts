@@ -31,6 +31,8 @@ const mockSeason: Season = {
   race_divisions_enabled: true,
   team_championship_enabled: false,
   race_times_required: true, // IMPORTANT: This controls visibility of time-related tabs
+  drop_round: false,
+  total_drop_rounds: 0,
   status: 'active',
   is_setup: false,
   is_active: true,

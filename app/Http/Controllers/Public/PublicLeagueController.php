@@ -34,4 +34,32 @@ final class PublicLeagueController extends Controller
 
         return ApiResponse::success($result);
     }
+
+    /**
+     * Get detailed league information by slug.
+     */
+    public function show(string $slug): JsonResponse
+    {
+        $leagueDetail = $this->leagueService->getPublicLeagueDetail($slug);
+
+        if ($leagueDetail === null) {
+            return ApiResponse::error('League not found', null, 404);
+        }
+
+        return ApiResponse::success($leagueDetail->toArray());
+    }
+
+    /**
+     * Get detailed season information by league slug and season slug.
+     */
+    public function seasonDetail(string $slug, string $seasonSlug): JsonResponse
+    {
+        $seasonDetail = $this->leagueService->getPublicSeasonDetail($slug, $seasonSlug);
+
+        if ($seasonDetail === null) {
+            return ApiResponse::error('Season not found', null, 404);
+        }
+
+        return ApiResponse::success($seasonDetail->toArray());
+    }
 }

@@ -105,7 +105,7 @@ const headerStyle = computed(() => {
 
 .card-racing.cursor-pointer:hover {
   border-color: var(--card-hover-border);
-  transform: translateY(-4px);
+  /* transform: translateY(-4px); */
   box-shadow: var(--shadow-card);
 }
 </style>

@@ -35,6 +35,8 @@ export default [
         document: 'readonly',
         window: 'readonly',
         navigator: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal: 'readonly',
       },
     },
     rules: {

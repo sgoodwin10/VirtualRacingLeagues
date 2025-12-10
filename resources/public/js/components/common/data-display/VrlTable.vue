@@ -49,8 +49,7 @@ interface Props {
   /**
    * Array of data objects to display
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: Array<Record<string, any>>;
+  data: Array<Record<string, unknown>>;
 
   /**
    * Column configuration array
@@ -74,12 +73,19 @@ interface Props {
    * @default ''
    */
   class?: string;
+
+  /**
+   * Function to determine row CSS class based on row data
+   * @default undefined
+   */
+  rowClass?: (data: Record<string, unknown>) => string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   stickyHeader: false,
   class: '',
+  rowClass: undefined,
 });
 
 // Build table classes
@@ -112,6 +118,7 @@ const getAlignmentClass = (align?: 'left' | 'center' | 'right'): string => {
     <DataTable
       :value="data"
       :loading="loading"
+      :row-class="rowClass"
       responsive-layout="scroll"
       :pt="{
         wrapper: 'overflow-auto rounded',
@@ -125,14 +132,20 @@ const getAlignmentClass = (align?: 'left' | 'center' | 'right'): string => {
         v-for="col in columns"
         :key="col.field"
         :field="col.field"
-        :header="col.header"
         :sortable="col.sortable"
         :style="{ width: col.width }"
         :pt="{
           headerCell: `vrl-table-header-cell ${getAlignmentClass(col.align)}`,
+          headerContent: `vrl-table-header-content ${getAlignmentClass(col.align)}`,
           bodyCell: `vrl-table-body-cell ${getAlignmentClass(col.align)}`,
         }"
       >
+        <!-- Header slot for custom header rendering with alignment -->
+        <template #header>
+          <span :class="getAlignmentClass(col.align)" class="w-full block">
+            {{ col.header }}
+          </span>
+        </template>
         <!-- Dynamic column slot for custom cell rendering -->
         <template #body="slotProps">
           <slot :name="`cell-${col.field}`" :data="slotProps.data" :field="col.field">
@@ -184,6 +197,37 @@ const getAlignmentClass = (align?: 'left' | 'center' | 'right'): string => {
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: var(--text-dim);
+}
+
+/* Header alignment classes */
+.vrl-table :deep(.vrl-table-header-cell.text-center) {
+  text-align: center;
+}
+
+.vrl-table :deep(.vrl-table-header-cell.text-right) {
+  text-align: right;
+}
+
+.vrl-table :deep(.vrl-table-header-cell.text-left) {
+  text-align: left;
+}
+
+/* Header content alignment */
+.vrl-table :deep(.vrl-table-header-content) {
+  display: flex;
+  width: 100%;
+}
+
+.vrl-table :deep(.vrl-table-header-content.text-center) {
+  justify-content: center;
+}
+
+.vrl-table :deep(.vrl-table-header-content.text-right) {
+  justify-content: flex-end;
+}
+
+.vrl-table :deep(.vrl-table-header-content.text-left) {
+  justify-content: flex-start;
 }
 
 /* Body cell styling */

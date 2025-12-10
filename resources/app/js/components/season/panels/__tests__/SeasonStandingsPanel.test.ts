@@ -3,11 +3,7 @@ import { mount, VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import SeasonStandingsPanel from '../SeasonStandingsPanel.vue';
 import * as seasonService from '@app/services/seasonService';
-import type {
-  SeasonStandingsResponse,
-  SeasonStandingDriver,
-  SeasonStandingDivision,
-} from '@app/types/seasonStandings';
+import type { SeasonStandingsResponse } from '@app/types/seasonStandings';
 
 // Mock PrimeVue components
 vi.mock('primevue/message', () => ({
@@ -111,6 +107,8 @@ describe('SeasonStandingsPanel', () => {
         driver_id: 1,
         driver_name: 'Lewis Hamilton',
         total_points: 150,
+        drop_total: 150,
+        podiums: 2,
         rounds: [
           { round_id: 1, round_number: 1, points: 75, has_pole: true, has_fastest_lap: false },
           { round_id: 2, round_number: 2, points: 75, has_pole: false, has_fastest_lap: true },
@@ -121,6 +119,8 @@ describe('SeasonStandingsPanel', () => {
         driver_id: 2,
         driver_name: 'Max Verstappen',
         total_points: 140,
+        drop_total: 140,
+        podiums: 2,
         rounds: [
           { round_id: 1, round_number: 1, points: 70, has_pole: false, has_fastest_lap: true },
           { round_id: 2, round_number: 2, points: 70, has_pole: true, has_fastest_lap: false },
@@ -131,13 +131,17 @@ describe('SeasonStandingsPanel', () => {
         driver_id: 3,
         driver_name: 'Charles Leclerc',
         total_points: 130,
+        drop_total: 130,
+        podiums: 1,
         rounds: [
           { round_id: 1, round_number: 1, points: 65, has_pole: false, has_fastest_lap: false },
           { round_id: 2, round_number: 2, points: 65, has_pole: false, has_fastest_lap: false },
         ],
       },
-    ] as SeasonStandingDriver[],
+    ],
     has_divisions: false,
+    drop_round_enabled: false,
+    total_drop_rounds: 0,
   };
 
   const mockDivisionStandings: SeasonStandingsResponse = {
@@ -152,6 +156,8 @@ describe('SeasonStandingsPanel', () => {
             driver_id: 1,
             driver_name: 'Lewis Hamilton',
             total_points: 150,
+            drop_total: 150,
+            podiums: 2,
             rounds: [
               { round_id: 1, round_number: 1, points: 75, has_pole: true, has_fastest_lap: false },
               { round_id: 2, round_number: 2, points: 75, has_pole: false, has_fastest_lap: true },
@@ -162,6 +168,8 @@ describe('SeasonStandingsPanel', () => {
             driver_id: 2,
             driver_name: 'Max Verstappen',
             total_points: 140,
+            drop_total: 140,
+            podiums: 2,
             rounds: [
               { round_id: 1, round_number: 1, points: 70, has_pole: false, has_fastest_lap: true },
               { round_id: 2, round_number: 2, points: 70, has_pole: true, has_fastest_lap: false },
@@ -179,6 +187,8 @@ describe('SeasonStandingsPanel', () => {
             driver_id: 3,
             driver_name: 'George Russell',
             total_points: 120,
+            drop_total: 120,
+            podiums: 1,
             rounds: [
               { round_id: 1, round_number: 1, points: 60, has_pole: true, has_fastest_lap: true },
               { round_id: 2, round_number: 2, points: 60, has_pole: false, has_fastest_lap: false },
@@ -186,8 +196,10 @@ describe('SeasonStandingsPanel', () => {
           },
         ],
       },
-    ] as SeasonStandingDivision[],
+    ],
     has_divisions: true,
+    drop_round_enabled: false,
+    total_drop_rounds: 0,
   };
 
   beforeEach(() => {

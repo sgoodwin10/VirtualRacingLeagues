@@ -60,6 +60,8 @@ export interface Season {
   race_divisions_enabled: boolean;
   team_championship_enabled: boolean;
   race_times_required: boolean;
+  drop_round: boolean;
+  total_drop_rounds: number;
 
   // Status
   status: SeasonStatus;
@@ -114,21 +116,47 @@ export interface CreateSeasonRequest {
   race_divisions_enabled?: boolean;
   team_championship_enabled?: boolean;
   race_times_required?: boolean;
+  drop_round?: boolean;
+  total_drop_rounds?: number;
 }
 
 /**
- * Update season request (update/partial type - can be omitted, provided, or cleared)
+ * Update season request (update/partial type)
+ *
+ * Nullability patterns:
+ * - Fields that can be omitted: Not provided means "don't change this field"
+ * - Fields that support null: Explicitly passing null means "clear this field"
+ *   - car_class: Pass null to clear car class
+ *   - description: Pass null to clear description
+ *   - technical_specs: Pass null to clear technical specs
+ *   - logo: Pass null to remove custom logo (reverts to competition logo)
+ *   - banner: Pass null to remove banner
+ * - Boolean fields: Cannot be null, omit to keep current value
+ * - Number fields: Cannot be null, omit to keep current value
  */
 export interface UpdateSeasonRequest {
+  /** Season name (omit to keep current) */
   name?: string;
+  /** Car class (omit to keep, null to clear) */
   car_class?: string | null;
+  /** Description (omit to keep, null to clear) */
   description?: string | null;
+  /** Technical specifications (omit to keep, null to clear) */
   technical_specs?: string | null;
+  /** Logo file (omit to keep, null to remove custom logo and revert to competition logo) */
   logo?: File | null;
+  /** Banner file (omit to keep, null to remove banner) */
   banner?: File | null;
+  /** Enable race divisions (omit to keep current) */
   race_divisions_enabled?: boolean;
+  /** Enable team championship (omit to keep current) */
   team_championship_enabled?: boolean;
+  /** Require race times (omit to keep current) */
   race_times_required?: boolean;
+  /** Enable drop round feature (omit to keep current) */
+  drop_round?: boolean;
+  /** Total number of drop rounds (omit to keep current) */
+  total_drop_rounds?: number;
 }
 
 /**
@@ -146,6 +174,8 @@ export interface SeasonForm {
   race_divisions_enabled: boolean;
   team_championship_enabled: boolean;
   race_times_required: boolean;
+  drop_round: boolean;
+  total_drop_rounds: number;
 }
 
 /**

@@ -22,6 +22,8 @@ export interface SeasonStandingDriver {
   readonly driver_id: number;
   readonly driver_name: string;
   readonly total_points: number;
+  readonly drop_total: number;
+  readonly podiums: number;
   readonly rounds: readonly RoundPoints[];
 }
 
@@ -42,6 +44,8 @@ export interface SeasonStandingDivision {
 export interface SeasonStandingsResponseFlat {
   readonly standings: readonly SeasonStandingDriver[];
   readonly has_divisions: false;
+  readonly drop_round_enabled: boolean;
+  readonly total_drop_rounds: number;
 }
 
 /**
@@ -50,6 +54,8 @@ export interface SeasonStandingsResponseFlat {
 export interface SeasonStandingsResponseDivisions {
   readonly standings: readonly SeasonStandingDivision[];
   readonly has_divisions: true;
+  readonly drop_round_enabled: boolean;
+  readonly total_drop_rounds: number;
 }
 
 /**
@@ -62,6 +68,15 @@ export type SeasonStandingsResponse =
 
 /**
  * Type guard to check if standings response contains divisions
+ *
+ * Note: This guard only checks the `has_divisions` boolean discriminator.
+ * It assumes the backend returns the correct structure based on this flag.
+ * The type system enforces that:
+ * - When has_divisions is true, standings contains SeasonStandingDivision[]
+ * - When has_divisions is false, standings contains SeasonStandingDriver[]
+ *
+ * @param response - The season standings response to check
+ * @returns true if response contains divisions, false if it contains a flat driver list
  */
 export function isDivisionStandings(
   response: SeasonStandingsResponse,

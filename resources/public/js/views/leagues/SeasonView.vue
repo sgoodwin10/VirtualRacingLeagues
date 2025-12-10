@@ -18,91 +18,89 @@
 
     <!-- Season Content -->
     <template v-else-if="season">
-      <!-- Season Hero -->
-      <section class="season-hero">
-        <div class="season-hero-background">
-          <img
-            v-if="season.banner_url"
-            :src="season.banner_url"
-            :alt="season.name"
-            class="season-hero-image"
-          />
-          <div v-else class="season-hero-placeholder pattern-carbon"></div>
-          <div class="season-hero-overlay"></div>
-        </div>
-
-        <div class="container-racing season-hero-content">
-          <!-- Breadcrumb -->
-          <nav class="breadcrumb">
-            <router-link to="/leagues" class="breadcrumb-link">Leagues</router-link>
-            <PhCaretRight :size="12" class="breadcrumb-separator" />
-            <router-link :to="`/leagues/${route.params.slug}`" class="breadcrumb-link">
-              {{ leagueName }}
-            </router-link>
-            <PhCaretRight :size="12" class="breadcrumb-separator" />
-            <span class="breadcrumb-current">{{ season.name }}</span>
-          </nav>
-
-          <div class="season-hero-info">
-            <div v-if="season.logo_url" class="season-logo">
-              <img :src="season.logo_url" :alt="season.name" />
-            </div>
-
-            <div class="season-details">
-              <div class="season-meta">
-                <span class="status-badge" :class="`status-${season.status}`">
-                  {{ season.status }}
-                </span>
-                <span v-if="season.car_class" class="car-class-badge">
-                  {{ season.car_class }}
-                </span>
-              </div>
-
-              <h1 class="season-name">{{ season.name }}</h1>
-              <p v-if="season.description" class="season-description">{{ season.description }}</p>
-            </div>
+      <!-- Page Header -->
+      <PageHeader
+        :label="seasonLabel"
+        :title="season.name"
+        :description="season.description || undefined"
+        :background-image="pageHeaderBackgroundImage"
+        :logo-url="leagueLogoUrl || undefined"
+      >
+        <template #social-links>
+          <div class="season-badges">
+            <VrlBadge
+              :variant="getSeasonBadgeVariant(season.status)"
+              :label="season.status"
+              :pulse="season.status === 'active'"
+            />
+            <VrlBadge
+              v-if="season.car_class"
+              variant="platform"
+              :label="season.car_class"
+              :rounded="false"
+            />
           </div>
+        </template>
+      </PageHeader>
 
-          <div class="season-stats-bar">
-            <div class="stat-item">
-              <span class="stat-value font-data">{{ season.stats.active_drivers }}</span>
-              <span class="stat-label">Active Drivers</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-value font-data"
-                >{{ season.stats.completed_races }}/{{ season.stats.total_races }}</span
-              >
-              <span class="stat-label">Races Completed</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-value font-data">{{ rounds.length }}</span>
-              <span class="stat-label">Rounds</span>
-            </div>
+      <!-- Breadcrumbs -->
+      <section class="breadcrumbs-section">
+        <div class="container-racing py-4">
+          <VrlBreadcrumbs :items="breadcrumbItems" />
+        </div>
+      </section>
+
+      <!-- Stats Bar -->
+      <section class="stats-section">
+        <div class="container-racing">
+          <div class="stats-grid">
+            <!-- Active Drivers -->
+            <VrlStatsCard
+              label="Active Drivers"
+              :value="season.stats.active_drivers"
+              :highlighted="true"
+            >
+              <template #icon>
+                <PhUsers :size="20" weight="fill" class="text-racing-gold" />
+              </template>
+            </VrlStatsCard>
+
+            <!-- Races Completed -->
+            <VrlStatsCard
+              label="Races Completed"
+              :value="`${season.stats.completed_races}/${season.stats.total_races}`"
+            >
+              <template #icon>
+                <PhFlagCheckered :size="20" weight="fill" class="text-racing-gold" />
+              </template>
+            </VrlStatsCard>
+
+            <!-- Total Rounds -->
+            <VrlStatsCard label="Total Rounds" :value="rounds.length">
+              <template #icon>
+                <PhCalendarDots :size="20" weight="fill" class="text-racing-gold" />
+              </template>
+            </VrlStatsCard>
+
+            <!-- Season Status -->
+            <VrlStatsCard label="Status" :value="season.status">
+              <template #icon>
+                <component
+                  :is="getSeasonStatusIcon(season.status)"
+                  :size="20"
+                  weight="fill"
+                  class="text-racing-gold"
+                />
+              </template>
+            </VrlStatsCard>
           </div>
         </div>
       </section>
 
       <!-- Tabs Navigation -->
       <section class="tabs-section">
-        <div class="container-racing">
-          <div class="tabs-nav">
-            <button
-              class="tab-btn"
-              :class="{ active: activeTab === 'standings' }"
-              @click="activeTab = 'standings'"
-            >
-              <PhChartLine :size="18" />
-              Standings
-            </button>
-            <button
-              class="tab-btn"
-              :class="{ active: activeTab === 'rounds' }"
-              @click="activeTab = 'rounds'"
-            >
-              <PhFlag :size="18" />
-              Rounds
-            </button>
-          </div>
+        <div class="container-racing py-4">
+          <VrlFilterChips v-model="activeTab" :options="tabOptions" />
         </div>
       </section>
 
@@ -117,24 +115,28 @@
             </div>
 
             <!-- Flat Standings (No Divisions) -->
-            <div v-else-if="!hasDivisions" class="standings-wrapper">
+            <VrlCard v-else-if="!hasDivisions" :hoverable="false" class="standings-card">
               <StandingsTable
                 :drivers="standings as SeasonStandingDriver[]"
                 :rounds="roundHeaders"
               />
-            </div>
+            </VrlCard>
 
-            <!-- Division Standings -->
-            <div v-else class="divisions-standings">
-              <div
-                v-for="division in standings as SeasonStandingDivision[]"
+            <!-- Division Standings with Tabs -->
+            <VrlTabs
+              v-else
+              v-model="activeStandingsTab"
+              :tabs="standingsTabs"
+              class="divisions-tabs"
+            >
+              <template
+                v-for="(division, index) in standings as SeasonStandingDivision[]"
                 :key="division.division_id"
-                class="division-section"
+                #[`tab-${index}`]
               >
-                <h3 class="division-name">{{ division.division_name }}</h3>
                 <StandingsTable :drivers="division.drivers" :rounds="roundHeaders" />
-              </div>
-            </div>
+              </template>
+            </VrlTabs>
           </div>
 
           <!-- Rounds Tab -->
@@ -195,17 +197,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import {
-  PhCaretRight,
-  PhChartLine,
-  PhFlag,
   PhMapPin,
   PhCalendar,
   PhWarningCircle,
+  PhUsers,
+  PhFlagCheckered,
+  PhCalendarDots,
+  PhPlay,
+  PhCheck,
+  PhClock,
+  PhChartLine,
+  PhFlag,
 } from '@phosphor-icons/vue';
 import StandingsTable from '@public/components/leagues/StandingsTable.vue';
+import PageHeader from '@public/components/common/layout/PageHeader.vue';
+import VrlBreadcrumbs, {
+  type BreadcrumbItem,
+} from '@public/components/common/navigation/VrlBreadcrumbs.vue';
+import VrlStatsCard from '@public/components/common/cards/VrlStatsCard.vue';
+import VrlBadge from '@public/components/common/badges/VrlBadge.vue';
+import VrlTabs, { type TabItem } from '@public/components/common/navigation/VrlTabs.vue';
+import VrlCard from '@public/components/common/cards/VrlCard.vue';
+import VrlFilterChips from '@public/components/common/forms/VrlFilterChips.vue';
+import { publicApi, NotFoundError, NetworkError, ApiError } from '@public/services/publicApi';
 import type {
   PublicSeason,
   PublicRound,
@@ -215,17 +232,59 @@ import type {
 
 const route = useRoute();
 
+// AbortController for request cleanup
+const abortController = ref<AbortController | null>(null);
+
 // State
 const loading = ref(true);
 const error = ref<string | null>(null);
 const leagueName = ref('');
+const leagueLogoUrl = ref<string | null>(null);
+const leagueHeaderImageUrl = ref<string | null>(null);
+const competitionName = ref('');
 const season = ref<PublicSeason | null>(null);
 const rounds = ref<PublicRound[]>([]);
 const standings = ref<SeasonStandingDriver[] | SeasonStandingDivision[]>([]);
 const hasDivisions = ref(false);
 const activeTab = ref<'standings' | 'rounds'>('standings');
+const activeStandingsTab = ref(0);
+
+// Filter chip options for tab navigation
+const tabOptions = [
+  { label: 'Standings', value: 'standings' },
+  { label: 'Rounds', value: 'rounds' },
+];
 
 // Computed
+const seasonLabel = computed(() => {
+  if (!leagueName.value || !competitionName.value) return '';
+  return `${leagueName.value} - ${competitionName.value}`;
+});
+
+const pageHeaderBackgroundImage = computed(() => {
+  // Use season banner, or fall back to league header image
+  return season.value?.banner_url || leagueHeaderImageUrl.value || undefined;
+});
+
+const standingsTabs = computed<TabItem[]>(() => {
+  if (!hasDivisions.value) {
+    return [{ label: 'All Drivers' }];
+  }
+
+  const divisions = standings.value as SeasonStandingDivision[];
+  return divisions.map((division) => ({
+    label: division.division_name,
+    count: division.drivers.length,
+  }));
+});
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+  { label: 'Home', to: '/' },
+  { label: 'Leagues', to: '/leagues' },
+  { label: leagueName.value || 'League', to: `/leagues/${route.params.slug}` },
+  { label: season.value?.name || 'Season' },
+]);
+
 const roundHeaders = computed(() => {
   return rounds.value.map((r) => ({
     round_id: r.id,
@@ -246,205 +305,71 @@ const formatDate = (dateString: string) => {
   });
 };
 
+const getSeasonStatusIcon = (status: string) => {
+  switch (status) {
+    case 'active':
+      return PhPlay;
+    case 'completed':
+      return PhCheck;
+    case 'setup':
+      return PhClock;
+    default:
+      return PhClock;
+  }
+};
+
+const getSeasonBadgeVariant = (status: string): 'active' | 'completed' | 'upcoming' => {
+  switch (status) {
+    case 'active':
+      return 'active';
+    case 'completed':
+      return 'completed';
+    case 'setup':
+      return 'upcoming';
+    default:
+      return 'completed';
+  }
+};
+
 const fetchSeasonData = async () => {
-  void route.params.slug; // leagueSlug - will be used for API call
-  void route.params.seasonSlug; // seasonSlug - will be used for API call
+  const leagueSlug = route.params.slug as string;
+  const seasonSlug = route.params.seasonSlug as string;
 
   loading.value = true;
   error.value = null;
 
+  // Create new AbortController for this request
+  abortController.value = new AbortController();
+
   try {
-    // TODO: Replace with actual API calls using route.params.slug and route.params.seasonSlug
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const data = await publicApi.fetchSeasonDetail(
+      leagueSlug,
+      seasonSlug,
+      abortController.value.signal,
+    );
 
-    leagueName.value = 'GT7 Racing League';
-
-    season.value = {
-      id: 1,
-      name: 'Season 3',
-      slug: 'season-3',
-      car_class: 'GT3',
-      description:
-        'The third season of our GT3 Championship. Featuring 8 rounds across iconic circuits.',
-      logo_url: '',
-      banner_url: null,
-      status: 'active',
-      is_active: true,
-      is_completed: false,
-      race_divisions_enabled: false,
-      stats: {
-        total_drivers: 18,
-        active_drivers: 16,
-        total_races: 8,
-        completed_races: 4,
-      },
-    };
-
-    rounds.value = [
-      {
-        id: 1,
-        round_number: 1,
-        name: 'Spa-Francorchamps GP',
-        slug: 'round-1',
-        scheduled_at: '2024-02-04T19:00:00Z',
-        track_name: 'Circuit de Spa-Francorchamps',
-        track_layout: 'Grand Prix',
-        status: 'completed',
-        status_label: 'Completed',
-        races: [
-          {
-            id: 1,
-            race_number: 1,
-            name: 'Qualifying',
-            race_type: 'qualifying',
-            status: 'completed',
-          },
-          {
-            id: 2,
-            race_number: 2,
-            name: 'Feature Race',
-            race_type: 'feature',
-            status: 'completed',
-          },
-        ],
-      },
-      {
-        id: 2,
-        round_number: 2,
-        name: 'Nürburgring Nordschleife',
-        slug: 'round-2',
-        scheduled_at: '2024-02-11T19:00:00Z',
-        track_name: 'Nürburgring',
-        track_layout: 'Nordschleife',
-        status: 'completed',
-        status_label: 'Completed',
-        races: [
-          { id: 3, race_number: 1, name: 'Sprint', race_type: 'sprint', status: 'completed' },
-          { id: 4, race_number: 2, name: 'Feature', race_type: 'feature', status: 'completed' },
-        ],
-      },
-      {
-        id: 3,
-        round_number: 3,
-        name: 'Suzuka Circuit',
-        slug: 'round-3',
-        scheduled_at: '2024-02-18T19:00:00Z',
-        track_name: 'Suzuka Circuit',
-        track_layout: 'Full Course',
-        status: 'completed',
-        status_label: 'Completed',
-        races: [
-          {
-            id: 5,
-            race_number: 1,
-            name: 'Feature Race',
-            race_type: 'feature',
-            status: 'completed',
-          },
-        ],
-      },
-      {
-        id: 4,
-        round_number: 4,
-        name: 'Interlagos',
-        slug: 'round-4',
-        scheduled_at: '2024-02-25T19:00:00Z',
-        track_name: 'Autódromo José Carlos Pace',
-        track_layout: 'Grand Prix',
-        status: 'completed',
-        status_label: 'Completed',
-        races: [
-          {
-            id: 6,
-            race_number: 1,
-            name: 'Feature Race',
-            race_type: 'feature',
-            status: 'completed',
-          },
-        ],
-      },
-      {
-        id: 5,
-        round_number: 5,
-        name: 'Mount Panorama',
-        slug: 'round-5',
-        scheduled_at: '2024-03-03T19:00:00Z',
-        track_name: 'Mount Panorama Circuit',
-        track_layout: null,
-        status: 'scheduled',
-        status_label: 'Scheduled',
-        races: [
-          { id: 7, race_number: 1, name: 'Endurance', race_type: 'endurance', status: 'scheduled' },
-        ],
-      },
-    ];
-
-    // Mock standings data
-    hasDivisions.value = false;
-    standings.value = [
-      {
-        position: 1,
-        driver_id: 1,
-        driver_name: 'Max Racer',
-        total_points: 98,
-        rounds: [
-          { round_id: 1, round_number: 1, points: 25, has_pole: true, has_fastest_lap: true },
-          { round_id: 2, round_number: 2, points: 25, has_pole: false, has_fastest_lap: false },
-          { round_id: 3, round_number: 3, points: 25, has_pole: true, has_fastest_lap: false },
-          { round_id: 4, round_number: 4, points: 23, has_pole: false, has_fastest_lap: true },
-        ],
-      },
-      {
-        position: 2,
-        driver_id: 2,
-        driver_name: 'Speed King',
-        total_points: 82,
-        rounds: [
-          { round_id: 1, round_number: 1, points: 18, has_pole: false, has_fastest_lap: false },
-          { round_id: 2, round_number: 2, points: 18, has_pole: true, has_fastest_lap: true },
-          { round_id: 3, round_number: 3, points: 21, has_pole: false, has_fastest_lap: true },
-          { round_id: 4, round_number: 4, points: 25, has_pole: true, has_fastest_lap: false },
-        ],
-      },
-      {
-        position: 3,
-        driver_id: 3,
-        driver_name: 'Turbo Tom',
-        total_points: 71,
-        rounds: [
-          { round_id: 1, round_number: 1, points: 15, has_pole: false, has_fastest_lap: false },
-          { round_id: 2, round_number: 2, points: 15, has_pole: false, has_fastest_lap: false },
-          { round_id: 3, round_number: 3, points: 23, has_pole: false, has_fastest_lap: false },
-          { round_id: 4, round_number: 4, points: 18, has_pole: false, has_fastest_lap: false },
-        ],
-      },
-      {
-        position: 4,
-        driver_id: 4,
-        driver_name: 'Fast Freddy',
-        total_points: 58,
-        rounds: [
-          { round_id: 1, round_number: 1, points: 12, has_pole: false, has_fastest_lap: false },
-          { round_id: 2, round_number: 2, points: 12, has_pole: false, has_fastest_lap: false },
-          { round_id: 3, round_number: 3, points: 18, has_pole: false, has_fastest_lap: false },
-          { round_id: 4, round_number: 4, points: 16, has_pole: false, has_fastest_lap: false },
-        ],
-      },
-      {
-        position: 5,
-        driver_id: 5,
-        driver_name: 'Drift Dave',
-        total_points: 45,
-        rounds: [
-          { round_id: 1, round_number: 1, points: 10, has_pole: false, has_fastest_lap: false },
-          { round_id: 2, round_number: 2, points: 10, has_pole: false, has_fastest_lap: false },
-          { round_id: 3, round_number: 3, points: 15, has_pole: false, has_fastest_lap: false },
-          { round_id: 4, round_number: 4, points: 10, has_pole: false, has_fastest_lap: false },
-        ],
-      },
-    ];
+    // Map API response to component state
+    leagueName.value = data.league.name;
+    leagueLogoUrl.value = data.league.logo_url || null;
+    leagueHeaderImageUrl.value = data.league.header_image_url || null;
+    competitionName.value = data.competition.name;
+    season.value = data.season;
+    rounds.value = data.rounds;
+    standings.value = data.standings;
+    hasDivisions.value = data.has_divisions;
   } catch (e) {
-    error.value = 'Unable to load season. Please try again later.';
+    // Handle different error types with specific messages
+    if (e instanceof NotFoundError) {
+      error.value = 'Season not found. It may have been removed or the URL is incorrect.';
+    } else if (e instanceof NetworkError) {
+      error.value = 'Unable to connect to the server. Please check your internet connection.';
+    } else if (e instanceof ApiError) {
+      error.value = e.message;
+    } else if (e instanceof Error) {
+      error.value = e.message;
+    } else {
+      error.value = 'Unable to load season. Please try again later.';
+    }
     console.error('Failed to fetch season:', e);
   } finally {
     loading.value = false;
@@ -454,9 +379,21 @@ const fetchSeasonData = async () => {
 onMounted(() => {
   fetchSeasonData();
 });
+
+// Cleanup: abort any in-flight requests when component unmounts
+onUnmounted(() => {
+  if (abortController.value) {
+    abortController.value.abort();
+  }
+});
 </script>
 
 <style scoped>
+/* Page */
+.season-page {
+  background: var(--color-carbon);
+}
+
 /* Loading & Error States */
 .loading-container,
 .error-container {
@@ -491,176 +428,43 @@ onMounted(() => {
   margin-bottom: var(--space-lg);
 }
 
-/* Season Hero */
-.season-hero {
-  position: relative;
-  padding-top: var(--header-height);
-  min-height: 350px;
-  display: flex;
-  align-items: flex-end;
-}
-
-.season-hero-background {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.season-hero-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.season-hero-placeholder {
-  width: 100%;
-  height: 100%;
-}
-
-.season-hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    var(--color-carbon) 0%,
-    rgba(10, 10, 10, 0.85) 40%,
-    rgba(10, 10, 10, 0.5) 100%
-  );
-}
-
-.season-hero-content {
-  position: relative;
-  z-index: 1;
-  padding: var(--space-3xl) 0;
-}
-
-/* Breadcrumb */
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xl);
-}
-
-.breadcrumb-link {
-  font-family: var(--font-display);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-barrier);
-  text-decoration: none;
-  transition: color var(--duration-fast);
-}
-
-.breadcrumb-link:hover {
-  color: var(--color-gold);
-}
-
-.breadcrumb-separator {
-  color: var(--color-tarmac);
-}
-
-.breadcrumb-current {
-  font-family: var(--font-display);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-pit-white);
-}
-
-/* Season Hero Info */
-.season-hero-info {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-xl);
-  margin-bottom: var(--space-xl);
-}
-
-.season-logo {
-  width: 80px;
-  height: 80px;
+/* Breadcrumbs Section */
+.breadcrumbs-section {
   background: var(--color-asphalt);
-  border: 2px solid var(--color-tarmac);
-  flex-shrink: 0;
-  overflow: hidden;
+  border-bottom: 1px solid var(--color-tarmac);
 }
 
-.season-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.season-meta {
+/* Season Badges (in header social-links slot) */
+.season-badges {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
+  align-items: flex-start;
 }
 
-.status-badge {
-  font-family: var(--font-display);
-  font-size: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  padding: var(--space-xs) var(--space-sm);
-  background: var(--color-tarmac);
-  color: var(--color-barrier);
+@media (max-width: 768px) {
+  .season-badges {
+    width: 100%;
+  }
 }
 
-.status-badge.status-active {
-  background: rgba(212, 168, 83, 0.2);
-  color: var(--color-gold);
+/* Stats Section */
+.stats-section {
+  background: var(--color-asphalt);
+  border-bottom: 1px solid var(--color-tarmac);
+  padding: var(--space-xl) 0;
 }
 
-.status-badge.status-completed {
-  background: rgba(52, 211, 153, 0.2);
-  color: #34d399;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
 }
 
-.car-class-badge {
-  font-family: var(--font-data);
-  font-size: 0.625rem;
-  padding: var(--space-xs) var(--space-sm);
-  background: var(--color-tarmac);
-  color: var(--color-pit-white);
-}
-
-.season-name {
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  margin-bottom: var(--space-sm);
-}
-
-.season-description {
-  font-size: 0.875rem;
-  color: var(--color-barrier);
-  max-width: 600px;
-}
-
-/* Stats Bar */
-.season-stats-bar {
-  display: flex;
-  gap: var(--space-2xl);
-  padding-top: var(--space-xl);
-  border-top: 1px solid var(--color-tarmac);
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.stat-value {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-pit-white);
-}
-
-.stat-label {
-  font-size: 0.625rem;
-  color: var(--color-barrier);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 /* Tabs */
@@ -670,46 +474,6 @@ onMounted(() => {
   position: sticky;
   top: var(--header-height);
   z-index: 50;
-}
-
-.tabs-nav {
-  display: flex;
-  gap: var(--space-xs);
-}
-
-.tab-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: var(--space-lg) var(--space-xl);
-  background: transparent;
-  border: none;
-  color: var(--color-barrier);
-  cursor: pointer;
-  position: relative;
-  transition: color var(--duration-fast);
-}
-
-.tab-btn:hover {
-  color: var(--color-pit-white);
-}
-
-.tab-btn.active {
-  color: var(--color-gold);
-}
-
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--color-gold);
 }
 
 /* Tab Content */
@@ -729,27 +493,12 @@ onMounted(() => {
 }
 
 /* Standings */
-.standings-wrapper {
+.standings-card {
   overflow-x: auto;
 }
 
-.divisions-standings {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3xl);
-}
-
-.division-section {
-  background: var(--color-asphalt);
-  padding: var(--space-lg);
-  border: 1px solid var(--color-tarmac);
-}
-
-.division-name {
-  font-size: 1rem;
-  margin-bottom: var(--space-lg);
-  padding-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--color-tarmac);
+.divisions-tabs {
+  width: 100%;
 }
 
 /* Rounds */
@@ -883,13 +632,8 @@ onMounted(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .season-hero-info {
-    flex-direction: column;
-  }
-
-  .season-stats-bar {
-    flex-wrap: wrap;
-    gap: var(--space-lg);
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
 
   .round-card {

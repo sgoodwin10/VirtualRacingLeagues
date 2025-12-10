@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { PhTimer } from '@phosphor-icons/vue';
 import VrlTable, { type TableColumn } from './VrlTable.vue';
 
-export interface StandingsEntry {
+export interface StandingsEntry extends Record<string, unknown> {
   position: number;
   driver: string;
   team?: string;
