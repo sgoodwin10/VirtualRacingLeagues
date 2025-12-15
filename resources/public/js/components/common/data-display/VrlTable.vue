@@ -193,7 +193,7 @@ const getAlignmentClass = (align?: 'left' | 'center' | 'right'): string => {
   border-bottom: 1px solid var(--border-primary);
   padding: 0.75rem 1rem;
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: var(--text-dim);

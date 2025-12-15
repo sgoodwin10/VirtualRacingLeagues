@@ -28,6 +28,7 @@ use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
+use App\Infrastructure\Cache\RaceResultsCacheService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -59,6 +60,7 @@ final class SeasonApplicationService
         private readonly RoundRepositoryInterface $roundRepository,
         private readonly RaceRepositoryInterface $raceRepository,
         private readonly RaceResultRepositoryInterface $raceResultRepository,
+        private readonly RaceResultsCacheService $raceResultsCacheService,
     ) {
     }
 
@@ -74,61 +76,63 @@ final class SeasonApplicationService
         $bannerPath = null;
 
         try {
-            return DB::transaction(function () use ($data, $userId, &$logoPath, &$bannerPath) {
-                // 1. Validate competition exists
-                $competition = $this->competitionRepository->findById($data->competition_id);
+            return $this->executeWithRetry(function () use ($data, $userId, &$logoPath, &$bannerPath) {
+                return DB::transaction(function () use ($data, $userId, &$logoPath, &$bannerPath) {
+                    // 1. Validate competition exists
+                    $competition = $this->competitionRepository->findById($data->competition_id);
 
-                // 2. Authorize (league owner)
-                $this->authorizeLeagueOwner($competition, $userId);
+                    // 2. Authorize (league owner)
+                    $this->authorizeLeagueOwner($competition, $userId);
 
-                // 3. Generate unique slug
-                $slug = $data->slug
-                    ? SeasonSlug::from($data->slug)
-                    : SeasonSlug::fromName($data->name);
+                    // 3. Generate unique slug
+                    $slug = $data->slug
+                        ? SeasonSlug::from($data->slug)
+                        : SeasonSlug::fromName($data->name);
 
-                $uniqueSlug = $this->seasonRepository->generateUniqueSlug(
-                    $slug->value(),
-                    $data->competition_id
-                );
+                    $uniqueSlug = $this->seasonRepository->generateUniqueSlug(
+                        $slug->value(),
+                        $data->competition_id
+                    );
 
-                // 4. Handle logo upload
-                if ($data->logo) {
-                    $logoPath = $this->storeSeasonImage($data->logo, 'logo', null);
-                }
+                    // 4. Handle logo upload
+                    if ($data->logo) {
+                        $logoPath = $this->storeSeasonImage($data->logo, 'logo', null);
+                    }
 
-                // 5. Handle banner upload
-                if ($data->banner) {
-                    $bannerPath = $this->storeSeasonImage($data->banner, 'banner', null);
-                }
+                    // 5. Handle banner upload
+                    if ($data->banner) {
+                        $bannerPath = $this->storeSeasonImage($data->banner, 'banner', null);
+                    }
 
-                // 6. Create season entity
-                $season = Season::create(
-                    competitionId: $data->competition_id,
-                    name: SeasonName::from($data->name),
-                    slug: SeasonSlug::from($uniqueSlug),
-                    createdByUserId: $userId,
-                    carClass: $data->car_class,
-                    description: $data->description,
-                    technicalSpecs: $data->technical_specs,
-                    logoPath: $logoPath,
-                    bannerPath: $bannerPath,
-                    teamChampionshipEnabled: $data->team_championship_enabled,
-                    raceDivisionsEnabled: $data->race_divisions_enabled,
-                    raceTimesRequired: $data->race_times_required,
-                    dropRound: $data->drop_round,
-                    totalDropRounds: $data->total_drop_rounds,
-                );
+                    // 6. Create season entity
+                    $season = Season::create(
+                        competitionId: $data->competition_id,
+                        name: SeasonName::from($data->name),
+                        slug: SeasonSlug::from($uniqueSlug),
+                        createdByUserId: $userId,
+                        carClass: $data->car_class,
+                        description: $data->description,
+                        technicalSpecs: $data->technical_specs,
+                        logoPath: $logoPath,
+                        bannerPath: $bannerPath,
+                        teamChampionshipEnabled: $data->team_championship_enabled,
+                        raceDivisionsEnabled: $data->race_divisions_enabled,
+                        raceTimesRequired: $data->race_times_required,
+                        dropRound: $data->drop_round,
+                        totalDropRounds: $data->total_drop_rounds,
+                    );
 
-                // 7. Save via repository
-                $this->seasonRepository->save($season);
+                    // 7. Save via repository
+                    $this->seasonRepository->save($season);
 
-                // 8. Record creation event and dispatch
-                $league = $this->leagueRepository->findById($competition->leagueId());
-                $season->recordCreationEvent($league->id() ?? 0);
-                $this->dispatchEvents($season);
+                    // 8. Record creation event and dispatch
+                    $league = $this->leagueRepository->findById($competition->leagueId());
+                    $season->recordCreationEvent($league->id() ?? 0);
+                    $this->dispatchEvents($season);
 
-                // 9. Return SeasonData DTO
-                return $this->toSeasonData($season, $competition->logoPath());
+                    // 9. Return SeasonData DTO
+                    return $this->toSeasonData($season, $competition->logoPath());
+                });
             });
         } catch (\Throwable $e) {
             // Cleanup uploaded files on failure
@@ -295,7 +299,10 @@ final class SeasonApplicationService
      */
     public function deleteSeason(int $id, int $userId): void
     {
-        DB::transaction(function () use ($id, $userId) {
+        // Collect race IDs for cache invalidation before transaction
+        $raceIdsToInvalidate = [];
+
+        DB::transaction(function () use ($id, $userId, &$raceIdsToInvalidate) {
             $season = $this->seasonRepository->findById($id);
             $competition = $this->competitionRepository->findById($season->competitionId());
 
@@ -322,6 +329,9 @@ final class SeasonApplicationService
                         continue;
                     }
 
+                    // Collect race ID for cache invalidation
+                    $raceIdsToInvalidate[] = $race->id();
+
                     // Delete all race results for this race using repository
                     $this->raceResultRepository->deleteByRaceId($race->id());
 
@@ -343,6 +353,11 @@ final class SeasonApplicationService
             $season->delete();
             $this->dispatchEvents($season);
         });
+
+        // Invalidate race results caches AFTER transaction commits
+        foreach ($raceIdsToInvalidate as $raceId) {
+            $this->raceResultsCacheService->forget($raceId);
+        }
     }
 
     /**
@@ -621,9 +636,7 @@ final class SeasonApplicationService
         $rounds = $this->roundRepository->findBySeasonId($seasonId);
 
         // Filter to completed rounds with round_results populated
-        $completedRounds = array_filter($rounds, function ($round) {
-            return $round->status()->isCompleted() && $round->roundResults() !== null;
-        });
+        $completedRounds = array_filter($rounds, fn($round) => $this->isRoundCompleteWithResults($round));
 
         if (empty($completedRounds)) {
             // No completed rounds yet
@@ -726,6 +739,7 @@ final class SeasonApplicationService
                     'round_id' => $roundId,
                     'round_number' => $roundNumber,
                     'points' => $points,
+                    'position' => $position,
                     'has_pole' => $hasPole,
                     'has_fastest_lap' => $hasFastestLap,
                 ];
@@ -747,7 +761,7 @@ final class SeasonApplicationService
                 // Sum the lowest N rounds to subtract
                 $droppedPoints = 0;
                 for ($i = 0; $i < $roundsToDrop; $i++) {
-                    $droppedPoints += $roundPoints[$i];
+                    $droppedPoints += (int) ($roundPoints[$i] ?? 0);
                 }
 
                 // Calculate drop total
@@ -844,7 +858,9 @@ final class SeasonApplicationService
                 $divisionName = $divisionId === 0
                     ? 'No Division'
                     : ($divisionInfo['name'] ?? 'Unknown Division');
-                $divisionOrder = $divisionId === 0 ? PHP_INT_MAX : ($divisionInfo['order'] ?? 0);
+                $divisionOrder = $divisionId === 0
+                    ? PHP_INT_MAX
+                    : ($divisionInfo['order'] ?? (PHP_INT_MAX - 1));
 
                 if (!isset($divisionDriverTotals[$divisionId])) {
                     $divisionDriverTotals[$divisionId] = [
@@ -890,6 +906,7 @@ final class SeasonApplicationService
                         'round_id' => $roundId,
                         'round_number' => $roundNumber,
                         'points' => $points,
+                        'position' => $position,
                         'has_pole' => $hasPole,
                         'has_fastest_lap' => $hasFastestLap,
                     ];
@@ -915,7 +932,7 @@ final class SeasonApplicationService
                     // Sum the lowest N rounds to subtract
                     $droppedPoints = 0;
                     for ($i = 0; $i < $roundsToDrop; $i++) {
-                        $droppedPoints += $roundPoints[$i];
+                        $droppedPoints += (int) ($roundPoints[$i] ?? 0);
                     }
 
                     // Calculate drop total
@@ -965,6 +982,40 @@ final class SeasonApplicationService
         usort($standings, fn($a, $b) => $a['order'] <=> $b['order']);
 
         return $standings;
+    }
+
+    /**
+     * Check if a round is completed and has results.
+     */
+    private function isRoundCompleteWithResults(\App\Domain\Competition\Entities\Round $round): bool
+    {
+        return $round->status()->isCompleted() && $round->roundResults() !== null;
+    }
+
+    /**
+     * Execute a callback with retry logic for unique constraint violations.
+     *
+     * @template T
+     * @param callable(): T $callback
+     * @param int $maxRetries
+     * @return T
+     * @throws \Throwable
+     */
+    private function executeWithRetry(callable $callback, int $maxRetries = 3): mixed
+    {
+        $attempt = 1;
+        while (true) {
+            try {
+                return $callback();
+            } catch (\Illuminate\Database\QueryException $e) {
+                // Check for unique constraint violation (MySQL: 23000, PostgreSQL: 23505)
+                if ($attempt < $maxRetries && in_array($e->getCode(), ['23000', '23505'])) {
+                    $attempt++;
+                    continue;
+                }
+                throw $e;
+            }
+        }
     }
 
     /**

@@ -326,7 +326,11 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
                 ->name('leagues.show');
             Route::get('/leagues/{slug}/seasons/{seasonSlug}', [PublicLeagueController::class, 'seasonDetail'])
                 ->where(['slug' => '[a-z0-9\-]+', 'seasonSlug' => '[a-z0-9\-]+'])
+                ->middleware('throttle:20,1')
                 ->name('leagues.seasons.show');
+            Route::get('/races/{raceId}/results', [PublicLeagueController::class, 'raceResults'])
+                ->whereNumber('raceId')
+                ->name('races.results');
             Route::get('/platforms', [PublicPlatformController::class, 'index'])->name('platforms.index');
         });
 

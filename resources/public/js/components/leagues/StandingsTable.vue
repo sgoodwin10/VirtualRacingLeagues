@@ -35,7 +35,11 @@
       #[`cell-round_${round.round_id}`]="{ data }"
     >
       <div class="flex flex-col items-center gap-0.5">
-        <span class="font-data text-[var(--text-dim)]">
+        <span
+          class="font-data"
+          :title="getRoundPositionTooltip(data, round.round_id)"
+          :data-test="`round-${round.round_id}-points`"
+        >
           {{ getRoundPoints(data, round.round_id) }}
         </span>
         <div v-if="hasAnyBadge(data, round.round_id)" class="flex gap-0.5 min-h-[12px]">
@@ -134,7 +138,10 @@ const tableData = computed(() => {
 const roundsLookup = computed(() => {
   const lookup = new Map<
     number,
-    Map<number, { points: number; has_pole: boolean; has_fastest_lap: boolean }>
+    Map<
+      number,
+      { points: number; position: number | null; has_pole: boolean; has_fastest_lap: boolean }
+    >
   >();
 
   props.drivers.forEach((driver) => {
@@ -142,6 +149,7 @@ const roundsLookup = computed(() => {
     driver.rounds.forEach((round) => {
       driverMap.set(round.round_id, {
         points: round.points,
+        position: round.position,
         has_pole: round.has_pole,
         has_fastest_lap: round.has_fastest_lap,
       });
@@ -174,6 +182,28 @@ const hasAnyBadge = (driver: SeasonStandingDriver, roundId: number): boolean => 
   return hasPole(driver, roundId) || hasFastestLap(driver, roundId);
 };
 
+const getRoundPositionTooltip = (driver: SeasonStandingDriver, roundId: number): string => {
+  const driverRounds = roundsLookup.value.get(driver.driver_id);
+  const roundData = driverRounds?.get(roundId);
+
+  if (!roundData) return '';
+
+  const position = roundData.position;
+  if (position === null) return '';
+
+  // Format position with suffix (1st, 2nd, 3rd, 4th, etc.)
+  // Special case for 11th, 12th, 13th
+  let suffix: string;
+  if (position % 100 >= 11 && position % 100 <= 13) {
+    suffix = 'th';
+  } else {
+    const lastDigit = position % 10;
+    suffix = lastDigit === 1 ? 'st' : lastDigit === 2 ? 'nd' : lastDigit === 3 ? 'rd' : 'th';
+  }
+
+  return `P${position}${suffix} - ${roundData.points} pts`;
+};
+
 // Get position color based on standing
 // Uses CSS variables for consistent theming across the application
 const getPositionColor = (position: number): string => {
@@ -192,8 +222,8 @@ const getPositionColor = (position: number): string => {
 
 <style scoped>
 /* Highlight the Points (totals) column with a subtle background */
-:deep(.vrl-table-body-cell:has(span[data-test="total-points"])),
-:deep(.vrl-table-header-cell:has(span:contains("Points"))) {
+:deep(.vrl-table-body-cell:has(span[data-test='total-points'])),
+:deep(.vrl-table-header-cell:has(span:contains('Points'))) {
   background-color: var(--bg-tertiary);
 }
 
@@ -209,5 +239,23 @@ const getPositionColor = (position: number): string => {
 /* Maintain hover effect on rows */
 :deep(.p-datatable-tbody > tr:hover > td:last-child) {
   background-color: var(--bg-elevated);
+}
+
+/* Column borders - add vertical borders between all columns */
+:deep(.p-datatable-thead > tr > th) {
+  border-right: 1px solid var(--border-subtle);
+}
+
+:deep(.p-datatable-tbody > tr > td) {
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* Remove border from the last column to avoid double border at the edge */
+:deep(.p-datatable-thead > tr > th:last-child) {
+  border-right: none;
+}
+
+:deep(.p-datatable-tbody > tr > td:last-child) {
+  border-right: none;
 }
 </style>

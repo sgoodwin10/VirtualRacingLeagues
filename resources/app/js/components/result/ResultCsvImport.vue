@@ -202,7 +202,8 @@ function parseCsv(text: string, isQualifying: boolean, raceTimesRequired: boolea
     const line = lines[i]?.trim() ?? '';
     if (!line) continue;
 
-    const values = line.split(',').map((v) => v.trim());
+    // Split and clean values: trim whitespace and remove + characters
+    const values = line.split(',').map((v) => v.trim().replace(/\+/g, ''));
 
     // Check bounds before accessing driver index
     if (driverIndex >= values.length) continue;
@@ -256,12 +257,8 @@ function parseCsv(text: string, isQualifying: boolean, raceTimesRequired: boolea
               );
             }
           } else {
-            // Remove leading '+' from time difference if present
-            let timeDiff = diffValue;
-            if (timeDiff.startsWith('+')) {
-              timeDiff = timeDiff.substring(1);
-            }
-            row.original_race_time_difference = timeDiff;
+            // Store the time difference (+ characters already removed during parsing)
+            row.original_race_time_difference = diffValue;
           }
         }
       }

@@ -82,6 +82,64 @@ export interface PublicSeason {
 }
 
 /**
+ * Cross-division aggregate result
+ */
+export interface CrossDivisionResult {
+  position: number;
+  driver_id: number;
+  driver_name: string;
+  driver_number: string;
+  division_id?: number;
+  division_name?: string;
+  time_ms: number;
+  time_formatted: string;
+  time_difference?: string | null; // "+0.345" format, null for P1
+}
+
+/**
+ * Time Result (simplified aggregate results for qualifying, fastest laps, race times)
+ */
+export interface TimeResult {
+  position: number;
+  driver_id: number;
+  driver_name: string;
+  division_id?: number;
+  division_name?: string;
+  time_formatted: string;
+  time_difference?: string | null; // "+0.345" format, null for P1
+}
+
+/**
+ * Round Standing Driver (from round_results)
+ */
+export interface RoundStandingDriver {
+  position: number;
+  driver_id: number;
+  driver_name: string;
+  total_points: number;
+  race_points: number;
+  fastest_lap_points: number;
+  pole_position_points: number;
+  total_positions_gained: number;
+}
+
+/**
+ * Round Standing Division (for seasons with divisions)
+ */
+export interface RoundStandingDivision {
+  division_id: number;
+  division_name: string;
+  results: RoundStandingDriver[]; // Note: "results" not "standings"
+}
+
+/**
+ * Round Standings wrapper
+ */
+export interface RoundStandings {
+  standings: RoundStandingDriver[] | RoundStandingDivision[];
+}
+
+/**
  * Public Round
  */
 export interface PublicRound {
@@ -90,11 +148,17 @@ export interface PublicRound {
   name: string | null;
   slug: string;
   scheduled_at: string | null;
+  circuit_name: string | null;
+  circuit_country: string | null;
   track_name: string | null;
   track_layout: string | null;
   status: 'scheduled' | 'pre_race' | 'in_progress' | 'completed' | 'cancelled';
   status_label: string;
   races: PublicRace[];
+  qualifying_results?: CrossDivisionResult[];
+  race_time_results?: CrossDivisionResult[];
+  fastest_lap_results?: CrossDivisionResult[];
+  round_standings?: RoundStandings | null;
 }
 
 /**
@@ -106,6 +170,8 @@ export interface PublicRace {
   name: string | null;
   race_type: 'sprint' | 'feature' | 'endurance' | 'qualifying' | 'custom';
   status: string;
+  is_qualifier: boolean;
+  race_points: boolean;
 }
 
 /**
@@ -128,6 +194,7 @@ export interface RoundPoints {
   round_id: number;
   round_number: number;
   points: number;
+  position: number | null;
   has_pole: boolean;
   has_fastest_lap: boolean;
 }
@@ -295,4 +362,51 @@ export interface PublicSeasonDetailResponse {
   rounds: PublicRound[];
   standings: SeasonStandingDriver[] | SeasonStandingDivision[];
   has_divisions: boolean;
+  qualifying_results?: PublicRaceResult[] | PublicRaceResultDivision[];
+  fastest_lap_results?: PublicRaceResult[] | PublicRaceResultDivision[];
+  race_time_results?: PublicRaceResult[] | PublicRaceResultDivision[];
+}
+
+/**
+ * Public Race Result
+ */
+export interface PublicRaceResult {
+  position: number | null;
+  driver_id: number;
+  driver_name: string;
+  race_time: string | null;
+  race_time_difference: string | null;
+  fastest_lap: string | null;
+  penalties: string | null;
+  race_points: number;
+  has_fastest_lap: boolean;
+  has_pole: boolean;
+  dnf: boolean;
+  status: string;
+  // Optional division fields for cross-division display
+  division_id?: number;
+  division_name?: string;
+}
+
+/**
+ * Public Race Results Response (flat or with divisions)
+ */
+export interface PublicRaceResultsResponse {
+  race: {
+    id: number;
+    race_number: number;
+    name: string | null;
+    race_type: 'sprint' | 'feature' | 'endurance' | 'qualifying' | 'custom';
+    status: string;
+    is_qualifier: boolean;
+    race_points: boolean;
+  };
+  has_divisions: boolean;
+  results: PublicRaceResult[] | PublicRaceResultDivision[];
+}
+
+export interface PublicRaceResultDivision {
+  division_id: number;
+  division_name: string;
+  results: PublicRaceResult[];
 }

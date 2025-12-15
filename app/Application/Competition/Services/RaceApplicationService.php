@@ -21,6 +21,7 @@ use App\Domain\Competition\ValueObjects\RaceName;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
 use App\Domain\Competition\ValueObjects\RaceStatus;
 use App\Domain\Competition\ValueObjects\RaceType;
+use App\Infrastructure\Cache\RaceResultsCacheService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Spatie\LaravelData\Optional;
@@ -32,6 +33,7 @@ final class RaceApplicationService
         private readonly RaceResultRepositoryInterface $raceResultRepository,
         private readonly RoundRepositoryInterface $roundRepository,
         private readonly SeasonRepositoryInterface $seasonRepository,
+        private readonly RaceResultsCacheService $raceResultsCache,
     ) {
     }
 
@@ -137,7 +139,13 @@ final class RaceApplicationService
 
     public function updateRace(int $raceId, UpdateRaceData $data): RaceData
     {
-        return DB::transaction(function () use ($raceId, $data) {
+        // Track whether cache should be invalidated
+        // Cache invalidation is needed for:
+        // 1. Status changes (affects result statuses and points)
+        // 2. Any configuration changes (cached data includes race metadata)
+        $shouldInvalidateCache = false;
+
+        $raceData = DB::transaction(function () use ($raceId, $data, &$shouldInvalidateCache) {
             $race = $this->raceRepository->findById($raceId);
 
             // Handle status change if provided
@@ -149,6 +157,8 @@ final class RaceApplicationService
                 $newStatus = RaceStatus::from($data->status);
                 if ($oldStatus !== $newStatus) {
                     $statusChanged = true;
+                    $shouldInvalidateCache = true;
+
                     if ($newStatus === RaceStatus::COMPLETED) {
                         $race->markAsCompleted();
                     } elseif ($newStatus === RaceStatus::SCHEDULED) {
@@ -216,6 +226,9 @@ final class RaceApplicationService
                 $raceNotes = !($data->race_notes instanceof Optional)
                     ? $data->race_notes
                     : $race->raceNotes();
+
+                // Mark cache for invalidation if any configuration changes
+                $shouldInvalidateCache = true;
 
                 $race->updateQualifierConfiguration(
                     name: $name,
@@ -351,6 +364,9 @@ final class RaceApplicationService
                     ? $data->race_notes
                     : $race->raceNotes();
 
+                // Mark cache for invalidation if any configuration changes
+                $shouldInvalidateCache = true;
+
                 $race->updateConfiguration(
                     name: $name,
                     type: $type,
@@ -394,6 +410,14 @@ final class RaceApplicationService
 
             return RaceData::fromEntity($race);
         });
+
+        // Invalidate cache AFTER successful transaction
+        // This ensures cache is only cleared if the update actually succeeded
+        if ($shouldInvalidateCache) {
+            $this->raceResultsCache->forget($raceId);
+        }
+
+        return $raceData;
     }
 
     public function getRace(int $raceId): RaceData

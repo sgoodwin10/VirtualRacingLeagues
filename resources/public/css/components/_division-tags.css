@@ -1,0 +1,59 @@
+/**
+ * Division Tags - Shared styles for division badges across all components
+ * Used by RaceResultsTable, TimeResultsTable, and other components that display divisions
+ */
+
+.division-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.division-blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: rgb(96, 165, 250);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.division-green {
+  background: rgba(34, 197, 94, 0.15);
+  color: rgb(74, 222, 128);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.division-purple {
+  background: rgba(168, 85, 247, 0.15);
+  color: rgb(192, 132, 252);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.division-orange {
+  background: rgba(249, 115, 22, 0.15);
+  color: rgb(251, 146, 60);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.division-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: rgb(248, 113, 113);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.division-cyan {
+  background: rgba(6, 182, 212, 0.15);
+  color: rgb(34, 211, 238);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.division-default {
+  background: rgba(156, 163, 175, 0.15);
+  color: rgb(209, 213, 219);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+}

@@ -12,6 +12,7 @@ use App\Application\League\DTOs\LeaguePlatformData;
 use App\Application\League\DTOs\PublicCompetitionDetailData;
 use App\Application\League\DTOs\PublicLeagueData;
 use App\Application\League\DTOs\PublicLeagueDetailData;
+use App\Application\League\DTOs\PublicRaceResultsData;
 use App\Application\League\DTOs\PublicSeasonDetailData;
 use App\Application\League\DTOs\PublicSeasonSummaryData;
 use App\Application\League\DTOs\UpdateLeagueData;
@@ -34,6 +35,7 @@ use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Helpers\FilterBuilder;
 use App\Helpers\PaginationHelper;
 use App\Http\Requests\Admin\IndexLeaguesRequest;
+use App\Infrastructure\Cache\RaceResultsCacheService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -44,8 +46,6 @@ use Illuminate\Support\Facades\Storage;
  */
 final class LeagueApplicationService
 {
-    private const FREE_TIER_LEAGUE_LIMIT = 1;
-
     public function __construct(
         private readonly LeagueRepositoryInterface $leagueRepository,
         private readonly CompetitionRepositoryInterface $competitionRepository,
@@ -53,6 +53,7 @@ final class LeagueApplicationService
         private readonly PlatformRepositoryInterface $platformRepository,
         private readonly UserRepositoryInterface $userRepository,
         private readonly SeasonApplicationService $seasonApplicationService,
+        private readonly RaceResultsCacheService $raceResultsCache,
     ) {
     }
 
@@ -68,8 +69,9 @@ final class LeagueApplicationService
             // Check free tier limit (using computed property)
             if ($isFreeTier) {
                 $leagueCount = $this->leagueRepository->countByUserId($userId);
-                if ($leagueCount >= self::FREE_TIER_LEAGUE_LIMIT) {
-                    throw LeagueLimitReachedException::forFreeTier(self::FREE_TIER_LEAGUE_LIMIT);
+                $freeTierLimit = $this->getFreeTierLimit();
+                if ($leagueCount >= $freeTierLimit) {
+                    throw LeagueLimitReachedException::forFreeTier($freeTierLimit);
                 }
             }
 
@@ -252,7 +254,15 @@ final class LeagueApplicationService
 
             // Update visibility if provided
             if ($data->visibility !== null) {
-                $league->changeVisibility(LeagueVisibility::fromString($data->visibility));
+                $oldVisibility = $league->visibility()->value;
+                $newVisibility = $data->visibility;
+
+                $league->changeVisibility(LeagueVisibility::fromString($newVisibility));
+
+                // If changing to private from public/unlisted, invalidate all race results caches
+                if ($newVisibility === 'private' && $oldVisibility !== 'private') {
+                    $this->invalidateLeagueRaceResultsCache($leagueId);
+                }
             }
 
             // Update contact info if provided
@@ -1148,16 +1158,19 @@ final class LeagueApplicationService
         $eloquentRounds = \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
             ->where('season_id', $eloquentSeason->id)
             ->with([
-                'races:id,round_id,race_number,name,race_type,status',
-                'platformTrack:id,name,slug',
+                'races:id,round_id,race_number,name,race_type,status,is_qualifier',
+                'platformTrack:id,name,slug,platform_track_location_id',
+                'platformTrack.location:id,name,slug,country',
             ])
             ->orderBy('round_number')
             ->get();
 
         $rounds = [];
         foreach ($eloquentRounds as $round) {
-            $trackName = $round->platformTrack->name ?? null;
+            $trackName = $round->platformTrack?->name;
             $trackLayout = $round->track_layout;
+            $circuitName = $round->platformTrack?->location?->name;
+            $circuitCountry = $round->platformTrack?->location?->country;
 
             $races = [];
             foreach ($round->races as $race) {
@@ -1167,8 +1180,26 @@ final class LeagueApplicationService
                     'name' => $race->name,
                     'race_type' => $race->race_type ?? 'custom',
                     'status' => $race->status,
+                    'is_qualifier' => (bool) $race->is_qualifier,
                 ];
             }
+
+            // Enrich cross-division aggregate results with driver info
+            $enrichedQualifying = $this->enrichCrossDivisionResults(
+                $round->qualifying_results ?? [],
+                $eloquentSeason->race_divisions_enabled
+            );
+            $enrichedRaceTime = $this->enrichCrossDivisionResults(
+                $round->race_time_results ?? [],
+                $eloquentSeason->race_divisions_enabled
+            );
+            $enrichedFastestLap = $this->enrichCrossDivisionResults(
+                $round->fastest_lap_results ?? [],
+                $eloquentSeason->race_divisions_enabled
+            );
+
+            // Use existing round_results from database
+            $roundStandings = $round->round_results;
 
             $rounds[] = [
                 'id' => $round->id,
@@ -1176,16 +1207,40 @@ final class LeagueApplicationService
                 'name' => $round->name,
                 'slug' => $round->slug,
                 'scheduled_at' => $round->scheduled_at?->format('Y-m-d H:i:s'),
+                'circuit_name' => $circuitName,
+                'circuit_country' => $circuitCountry,
                 'track_name' => $trackName,
                 'track_layout' => $trackLayout,
                 'status' => $round->status,
                 'status_label' => ucfirst(str_replace('_', ' ', $round->status)),
                 'races' => $races,
+                'qualifying_results' => $enrichedQualifying,
+                'race_time_results' => $enrichedRaceTime,
+                'fastest_lap_results' => $enrichedFastestLap,
+                'round_standings' => $roundStandings,
             ];
         }
 
         // Get standings using existing method from SeasonApplicationService
         $standingsData = $this->seasonApplicationService->getSeasonStandings($eloquentSeason->id);
+
+        // Fetch qualifying results (from qualifying races)
+        $qualifyingResults = $this->fetchQualifyingResults(
+            $eloquentSeason->id,
+            $eloquentSeason->race_divisions_enabled
+        );
+
+        // Fetch fastest lap results (sorted by fastest lap time)
+        $fastestLapResults = $this->fetchFastestLapResults(
+            $eloquentSeason->id,
+            $eloquentSeason->race_divisions_enabled
+        );
+
+        // Fetch race time results (sorted by race time)
+        $raceTimeResults = $this->fetchRaceTimeResults(
+            $eloquentSeason->id,
+            $eloquentSeason->race_divisions_enabled
+        );
 
         return new PublicSeasonDetailData(
             league: $leagueData,
@@ -1194,7 +1249,446 @@ final class LeagueApplicationService
             rounds: $rounds,
             standings: $standingsData['standings'],
             has_divisions: $standingsData['has_divisions'],
+            qualifying_results: $qualifyingResults,
+            fastest_lap_results: $fastestLapResults,
+            race_time_results: $raceTimeResults,
         );
+    }
+
+    /**
+     * Fetch qualifying results for a season.
+     * Returns results from qualifying sessions (is_qualifier = true).
+     *
+     * @param int $seasonId
+     * @param bool $hasDivisions
+     * @return array<int, mixed>
+     */
+    private function fetchQualifyingResults(int $seasonId, bool $hasDivisions): array
+    {
+        // Get all qualifying race IDs for this season
+        $qualifyingRaceIds = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->where('rounds.season_id', $seasonId)
+            ->where('races.is_qualifier', true)
+            ->where('races.status', 'completed')
+            ->pluck('races.id')
+            ->toArray();
+
+        if (empty($qualifyingRaceIds)) {
+            return [];
+        }
+
+        // Fetch results from qualifying races grouped by round
+        $results = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+            ->whereIn('race_id', $qualifyingRaceIds)
+            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
+            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->join('races', 'race_results.race_id', '=', 'races.id')
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
+            ->select([
+                'race_results.position',
+                'race_results.driver_id',
+                'race_results.division_id',
+                'race_results.fastest_lap',
+                'race_results.has_pole',
+                'drivers.first_name',
+                'drivers.last_name',
+                'drivers.nickname',
+                'league_drivers.driver_number',
+                'divisions.name as division_name',
+                'rounds.round_number',
+                'rounds.name as round_name',
+                'races.id as race_id',
+            ])
+            ->orderBy('rounds.round_number')
+            ->orderBy('race_results.position')
+            ->get();
+
+        // Format results - always group by round with flat results
+        $groupedResults = [];
+        foreach ($results as $result) {
+            $roundKey = $result->round_number;
+
+            if (!isset($groupedResults[$roundKey])) {
+                $groupedResults[$roundKey] = [
+                    'round_number' => $result->round_number,
+                    'round_name' => $result->round_name,
+                    'results' => [],
+                ];
+            }
+
+            $formattedResult = $this->formatQualifyingResult($result);
+
+            // Include division information if divisions are enabled
+            if ($hasDivisions) {
+                $formattedResult['division_id'] = $result->division_id;
+                $formattedResult['division_name'] = $result->division_name ?? 'No Division';
+            }
+
+            $groupedResults[$roundKey]['results'][] = $formattedResult;
+        }
+
+        return array_values($groupedResults);
+    }
+
+    /**
+     * Fetch fastest lap results for a season.
+     * Returns results sorted by fastest lap time across all non-qualifying races.
+     * Results are always returned as a flat array with division info included when divisions are enabled.
+     *
+     * @param int $seasonId
+     * @param bool $hasDivisions
+     * @return array<int, mixed>
+     */
+    private function fetchFastestLapResults(int $seasonId, bool $hasDivisions): array
+    {
+        // Get all non-qualifying race IDs for this season
+        $raceIds = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->where('rounds.season_id', $seasonId)
+            ->where('races.is_qualifier', false)
+            ->where('races.status', 'completed')
+            ->pluck('races.id')
+            ->toArray();
+
+        if (empty($raceIds)) {
+            return [];
+        }
+
+        // Fetch results with fastest laps, sorted by time globally (not per division)
+        $results = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+            ->whereIn('race_id', $raceIds)
+            ->whereNotNull('race_results.fastest_lap')
+            ->where('race_results.fastest_lap', '!=', '')
+            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
+            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->join('races', 'race_results.race_id', '=', 'races.id')
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
+            ->select([
+                'race_results.driver_id',
+                'race_results.division_id',
+                'race_results.fastest_lap',
+                'drivers.first_name',
+                'drivers.last_name',
+                'drivers.nickname',
+                'league_drivers.driver_number',
+                'divisions.name as division_name',
+                'rounds.round_number',
+                'rounds.name as round_name',
+            ])
+            ->orderBy(DB::raw('CAST(race_results.fastest_lap AS CHAR)'))
+            ->get();
+
+        // Format as flat list with global positions
+        $formattedResults = [];
+        $position = 1;
+
+        foreach ($results as $result) {
+            $formattedResult = $this->formatFastestLapResult($result, $position);
+
+            // Include division information if divisions are enabled
+            if ($hasDivisions) {
+                $formattedResult['division_id'] = $result->division_id;
+                $formattedResult['division_name'] = $result->division_name ?? 'No Division';
+            }
+
+            $formattedResults[] = $formattedResult;
+            $position++;
+        }
+
+        return $formattedResults;
+    }
+
+    /**
+     * Fetch race time results for a season.
+     * Returns results sorted by race time across all non-qualifying races.
+     * Results are always returned as a flat array with division info included when divisions are enabled.
+     *
+     * @param int $seasonId
+     * @param bool $hasDivisions
+     * @return array<int, mixed>
+     */
+    private function fetchRaceTimeResults(int $seasonId, bool $hasDivisions): array
+    {
+        // Get all non-qualifying race IDs for this season
+        $raceIds = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->where('rounds.season_id', $seasonId)
+            ->where('races.is_qualifier', false)
+            ->where('races.status', 'completed')
+            ->pluck('races.id')
+            ->toArray();
+
+        if (empty($raceIds)) {
+            return [];
+        }
+
+        // Fetch results with race times, sorted by time globally (not per division)
+        $results = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+            ->whereIn('race_id', $raceIds)
+            ->whereNotNull('race_results.original_race_time')
+            ->where('race_results.original_race_time', '!=', '')
+            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
+            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->join('races', 'race_results.race_id', '=', 'races.id')
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
+            ->select([
+                'race_results.driver_id',
+                'race_results.division_id',
+                'race_results.original_race_time',
+                'drivers.first_name',
+                'drivers.last_name',
+                'drivers.nickname',
+                'league_drivers.driver_number',
+                'divisions.name as division_name',
+                'rounds.round_number',
+                'rounds.name as round_name',
+            ])
+            ->orderBy(DB::raw('CAST(race_results.original_race_time AS CHAR)'))
+            ->get();
+
+        // Format as flat list with global positions
+        $formattedResults = [];
+        $position = 1;
+
+        foreach ($results as $result) {
+            $formattedResult = $this->formatRaceTimeResult($result, $position);
+
+            // Include division information if divisions are enabled
+            if ($hasDivisions) {
+                $formattedResult['division_id'] = $result->division_id;
+                $formattedResult['division_name'] = $result->division_name ?? 'No Division';
+            }
+
+            $formattedResults[] = $formattedResult;
+            $position++;
+        }
+
+        return $formattedResults;
+    }
+
+    /**
+     * Format driver name from database result.
+     * Uses nickname if available, otherwise combines first/last name.
+     *
+     * @param object $result Database result with first_name, last_name, nickname
+     * @return string
+     */
+    private function formatDriverName(object $result): string
+    {
+        if (!empty($result->nickname)) {
+            return $result->nickname;
+        }
+
+        if (!empty($result->first_name) && !empty($result->last_name)) {
+            return "{$result->first_name} {$result->last_name}";
+        }
+
+        return $result->first_name ?? $result->last_name ?? 'Unknown';
+    }
+
+    /**
+     * Format a qualifying result.
+     *
+     * @param mixed $result The qualifying result from database
+     * @return array<string, mixed>
+     */
+    private function formatQualifyingResult($result): array
+    {
+        return [
+            'position' => $result->position,
+            'driver_id' => $result->driver_id,
+            'driver_name' => $this->formatDriverName($result),
+            'driver_number' => $result->driver_number,
+            'fastest_lap' => $result->fastest_lap,
+            'has_pole' => (bool) $result->has_pole,
+        ];
+    }
+
+    /**
+     * Format a fastest lap result.
+     *
+     * @param mixed $result The fastest lap result from database
+     * @param int $position The position in the fastest lap standings
+     * @return array<string, mixed>
+     */
+    private function formatFastestLapResult($result, int $position): array
+    {
+        return [
+            'position' => $position,
+            'driver_id' => $result->driver_id,
+            'driver_name' => $this->formatDriverName($result),
+            'driver_number' => $result->driver_number,
+            'fastest_lap' => $result->fastest_lap,
+            'round_number' => $result->round_number,
+            'round_name' => $result->round_name,
+        ];
+    }
+
+    /**
+     * Format a race time result.
+     *
+     * @param mixed $result The race time result from database
+     * @param int $position The position in the race time standings
+     * @return array<string, mixed>
+     */
+    private function formatRaceTimeResult($result, int $position): array
+    {
+        return [
+            'position' => $position,
+            'driver_id' => $result->driver_id,
+            'driver_name' => $this->formatDriverName($result),
+            'driver_number' => $result->driver_number,
+            'race_time' => $result->original_race_time,
+            'round_number' => $result->round_number,
+            'round_name' => $result->round_name,
+        ];
+    }
+
+    /**
+     * Enrich cross-division aggregate results with driver information.
+     * Takes the JSON stored results (position, race_result_id, time_ms) and enriches
+     * them with driver_name, driver_number, division info, formatted time, and time_difference.
+     *
+     * @param array<int, array<string, mixed>> $results The raw JSON results from Round model
+     * @param bool $hasDivisions Whether the season has divisions enabled
+     * @return array<int, array<string, mixed>> Enriched results with driver info
+     */
+    private function enrichCrossDivisionResults(array $results, bool $hasDivisions): array
+    {
+        if (empty($results)) {
+            return [];
+        }
+
+        // Extract all race_result_ids to fetch in a single query
+        $raceResultIds = array_column($results, 'race_result_id');
+
+        // Fetch all race results with driver and division info
+        $raceResultsData = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+            ->whereIn('race_results.id', $raceResultIds)
+            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
+            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
+            ->select([
+                'race_results.id as race_result_id',
+                'race_results.driver_id',
+                'race_results.division_id',
+                'drivers.first_name',
+                'drivers.last_name',
+                'drivers.nickname',
+                'league_drivers.driver_number',
+                'divisions.name as division_name',
+            ])
+            ->get()
+            ->keyBy('race_result_id');
+
+        // Get the fastest time (position 1) for calculating time differences
+        $firstResult = $results[0];
+        $fastestTimeMs = $firstResult['time_ms'] ?? null;
+
+        // Enrich each result with driver information
+        $enrichedResults = [];
+        foreach ($results as $result) {
+            $raceResultId = $result['race_result_id'];
+            $driverData = $raceResultsData->get($raceResultId);
+
+            if (!$driverData) {
+                // Skip if race result not found (shouldn't happen but be defensive)
+                continue;
+            }
+
+            // Calculate time difference from position 1
+            $timeDifference = null;
+            $position = $result['position'] ?? 0;
+            $timeMs = $result['time_ms'] ?? null;
+
+            if ($position > 1 && $fastestTimeMs !== null && $timeMs !== null) {
+                $diffMs = $timeMs - $fastestTimeMs;
+                $timeDifference = $this->formatTimeDifference($diffMs);
+            }
+
+            $enriched = [
+                'position' => $position,
+                'race_result_id' => $raceResultId,
+                'driver_id' => $driverData->driver_id,
+                'driver_name' => $this->formatDriverName($driverData),
+                'driver_number' => $driverData->driver_number,
+                'time_ms' => $timeMs,
+                'time_formatted' => $this->formatMillisecondsToTime($timeMs),
+                'time_difference' => $timeDifference,
+            ];
+
+            // Include division information if divisions are enabled
+            if ($hasDivisions) {
+                $enriched['division_id'] = $driverData->division_id;
+                $enriched['division_name'] = $driverData->division_name ?? 'No Division';
+            }
+
+            $enrichedResults[] = $enriched;
+        }
+
+        return $enrichedResults;
+    }
+
+    /**
+     * Format milliseconds to readable time format.
+     * Converts time in milliseconds to format like "1:25.123" or "25.123" for sub-minute times.
+     *
+     * @param int|null $milliseconds Time in milliseconds
+     * @return string|null Formatted time string or null if input is null
+     */
+    private function formatMillisecondsToTime(?int $milliseconds): ?string
+    {
+        if ($milliseconds === null || $milliseconds <= 0) {
+            return null;
+        }
+
+        $totalSeconds = (int) floor($milliseconds / 1000);
+        $ms = $milliseconds % 1000;
+        $minutes = (int) floor($totalSeconds / 60);
+        $seconds = $totalSeconds % 60;
+
+        if ($minutes > 0) {
+            // Format: "M:SS.mmm" (e.g., "1:25.123")
+            return sprintf('%d:%02d.%03d', $minutes, $seconds, $ms);
+        }
+
+        // Format: "SS.mmm" (e.g., "25.123")
+        return sprintf('%d.%03d', $seconds, $ms);
+    }
+
+    /**
+     * Format time difference in milliseconds to a human-readable string with '+' prefix.
+     * Converts time difference to format like "+0.345" for sub-second gaps or "+1:23.456" for larger gaps.
+     *
+     * @param int $milliseconds Time difference in milliseconds
+     * @return string Formatted time difference string with '+' prefix
+     */
+    private function formatTimeDifference(int $milliseconds): string
+    {
+        if ($milliseconds <= 0) {
+            return '+0.000';
+        }
+
+        $totalSeconds = (int) floor($milliseconds / 1000);
+        $ms = $milliseconds % 1000;
+        $minutes = (int) floor($totalSeconds / 60);
+        $seconds = $totalSeconds % 60;
+
+        if ($minutes > 0) {
+            // Format: "+M:SS.mmm" (e.g., "+1:23.456")
+            return sprintf('+%d:%02d.%03d', $minutes, $seconds, $ms);
+        }
+
+        // Format: "+S.mmm" or "+SS.mmm" (e.g., "+0.345" or "+23.456")
+        return sprintf('+%d.%03d', $seconds, $ms);
     }
 
     /**
@@ -1208,6 +1702,196 @@ final class LeagueApplicationService
     {
         if ($league->ownerUserId() !== $userId) {
             throw UnauthorizedException::forResource('league');
+        }
+    }
+
+    /**
+     * Get public race results for a race (no authentication required).
+     * Returns null if race not found or belongs to a private league.
+     *
+     * @param int $raceId The race ID
+     * @return PublicRaceResultsData|null
+     */
+    public function getPublicRaceResults(int $raceId): ?PublicRaceResultsData
+    {
+        // Find race with its round -> season -> competition -> league relationships
+        // IMPORTANT: We must check visibility BEFORE returning cached data
+        $race = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+            ->with(['round.season.competition.league:id,visibility'])
+            ->find($raceId);
+
+        if ($race === null) {
+            return null;
+        }
+
+        // Load relationships - use getRelation() for PHPStan compatibility
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\Round|null $round */
+        $round = $race->getRelation('round');
+        if ($round === null) {
+            return null;
+        }
+
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent|null $season */
+        $season = $round->getRelation('season');
+        if ($season === null) {
+            return null;
+        }
+
+        // Check if league is public or unlisted
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\Competition|null $competition */
+        $competition = $season->getRelation('competition');
+        if ($competition === null) {
+            return null;
+        }
+
+        /** @var \App\Infrastructure\Persistence\Eloquent\Models\League|null $league */
+        $league = $competition->getRelation('league');
+        if ($league === null || $league->visibility === 'private') {
+            // If league is private but cache exists (visibility changed), invalidate cache
+            if ($this->raceResultsCache->has($raceId)) {
+                $this->raceResultsCache->forget($raceId);
+            }
+            return null;
+        }
+
+        // Now safe to check cache - we know the league is public/unlisted
+        $cached = $this->raceResultsCache->get($raceId);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $hasDivisions = $season->race_divisions_enabled ?? false;
+
+        // Build race metadata
+        $raceData = [
+            'id' => $race->id,
+            'race_number' => $race->race_number,
+            'name' => $race->name,
+            'race_type' => $race->race_type ?? 'custom',
+            'status' => $race->status,
+            'is_qualifier' => (bool) $race->is_qualifier,
+            'race_points' => (bool) $race->race_points,
+        ];
+
+        // Fetch results with driver names
+        $results = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+            ->where('race_id', $raceId)
+            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
+            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
+            ->select([
+                'race_results.position',
+                'race_results.driver_id',
+                'race_results.division_id',
+                'race_results.original_race_time',
+                'race_results.final_race_time_difference',
+                'race_results.fastest_lap',
+                'race_results.penalties',
+                'race_results.race_points',
+                'race_results.has_fastest_lap',
+                'race_results.has_pole',
+                'race_results.dnf',
+                'race_results.status',
+                'drivers.first_name',
+                'drivers.last_name',
+                'drivers.nickname',
+                'league_drivers.driver_number',
+                'divisions.name as division_name',
+            ])
+            ->orderBy('race_results.position')
+            ->get();
+
+        // Format results
+        $formattedResults = [];
+
+        if ($hasDivisions) {
+            // Group by division
+            $groupedResults = $results->groupBy('division_id');
+
+            foreach ($groupedResults as $divisionId => $divisionResults) {
+                $divisionName = $divisionResults->first()->division_name ?? 'No Division';
+
+                $formattedResults[] = [
+                    'division_id' => $divisionId,
+                    'division_name' => $divisionName,
+                    'results' => $divisionResults->map(function ($result) {
+                        return $this->formatRaceResult($result);
+                    })->values()->toArray(),
+                ];
+            }
+        } else {
+            // Flat list
+            $formattedResults = $results->map(function ($result) {
+                return $this->formatRaceResult($result);
+            })->values()->toArray();
+        }
+
+        $data = new PublicRaceResultsData(
+            race: $raceData,
+            results: $formattedResults,
+            has_divisions: $hasDivisions,
+        );
+
+        // Store in cache for next time
+        $this->raceResultsCache->put($raceId, $data);
+
+        return $data;
+    }
+
+    /**
+     * Format a single race result.
+     *
+     * @param mixed $result The race result from database
+     * @return array<string, mixed>
+     */
+    private function formatRaceResult($result): array
+    {
+        return [
+            'position' => $result->position,
+            'driver_id' => $result->driver_id,
+            'driver_name' => $this->formatDriverName($result),
+            'driver_number' => $result->driver_number,
+            'race_time' => $result->original_race_time,
+            'race_time_difference' => $result->final_race_time_difference,
+            'fastest_lap' => $result->fastest_lap,
+            'penalties' => $result->penalties,
+            'race_points' => $result->race_points,
+            'has_fastest_lap' => (bool) $result->has_fastest_lap,
+            'has_pole' => (bool) $result->has_pole,
+            'dnf' => (bool) $result->dnf,
+            'status' => $result->status,
+        ];
+    }
+
+    /**
+     * Get the free tier league limit from config.
+     */
+    private function getFreeTierLimit(): int
+    {
+        return (int) config('league.free_tier_limit', 1);
+    }
+
+    /**
+     * Invalidate all race results caches for a league.
+     * This is called when league visibility changes to private.
+     *
+     * @param int $leagueId The league ID
+     */
+    private function invalidateLeagueRaceResultsCache(int $leagueId): void
+    {
+        // Get all race IDs for this league through the competition -> season -> round -> race hierarchy
+        $raceIds = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
+            ->join('competitions', 'seasons.competition_id', '=', 'competitions.id')
+            ->where('competitions.league_id', $leagueId)
+            ->pluck('races.id')
+            ->toArray();
+
+        // Invalidate cache for each race
+        foreach ($raceIds as $raceId) {
+            $this->raceResultsCache->forget($raceId);
         }
     }
 }

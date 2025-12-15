@@ -4,6 +4,7 @@ import type {
   Platform,
   PublicLeagueDetailResponse,
   PublicSeasonDetailResponse,
+  PublicRaceResultsResponse,
 } from '@public/types/public';
 
 /**
@@ -155,6 +156,18 @@ class PublicApiService {
       return response.data.data;
     } catch (error) {
       this.handleError(error, 'fetch season details');
+    }
+  }
+
+  async fetchRaceResults(raceId: number, signal?: AbortSignal): Promise<PublicRaceResultsResponse> {
+    try {
+      const response = await this.client.get<{ data: PublicRaceResultsResponse }>(
+        `/races/${raceId}/results`,
+        { signal },
+      );
+      return response.data.data;
+    } catch (error) {
+      this.handleError(error, 'fetch race results');
     }
   }
 }

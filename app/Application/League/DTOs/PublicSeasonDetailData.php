@@ -9,10 +9,10 @@ use Spatie\LaravelData\Data;
 /**
  * Public Season Detail DTO.
  * Used for displaying detailed season information on the public season detail page.
- * Includes season info, league context, rounds with races, and standings.
+ * Includes season info, league context, rounds with races, standings, and race results.
  *
- * TODO: Refactor to use proper nested DTOs instead of raw arrays for better type safety.
- *       Create DTOs for: league details, season details, round details, race details.
+ * Note: Uses typed arrays with PHPDoc annotations for flexibility and performance.
+ * The array structures are fully documented in the constructor's PHPDoc annotations.
  */
 final class PublicSeasonDetailData extends Data
 {
@@ -51,6 +51,8 @@ final class PublicSeasonDetailData extends Data
      *     name: ?string,
      *     slug: string,
      *     scheduled_at: ?string,
+     *     circuit_name: ?string,
+     *     circuit_country: ?string,
      *     track_name: ?string,
      *     track_layout: ?string,
      *     status: string,
@@ -60,11 +62,19 @@ final class PublicSeasonDetailData extends Data
      *         race_number: int,
      *         name: ?string,
      *         race_type: string,
-     *         status: string
-     *     }>
+     *         status: string,
+     *         is_qualifier: bool
+     *     }>,
+     *     qualifying_results: array<int, mixed>,
+     *     race_time_results: array<int, mixed>,
+     *     fastest_lap_results: array<int, mixed>,
+     *     round_standings: array<int, mixed>
      * }> $rounds
      * @param array<int, mixed> $standings
      * @param bool $has_divisions
+     * @param array<int, mixed> $qualifying_results Results from qualifying sessions (is_qualifier = true)
+     * @param array<int, mixed> $fastest_lap_results Results sorted by fastest lap times
+     * @param array<int, mixed> $race_time_results Results sorted by race times
      */
     public function __construct(
         public readonly array $league,
@@ -73,6 +83,9 @@ final class PublicSeasonDetailData extends Data
         public readonly array $rounds,
         public readonly array $standings,
         public readonly bool $has_divisions,
+        public readonly array $qualifying_results,
+        public readonly array $fastest_lap_results,
+        public readonly array $race_time_results,
     ) {
     }
 }

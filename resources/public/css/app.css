@@ -9,6 +9,9 @@
 @import 'tailwindcss';
 @plugin 'tailwindcss-primeui';
 
+/* Component-specific styles */
+@import './components/_division-tags.css';
+
 /* ==========================================================================
    TAILWIND V4 THEME CONFIGURATION
    ========================================================================== */
@@ -332,7 +335,7 @@
   }
 
   .section-padding {
-    padding: var(--space-2xl) 0;
+    /* padding: var(--space-2xl) 0; */
   }
 
   /* ==========================================================================

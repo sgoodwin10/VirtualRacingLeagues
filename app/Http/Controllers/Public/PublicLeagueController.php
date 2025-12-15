@@ -8,6 +8,9 @@ use App\Application\League\Services\LeagueApplicationService;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\IndexPublicLeaguesRequest;
+use App\Http\Requests\Public\ShowPublicLeagueRequest;
+use App\Http\Requests\Public\ShowPublicSeasonRequest;
+use App\Http\Requests\Public\ShowRaceResultsRequest;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -38,9 +41,9 @@ final class PublicLeagueController extends Controller
     /**
      * Get detailed league information by slug.
      */
-    public function show(string $slug): JsonResponse
+    public function show(ShowPublicLeagueRequest $request): JsonResponse
     {
-        $leagueDetail = $this->leagueService->getPublicLeagueDetail($slug);
+        $leagueDetail = $this->leagueService->getPublicLeagueDetail($request->getSlug());
 
         if ($leagueDetail === null) {
             return ApiResponse::error('League not found', null, 404);
@@ -52,14 +55,31 @@ final class PublicLeagueController extends Controller
     /**
      * Get detailed season information by league slug and season slug.
      */
-    public function seasonDetail(string $slug, string $seasonSlug): JsonResponse
+    public function seasonDetail(ShowPublicSeasonRequest $request): JsonResponse
     {
-        $seasonDetail = $this->leagueService->getPublicSeasonDetail($slug, $seasonSlug);
+        $seasonDetail = $this->leagueService->getPublicSeasonDetail(
+            $request->getSlug(),
+            $request->getSeasonSlug()
+        );
 
         if ($seasonDetail === null) {
             return ApiResponse::error('Season not found', null, 404);
         }
 
         return ApiResponse::success($seasonDetail->toArray());
+    }
+
+    /**
+     * Get race results for a race.
+     */
+    public function raceResults(ShowRaceResultsRequest $request): JsonResponse
+    {
+        $raceResults = $this->leagueService->getPublicRaceResults($request->getRaceId());
+
+        if ($raceResults === null) {
+            return ApiResponse::error('Race not found', null, 404);
+        }
+
+        return ApiResponse::success($raceResults->toArray());
     }
 }

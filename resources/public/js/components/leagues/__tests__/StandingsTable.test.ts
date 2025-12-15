@@ -20,9 +20,30 @@ describe('StandingsTable', () => {
       podiums: 3,
       poles: 2,
       rounds: [
-        { round_id: 1, round_number: 1, points: 25, has_pole: true, has_fastest_lap: false },
-        { round_id: 2, round_number: 2, points: 25, has_pole: false, has_fastest_lap: true },
-        { round_id: 3, round_number: 3, points: 25, has_pole: true, has_fastest_lap: true },
+        {
+          round_id: 1,
+          round_number: 1,
+          points: 25,
+          position: 1,
+          has_pole: true,
+          has_fastest_lap: false,
+        },
+        {
+          round_id: 2,
+          round_number: 2,
+          points: 25,
+          position: 1,
+          has_pole: false,
+          has_fastest_lap: true,
+        },
+        {
+          round_id: 3,
+          round_number: 3,
+          points: 25,
+          position: 1,
+          has_pole: true,
+          has_fastest_lap: true,
+        },
       ],
     },
     {
@@ -33,9 +54,30 @@ describe('StandingsTable', () => {
       podiums: 2,
       poles: 1,
       rounds: [
-        { round_id: 1, round_number: 1, points: 18, has_pole: false, has_fastest_lap: false },
-        { round_id: 2, round_number: 2, points: 18, has_pole: false, has_fastest_lap: false },
-        { round_id: 3, round_number: 3, points: 14, has_pole: false, has_fastest_lap: false },
+        {
+          round_id: 1,
+          round_number: 1,
+          points: 18,
+          position: 2,
+          has_pole: false,
+          has_fastest_lap: false,
+        },
+        {
+          round_id: 2,
+          round_number: 2,
+          points: 18,
+          position: 2,
+          has_pole: false,
+          has_fastest_lap: false,
+        },
+        {
+          round_id: 3,
+          round_number: 3,
+          points: 14,
+          position: 3,
+          has_pole: false,
+          has_fastest_lap: false,
+        },
       ],
     },
     {
@@ -46,9 +88,30 @@ describe('StandingsTable', () => {
       podiums: 1,
       poles: 0,
       rounds: [
-        { round_id: 1, round_number: 1, points: 15, has_pole: false, has_fastest_lap: false },
-        { round_id: 2, round_number: 2, points: 15, has_pole: false, has_fastest_lap: false },
-        { round_id: 3, round_number: 3, points: 10, has_pole: false, has_fastest_lap: false },
+        {
+          round_id: 1,
+          round_number: 1,
+          points: 15,
+          position: 3,
+          has_pole: false,
+          has_fastest_lap: false,
+        },
+        {
+          round_id: 2,
+          round_number: 2,
+          points: 15,
+          position: 3,
+          has_pole: false,
+          has_fastest_lap: false,
+        },
+        {
+          round_id: 3,
+          round_number: 3,
+          points: 10,
+          position: 4,
+          has_pole: false,
+          has_fastest_lap: false,
+        },
       ],
     },
   ];
@@ -141,17 +204,20 @@ describe('StandingsTable', () => {
       },
     });
 
-    // Find all text elements - includes podiums (3), poles (3), and round points (9) = 15 total
-    const allDataText = wrapper.findAll('.font-data.text-sm');
-    expect(allDataText.length).toBeGreaterThanOrEqual(15);
+    // Use data-test attributes to find round points
+    const round1Points = wrapper.findAll('[data-test="round-1-points"]');
+    const round2Points = wrapper.findAll('[data-test="round-2-points"]');
+    const round3Points = wrapper.findAll('[data-test="round-3-points"]');
 
-    // Verify first driver's round points (indices 2, 3, 4 after podiums and poles)
-    const firstDriverRoundPoints = [
-      allDataText[2]?.text(), // Round 1
-      allDataText[3]?.text(), // Round 2
-      allDataText[4]?.text(), // Round 3
-    ];
-    expect(firstDriverRoundPoints).toEqual(['25', '25', '25']);
+    // Verify first driver's round points
+    expect(round1Points[0]?.text()).toBe('25');
+    expect(round2Points[0]?.text()).toBe('25');
+    expect(round3Points[0]?.text()).toBe('25');
+
+    // Verify second driver's round points
+    expect(round1Points[1]?.text()).toBe('18');
+    expect(round2Points[1]?.text()).toBe('18');
+    expect(round3Points[1]?.text()).toBe('14');
   });
 
   it('displays pole position badge', () => {
@@ -228,7 +294,8 @@ describe('StandingsTable', () => {
     expect(polesCounts).toHaveLength(3);
     expect(polesCounts[0]?.text()).toBe('2');
     expect(polesCounts[1]?.text()).toBe('1');
-    expect(polesCounts[2]?.text()).toBe('0');
+    // When poles is 0, it shows empty string
+    expect(polesCounts[2]?.text()).toBe('');
   });
 
   it('enables sticky header', () => {
@@ -253,7 +320,14 @@ describe('StandingsTable', () => {
         podiums: 1,
         poles: 0,
         rounds: [
-          { round_id: 1, round_number: 1, points: 25, has_pole: false, has_fastest_lap: false },
+          {
+            round_id: 1,
+            round_number: 1,
+            points: 25,
+            position: 1,
+            has_pole: false,
+            has_fastest_lap: false,
+          },
         ],
       },
     ];
@@ -265,11 +339,73 @@ describe('StandingsTable', () => {
       },
     });
 
-    const roundPoints = wrapper.findAll('.font-data.text-sm');
-    // Includes: podiums (1), poles (0), round 1 (25), round 2 (-), round 3 (-) = 5 elements
-    // Indices: [0] = podiums, [1] = poles, [2] = round 1, [3] = round 2, [4] = round 3
-    expect(roundPoints[2]?.text()).toBe('25'); // Round 1
-    expect(roundPoints[3]?.text()).toBe('-'); // Round 2
-    expect(roundPoints[4]?.text()).toBe('-'); // Round 3
+    // Use data-test attributes to find round points
+    const round1Points = wrapper.findAll('[data-test="round-1-points"]');
+    const round2Points = wrapper.findAll('[data-test="round-2-points"]');
+    const round3Points = wrapper.findAll('[data-test="round-3-points"]');
+
+    expect(round1Points[0]?.text()).toBe('25'); // Round 1 (has data)
+    expect(round2Points[0]?.text()).toBe('-'); // Round 2 (missing)
+    expect(round3Points[0]?.text()).toBe('-'); // Round 3 (missing)
+  });
+
+  it('displays position tooltip on round points', () => {
+    const wrapper = mount(StandingsTable, {
+      props: {
+        drivers: mockDrivers,
+        rounds: mockRounds,
+      },
+    });
+
+    // Find round points elements with data-test attributes
+    const round1Points = wrapper.findAll('[data-test="round-1-points"]');
+    expect(round1Points.length).toBeGreaterThan(0);
+
+    // Check first driver's round 1 tooltip (P1st - 25 pts)
+    expect(round1Points[0]?.attributes('title')).toBe('P1st - 25 pts');
+
+    // Check second driver's round 1 tooltip (P2nd - 18 pts)
+    expect(round1Points[1]?.attributes('title')).toBe('P2nd - 18 pts');
+
+    // Check third driver's round 1 tooltip (P3rd - 15 pts)
+    expect(round1Points[2]?.attributes('title')).toBe('P3rd - 15 pts');
+
+    // Check third driver's round 3 tooltip (P4th - 10 pts)
+    const round3Points = wrapper.findAll('[data-test="round-3-points"]');
+    expect(round3Points[2]?.attributes('title')).toBe('P4th - 10 pts');
+  });
+
+  it('handles null position in tooltip', () => {
+    const driversWithNullPosition: SeasonStandingDriver[] = [
+      {
+        position: 1,
+        driver_id: 1,
+        driver_name: 'Driver One',
+        total_points: 25,
+        podiums: 1,
+        poles: 0,
+        rounds: [
+          {
+            round_id: 1,
+            round_number: 1,
+            points: 25,
+            position: null,
+            has_pole: false,
+            has_fastest_lap: false,
+          },
+        ],
+      },
+    ];
+
+    const wrapper = mount(StandingsTable, {
+      props: {
+        drivers: driversWithNullPosition,
+        rounds: [{ round_id: 1, round_number: 1, name: 'Round 1' }],
+      },
+    });
+
+    const round1Points = wrapper.findAll('[data-test="round-1-points"]');
+    // Tooltip should be empty string when position is null
+    expect(round1Points[0]?.attributes('title')).toBe('');
   });
 });

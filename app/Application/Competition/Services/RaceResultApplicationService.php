@@ -11,6 +11,7 @@ use App\Domain\Competition\Entities\RaceResult;
 use App\Domain\Competition\Exceptions\RaceResultException;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
+use App\Infrastructure\Cache\RaceResultsCacheService;
 use Illuminate\Support\Facades\DB;
 
 final class RaceResultApplicationService
@@ -18,6 +19,7 @@ final class RaceResultApplicationService
     public function __construct(
         private RaceResultRepositoryInterface $raceResultRepository,
         private RaceRepositoryInterface $raceRepository,
+        private RaceResultsCacheService $raceResultsCache,
     ) {
     }
 
@@ -51,6 +53,9 @@ final class RaceResultApplicationService
         }
 
         return DB::transaction(function () use ($raceId, $data) {
+            // Invalidate cache BEFORE making changes
+            $this->raceResultsCache->forget($raceId);
+
             // Fetch race to check if it's a qualifier
             $race = $this->raceRepository->findById($raceId);
 
@@ -185,6 +190,9 @@ final class RaceResultApplicationService
     public function deleteResults(int $raceId): void
     {
         DB::transaction(function () use ($raceId) {
+            // Invalidate cache BEFORE deletion
+            $this->raceResultsCache->forget($raceId);
+
             $this->raceResultRepository->deleteByRaceId($raceId);
         });
     }
