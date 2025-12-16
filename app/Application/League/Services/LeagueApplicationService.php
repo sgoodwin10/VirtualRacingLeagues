@@ -134,8 +134,12 @@ final class LeagueApplicationService
                 // Fetch platform data for response
                 $platforms = $this->fetchPlatformData($league->platformIds());
 
+                // Compute URLs for logo and header image
+                $logoUrl = $this->computeLogoUrl($league);
+                $headerImageUrl = $this->computeHeaderImageUrl($league);
+
                 // New leagues have 0 competitions and 0 drivers
-                return LeagueData::fromEntity($league, $platforms, null, 0, 0);
+                return LeagueData::fromEntity($league, $platforms, null, 0, 0, $logoUrl, $headerImageUrl);
             } catch (\Throwable $e) {
                 // Clean up any uploaded files on failure
                 $this->cleanupUploadedFiles($uploadedFiles);
@@ -178,12 +182,16 @@ final class LeagueApplicationService
             function (array $item) {
                 $league = $item['league'];
                 $platforms = $this->fetchPlatformData($league->platformIds());
+                $logoUrl = $this->computeLogoUrl($league);
+                $headerImageUrl = $this->computeHeaderImageUrl($league);
                 return LeagueData::fromEntity(
                     $league,
                     $platforms,
                     null,
                     $item['competitions_count'],
-                    $item['drivers_count']
+                    $item['drivers_count'],
+                    $logoUrl,
+                    $headerImageUrl
                 );
             },
             $leaguesWithCounts
@@ -205,13 +213,17 @@ final class LeagueApplicationService
         $this->authorizeLeagueAccess($league, $userId);
 
         $platforms = $this->fetchPlatformData($league->platformIds());
+        $logoUrl = $this->computeLogoUrl($league);
+        $headerImageUrl = $this->computeHeaderImageUrl($league);
 
         return LeagueData::fromEntity(
             $league,
             $platforms,
             null,
             $result['competitions_count'],
-            $result['drivers_count']
+            $result['drivers_count'],
+            $logoUrl,
+            $headerImageUrl
         );
     }
 
@@ -352,13 +364,17 @@ final class LeagueApplicationService
             // Fetch updated counts and platform data for response
             $result = $this->leagueRepository->findByIdWithCounts($leagueId);
             $platforms = $this->fetchPlatformData($league->platformIds());
+            $logoUrl = $this->computeLogoUrl($league);
+            $headerImageUrl = $this->computeHeaderImageUrl($league);
 
             return LeagueData::fromEntity(
                 $league,
                 $platforms,
                 null,
                 $result['competitions_count'],
-                $result['drivers_count']
+                $result['drivers_count'],
+                $logoUrl,
+                $headerImageUrl
             );
         });
     }
@@ -582,6 +598,8 @@ final class LeagueApplicationService
             function (array $item) use ($owners) {
                 $league = $item['league'];
                 $platforms = $this->fetchPlatformData($league->platformIds());
+                $logoUrl = $this->computeLogoUrl($league);
+                $headerImageUrl = $this->computeHeaderImageUrl($league);
 
                 // Get owner data
                 $ownerData = $owners[$league->ownerUserId()] ?? null;
@@ -591,7 +609,9 @@ final class LeagueApplicationService
                     $platforms,
                     $ownerData,
                     $item['competitions_count'],
-                    $item['drivers_count']
+                    $item['drivers_count'],
+                    $logoUrl,
+                    $headerImageUrl
                 );
             },
             $result['data']
@@ -616,6 +636,8 @@ final class LeagueApplicationService
         $result = $this->leagueRepository->findByIdWithCounts($leagueId);
         $league = $result['league'];
         $platforms = $this->fetchPlatformData($league->platformIds());
+        $logoUrl = $this->computeLogoUrl($league);
+        $headerImageUrl = $this->computeHeaderImageUrl($league);
 
         // Fetch owner data
         $owners = $this->userRepository->findMultipleByIds([$league->ownerUserId()]);
@@ -626,7 +648,9 @@ final class LeagueApplicationService
             $platforms,
             $ownerData,
             $result['competitions_count'],
-            $result['drivers_count']
+            $result['drivers_count'],
+            $logoUrl,
+            $headerImageUrl
         );
     }
 
@@ -653,6 +677,8 @@ final class LeagueApplicationService
             // Fetch updated counts, platform, and owner data for response
             $result = $this->leagueRepository->findByIdWithCounts($leagueId);
             $platforms = $this->fetchPlatformData($league->platformIds());
+            $logoUrl = $this->computeLogoUrl($league);
+            $headerImageUrl = $this->computeHeaderImageUrl($league);
             $owners = $this->userRepository->findMultipleByIds([$league->ownerUserId()]);
             $ownerData = $owners[$league->ownerUserId()] ?? null;
 
@@ -661,7 +687,9 @@ final class LeagueApplicationService
                 $platforms,
                 $ownerData,
                 $result['competitions_count'],
-                $result['drivers_count']
+                $result['drivers_count'],
+                $logoUrl,
+                $headerImageUrl
             );
         });
     }
@@ -784,6 +812,8 @@ final class LeagueApplicationService
             function (array $item) use ($owners) {
                 $league = $item['league'];
                 $platforms = $this->fetchPlatformData($league->platformIds());
+                $logoUrl = $this->computeLogoUrl($league);
+                $headerImageUrl = $this->computeHeaderImageUrl($league);
 
                 // Get owner data
                 $ownerData = $owners[$league->ownerUserId()] ?? null;
@@ -793,7 +823,9 @@ final class LeagueApplicationService
                     $platforms,
                     $ownerData,
                     $item['competitions_count'],
-                    $item['drivers_count']
+                    $item['drivers_count'],
+                    $logoUrl,
+                    $headerImageUrl
                 );
             },
             $result['data']
@@ -834,12 +866,16 @@ final class LeagueApplicationService
             function (array $item) {
                 $league = $item['league'];
                 $platforms = $this->fetchPlatformData($league->platformIds());
+                $logoUrl = $this->computeLogoUrl($league);
+                $headerImageUrl = $this->computeHeaderImageUrl($league);
 
                 return PublicLeagueData::fromEntity(
                     $league,
                     $platforms,
                     $item['competitions_count'],
-                    $item['drivers_count']
+                    $item['drivers_count'],
+                    $logoUrl,
+                    $headerImageUrl
                 );
             },
             $result['data']
@@ -1017,6 +1053,34 @@ final class LeagueApplicationService
             upcoming_races: [],   // Placeholder - to be implemented later
             championship_leaders: [],  // Placeholder - to be implemented later
         );
+    }
+
+    /**
+     * Compute logo URL from league entity.
+     * Returns null if league has no logo path.
+     *
+     * @param League $league
+     * @return string|null
+     */
+    private function computeLogoUrl(League $league): ?string
+    {
+        return $league->logoPath()
+            ? Storage::disk('public')->url($league->logoPath())
+            : null;
+    }
+
+    /**
+     * Compute header image URL from league entity.
+     * Returns null if league has no header image path.
+     *
+     * @param League $league
+     * @return string|null
+     */
+    private function computeHeaderImageUrl(League $league): ?string
+    {
+        return $league->headerImagePath()
+            ? Storage::disk('public')->url($league->headerImagePath())
+            : null;
     }
 
     /**

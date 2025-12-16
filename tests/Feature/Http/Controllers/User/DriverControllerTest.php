@@ -705,4 +705,144 @@ final class DriverControllerTest extends UserControllerTestCase
 
         $response->assertUnauthorized();
     }
+
+    public function test_cannot_list_drivers_from_another_users_league(): void
+    {
+        $otherUser = UserEloquent::factory()->create(['status' => 'active']);
+        $otherLeague = League::factory()->create(['owner_user_id' => $otherUser->id]);
+
+        $driver = Driver::factory()->create(['psn_id' => 'SomeDriver']);
+        DB::table('league_drivers')->insert([
+            'league_id' => $otherLeague->id,
+            'driver_id' => $driver->id,
+            'status' => 'active',
+            'added_to_league_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$otherLeague->id}/drivers");
+
+        $response->assertForbidden()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Unauthorized to access this league',
+            ]);
+    }
+
+    public function test_cannot_add_driver_to_another_users_league(): void
+    {
+        $otherUser = UserEloquent::factory()->create(['status' => 'active']);
+        $otherLeague = League::factory()->create(['owner_user_id' => $otherUser->id]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$otherLeague->id}/drivers", [
+                'first_name' => 'Mike',
+                'last_name' => 'Johnson',
+                'psn_id' => 'MikeJ_Racing',
+                'driver_number' => 3,
+                'status' => 'active',
+            ]);
+
+        $response->assertForbidden()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Unauthorized to access this league',
+            ]);
+    }
+
+    public function test_cannot_view_driver_from_another_users_league(): void
+    {
+        $otherUser = UserEloquent::factory()->create(['status' => 'active']);
+        $otherLeague = League::factory()->create(['owner_user_id' => $otherUser->id]);
+
+        $driver = Driver::factory()->create(['psn_id' => 'SomeDriver']);
+        DB::table('league_drivers')->insert([
+            'league_id' => $otherLeague->id,
+            'driver_id' => $driver->id,
+            'status' => 'active',
+            'added_to_league_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$otherLeague->id}/drivers/{$driver->id}");
+
+        $response->assertForbidden()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Unauthorized to access this league',
+            ]);
+    }
+
+    public function test_cannot_update_driver_in_another_users_league(): void
+    {
+        $otherUser = UserEloquent::factory()->create(['status' => 'active']);
+        $otherLeague = League::factory()->create(['owner_user_id' => $otherUser->id]);
+
+        $driver = Driver::factory()->create(['psn_id' => 'SomeDriver']);
+        DB::table('league_drivers')->insert([
+            'league_id' => $otherLeague->id,
+            'driver_id' => $driver->id,
+            'driver_number' => 5,
+            'status' => 'active',
+            'added_to_league_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->putJson("/api/leagues/{$otherLeague->id}/drivers/{$driver->id}", [
+                'driver_number' => 99,
+                'status' => 'inactive',
+            ]);
+
+        $response->assertForbidden()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Unauthorized to access this league',
+            ]);
+    }
+
+    public function test_cannot_delete_driver_from_another_users_league(): void
+    {
+        $otherUser = UserEloquent::factory()->create(['status' => 'active']);
+        $otherLeague = League::factory()->create(['owner_user_id' => $otherUser->id]);
+
+        $driver = Driver::factory()->create(['psn_id' => 'SomeDriver']);
+        DB::table('league_drivers')->insert([
+            'league_id' => $otherLeague->id,
+            'driver_id' => $driver->id,
+            'status' => 'active',
+            'added_to_league_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->deleteJson("/api/leagues/{$otherLeague->id}/drivers/{$driver->id}");
+
+        $response->assertForbidden()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Unauthorized to access this league',
+            ]);
+    }
+
+    public function test_cannot_import_csv_to_another_users_league(): void
+    {
+        $otherUser = UserEloquent::factory()->create(['status' => 'active']);
+        $otherLeague = League::factory()->create(['owner_user_id' => $otherUser->id]);
+
+        $csvData = "FirstName,LastName,PSN_ID\nJohn,Doe,JohnDoe";
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$otherLeague->id}/drivers/import-csv", [
+                'csv_data' => $csvData,
+            ]);
+
+        $response->assertForbidden()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Unauthorized to access this league',
+            ]);
+    }
 }

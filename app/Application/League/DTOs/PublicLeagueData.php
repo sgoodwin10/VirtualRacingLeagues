@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\League\DTOs;
 
 use App\Domain\League\Entities\League;
-use Illuminate\Support\Facades\Storage;
 use Spatie\LaravelData\Data;
 
 /**
@@ -40,26 +39,22 @@ final class PublicLeagueData extends Data
     /**
      * Create from domain entity with platform data and counts.
      *
-     * @param League $league
-     * @param array<int, array{id: int, name: string, slug: string}> $platforms
-     * @param int $competitionsCount
-     * @param int $driversCount
+     * @param League $league Domain entity
+     * @param array<int, array{id: int, name: string, slug: string}> $platforms Platform data
+     * @param int $competitionsCount Competitions count
+     * @param int $driversCount Drivers count
+     * @param string|null $logoUrl Optional pre-computed logo URL (infrastructure concern)
+     * @param string|null $headerImageUrl Optional pre-computed header image URL (infrastructure concern)
      * @return self
      */
     public static function fromEntity(
         League $league,
         array $platforms,
         int $competitionsCount,
-        int $driversCount
+        int $driversCount,
+        ?string $logoUrl = null,
+        ?string $headerImageUrl = null
     ): self {
-        $logoUrl = $league->logoPath()
-            ? Storage::disk('public')->url($league->logoPath())
-            : null;
-
-        $headerImageUrl = $league->headerImagePath()
-            ? Storage::disk('public')->url($league->headerImagePath())
-            : null;
-
         return new self(
             id: $league->id(),
             name: $league->name()->value(),

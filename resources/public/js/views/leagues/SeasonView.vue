@@ -115,12 +115,20 @@
             </div>
 
             <!-- Flat Standings (No Divisions) -->
-            <VrlCard v-else-if="!hasDivisions" :hoverable="false" class="standings-card">
-              <StandingsTable
+            <div v-else-if="!hasDivisions" class="standings-section">
+              <VrlCard :hoverable="false" class="standings-card">
+                <StandingsTable
+                  :drivers="standings as SeasonStandingDriver[]"
+                  :rounds="roundHeaders"
+                />
+              </VrlCard>
+
+              <!-- Points Progression Chart -->
+              <PointsProgressionChart
                 :drivers="standings as SeasonStandingDriver[]"
                 :rounds="roundHeaders"
               />
-            </VrlCard>
+            </div>
 
             <!-- Division Standings with Tabs -->
             <VrlTabs
@@ -134,7 +142,12 @@
                 :key="division.division_id"
                 #[`tab-${index}`]
               >
-                <StandingsTable :drivers="division.drivers" :rounds="roundHeaders" />
+                <div class="division-standings-section">
+                  <StandingsTable :drivers="division.drivers" :rounds="roundHeaders" />
+
+                  <!-- Points Progression Chart for this division -->
+                  <PointsProgressionChart :drivers="division.drivers" :rounds="roundHeaders" />
+                </div>
               </template>
             </VrlTabs>
           </div>
@@ -289,64 +302,19 @@
                       </div>
                     </template>
 
-                    <!-- All Qualifying Times Tab (after all race tabs) -->
-                    <template
-                      v-if="getQualifyingTabIndex(round) >= 0"
-                      #[getQualifyingTabSlot(round)]
-                    >
-                      <div
-                        v-if="getQualifyingResultsForRound(round).length === 0"
-                        class="empty-state-small"
-                      >
+                    <!-- All Times Tab (after all race tabs) -->
+                    <template v-if="getAllTimesTabIndex(round) >= 0" #[getAllTimesTabSlot(round)]>
+                      <div v-if="!hasAnyTimeResults(round)" class="empty-state-small">
                         <PhFlagCheckered :size="32" weight="duotone" class="empty-icon-small" />
-                        <p>No qualifying results available for this round yet.</p>
+                        <p>No time results available for this round yet.</p>
                       </div>
 
-                      <!-- Always show flat combined results across all divisions -->
+                      <!-- Combined times table with all three time categories -->
                       <div v-else class="aggregate-results-content">
-                        <TimeResultsTable
-                          :results="getQualifyingResultsForRound(round)"
-                          :show-division="hasDivisions"
-                        />
-                      </div>
-                    </template>
-
-                    <!-- Fastest Laps Tab -->
-                    <template
-                      v-if="getFastestLapTabIndex(round) >= 0"
-                      #[getFastestLapTabSlot(round)]
-                    >
-                      <div
-                        v-if="getFastestLapResultsForRound(round).length === 0"
-                        class="empty-state-small"
-                      >
-                        <PhFlagCheckered :size="32" weight="duotone" class="empty-icon-small" />
-                        <p>No fastest lap results available for this round yet.</p>
-                      </div>
-
-                      <!-- Always show flat combined results across all divisions -->
-                      <div v-else class="aggregate-results-content">
-                        <TimeResultsTable
-                          :results="getFastestLapResultsForRound(round)"
-                          :show-division="hasDivisions"
-                        />
-                      </div>
-                    </template>
-
-                    <!-- Race Times Tab -->
-                    <template v-if="getRaceTimesTabIndex(round) >= 0" #[getRaceTimesTabSlot(round)]>
-                      <div
-                        v-if="getRaceTimeResultsForRound(round).length === 0"
-                        class="empty-state-small"
-                      >
-                        <PhFlagCheckered :size="32" weight="duotone" class="empty-icon-small" />
-                        <p>No race time results available for this round yet.</p>
-                      </div>
-
-                      <!-- Always show flat combined results across all divisions -->
-                      <div v-else class="aggregate-results-content">
-                        <TimeResultsTable
-                          :results="getRaceTimeResultsForRound(round)"
+                        <CombinedTimesTable
+                          :qualifying-results="round.qualifying_results || []"
+                          :fastest-lap-results="round.fastest_lap_results || []"
+                          :race-time-results="round.race_time_results || []"
                           :show-division="hasDivisions"
                         />
                       </div>
@@ -385,8 +353,9 @@ import {
 } from '@phosphor-icons/vue';
 import StandingsTable from '@public/components/leagues/StandingsTable.vue';
 import RaceResultsTable from '@public/components/leagues/RaceResultsTable.vue';
-import TimeResultsTable from '@public/components/leagues/TimeResultsTable.vue';
+import CombinedTimesTable from '@public/components/leagues/CombinedTimesTable.vue';
 import RoundStandingsTable from '@public/components/leagues/RoundStandingsTable.vue';
+import PointsProgressionChart from '@public/components/leagues/PointsProgressionChart.vue';
 import PageHeader from '@public/components/common/layout/PageHeader.vue';
 import VrlBreadcrumbs, {
   type BreadcrumbItem,
@@ -408,8 +377,6 @@ import type {
   PublicRaceResultsResponse,
   PublicRaceResult,
   PublicRaceResultDivision,
-  CrossDivisionResult,
-  TimeResult,
   RoundStandingDriver,
   RoundStandingDivision,
 } from '@public/types/public';
@@ -591,57 +558,34 @@ const getRoundTabs = (round: PublicRound): TabItem[] => {
     });
   });
 
-  // Add aggregate tabs at the same level
-  tabs.push({ label: 'All Qualifying Times' });
-  tabs.push({ label: 'Fastest Laps' });
-  tabs.push({ label: 'Race Times' });
+  // Add aggregate "All Times" tab at the same level
+  tabs.push({ label: 'All Times' });
 
   return tabs;
 };
 
 // Helper functions to get tab indices (accounting for Standings at index 0)
-// Standings is always at index 0
-const getStandingsTabIndex = (): number => 0;
-
 // Race tabs: Standings (0) + race index, so index = raceIndex + 1
 const getRaceTabIndex = (raceIndex: number): number => {
   return raceIndex + 1;
 };
 
-// Qualifying tab: Standings (0) + all races, so index = 1 + races.length
-const getQualifyingTabIndex = (round: PublicRound): number => {
+// All Times tab: Standings (0) + all races, so index = 1 + races.length
+const getAllTimesTabIndex = (round: PublicRound): number => {
   return round.races ? round.races.length + 1 : -1;
-};
-
-// Fastest Lap tab: after Qualifying tab
-const getFastestLapTabIndex = (round: PublicRound): number => {
-  return round.races ? round.races.length + 2 : -1;
-};
-
-// Race Times tab: after Fastest Lap tab
-const getRaceTimesTabIndex = (round: PublicRound): number => {
-  return round.races ? round.races.length + 3 : -1;
 };
 
 // Helper functions to get slot names for tabs
 const getStandingsTabSlot = (): string => {
-  return `tab-${getStandingsTabIndex()}`;
+  return 'tab-0';
 };
 
 const getRaceTabSlot = (raceIndex: number): string => {
   return `tab-${getRaceTabIndex(raceIndex)}`;
 };
 
-const getQualifyingTabSlot = (round: PublicRound): string => {
-  return `tab-${getQualifyingTabIndex(round)}`;
-};
-
-const getFastestLapTabSlot = (round: PublicRound): string => {
-  return `tab-${getFastestLapTabIndex(round)}`;
-};
-
-const getRaceTimesTabSlot = (round: PublicRound): string => {
-  return `tab-${getRaceTimesTabIndex(round)}`;
+const getAllTimesTabSlot = (round: PublicRound): string => {
+  return `tab-${getAllTimesTabIndex(round)}`;
 };
 
 // Helper function to check if round has any races with race points enabled
@@ -650,33 +594,13 @@ const roundHasRacePoints = (round: PublicRound): boolean => {
   return round.races.some((race) => race.race_points === true);
 };
 
-// Convert CrossDivisionResult to TimeResult format for display
-const convertToTimeResult = (result: CrossDivisionResult): TimeResult => {
-  return {
-    position: result.position,
-    driver_id: result.driver_id,
-    driver_name: result.driver_name,
-    division_id: result.division_id,
-    division_name: result.division_name,
-    time_formatted: result.time_formatted,
-    time_difference: result.time_difference,
-  };
-};
-
-// Get aggregate results directly from round object
-const getQualifyingResultsForRound = (round: PublicRound): TimeResult[] => {
-  if (!round.qualifying_results || round.qualifying_results.length === 0) return [];
-  return round.qualifying_results.map(convertToTimeResult);
-};
-
-const getFastestLapResultsForRound = (round: PublicRound): TimeResult[] => {
-  if (!round.fastest_lap_results || round.fastest_lap_results.length === 0) return [];
-  return round.fastest_lap_results.map(convertToTimeResult);
-};
-
-const getRaceTimeResultsForRound = (round: PublicRound): TimeResult[] => {
-  if (!round.race_time_results || round.race_time_results.length === 0) return [];
-  return round.race_time_results.map(convertToTimeResult);
+// Get aggregate results directly from round object for the combined times table
+const hasAnyTimeResults = (round: PublicRound): boolean => {
+  return Boolean(
+    (round.qualifying_results && round.qualifying_results.length > 0) ||
+      (round.fastest_lap_results && round.fastest_lap_results.length > 0) ||
+      (round.race_time_results && round.race_time_results.length > 0),
+  );
 };
 
 // Methods
@@ -719,8 +643,8 @@ const getSeasonBadgeVariant = (status: string): 'active' | 'completed' | 'upcomi
 
 // Fetch race results for a specific race
 const fetchRaceResults = async (raceId: number) => {
-  // Don't refetch if already loaded
-  if (raceResults.value.has(raceId)) {
+  // Don't refetch if already loaded or currently loading
+  if (raceResults.value.has(raceId) || raceResultsLoading.value.get(raceId)) {
     return;
   }
 
@@ -797,7 +721,10 @@ const fetchSeasonData = async () => {
   loading.value = true;
   error.value = null;
 
-  // Create new AbortController for this request
+  // Abort existing request before creating new AbortController
+  if (abortController.value) {
+    abortController.value.abort();
+  }
   abortController.value = new AbortController();
 
   try {
@@ -839,11 +766,16 @@ onMounted(() => {
   fetchSeasonData();
 });
 
-// Cleanup: abort any in-flight requests when component unmounts
+// Cleanup: abort any in-flight requests and clear maps when component unmounts
 onUnmounted(() => {
   if (abortController.value) {
     abortController.value.abort();
   }
+  // Clear maps to prevent memory leaks
+  raceResults.value.clear();
+  raceResultsLoading.value.clear();
+  raceResultsError.value.clear();
+  activeRoundTabs.value.clear();
 });
 </script>
 
@@ -949,8 +881,16 @@ onUnmounted(() => {
 }
 
 /* Standings */
+.standings-section {
+  width: 100%;
+}
+
 .standings-card {
   overflow-x: auto;
+}
+
+.division-standings-section {
+  width: 100%;
 }
 
 .divisions-tabs {
@@ -977,16 +917,9 @@ onUnmounted(() => {
   overflow-x: auto;
 }
 
-/* Round Content */
-.round-content {
-}
-
 .round-tabs {
   background: transparent;
   border: none;
-}
-
-.race-results-container {
 }
 
 .aggregate-results-content {

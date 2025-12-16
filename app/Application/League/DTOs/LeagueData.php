@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\League\DTOs;
 
 use App\Domain\League\Entities\League;
-use Illuminate\Support\Facades\Storage;
 use Spatie\LaravelData\Data;
 
 /**
@@ -49,23 +48,31 @@ final class LeagueData extends Data
     /**
      * Create from domain entity with platform data.
      *
-     * @param array<array{id: int, name: string, slug: string}> $platforms
-     * @param array{id: int, first_name: string, last_name: string, email: string}|null $owner
+     * @param League $league Domain entity
+     * @param array<array{id: int, name: string, slug: string}> $platforms Platform data
+     * @param array{id: int, first_name: string, last_name: string, email: string}|null $owner Owner data
+     * @param int $competitionsCount Competitions count
+     * @param int $driversCount Drivers count
+     * @param string|null $logoUrl Optional pre-computed logo URL (infrastructure concern)
+     * @param string|null $headerImageUrl Optional pre-computed header image URL (infrastructure concern)
      */
-    public static function fromEntity(League $league, array $platforms = [], ?array $owner = null, int $competitionsCount = 0, int $driversCount = 0): self
-    {
+    public static function fromEntity(
+        League $league,
+        array $platforms = [],
+        ?array $owner = null,
+        int $competitionsCount = 0,
+        int $driversCount = 0,
+        ?string $logoUrl = null,
+        ?string $headerImageUrl = null
+    ): self {
         return new self(
             id: $league->id(),
             name: $league->name()->value(),
             slug: $league->slug()->value(),
             tagline: $league->tagline()?->value(),
             description: $league->description(),
-            logo_url: $league->logoPath()
-                ? Storage::disk('public')->url($league->logoPath())
-                : null,
-            header_image_url: $league->headerImagePath()
-                ? Storage::disk('public')->url($league->headerImagePath())
-                : null,
+            logo_url: $logoUrl,
+            header_image_url: $headerImageUrl,
             platform_ids: $league->platformIds(),
             platforms: $platforms,
             discord_url: $league->discordUrl(),

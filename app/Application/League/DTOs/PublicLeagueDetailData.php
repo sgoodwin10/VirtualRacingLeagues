@@ -17,8 +17,28 @@ use Spatie\LaravelData\Data;
 final class PublicLeagueDetailData extends Data
 {
     /**
-     * @param array{id: int, name: string, slug: string, tagline: ?string, description: ?string, logo_url: ?string, header_image_url: ?string, platforms: array<int, array{id: int, name: string, slug: string}>, visibility: string, discord_url: ?string, website_url: ?string, twitter_handle: ?string, youtube_url: ?string, twitch_url: ?string, created_at: string} $league
-     * @param array{competitions_count: int, active_seasons_count: int, drivers_count: int} $stats
+     * @param array{
+     *     id: int,
+     *     name: string,
+     *     slug: string,
+     *     tagline: ?string,
+     *     description: ?string,
+     *     logo_url: ?string,
+     *     header_image_url: ?string,
+     *     platforms: array<int, array{id: int, name: string, slug: string}>,
+     *     visibility: string,
+     *     discord_url: ?string,
+     *     website_url: ?string,
+     *     twitter_handle: ?string,
+     *     youtube_url: ?string,
+     *     twitch_url: ?string,
+     *     created_at: string
+     * } $league
+     * @param array{
+     *     competitions_count: int,
+     *     active_seasons_count: int,
+     *     drivers_count: int
+     * } $stats
      * @param array<int, PublicCompetitionDetailData> $competitions
      * @param array<int, mixed> $recent_activity
      * @param array<int, mixed> $upcoming_races

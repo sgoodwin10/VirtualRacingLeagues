@@ -4,82 +4,98 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\DTOs;
 
-use Spatie\LaravelData\Attributes\Validation\Between;
-use Spatie\LaravelData\Attributes\Validation\BooleanType;
-use Spatie\LaravelData\Attributes\Validation\In;
-use Spatie\LaravelData\Attributes\Validation\IntegerType;
-use Spatie\LaravelData\Attributes\Validation\Max;
-use Spatie\LaravelData\Attributes\Validation\Min;
-use Spatie\LaravelData\Attributes\Validation\Nullable;
-use Spatie\LaravelData\Attributes\Validation\Required;
-use Spatie\LaravelData\Attributes\Validation\StringType;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
+/**
+ * Data Transfer Object for creating a qualifier.
+ */
 final class CreateQualifierData extends Data
 {
     public function __construct(
         // Basic
-        #[Nullable, StringType, Between(3, 100)]
-        public ?string $name,
+        public readonly ?string $name,
         // Qualifying Configuration
-        #[Required, StringType, In(['standard', 'time_trial', 'previous_race'])]
-        public string $qualifying_format,
-        #[Required, IntegerType, Min(1)]
-        public int $qualifying_length,
-        #[Nullable, StringType, Max(50)]
-        public ?string $qualifying_tire,
+        public readonly string $qualifying_format,
+        public readonly int $qualifying_length,
+        public readonly ?string $qualifying_tire,
         // Platform Settings
-        #[Nullable, StringType, Max(100)]
-        public ?string $weather,
-        #[Nullable, StringType, Max(100)]
-        public ?string $tire_restrictions,
-        #[Nullable, StringType, Max(100)]
-        public ?string $fuel_usage,
-        #[Nullable, StringType, Max(100)]
-        public ?string $damage_model,
+        public readonly ?string $weather,
+        public readonly ?string $tire_restrictions,
+        public readonly ?string $fuel_usage,
+        public readonly ?string $damage_model,
         // Penalties & Rules
-        #[Required, BooleanType]
-        public bool $track_limits_enforced,
-        #[Required, BooleanType]
-        public bool $false_start_detection,
-        #[Required, BooleanType]
-        public bool $collision_penalties,
-        #[Nullable, StringType]
-        public ?string $assists_restrictions,
+        public readonly bool $track_limits_enforced,
+        public readonly bool $false_start_detection,
+        public readonly bool $collision_penalties,
+        public readonly ?string $assists_restrictions,
         // Bonus Points
-        #[Nullable, IntegerType, Min(1)]
-        public ?int $qualifying_pole,
-        #[Nullable, BooleanType]
-        public ?bool $qualifying_pole_top_10,
+        public readonly ?int $qualifying_pole,
+        public readonly ?bool $qualifying_pole_top_10,
         // Notes
-        #[Nullable, StringType]
-        public ?string $race_notes,
+        public readonly ?string $race_notes,
     ) {
     }
 
     /**
-     * Prepare data for pipeline with validation.
+     * Validation rules including cross-field validation.
+     *
+     * @param ValidationContext|null $context
+     * @return array<string, array<mixed>>
+     */
+    public static function rules(?ValidationContext $context = null): array
+    {
+        return [
+            'name' => ['nullable', 'string', 'between:3,100'],
+            'qualifying_format' => ['required', 'string', 'in:standard,time_trial,previous_race'],
+            'qualifying_length' => ['required', 'integer', 'min:1'],
+            'qualifying_tire' => ['nullable', 'string', 'max:50'],
+            'weather' => ['nullable', 'string', 'max:100'],
+            'tire_restrictions' => ['nullable', 'string', 'max:100'],
+            'fuel_usage' => ['nullable', 'string', 'max:100'],
+            'damage_model' => ['nullable', 'string', 'max:100'],
+            'track_limits_enforced' => ['required', 'boolean'],
+            'false_start_detection' => ['required', 'boolean'],
+            'collision_penalties' => ['required', 'boolean'],
+            'assists_restrictions' => ['nullable', 'string'],
+            'qualifying_pole' => ['nullable', 'integer', 'min:1'],
+            'qualifying_pole_top_10' => [
+                'nullable',
+                'boolean',
+                function ($attribute, $value, $fail) use ($context) {
+                    $qualifyingPole = $context?->payload['qualifying_pole'] ?? null;
+                    if ($qualifyingPole === null && $value === true) {
+                        $fail('The qualifying_pole_top_10 field cannot be true when qualifying_pole is null.');
+                    }
+                },
+            ],
+            'race_notes' => ['nullable', 'string'],
+        ];
+    }
+
+    /**
+     * Normalize empty strings to null for nullable fields.
      *
      * @param array<string, mixed> $payload
      * @return array<string, mixed>
      */
     public static function prepareForPipeline(array $payload): array
     {
-        // Validate: if qualifying_pole is null, qualifying_pole_top_10 must be false or null
-        $qualifyingPole = $payload['qualifying_pole'] ?? null;
-        $qualifyingPoleTop10 = $payload['qualifying_pole_top_10'] ?? null;
+        $nullableStringFields = [
+            'name',
+            'qualifying_tire',
+            'weather',
+            'tire_restrictions',
+            'fuel_usage',
+            'damage_model',
+            'assists_restrictions',
+            'race_notes',
+        ];
 
-        if ($qualifyingPole === null && $qualifyingPoleTop10 === true) {
-            throw new \InvalidArgumentException(
-                'qualifying_pole_top_10 cannot be true when qualifying_pole is null'
-            );
-        }
-
-        // Validate: qualifying_pole must be at least 1 when provided
-        if (isset($payload['qualifying_pole']) && $payload['qualifying_pole'] !== null && $payload['qualifying_pole'] < 1) {
-            throw new \InvalidArgumentException(
-                'qualifying_pole must be at least 1 when provided'
-            );
+        foreach ($nullableStringFields as $field) {
+            if (isset($payload[$field]) && $payload[$field] === '') {
+                $payload[$field] = null;
+            }
         }
 
         return $payload;

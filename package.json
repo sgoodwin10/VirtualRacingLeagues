@@ -70,6 +70,7 @@
         "@primevue/themes": "^4.4.1",
         "@types/quill": "^2.0.14",
         "@vueuse/core": "^14.0.0",
+        "chart.js": "^4.5.1",
         "date-fns": "^4.1.0",
         "pinia": "^3.0.3",
         "pinia-plugin-persistedstate": "^4.5.0",

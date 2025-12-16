@@ -29,7 +29,7 @@ final class IndexPublicLeaguesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'search' => ['nullable', 'string', 'max:255', 'regex:/^[\pL\pN\s\-\_\.,]+$/u'],
+            'search' => ['nullable', 'string', 'max:255', 'regex:/^[\pL\pN\s\-_.,\'()&]*$/u'],
             'platform_id' => ['nullable', 'integer', 'exists:platforms,id'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
@@ -44,7 +44,7 @@ final class IndexPublicLeaguesRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'search.regex' => 'The search field contains invalid characters. Only letters, numbers, spaces, hyphens, underscores, dots, and commas are allowed.',
+            'search.regex' => 'The search field contains invalid characters. Only letters, numbers, spaces, and common punctuation are allowed.',
             'search.max' => 'The search field must not exceed 255 characters.',
             'platform_id.integer' => 'The platform ID must be a valid number.',
             'platform_id.exists' => 'The selected platform does not exist.',
@@ -63,10 +63,15 @@ final class IndexPublicLeaguesRequest extends FormRequest
      */
     public function getFilters(): array
     {
-        return array_filter([
-            'search' => $this->input('search'),
-            'platform_id' => $this->input('platform_id'),
-        ], fn($value) => $value !== null);
+        $validated = $this->validated();
+
+        return array_filter(
+            [
+                'search' => $validated['search'] ?? null,
+                'platform_id' => $validated['platform_id'] ?? null,
+            ],
+            fn($value): bool => $value !== null
+        );
     }
 
     /**
@@ -74,7 +79,7 @@ final class IndexPublicLeaguesRequest extends FormRequest
      */
     public function getPerPage(): int
     {
-        return (int) $this->input('per_page', 12);
+        return (int) ($this->validated()['per_page'] ?? 12);
     }
 
     /**
@@ -82,6 +87,6 @@ final class IndexPublicLeaguesRequest extends FormRequest
      */
     public function getPage(): int
     {
-        return (int) $this->input('page', 1);
+        return (int) ($this->validated()['page'] ?? 1);
     }
 }

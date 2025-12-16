@@ -41,7 +41,8 @@ use Spatie\Activitylog\Models\Activity;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Activity> $activities
  * @property-read int|null $activities_count
  * @property-read string $name
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int,
+ *     \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static Builder<static>|UserEloquent filterByStatus(?string $status)
@@ -129,7 +130,7 @@ class UserEloquent extends Authenticatable implements MustVerifyEmail
      */
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === 'active' && $this->deleted_at === null;
     }
 
     /**

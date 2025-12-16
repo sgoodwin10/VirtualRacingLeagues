@@ -27,6 +27,7 @@ use App\Domain\Driver\ValueObjects\DriverName;
 use App\Domain\Driver\ValueObjects\DriverStatus;
 use App\Domain\Driver\ValueObjects\PlatformIdentifiers;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use InvalidArgumentException;
@@ -41,9 +42,14 @@ final class DriverApplicationService
 
     /**
      * Create a driver and add them to a league.
+     *
+     * @throws UnauthorizedException If the user does not own the league
      */
-    public function createDriverForLeague(CreateDriverData $data, int $leagueId): LeagueDriverData
+    public function createDriverForLeague(CreateDriverData $data, int $leagueId, int $userId): LeagueDriverData
     {
+        // Authorization check
+        $this->authorizeLeagueAccess($leagueId, $userId);
+
         // Get effective nickname (auto-generated from Discord ID if needed)
         $effectiveNickname = $this->resolveNickname(
             $data->nickname,
@@ -182,14 +188,20 @@ final class DriverApplicationService
 
     /**
      * Get paginated list of drivers in a league.
+     *
+     * @throws UnauthorizedException If the user does not own the league
      */
     public function getLeagueDrivers(
         int $leagueId,
+        int $userId,
         ?string $search = null,
         ?string $status = null,
         int $page = 1,
         int $perPage = 15
     ): PaginatedLeagueDriversData {
+        // Authorization check
+        $this->authorizeLeagueAccess($leagueId, $userId);
+
         $result = $this->driverRepository->getLeagueDrivers($leagueId, $search, $status, $page, $perPage);
 
         // Map to DTOs
@@ -212,9 +224,14 @@ final class DriverApplicationService
 
     /**
      * Get a single league driver.
+     *
+     * @throws UnauthorizedException If the user does not own the league
      */
-    public function getLeagueDriver(int $leagueId, int $driverId): LeagueDriverData
+    public function getLeagueDriver(int $leagueId, int $driverId, int $userId): LeagueDriverData
     {
+        // Authorization check
+        $this->authorizeLeagueAccess($leagueId, $userId);
+
         $result = $this->driverRepository->getLeagueDriver($leagueId, $driverId);
 
         return LeagueDriverData::fromEntities(
@@ -253,12 +270,18 @@ final class DriverApplicationService
      * Update global driver fields and league-specific settings.
      * This is used when editing a driver in a league context where both
      * driver information and league settings can be updated.
+     *
+     * @throws UnauthorizedException If the user does not own the league
      */
     public function updateDriverAndLeagueSettings(
         UpdateDriverData $data,
         int $leagueId,
-        int $driverId
+        int $driverId,
+        int $userId
     ): LeagueDriverData {
+        // Authorization check
+        $this->authorizeLeagueAccess($leagueId, $userId);
+
         return DB::transaction(function () use ($data, $leagueId, $driverId) {
             $result = $this->driverRepository->getLeagueDriver($leagueId, $driverId);
             $leagueDriver = $result['league_driver'];
@@ -319,9 +342,14 @@ final class DriverApplicationService
 
     /**
      * Remove a driver from a league.
+     *
+     * @throws UnauthorizedException If the user does not own the league
      */
-    public function removeDriverFromLeague(int $leagueId, int $driverId): void
+    public function removeDriverFromLeague(int $leagueId, int $driverId, int $userId): void
     {
+        // Authorization check
+        $this->authorizeLeagueAccess($leagueId, $userId);
+
         DB::transaction(function () use ($leagueId, $driverId) {
             // Get driver info before removal for event
             $result = $this->driverRepository->getLeagueDriver($leagueId, $driverId);
@@ -340,9 +368,14 @@ final class DriverApplicationService
 
     /**
      * Import drivers from CSV data.
+     *
+     * @throws UnauthorizedException If the user does not own the league
      */
-    public function importDriversFromCSV(ImportDriversData $data, int $leagueId): ImportResultData
+    public function importDriversFromCSV(ImportDriversData $data, int $leagueId, int $userId): ImportResultData
     {
+        // Authorization check
+        $this->authorizeLeagueAccess($leagueId, $userId);
+
         $successCount = 0;
         $errors = [];
 
@@ -482,7 +515,7 @@ final class DriverApplicationService
                 );
 
                 // Create driver and add to league
-                $this->createDriverForLeague($createData, $leagueId);
+                $this->createDriverForLeague($createData, $leagueId, $userId);
                 $successCount++;
             } catch (InvalidArgumentException $e) {
                 $errors[] = [
@@ -802,6 +835,21 @@ final class DriverApplicationService
     // ===================================================================
     // Private Helper Methods
     // ===================================================================
+
+    /**
+     * Verify that a league belongs to the specified user.
+     *
+     * @param int $leagueId The league ID to check
+     * @param int $userId The user ID to verify ownership against
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    private function authorizeLeagueAccess(int $leagueId, int $userId): void
+    {
+        $league = $this->leagueRepository->findById($leagueId);
+        if ($league->ownerUserId() !== $userId) {
+            throw UnauthorizedException::forResource('league');
+        }
+    }
 
     /**
      * Resolve the effective nickname for a driver.

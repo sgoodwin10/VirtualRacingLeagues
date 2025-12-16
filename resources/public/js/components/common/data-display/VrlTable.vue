@@ -148,7 +148,12 @@ const getAlignmentClass = (align?: 'left' | 'center' | 'right'): string => {
         </template>
         <!-- Dynamic column slot for custom cell rendering -->
         <template #body="slotProps">
-          <slot :name="`cell-${col.field}`" :data="slotProps.data" :field="col.field">
+          <slot
+            :name="`cell-${col.field}`"
+            :data="slotProps.data"
+            :field="col.field"
+            :index="slotProps.index"
+          >
             {{ slotProps.data[col.field] }}
           </slot>
         </template>
