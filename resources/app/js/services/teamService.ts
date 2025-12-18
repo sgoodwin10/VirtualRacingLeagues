@@ -12,12 +12,7 @@ import type {
 } from '@app/types/team';
 import type { AxiosResponse } from 'axios';
 import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
-
-// API response wrapper
-interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}
+import type { ApiResponse } from '@app/types/api';
 
 /**
  * Get all teams for a season

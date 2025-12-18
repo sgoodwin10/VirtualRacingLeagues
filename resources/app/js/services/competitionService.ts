@@ -7,12 +7,12 @@ import { apiClient } from './api';
 import type { Competition, CompetitionFilters, SlugCheckResponse } from '@app/types/competition';
 import type { AxiosResponse } from 'axios';
 import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
-
-// API response wrapper
-interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}
+import {
+  appendIfDefined,
+  appendFileIfProvided,
+  addMethodSpoofing,
+} from '@app/utils/formDataBuilder';
+import type { ApiResponse } from '@app/types/api';
 
 /**
  * Get all competitions for a league
@@ -62,7 +62,7 @@ export async function createCompetition(
  */
 export async function updateCompetition(id: number, formData: FormData): Promise<Competition> {
   // Laravel method spoofing for PUT with multipart/form-data
-  formData.append('_method', 'PUT');
+  addMethodSpoofing(formData, 'PUT');
 
   const response: AxiosResponse<ApiResponse<Competition>> = await apiClient.post(
     API_ENDPOINTS.competitions.update(id),
@@ -117,20 +117,11 @@ export function buildCompetitionFormData(form: {
 }): FormData {
   const formData = new FormData();
 
-  formData.append('name', form.name);
-  formData.append('platform_id', form.platform_id.toString());
-
-  if (form.description) {
-    formData.append('description', form.description);
-  }
-
-  if (form.logo) {
-    formData.append('logo', form.logo);
-  }
-
-  if (form.competition_colour) {
-    formData.append('competition_colour', form.competition_colour);
-  }
+  appendIfDefined(formData, 'name', form.name);
+  appendIfDefined(formData, 'platform_id', form.platform_id);
+  appendIfDefined(formData, 'description', form.description);
+  appendFileIfProvided(formData, 'logo', form.logo);
+  appendIfDefined(formData, 'competition_colour', form.competition_colour);
 
   return formData;
 }
@@ -146,21 +137,10 @@ export function buildUpdateCompetitionFormData(form: {
 }): FormData {
   const formData = new FormData();
 
-  if (form.name !== undefined) {
-    formData.append('name', form.name);
-  }
-
-  if (form.description !== undefined) {
-    formData.append('description', form.description || '');
-  }
-
-  if (form.logo !== undefined && form.logo !== null) {
-    formData.append('logo', form.logo);
-  }
-
-  if (form.competition_colour !== undefined) {
-    formData.append('competition_colour', form.competition_colour || '');
-  }
+  appendIfDefined(formData, 'name', form.name);
+  appendIfDefined(formData, 'description', form.description);
+  appendFileIfProvided(formData, 'logo', form.logo);
+  appendIfDefined(formData, 'competition_colour', form.competition_colour);
 
   return formData;
 }

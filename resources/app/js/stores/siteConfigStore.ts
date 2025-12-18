@@ -7,6 +7,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { SiteConfig } from '@app/types/siteConfig';
 import { getSiteConfig } from '@app/services/siteConfigService';
+import { logError } from '@app/utils/logger';
 
 export const useSiteConfigStore = defineStore('siteConfig', () => {
   // State
@@ -72,7 +73,7 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load site configuration';
       error.value = errorMessage;
       // Don't throw - allow app to continue with defaults
-      console.error('Site config error:', errorMessage);
+      logError('Site config error', { context: 'siteConfigStore', data: errorMessage });
     } finally {
       loading.value = false;
     }

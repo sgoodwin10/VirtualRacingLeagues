@@ -1,3 +1,5 @@
+import type { PaginationMeta, PaginationLinks, ApiErrorResponse } from './api';
+
 /**
  * Admin user interface
  */
@@ -65,14 +67,6 @@ export interface LogoutResponse {
 }
 
 /**
- * API error response interface
- */
-export interface ApiErrorResponse {
-  message: string;
-  errors?: Record<string, string[]>;
-}
-
-/**
  * Admin user update data interface
  */
 export interface AdminUserUpdateData {
@@ -80,28 +74,6 @@ export interface AdminUserUpdateData {
   last_name: string;
   email: string;
   role: AdminRole;
-}
-
-/**
- * Pagination metadata
- */
-export interface PaginationMeta {
-  current_page: number;
-  from: number;
-  last_page: number;
-  per_page: number;
-  to: number;
-  total: number;
-}
-
-/**
- * Pagination links
- */
-export interface PaginationLinks {
-  first: string | null;
-  last: string | null;
-  prev: string | null;
-  next: string | null;
 }
 
 /**
@@ -130,3 +102,6 @@ export interface DeleteAdminUserResponse {
   success: boolean;
   message?: string;
 }
+
+// Re-export ApiErrorResponse for backward compatibility
+export type { ApiErrorResponse };

@@ -11,11 +11,16 @@ const theme = ref<Theme>('dark');
 // Singleton initialization tracking
 let isInitialized = false;
 let mediaQuery: MediaQueryList | null = null;
+let mediaQueryHandler: ((e: MediaQueryListEvent) => void) | null = null;
 
 // For testing purposes only - allows resetting the singleton state
 export function __resetThemeForTesting(): void {
   isInitialized = false;
+  if (mediaQuery && mediaQueryHandler) {
+    mediaQuery.removeEventListener('change', mediaQueryHandler);
+  }
   mediaQuery = null;
+  mediaQueryHandler = null;
   theme.value = 'dark';
   if (typeof document !== 'undefined') {
     document.documentElement.removeAttribute('data-theme');
@@ -66,7 +71,7 @@ function initializeTheme(): void {
 
   // Listen for system theme changes
   mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
-  const handleChange = (e: MediaQueryListEvent) => {
+  mediaQueryHandler = (e: MediaQueryListEvent) => {
     // Only apply system preference if user hasn't set a preference
     if (!getStoredTheme()) {
       const systemTheme = e.matches ? 'light' : 'dark';
@@ -75,7 +80,17 @@ function initializeTheme(): void {
     }
   };
 
-  mediaQuery.addEventListener('change', handleChange);
+  mediaQuery.addEventListener('change', mediaQueryHandler);
+}
+
+/**
+ * Cleanup function to remove event listener
+ * This should be called when the app is being destroyed
+ */
+export function cleanupTheme(): void {
+  if (mediaQuery && mediaQueryHandler) {
+    mediaQuery.removeEventListener('change', mediaQueryHandler);
+  }
 }
 
 export function useTheme() {

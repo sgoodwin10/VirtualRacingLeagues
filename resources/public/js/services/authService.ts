@@ -1,6 +1,7 @@
 import { apiClient, apiService } from '@public/services/api';
 import type { User } from '@public/types/user';
 import type { LoginCredentials, RegisterData } from '@public/types/auth';
+import { isAxiosError } from '@public/types/errors';
 
 class AuthService {
   async register(data: RegisterData, signal?: AbortSignal): Promise<void> {
@@ -31,8 +32,20 @@ class AuthService {
     try {
       const response = await apiClient.get<{ data: { user: User } }>('/me', { signal });
       return response.data.data.user;
-    } catch {
-      return null;
+    } catch (error) {
+      // Only treat 401 (unauthorized) and 404 (not found) as "not authenticated"
+      if (isAxiosError(error)) {
+        const status = error.response?.status;
+        // 401 Unauthorized - expected when user is not authenticated
+        // 404 Not Found - endpoint doesn't exist, treat as not authenticated
+        if (status === 401 || status === 404) {
+          return null;
+        }
+      }
+
+      // For all other errors (network errors, 500s, etc.), propagate them
+      // so callers can handle them appropriately
+      throw error;
     }
   }
 

@@ -1,10 +1,12 @@
+import type { MediaObject } from './media';
+
 /**
  * Site Config File Type
  */
 export type SiteConfigFileType = 'logo' | 'favicon' | 'og_image';
 
 /**
- * Site Config File Interface
+ * Site Config File Interface (Legacy format for backward compatibility)
  */
 export interface SiteConfigFile {
   id: number;
@@ -30,6 +32,15 @@ export interface SiteConfig {
   maintenance_mode: boolean;
   timezone: string;
   user_registration_enabled: boolean;
+  // OLD FORMAT (backward compatibility)
+  logo_url?: string | null;
+  favicon_url?: string | null;
+  og_image_url?: string | null;
+  // NEW FORMAT - responsive media with Spatie Media Library
+  logo?: MediaObject | null;
+  favicon?: MediaObject | null;
+  og_image?: MediaObject | null;
+  // Legacy file structure (deprecated)
   files: {
     logo: SiteConfigFile | null;
     favicon: SiteConfigFile | null;

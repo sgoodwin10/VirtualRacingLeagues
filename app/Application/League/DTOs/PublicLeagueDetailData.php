@@ -25,6 +25,7 @@ final class PublicLeagueDetailData extends Data
      *     description: ?string,
      *     logo_url: ?string,
      *     header_image_url: ?string,
+     *     banner_url: ?string,
      *     platforms: array<int, array{id: int, name: string, slug: string}>,
      *     visibility: string,
      *     discord_url: ?string,

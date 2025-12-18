@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use App\Infrastructure\Persistence\Eloquent\Traits\HasMediaCollections;
 use Database\Factories\DivisionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
 
 /**
  * Division Eloquent Model (Anemic).
@@ -29,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division where($column, $operator = null, $value = null, $boolean = 'and')
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereIn($column, $values, $boolean = 'and', $not = false)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Division whereNotNull($column)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division orderBy($column, $direction = 'asc')
  * @method static \Illuminate\Database\Eloquent\Collection<int, Division> get($columns = ['*'])
  * @method static Division|null find($id, $columns = ['*'])
@@ -44,9 +47,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static DivisionFactory factory($count = null, $state = [])
  * @method static Division firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  */
-class Division extends Model
+class Division extends Model implements HasMedia
 {
     use HasFactory;
+    use HasMediaCollections;
 
     /**
      * The table associated with the model.
@@ -106,5 +110,17 @@ class Division extends Model
     public function seasonDrivers(): HasMany
     {
         return $this->hasMany(SeasonDriverEloquent::class, 'division_id');
+    }
+
+    /**
+     * Register media collections for the division.
+     *
+     * @return void
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logo')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
     }
 }

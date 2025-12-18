@@ -33,6 +33,7 @@ final class League
         private ?Tagline $tagline,
         private ?string $description,
         private ?string $headerImagePath,
+        private ?string $bannerPath,
         /** @var array<int> */
         private array $platformIds,
         private ?string $discordUrl,
@@ -60,6 +61,7 @@ final class League
         ?Tagline $tagline = null,
         ?string $description = null,
         ?string $headerImagePath = null,
+        ?string $bannerPath = null,
         array $platformIds = [],
         ?string $discordUrl = null,
         ?string $websiteUrl = null,
@@ -81,6 +83,7 @@ final class League
             tagline: $tagline,
             description: $description,
             headerImagePath: $headerImagePath,
+            bannerPath: $bannerPath,
             platformIds: $platformIds,
             discordUrl: $discordUrl,
             websiteUrl: $websiteUrl,
@@ -126,6 +129,7 @@ final class League
         ?Tagline $tagline,
         ?string $description,
         ?string $headerImagePath,
+        ?string $bannerPath,
         array $platformIds,
         ?string $discordUrl,
         ?string $websiteUrl,
@@ -148,6 +152,7 @@ final class League
             tagline: $tagline,
             description: $description,
             headerImagePath: $headerImagePath,
+            bannerPath: $bannerPath,
             platformIds: $platformIds,
             discordUrl: $discordUrl,
             websiteUrl: $websiteUrl,
@@ -220,6 +225,11 @@ final class League
     public function headerImagePath(): ?string
     {
         return $this->headerImagePath;
+    }
+
+    public function bannerPath(): ?string
+    {
+        return $this->bannerPath;
     }
 
     /**
@@ -395,6 +405,15 @@ final class League
     public function updateHeaderImage(?string $headerImagePath): void
     {
         $this->headerImagePath = $headerImagePath;
+        $this->recordEvent(new LeagueUpdated($this));
+    }
+
+    /**
+     * Update banner path.
+     */
+    public function updateBanner(?string $bannerPath): void
+    {
+        $this->bannerPath = $bannerPath;
         $this->recordEvent(new LeagueUpdated($this));
     }
 

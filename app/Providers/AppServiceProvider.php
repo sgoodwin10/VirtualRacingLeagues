@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Application\Shared\Services\MediaServiceInterface;
+use App\Infrastructure\Media\SpatieMediaService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,7 +16,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register MediaServiceInterface binding
+        $this->app->bind(MediaServiceInterface::class, SpatieMediaService::class);
     }
 
     /**

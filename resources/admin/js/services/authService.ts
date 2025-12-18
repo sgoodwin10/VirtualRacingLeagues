@@ -23,8 +23,8 @@ class AuthService {
    */
   async login(credentials: LoginCredentials, signal?: AbortSignal): Promise<Admin> {
     try {
-      // First, get CSRF cookie
-      await apiService.get('/csrf-cookie', { signal });
+      // First, get CSRF cookie from Sanctum
+      await apiService.fetchCSRFToken();
 
       // Then attempt login
       const response = await apiService.post<LoginResponse>('/login', credentials, { signal });

@@ -3,6 +3,8 @@
  * These represent the public view of data (subset of admin types)
  */
 
+import type { MediaObject } from './media';
+
 /**
  * Platform reference
  */
@@ -21,8 +23,12 @@ export interface PublicLeague {
   slug: string;
   tagline: string | null;
   description: string | null;
-  logo_url: string | null;
-  header_image_url: string | null;
+  logo_url: string | null; // OLD - deprecated, kept for backward compatibility
+  logo?: MediaObject | null; // NEW - responsive media
+  header_image_url: string | null; // OLD - deprecated
+  header_image?: MediaObject | null; // NEW - responsive media
+  banner_url?: string | null; // OLD - deprecated
+  banner?: MediaObject | null; // NEW - responsive media
   platforms: Platform[];
   discord_url: string | null;
   website_url: string | null;
@@ -46,7 +52,8 @@ export interface PublicCompetition {
   platform_id: number;
   platform_name: string;
   platform_slug: string;
-  logo_url: string | null;
+  logo_url: string | null; // OLD - deprecated
+  logo?: MediaObject | null; // NEW - responsive media
   competition_colour: string | null; // RGB JSON string
   stats: {
     total_seasons: number;
@@ -65,8 +72,10 @@ export interface PublicSeason {
   slug: string;
   car_class: string | null;
   description: string | null;
-  logo_url: string;
-  banner_url: string | null;
+  logo_url: string; // OLD - deprecated
+  logo?: MediaObject | null; // NEW - responsive media
+  banner_url: string | null; // OLD - deprecated
+  banner?: MediaObject | null; // NEW - responsive media
   status: 'setup' | 'active' | 'completed' | 'archived';
   is_active: boolean;
   is_completed: boolean;
@@ -270,8 +279,12 @@ export interface PublicLeagueInfo {
   slug: string;
   tagline: string | null;
   description: string | null;
-  logo_url: string | null;
-  header_image_url: string | null;
+  logo_url: string | null; // OLD - deprecated
+  logo?: MediaObject | null; // NEW - responsive media
+  header_image_url: string | null; // OLD - deprecated
+  header_image?: MediaObject | null; // NEW - responsive media
+  banner_url?: string | null; // OLD - deprecated
+  banner?: MediaObject | null; // NEW - responsive media
   platforms: Platform[];
   visibility: 'public' | 'unlisted';
   discord_url: string | null;
@@ -293,7 +306,8 @@ export interface PublicCompetitionDetail {
   name: string;
   slug: string;
   description: string | null;
-  logo_url: string | null;
+  logo_url: string | null; // OLD - deprecated
+  logo?: MediaObject | null; // NEW - responsive media
   competition_colour: string | null;
   platform: Platform;
   stats: {
@@ -351,8 +365,10 @@ export interface PublicSeasonDetailResponse {
   league: {
     name: string;
     slug: string;
-    logo_url?: string | null;
-    header_image_url?: string | null;
+    logo_url?: string | null; // OLD - deprecated
+    logo?: MediaObject | null; // NEW - responsive media
+    header_image_url?: string | null; // OLD - deprecated
+    header_image?: MediaObject | null; // NEW - responsive media
   };
   competition: {
     name: string;
@@ -409,4 +425,28 @@ export interface PublicRaceResultDivision {
   division_id: number;
   division_name: string;
   results: PublicRaceResult[];
+}
+
+/**
+ * Public Driver Profile
+ */
+export interface PublicDriverProfile {
+  nickname: string;
+  driver_number: number | null;
+  platform_accounts: {
+    psn_id?: string;
+    discord_id?: string;
+    iracing_id?: string;
+  };
+  career_stats: {
+    total_poles: number;
+    total_podiums: number;
+  };
+  competitions: Array<{
+    league_name: string;
+    league_slug: string;
+    season_name: string;
+    season_slug: string;
+    status: 'active' | 'reserve' | 'withdrawn';
+  }>;
 }

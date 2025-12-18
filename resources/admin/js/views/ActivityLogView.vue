@@ -6,133 +6,161 @@
       <p class="text-gray-600">View and track all system activities</p>
     </div>
 
-    <!-- Filters & Actions -->
-    <Card class="mb-6">
-      <template #content>
-        <div class="flex flex-col lg:flex-row gap-4 justify-between">
-          <!-- Search -->
-          <div class="flex-1 max-w-md">
-            <IconField>
-              <InputIcon class="pi pi-search" />
-              <InputText v-model="searchQuery" placeholder="Search activities..." class="w-full" />
-            </IconField>
-          </div>
-
-          <!-- Filters and Actions -->
-          <div class="flex gap-3">
-            <!-- Log Type Filter -->
-            <Select
-              v-model="logTypeFilter"
-              :options="logTypeOptions"
-              option-label="label"
-              option-value="value"
-              placeholder="All Types"
-              class="w-40"
-            />
-
-            <!-- Event Filter -->
-            <Select
-              v-model="eventFilter"
-              :options="eventOptions"
-              option-label="label"
-              option-value="value"
-              placeholder="All Events"
-              class="w-40"
-            />
-
-            <!-- Limit -->
-            <Select
-              v-model="limitFilter"
-              :options="limitOptions"
-              option-label="label"
-              option-value="value"
-              class="w-32"
-            />
-
-            <!-- Refresh -->
-            <Button
-              v-tooltip.top="'Refresh'"
-              icon="pi pi-refresh"
-              severity="secondary"
-              :loading="loading"
-              @click="loadActivities"
-            />
-
-            <!-- Clean -->
-            <Button
-              v-if="adminStore.adminRole === 'super_admin'"
-              v-tooltip.top="'Clean Old Logs'"
-              icon="pi pi-trash"
-              severity="danger"
-              @click="showCleanDialog = true"
-            />
-          </div>
-        </div>
-      </template>
-    </Card>
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <!-- Total Activities -->
+    <!-- Initial Loading Skeleton -->
+    <div v-if="initialLoading" class="space-y-6">
       <Card>
         <template #content>
-          <div class="flex items-center gap-3">
-            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-50">
-              <i class="pi pi-list text-blue-600 text-xl"></i>
-            </div>
-            <div>
-              <p class="text-sm text-gray-600">Total Activities</p>
-              <p class="text-2xl font-bold text-gray-900">{{ filteredActivities.length }}</p>
-            </div>
-          </div>
+          <Skeleton height="4rem" class="mb-4" />
         </template>
       </Card>
-
-      <!-- Admin Activities -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card v-for="i in 3" :key="i">
+          <template #content>
+            <Skeleton height="6rem" />
+          </template>
+        </Card>
+      </div>
       <Card>
         <template #content>
-          <div class="flex items-center gap-3">
-            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-purple-50">
-              <i class="pi pi-shield text-purple-600 text-xl"></i>
-            </div>
-            <div>
-              <p class="text-sm text-gray-600">Admin Activities</p>
-              <p class="text-2xl font-bold text-gray-900">{{ adminActivitiesCount }}</p>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <!-- User Activities -->
-      <Card>
-        <template #content>
-          <div class="flex items-center gap-3">
-            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-green-50">
-              <i class="pi pi-users text-green-600 text-xl"></i>
-            </div>
-            <div>
-              <p class="text-sm text-gray-600">User Activities</p>
-              <p class="text-2xl font-bold text-gray-900">{{ userActivitiesCount }}</p>
-            </div>
-          </div>
+          <Skeleton height="20rem" />
         </template>
       </Card>
     </div>
 
-    <!-- Activity Table -->
-    <Card :pt="{ body: { class: 'p-0' }, content: { class: 'p-0' } }">
-      <template #content>
-        <ActivityLogTable
-          :activities="filteredActivities"
-          :loading="loading"
-          :show-event="true"
-          :show-subject="true"
-          :paginator="true"
-          :rows-per-page="20"
-          @view-details="viewActivityDetails"
-        />
-      </template>
-    </Card>
+    <!-- Main Content (after initial load) -->
+    <div v-else>
+      <!-- Filters & Actions -->
+      <Card class="mb-6">
+        <template #content>
+          <div class="flex flex-col lg:flex-row gap-4 justify-between">
+            <!-- Search -->
+            <div class="flex-1 max-w-md">
+              <IconField>
+                <InputIcon class="pi pi-search" />
+                <InputText
+                  v-model="searchQuery"
+                  placeholder="Search activities..."
+                  class="w-full"
+                />
+              </IconField>
+            </div>
+
+            <!-- Filters and Actions -->
+            <div class="flex gap-3">
+              <!-- Log Type Filter -->
+              <Select
+                v-model="logTypeFilter"
+                :options="logTypeOptions"
+                option-label="label"
+                option-value="value"
+                placeholder="All Types"
+                class="w-40"
+              />
+
+              <!-- Event Filter -->
+              <Select
+                v-model="eventFilter"
+                :options="eventOptions"
+                option-label="label"
+                option-value="value"
+                placeholder="All Events"
+                class="w-40"
+              />
+
+              <!-- Limit -->
+              <Select
+                v-model="limitFilter"
+                :options="limitOptions"
+                option-label="label"
+                option-value="value"
+                class="w-32"
+              />
+
+              <!-- Refresh -->
+              <Button
+                v-tooltip.top="'Refresh'"
+                icon="pi pi-refresh"
+                severity="secondary"
+                :loading="loading"
+                @click="loadActivities"
+              />
+
+              <!-- Clean -->
+              <Button
+                v-if="adminStore.adminRole === 'super_admin'"
+                v-tooltip.top="'Clean Old Logs'"
+                icon="pi pi-trash"
+                severity="danger"
+                @click="showCleanDialog = true"
+              />
+            </div>
+          </div>
+        </template>
+      </Card>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Total Activities -->
+        <Card>
+          <template #content>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-50">
+                <i class="pi pi-list text-blue-600 text-xl"></i>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Total Activities</p>
+                <p class="text-2xl font-bold text-gray-900">{{ filteredActivities.length }}</p>
+              </div>
+            </div>
+          </template>
+        </Card>
+
+        <!-- Admin Activities -->
+        <Card>
+          <template #content>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-purple-50">
+                <i class="pi pi-shield text-purple-600 text-xl"></i>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Admin Activities</p>
+                <p class="text-2xl font-bold text-gray-900">{{ adminActivitiesCount }}</p>
+              </div>
+            </div>
+          </template>
+        </Card>
+
+        <!-- User Activities -->
+        <Card>
+          <template #content>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-green-50">
+                <i class="pi pi-users text-green-600 text-xl"></i>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">User Activities</p>
+                <p class="text-2xl font-bold text-gray-900">{{ userActivitiesCount }}</p>
+              </div>
+            </div>
+          </template>
+        </Card>
+      </div>
+
+      <!-- Activity Table -->
+      <Card :pt="{ body: { class: 'p-0' }, content: { class: 'p-0' } }">
+        <template #content>
+          <ActivityLogTable
+            :activities="filteredActivities"
+            :loading="loading"
+            :show-event="true"
+            :show-subject="true"
+            :paginator="true"
+            :rows-per-page="20"
+            @view-details="viewActivityDetails"
+          />
+        </template>
+      </Card>
+    </div>
 
     <!-- Activity Detail Modal -->
     <ActivityLogDetailModal
@@ -208,6 +236,7 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Dialog from 'primevue/dialog';
 import Card from 'primevue/card';
+import Skeleton from 'primevue/skeleton';
 import Toast from 'primevue/toast';
 import ActivityLogTable from '@admin/components/ActivityLog/ActivityLogTable.vue';
 import ActivityLogDetailModal from '@admin/components/ActivityLog/ActivityLogDetailModal.vue';
@@ -223,6 +252,7 @@ const { showErrorToast, showSuccessToast } = useErrorToast();
 // State
 const activities = ref<Activity[]>([]);
 const loading = ref(false);
+const initialLoading = ref(true);
 const searchQuery = ref('');
 const logTypeFilter = ref<LogName | 'all'>('all');
 const eventFilter = ref<EventType | 'all'>('all');
@@ -360,8 +390,9 @@ const cleanOldLogs = async (): Promise<void> => {
 };
 
 // Load data on mount
-onMounted(() => {
-  loadActivities();
+onMounted(async () => {
+  await loadActivities();
+  initialLoading.value = false;
 });
 </script>
 

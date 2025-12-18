@@ -31,7 +31,24 @@
       <!-- Header Section with League Name and Status -->
       <div class="flex items-center justify-between pb-3 border-b border-gray-200">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+          <!-- League Logo or Icon -->
+          <div
+            v-if="detailedLeague.logo || detailedLeague.logo_url"
+            class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
+          >
+            <ResponsiveImage
+              :media="detailedLeague.logo"
+              :fallback-url="detailedLeague.logo_url"
+              :alt="`${detailedLeague.name} logo`"
+              conversion="thumb"
+              img-class="w-full h-full object-cover"
+              loading="eager"
+            />
+          </div>
+          <div
+            v-else
+            class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0"
+          >
             <i class="pi pi-sitemap text-blue-600 text-lg"></i>
           </div>
           <div>
@@ -331,6 +348,7 @@ import { computed, ref, watch } from 'vue';
 import BaseModal from '@admin/components/modals/BaseModal.vue';
 import Button from 'primevue/button';
 import Badge from '@admin/components/common/Badge.vue';
+import ResponsiveImage from '@admin/components/common/ResponsiveImage.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';

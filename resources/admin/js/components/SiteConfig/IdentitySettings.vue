@@ -243,6 +243,7 @@ import Select from 'primevue/select';
 import ImageUpload from './FileUpload/ImageUpload.vue';
 import { COMMON_TIMEZONES } from '@admin/types/siteConfig';
 import type { SiteConfigFile } from '@admin/types/siteConfig';
+import type { MediaObject } from '@admin/types/media';
 
 interface LocalFormData {
   site_name: string;
@@ -253,9 +254,9 @@ interface LocalFormData {
   admin_email: string | null;
   maintenance_mode: boolean;
   user_registration_enabled: boolean;
-  logo: File | SiteConfigFile | null;
-  favicon: File | SiteConfigFile | null;
-  og_image: File | SiteConfigFile | null;
+  logo: File | SiteConfigFile | MediaObject | null;
+  favicon: File | SiteConfigFile | MediaObject | null;
+  og_image: File | SiteConfigFile | MediaObject | null;
   remove_logo: boolean;
   remove_favicon: boolean;
   remove_og_image: boolean;

@@ -6,6 +6,7 @@ import type { Season } from '@app/types/season';
 import Card from 'primevue/card';
 import Chip from 'primevue/chip';
 import Button from 'primevue/button';
+import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 
 interface Props {
   season: Season;
@@ -61,7 +62,14 @@ function handleView(): void {
 <template>
   <Card :class="cardClasses" class="season-card cursor-pointer" @click="handleView">
     <template #header>
-      <img :src="season.logo_url" :alt="season.name" class="w-full h-48 object-cover" />
+      <ResponsiveImage
+        :media="season.logo"
+        :fallback-url="season.logo_url"
+        :alt="season.name"
+        conversion="medium"
+        sizes="(max-width: 768px) 100vw, 400px"
+        img-class="w-full h-48 object-cover"
+      />
     </template>
 
     <template #title>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import DataView from 'primevue/dataview';
 import Button from 'primevue/button';
-import Card from 'primevue/card';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import LeagueWizardDrawer from '@app/components/league/modals/LeagueWizardDrawer.vue';
 import LeagueCard from '@app/components/league/LeagueCard.vue';
@@ -11,6 +11,7 @@ import PageHeader from '@app/components/common/PageHeader.vue';
 // import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@app/components/common/Breadcrumbs.vue';
 
+const router = useRouter();
 const toast = useToast();
 const leagueStore = useLeagueStore();
 
@@ -36,11 +37,13 @@ async function loadLeagues(): Promise<void> {
   isLoading.value = true;
   try {
     await leagueStore.fetchLeagues();
-  } catch {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to load leagues';
+    console.error('Failed to load leagues:', err);
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: 'Failed to load leagues',
+      detail: errorMessage,
       life: 5000,
     });
   } finally {
@@ -80,8 +83,9 @@ async function handleLeagueSaved(): Promise<void> {
   await loadLeagues();
 }
 
-function handleLeagueView(_leagueId: number): void {
-  // View action handled by LeagueCard component
+function handleLeagueView(leagueId: number): void {
+  // Navigate to league detail page
+  router.push({ name: 'league-detail', params: { id: leagueId.toString() } });
 }
 
 function handleLeagueDelete(_leagueId: number): void {
@@ -126,24 +130,6 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
         :title="createButtonTooltip"
         @click="openCreateDrawer"
       />
-    </div>
-
-    <!-- Free Tier Notice -->
-    <div v-if="leagueStore.hasReachedFreeLimit" class="my-6 hidden">
-      <Card class="bg-yellow-50 border border-yellow-200">
-        <template #content>
-          <div class="flex items-start gap-3">
-            <i class="pi pi-info-circle text-yellow-600 text-xl"></i>
-            <div>
-              <p class="font-semibold text-yellow-900 mb-1">Free Tier Limit Reached</p>
-              <p class="text-yellow-800">
-                You've reached the maximum of {{ leagueStore.leagueCount }} league(s) for the free
-                tier. Upgrade your plan to create more leagues and unlock additional features.
-              </p>
-            </div>
-          </div>
-        </template>
-      </Card>
     </div>
 
     <!-- Leagues List -->

@@ -5,6 +5,7 @@ import type { Competition } from '@app/types/competition';
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';
 import { PhImage } from '@phosphor-icons/vue';
+import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 
 interface Props {
   competition: Competition;
@@ -48,11 +49,14 @@ const competitionBackgroundColor = computed(() => {
         class="flex items-center justify-center w-24 h-24 rounded-lg"
         :style="{ backgroundColor: competitionBackgroundColor }"
       >
-        <img
+        <ResponsiveImage
           v-if="hasLogo"
-          :src="competition.logo_url!"
+          :media="competition.logo"
+          :fallback-url="competition.logo_url ?? undefined"
           :alt="competition.name"
-          class="w-full h-full rounded-lg object-cover"
+          conversion="small"
+          sizes="96px"
+          img-class="w-full h-full rounded-lg object-cover"
         />
         <PhImage v-else :size="48" weight="light" class="text-white/50" />
       </div>

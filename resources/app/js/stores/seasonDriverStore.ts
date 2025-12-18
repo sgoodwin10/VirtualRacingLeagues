@@ -199,8 +199,23 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
       totalDrivers.value += 1;
       lastPage.value = Math.ceil(totalDrivers.value / perPage.value);
 
-      // Re-fetch stats from API to ensure accuracy
-      await fetchStats(seasonId);
+      // Optimistically update stats based on the new driver's status
+      stats.value.total += 1;
+      if (seasonDriver.status === 'active') {
+        stats.value.active += 1;
+      } else if (seasonDriver.status === 'reserve') {
+        stats.value.reserve += 1;
+      } else if (seasonDriver.status === 'withdrawn') {
+        stats.value.withdrawn += 1;
+      }
+
+      // Update unassigned counts
+      if (!seasonDriver.division_id) {
+        stats.value.unassigned_to_division += 1;
+      }
+      if (!seasonDriver.team_id) {
+        stats.value.unassigned_to_team += 1;
+      }
 
       return seasonDriver;
     } catch (err: unknown) {

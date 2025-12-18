@@ -24,7 +24,9 @@
         :title="season.name"
         :description="season.description || undefined"
         :background-image="pageHeaderBackgroundImage"
+        :background-media="pageHeaderBackgroundMedia"
         :logo-url="leagueLogoUrl || undefined"
+        :logo="leagueLogo"
       >
         <template #social-links>
           <div class="season-badges">
@@ -43,57 +45,60 @@
         </template>
       </PageHeader>
 
+      <!-- Stats Banner -->
+      <section class="stats-banner">
+        <div class="container-racing h-full">
+          <div class="stats-banner-grid">
+            <!-- Active Drivers -->
+            <div class="stat-item">
+              <PhUsers :size="20" weight="fill" class="stat-icon" />
+              <div class="stat-content">
+                <span class="stat-label">Active Drivers</span>
+                <span class="stat-value">{{ season.stats.active_drivers }}</span>
+              </div>
+            </div>
+
+            <!-- Races Completed -->
+            <div class="stat-item">
+              <PhFlagCheckered :size="20" weight="fill" class="stat-icon" />
+              <div class="stat-content">
+                <span class="stat-label">Races Completed</span>
+                <span class="stat-value"
+                  >{{ season.stats.completed_races }}/{{ season.stats.total_races }}</span
+                >
+              </div>
+            </div>
+
+            <!-- Total Rounds -->
+            <div class="stat-item">
+              <PhCalendarDots :size="20" weight="fill" class="stat-icon" />
+              <div class="stat-content">
+                <span class="stat-label">Total Rounds</span>
+                <span class="stat-value">{{ rounds.length }}</span>
+              </div>
+            </div>
+
+            <!-- Season Status -->
+            <div class="stat-item">
+              <component
+                :is="getSeasonStatusIcon(season.status)"
+                :size="20"
+                weight="fill"
+                class="stat-icon"
+              />
+              <div class="stat-content">
+                <span class="stat-label">Status</span>
+                <span class="stat-value stat-value-capitalized">{{ season.status }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Breadcrumbs -->
       <section class="breadcrumbs-section">
         <div class="container-racing py-4">
           <VrlBreadcrumbs :items="breadcrumbItems" />
-        </div>
-      </section>
-
-      <!-- Stats Bar -->
-      <section class="stats-section">
-        <div class="container-racing">
-          <div class="stats-grid">
-            <!-- Active Drivers -->
-            <VrlStatsCard
-              label="Active Drivers"
-              :value="season.stats.active_drivers"
-              :highlighted="true"
-            >
-              <template #icon>
-                <PhUsers :size="20" weight="fill" class="text-racing-gold" />
-              </template>
-            </VrlStatsCard>
-
-            <!-- Races Completed -->
-            <VrlStatsCard
-              label="Races Completed"
-              :value="`${season.stats.completed_races}/${season.stats.total_races}`"
-            >
-              <template #icon>
-                <PhFlagCheckered :size="20" weight="fill" class="text-racing-gold" />
-              </template>
-            </VrlStatsCard>
-
-            <!-- Total Rounds -->
-            <VrlStatsCard label="Total Rounds" :value="rounds.length">
-              <template #icon>
-                <PhCalendarDots :size="20" weight="fill" class="text-racing-gold" />
-              </template>
-            </VrlStatsCard>
-
-            <!-- Season Status -->
-            <VrlStatsCard label="Status" :value="season.status">
-              <template #icon>
-                <component
-                  :is="getSeasonStatusIcon(season.status)"
-                  :size="20"
-                  weight="fill"
-                  class="text-racing-gold"
-                />
-              </template>
-            </VrlStatsCard>
-          </div>
         </div>
       </section>
 
@@ -360,7 +365,6 @@ import PageHeader from '@public/components/common/layout/PageHeader.vue';
 import VrlBreadcrumbs, {
   type BreadcrumbItem,
 } from '@public/components/common/navigation/VrlBreadcrumbs.vue';
-import VrlStatsCard from '@public/components/common/cards/VrlStatsCard.vue';
 import VrlBadge from '@public/components/common/badges/VrlBadge.vue';
 import VrlTabs, { type TabItem } from '@public/components/common/navigation/VrlTabs.vue';
 import VrlCard from '@public/components/common/cards/VrlCard.vue';
@@ -380,6 +384,7 @@ import type {
   RoundStandingDriver,
   RoundStandingDivision,
 } from '@public/types/public';
+import type { MediaObject } from '@public/types/media';
 
 const route = useRoute();
 
@@ -391,7 +396,9 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const leagueName = ref('');
 const leagueLogoUrl = ref<string | null>(null);
+const leagueLogo = ref<MediaObject | null>(null);
 const leagueHeaderImageUrl = ref<string | null>(null);
+const leagueHeaderImage = ref<MediaObject | null>(null);
 const competitionName = ref('');
 const season = ref<PublicSeason | null>(null);
 const rounds = ref<PublicRound[]>([]);
@@ -420,8 +427,13 @@ const seasonLabel = computed(() => {
 });
 
 const pageHeaderBackgroundImage = computed(() => {
-  // Use season banner, or fall back to league header image
+  // Use season banner, or fall back to league header image (for backward compatibility)
   return season.value?.banner_url || leagueHeaderImageUrl.value || undefined;
+});
+
+const pageHeaderBackgroundMedia = computed(() => {
+  // Use season banner media, or fall back to league header image media
+  return season.value?.banner || leagueHeaderImage.value || undefined;
 });
 
 const standingsTabs = computed<TabItem[]>(() => {
@@ -737,7 +749,9 @@ const fetchSeasonData = async () => {
     // Map API response to component state
     leagueName.value = data.league.name;
     leagueLogoUrl.value = data.league.logo_url || null;
+    leagueLogo.value = data.league.logo || null;
     leagueHeaderImageUrl.value = data.league.header_image_url || null;
+    leagueHeaderImage.value = data.league.header_image || null;
     competitionName.value = data.competition.name;
     season.value = data.season;
     rounds.value = data.rounds;
@@ -839,22 +853,93 @@ onUnmounted(() => {
   }
 }
 
-/* Stats Section */
-.stats-section {
+/* Stats Banner */
+.stats-banner {
   background: var(--color-asphalt);
   border-bottom: 1px solid var(--color-tarmac);
-  padding: var(--space-xl) 0;
+  height: 4rem; /* 64px - h-16 */
+  display: flex;
+  align-items: center;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+.stats-banner-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  height: 100%;
   gap: var(--space-lg);
 }
 
-@media (min-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(4, 1fr);
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0; /* Allow flex items to shrink below their min-content size */
+}
+
+.stat-icon {
+  color: var(--color-gold);
+  flex-shrink: 0;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* Allow text truncation if needed */
+}
+
+.stat-label {
+  font-family: var(--font-body);
+  font-size: 0.75rem; /* 12px */
+  font-weight: 500;
+  color: var(--color-barrier);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.125rem; /* 18px */
+  font-weight: 700;
+  color: var(--color-pit-white);
+  line-height: 1;
+}
+
+.stat-value-capitalized {
+  text-transform: capitalize;
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .stats-banner {
+    height: auto;
+    padding: var(--space-md) 0;
+  }
+
+  .stats-banner-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+
+  .stat-item {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-xs);
+  }
+
+  .stat-content {
+    align-items: center;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+  }
+
+  .stat-label {
+    font-size: 0.6875rem; /* 11px */
   }
 }
 

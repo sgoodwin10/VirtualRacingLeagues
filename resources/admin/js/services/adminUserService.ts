@@ -111,10 +111,12 @@ class AdminUserService {
    * - Uses per_page=100 to minimize API calls
    * - Automatically fetches subsequent pages until all data is retrieved
    * - For very large datasets (>1000 users), consider using getAdminUsers() with manual pagination
+   * - Memory safety: Warns and stops if total exceeds 5000 records
    *
    * @param filters - Optional filter parameters
    * @param signal - Optional AbortSignal for request cancellation
    * @returns Array of all admin users matching the filters
+   * @throws Error if dataset exceeds memory threshold (5000 records)
    */
   async getAllAdminUsers(filters?: AdminUserFilterParams, signal?: AbortSignal): Promise<Admin[]> {
     try {
@@ -122,6 +124,7 @@ class AdminUserService {
       let currentPage = 1;
       let hasMorePages = true;
       const perPage = 100; // Fetch 100 records per request to minimize API calls
+      const MEMORY_THRESHOLD = 5000; // Maximum records to prevent memory exhaustion
 
       while (hasMorePages) {
         // Check if request was aborted
@@ -130,6 +133,13 @@ class AdminUserService {
         }
 
         const response = await this.getAdminUsers(currentPage, perPage, filters, signal);
+
+        // Memory safety check: Warn if total exceeds threshold
+        if (response.meta.total > MEMORY_THRESHOLD) {
+          const errorMessage = `Dataset too large: ${response.meta.total} records exceed memory threshold of ${MEMORY_THRESHOLD}. Use getAdminUsers() with manual pagination instead.`;
+          logger.error(errorMessage);
+          throw new Error(errorMessage);
+        }
 
         allAdmins.push(...response.data);
 

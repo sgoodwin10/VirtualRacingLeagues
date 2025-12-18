@@ -2,12 +2,17 @@
 import { computed } from 'vue';
 import { RouterLink, type RouteLocationRaw } from 'vue-router';
 import { PhFlagCheckered } from '@phosphor-icons/vue';
+import { sanitizeImageUrl } from '@public/utils/urlSanitizer';
+import ResponsiveImage from '@public/components/common/ResponsiveImage.vue';
+import type { MediaObject } from '@public/types/media';
 
 interface Props {
   name: string;
   tagline?: string;
-  logoUrl?: string;
-  headerImageUrl?: string;
+  logoUrl?: string; // OLD - deprecated
+  logo?: MediaObject | null; // NEW - responsive media
+  headerImageUrl?: string; // OLD - deprecated
+  headerImage?: MediaObject | null; // NEW - responsive media
   competitions?: number;
   drivers?: number;
   to?: string | RouteLocationRaw;
@@ -17,7 +22,9 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   tagline: undefined,
   logoUrl: undefined,
+  logo: undefined,
   headerImageUrl: undefined,
+  headerImage: undefined,
   competitions: 0,
   drivers: 0,
   to: undefined,
@@ -31,10 +38,21 @@ const cardClasses = computed(() => {
   return [baseClasses, interactiveClasses, props.class].filter(Boolean).join(' ');
 });
 
+const sanitizedHeaderImageUrl = computed(() => {
+  return sanitizeImageUrl(props.headerImageUrl);
+});
+
+const sanitizedLogoUrl = computed(() => {
+  return sanitizeImageUrl(props.logoUrl);
+});
+
 const headerStyle = computed(() => {
-  if (props.headerImageUrl) {
+  // Use new headerImage media object if available, otherwise fall back to old headerImageUrl
+  const backgroundUrl = props.headerImage?.conversions.medium || sanitizedHeaderImageUrl.value;
+
+  if (backgroundUrl) {
     return {
-      background: `url(${props.headerImageUrl}) center/cover, var(--bg-tertiary)`,
+      background: `url(${backgroundUrl}) center/cover, var(--bg-tertiary)`,
     };
   }
   return {
@@ -58,11 +76,14 @@ const headerStyle = computed(() => {
         class="absolute -bottom-5 sm:-bottom-6 left-4 w-12 h-12 sm:w-14 sm:h-14 rounded flex items-center justify-center"
         style="background: var(--bg-secondary); border: 2px solid var(--border-primary)"
       >
-        <img
-          v-if="logoUrl"
-          :src="logoUrl"
+        <ResponsiveImage
+          v-if="logo || sanitizedLogoUrl"
+          :media="logo"
+          :fallback-url="sanitizedLogoUrl || undefined"
           :alt="`${name} logo`"
-          class="w-full h-full object-cover rounded"
+          sizes="(max-width: 640px) 48px, 56px"
+          loading="lazy"
+          image-class="w-full h-full object-cover rounded"
         />
         <PhFlagCheckered v-else :size="20" weight="fill" class="text-racing-gold sm:text-xl" />
       </div>

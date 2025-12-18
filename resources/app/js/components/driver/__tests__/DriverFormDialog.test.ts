@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mountWithStubs } from '@app/__tests__/setup';
 import { createPinia, setActivePinia } from 'pinia';
 import DriverFormDialog from '../modals/DriverFormDialog.vue';
 import type { LeagueDriver } from '@app/types/driver';
 import type { PlatformFormField } from '@app/types/league';
+import { defineComponent } from 'vue';
 
 // Mock the league store
 const mockFetchDriverFormFieldsForLeague = vi.fn();
@@ -18,88 +19,44 @@ vi.mock('@app/stores/leagueStore', () => ({
   })),
 }));
 
-// Mock BaseModal component
-vi.mock('@app/components/common/modals/BaseModal.vue', () => ({
-  default: {
-    name: 'BaseModal',
-    template: '<div v-if="visible"><slot></slot><slot name="footer"></slot></div>',
-    props: ['visible', 'header', 'width'],
-  },
-}));
+// Stub components that are not yet in centralized stubs
+const AccordionStub = defineComponent({
+  name: 'Accordion',
+  props: ['multiple'],
+  template: '<div class="mock-accordion"><slot></slot></div>',
+});
 
-vi.mock('primevue/inputtext', () => ({
-  default: {
-    name: 'InputText',
-    template:
-      '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
-    props: ['modelValue', 'placeholder', 'type'],
-  },
-}));
+const AccordionPanelStub = defineComponent({
+  name: 'AccordionPanel',
+  props: ['value'],
+  template: '<div class="mock-accordion-panel"><slot></slot></div>',
+});
 
-vi.mock('primevue/inputnumber', () => ({
-  default: {
-    name: 'InputNumber',
-    template:
-      '<input type="number" :value="modelValue" @input="$emit(\'update:modelValue\', parseInt($event.target.value))" />',
-    props: ['modelValue', 'min', 'max', 'useGrouping', 'placeholder'],
-  },
-}));
+const AccordionHeaderStub = defineComponent({
+  name: 'AccordionHeader',
+  template: '<div class="mock-accordion-header"><slot></slot></div>',
+});
 
-vi.mock('primevue/select', () => ({
-  default: {
-    name: 'Select',
-    template:
-      '<select :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value)"><option v-for="opt in options" :value="opt.value">{{ opt.label }}</option></select>',
-    props: ['modelValue', 'options', 'optionLabel', 'optionValue', 'placeholder'],
-  },
-}));
+const AccordionContentStub = defineComponent({
+  name: 'AccordionContent',
+  template: '<div class="mock-accordion-content"><slot></slot></div>',
+});
 
-vi.mock('primevue/textarea', () => ({
-  default: {
-    name: 'Textarea',
-    template:
-      '<textarea :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)"></textarea>',
-    props: ['modelValue', 'rows', 'placeholder'],
-  },
-}));
+const InputNumberStub = defineComponent({
+  name: 'InputNumber',
+  props: ['modelValue', 'min', 'max', 'useGrouping', 'placeholder'],
+  emits: ['update:modelValue'],
+  template:
+    '<input type="number" :value="modelValue" @input="$emit(\'update:modelValue\', parseInt($event.target.value))" />',
+});
 
-vi.mock('primevue/button', () => ({
-  default: {
-    name: 'Button',
-    template: '<button @click="$emit(\'click\')">{{ label }}</button>',
-    props: ['label', 'severity'],
-  },
-}));
-
-vi.mock('primevue/accordion', () => ({
-  default: {
-    name: 'Accordion',
-    template: '<div class="mock-accordion"><slot></slot></div>',
-    props: ['multiple'],
-  },
-}));
-
-vi.mock('primevue/accordionpanel', () => ({
-  default: {
-    name: 'AccordionPanel',
-    template: '<div class="mock-accordion-panel"><slot></slot></div>',
-    props: ['value'],
-  },
-}));
-
-vi.mock('primevue/accordionheader', () => ({
-  default: {
-    name: 'AccordionHeader',
-    template: '<div class="mock-accordion-header"><slot></slot></div>',
-  },
-}));
-
-vi.mock('primevue/accordioncontent', () => ({
-  default: {
-    name: 'AccordionContent',
-    template: '<div class="mock-accordion-content"><slot></slot></div>',
-  },
-}));
+const TextareaStub = defineComponent({
+  name: 'Textarea',
+  props: ['modelValue', 'rows', 'placeholder', 'maxlength'],
+  emits: ['update:modelValue'],
+  template:
+    '<textarea :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)"></textarea>',
+});
 
 describe('DriverFormDialog', () => {
   let mockDriver: LeagueDriver;
@@ -146,25 +103,51 @@ describe('DriverFormDialog', () => {
   });
 
   it('should render in create mode', () => {
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      global: {
+        stubs: {
+          Accordion: AccordionStub,
+          AccordionPanel: AccordionPanelStub,
+          AccordionHeader: AccordionHeaderStub,
+          AccordionContent: AccordionContentStub,
+          InputNumber: InputNumberStub,
+          Textarea: TextareaStub,
+        },
+      },
     });
 
     expect(wrapper.exists()).toBe(true);
+    // Verify dialog title for create mode
+    expect(wrapper.html()).toContain('Add Driver');
+  });
+
+  const getStubOptions = () => ({
+    global: {
+      stubs: {
+        Accordion: AccordionStub,
+        AccordionPanel: AccordionPanelStub,
+        AccordionHeader: AccordionHeaderStub,
+        AccordionContent: AccordionContentStub,
+        InputNumber: InputNumberStub,
+        Textarea: TextareaStub,
+      },
+    },
   });
 
   it('should render in edit mode with driver data', async () => {
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'edit',
         driver: mockDriver,
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     await wrapper.vm.$nextTick();
@@ -178,12 +161,13 @@ describe('DriverFormDialog', () => {
   });
 
   it('should validate that at least one of nickname or discord_id is required', async () => {
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -199,12 +183,13 @@ describe('DriverFormDialog', () => {
     // Set up platform fields in mock
     mockPlatformFormFieldsValue = mockPlatformFormFields;
 
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -221,12 +206,13 @@ describe('DriverFormDialog', () => {
     // Set up platform fields in mock
     mockPlatformFormFieldsValue = mockPlatformFormFields;
 
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -243,12 +229,13 @@ describe('DriverFormDialog', () => {
     // Set up platform fields in mock
     mockPlatformFormFieldsValue = mockPlatformFormFields;
 
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -266,12 +253,13 @@ describe('DriverFormDialog', () => {
     // Set up platform fields in mock
     mockPlatformFormFieldsValue = mockPlatformFormFields;
 
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -284,12 +272,13 @@ describe('DriverFormDialog', () => {
   });
 
   it('should validate email format', async () => {
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -304,12 +293,13 @@ describe('DriverFormDialog', () => {
   });
 
   it('should validate driver number range', async () => {
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -327,12 +317,13 @@ describe('DriverFormDialog', () => {
     // Set up platform fields in mock
     mockPlatformFormFieldsValue = mockPlatformFormFields;
 
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -354,12 +345,13 @@ describe('DriverFormDialog', () => {
   });
 
   it('should emit cancel event', async () => {
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -370,12 +362,13 @@ describe('DriverFormDialog', () => {
   });
 
   it('should reset form when opening in create mode', async () => {
-    const wrapper = mount(DriverFormDialog, {
+    const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: false,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     const component = wrapper.vm as any;
@@ -387,22 +380,24 @@ describe('DriverFormDialog', () => {
   });
 
   it('should display correct dialog title', () => {
-    const createWrapper = mount(DriverFormDialog, {
+    const createWrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'create',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     expect((createWrapper.vm as any).dialogTitle).toBe('Add Driver');
 
-    const editWrapper = mount(DriverFormDialog, {
+    const editWrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
         mode: 'edit',
         leagueId: 1,
       },
+      ...getStubOptions(),
     });
 
     expect((editWrapper.vm as any).dialogTitle).toBe('Edit Driver');

@@ -59,6 +59,8 @@ const form = reactive<CreateLeagueForm>({
   visibility: 'public',
   tagline: '',
   description: '',
+  banner: null,
+  banner_url: undefined,
   header_image: null,
   header_image_url: undefined,
   contact_email: '',
@@ -167,13 +169,15 @@ async function loadLeagueData(leagueId: number): Promise<void> {
 
     // Pre-populate form with existing league data
     form.name = league.name;
-    form.logo_url = league.logo_url || undefined;
+    // Use new media system if available, fallback to old URLs
+    form.logo_url = league.logo?.original || league.logo_url || undefined;
     form.platform_ids = league.platform_ids;
     form.timezone = league.timezone;
     form.visibility = league.visibility;
     form.tagline = league.tagline || '';
     form.description = league.description || '';
-    form.header_image_url = league.header_image_url || undefined;
+    form.banner_url = league.banner?.original || league.banner_url || undefined;
+    form.header_image_url = league.header_image?.original || league.header_image_url || undefined;
     form.contact_email = league.contact_email || '';
     form.organizer_name = league.organizer_name || '';
     form.discord_url = league.discord_url || '';
@@ -183,7 +187,7 @@ async function loadLeagueData(leagueId: number): Promise<void> {
     form.youtube_url = league.youtube_url || '';
     form.twitch_url = league.twitch_url || '';
 
-    // Note: logo and header_image are File objects and will remain null
+    // Note: logo, banner and header_image are File objects and will remain null
     // unless the user uploads new ones
   } catch {
     toast.add({
@@ -320,6 +324,9 @@ async function submitForm(): Promise<void> {
       if (form.logo) {
         updateData.logo = form.logo;
       }
+      if (form.banner) {
+        updateData.banner = form.banner;
+      }
       if (form.header_image) {
         updateData.header_image = form.header_image;
       }
@@ -398,6 +405,8 @@ function resetForm(): void {
   form.visibility = 'public';
   form.tagline = '';
   form.description = '';
+  form.banner = null;
+  form.banner_url = undefined;
   form.header_image = null;
   form.header_image_url = undefined;
   form.contact_email = '';
@@ -630,27 +639,44 @@ function resetForm(): void {
           <!-- Tab 0: Media -->
           <TabPanel value="0">
             <BasePanel>
-              <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
-                <!-- Logo Upload -->
-                <div class="lg:col-span-1 rounded-md border border-gray-200 content-center p-2">
-                  <ImageUpload
-                    v-model="form.logo"
-                    :existing-image-url="form.logo_url ?? null"
-                    label="League Logo"
-                    :required="false"
-                    :error="errors.logo"
-                    preview-size="small"
-                    helper-text="Square logo (400x400px recommended)"
-                    @remove-existing="form.logo_url = undefined"
-                  />
+              <div class="space-y-4 p-4">
+                <!-- Row 1: Logo and Banner -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <!-- Logo Upload -->
+                  <div class="lg:col-span-1 rounded-md border border-gray-200 content-center p-2">
+                    <ImageUpload
+                      v-model="form.logo"
+                      :existing-image-url="form.logo_url ?? null"
+                      label="League Logo"
+                      :required="false"
+                      :error="errors.logo"
+                      preview-size="small"
+                      helper-text="Square logo (400x400px recommended)"
+                      @remove-existing="form.logo_url = undefined"
+                    />
+                  </div>
+
+                  <!-- Banner Upload -->
+                  <div class="lg:col-span-2 rounded-md border border-gray-200 content-center p-2">
+                    <ImageUpload
+                      v-model="form.banner"
+                      :existing-image-url="form.banner_url ?? null"
+                      label="League Banner"
+                      :required="false"
+                      :error="errors.banner"
+                      preview-size="large"
+                      helper-text="Banner image (200-800px wide, 32-100px tall)"
+                      @remove-existing="form.banner_url = undefined"
+                    />
+                  </div>
                 </div>
 
-                <!-- Header Image -->
-                <div class="lg:col-span-2 rounded-md border border-gray-200 content-center p-2">
+                <!-- Row 2: Header Image (Background) -->
+                <div class="rounded-md border border-gray-200 content-center p-2">
                   <ImageUpload
                     v-model="form.header_image"
                     :existing-image-url="form.header_image_url ?? null"
-                    label="Header Image"
+                    label="League Background Image"
                     :required="false"
                     :error="errors.header_image"
                     preview-size="large"

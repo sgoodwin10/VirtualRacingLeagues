@@ -1,25 +1,48 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import type { PlatformRaceSettings } from '@app/types/race';
 import { getRaceSettings } from '@app/services/raceSettingsService';
 
+interface CachedSettings {
+  data: PlatformRaceSettings;
+  timestamp: number;
+}
+
 export const useRaceSettingsStore = defineStore('raceSettings', () => {
-  // Cache settings by platform ID
-  const settingsCache = ref<Map<number, PlatformRaceSettings>>(new Map());
+  // Cache settings by platform ID with TTL - reactive Map for proper reactivity
+  const settingsCache = reactive(new Map<number, CachedSettings>());
   const loading = ref(false);
   const error = ref<string | null>(null);
 
+  // Cache TTL: 5 minutes (in milliseconds)
+  const CACHE_TTL = 5 * 60 * 1000;
+
+  /**
+   * Check if cached entry is still valid
+   */
+  function isCacheValid(platformId: number): boolean {
+    const cached = settingsCache.get(platformId);
+    if (!cached) return false;
+
+    const now = Date.now();
+    return now - cached.timestamp < CACHE_TTL;
+  }
+
   async function fetchRaceSettings(platformId: number): Promise<PlatformRaceSettings> {
-    // Return cached if available
-    if (settingsCache.value.has(platformId)) {
-      return settingsCache.value.get(platformId)!;
+    // Return cached if available and not expired
+    if (isCacheValid(platformId)) {
+      return settingsCache.get(platformId)!.data;
     }
 
     loading.value = true;
     error.value = null;
     try {
       const settings = await getRaceSettings(platformId);
-      settingsCache.value.set(platformId, settings);
+      // Store with timestamp for TTL validation
+      settingsCache.set(platformId, {
+        data: settings,
+        timestamp: Date.now(),
+      });
       return settings;
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to load race settings';
@@ -29,12 +52,22 @@ export const useRaceSettingsStore = defineStore('raceSettings', () => {
     }
   }
 
+  /**
+   * Invalidate cache for a specific platform
+   */
+  function invalidateCache(platformId: number): void {
+    settingsCache.delete(platformId);
+  }
+
+  /**
+   * Clear all cached settings
+   */
   function clearCache(): void {
-    settingsCache.value.clear();
+    settingsCache.clear();
   }
 
   function $reset(): void {
-    settingsCache.value.clear();
+    settingsCache.clear();
     loading.value = false;
     error.value = null;
   }
@@ -44,6 +77,7 @@ export const useRaceSettingsStore = defineStore('raceSettings', () => {
     loading,
     error,
     fetchRaceSettings,
+    invalidateCache,
     clearCache,
     $reset,
   };

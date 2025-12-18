@@ -119,6 +119,15 @@ const router = createRouter({
         title: 'Component Demo',
       },
     },
+    // 404 catch-all route (must be last)
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@public/views/NotFoundView.vue'),
+      meta: {
+        title: 'Page Not Found',
+      },
+    },
   ],
 });
 

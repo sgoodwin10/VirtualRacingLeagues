@@ -6,7 +6,12 @@
 import { reactive, computed } from 'vue';
 import type { SeasonForm, SeasonFormErrors } from '@app/types/season';
 
-export function useSeasonValidation(form: SeasonForm) {
+export function useSeasonValidation(
+  form: Pick<
+    SeasonForm,
+    'name' | 'car_class' | 'description' | 'technical_specs' | 'logo' | 'banner'
+  >,
+) {
   const errors = reactive<SeasonFormErrors>({});
 
   /**

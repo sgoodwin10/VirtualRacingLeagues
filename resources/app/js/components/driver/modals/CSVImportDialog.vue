@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue';
+import { useMemoize } from '@vueuse/core';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
@@ -32,10 +33,11 @@ const importing = ref(false);
 const importResult = ref<ImportDriversResponse | null>(null);
 const error = ref<string | null>(null);
 
-// Generate CSV example dynamically based on league's platform headers
-const csvExample = computed(() => {
-  const platformHeaders = leagueStore.platformCsvHeaders;
-
+/**
+ * Memoized function to generate CSV example based on platform headers
+ * This prevents expensive recalculations on every access
+ */
+const generateCsvExample = useMemoize((platformHeaders: typeof leagueStore.platformCsvHeaders) => {
   if (platformHeaders.length === 0) {
     // Fallback example if headers not loaded yet
     return `Nickname,DiscordID,DriverNumber
@@ -104,6 +106,10 @@ Mike Ross,,3`;
 
   return `${headerRow}\n${dataRows.join('\n')}`;
 });
+
+// Generate CSV example dynamically based on league's platform headers
+// Uses memoization to prevent expensive recalculations
+const csvExample = computed(() => generateCsvExample(leagueStore.platformCsvHeaders));
 
 // Watch for visible changes to reset form
 watch(

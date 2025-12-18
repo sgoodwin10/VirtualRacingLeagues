@@ -21,6 +21,9 @@ describe('useSeasonValidation', () => {
       race_times_required: true,
       drop_round: false,
       total_drop_rounds: 0,
+      teams_drivers_for_calculation: null,
+      teams_drop_rounds: false,
+      teams_total_drop_rounds: null,
     });
   });
 

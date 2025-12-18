@@ -79,7 +79,7 @@ final class SeasonController extends Controller
         $validated = $request->validate(UpdateSeasonData::rules());
 
         $data = UpdateSeasonData::from($validated);
-        $season = $this->seasonService->updateSeason($id, $data, $this->getAuthenticatedUserId());
+        $season = $this->seasonService->updateSeason($id, $data, $this->getAuthenticatedUserId(), $validated);
 
         return ApiResponse::success($season->toArray(), 'Season updated successfully');
     }

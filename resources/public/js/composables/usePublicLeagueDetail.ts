@@ -102,7 +102,10 @@ export function usePublicLeagueDetail(slug: string) {
     error.value = null;
 
     try {
-      const response: PublicLeagueDetailResponse = await publicApi.fetchLeague(slug);
+      const response: PublicLeagueDetailResponse = await publicApi.fetchLeague(
+        slug,
+        abortController.value.signal,
+      );
 
       league.value = response.league;
       stats.value = response.stats;
@@ -112,7 +115,7 @@ export function usePublicLeagueDetail(slug: string) {
       championshipLeaders.value = response.championship_leaders;
     } catch (err) {
       // Don't set error if request was aborted
-      if (axios.isCancel(err)) {
+      if (axios.isCancel(err) || (err instanceof Error && err.name === 'AbortError')) {
         return;
       }
 

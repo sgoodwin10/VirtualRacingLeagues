@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
+import { useConfirmDialog } from '@app/composables/useConfirmDialog';
 import type { Competition, CompetitionSeason } from '@app/types/competition';
 import type { Season } from '@app/types/season';
 import type { MenuItem } from 'primevue/menuitem';
@@ -14,6 +14,7 @@ import SpeedDial from 'primevue/speeddial';
 import Button from 'primevue/button';
 import InfoItem from '@app/components/common/InfoItem.vue';
 import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
+import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 import { useCompetitionStore } from '@app/stores/competitionStore';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import {
@@ -42,7 +43,7 @@ const emit = defineEmits<Emits>();
 
 const router = useRouter();
 const toast = useToast();
-const confirm = useConfirm();
+const { showConfirmation } = useConfirmDialog();
 const competitionStore = useCompetitionStore();
 const seasonStore = useSeasonStore();
 
@@ -52,7 +53,6 @@ const vTooltip = Tooltip;
 const showSeasonDrawer = ref(false);
 const editingSeasonId = ref<number | null>(null);
 const seasonOperations = ref<Record<number, boolean>>({});
-const isConfirmationOpen = ref(false);
 
 const cardClasses = computed(() => ({
   'opacity-60': props.competition.is_archived,
@@ -203,25 +203,12 @@ async function handleEditSeason(seasonId: number): Promise<void> {
 }
 
 function confirmArchiveSeason(season: CompetitionSeason): void {
-  if (isConfirmationOpen.value) return;
-
-  isConfirmationOpen.value = true;
-
-  confirm.require({
+  showConfirmation({
     message: `Are you sure you want to archive "${season.name}"? All associated rounds and races will also be archived.`,
     header: 'Archive Season',
     icon: 'pi pi-box',
     acceptClass: 'p-button-warning',
-    accept: () => {
-      isConfirmationOpen.value = false;
-      archiveSeason(season.id);
-    },
-    reject: () => {
-      isConfirmationOpen.value = false;
-    },
-    onHide: () => {
-      isConfirmationOpen.value = false;
-    },
+    onAccept: () => archiveSeason(season.id),
   });
 }
 
@@ -249,25 +236,12 @@ async function archiveSeason(seasonId: number): Promise<void> {
 }
 
 function confirmUnarchiveSeason(season: CompetitionSeason): void {
-  if (isConfirmationOpen.value) return;
-
-  isConfirmationOpen.value = true;
-
-  confirm.require({
+  showConfirmation({
     message: `Are you sure you want to unarchive "${season.name}"? All associated rounds and races will also be restored.`,
     header: 'Unarchive Season',
     icon: 'pi pi-inbox',
     acceptClass: 'p-button-success',
-    accept: () => {
-      isConfirmationOpen.value = false;
-      unarchiveSeason(season.id);
-    },
-    reject: () => {
-      isConfirmationOpen.value = false;
-    },
-    onHide: () => {
-      isConfirmationOpen.value = false;
-    },
+    onAccept: () => unarchiveSeason(season.id),
   });
 }
 
@@ -295,25 +269,12 @@ async function unarchiveSeason(seasonId: number): Promise<void> {
 }
 
 function confirmDeleteSeason(season: CompetitionSeason): void {
-  if (isConfirmationOpen.value) return;
-
-  isConfirmationOpen.value = true;
-
-  confirm.require({
+  showConfirmation({
     message: `Are you sure you want to delete "${season.name}"? This action cannot be undone and will permanently remove all associated rounds, races, and results.`,
     header: 'Delete Season',
     icon: 'pi pi-exclamation-triangle',
     acceptClass: 'p-button-danger',
-    accept: () => {
-      isConfirmationOpen.value = false;
-      deleteSeason(season.id);
-    },
-    reject: () => {
-      isConfirmationOpen.value = false;
-    },
-    onHide: () => {
-      isConfirmationOpen.value = false;
-    },
+    onAccept: () => deleteSeason(season.id),
   });
 }
 
@@ -345,25 +306,12 @@ function handleEdit(): void {
 }
 
 function confirmDelete(): void {
-  if (isConfirmationOpen.value) return;
-
-  isConfirmationOpen.value = true;
-
-  confirm.require({
+  showConfirmation({
     message: `Are you sure you want to delete "${props.competition.name}"? \nThis action cannot be undone and will remove all associated seasons and data.`,
     header: 'Delete Competition',
     icon: 'pi pi-exclamation-triangle',
     acceptClass: 'p-button-danger',
-    accept: () => {
-      isConfirmationOpen.value = false;
-      deleteCompetition();
-    },
-    reject: () => {
-      isConfirmationOpen.value = false;
-    },
-    onHide: () => {
-      isConfirmationOpen.value = false;
-    },
+    onAccept: () => deleteCompetition(),
   });
 }
 
@@ -399,11 +347,14 @@ async function deleteCompetition(): Promise<void> {
         :style="{ backgroundColor: competitionBackgroundColor }"
         :class="{ 'w-18 h-18 m-1 p-1': hasLogo, 'w-16 h-16 m-2': !hasLogo }"
       >
-        <img
+        <ResponsiveImage
           v-if="hasLogo"
-          :src="competition.logo_url!"
+          :media="competition.logo"
+          :fallback-url="competition.logo_url ?? undefined"
           :alt="competition.name"
-          class="w-full h-full object-cover rounded-tl-md"
+          conversion="small"
+          sizes="72px"
+          img-class="w-full h-full object-cover rounded-tl-md"
         />
         <PhImage v-else :size="32" weight="light" class="text-white/50" />
       </div>

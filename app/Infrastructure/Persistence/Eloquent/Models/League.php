@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use App\Infrastructure\Persistence\Eloquent\Traits\HasMediaCollections;
 use App\Models\User;
 use Database\Factories\LeagueFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
 
 /**
  * @property int $id
@@ -22,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $description
  * @property string $logo_path
  * @property string|null $header_image_path
+ * @property string|null $banner_path
  * @property array $platform_ids
  * @property string|null $discord_url
  * @property string|null $website_url
@@ -71,9 +74,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|League withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|League withoutTrashed()
  */
-class League extends Model
+class League extends Model implements HasMedia
 {
     use HasFactory;
+    use HasMediaCollections;
     use SoftDeletes;
 
     /**
@@ -94,6 +98,7 @@ class League extends Model
         'description',
         'logo_path',
         'header_image_path',
+        'banner_path',
         'platform_ids',
         'discord_url',
         'website_url',
@@ -190,5 +195,26 @@ class League extends Model
     public function competitions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Competition::class, 'league_id');
+    }
+
+    /**
+     * Register media collections for League.
+     * Defines single-file collections for logo, header image, and banner.
+     *
+     * @return void
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logo')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
+
+        $this->addMediaCollection('header_image')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
+
+        $this->addMediaCollection('banner')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
     }
 }

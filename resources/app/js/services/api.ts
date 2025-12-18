@@ -7,6 +7,7 @@ class ApiService {
     this.client = axios.create({
       baseURL: '/api',
       withCredentials: true,
+      timeout: 30000, // 30 seconds timeout
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
@@ -34,11 +35,12 @@ class ApiService {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
-        // Handle 419 CSRF token mismatch
-        if (error.response?.status === 419) {
-          await this.fetchCSRFToken();
+        // Handle 419 CSRF token mismatch (with retry limit to prevent infinite loops)
+        if (error.response?.status === 419 && !error.config?._retry) {
           const originalRequest = error.config;
           if (originalRequest) {
+            originalRequest._retry = true;
+            await this.fetchCSRFToken();
             return this.client.request(originalRequest);
           }
         }
@@ -47,12 +49,10 @@ class ApiService {
         if (error.response?.status === 401) {
           // Redirect to login if not already there
           if (!window.location.pathname.includes('/login')) {
-            // If on app subdomain, redirect to main domain login
-            if (window.location.hostname.includes('app.')) {
-              window.location.href = `${import.meta.env.VITE_APP_URL}/login`;
-            } else {
-              window.location.href = '/login';
-            }
+            // Redirect to public site login with return URL
+            const publicDomain = window.location.origin.replace('//app.', '//');
+            const returnUrl = encodeURIComponent(window.location.pathname);
+            window.location.href = `${publicDomain}/login?redirect=${returnUrl}`;
           }
         }
 

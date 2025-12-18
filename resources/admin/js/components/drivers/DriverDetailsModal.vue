@@ -255,12 +255,19 @@
           <div v-if="driverDetails?.leagues && driverDetails.leagues.length > 0">
             <div v-for="league in driverDetails.leagues" :key="league.id" class="mb-3 last:mb-0">
               <div class="flex items-center gap-3 p-3 bg-white rounded border border-gray-200">
-                <img
-                  v-if="league.logo_url"
-                  :src="league.logo_url"
-                  :alt="league.name"
-                  class="w-10 h-10 rounded object-cover"
-                />
+                <div
+                  v-if="league.logo || league.logo_url"
+                  class="w-10 h-10 rounded overflow-hidden flex-shrink-0"
+                >
+                  <ResponsiveImage
+                    :media="league.logo"
+                    :fallback-url="league.logo_url ?? undefined"
+                    :alt="`${league.name} logo`"
+                    conversion="thumb"
+                    img-class="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
                 <div v-else class="w-10 h-10 rounded bg-gray-200 flex items-center justify-center">
                   <i class="pi pi-sitemap text-gray-400"></i>
                 </div>
@@ -335,6 +342,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Badge from '@admin/components/common/Badge.vue';
+import ResponsiveImage from '@admin/components/common/ResponsiveImage.vue';
 import { driverService } from '@admin/services/driverService';
 import { useErrorToast } from '@admin/composables/useErrorToast';
 import { useDateFormatter } from '@admin/composables/useDateFormatter';

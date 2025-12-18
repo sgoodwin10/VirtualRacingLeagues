@@ -2,6 +2,8 @@
  * League-related TypeScript types and interfaces
  */
 
+import type { MediaObject } from './media';
+
 /**
  * Platform interface representing a racing simulation platform
  */
@@ -38,8 +40,14 @@ export interface League {
   slug: string;
   tagline: string | null;
   description: string | null;
+  // OLD - kept for backward compatibility
   logo_url: string | null;
+  banner_url: string | null;
   header_image_url: string | null;
+  // NEW - responsive media system
+  logo?: MediaObject | null;
+  banner?: MediaObject | null;
+  header_image?: MediaObject | null;
   platform_ids: number[];
   platforms?: Platform[];
   discord_url: string | null;
@@ -75,6 +83,8 @@ export interface CreateLeagueForm {
   // Step 2: Branding & Description
   tagline: string;
   description: string;
+  banner: File | null;
+  banner_url?: string; // Existing banner URL (for edit mode)
   header_image: File | null;
   header_image_url?: string; // Existing header image URL (for edit mode)
 
@@ -122,6 +132,8 @@ export interface UpdateLeagueForm {
   // Branding
   tagline?: string;
   description?: string;
+  banner?: File | null;
+  banner_url?: string; // Existing banner URL (for edit mode)
   header_image?: File | null;
   header_image_url?: string; // Existing header image URL (for edit mode)
 
@@ -147,6 +159,7 @@ export interface FormErrors {
   visibility?: string;
   tagline?: string;
   description?: string;
+  banner?: string;
   header_image?: string;
   contact_email?: string;
   organizer_name?: string;

@@ -127,4 +127,43 @@ describe('siteConfigService', () => {
       await expect(getSiteConfig()).rejects.toEqual(mockError);
     });
   });
+
+  describe('Network Edge Cases', () => {
+    it('should handle network timeout', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(getSiteConfig()).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle network connection error', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+      });
+
+      await expect(getSiteConfig()).rejects.toMatchObject({
+        code: 'ERR_NETWORK',
+      });
+    });
+
+    it('should handle partial response error', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        response: {
+          status: 503,
+          data: { message: 'Service temporarily unavailable' },
+        },
+      });
+
+      await expect(getSiteConfig()).rejects.toMatchObject({
+        response: {
+          status: 503,
+        },
+      });
+    });
+  });
 });

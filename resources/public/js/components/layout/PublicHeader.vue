@@ -137,7 +137,9 @@ const mobileMenuOpen = ref(false);
 const isLoggingOut = ref(false);
 
 const appSubdomainUrl = computed(() => {
-  return `http://${import.meta.env.VITE_APP_DOMAIN}`;
+  // Use dynamic protocol detection to support both HTTP and HTTPS
+  const protocol = window.location.protocol;
+  return `${protocol}//${import.meta.env.VITE_APP_DOMAIN}`;
 });
 
 const isActive = (path: string) => {

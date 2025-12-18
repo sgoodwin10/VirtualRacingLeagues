@@ -7,22 +7,43 @@ import axios, {
 import { logger } from '@admin/utils/logger';
 
 /**
+ * Custom event for unauthorized access
+ * Dispatched when a 401 response is received
+ */
+export const UNAUTHORIZED_EVENT = 'api:unauthorized';
+
+/**
+ * Symbol to track retry count on request config
+ */
+const CSRF_RETRY_COUNT = Symbol('csrfRetryCount');
+
+/**
+ * Extended Axios request config with retry tracking
+ */
+interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
+  [CSRF_RETRY_COUNT]?: number;
+}
+
+/**
  * API Service with CSRF protection and authentication handling
  */
 class ApiService {
   private client: AxiosInstance;
   private csrfToken: string | null = null;
+  private readonly MAX_CSRF_RETRIES = 1; // Maximum number of CSRF retry attempts
 
   constructor() {
     this.client = axios.create({
       // Admin dashboard is served from admin.virtualracingleagues.localhost subdomain
-      // API routes are at /api/* on the admin subdomain (see routes/subdomain.php line 24)
+      // API routes are at /api/* on the admin subdomain (see routes/subdomain.php line 45)
+      // Note: The admin subdomain uses /api, while main domain fallback uses /api/admin
       baseURL: '/api',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       withCredentials: true, // Important for cookie-based sessions
+      timeout: 30000, // 30 second timeout to prevent hanging requests
     });
 
     this.setupInterceptors();
@@ -60,33 +81,47 @@ class ApiService {
           // Clear any stored auth data
           localStorage.removeItem('admin_remember');
 
-          // Redirect to login if not already there
-          if (!window.location.pathname.includes('/login')) {
-            // Ensure we're on the admin subdomain
-            if (!window.location.hostname.includes('admin.')) {
-              // Construct admin URL from APP_URL
-              const adminUrl = import.meta.env.VITE_APP_URL.replace('//', '//admin.');
-              window.location.href = `${adminUrl}/login`;
-            } else {
-              window.location.href = '/login';
-            }
-          }
+          // Dispatch custom event for unauthorized access
+          // This allows the router to handle navigation without breaking SPA state
+          const event = new CustomEvent(UNAUTHORIZED_EVENT, {
+            detail: {
+              returnUrl:
+                window.location.pathname !== '/login' ? window.location.pathname : undefined,
+            },
+          });
+          window.dispatchEvent(event);
+
+          logger.info('401 Unauthorized - dispatched unauthorized event');
         }
 
         // Handle 419 CSRF token mismatch
         if (error.response?.status === 419) {
-          logger.warn('CSRF token expired, refreshing and retrying...');
+          const originalRequest = error.config as ExtendedAxiosRequestConfig | undefined;
+
+          if (!originalRequest) {
+            return Promise.reject(error);
+          }
+
+          // Check retry count to prevent infinite loops
+          const retryCount = originalRequest[CSRF_RETRY_COUNT] || 0;
+
+          if (retryCount >= this.MAX_CSRF_RETRIES) {
+            logger.error(
+              `CSRF retry limit exceeded (${this.MAX_CSRF_RETRIES} attempts). Rejecting request.`,
+            );
+            return Promise.reject(error);
+          }
+
+          logger.warn(`CSRF token expired, refreshing and retrying (attempt ${retryCount + 1})...`);
+
+          // Increment retry count
+          originalRequest[CSRF_RETRY_COUNT] = retryCount + 1;
 
           // Attempt to refresh CSRF token and retry the request
           return this.fetchCSRFToken()
             .then(() => {
-              // Retry the original request with the fresh token
-              const originalRequest = error.config;
-              if (originalRequest) {
-                logger.info('CSRF token refreshed, retrying request...');
-                return this.client.request(originalRequest);
-              }
-              return Promise.reject(error);
+              logger.info('CSRF token refreshed, retrying request...');
+              return this.client.request(originalRequest);
             })
             .catch((retryError) => {
               // If retry fails, log and proceed with normal error handling
@@ -131,10 +166,12 @@ class ApiService {
 
   /**
    * Fetch a fresh CSRF token from the server
+   * Uses the standard Laravel Sanctum CSRF cookie endpoint
    */
   async fetchCSRFToken(): Promise<void> {
     try {
-      await this.client.get('/csrf-cookie');
+      // Use Sanctum's CSRF cookie endpoint (bypasses baseURL)
+      await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
       // Token should be in cookie now
       this.csrfToken = null; // Reset to force re-reading
     } catch (error) {

@@ -1,4 +1,5 @@
 import { ref, type Ref } from 'vue';
+import { useConfirm } from 'primevue/useconfirm';
 
 /**
  * Callback function type for modal lifecycle events
@@ -114,6 +115,7 @@ export function useModal(options: UseModalOptions = {}): UseModalReturn {
   } = options;
 
   const visible = ref(false);
+  const confirm = useConfirm();
 
   /**
    * Opens the modal and executes onOpen callback if provided
@@ -134,11 +136,29 @@ export function useModal(options: UseModalOptions = {}): UseModalReturn {
   const closeModal = async (force = false): Promise<void> => {
     // Check for unsaved changes if confirmClose is enabled and not forcing
     if (confirmClose && !force && hasUnsavedChanges && hasUnsavedChanges()) {
-      const confirmed = window.confirm(confirmMessage);
+      // Use PrimeVue's confirm dialog instead of window.confirm
+      return new Promise<void>((resolve) => {
+        confirm.require({
+          message: confirmMessage,
+          header: 'Unsaved Changes',
+          icon: 'pi pi-exclamation-triangle',
+          acceptClass: 'p-button-danger',
+          acceptLabel: 'Close Anyway',
+          rejectLabel: 'Keep Editing',
+          accept: async () => {
+            visible.value = false;
 
-      if (!confirmed) {
-        return; // User cancelled, keep modal open
-      }
+            if (onClose) {
+              await onClose();
+            }
+            resolve();
+          },
+          reject: () => {
+            // User cancelled, keep modal open
+            resolve();
+          },
+        });
+      });
     }
 
     visible.value = false;

@@ -96,4 +96,13 @@ interface SeasonRepositoryInterface
      * @return array<array{season: Season, stats: array{driver_count: int, round_count: int, race_count: int}}>
      */
     public function getSeasonsWithStatsForCompetition(int $competitionId): array;
+
+    /**
+     * Get the Eloquent model for a season by ID.
+     * Used for media operations that require the Eloquent model.
+     *
+     * @return \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent
+     * @throws SeasonNotFoundException
+     */
+    public function getEloquentModel(int $id): \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 }

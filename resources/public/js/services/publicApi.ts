@@ -5,6 +5,7 @@ import type {
   PublicLeagueDetailResponse,
   PublicSeasonDetailResponse,
   PublicRaceResultsResponse,
+  PublicDriverProfile,
 } from '@public/types/public';
 
 /**
@@ -100,7 +101,10 @@ class PublicApiService {
     throw new ApiError(`Unexpected error while trying to ${context}`, undefined, error);
   }
 
-  async fetchLeagues(params: FetchLeaguesParams = {}): Promise<PaginatedResponse<PublicLeague>> {
+  async fetchLeagues(
+    params: FetchLeaguesParams = {},
+    signal?: AbortSignal,
+  ): Promise<PaginatedResponse<PublicLeague>> {
     try {
       const response = await this.client.get<{ data: PaginatedResponse<PublicLeague> }>(
         '/leagues',
@@ -111,6 +115,7 @@ class PublicApiService {
             search: params.search ?? undefined,
             platform_id: params.platform_id ?? undefined,
           },
+          signal,
         },
       );
       // Laravel's ApiResponse wraps data in a 'data' property
@@ -120,9 +125,9 @@ class PublicApiService {
     }
   }
 
-  async fetchPlatforms(): Promise<Platform[]> {
+  async fetchPlatforms(signal?: AbortSignal): Promise<Platform[]> {
     try {
-      const response = await this.client.get<{ data: Platform[] }>('/platforms');
+      const response = await this.client.get<{ data: Platform[] }>('/platforms', { signal });
       // Laravel's ApiResponse wraps data in a 'data' property
       return response.data.data;
     } catch (error) {
@@ -130,10 +135,11 @@ class PublicApiService {
     }
   }
 
-  async fetchLeague(slug: string): Promise<PublicLeagueDetailResponse> {
+  async fetchLeague(slug: string, signal?: AbortSignal): Promise<PublicLeagueDetailResponse> {
     try {
       const response = await this.client.get<{ data: PublicLeagueDetailResponse }>(
         `/leagues/${slug}`,
+        { signal },
       );
       // Laravel's ApiResponse wraps data in a 'data' property
       return response.data.data;
@@ -168,6 +174,21 @@ class PublicApiService {
       return response.data.data;
     } catch (error) {
       this.handleError(error, 'fetch race results');
+    }
+  }
+
+  async fetchDriverProfile(
+    seasonDriverId: number,
+    signal?: AbortSignal,
+  ): Promise<PublicDriverProfile> {
+    try {
+      const response = await this.client.get<{ data: PublicDriverProfile }>(
+        `/drivers/${seasonDriverId}`,
+        { signal },
+      );
+      return response.data.data;
+    } catch (error) {
+      this.handleError(error, 'fetch driver profile');
     }
   }
 }

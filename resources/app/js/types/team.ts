@@ -2,6 +2,8 @@
  * Team-related TypeScript types and interfaces
  */
 
+import type { MediaObject } from './media';
+
 /**
  * Main Team entity
  */
@@ -9,7 +11,10 @@ export interface Team {
   id: number;
   season_id: number;
   name: string;
+  // OLD FORMAT (backward compatibility)
   logo_url: string | null;
+  // NEW FORMAT - responsive media
+  logo?: MediaObject | null;
   created_at: string;
   updated_at: string;
 }

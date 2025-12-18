@@ -341,4 +341,114 @@ describe('driverService', () => {
       });
     });
   });
+
+  describe('Network Edge Cases', () => {
+    it('should handle network timeout on getLeagueDrivers', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(getLeagueDrivers(1)).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle network timeout on createDriver', async () => {
+      const driverData: CreateDriverRequest = {
+        first_name: 'Jane',
+        last_name: 'Doe',
+        psn_id: 'JaneDoe_GT',
+      };
+
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(createDriver(1, driverData)).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle partial response on getLeagueDriver', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        response: {
+          status: 500,
+          data: { message: 'Internal server error' },
+        },
+      });
+
+      await expect(getLeagueDriver(1, 1)).rejects.toMatchObject({
+        response: {
+          status: 500,
+        },
+      });
+    });
+
+    it('should handle network connection error on updateLeagueDriver', async () => {
+      const updateData: UpdateLeagueDriverRequest = {
+        driver_number: 10,
+        status: 'inactive',
+      };
+
+      vi.mocked(apiClient.put).mockRejectedValue({
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+      });
+
+      await expect(updateLeagueDriver(1, 1, updateData)).rejects.toMatchObject({
+        code: 'ERR_NETWORK',
+      });
+    });
+
+    it('should handle network timeout on importDriversFromCSV', async () => {
+      const csvData = 'first_name,last_name,psn_id\nJohn,Smith,JSmith77';
+
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(importDriversFromCSV(1, csvData)).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle 404 error on getLeagueDriver', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        response: {
+          status: 404,
+          data: { message: 'Driver not found' },
+        },
+      });
+
+      await expect(getLeagueDriver(1, 999)).rejects.toMatchObject({
+        response: {
+          status: 404,
+        },
+      });
+    });
+
+    it('should handle 409 conflict on createDriver', async () => {
+      const driverData: CreateDriverRequest = {
+        first_name: 'Jane',
+        last_name: 'Doe',
+        psn_id: 'JaneDoe_GT',
+      };
+
+      vi.mocked(apiClient.post).mockRejectedValue({
+        response: {
+          status: 409,
+          data: { message: 'Driver already exists in league' },
+        },
+      });
+
+      await expect(createDriver(1, driverData)).rejects.toMatchObject({
+        response: {
+          status: 409,
+        },
+      });
+    });
+  });
 });

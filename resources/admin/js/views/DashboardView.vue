@@ -6,8 +6,20 @@
       <p class="text-gray-600">Here's what's happening with your platform today.</p>
     </div>
 
-    <!-- Recent Activity -->
-    <Card>
+    <!-- Initial Loading Skeleton -->
+    <div v-if="initialLoading" class="space-y-6">
+      <Card>
+        <template #content>
+          <Skeleton height="3rem" class="mb-4" />
+          <div class="space-y-4">
+            <Skeleton v-for="i in 5" :key="i" height="80px" class="mb-3" />
+          </div>
+        </template>
+      </Card>
+    </div>
+
+    <!-- Main Content (after initial load) -->
+    <Card v-else>
       <template #title>
         <div class="flex items-center justify-between">
           <span>Recent Activity</span>
@@ -86,6 +98,7 @@ const { showErrorToast } = useErrorToast();
 // State
 const recentActivity = ref<Activity[]>([]);
 const loading = ref(false);
+const initialLoading = ref(true);
 
 // Computed properties
 const adminName = computed(() => adminStore.adminName);
@@ -180,8 +193,9 @@ const formatActivityTime = (timestamp: string): string => {
 };
 
 // Load activities on mount
-onMounted(() => {
-  loadActivities();
+onMounted(async () => {
+  await loadActivities();
+  initialLoading.value = false;
 });
 </script>
 

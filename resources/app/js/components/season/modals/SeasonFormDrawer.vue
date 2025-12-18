@@ -15,6 +15,7 @@ import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 import Checkbox from 'primevue/checkbox';
 import InputNumber from 'primevue/inputnumber';
+import Select from 'primevue/select';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
@@ -55,9 +56,14 @@ const emit = defineEmits<Emits>();
 const toast = useToast();
 const seasonStore = useSeasonStore();
 
+// Internal form type with 'all' option for dropdown compatibility
+interface InternalSeasonForm extends Omit<SeasonForm, 'teams_drivers_for_calculation'> {
+  teams_drivers_for_calculation: number | 'all' | null;
+}
+
 // State
 const activeTab = ref('0');
-const form = reactive<SeasonForm>({
+const form = reactive<InternalSeasonForm>({
   name: '',
   car_class: '',
   description: '',
@@ -71,6 +77,9 @@ const form = reactive<SeasonForm>({
   race_times_required: true,
   drop_round: false,
   total_drop_rounds: 0,
+  teams_drivers_for_calculation: 'all',
+  teams_drop_rounds: false,
+  teams_total_drop_rounds: null,
 });
 
 const originalName = ref('');
@@ -82,6 +91,29 @@ const showNameChangeDialog = ref(false);
 const slugPreview = ref('');
 const slugStatus = ref<'checking' | 'available' | 'taken' | 'error' | 'timeout' | null>(null);
 const slugSuggestion = ref<string | null>(null);
+
+// Team championship options
+// Note: Using string 'all' instead of null for PrimeVue compatibility
+// Will convert 'all' to null when submitting to API
+const teamsDriversOptions = [
+  { label: 'All', value: 'all' },
+  { label: '1', value: 1 },
+  { label: '2', value: 2 },
+  { label: '3', value: 3 },
+  { label: '4', value: 4 },
+  { label: '5', value: 5 },
+  { label: '6', value: 6 },
+  { label: '7', value: 7 },
+  { label: '8', value: 8 },
+  { label: '9', value: 9 },
+  { label: '10', value: 10 },
+  { label: '11', value: 11 },
+  { label: '12', value: 12 },
+  { label: '13', value: 13 },
+  { label: '14', value: 14 },
+  { label: '15', value: 15 },
+  { label: '16', value: 16 },
+];
 
 // Validation
 const { errors, validateAll, clearError, clearErrors } = useSeasonValidation(form);
@@ -167,6 +199,7 @@ watch(
       }
     }
   },
+  { immediate: true }, // Run immediately on mount if visible is true
 );
 
 // Methods
@@ -180,14 +213,25 @@ function loadSeasonData(): void {
   form.description = props.season.description || '';
   form.technical_specs = props.season.technical_specs || '';
   form.logo = null;
-  form.logo_url = props.season.has_own_logo ? props.season.logo_url : null;
+  // Prefer MediaObject.original over old logo_url
+  form.logo_url = props.season.has_own_logo
+    ? props.season.logo?.original || props.season.logo_url
+    : null;
   form.banner = null;
-  form.banner_url = props.season.banner_url;
+  // Prefer MediaObject.original over old banner_url
+  form.banner_url = props.season.banner?.original || props.season.banner_url;
   form.race_divisions_enabled = props.season.race_divisions_enabled;
   form.team_championship_enabled = props.season.team_championship_enabled;
   form.race_times_required = props.season.race_times_required;
   form.drop_round = props.season.drop_round;
   form.total_drop_rounds = props.season.total_drop_rounds;
+  // Convert null to 'all' for PrimeVue Dropdown compatibility
+  form.teams_drivers_for_calculation =
+    props.season.teams_drivers_for_calculation === null
+      ? 'all'
+      : props.season.teams_drivers_for_calculation;
+  form.teams_drop_rounds = props.season.teams_drop_rounds;
+  form.teams_total_drop_rounds = props.season.teams_total_drop_rounds;
 
   originalName.value = props.season.name;
 
@@ -209,6 +253,9 @@ function resetForm(): void {
   form.race_times_required = true;
   form.drop_round = false;
   form.total_drop_rounds = 0;
+  form.teams_drivers_for_calculation = 'all'; // Default to 'all' instead of null
+  form.teams_drop_rounds = false;
+  form.teams_total_drop_rounds = null;
   originalName.value = '';
   slugPreview.value = '';
   slugStatus.value = null;
@@ -239,6 +286,10 @@ async function submitForm(): Promise<void> {
   isSubmitting.value = true;
 
   try {
+    // Convert 'all' to null for API
+    const teamsDriversValue =
+      form.teams_drivers_for_calculation === 'all' ? null : form.teams_drivers_for_calculation;
+
     if (props.isEditMode && props.season) {
       const updated = await seasonStore.updateExistingSeason(props.season.id, {
         name: form.name,
@@ -252,6 +303,9 @@ async function submitForm(): Promise<void> {
         race_times_required: form.race_times_required,
         drop_round: form.drop_round,
         total_drop_rounds: form.total_drop_rounds,
+        teams_drivers_for_calculation: teamsDriversValue,
+        teams_drop_rounds: form.teams_drop_rounds,
+        teams_total_drop_rounds: form.teams_total_drop_rounds,
       });
 
       toast.add({
@@ -275,6 +329,9 @@ async function submitForm(): Promise<void> {
         race_times_required: form.race_times_required,
         drop_round: form.drop_round,
         total_drop_rounds: form.total_drop_rounds,
+        teams_drivers_for_calculation: teamsDriversValue,
+        teams_drop_rounds: form.teams_drop_rounds,
+        teams_total_drop_rounds: form.teams_total_drop_rounds,
       });
 
       toast.add({
@@ -506,6 +563,70 @@ function cancelNameChange(): void {
             />
             <FormOptionalText text="Number of lowest scoring rounds to exclude" />
           </FormInputGroup>
+
+          <!-- Team Championship Settings Card -->
+          <BasePanel v-if="form.team_championship_enabled" class="bg-blue-50/50 border-blue-200">
+            <div class="p-3 space-y-2.5">
+              <div class="flex items-center gap-2 mb-2">
+                <i class="pi pi-users text-blue-600"></i>
+                <h4 class="font-semibold text-blue-900">Team Championship Settings</h4>
+              </div>
+
+              <!-- Drivers for Team Calculation -->
+              <FormInputGroup>
+                <FormLabel for="teams_drivers_calculation" text="Drivers for Team Calculation" />
+                <Select
+                  id="teams_drivers_calculation"
+                  v-model="form.teams_drivers_for_calculation"
+                  :options="teamsDriversOptions"
+                  option-label="label"
+                  option-value="value"
+                  placeholder="Select number of drivers"
+                  class="w-full"
+                  size="small"
+                  :disabled="isSubmitting"
+                />
+                <FormOptionalText text="How many drivers' points count towards team round scores" />
+              </FormInputGroup>
+
+              <!-- Enable Teams Drop Rounds -->
+              <FormInputGroup>
+                <div class="flex items-center gap-3">
+                  <Checkbox
+                    v-model="form.teams_drop_rounds"
+                    input-id="teams_drop_rounds"
+                    :binary="true"
+                    :disabled="isSubmitting"
+                  />
+                  <FormLabel
+                    for="teams_drop_rounds"
+                    text="Enable Teams Drop Rounds"
+                    class="mb-0 cursor-pointer"
+                  />
+                </div>
+                <FormOptionalText text="Exclude lowest scoring rounds from team standings" />
+              </FormInputGroup>
+
+              <!-- Total Teams Drop Rounds -->
+              <FormInputGroup v-if="form.teams_drop_rounds">
+                <FormLabel for="teams_total_drop_rounds" text="Total Teams Drop Rounds" />
+                <InputNumber
+                  id="teams_total_drop_rounds"
+                  v-model="form.teams_total_drop_rounds"
+                  :min="0"
+                  :max="10"
+                  :disabled="isSubmitting"
+                  show-buttons
+                  button-layout="horizontal"
+                  class="w-full"
+                  size="small"
+                />
+                <FormOptionalText
+                  text="Number of lowest scoring rounds to exclude from team standings"
+                />
+              </FormInputGroup>
+            </div>
+          </BasePanel>
 
           <!-- Info Message -->
           <Message severity="info" :closable="false">

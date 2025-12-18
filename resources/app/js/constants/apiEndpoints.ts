@@ -103,6 +103,7 @@ export const API_ENDPOINTS = {
     detail: (id: number) => `/races/${id}`,
     update: (id: number) => `/races/${id}`,
     delete: (id: number) => `/races/${id}`,
+    results: (raceId: number) => `/races/${raceId}/results`,
   },
 
   // Qualifier endpoints

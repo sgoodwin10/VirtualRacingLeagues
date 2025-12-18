@@ -3,6 +3,7 @@
  */
 
 import type { PaginationMeta } from './driver';
+import type { MediaObject } from './media';
 
 /**
  * Season status
@@ -17,7 +18,10 @@ export interface SeasonCompetition {
   name: string;
   slug: string;
   platform_id: number;
+  // OLD FORMAT (backward compatibility)
   logo_url: string;
+  // NEW FORMAT - responsive media
+  logo?: MediaObject | null;
   competition_colour: string | null; // RGB JSON string: {"r":100,"g":102,"b":241}
   platform?: {
     id: number;
@@ -50,11 +54,15 @@ export interface Season {
   description: string | null;
   technical_specs: string | null;
 
-  // Branding
+  // Branding - OLD FORMAT (backward compatibility)
   logo_url: string; // Never null (resolves to competition logo if not set)
   has_own_logo: boolean;
   banner_url: string | null;
   has_own_banner: boolean;
+
+  // Branding - NEW FORMAT (responsive media)
+  logo?: MediaObject | null; // Responsive logo with multiple sizes
+  banner?: MediaObject | null; // Responsive banner with multiple sizes
 
   // Settings
   race_divisions_enabled: boolean;
@@ -62,6 +70,11 @@ export interface Season {
   race_times_required: boolean;
   drop_round: boolean;
   total_drop_rounds: number;
+
+  // Team Championship Settings
+  teams_drivers_for_calculation: number | null;
+  teams_drop_rounds: boolean;
+  teams_total_drop_rounds: number | null;
 
   // Status
   status: SeasonStatus;
@@ -118,6 +131,9 @@ export interface CreateSeasonRequest {
   race_times_required?: boolean;
   drop_round?: boolean;
   total_drop_rounds?: number;
+  teams_drivers_for_calculation?: number | null;
+  teams_drop_rounds?: boolean;
+  teams_total_drop_rounds?: number | null;
 }
 
 /**
@@ -157,6 +173,12 @@ export interface UpdateSeasonRequest {
   drop_round?: boolean;
   /** Total number of drop rounds (omit to keep current) */
   total_drop_rounds?: number;
+  /** Number of drivers for team calculation (omit to keep, null for all drivers) */
+  teams_drivers_for_calculation?: number | null;
+  /** Enable teams drop rounds (omit to keep current) */
+  teams_drop_rounds?: boolean;
+  /** Total number of team drop rounds (omit to keep, null to clear) */
+  teams_total_drop_rounds?: number | null;
 }
 
 /**
@@ -176,6 +198,9 @@ export interface SeasonForm {
   race_times_required: boolean;
   drop_round: boolean;
   total_drop_rounds: number;
+  teams_drivers_for_calculation: number | null;
+  teams_drop_rounds: boolean;
+  teams_total_drop_rounds: number | null;
 }
 
 /**

@@ -316,4 +316,106 @@ describe('competitionService', () => {
       expect(formData.get('logo')).toBe(file);
     });
   });
+
+  describe('Network Edge Cases', () => {
+    it('should handle network timeout on getLeagueCompetitions', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(getLeagueCompetitions(1)).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle network timeout on getCompetition', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(getCompetition(1, 1)).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle network timeout on createCompetition', async () => {
+      const formData = new FormData();
+
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(createCompetition(1, formData)).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle partial response on getCompetition', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        response: {
+          status: 500,
+          data: { message: 'Internal server error' },
+        },
+      });
+
+      await expect(getCompetition(1, 1)).rejects.toMatchObject({
+        response: {
+          status: 500,
+        },
+      });
+    });
+
+    it('should handle network connection error on updateCompetition', async () => {
+      const formData = new FormData();
+
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+      });
+
+      await expect(updateCompetition(1, 1, formData)).rejects.toMatchObject({
+        code: 'ERR_NETWORK',
+      });
+    });
+
+    it('should handle 404 error on getCompetition', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        response: {
+          status: 404,
+          data: { message: 'Competition not found' },
+        },
+      });
+
+      await expect(getCompetition(1, 999)).rejects.toMatchObject({
+        response: {
+          status: 404,
+        },
+      });
+    });
+
+    it('should handle network timeout on archiveCompetition', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(archiveCompetition(1, 1)).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle network timeout on checkSlugAvailability', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(checkSlugAvailability(1, 'test-slug')).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+  });
 });

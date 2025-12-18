@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import BaseModalHeader from '@app/components/common/modals/BaseModalHeader.vue';
 import InputText from 'primevue/inputtext';
@@ -17,7 +17,8 @@ import FormError from '@app/components/common/forms/FormError.vue';
 import FormHelper from '@app/components/common/forms/FormHelper.vue';
 import FormCharacterCount from '@app/components/common/forms/FormCharacterCount.vue';
 import { useLeagueStore } from '@app/stores/leagueStore';
-import type { LeagueDriver, CreateDriverRequest } from '@app/types/driver';
+import { usePlatformFormFields } from '@app/composables/usePlatformFormFields';
+import type { LeagueDriver, CreateDriverRequest, DriverFormData } from '@app/types/driver';
 
 interface Props {
   visible: boolean;
@@ -37,8 +38,20 @@ const emit = defineEmits<Emits>();
 
 const leagueStore = useLeagueStore();
 
+// Fetch platform form fields on mount if league is provided
+if (props.leagueId) {
+  usePlatformFormFields({
+    leagueId: props.leagueId,
+    onSuccess: () => {
+      if (props.mode === 'create') {
+        resetForm();
+      }
+    },
+  });
+}
+
 // Form data - platform fields stored dynamically
-const formData = ref<CreateDriverRequest & Record<string, unknown>>({
+const formData = ref<DriverFormData>({
   first_name: '',
   last_name: '',
   nickname: '',
@@ -79,7 +92,7 @@ watch(
   (leagueDriver) => {
     if (leagueDriver && props.mode === 'edit') {
       const driver = leagueDriver.driver;
-      const newFormData: CreateDriverRequest & Record<string, unknown> = {
+      const newFormData: DriverFormData = {
         first_name: driver?.first_name || '',
         last_name: driver?.last_name || '',
         nickname: driver?.nickname || '',
@@ -164,7 +177,7 @@ const handleSubmit = (): void => {
   }
 
   // Clean up empty string values
-  const cleanedData: CreateDriverRequest & Record<string, unknown> = {
+  const cleanedData: DriverFormData = {
     first_name: formData.value.first_name || undefined,
     last_name: formData.value.last_name || undefined,
     nickname: formData.value.nickname || undefined,
@@ -200,7 +213,7 @@ const handleCancel = (): void => {
  * Reset form to initial state
  */
 const resetForm = (): void => {
-  const newFormData: CreateDriverRequest & Record<string, unknown> = {
+  const newFormData: DriverFormData = {
     first_name: '',
     last_name: '',
     nickname: '',
@@ -220,23 +233,6 @@ const resetForm = (): void => {
   formData.value = newFormData;
   errors.value = {};
 };
-
-/**
- * Fetch platform form fields on mount if league is provided
- */
-onMounted(async () => {
-  if (props.leagueId) {
-    try {
-      await leagueStore.fetchDriverFormFieldsForLeague(props.leagueId);
-      // Initialize form data with platform fields
-      if (props.mode === 'create') {
-        resetForm();
-      }
-    } catch (error) {
-      console.error('Failed to fetch platform form fields:', error);
-    }
-  }
-});
 </script>
 
 <template>

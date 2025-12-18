@@ -6,6 +6,7 @@ namespace App\Application\Competition\DTOs;
 
 use App\Domain\Competition\Entities\Competition;
 use Spatie\LaravelData\Data;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Output DTO representing a competition with full details.
@@ -22,7 +23,10 @@ class CompetitionData extends Data
         public string $platform_name,
         public string $platform_slug,
         public ?CompetitionLeagueData $league,
+        // OLD FORMAT (backward compatibility) - will be deprecated
         public ?string $logo_url,
+        // NEW FORMAT - media object with all conversion URLs
+        public ?array $logo,
         public bool $has_own_logo,
         public ?string $competition_colour,
         public string $status,
@@ -47,6 +51,7 @@ class CompetitionData extends Data
      * @param array{id: int, name: string, slug: string}|null $leagueData
      * @param array<string, int|string|null> $aggregates
      * @param array<CompetitionSeasonData> $seasons
+     * @param \App\Infrastructure\Persistence\Eloquent\Models\Competition|null $eloquentModel Optional eloquent model for media
      */
     public static function fromEntity(
         Competition $competition,
@@ -54,8 +59,16 @@ class CompetitionData extends Data
         ?string $logoUrl,
         ?array $leagueData = null,
         array $aggregates = [],
-        array $seasons = []
+        array $seasons = [],
+        ?\App\Infrastructure\Persistence\Eloquent\Models\Competition $eloquentModel = null
     ): self {
+        // Extract media from eloquent model if available
+        $logo = null;
+
+        if ($eloquentModel !== null) {
+            $logo = self::mediaToArray($eloquentModel->getFirstMedia('logo'));
+        }
+
         return new self(
             id: $competition->id() ?? 0,
             league_id: $competition->leagueId(),
@@ -72,7 +85,10 @@ class CompetitionData extends Data
                     slug: $leagueData['slug'],
                 )
                 : null,
+            // OLD FORMAT (backward compatibility)
             logo_url: $logoUrl,
+            // NEW FORMAT
+            logo: $logo,
             has_own_logo: $competition->logoPath() !== null,
             competition_colour: $competition->competitionColour(),
             status: $competition->status()->value,
@@ -95,5 +111,52 @@ class CompetitionData extends Data
             ),
             seasons: $seasons,
         );
+    }
+
+    /**
+     * Convert Spatie Media model to array representation
+     *
+     * @param Media|null $media
+     * @return array{id: int, original: string, conversions: array<string, string>, srcset: string}|null
+     */
+    public static function mediaToArray(?Media $media): ?array
+    {
+        if ($media === null) {
+            return null;
+        }
+
+        $conversions = [];
+        $conversionNames = ['thumb', 'small', 'medium', 'large', 'og'];
+
+        foreach ($conversionNames as $conversion) {
+            try {
+                $conversions[$conversion] = $media->getUrl($conversion);
+            } catch (\Exception $e) {
+                // Conversion may not exist yet (queued) or may not apply to this file type
+                // Skip silently
+            }
+        }
+
+        // Generate srcset for responsive images
+        $srcsetParts = [];
+        $widths = [
+            'thumb' => '150w',
+            'small' => '320w',
+            'medium' => '640w',
+            'large' => '1280w',
+        ];
+
+        foreach ($widths as $conversionName => $width) {
+            if (isset($conversions[$conversionName])) {
+                $srcsetParts[] = "{$conversions[$conversionName]} {$width}";
+            }
+        }
+
+        return [
+            'id' => $media->getKey(),
+            'original' => $media->getUrl(),
+            'conversions' => $conversions,
+            'srcset' => implode(', ', $srcsetParts),
+        ];
     }
 }

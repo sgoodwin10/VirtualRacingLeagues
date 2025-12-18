@@ -4,7 +4,7 @@
  */
 
 import { defineStore } from 'pinia';
-import { computed } from 'vue';
+import { computed, onScopeDispose } from 'vue';
 import type {
   Competition,
   CompetitionForm,
@@ -43,39 +43,59 @@ export const useCompetitionStore = defineStore('competition', () => {
     resetStore,
   } = crud;
 
-  // Set up event listeners for season events
+  // Set up event listeners for season events with cleanup
   const events = useStoreEvents();
 
-  events.on('season:created', (competitionId: number, season: CompetitionSeason) => {
+  // Store event handlers for cleanup
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handlers = new Map<string, (...args: any[]) => void>();
+
+  // Helper to register event handler with cleanup tracking
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function registerEventHandler(event: string, handler: (...args: any[]) => void): void {
+    events.on(event, handler);
+    handlers.set(event, handler);
+  }
+
+  // Register all season event handlers
+  registerEventHandler('season:created', (competitionId: number, season: CompetitionSeason) => {
     addSeasonToCompetition(competitionId, season);
   });
 
-  events.on('season:updated', (competitionId: number, season: CompetitionSeason) => {
+  registerEventHandler('season:updated', (competitionId: number, season: CompetitionSeason) => {
     updateSeasonInCompetition(competitionId, season);
   });
 
-  events.on('season:deleted', (competitionId: number, seasonId: number) => {
+  registerEventHandler('season:deleted', (competitionId: number, seasonId: number) => {
     removeSeasonFromCompetition(competitionId, seasonId);
   });
 
-  events.on('season:archived', (competitionId: number, season: CompetitionSeason) => {
+  registerEventHandler('season:archived', (competitionId: number, season: CompetitionSeason) => {
     updateSeasonInCompetition(competitionId, season);
   });
 
-  events.on('season:unarchived', (competitionId: number, season: CompetitionSeason) => {
+  registerEventHandler('season:unarchived', (competitionId: number, season: CompetitionSeason) => {
     updateSeasonInCompetition(competitionId, season);
   });
 
-  events.on('season:activated', (competitionId: number, season: CompetitionSeason) => {
+  registerEventHandler('season:activated', (competitionId: number, season: CompetitionSeason) => {
     updateSeasonInCompetition(competitionId, season);
   });
 
-  events.on('season:completed', (competitionId: number, season: CompetitionSeason) => {
+  registerEventHandler('season:completed', (competitionId: number, season: CompetitionSeason) => {
     updateSeasonInCompetition(competitionId, season);
   });
 
-  events.on('season:restored', (competitionId: number, season: CompetitionSeason) => {
+  registerEventHandler('season:restored', (competitionId: number, season: CompetitionSeason) => {
     addSeasonToCompetition(competitionId, season);
+  });
+
+  // Clean up event listeners when store scope is disposed
+  onScopeDispose(() => {
+    handlers.forEach((handler, event) => {
+      events.off(event, handler);
+    });
+    handlers.clear();
   });
 
   // Getters

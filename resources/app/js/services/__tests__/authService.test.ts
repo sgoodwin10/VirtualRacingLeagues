@@ -123,4 +123,89 @@ describe('AuthService', () => {
       expect(result).toEqual(updatedUser);
     });
   });
+
+  describe('Network Edge Cases', () => {
+    it('should handle network timeout on login', async () => {
+      vi.mocked(apiService.fetchCSRFToken).mockResolvedValue();
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(
+        authService.login({
+          email: 'john@example.com',
+          password: 'password',
+        }),
+      ).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle network timeout on checkAuth', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      const result = await authService.checkAuth();
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle network timeout on updateProfile', async () => {
+      vi.mocked(apiClient.put).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(
+        authService.updateProfile({
+          first_name: 'Jane',
+          last_name: 'Doe',
+          email: 'jane@example.com',
+        }),
+      ).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle partial response on login', async () => {
+      vi.mocked(apiService.fetchCSRFToken).mockResolvedValue();
+      vi.mocked(apiClient.post).mockRejectedValue({
+        response: {
+          status: 500,
+          data: { message: 'Internal server error' },
+        },
+      });
+
+      await expect(
+        authService.login({
+          email: 'john@example.com',
+          password: 'password',
+        }),
+      ).rejects.toMatchObject({
+        response: {
+          status: 500,
+        },
+      });
+    });
+
+    it('should handle network connection error', async () => {
+      vi.mocked(apiService.fetchCSRFToken).mockResolvedValue();
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+      });
+
+      await expect(
+        authService.login({
+          email: 'john@example.com',
+          password: 'password',
+        }),
+      ).rejects.toMatchObject({
+        code: 'ERR_NETWORK',
+      });
+    });
+  });
 });

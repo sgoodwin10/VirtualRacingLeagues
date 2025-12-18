@@ -20,8 +20,8 @@ const pinia = createPinia();
 // Register persistence plugin to save state to localStorage
 pinia.use(piniaPluginPersistedstate);
 
+// Register plugins in correct order: Pinia first, then PrimeVue and services, then router
 app.use(pinia);
-app.use(router);
 app.use(PrimeVue, {
   theme: {
     preset: Aura,
@@ -38,10 +38,36 @@ app.use(PrimeVue, {
 app.use(ToastService);
 app.use(ConfirmationService);
 app.directive('tooltip', Tooltip);
+app.use(router);
 
-// Initialize site configuration before mounting
+// Global error handlers
+app.config.errorHandler = (err, instance, info) => {
+  console.error('[Vue Error Handler]:', err);
+  console.error('Component:', instance);
+  console.error('Error Info:', info);
+  // You could send this to an error tracking service here
+};
+
+window.onerror = (message, source, lineno, colno, error) => {
+  console.error('[Global Error]:', {
+    message,
+    source,
+    lineno,
+    colno,
+    error,
+  });
+  // You could send this to an error tracking service here
+  return false; // Let default error handling continue
+};
+
+window.onunhandledrejection = (event) => {
+  console.error('[Unhandled Promise Rejection]:', event.reason);
+  // You could send this to an error tracking service here
+};
+
+// Initialize site configuration and router before mounting
 const siteConfigStore = useSiteConfigStore();
-siteConfigStore.fetchConfig().finally(() => {
+Promise.all([siteConfigStore.fetchConfig(), router.isReady()]).finally(() => {
   // Mount app regardless of config load success (will use defaults)
   app.mount('#user-app');
 });

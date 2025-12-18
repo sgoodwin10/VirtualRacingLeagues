@@ -191,6 +191,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         $eloquentLeague->tagline = $league->tagline()?->value();
         $eloquentLeague->description = $league->description();
         $eloquentLeague->header_image_path = $league->headerImagePath();
+        $eloquentLeague->banner_path = $league->bannerPath();
         $eloquentLeague->platform_ids = $league->platformIds();
         $eloquentLeague->discord_url = $league->discordUrl();
         $eloquentLeague->website_url = $league->websiteUrl();
@@ -317,6 +318,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             tagline: Tagline::fromNullable($eloquentLeague->tagline),
             description: $eloquentLeague->description,
             headerImagePath: $eloquentLeague->header_image_path,
+            bannerPath: $eloquentLeague->banner_path,
             platformIds: $eloquentLeague->platform_ids ?? [],
             discordUrl: $eloquentLeague->discord_url,
             websiteUrl: $eloquentLeague->website_url,
@@ -340,6 +342,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         $eloquentLeague->description = $league->description();
         $eloquentLeague->logo_path = $league->logoPath();
         $eloquentLeague->header_image_path = $league->headerImagePath();
+        $eloquentLeague->banner_path = $league->bannerPath();
         $eloquentLeague->platform_ids = $league->platformIds();
         $eloquentLeague->discord_url = $league->discordUrl();
         $eloquentLeague->website_url = $league->websiteUrl();

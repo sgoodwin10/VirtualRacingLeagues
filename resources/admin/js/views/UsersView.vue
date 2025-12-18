@@ -1,5 +1,87 @@
+<template>
+  <div class="users-view">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">User Management</h1>
+      <p class="text-gray-600">Manage all users in the system</p>
+    </div>
+
+    <!-- Initial Loading Skeleton -->
+    <div v-if="initialLoading" class="space-y-6">
+      <Card>
+        <template #content>
+          <Skeleton height="4rem" />
+        </template>
+      </Card>
+      <Card>
+        <template #content>
+          <Skeleton height="20rem" />
+        </template>
+      </Card>
+    </div>
+
+    <!-- Main Content (after initial load) -->
+    <div v-else>
+      <!-- Filters & Actions -->
+      <Card class="mb-6">
+        <template #content>
+          <div class="flex gap-4">
+            <InputText
+              :model-value="searchQuery"
+              placeholder="Search users..."
+              class="flex-1"
+              @update:model-value="(value) => userStore.setSearchQuery(value ?? '')"
+            />
+            <Select
+              :model-value="statusFilter"
+              :options="statusOptions"
+              option-label="label"
+              option-value="value"
+              placeholder="Filter by status"
+              class="w-48"
+              @update:model-value="
+                (value: string) =>
+                  userStore.setStatusFilter(value as 'active' | 'inactive' | 'suspended' | 'all')
+              "
+            />
+            <Button
+              label="Create User"
+              icon="pi pi-plus"
+              severity="success"
+              @click="handleCreate"
+            />
+          </div>
+        </template>
+      </Card>
+
+      <!-- Users Table -->
+      <Card :pt="{ body: { class: 'p-0' }, content: { class: 'p-0' } }">
+        <template #content>
+          <UsersTable
+            :users="users ?? []"
+            :loading="loading"
+            @view="handleView"
+            @edit="handleEdit"
+            @deactivate="handleDeactivate"
+            @reactivate="handleReactivate"
+          />
+        </template>
+      </Card>
+    </div>
+
+    <ViewUserModal v-model:visible="viewModalVisible" :user="selectedUser" />
+    <EditUserModal
+      v-model:visible="editModalVisible"
+      :user="selectedUser"
+      @user-updated="handleUserUpdated"
+    />
+    <CreateUserModal v-model:visible="createModalVisible" @user-created="handleUserCreated" />
+    <ConfirmDialog />
+  </div>
+</template>
+
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { storeToRefs } from 'pinia';
 import { useDebounceFn } from '@vueuse/core';
@@ -149,88 +231,15 @@ onMounted(async () => {
   await loadUsers();
   initialLoading.value = false;
 });
+
+/**
+ * Clean up pending requests on component unmount
+ * Note: useRequestCancellation already handles this automatically,
+ * but we explicitly call it here for clarity and documentation
+ */
+onUnmounted(() => {
+  cancelRequests('UsersView component unmounted');
+});
 </script>
-
-<template>
-  <div class="users-view">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">User Management</h1>
-      <p class="text-gray-600">Manage all users in the system</p>
-    </div>
-
-    <!-- Initial Loading Skeleton -->
-    <div v-if="initialLoading" class="space-y-6">
-      <Card>
-        <template #content>
-          <Skeleton height="4rem" />
-        </template>
-      </Card>
-      <Card>
-        <template #content>
-          <Skeleton height="20rem" />
-        </template>
-      </Card>
-    </div>
-
-    <!-- Main Content (after initial load) -->
-    <div v-else>
-      <!-- Filters & Actions -->
-      <Card class="mb-6">
-        <template #content>
-          <div class="flex gap-4">
-            <InputText
-              :model-value="searchQuery"
-              placeholder="Search users..."
-              class="flex-1"
-              @update:model-value="(value) => userStore.setSearchQuery(value ?? '')"
-            />
-            <Select
-              :model-value="statusFilter"
-              :options="statusOptions"
-              option-label="label"
-              option-value="value"
-              placeholder="Filter by status"
-              class="w-48"
-              @update:model-value="
-                (value: string) =>
-                  userStore.setStatusFilter(value as 'active' | 'inactive' | 'suspended' | 'all')
-              "
-            />
-            <Button
-              label="Create User"
-              icon="pi pi-plus"
-              severity="success"
-              @click="handleCreate"
-            />
-          </div>
-        </template>
-      </Card>
-
-      <!-- Users Table -->
-      <Card :pt="{ body: { class: 'p-0' }, content: { class: 'p-0' } }">
-        <template #content>
-          <UsersTable
-            :users="users ?? []"
-            :loading="loading"
-            @view="handleView"
-            @edit="handleEdit"
-            @deactivate="handleDeactivate"
-            @reactivate="handleReactivate"
-          />
-        </template>
-      </Card>
-    </div>
-
-    <ViewUserModal v-model:visible="viewModalVisible" :user="selectedUser" />
-    <EditUserModal
-      v-model:visible="editModalVisible"
-      :user="selectedUser"
-      @user-updated="handleUserUpdated"
-    />
-    <CreateUserModal v-model:visible="createModalVisible" @user-created="handleUserCreated" />
-    <ConfirmDialog />
-  </div>
-</template>
 
 <style scoped></style>

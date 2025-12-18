@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
+import { useToastError, TOAST_DURATION } from '@app/composables/useToastError';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import { useTeamStore } from '@app/stores/teamStore';
@@ -17,6 +17,9 @@ import {
   PhCar,
   PhUsersThree,
 } from '@phosphor-icons/vue';
+
+// Transition delay constants
+const TRANSITION_DELAY = 1500;
 
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -46,7 +49,7 @@ import InfoItem from '@app/components/common/InfoItem.vue';
 
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
+const { showError, showSuccess } = useToastError();
 const seasonStore = useSeasonStore();
 const seasonDriverStore = useSeasonDriverStore();
 const teamStore = useTeamStore();
@@ -61,6 +64,9 @@ const showDriverManagementDrawer = ref(false);
 const showEditDriverDialog = ref(false);
 const selectedSeasonDriver = ref<SeasonDriver | null>(null);
 
+// Timeout tracking for cleanup
+let deleteRedirectTimeout: ReturnType<typeof setTimeout> | null = null;
+
 const leagueId = computed(() => parseInt(route.params.leagueId as string, 10));
 const competitionId = computed(() => parseInt(route.params.competitionId as string, 10));
 const seasonId = computed(() => parseInt(route.params.seasonId as string, 10));
@@ -74,6 +80,14 @@ onMounted(async () => {
   // Only load drivers if season loaded successfully
   if (seasonLoaded) {
     await loadDrivers();
+  }
+});
+
+onUnmounted(() => {
+  // Clean up any pending timeouts
+  if (deleteRedirectTimeout) {
+    clearTimeout(deleteRedirectTimeout);
+    deleteRedirectTimeout = null;
   }
 });
 
@@ -99,12 +113,7 @@ async function loadSeason(): Promise<boolean> {
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Failed to load season';
     error.value = errorMessage;
-    toast.add({
-      severity: 'error',
-      summary: 'Load Failed',
-      detail: errorMessage,
-      life: 5000,
-    });
+    showError(errorMessage, { summary: 'Load Failed' });
     return false;
   } finally {
     isLoading.value = false;
@@ -113,18 +122,26 @@ async function loadSeason(): Promise<boolean> {
 
 async function loadDrivers(): Promise<void> {
   try {
-    await Promise.all([
+    const results = await Promise.allSettled([
       seasonDriverStore.fetchSeasonDrivers(seasonId.value),
       seasonDriverStore.fetchStats(seasonId.value),
     ]);
+
+    // Check for failures and provide specific error messages
+    const failures: string[] = [];
+    if (results[0].status === 'rejected') {
+      failures.push('season drivers');
+    }
+    if (results[1].status === 'rejected') {
+      failures.push('driver statistics');
+    }
+
+    if (failures.length > 0) {
+      const errorMessage = `Failed to load ${failures.join(' and ')}`;
+      showError(errorMessage, { summary: 'Load Failed' });
+    }
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to load drivers';
-    toast.add({
-      severity: 'error',
-      summary: 'Load Failed',
-      detail: errorMessage,
-      life: 5000,
-    });
+    showError(err, { summary: 'Load Failed' });
   }
 }
 
@@ -132,13 +149,7 @@ async function loadTeams(): Promise<void> {
   try {
     await teamStore.fetchTeams(seasonId.value);
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
-    toast.add({
-      severity: 'error',
-      summary: 'Load Failed',
-      detail: errorMessage,
-      life: 5000,
-    });
+    showError(err, { summary: 'Load Failed' });
   }
 }
 
@@ -146,13 +157,7 @@ async function loadDivisions(): Promise<void> {
   try {
     await divisionStore.fetchDivisions(seasonId.value);
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to load divisions';
-    toast.add({
-      severity: 'error',
-      summary: 'Load Failed',
-      detail: errorMessage,
-      life: 5000,
-    });
+    showError(err, { summary: 'Load Failed' });
   }
 }
 
@@ -178,16 +183,14 @@ function handleArchived(): void {
 }
 
 function handleDeleted(): void {
-  toast.add({
-    severity: 'success',
+  showSuccess('Redirecting to league...', {
     summary: 'Season Deleted',
-    detail: 'Redirecting to league...',
-    life: 3000,
+    life: TOAST_DURATION.SHORT,
   });
 
-  setTimeout(() => {
+  deleteRedirectTimeout = setTimeout(() => {
     handleBackToLeague();
-  }, 1500);
+  }, TRANSITION_DELAY);
 }
 
 function handleManageDrivers(): void {
@@ -276,7 +279,7 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
         <template #header>
           <div class="relative">
             <!-- Gradient Header Background -->
-            <div class="w-full h-64 bg-gradient-to-br from-purple-500 to-blue-600"></div>
+            <div class="w-full h-48 bg-gradient-to-br from-purple-500 to-blue-600"></div>
 
             <!-- Archived Tag Overlay (top-left corner) -->
             <div

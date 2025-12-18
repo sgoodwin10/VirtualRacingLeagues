@@ -1,7 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import { useUserStore } from '@app/stores/userStore';
-import LeagueList from '@app/views/LeagueList.vue';
-import LeagueDetail from '@app/views/LeagueDetail.vue';
+
+// Type-safe route meta fields
+declare module 'vue-router' {
+  interface RouteMeta {
+    title?: string;
+  }
+}
 
 declare global {
   interface Window {
@@ -9,34 +15,58 @@ declare global {
   }
 }
 
+/**
+ * Validates that route params are numeric
+ * @param paramNames - Array of param names to validate
+ * @returns Navigation guard function
+ */
+const validateNumericParams = (paramNames: string[]) => {
+  return (
+    to: RouteLocationNormalized,
+    _from: RouteLocationNormalized,
+    next: NavigationGuardNext,
+  ) => {
+    for (const paramName of paramNames) {
+      const paramValue = to.params[paramName];
+      const valueToCheck = Array.isArray(paramValue) ? paramValue[0] : paramValue;
+
+      if (valueToCheck && !/^\d+$/.test(valueToCheck)) {
+        // Invalid param - redirect to home
+        next({ name: 'home' });
+        return;
+      }
+    }
+    next();
+  };
+};
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: '/',
       name: 'home',
-      component: LeagueList,
+      component: () => import('@app/views/LeagueList.vue'),
       meta: {
         title: 'My Leagues',
-        requiresAuth: true,
       },
     },
     {
       path: '/leagues/:id',
       name: 'league-detail',
-      component: LeagueDetail,
+      component: () => import('@app/views/LeagueDetail.vue'),
+      beforeEnter: validateNumericParams(['id']),
       meta: {
         title: 'League Details',
-        requiresAuth: true,
       },
     },
     {
       path: '/leagues/:leagueId/competitions/:competitionId/seasons/:seasonId',
       name: 'season-detail',
       component: () => import('@app/views/SeasonDetail.vue'),
+      beforeEnter: validateNumericParams(['leagueId', 'competitionId', 'seasonId']),
       meta: {
         title: 'Season Details',
-        requiresAuth: true,
       },
     },
   ],

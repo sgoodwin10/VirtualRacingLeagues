@@ -2,6 +2,8 @@
  * Division-related TypeScript types and interfaces
  */
 
+import type { MediaObject } from './media';
+
 /**
  * Main Division entity
  */
@@ -10,7 +12,10 @@ export interface Division {
   season_id: number;
   name: string;
   description: string | null;
+  // OLD FORMAT (backward compatibility)
   logo_url: string | null;
+  // NEW FORMAT - responsive media
+  logo?: MediaObject | null;
   order: number;
   created_at: string;
   updated_at: string;

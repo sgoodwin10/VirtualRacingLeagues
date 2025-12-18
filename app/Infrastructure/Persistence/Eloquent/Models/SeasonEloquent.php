@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use App\Infrastructure\Persistence\Eloquent\Traits\HasMediaCollections;
 use Database\Factories\SeasonFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
 
 /**
  * Season Eloquent Model (Anemic).
@@ -27,6 +29,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $logo_path
  * @property string|null $banner_path
  * @property bool $team_championship_enabled
+ * @property int|null $teams_drivers_for_calculation
+ * @property bool $teams_drop_rounds
+ * @property int|null $teams_total_drop_rounds
  * @property bool $race_divisions_enabled
  * @property bool $race_times_required
  * @property bool $drop_round
@@ -38,10 +43,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @method static SeasonEloquent firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  */
-final class SeasonEloquent extends Model
+final class SeasonEloquent extends Model implements HasMedia
 {
     use HasFactory;
     use SoftDeletes;
+    use HasMediaCollections;
 
     /**
      * The table associated with the model.
@@ -63,6 +69,9 @@ final class SeasonEloquent extends Model
         'logo_path',
         'banner_path',
         'team_championship_enabled',
+        'teams_drivers_for_calculation',
+        'teams_drop_rounds',
+        'teams_total_drop_rounds',
         'race_divisions_enabled',
         'race_times_required',
         'drop_round',
@@ -78,6 +87,9 @@ final class SeasonEloquent extends Model
      */
     protected $casts = [
         'team_championship_enabled' => 'boolean',
+        'teams_drivers_for_calculation' => 'integer',
+        'teams_drop_rounds' => 'boolean',
+        'teams_total_drop_rounds' => 'integer',
         'race_divisions_enabled' => 'boolean',
         'race_times_required' => 'boolean',
         'drop_round' => 'boolean',
@@ -133,5 +145,19 @@ final class SeasonEloquent extends Model
     protected static function newFactory(): SeasonFactory
     {
         return SeasonFactory::new();
+    }
+
+    /**
+     * Register media collections for the season.
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logo')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
+
+        $this->addMediaCollection('banner')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
     }
 }

@@ -182,6 +182,7 @@ import Button from 'primevue/button';
 import BaseModal from '@admin/components/modals/BaseModal.vue';
 import Badge, { type BadgeVariant } from '@admin/components/common/Badge.vue';
 import { useDateFormatter } from '@admin/composables/useDateFormatter';
+import { useNameHelpers } from '@admin/composables/useNameHelpers';
 import { activityLogService } from '@admin/services/activityLogService';
 import type { Admin, AdminRole, AdminStatus } from '@admin/types/admin';
 import type { Activity, EventType } from '@admin/types/activityLog';
@@ -257,7 +258,8 @@ const recentActivities = ref<Activity[]>([]);
 const loadingActivities = ref(false);
 
 // Composables
-const { formatDate } = useDateFormatter();
+const { formatDate, formatDateShort } = useDateFormatter();
+const { getFullName } = useNameHelpers();
 
 /**
  * Load recent activities for admin user
@@ -303,29 +305,6 @@ watch(
 );
 
 /**
- * Get first name from admin user
- */
-const getFirstName = (user: Admin): string => {
-  return user.first_name || user.name?.split(' ')[0] || '';
-};
-
-/**
- * Get last name from admin user
- */
-const getLastName = (user: Admin): string => {
-  return user.last_name || user.name?.split(' ').slice(1).join(' ') || '';
-};
-
-/**
- * Get full name from admin user
- */
-const getFullName = (user: Admin): string => {
-  const firstName = getFirstName(user);
-  const lastName = getLastName(user);
-  return `${firstName} ${lastName}`.trim();
-};
-
-/**
  * Get event variant for badge
  */
 const getEventVariant = (event: EventType): BadgeVariant => {
@@ -336,44 +315,6 @@ const getEventVariant = (event: EventType): BadgeVariant => {
   };
 
   return variants[event] || 'secondary';
-};
-
-/**
- * Format date (short version) for activity list
- */
-const formatDateShort = (dateString: string): string => {
-  try {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInHours = diffInMs / (1000 * 60 * 60);
-
-    // Less than 1 hour - show minutes ago
-    if (diffInHours < 1) {
-      const minutes = Math.floor(diffInMs / (1000 * 60));
-      return `${minutes}m ago`;
-    }
-
-    // Less than 24 hours - show hours ago
-    if (diffInHours < 24) {
-      const hours = Math.floor(diffInHours);
-      return `${hours}h ago`;
-    }
-
-    // Less than 7 days - show days ago
-    if (diffInHours < 168) {
-      const days = Math.floor(diffInHours / 24);
-      return `${days}d ago`;
-    }
-
-    // Otherwise show date
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
-  } catch {
-    return 'Invalid date';
-  }
 };
 
 /**

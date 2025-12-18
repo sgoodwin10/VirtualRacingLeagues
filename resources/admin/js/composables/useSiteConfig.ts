@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { siteConfigService } from '@admin/services/siteConfigService';
 import { useSiteConfigStore } from '@admin/stores/siteConfigStore';
+import { useRequestCancellation } from '@admin/composables/useRequestCancellation';
 import type {
   SiteConfig,
   UpdateSiteConfigRequest,
@@ -48,6 +49,9 @@ export function useSiteConfig() {
   // Pinia store
   const siteConfigStore = useSiteConfigStore();
 
+  // Request cancellation
+  const { getSignal } = useRequestCancellation();
+
   // State
   const config = ref<SiteConfig | null>(null);
   const loading = ref(false);
@@ -58,6 +62,7 @@ export function useSiteConfig() {
   /**
    * Fetch site configuration from API
    * Sets loading state and handles errors
+   * Automatically cancels request on component unmount
    *
    * @returns Promise that resolves when config is fetched
    *
@@ -72,7 +77,7 @@ export function useSiteConfig() {
     error.value = null;
 
     try {
-      config.value = await siteConfigService.getSiteConfig();
+      config.value = await siteConfigService.getSiteConfig(getSignal());
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;
@@ -89,6 +94,7 @@ export function useSiteConfig() {
    * Update site configuration with provided data
    * Sets saving state, handles validation errors, and returns success status
    * Also updates the Pinia store with the new configuration
+   * Automatically cancels request on component unmount
    *
    * @param data - The configuration data to update
    * @returns Promise that resolves to true if successful, false otherwise
@@ -114,7 +120,7 @@ export function useSiteConfig() {
     validationErrors.value = {};
 
     try {
-      const updatedConfig = await siteConfigService.updateSiteConfig(data);
+      const updatedConfig = await siteConfigService.updateSiteConfig(data, getSignal());
       config.value = updatedConfig;
 
       // Update the Pinia store with the new configuration

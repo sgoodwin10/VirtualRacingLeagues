@@ -8,7 +8,6 @@ import type {
   LeagueDriver,
   CreateDriverRequest,
   UpdateDriverRequest,
-  UpdateLeagueDriverRequest,
   ImportDriversRequest,
   ImportDriversBackendResponse,
   ImportDriversResponse,
@@ -118,25 +117,6 @@ export async function updateDriver(
   leagueId: number,
   driverId: number,
   data: UpdateDriverRequest,
-): Promise<LeagueDriver> {
-  const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.put(
-    API_ENDPOINTS.leagues.driverDetail(leagueId, driverId),
-    data,
-  );
-  return response.data.data;
-}
-
-/**
- * Update league-specific driver settings only
- * @param leagueId - League ID
- * @param driverId - Driver ID
- * @param data - Update data (number, status, notes)
- * @deprecated Use updateDriver instead for full driver updates
- */
-export async function updateLeagueDriver(
-  leagueId: number,
-  driverId: number,
-  data: UpdateLeagueDriverRequest,
 ): Promise<LeagueDriver> {
   const response: AxiosResponse<ApiResponse<LeagueDriver>> = await apiClient.put(
     API_ENDPOINTS.leagues.driverDetail(leagueId, driverId),

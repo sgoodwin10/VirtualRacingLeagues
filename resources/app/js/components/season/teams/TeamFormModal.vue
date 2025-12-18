@@ -85,7 +85,8 @@ function loadTeamData(): void {
 
   form.name = props.team.name;
   form.logo = null;
-  form.logo_url = props.team.logo_url;
+  // Prefer new media format, fallback to old URL format
+  form.logo_url = props.team.logo?.original ?? props.team.logo_url;
 }
 
 function resetForm(): void {

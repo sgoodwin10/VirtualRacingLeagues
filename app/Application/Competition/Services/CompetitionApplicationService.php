@@ -9,6 +9,7 @@ use App\Application\Competition\DTOs\CompetitionSeasonData;
 use App\Application\Competition\DTOs\CompetitionSeasonStatsData;
 use App\Application\Competition\DTOs\CreateCompetitionData;
 use App\Application\Competition\DTOs\UpdateCompetitionData;
+use App\Application\Shared\Services\MediaServiceInterface;
 use App\Domain\Competition\Entities\Competition;
 use App\Domain\Competition\Exceptions\CompetitionNotFoundException;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
@@ -41,6 +42,7 @@ final class CompetitionApplicationService
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
         private readonly SeasonRepositoryInterface $seasonRepository,
+        private readonly MediaServiceInterface $mediaService,
     ) {
     }
 
@@ -91,11 +93,17 @@ final class CompetitionApplicationService
             // 6. Save via repository
             $this->competitionRepository->save($competition);
 
-            // 7. Record creation event and dispatch
+            // 7. Upload media using new media service (dual-write during transition)
+            if ($data->logo && $competition->id()) {
+                $eloquentCompetition = $this->competitionRepository->getEloquentModel($competition->id());
+                $this->mediaService->upload($data->logo, $eloquentCompetition, 'logo');
+            }
+
+            // 8. Record creation event and dispatch
             $competition->recordCreationEvent();
             $this->dispatchEvents($competition);
 
-            // 8. Get stats and return CompetitionData DTO
+            // 9. Get stats and return CompetitionData DTO
             $stats = $this->competitionRepository->getStatsForEntity($competition);
             return $this->toCompetitionData($competition, $league->logoPath(), $stats);
         });
@@ -148,6 +156,12 @@ final class CompetitionApplicationService
                 }
 
                 $competition->updateLogo($logoPath);
+
+                // Upload via media service (dual-write)
+                if ($competition->id()) {
+                    $eloquentCompetition = $this->competitionRepository->getEloquentModel($competition->id());
+                    $this->mediaService->upload($data->logo, $eloquentCompetition, 'logo');
+                }
             }
 
             // 5. Update competition colour if provided
@@ -375,6 +389,16 @@ final class CompetitionApplicationService
         // Get seasons with stats for this competition
         $seasonsData = $this->getSeasonsForCompetition($competition->id() ?? 0);
 
+        // Get eloquent model for media extraction
+        $eloquentModel = null;
+        if ($competition->id()) {
+            try {
+                $eloquentModel = $this->competitionRepository->getEloquentModel($competition->id());
+            } catch (\Exception $e) {
+                // Model not found or error loading media - continue without media
+            }
+        }
+
         // Return DTO
         return CompetitionData::fromEntity(
             competition: $competition,
@@ -383,6 +407,7 @@ final class CompetitionApplicationService
             leagueData: $leagueData,
             aggregates: $aggregates,
             seasons: $seasonsData,
+            eloquentModel: $eloquentModel,
         );
     }
 

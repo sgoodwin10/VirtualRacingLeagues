@@ -3,17 +3,20 @@ import { ref, computed } from 'vue';
 import type { User } from '@app/types/user';
 import type { LoginCredentials } from '@app/types/auth';
 import { authService } from '@app/services/authService';
+import { logError } from '@app/utils/logger';
 
 export const useUserStore = defineStore(
   'user',
   () => {
     // State
     const user = ref<User | null>(null);
-    const isAuthenticated = ref(false);
     const isLoading = ref(false);
-    const authCheckPromise = ref<Promise<boolean> | null>(null);
+
+    // Private state for managing auth check concurrency
+    let authCheckPromise: Promise<boolean> | null = null;
 
     // Getters
+    const isAuthenticated = computed((): boolean => user.value !== null);
     const userName = computed((): string => {
       if (!user.value) return 'Guest';
       return `${user.value.first_name} ${user.value.last_name}`.trim() || 'Guest';
@@ -23,10 +26,11 @@ export const useUserStore = defineStore(
     const userEmail = computed((): string => user.value?.email || '');
     const isEmailVerified = computed((): boolean => user.value?.email_verified_at !== null);
 
-    // Helper function to get public site domain
+    // Helper function to get public site URL
     const getPublicDomain = (): string => {
-      // Extract domain without 'app.' subdomain
-      return import.meta.env.VITE_APP_URL.replace('//app.', '//');
+      const publicDomain = import.meta.env.VITE_PUBLIC_DOMAIN;
+      // Build full URL with protocol from current location
+      return `${window.location.protocol}//${publicDomain}`;
     };
 
     // Actions
@@ -44,7 +48,7 @@ export const useUserStore = defineStore(
       try {
         await authService.logout();
       } catch (error) {
-        console.error('Logout error:', error);
+        logError('Logout error', { context: 'userStore', data: error });
       } finally {
         clearAuth();
         // Redirect to public site login page with logout flag to clear public auth store
@@ -55,11 +59,11 @@ export const useUserStore = defineStore(
 
     async function checkAuth(): Promise<boolean> {
       // Prevent concurrent auth checks
-      if (authCheckPromise.value) {
-        return authCheckPromise.value;
+      if (authCheckPromise) {
+        return authCheckPromise;
       }
 
-      authCheckPromise.value = (async () => {
+      authCheckPromise = (async () => {
         try {
           const userData = await authService.checkAuth();
 
@@ -71,15 +75,15 @@ export const useUserStore = defineStore(
             return false;
           }
         } catch (error) {
-          console.error('Auth check failed:', error);
+          logError('Auth check failed', { context: 'userStore', data: error });
           clearAuth();
           return false;
         } finally {
-          authCheckPromise.value = null;
+          authCheckPromise = null;
         }
       })();
 
-      return authCheckPromise.value;
+      return authCheckPromise;
     }
 
     async function resendVerificationEmail(): Promise<void> {
@@ -105,12 +109,10 @@ export const useUserStore = defineStore(
 
     function setUser(userData: User): void {
       user.value = userData;
-      isAuthenticated.value = true;
     }
 
     function clearAuth(): void {
       user.value = null;
-      isAuthenticated.value = false;
     }
 
     return {
@@ -137,7 +139,7 @@ export const useUserStore = defineStore(
   {
     persist: {
       storage: localStorage,
-      pick: ['user', 'isAuthenticated'],
+      pick: ['user'],
     },
   },
 );

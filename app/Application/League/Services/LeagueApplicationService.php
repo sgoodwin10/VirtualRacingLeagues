@@ -16,7 +16,9 @@ use App\Application\League\DTOs\PublicRaceResultsData;
 use App\Application\League\DTOs\PublicSeasonDetailData;
 use App\Application\League\DTOs\PublicSeasonSummaryData;
 use App\Application\League\DTOs\UpdateLeagueData;
+use App\Application\Driver\DTOs\PublicDriverProfileData;
 use App\Application\Competition\Services\SeasonApplicationService;
+use App\Application\Shared\Services\MediaServiceInterface;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Driver\Services\DriverPlatformColumnService;
 use App\Domain\League\Entities\League;
@@ -54,6 +56,7 @@ final class LeagueApplicationService
         private readonly UserRepositoryInterface $userRepository,
         private readonly SeasonApplicationService $seasonApplicationService,
         private readonly RaceResultsCacheService $raceResultsCache,
+        private readonly MediaServiceInterface $mediaService,
     ) {
     }
 
@@ -79,27 +82,31 @@ final class LeagueApplicationService
             $baseSlug = LeagueSlug::fromName($data->name);
             $slug = $this->generateUniqueSlug($baseSlug);
 
-            // Track uploaded files for cleanup on failure
-            $uploadedFiles = [];
+            // Store logo using old method for backward compatibility (dual-write during transition)
+            $logoPath = $data->logo->store('leagues/logos', 'public');
+            if (!$logoPath) {
+                throw new \RuntimeException('Failed to store league logo');
+            }
+
+            // Store header image if provided
+            $headerImagePath = null;
+            if ($data->header_image) {
+                $headerImagePath = $data->header_image->store('leagues/headers', 'public');
+                if (!$headerImagePath) {
+                    throw new \RuntimeException('Failed to store league header image');
+                }
+            }
+
+            // Store banner if provided
+            $bannerPath = null;
+            if ($data->banner) {
+                $bannerPath = $data->banner->store('leagues/banners', 'public');
+                if (!$bannerPath) {
+                    throw new \RuntimeException('Failed to store league banner');
+                }
+            }
 
             try {
-                // Store logo
-                $logoPath = $data->logo->store('leagues/logos', 'public');
-                if (!$logoPath) {
-                    throw new \RuntimeException('Failed to store league logo');
-                }
-                $uploadedFiles[] = $logoPath;
-
-                // Store header image if provided
-                $headerImagePath = null;
-                if ($data->header_image) {
-                    $headerImagePath = $data->header_image->store('leagues/headers', 'public');
-                    if (!$headerImagePath) {
-                        throw new \RuntimeException('Failed to store league header image');
-                    }
-                    $uploadedFiles[] = $headerImagePath;
-                }
-
                 // Create domain entity
                 $league = League::create(
                     name: LeagueName::from($data->name),
@@ -112,6 +119,7 @@ final class LeagueApplicationService
                     tagline: Tagline::fromNullable($data->tagline),
                     description: $data->description,
                     headerImagePath: $headerImagePath,
+                    bannerPath: $bannerPath,
                     platformIds: $data->platform_ids,
                     discordUrl: $data->discord_url,
                     websiteUrl: $data->website_url,
@@ -131,18 +139,48 @@ final class LeagueApplicationService
                 // Dispatch domain events
                 $this->dispatchEvents($league);
 
+                // Fetch the Eloquent model for media operations
+                $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::find($league->id());
+
+                // Upload media using new media service
+                if ($eloquentLeague) {
+                    $this->mediaService->upload($data->logo, $eloquentLeague, 'logo');
+
+                    if ($data->header_image) {
+                        $this->mediaService->upload($data->header_image, $eloquentLeague, 'header_image');
+                    }
+
+                    if ($data->banner) {
+                        $this->mediaService->upload($data->banner, $eloquentLeague, 'banner');
+                    }
+                }
+
                 // Fetch platform data for response
                 $platforms = $this->fetchPlatformData($league->platformIds());
 
-                // Compute URLs for logo and header image
+                // Compute URLs for logo, header image, and banner
                 $logoUrl = $this->computeLogoUrl($league);
                 $headerImageUrl = $this->computeHeaderImageUrl($league);
+                $bannerUrl = $this->computeBannerUrl($league);
+
+                // Reload to get media relationships
+                if ($eloquentLeague) {
+                    $eloquentLeague->load('media');
+                }
 
                 // New leagues have 0 competitions and 0 drivers
-                return LeagueData::fromEntity($league, $platforms, null, 0, 0, $logoUrl, $headerImageUrl);
+                return LeagueData::fromEntity($league, $platforms, null, 0, 0, $logoUrl, $headerImageUrl, $bannerUrl, $eloquentLeague);
             } catch (\Throwable $e) {
-                // Clean up any uploaded files on failure
-                $this->cleanupUploadedFiles($uploadedFiles);
+                // Clean up any uploaded old-style files on failure
+                if (Storage::disk('public')->exists($logoPath)) {
+                    Storage::disk('public')->delete($logoPath);
+                }
+                if ($headerImagePath !== null && Storage::disk('public')->exists($headerImagePath)) {
+                    Storage::disk('public')->delete($headerImagePath);
+                }
+                if ($bannerPath !== null && Storage::disk('public')->exists($bannerPath)) {
+                    Storage::disk('public')->delete($bannerPath);
+                }
 
                 // Re-throw the exception
                 throw $e;
@@ -184,6 +222,11 @@ final class LeagueApplicationService
                 $platforms = $this->fetchPlatformData($league->platformIds());
                 $logoUrl = $this->computeLogoUrl($league);
                 $headerImageUrl = $this->computeHeaderImageUrl($league);
+                $bannerUrl = $this->computeBannerUrl($league);
+
+                // Fetch eloquent model for media relationships
+                $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($league->id());
+
                 return LeagueData::fromEntity(
                     $league,
                     $platforms,
@@ -191,7 +234,9 @@ final class LeagueApplicationService
                     $item['competitions_count'],
                     $item['drivers_count'],
                     $logoUrl,
-                    $headerImageUrl
+                    $headerImageUrl,
+                    $bannerUrl,
+                    $eloquentLeague
                 );
             },
             $leaguesWithCounts
@@ -215,6 +260,10 @@ final class LeagueApplicationService
         $platforms = $this->fetchPlatformData($league->platformIds());
         $logoUrl = $this->computeLogoUrl($league);
         $headerImageUrl = $this->computeHeaderImageUrl($league);
+        $bannerUrl = $this->computeBannerUrl($league);
+
+        // Fetch eloquent model for media relationships
+        $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($leagueId);
 
         return LeagueData::fromEntity(
             $league,
@@ -223,7 +272,9 @@ final class LeagueApplicationService
             $result['competitions_count'],
             $result['drivers_count'],
             $logoUrl,
-            $headerImageUrl
+            $headerImageUrl,
+            $bannerUrl,
+            $eloquentLeague
         );
     }
 
@@ -302,57 +353,61 @@ final class LeagueApplicationService
                 $league->updateTimezone($data->timezone);
             }
 
-            // Track uploaded files and old files for cleanup on failure
-            $uploadedFiles = [];
-            $oldFilesToDelete = [];
+            // Fetch the Eloquent model for media operations
+            $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::find($leagueId);
 
+            // Handle media uploads
             try {
                 // Handle logo upload
                 if ($data->logo !== null) {
-                    // Store new logo first
+                    // Store new logo using old method (dual-write)
                     $logoPath = $data->logo->store('leagues/logos', 'public');
                     if (!$logoPath) {
                         throw new \RuntimeException('Failed to store league logo');
                     }
-                    $uploadedFiles[] = $logoPath;
-
-                    // Mark old logo for deletion only after successful upload
-                    $oldLogoPath = $league->logoPath();
-                    if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
-                        $oldFilesToDelete[] = $oldLogoPath;
-                    }
 
                     $league->updateLogo($logoPath);
+
+                    // Upload using new media service (replaces old media)
+                    if ($eloquentLeague) {
+                        $this->mediaService->upload($data->logo, $eloquentLeague, 'logo');
+                    }
                 }
 
                 // Handle header image upload
                 if ($data->header_image !== null) {
-                    // Store new header image first
+                    // Store new header image using old method (dual-write)
                     $headerImagePath = $data->header_image->store('leagues/headers', 'public');
                     if (!$headerImagePath) {
                         throw new \RuntimeException('Failed to store league header image');
                     }
-                    $uploadedFiles[] = $headerImagePath;
-
-                    // Mark old header image for deletion only after successful upload
-                    $oldHeaderImagePath = $league->headerImagePath();
-                    if ($oldHeaderImagePath && Storage::disk('public')->exists($oldHeaderImagePath)) {
-                        $oldFilesToDelete[] = $oldHeaderImagePath;
-                    }
 
                     $league->updateHeaderImage($headerImagePath);
+
+                    // Upload using new media service (replaces old media)
+                    if ($eloquentLeague) {
+                        $this->mediaService->upload($data->header_image, $eloquentLeague, 'header_image');
+                    }
+                }
+
+                // Handle banner upload
+                if ($data->banner !== null) {
+                    // Store new banner using old method (dual-write)
+                    $bannerPath = $data->banner->store('leagues/banners', 'public');
+                    if (!$bannerPath) {
+                        throw new \RuntimeException('Failed to store league banner');
+                    }
+
+                    $league->updateBanner($bannerPath);
+
+                    // Upload using new media service (replaces old media)
+                    if ($eloquentLeague) {
+                        $this->mediaService->upload($data->banner, $eloquentLeague, 'banner');
+                    }
                 }
             } catch (\Throwable $e) {
-                // Clean up any newly uploaded files on failure
-                $this->cleanupUploadedFiles($uploadedFiles);
-
-                // Re-throw the exception
+                // Re-throw the exception - Spatie handles cleanup automatically
                 throw $e;
-            }
-
-            // Delete old files only after all uploads succeed
-            foreach ($oldFilesToDelete as $filePath) {
-                Storage::disk('public')->delete($filePath);
             }
 
             // Persist updates
@@ -366,6 +421,12 @@ final class LeagueApplicationService
             $platforms = $this->fetchPlatformData($league->platformIds());
             $logoUrl = $this->computeLogoUrl($league);
             $headerImageUrl = $this->computeHeaderImageUrl($league);
+            $bannerUrl = $this->computeBannerUrl($league);
+
+            // Reload eloquent model to get updated media relationships
+            if ($eloquentLeague) {
+                $eloquentLeague->load('media');
+            }
 
             return LeagueData::fromEntity(
                 $league,
@@ -374,7 +435,9 @@ final class LeagueApplicationService
                 $result['competitions_count'],
                 $result['drivers_count'],
                 $logoUrl,
-                $headerImageUrl
+                $headerImageUrl,
+                $bannerUrl,
+                $eloquentLeague
             );
         });
     }
@@ -600,9 +663,13 @@ final class LeagueApplicationService
                 $platforms = $this->fetchPlatformData($league->platformIds());
                 $logoUrl = $this->computeLogoUrl($league);
                 $headerImageUrl = $this->computeHeaderImageUrl($league);
+                $bannerUrl = $this->computeBannerUrl($league);
 
                 // Get owner data
                 $ownerData = $owners[$league->ownerUserId()] ?? null;
+
+                // Fetch eloquent model for media relationships
+                $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($league->id());
 
                 return LeagueData::fromEntity(
                     $league,
@@ -611,7 +678,9 @@ final class LeagueApplicationService
                     $item['competitions_count'],
                     $item['drivers_count'],
                     $logoUrl,
-                    $headerImageUrl
+                    $headerImageUrl,
+                    $bannerUrl,
+                    $eloquentLeague
                 );
             },
             $result['data']
@@ -638,10 +707,14 @@ final class LeagueApplicationService
         $platforms = $this->fetchPlatformData($league->platformIds());
         $logoUrl = $this->computeLogoUrl($league);
         $headerImageUrl = $this->computeHeaderImageUrl($league);
+        $bannerUrl = $this->computeBannerUrl($league);
 
         // Fetch owner data
         $owners = $this->userRepository->findMultipleByIds([$league->ownerUserId()]);
         $ownerData = $owners[$league->ownerUserId()] ?? null;
+
+        // Fetch eloquent model for media relationships
+        $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($leagueId);
 
         return LeagueData::fromEntity(
             $league,
@@ -650,7 +723,9 @@ final class LeagueApplicationService
             $result['competitions_count'],
             $result['drivers_count'],
             $logoUrl,
-            $headerImageUrl
+            $headerImageUrl,
+            $bannerUrl,
+            $eloquentLeague
         );
     }
 
@@ -679,8 +754,12 @@ final class LeagueApplicationService
             $platforms = $this->fetchPlatformData($league->platformIds());
             $logoUrl = $this->computeLogoUrl($league);
             $headerImageUrl = $this->computeHeaderImageUrl($league);
+            $bannerUrl = $this->computeBannerUrl($league);
             $owners = $this->userRepository->findMultipleByIds([$league->ownerUserId()]);
             $ownerData = $owners[$league->ownerUserId()] ?? null;
+
+            // Fetch eloquent model for media relationships
+            $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($leagueId);
 
             return LeagueData::fromEntity(
                 $league,
@@ -689,7 +768,9 @@ final class LeagueApplicationService
                 $result['competitions_count'],
                 $result['drivers_count'],
                 $logoUrl,
-                $headerImageUrl
+                $headerImageUrl,
+                $bannerUrl,
+                $eloquentLeague
             );
         });
     }
@@ -814,9 +895,13 @@ final class LeagueApplicationService
                 $platforms = $this->fetchPlatformData($league->platformIds());
                 $logoUrl = $this->computeLogoUrl($league);
                 $headerImageUrl = $this->computeHeaderImageUrl($league);
+                $bannerUrl = $this->computeBannerUrl($league);
 
                 // Get owner data
                 $ownerData = $owners[$league->ownerUserId()] ?? null;
+
+                // Fetch eloquent model for media relationships
+                $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($league->id());
 
                 return LeagueData::fromEntity(
                     $league,
@@ -825,7 +910,9 @@ final class LeagueApplicationService
                     $item['competitions_count'],
                     $item['drivers_count'],
                     $logoUrl,
-                    $headerImageUrl
+                    $headerImageUrl,
+                    $bannerUrl,
+                    $eloquentLeague
                 );
             },
             $result['data']
@@ -868,6 +955,10 @@ final class LeagueApplicationService
                 $platforms = $this->fetchPlatformData($league->platformIds());
                 $logoUrl = $this->computeLogoUrl($league);
                 $headerImageUrl = $this->computeHeaderImageUrl($league);
+                $bannerUrl = $this->computeBannerUrl($league);
+
+                // Fetch eloquent model for media relationships
+                $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($league->id());
 
                 return PublicLeagueData::fromEntity(
                     $league,
@@ -875,7 +966,9 @@ final class LeagueApplicationService
                     $item['competitions_count'],
                     $item['drivers_count'],
                     $logoUrl,
-                    $headerImageUrl
+                    $headerImageUrl,
+                    $bannerUrl,
+                    $eloquentLeague
                 );
             },
             $result['data']
@@ -1011,13 +1104,17 @@ final class LeagueApplicationService
             ]);
         }
 
-        // Generate URLs for logo and header image
+        // Generate URLs for logo, header image, and banner
         $logoUrl = $league->logoPath()
             ? Storage::disk('public')->url($league->logoPath())
             : null;
 
         $headerImageUrl = $league->headerImagePath()
             ? Storage::disk('public')->url($league->headerImagePath())
+            : null;
+
+        $bannerUrl = $league->bannerPath()
+            ? Storage::disk('public')->url($league->bannerPath())
             : null;
 
         // Build league data
@@ -1029,6 +1126,7 @@ final class LeagueApplicationService
             'description' => $league->description(),
             'logo_url' => $logoUrl,
             'header_image_url' => $headerImageUrl,
+            'banner_url' => $bannerUrl,
             'platforms' => $platforms,
             'visibility' => $league->visibility()->value,
             'discord_url' => $league->discordUrl(),
@@ -1084,18 +1182,19 @@ final class LeagueApplicationService
     }
 
     /**
-     * Clean up uploaded files from storage.
+     * Compute banner URL from league entity.
+     * Returns null if league has no banner path.
      *
-     * @param array<string> $filePaths Array of file paths to delete
+     * @param League $league
+     * @return string|null
      */
-    private function cleanupUploadedFiles(array $filePaths): void
+    private function computeBannerUrl(League $league): ?string
     {
-        foreach ($filePaths as $filePath) {
-            if (Storage::disk('public')->exists($filePath)) {
-                Storage::disk('public')->delete($filePath);
-            }
-        }
+        return $league->bannerPath()
+            ? Storage::disk('public')->url($league->bannerPath())
+            : null;
     }
+
 
     /**
      * Get detailed season information for public viewing by slug (no authentication required).
@@ -1957,5 +2056,151 @@ final class LeagueApplicationService
         foreach ($raceIds as $raceId) {
             $this->raceResultsCache->forget($raceId);
         }
+    }
+
+    /**
+     * Get public driver profile by season_driver_id (no authentication required).
+     * Returns null if driver not found or belongs to a private league.
+     * Results are cached for 1 hour.
+     *
+     * @param int $seasonDriverId The season driver ID
+     * @return PublicDriverProfileData|null
+     */
+    public function getPublicDriverProfile(int $seasonDriverId): ?PublicDriverProfileData
+    {
+        // Cache key
+        $cacheKey = "public_driver_profile_{$seasonDriverId}";
+
+        // Check cache first
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($seasonDriverId) {
+            // Find season_driver and get league_driver_id
+            $seasonDriver = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::query()
+                ->with([
+                    'season.competition.league:id,visibility',
+                    'leagueDriver.driver:id,nickname,first_name,last_name,psn_id,discord_id,iracing_id',
+                    'leagueDriver:id,driver_id,driver_number',
+                ])
+                ->find($seasonDriverId);
+
+            if ($seasonDriver === null) {
+                return null;
+            }
+
+            // Use getRelation for PHPStan compatibility
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent|null $season */
+            $season = $seasonDriver->getRelation('season');
+            if ($season === null) {
+                return null;
+            }
+
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Competition|null $competition */
+            $competition = $season->getRelation('competition');
+            if ($competition === null) {
+                return null;
+            }
+
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\League|null $league */
+            $league = $competition->getRelation('league');
+            if ($league === null || $league->visibility === 'private') {
+                return null;
+            }
+
+            // Get the actual driver
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent|null $leagueDriver */
+            $leagueDriver = $seasonDriver->getRelation('leagueDriver');
+            if ($leagueDriver === null) {
+                return null;
+            }
+
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Driver|null $driver */
+            $driver = $leagueDriver->getRelation('driver');
+            if ($driver === null) {
+                return null;
+            }
+
+            // Get driver_id to query all their participations
+            $driverId = $driver->id;
+
+            // Build platform accounts array (only include non-null values)
+            $platformAccounts = [];
+            if ($driver->psn_id !== null) {
+                $platformAccounts['psn_id'] = $driver->psn_id;
+            }
+            if ($driver->discord_id !== null) {
+                $platformAccounts['discord_id'] = $driver->discord_id;
+            }
+            if ($driver->iracing_id !== null) {
+                $platformAccounts['iracing_id'] = $driver->iracing_id;
+            }
+
+            // Get all season_drivers for this driver (via league_drivers)
+            $allSeasonDriverIds = DB::table('season_drivers')
+                ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+                ->where('league_drivers.driver_id', $driverId)
+                ->pluck('season_drivers.id')
+                ->toArray();
+
+            if (empty($allSeasonDriverIds)) {
+                // Should never happen since we found one, but be defensive
+                $allSeasonDriverIds = [$seasonDriverId];
+            }
+
+            // Calculate career stats (total poles and podiums)
+            $totalPoles = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+                ->whereIn('driver_id', $allSeasonDriverIds)
+                ->where('has_pole', true)
+                ->count();
+
+            $totalPodiums = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+                ->whereIn('driver_id', $allSeasonDriverIds)
+                ->whereIn('position', [1, 2, 3])
+                ->count();
+
+            // Get all competitions/seasons this driver has participated in
+            $competitions = DB::table('season_drivers')
+                ->whereIn('season_drivers.id', $allSeasonDriverIds)
+                ->join('seasons', 'season_drivers.season_id', '=', 'seasons.id')
+                ->join('competitions', 'seasons.competition_id', '=', 'competitions.id')
+                ->join('leagues', 'competitions.league_id', '=', 'leagues.id')
+                ->select([
+                    'leagues.name as league_name',
+                    'leagues.slug as league_slug',
+                    'seasons.name as season_name',
+                    'seasons.slug as season_slug',
+                    'season_drivers.status',
+                ])
+                ->orderBy('seasons.created_at', 'desc')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'league_name' => $item->league_name,
+                        'league_slug' => $item->league_slug,
+                        'season_name' => $item->season_name,
+                        'season_slug' => $item->season_slug,
+                        'status' => $item->status,
+                    ];
+                })
+                ->toArray();
+
+            // Use nickname, or fallback to first/last name for display
+            $nickname = $driver->nickname;
+            if (empty($nickname)) {
+                $nickname = trim(($driver->first_name ?? '') . ' ' . ($driver->last_name ?? ''));
+                if (empty($nickname)) {
+                    $nickname = 'Unknown Driver';
+                }
+            }
+
+            return new PublicDriverProfileData(
+                nickname: $nickname,
+                driver_number: $leagueDriver->driver_number,
+                platform_accounts: $platformAccounts,
+                career_stats: [
+                    'total_poles' => $totalPoles,
+                    'total_podiums' => $totalPodiums,
+                ],
+                competitions: $competitions,
+            );
+        });
     }
 }

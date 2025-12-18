@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import type { PiniaPluginContext } from 'pinia';
 import { ref, computed } from 'vue';
 import type { User } from '@public/types/user';
 import type { LoginCredentials, RegisterData } from '@public/types/auth';
@@ -22,7 +23,9 @@ export const useAuthStore = defineStore(
     // Helper to get app subdomain URL
     const getAppSubdomainUrl = (): string => {
       // VITE_APP_DOMAIN already includes 'app.' prefix
-      return `http://${import.meta.env.VITE_APP_DOMAIN}`;
+      // Use dynamic protocol detection to support both HTTP and HTTPS
+      const protocol = window.location.protocol;
+      return `${protocol}//${import.meta.env.VITE_APP_DOMAIN}`;
     };
 
     // Actions
@@ -110,6 +113,7 @@ export const useAuthStore = defineStore(
       // State
       user,
       isAuthenticated,
+      isLoading,
 
       // Getters
       userName,
@@ -127,6 +131,10 @@ export const useAuthStore = defineStore(
     persist: {
       storage: localStorage,
       pick: ['user', 'isAuthenticated'],
+      afterHydrate: (ctx: PiniaPluginContext) => {
+        // Validate session after restoring from localStorage
+        ctx.store.checkAuth();
+      },
     },
   },
 );

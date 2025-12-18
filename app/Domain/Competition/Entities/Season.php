@@ -45,6 +45,9 @@ final class Season
         private ?string $logoPath,
         private ?string $bannerPath,
         private bool $teamChampionshipEnabled,
+        private ?int $teamsDriversForCalculation,
+        private bool $teamsDropRounds,
+        private ?int $teamsTotalDropRounds,
         private bool $raceDivisionsEnabled,
         private bool $raceTimesRequired,
         private bool $dropRound,
@@ -61,6 +64,7 @@ final class Season
      * Create a new season.
      *
      * @throws \InvalidArgumentException if dropRound is false but totalDropRounds > 0
+     * @throws \InvalidArgumentException if teamsDropRounds is false but teamsTotalDropRounds > 0
      */
     public static function create(
         int $competitionId,
@@ -73,6 +77,9 @@ final class Season
         ?string $logoPath = null,
         ?string $bannerPath = null,
         bool $teamChampionshipEnabled = false,
+        ?int $teamsDriversForCalculation = null,
+        bool $teamsDropRounds = false,
+        ?int $teamsTotalDropRounds = null,
         bool $raceDivisionsEnabled = false,
         bool $raceTimesRequired = true,
         bool $dropRound = false,
@@ -82,6 +89,13 @@ final class Season
         if (!$dropRound && $totalDropRounds > 0) {
             throw new \InvalidArgumentException(
                 'Cannot set total drop rounds to a value greater than 0 when drop round feature is disabled'
+            );
+        }
+
+        // Validate business rule: cannot have teamsTotalDropRounds > 0 when teamsDropRounds is disabled
+        if (!$teamsDropRounds && $teamsTotalDropRounds !== null && $teamsTotalDropRounds > 0) {
+            throw new \InvalidArgumentException(
+                'Cannot set teams total drop rounds to a value greater than 0 when teams drop rounds feature is disabled'
             );
         }
 
@@ -98,6 +112,9 @@ final class Season
             logoPath: $logoPath,
             bannerPath: $bannerPath,
             teamChampionshipEnabled: $teamChampionshipEnabled,
+            teamsDriversForCalculation: $teamsDriversForCalculation,
+            teamsDropRounds: $teamsDropRounds,
+            teamsTotalDropRounds: $teamsTotalDropRounds,
             raceDivisionsEnabled: $raceDivisionsEnabled,
             raceTimesRequired: $raceTimesRequired,
             dropRound: $dropRound,
@@ -128,6 +145,9 @@ final class Season
         ?string $logoPath = null,
         ?string $bannerPath = null,
         bool $teamChampionshipEnabled = false,
+        ?int $teamsDriversForCalculation = null,
+        bool $teamsDropRounds = false,
+        ?int $teamsTotalDropRounds = null,
         bool $raceDivisionsEnabled = false,
         bool $raceTimesRequired = true,
         bool $dropRound = false,
@@ -145,6 +165,9 @@ final class Season
             logoPath: $logoPath,
             bannerPath: $bannerPath,
             teamChampionshipEnabled: $teamChampionshipEnabled,
+            teamsDriversForCalculation: $teamsDriversForCalculation,
+            teamsDropRounds: $teamsDropRounds,
+            teamsTotalDropRounds: $teamsTotalDropRounds,
             raceDivisionsEnabled: $raceDivisionsEnabled,
             raceTimesRequired: $raceTimesRequired,
             dropRound: $dropRound,
@@ -253,6 +276,21 @@ final class Season
     public function getTotalDropRounds(): int
     {
         return $this->totalDropRounds;
+    }
+
+    public function getTeamsDriversForCalculation(): ?int
+    {
+        return $this->teamsDriversForCalculation;
+    }
+
+    public function hasTeamsDropRounds(): bool
+    {
+        return $this->teamsDropRounds;
+    }
+
+    public function getTeamsTotalDropRounds(): ?int
+    {
+        return $this->teamsTotalDropRounds;
     }
 
     public function status(): SeasonStatus
@@ -630,6 +668,123 @@ final class Season
                 seasonId: $this->id ?? 0,
                 competitionId: $this->competitionId,
                 changes: ['total_drop_rounds' => ['old' => $oldTotal, 'new' => $totalDropRounds]],
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Update the number of drivers' points to count towards team scores.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function updateTeamsDriversForCalculation(?int $count): void
+    {
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id ?? 0);
+        }
+
+        if ($this->teamsDriversForCalculation !== $count) {
+            $oldCount = $this->teamsDriversForCalculation;
+            $this->teamsDriversForCalculation = $count;
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonUpdated(
+                seasonId: $this->id ?? 0,
+                competitionId: $this->competitionId,
+                changes: ['teams_drivers_for_calculation' => ['old' => $oldCount, 'new' => $count]],
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Enable teams drop rounds feature.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function enableTeamsDropRounds(): void
+    {
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id ?? 0);
+        }
+
+        if (!$this->teamsDropRounds) {
+            $this->teamsDropRounds = true;
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonUpdated(
+                seasonId: $this->id ?? 0,
+                competitionId: $this->competitionId,
+                changes: ['teams_drop_rounds' => ['old' => false, 'new' => true]],
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Disable teams drop rounds feature.
+     * Automatically resets teamsTotalDropRounds to null when disabled.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function disableTeamsDropRounds(): void
+    {
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id ?? 0);
+        }
+
+        if ($this->teamsDropRounds) {
+            $changes = ['teams_drop_rounds' => ['old' => true, 'new' => false]];
+
+            $this->teamsDropRounds = false;
+
+            // Business rule: when teams drop rounds is disabled, teamsTotalDropRounds must be reset to null
+            if ($this->teamsTotalDropRounds !== null) {
+                $changes['teams_total_drop_rounds'] = ['old' => $this->teamsTotalDropRounds, 'new' => null];
+                $this->teamsTotalDropRounds = null;
+            }
+
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonUpdated(
+                seasonId: $this->id ?? 0,
+                competitionId: $this->competitionId,
+                changes: $changes,
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Update the number of rounds to drop for teams.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     * @throws \InvalidArgumentException if trying to set teamsTotalDropRounds > 0 when teamsDropRounds is disabled
+     */
+    public function updateTeamsTotalDropRounds(?int $totalDropRounds): void
+    {
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id ?? 0);
+        }
+
+        // Validate business rule: cannot set teamsTotalDropRounds > 0 when teams drop rounds is disabled
+        if (!$this->teamsDropRounds && $totalDropRounds !== null && $totalDropRounds > 0) {
+            throw new \InvalidArgumentException(
+                'Cannot set teams total drop rounds to a value greater than 0 when teams drop rounds feature is disabled. ' .
+                'Enable teams drop rounds first.'
+            );
+        }
+
+        if ($this->teamsTotalDropRounds !== $totalDropRounds) {
+            $oldTotal = $this->teamsTotalDropRounds;
+            $this->teamsTotalDropRounds = $totalDropRounds;
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonUpdated(
+                seasonId: $this->id ?? 0,
+                competitionId: $this->competitionId,
+                changes: ['teams_total_drop_rounds' => ['old' => $oldTotal, 'new' => $totalDropRounds]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
             ));
         }

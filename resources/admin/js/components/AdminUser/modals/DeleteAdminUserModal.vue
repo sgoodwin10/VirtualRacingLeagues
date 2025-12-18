@@ -51,6 +51,7 @@
 <script setup lang="ts">
 import Button from 'primevue/button';
 import BaseModal from '@admin/components/modals/BaseModal.vue';
+import { useNameHelpers } from '@admin/composables/useNameHelpers';
 import type { Admin } from '@admin/types/admin';
 
 /**
@@ -106,28 +107,8 @@ const props = withDefaults(defineProps<DeleteAdminUserModalProps>(), {
 // Emits
 const emit = defineEmits<DeleteAdminUserModalEmits>();
 
-/**
- * Get first name from admin user
- */
-const getFirstName = (user: Admin): string => {
-  return user.first_name || user.name?.split(' ')[0] || '';
-};
-
-/**
- * Get last name from admin user
- */
-const getLastName = (user: Admin): string => {
-  return user.last_name || user.name?.split(' ').slice(1).join(' ') || '';
-};
-
-/**
- * Get full name from admin user
- */
-const getFullName = (user: Admin): string => {
-  const firstName = getFirstName(user);
-  const lastName = getLastName(user);
-  return `${firstName} ${lastName}`.trim();
-};
+// Composables
+const { getFullName } = useNameHelpers();
 
 /**
  * Handle visibility change

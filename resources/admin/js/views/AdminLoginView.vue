@@ -1,3 +1,109 @@
+<template>
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4"
+  >
+    <div class="w-full max-w-md">
+      <!-- Login Card -->
+      <div class="bg-white rounded-lg shadow-lg p-8">
+        <!-- Logo/Header -->
+        <div class="text-center mb-8">
+          <div
+            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4"
+          >
+            <i class="pi pi-shield text-3xl text-blue-600"></i>
+          </div>
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">Admin Login</h1>
+          <p class="text-gray-600">Enter your credentials to access the admin panel</p>
+        </div>
+
+        <!-- Error Message -->
+        <Message v-if="errorMessage" severity="error" :closable="false" class="mb-6">
+          {{ errorMessage }}
+        </Message>
+
+        <!-- Login Form -->
+        <form class="space-y-5" @submit.prevent="handleSubmit">
+          <!-- Email Field -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </label>
+            <InputText
+              id="email"
+              v-model="email"
+              type="email"
+              placeholder="admin@example.com"
+              :class="{ 'p-invalid': emailError }"
+              class="w-full"
+              :disabled="isSubmitting"
+              autocomplete="email"
+              @input="clearEmailError"
+            />
+            <small v-if="emailError" class="text-red-600 mt-1 block">
+              {{ emailError }}
+            </small>
+          </div>
+
+          <!-- Password Field -->
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <Password
+              id="password"
+              v-model="password"
+              placeholder="Enter your password"
+              :class="{ 'p-invalid': passwordError }"
+              input-class="w-full"
+              :pt="{
+                root: { class: 'w-full' },
+                input: { class: 'w-full' },
+              }"
+              :disabled="isSubmitting"
+              :feedback="false"
+              :toggle-mask="true"
+              autocomplete="current-password"
+              @input="clearPasswordError"
+            />
+            <small v-if="passwordError" class="text-red-600 mt-1 block">
+              {{ passwordError }}
+            </small>
+          </div>
+
+          <!-- Remember Me -->
+          <div class="flex items-center">
+            <Checkbox
+              v-model="remember"
+              input-id="remember"
+              :binary="true"
+              :disabled="isSubmitting"
+            />
+            <label for="remember" class="ml-2 text-sm text-gray-700 cursor-pointer">
+              Remember me for 30 days
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <Button
+            type="submit"
+            label="Sign In"
+            icon="pi pi-sign-in"
+            :loading="isSubmitting"
+            :disabled="!isFormValid || isSubmitting"
+            class="w-full"
+            severity="primary"
+          />
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center mt-6">
+        <p class="text-sm text-gray-600">Protected area. Authorized personnel only.</p>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
@@ -139,112 +245,6 @@ const clearPasswordError = (): void => {
   errorMessage.value = '';
 };
 </script>
-
-<template>
-  <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4"
-  >
-    <div class="w-full max-w-md">
-      <!-- Login Card -->
-      <div class="bg-white rounded-lg shadow-lg p-8">
-        <!-- Logo/Header -->
-        <div class="text-center mb-8">
-          <div
-            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4"
-          >
-            <i class="pi pi-shield text-3xl text-blue-600"></i>
-          </div>
-          <h1 class="text-2xl font-bold text-gray-900 mb-2">Admin Login</h1>
-          <p class="text-gray-600">Enter your credentials to access the admin panel</p>
-        </div>
-
-        <!-- Error Message -->
-        <Message v-if="errorMessage" severity="error" :closable="false" class="mb-6">
-          {{ errorMessage }}
-        </Message>
-
-        <!-- Login Form -->
-        <form class="space-y-5" @submit.prevent="handleSubmit">
-          <!-- Email Field -->
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <InputText
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="admin@example.com"
-              :class="{ 'p-invalid': emailError }"
-              class="w-full"
-              :disabled="isSubmitting"
-              autocomplete="email"
-              @input="clearEmailError"
-            />
-            <small v-if="emailError" class="text-red-600 mt-1 block">
-              {{ emailError }}
-            </small>
-          </div>
-
-          <!-- Password Field -->
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <Password
-              id="password"
-              v-model="password"
-              placeholder="Enter your password"
-              :class="{ 'p-invalid': passwordError }"
-              input-class="w-full"
-              :pt="{
-                root: { class: 'w-full' },
-                input: { class: 'w-full' },
-              }"
-              :disabled="isSubmitting"
-              :feedback="false"
-              :toggle-mask="true"
-              autocomplete="current-password"
-              @input="clearPasswordError"
-            />
-            <small v-if="passwordError" class="text-red-600 mt-1 block">
-              {{ passwordError }}
-            </small>
-          </div>
-
-          <!-- Remember Me -->
-          <div class="flex items-center">
-            <Checkbox
-              v-model="remember"
-              input-id="remember"
-              :binary="true"
-              :disabled="isSubmitting"
-            />
-            <label for="remember" class="ml-2 text-sm text-gray-700 cursor-pointer">
-              Remember me for 30 days
-            </label>
-          </div>
-
-          <!-- Submit Button -->
-          <Button
-            type="submit"
-            label="Sign In"
-            icon="pi pi-sign-in"
-            :loading="isSubmitting"
-            :disabled="!isFormValid || isSubmitting"
-            class="w-full"
-            severity="primary"
-          />
-        </form>
-      </div>
-
-      <!-- Footer -->
-      <div class="text-center mt-6">
-        <p class="text-sm text-gray-600">Protected area. Authorized personnel only.</p>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 /* Ensure PrimeVue components take full width */

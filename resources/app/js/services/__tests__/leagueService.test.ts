@@ -185,6 +185,7 @@ describe('leagueService', () => {
         visibility: 'public',
         tagline: 'Test tagline',
         description: '<p>Test description</p>',
+        banner: null,
         header_image: new File([''], 'header.png'),
         contact_email: 'test@example.com',
         organizer_name: 'Test Organizer',
@@ -216,6 +217,7 @@ describe('leagueService', () => {
         visibility: 'public',
         tagline: '',
         description: '',
+        banner: null,
         header_image: null,
         contact_email: 'test@example.com',
         organizer_name: 'Test Organizer',
@@ -244,6 +246,7 @@ describe('leagueService', () => {
       tagline: 'Original tagline',
       description: 'Original description',
       logo_url: '/storage/logos/original.png',
+      banner_url: null,
       header_image_url: '/storage/headers/original.png',
       platform_ids: [1, 2],
       platforms: [],
@@ -335,6 +338,97 @@ describe('leagueService', () => {
 
       expect(formData.get('tagline')).toBe('');
       expect(formData.get('discord_url')).toBe('');
+    });
+  });
+
+  describe('Network Edge Cases', () => {
+    it('should handle network timeout on getPlatforms', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(getPlatforms()).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle network timeout on getUserLeagues', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(getUserLeagues()).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle network timeout on createLeague', async () => {
+      const formData = new FormData();
+
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(createLeague(formData)).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle partial response on getLeague', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        response: {
+          status: 500,
+          data: { message: 'Internal server error' },
+        },
+      });
+
+      await expect(getLeague(1)).rejects.toMatchObject({
+        response: {
+          status: 500,
+        },
+      });
+    });
+
+    it('should handle network connection error on updateLeague', async () => {
+      const formData = new FormData();
+
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+      });
+
+      await expect(updateLeague(1, formData)).rejects.toMatchObject({
+        code: 'ERR_NETWORK',
+      });
+    });
+
+    it('should handle network timeout on checkSlugAvailability', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ECONNABORTED',
+        message: 'timeout of 30000ms exceeded',
+      });
+
+      await expect(checkSlugAvailability('Test League')).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
+    });
+
+    it('should handle 404 error on getLeague', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue({
+        response: {
+          status: 404,
+          data: { message: 'League not found' },
+        },
+      });
+
+      await expect(getLeague(999)).rejects.toMatchObject({
+        response: {
+          status: 404,
+        },
+      });
     });
   });
 });

@@ -15,19 +15,25 @@
         <!-- Left: Logo + Info Section -->
         <div
           class="flex items-start gap-6 flex-1 min-w-0"
-          :class="{ 'flex-col md:flex-row': logoUrl }"
+          :class="{ 'flex-col md:flex-row': logo || logoUrl }"
         >
           <!-- Logo (if provided) -->
-          <div v-if="logoUrl" class="flex-shrink-0">
-            <img
-              :src="logoUrl"
+          <div v-if="logo || logoUrl" class="flex-shrink-0">
+            <ResponsiveImage
+              :media="logo"
+              :fallback-url="logoUrl"
               :alt="`${title} logo`"
-              class="w-20 h-20 md:w-[100px] md:h-[100px] object-contain rounded-md bg-[var(--bg-primary)] p-2 shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+              sizes="(max-width: 768px) 80px, 100px"
+              loading="eager"
+              image-class="w-20 h-20 md:w-[100px] md:h-[100px] object-contain rounded-md bg-[var(--bg-primary)] p-2 shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
             />
           </div>
 
           <!-- Info Section -->
-          <div class="max-w-[600px] flex-1 min-w-0" :class="{ 'pt-1': logoUrl && !isMobile }">
+          <div
+            class="max-w-[600px] flex-1 min-w-0"
+            :class="{ 'pt-1': (logo || logoUrl) && !isMobile }"
+          >
             <!-- Label -->
             <span
               v-if="label"
@@ -60,20 +66,26 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useBreakpoints } from '@vueuse/core';
+import ResponsiveImage from '@public/components/common/ResponsiveImage.vue';
+import type { MediaObject } from '@public/types/media';
 
 interface PageHeaderProps {
   label?: string;
   title: string;
   description?: string;
-  backgroundImage?: string;
-  logoUrl?: string;
+  backgroundImage?: string; // OLD - deprecated
+  backgroundMedia?: MediaObject | null; // NEW - responsive media
+  logoUrl?: string; // OLD - deprecated
+  logo?: MediaObject | null; // NEW - responsive media
 }
 
 const props = withDefaults(defineProps<PageHeaderProps>(), {
   label: undefined,
   description: undefined,
   backgroundImage: undefined,
+  backgroundMedia: undefined,
   logoUrl: undefined,
+  logo: undefined,
 });
 
 const breakpoints = useBreakpoints({
@@ -83,7 +95,10 @@ const breakpoints = useBreakpoints({
 const isMobile = breakpoints.smaller('tablet');
 
 const backgroundStyles = computed(() => {
-  if (!props.backgroundImage) {
+  // Use new backgroundMedia if available, otherwise fall back to old backgroundImage
+  const backgroundUrl = props.backgroundMedia?.conversions.large || props.backgroundImage;
+
+  if (!backgroundUrl) {
     return {
       backgroundColor: 'var(--bg-secondary)',
     };
@@ -91,7 +106,7 @@ const backgroundStyles = computed(() => {
 
   try {
     // Parse URL to validate its format
-    const url = new URL(props.backgroundImage, window.location.origin);
+    const url = new URL(backgroundUrl, window.location.origin);
 
     // Only allow http: and https: protocols
     if (!['http:', 'https:'].includes(url.protocol)) {
@@ -115,7 +130,7 @@ const backgroundStyles = computed(() => {
       backgroundRepeat: 'no-repeat',
     };
   } catch {
-    console.warn('Invalid background image URL:', props.backgroundImage);
+    console.warn('Invalid background image URL:', backgroundUrl);
     return {
       backgroundColor: 'var(--bg-secondary)',
     };

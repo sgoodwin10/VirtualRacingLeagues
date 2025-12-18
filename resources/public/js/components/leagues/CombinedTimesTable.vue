@@ -13,9 +13,11 @@
 
     <!-- Driver column -->
     <template #cell-driver_name="{ data }">
-      <span class="font-semibold text-md text-[var(--text-primary)]" data-test="driver-name">
-        {{ data.driver_name }}
-      </span>
+      <DriverNameLink
+        :driver-name="data.driver_name"
+        :driver-id="data.driver_id"
+        data-test="driver-name"
+      />
     </template>
 
     <!-- Division column (only shown when showDivision is true) -->
@@ -57,6 +59,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import VrlTable, { type TableColumn } from '@public/components/common/data-display/VrlTable.vue';
+import DriverNameLink from '@public/components/common/DriverNameLink.vue';
 import type { CrossDivisionResult } from '@public/types/public';
 import { useDivisionStyles } from '@public/composables/useDivisionStyles';
 

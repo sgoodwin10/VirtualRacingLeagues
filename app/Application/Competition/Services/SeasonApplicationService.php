@@ -11,6 +11,7 @@ use App\Application\Competition\DTOs\SeasonData;
 use App\Application\Competition\DTOs\SeasonLeagueData;
 use App\Application\Competition\DTOs\UpdateSeasonData;
 use App\Application\Competition\Traits\BatchFetchHelpersTrait;
+use App\Application\Shared\Services\MediaServiceInterface;
 use App\Domain\Competition\Entities\Season;
 use App\Domain\Competition\Exceptions\CompetitionNotFoundException;
 use App\Domain\Competition\Exceptions\SeasonNotFoundException;
@@ -61,6 +62,7 @@ final class SeasonApplicationService
         private readonly RaceRepositoryInterface $raceRepository,
         private readonly RaceResultRepositoryInterface $raceResultRepository,
         private readonly RaceResultsCacheService $raceResultsCacheService,
+        private readonly MediaServiceInterface $mediaService,
     ) {
     }
 
@@ -116,6 +118,9 @@ final class SeasonApplicationService
                         logoPath: $logoPath,
                         bannerPath: $bannerPath,
                         teamChampionshipEnabled: $data->team_championship_enabled,
+                        teamsDriversForCalculation: $data->teams_drivers_for_calculation,
+                        teamsDropRounds: $data->teams_drop_rounds,
+                        teamsTotalDropRounds: $data->teams_total_drop_rounds,
                         raceDivisionsEnabled: $data->race_divisions_enabled,
                         raceTimesRequired: $data->race_times_required,
                         dropRound: $data->drop_round,
@@ -125,12 +130,23 @@ final class SeasonApplicationService
                     // 7. Save via repository
                     $this->seasonRepository->save($season);
 
-                    // 8. Record creation event and dispatch
+                    // 8. Upload media using new media service (dual-write during transition)
+                    if ($season->id()) {
+                        $eloquentSeason = $this->seasonRepository->getEloquentModel($season->id());
+                        if ($data->logo) {
+                            $this->mediaService->upload($data->logo, $eloquentSeason, 'logo');
+                        }
+                        if ($data->banner) {
+                            $this->mediaService->upload($data->banner, $eloquentSeason, 'banner');
+                        }
+                    }
+
+                    // 9. Record creation event and dispatch
                     $league = $this->leagueRepository->findById($competition->leagueId());
                     $season->recordCreationEvent($league->id() ?? 0);
                     $this->dispatchEvents($season);
 
-                    // 9. Return SeasonData DTO
+                    // 10. Return SeasonData DTO
                     return $this->toSeasonData($season, $competition->logoPath());
                 });
             });
@@ -171,9 +187,9 @@ final class SeasonApplicationService
      * @throws SeasonNotFoundException
      * @throws UnauthorizedException
      */
-    public function updateSeason(int $id, UpdateSeasonData $data, int $userId): SeasonData
+    public function updateSeason(int $id, UpdateSeasonData $data, int $userId, array $requestData = []): SeasonData
     {
-        return DB::transaction(function () use ($id, $data, $userId) {
+        return DB::transaction(function () use ($id, $data, $userId, $requestData) {
             // 1. Find season
             $season = $this->seasonRepository->findById($id);
 
@@ -232,6 +248,27 @@ final class SeasonApplicationService
                 $season->updateTotalDropRounds($data->total_drop_rounds);
             }
 
+            // 5f. Handle teams drivers for calculation update
+            // Check if field was present in request (not just non-null)
+            // This allows us to distinguish between "not provided" and "provided as null"
+            if (array_key_exists('teams_drivers_for_calculation', $requestData)) {
+                $season->updateTeamsDriversForCalculation($data->teams_drivers_for_calculation);
+            }
+
+            // 5g. Handle teams drop rounds toggle
+            if ($data->teams_drop_rounds !== null) {
+                if ($data->teams_drop_rounds) {
+                    $season->enableTeamsDropRounds();
+                } else {
+                    $season->disableTeamsDropRounds();
+                }
+            }
+
+            // 5h. Handle teams total drop rounds update
+            if ($data->teams_total_drop_rounds !== null) {
+                $season->updateTeamsTotalDropRounds($data->teams_total_drop_rounds);
+            }
+
             // 6. Handle logo updates
             if ($data->remove_logo) {
                 $this->deleteSeasonImage($season->logoPath());
@@ -240,6 +277,12 @@ final class SeasonApplicationService
                 $this->deleteSeasonImage($season->logoPath());
                 $logoPath = $this->storeSeasonImage($data->logo, 'logo', $season->id());
                 $season->updateBranding($logoPath, $season->bannerPath());
+
+                // Upload via media service (dual-write)
+                if ($season->id()) {
+                    $eloquentSeason = $this->seasonRepository->getEloquentModel($season->id());
+                    $this->mediaService->upload($data->logo, $eloquentSeason, 'logo');
+                }
             }
 
             // 7. Handle banner updates
@@ -250,6 +293,12 @@ final class SeasonApplicationService
                 $this->deleteSeasonImage($season->bannerPath());
                 $bannerPath = $this->storeSeasonImage($data->banner, 'banner', $season->id());
                 $season->updateBranding($season->logoPath(), $bannerPath);
+
+                // Upload via media service (dual-write)
+                if ($season->id()) {
+                    $eloquentSeason = $this->seasonRepository->getEloquentModel($season->id());
+                    $this->mediaService->upload($data->banner, $eloquentSeason, 'banner');
+                }
             }
 
             // 8. Save
@@ -587,6 +636,16 @@ final class SeasonApplicationService
             ),
         );
 
+        // Get eloquent model for media extraction
+        $eloquentModel = null;
+        if ($season->id()) {
+            try {
+                $eloquentModel = $this->seasonRepository->getEloquentModel($season->id());
+            } catch (\Exception $e) {
+                // Model not found or error loading media - continue without media
+            }
+        }
+
         return SeasonData::fromEntity(
             season: $season,
             competitionData: $competitionData,
@@ -601,7 +660,8 @@ final class SeasonApplicationService
                 'total_teams' => $totalTeams,
                 'total_rounds' => $totalRounds,
                 'completed_rounds' => $completedRounds,
-            ]
+            ],
+            eloquentModel: $eloquentModel,
         );
     }
 

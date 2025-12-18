@@ -16,9 +16,11 @@
     <!-- Driver column -->
     <template #cell-driver="{ data }">
       <div class="flex items-center gap-2">
-        <span class="font-semibold text-md text-[var(--text-primary)]" data-test="driver-name">
-          {{ data.driver_name }}
-        </span>
+        <DriverNameLink
+          :driver-name="data.driver_name"
+          :driver-id="data.driver_id"
+          data-test="driver-name"
+        />
         <div class="flex gap-1">
           <span
             v-if="data.has_pole"
@@ -94,6 +96,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import VrlTable, { type TableColumn } from '@public/components/common/data-display/VrlTable.vue';
+import DriverNameLink from '@public/components/common/DriverNameLink.vue';
 import type { PublicRaceResult } from '@public/types/public';
 import { useDivisionStyles } from '@public/composables/useDivisionStyles';
 

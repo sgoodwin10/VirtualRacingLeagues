@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { RouterLink } from 'vue-router';
 import VrlLeagueCard from '../VrlLeagueCard.vue';
@@ -371,6 +371,258 @@ describe('VrlLeagueCard', () => {
 
       const gradient = wrapper.find('.absolute.bottom-0.left-0.right-0.h-16');
       expect(gradient.exists()).toBe(true);
+    });
+  });
+
+  describe('Security - URL Sanitization', () => {
+    let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      consoleWarnSpy.mockRestore();
+    });
+
+    describe('headerImageUrl sanitization', () => {
+      it('allows safe HTTPS URLs', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            headerImageUrl: 'https://example.com/header.jpg',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        // Verify the prop is passed and sanitized correctly
+        expect(wrapper.props('headerImageUrl')).toBe('https://example.com/header.jpg');
+        // Verify it's not blocked (console warn not called for this URL)
+        expect(consoleWarnSpy).not.toHaveBeenCalledWith(
+          expect.stringContaining('Blocked disallowed protocol'),
+        );
+      });
+
+      it('allows safe HTTP URLs', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            headerImageUrl: 'http://example.com/header.jpg',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        // Verify the prop is passed and sanitized correctly
+        expect(wrapper.props('headerImageUrl')).toBe('http://example.com/header.jpg');
+        // Verify it's not blocked (console warn not called for this URL)
+        expect(consoleWarnSpy).not.toHaveBeenCalledWith(
+          expect.stringContaining('Blocked disallowed protocol'),
+        );
+      });
+
+      it('blocks javascript: protocol URLs', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            headerImageUrl: 'javascript:alert(1)',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        const header = wrapper.find('.relative.h-28');
+        // Should use default background, not the malicious URL
+        expect(header.attributes('style')).not.toContain('javascript:');
+        expect(header.attributes('style')).toContain('var(--bg-tertiary)');
+        expect(consoleWarnSpy).toHaveBeenCalled();
+      });
+
+      it('blocks vbscript: protocol URLs', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            headerImageUrl: 'vbscript:msgbox("XSS")',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        const header = wrapper.find('.relative.h-28');
+        expect(header.attributes('style')).not.toContain('vbscript:');
+        expect(header.attributes('style')).toContain('var(--bg-tertiary)');
+      });
+
+      it('blocks data:text/html URLs', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            headerImageUrl: 'data:text/html,<script>alert(1)</script>',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        const header = wrapper.find('.relative.h-28');
+        expect(header.attributes('style')).not.toContain('data:text/html');
+        expect(header.attributes('style')).toContain('var(--bg-tertiary)');
+      });
+
+      it('allows valid data:image URLs', () => {
+        const validDataUrl =
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            headerImageUrl: validDataUrl,
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        // Verify the prop is passed correctly
+        expect(wrapper.props('headerImageUrl')).toBe(validDataUrl);
+        // Verify it's not blocked (console warn not called for valid data URLs)
+        expect(consoleWarnSpy).not.toHaveBeenCalledWith(
+          expect.stringContaining('Blocked non-image data URL'),
+        );
+      });
+
+      it('blocks URLs with encoded dangerous characters', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            headerImageUrl: 'https://example.com/image.jpg?param=%3cscript%3e',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        const header = wrapper.find('.relative.h-28');
+        expect(header.attributes('style')).not.toContain('%3c');
+        expect(header.attributes('style')).toContain('var(--bg-tertiary)');
+      });
+    });
+
+    describe('logoUrl sanitization', () => {
+      it('allows safe HTTPS URLs', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            logoUrl: 'https://example.com/logo.png',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        const img = wrapper.find('img');
+        expect(img.exists()).toBe(true);
+        expect(img.attributes('src')).toBe('https://example.com/logo.png');
+      });
+
+      it('blocks javascript: protocol URLs', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            logoUrl: 'javascript:alert(1)',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        // Should not render the image, should show icon instead
+        const img = wrapper.find('img');
+        expect(img.exists()).toBe(false);
+        const icon = wrapper.findComponent({ name: 'PhFlagCheckered' });
+        expect(icon.exists()).toBe(true);
+        expect(consoleWarnSpy).toHaveBeenCalled();
+      });
+
+      it('blocks vbscript: protocol URLs', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            logoUrl: 'vbscript:msgbox("XSS")',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        const img = wrapper.find('img');
+        expect(img.exists()).toBe(false);
+        const icon = wrapper.findComponent({ name: 'PhFlagCheckered' });
+        expect(icon.exists()).toBe(true);
+      });
+
+      it('allows valid data:image URLs', () => {
+        const validDataUrl =
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            logoUrl: validDataUrl,
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        const img = wrapper.find('img');
+        expect(img.exists()).toBe(true);
+        expect(img.attributes('src')).toContain('data:image/png;base64');
+      });
+
+      it('shows fallback icon when logoUrl is null or empty', () => {
+        const wrapper = mount(VrlLeagueCard, {
+          props: {
+            name: 'Test League',
+            logoUrl: '',
+          },
+          global: {
+            stubs: {
+              RouterLink: true,
+            },
+          },
+        });
+
+        const img = wrapper.find('img');
+        expect(img.exists()).toBe(false);
+        const icon = wrapper.findComponent({ name: 'PhFlagCheckered' });
+        expect(icon.exists()).toBe(true);
+      });
     });
   });
 });

@@ -1,35 +1,53 @@
+/**
+ * Race Result API Service
+ * Handles all HTTP requests for race result management
+ */
+
 import { apiClient } from './api';
 import type { RaceResult, BulkRaceResultsPayload } from '@app/types/raceResult';
+import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 
-const BASE_URL = '/races';
+/**
+ * Get all results for a race
+ * @param raceId - Race ID
+ */
+export async function getResults(raceId: number): Promise<RaceResult[]> {
+  const response = await apiClient.get<{ data: RaceResult[] }>(API_ENDPOINTS.races.results(raceId));
+  return response.data.data;
+}
 
-export const raceResultService = {
-  /**
-   * Get all results for a race
-   */
-  async getResults(raceId: number): Promise<RaceResult[]> {
-    const response = await apiClient.get<{ data: RaceResult[] }>(`${BASE_URL}/${raceId}/results`);
-    return response.data.data;
-  },
+/**
+ * Save/update results for a race (bulk operation)
+ * Replaces all existing results
+ * @param raceId - Race ID
+ * @param payload - Bulk race results payload
+ */
+export async function saveResults(
+  raceId: number,
+  payload: BulkRaceResultsPayload,
+): Promise<RaceResult[]> {
+  const response = await apiClient.post<{ data: RaceResult[] }>(
+    API_ENDPOINTS.races.results(raceId),
+    payload,
+  );
+  return response.data.data;
+}
 
-  /**
-   * Save/update results for a race (bulk operation)
-   * Replaces all existing results
-   */
-  async saveResults(raceId: number, payload: BulkRaceResultsPayload): Promise<RaceResult[]> {
-    const response = await apiClient.post<{ data: RaceResult[] }>(
-      `${BASE_URL}/${raceId}/results`,
-      payload,
-    );
-    return response.data.data;
-  },
+/**
+ * Delete all results for a race
+ * @param raceId - Race ID
+ */
+export async function deleteResults(raceId: number): Promise<void> {
+  await apiClient.delete(API_ENDPOINTS.races.results(raceId));
+}
 
-  /**
-   * Delete all results for a race
-   */
-  async deleteResults(raceId: number): Promise<void> {
-    await apiClient.delete(`${BASE_URL}/${raceId}/results`);
-  },
+/**
+ * Grouped export for convenient importing
+ */
+const raceResultService = {
+  getResults,
+  saveResults,
+  deleteResults,
 };
 
 export default raceResultService;

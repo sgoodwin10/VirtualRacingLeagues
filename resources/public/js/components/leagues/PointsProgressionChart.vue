@@ -136,7 +136,7 @@ const generateChartData = () => {
       borderWidth: 2,
       pointRadius: 4,
       pointHoverRadius: 6,
-      tension: 0.4,
+      tension: 0,
       fill: false,
     };
   });
@@ -192,7 +192,7 @@ const createChartConfig = (): ChartConfiguration<'line'> => {
           },
         },
         tooltip: {
-          enabled: true,
+          enabled: false,
           backgroundColor: colors.tooltipBg,
           titleColor: colors.tooltipTitle,
           bodyColor: colors.tooltipBody,
@@ -214,6 +214,7 @@ const createChartConfig = (): ChartConfiguration<'line'> => {
       },
       scales: {
         x: {
+          position: 'top',
           grid: {
             color: colors.gridColor,
             drawTicks: false,

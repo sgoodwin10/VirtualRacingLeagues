@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { useLeagueStore } from '@app/stores/leagueStore';
@@ -31,11 +32,12 @@ const leagueStore = useLeagueStore();
 const driverStore = useDriverStore();
 const logger = createLogger('DriverTable');
 
-// Computed properties bound to store
-const drivers = computed(() => driverStore.drivers);
-const loading = computed(() => driverStore.loading);
-const totalRecords = computed(() => driverStore.totalDrivers);
-const first = computed(() => (driverStore.currentPage - 1) * driverStore.perPage);
+// Use storeToRefs instead of manual computed wrappers
+const { drivers, loading, totalDrivers, currentPage, perPage } = storeToRefs(driverStore);
+const { platformColumns } = storeToRefs(leagueStore);
+
+// Computed property for pagination first index
+const first = computed(() => (currentPage.value - 1) * perPage.value);
 
 /**
  * Get driver's display name from nested driver object
@@ -155,7 +157,7 @@ onMounted(async () => {
     paginator
     :rows="DEFAULT_ROWS_PER_PAGE"
     :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
-    :total-records="totalRecords"
+    :total-records="totalDrivers"
     :first="first"
     data-key="id"
     responsive-layout="scroll"
@@ -189,7 +191,7 @@ onMounted(async () => {
 
     <!-- Dynamic Platform Columns - Rendered based on league's platforms -->
     <Column
-      v-for="column in leagueStore.platformColumns"
+      v-for="column in platformColumns"
       :key="column.field"
       :field="`driver.${column.field}`"
       :header="column.label"
@@ -202,9 +204,21 @@ onMounted(async () => {
     <Column header="Actions" style="width: 200px">
       <template #body="{ data }">
         <div class="flex gap-2">
-          <ViewButton aria-label="View driver details" @click="handleView(data)" />
-          <EditButton aria-label="Edit driver" @click="handleEdit(data)" />
-          <DeleteButton aria-label="Remove driver" @click="handleRemove(data)" />
+          <ViewButton
+            aria-label="View driver details"
+            :title="`View ${getDriverName(data)}`"
+            @click="handleView(data)"
+          />
+          <EditButton
+            aria-label="Edit driver"
+            :title="`Edit ${getDriverName(data)}`"
+            @click="handleEdit(data)"
+          />
+          <DeleteButton
+            aria-label="Remove driver"
+            :title="`Remove ${getDriverName(data)} from league`"
+            @click="handleRemove(data)"
+          />
         </div>
       </template>
     </Column>

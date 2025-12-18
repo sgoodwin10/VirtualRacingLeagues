@@ -14,6 +14,7 @@ import Message from 'primevue/message';
 import { PhPlus } from '@phosphor-icons/vue';
 
 import DivisionFormModal from './DivisionFormModal.vue';
+import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 
 interface Props {
   seasonId: number;
@@ -218,11 +219,14 @@ function truncateDescription(description: string | null, maxLength: number = 30)
         <Column field="name" header="Division">
           <template #body="{ data }">
             <div class="flex items-start gap-2">
-              <img
-                v-if="data.logo_url"
-                :src="data.logo_url"
+              <ResponsiveImage
+                v-if="data.logo || data.logo_url"
+                :media="data.logo"
+                :fallback-url="data.logo_url ?? undefined"
                 :alt="data.name"
-                class="w-8 h-8 rounded object-cover flex-shrink-0"
+                sizes="32px"
+                conversion="thumb"
+                img-class="w-8 h-8 rounded object-cover flex-shrink-0"
               />
               <div class="flex-1 min-w-0">
                 <p class="font-semibold">{{ data.name }}</p>

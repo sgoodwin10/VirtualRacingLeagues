@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use App\Infrastructure\Persistence\Eloquent\Traits\HasMediaCollections;
+use Database\Factories\SiteConfigFactory;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
 
 /**
  * Eloquent model for site_configs table.
@@ -48,14 +52,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel whereUserRegistrationEnabled($value)
  */
-class SiteConfigModel extends Model
+class SiteConfigModel extends Model implements HasMedia
 {
     use HasFactory;
+    use HasMediaCollections;
 
     /**
      * The table associated with the model.
      */
     protected $table = 'site_configs';
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): Factory
+    {
+        return SiteConfigFactory::new();
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -118,5 +131,28 @@ class SiteConfigModel extends Model
     public function getFileByType(string $fileType): ?SiteConfigFileModel
     {
         return $this->files->firstWhere('file_type', $fileType);
+    }
+
+    /**
+     * Register media collections for site configuration.
+     *
+     * @return void
+     */
+    public function registerMediaCollections(): void
+    {
+        // Site logo
+        $this->addMediaCollection('logo')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/svg+xml']);
+
+        // Site favicon
+        $this->addMediaCollection('favicon')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/x-icon', 'image/png', 'image/svg+xml']);
+
+        // Open Graph default image
+        $this->addMediaCollection('og_image')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
     }
 }

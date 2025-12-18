@@ -66,10 +66,11 @@
 import { ref, computed, type Ref } from 'vue';
 import FilePreview from './FilePreview.vue';
 import type { SiteConfigFile, SiteConfigFileType } from '@admin/types/siteConfig';
+import type { MediaObject } from '@admin/types/media';
 import { FILE_VALIDATION } from '@admin/types/siteConfig';
 
 interface Props {
-  modelValue: File | SiteConfigFile | null;
+  modelValue: File | SiteConfigFile | MediaObject | null;
   fileType: SiteConfigFileType;
   label?: string;
   helpText?: string;

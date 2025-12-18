@@ -97,7 +97,8 @@ function loadDivisionData(): void {
   form.name = props.division.name;
   form.description = props.division.description || '';
   form.logo = null;
-  form.logo_url = props.division.logo_url;
+  // Prefer new media format, fallback to old URL format
+  form.logo_url = props.division.logo?.original ?? props.division.logo_url;
 }
 
 function resetForm(): void {

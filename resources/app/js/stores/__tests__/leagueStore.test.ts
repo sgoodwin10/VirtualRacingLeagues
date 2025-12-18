@@ -23,7 +23,6 @@ describe('leagueStore', () => {
       expect(store.currentLeague).toBeNull();
       expect(store.loading).toBe(false);
       expect(store.error).toBeNull();
-      expect(store.currentStep).toBe(0);
       expect(store.platformColumns).toEqual([]);
       expect(store.platformFormFields).toEqual([]);
       expect(store.platformCsvHeaders).toEqual([]);
@@ -307,21 +306,6 @@ describe('leagueStore', () => {
       );
       expect(store.error).toBe('Update failed');
       expect(store.loading).toBe(false);
-    });
-  });
-
-  describe('wizard step management', () => {
-    it('should set current step', () => {
-      const store = useLeagueStore();
-      store.setCurrentStep(2);
-      expect(store.currentStep).toBe(2);
-    });
-
-    it('should reset wizard', () => {
-      const store = useLeagueStore();
-      store.currentStep = 2;
-      store.resetWizard();
-      expect(store.currentStep).toBe(0);
     });
   });
 

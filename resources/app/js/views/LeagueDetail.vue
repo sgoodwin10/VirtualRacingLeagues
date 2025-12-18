@@ -52,7 +52,14 @@ const selectedDriver = ref<LeagueDriver | null>(null);
 
 // Get league ID from route params
 const leagueId = computed(() => route.params.id as string);
-const leagueIdNumber = computed(() => parseInt(leagueId.value, 10));
+const leagueIdNumber = computed(() => {
+  const parsed = parseInt(leagueId.value, 10);
+  if (isNaN(parsed)) {
+    console.error('Invalid league ID:', leagueId.value);
+    return 0;
+  }
+  return parsed;
+});
 
 // Use the useLeagueDrivers composable for driver management
 const { loadDrivers, addDriver, updateDriver, removeDriver, importFromCSV } = useLeagueDrivers(

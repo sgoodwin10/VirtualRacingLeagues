@@ -21,7 +21,7 @@ describe('authService', () => {
       remember: false,
     };
 
-    vi.mocked(apiService.get).mockResolvedValue(undefined);
+    vi.mocked(apiService.fetchCSRFToken).mockResolvedValue(undefined);
     vi.mocked(apiService.post).mockResolvedValue({
       success: true,
       data: { admin: mockAdmin },
@@ -30,7 +30,7 @@ describe('authService', () => {
     const result = await authService.login(credentials);
 
     expect(result).toEqual(mockAdmin);
-    expect(apiService.get).toHaveBeenCalledWith('/csrf-cookie', { signal: undefined });
+    expect(apiService.fetchCSRFToken).toHaveBeenCalledWith();
     expect(apiService.post).toHaveBeenCalledWith('/login', credentials, { signal: undefined });
   });
 
@@ -41,7 +41,7 @@ describe('authService', () => {
       remember: true,
     };
 
-    vi.mocked(apiService.get).mockResolvedValue(undefined);
+    vi.mocked(apiService.fetchCSRFToken).mockResolvedValue(undefined);
     vi.mocked(apiService.post).mockResolvedValue({
       success: true,
       data: { admin: mockAdmin },

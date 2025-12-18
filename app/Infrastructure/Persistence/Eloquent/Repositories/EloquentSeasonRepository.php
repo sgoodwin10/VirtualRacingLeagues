@@ -273,6 +273,9 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             logoPath: $model->logo_path,
             bannerPath: $model->banner_path,
             teamChampionshipEnabled: $model->team_championship_enabled,
+            teamsDriversForCalculation: $model->teams_drivers_for_calculation,
+            teamsDropRounds: $model->teams_drop_rounds ?? false,
+            teamsTotalDropRounds: $model->teams_total_drop_rounds,
             raceDivisionsEnabled: $model->race_divisions_enabled ?? false,
             raceTimesRequired: $model->race_times_required ?? true,
             dropRound: $model->drop_round ?? false,
@@ -300,6 +303,9 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             'logo_path' => $season->logoPath(),
             'banner_path' => $season->bannerPath(),
             'team_championship_enabled' => $season->teamChampionshipEnabled(),
+            'teams_drivers_for_calculation' => $season->getTeamsDriversForCalculation(),
+            'teams_drop_rounds' => $season->hasTeamsDropRounds(),
+            'teams_total_drop_rounds' => $season->getTeamsTotalDropRounds(),
             'race_divisions_enabled' => $season->raceDivisionsEnabled(),
             'race_times_required' => $season->raceTimesRequired(),
             'drop_round' => $season->hasDropRound(),
@@ -308,5 +314,23 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             'created_by_user_id' => $season->createdByUserId(),
             'updated_at' => $season->updatedAt()->format('Y-m-d H:i:s'),
         ];
+    }
+
+    /**
+     * Get the Eloquent model for a season by ID.
+     * Used for media operations that require the Eloquent model.
+     *
+     * @return SeasonEloquent
+     * @throws SeasonNotFoundException
+     */
+    public function getEloquentModel(int $id): SeasonEloquent
+    {
+        $model = SeasonEloquent::with('media')->find($id);
+
+        if (!$model) {
+            throw SeasonNotFoundException::withId($id);
+        }
+
+        return $model;
     }
 }

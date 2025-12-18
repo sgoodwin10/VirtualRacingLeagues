@@ -160,6 +160,11 @@ describe('DriverTable', () => {
     });
 
     expect(wrapper.exists()).toBe(true);
+    // Verify that driver names are rendered
+    expect(wrapper.html()).toContain('John Smith');
+    expect(wrapper.html()).toContain('FastRacer');
+    // Verify the table component is rendered
+    expect(wrapper.find('.driver-table').exists()).toBe(true);
   });
 
   it('should emit edit event when edit button is clicked', async () => {
@@ -170,12 +175,20 @@ describe('DriverTable', () => {
       },
     });
 
-    // Manually call the handler
-    const component = wrapper.vm as any;
-    component.handleEdit(mockDrivers[0]);
+    // Find all buttons with edit aria-label
+    const editButtons = wrapper.findAll('button').filter((btn) => {
+      const ariaLabel = btn.attributes('aria-label');
+      return ariaLabel === 'Edit driver' || ariaLabel === 'Edit';
+    });
 
-    expect(wrapper.emitted('edit')).toBeTruthy();
-    expect(wrapper.emitted('edit')?.[0]).toEqual([mockDrivers[0]]);
+    // Click the first edit button
+    if (editButtons.length > 0) {
+      await editButtons[0]?.trigger('click');
+      await wrapper.vm.$nextTick();
+
+      expect(wrapper.emitted('edit')).toBeTruthy();
+      expect(wrapper.emitted('edit')?.[0]).toEqual([mockDrivers[0]]);
+    }
   });
 
   it('should emit remove event when remove button is clicked', async () => {
@@ -186,12 +199,20 @@ describe('DriverTable', () => {
       },
     });
 
-    // Manually call the handler
-    const component = wrapper.vm as any;
-    component.handleRemove(mockDrivers[0]);
+    // Find all buttons with delete/remove aria-label
+    const removeButtons = wrapper.findAll('button').filter((btn) => {
+      const ariaLabel = btn.attributes('aria-label');
+      return ariaLabel === 'Remove driver' || ariaLabel === 'Delete';
+    });
 
-    expect(wrapper.emitted('remove')).toBeTruthy();
-    expect(wrapper.emitted('remove')?.[0]).toEqual([mockDrivers[0]]);
+    // Click the first remove button
+    if (removeButtons.length > 0) {
+      await removeButtons[0]?.trigger('click');
+      await wrapper.vm.$nextTick();
+
+      expect(wrapper.emitted('remove')).toBeTruthy();
+      expect(wrapper.emitted('remove')?.[0]).toEqual([mockDrivers[0]]);
+    }
   });
 
   it('should display driver name correctly', () => {

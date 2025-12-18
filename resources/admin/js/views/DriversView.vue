@@ -1,3 +1,78 @@
+<template>
+  <div class="drivers-view">
+    <!-- Header -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">Driver Management</h1>
+          <p class="text-gray-600">Manage all drivers in the system</p>
+        </div>
+        <Button label="Create Driver" icon="pi pi-plus" @click="handleCreate" />
+      </div>
+    </div>
+
+    <!-- Initial Loading Skeleton -->
+    <div v-if="initialLoading" class="space-y-6">
+      <Card>
+        <template #content>
+          <Skeleton height="4rem" />
+        </template>
+      </Card>
+      <Card>
+        <template #content>
+          <Skeleton height="20rem" />
+        </template>
+      </Card>
+    </div>
+
+    <!-- Main Content (after initial load) -->
+    <div v-else>
+      <!-- Search & Filters -->
+      <Card class="mb-6">
+        <template #content>
+          <div class="flex flex-col gap-4">
+            <!-- Search -->
+            <div class="relative">
+              <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <InputText
+                :model-value="searchQuery"
+                placeholder="Search drivers by name, email, or platform ID..."
+                class="w-full pl-10"
+                @update:model-value="(value) => driverStore.setSearchQuery(value ?? '')"
+              />
+            </div>
+          </div>
+        </template>
+      </Card>
+
+      <!-- Drivers Table -->
+      <Card :pt="{ body: { class: 'p-0' }, content: { class: 'p-0' } }">
+        <template #content>
+          <DriverDataTable
+            :drivers="drivers ?? []"
+            :loading="loading"
+            @view="handleView"
+            @edit="handleEdit"
+            @delete="handleDelete"
+          />
+        </template>
+      </Card>
+    </div>
+
+    <!-- Modals & Drawers -->
+    <DriverFormModal
+      v-model:visible="formModalVisible"
+      :driver="selectedDriver"
+      @driver-saved="handleDriverSaved"
+      @update:visible="handleFormModalClose"
+    />
+
+    <DriverDetailsModal v-model:visible="detailsModalVisible" :driver="selectedDriver" />
+
+    <ConfirmDialog />
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
@@ -143,80 +218,5 @@ onUnmounted(() => {
   cancelRequests('Component unmounted');
 });
 </script>
-
-<template>
-  <div class="drivers-view">
-    <!-- Header -->
-    <div class="mb-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900 mb-2">Driver Management</h1>
-          <p class="text-gray-600">Manage all drivers in the system</p>
-        </div>
-        <Button label="Create Driver" icon="pi pi-plus" @click="handleCreate" />
-      </div>
-    </div>
-
-    <!-- Initial Loading Skeleton -->
-    <div v-if="initialLoading" class="space-y-6">
-      <Card>
-        <template #content>
-          <Skeleton height="4rem" />
-        </template>
-      </Card>
-      <Card>
-        <template #content>
-          <Skeleton height="20rem" />
-        </template>
-      </Card>
-    </div>
-
-    <!-- Main Content (after initial load) -->
-    <div v-else>
-      <!-- Search & Filters -->
-      <Card class="mb-6">
-        <template #content>
-          <div class="flex flex-col gap-4">
-            <!-- Search -->
-            <div class="relative">
-              <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-              <InputText
-                :model-value="searchQuery"
-                placeholder="Search drivers by name, email, or platform ID..."
-                class="w-full pl-10"
-                @update:model-value="(value) => driverStore.setSearchQuery(value ?? '')"
-              />
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <!-- Drivers Table -->
-      <Card :pt="{ body: { class: 'p-0' }, content: { class: 'p-0' } }">
-        <template #content>
-          <DriverDataTable
-            :drivers="drivers ?? []"
-            :loading="loading"
-            @view="handleView"
-            @edit="handleEdit"
-            @delete="handleDelete"
-          />
-        </template>
-      </Card>
-    </div>
-
-    <!-- Modals & Drawers -->
-    <DriverFormModal
-      v-model:visible="formModalVisible"
-      :driver="selectedDriver"
-      @driver-saved="handleDriverSaved"
-      @update:visible="handleFormModalClose"
-    />
-
-    <DriverDetailsModal v-model:visible="detailsModalVisible" :driver="selectedDriver" />
-
-    <ConfirmDialog />
-  </div>
-</template>
 
 <style scoped></style>

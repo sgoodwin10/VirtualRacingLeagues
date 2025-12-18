@@ -44,7 +44,12 @@ export interface DriverDetails extends DriverWithUser {
     id: number;
     name: string;
     slug: string;
-    logo_url: string | null;
+    // OLD - deprecated but kept for backward compatibility
+    logo_url?: string | null;
+    banner_url?: string | null;
+    // NEW - responsive media objects
+    logo?: import('./media').MediaObject | null;
+    banner?: import('./media').MediaObject | null;
   }>;
   competitions: Array<{
     id: number;
@@ -52,6 +57,12 @@ export interface DriverDetails extends DriverWithUser {
     slug: string;
     platform_name: string;
     season_count: number;
+    // OLD - deprecated but kept for backward compatibility
+    logo_url?: string | null;
+    banner_url?: string | null;
+    // NEW - responsive media objects
+    logo?: import('./media').MediaObject | null;
+    banner?: import('./media').MediaObject | null;
   }>;
   seasons: Array<{
     id: number;
@@ -60,6 +71,12 @@ export interface DriverDetails extends DriverWithUser {
     status: string;
     division_name: string | null;
     team_name: string | null;
+    // OLD - deprecated but kept for backward compatibility
+    logo_url?: string | null;
+    banner_url?: string | null;
+    // NEW - responsive media objects
+    logo?: import('./media').MediaObject | null;
+    banner?: import('./media').MediaObject | null;
   }>;
   race_stats: {
     total_races: number;

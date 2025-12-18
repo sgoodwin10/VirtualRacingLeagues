@@ -106,7 +106,9 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import BaseModal from '@admin/components/modals/BaseModal.vue';
+import { useNameHelpers } from '@admin/composables/useNameHelpers';
 import type { Admin, AdminUserUpdateData, AdminRole } from '@admin/types/admin';
+import { validateRequired, validateEmail } from '@admin/utils/validation';
 
 /**
  * Role option interface
@@ -195,19 +197,8 @@ const formData = ref<AdminUserUpdateData>({
  */
 const errors = ref<Record<string, string>>({});
 
-/**
- * Get first name from admin user
- */
-const getFirstName = (user: Admin): string => {
-  return user.first_name || user.name?.split(' ')[0] || '';
-};
-
-/**
- * Get last name from admin user
- */
-const getLastName = (user: Admin): string => {
-  return user.last_name || user.name?.split(' ').slice(1).join(' ') || '';
-};
+// Composables
+const { getFirstName, getLastName } = useNameHelpers();
 
 /**
  * Initialize form data when adminUser changes
@@ -234,22 +225,28 @@ watch(
 const validateForm = (): boolean => {
   errors.value = {};
 
-  if (!formData.value.first_name.trim()) {
-    errors.value.first_name = 'First name is required';
+  // Validate first name
+  const firstNameResult = validateRequired(formData.value.first_name, 'First name');
+  if (!firstNameResult.isValid) {
+    errors.value.first_name = firstNameResult.error!;
   }
 
-  if (!formData.value.last_name.trim()) {
-    errors.value.last_name = 'Last name is required';
+  // Validate last name
+  const lastNameResult = validateRequired(formData.value.last_name, 'Last name');
+  if (!lastNameResult.isValid) {
+    errors.value.last_name = lastNameResult.error!;
   }
 
-  if (!formData.value.email.trim()) {
-    errors.value.email = 'Email is required';
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email)) {
-    errors.value.email = 'Please enter a valid email address';
+  // Validate email
+  const emailResult = validateEmail(formData.value.email);
+  if (!emailResult.isValid) {
+    errors.value.email = emailResult.error!;
   }
 
-  if (!formData.value.role) {
-    errors.value.role = 'Role is required';
+  // Validate role
+  const roleResult = validateRequired(formData.value.role, 'Role');
+  if (!roleResult.isValid) {
+    errors.value.role = roleResult.error!;
   }
 
   return Object.keys(errors.value).length === 0;

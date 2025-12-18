@@ -24,6 +24,14 @@ import {
 } from '@app/services/driverService';
 import { useCrudStore } from '@app/composables/useCrudStore';
 
+/**
+ * Note on ID fields in LeagueDriver:
+ * - driver_id: The actual driver ID (used for all API operations)
+ * - id: The league_driver pivot table record ID (not used for API calls)
+ * - league_id: The league ID
+ *
+ * Always use driver_id when making API calls or finding/filtering drivers.
+ */
 export const useDriverStore = defineStore('driver', () => {
   // Use CRUD composable
   const crud = useCrudStore<LeagueDriver>();
@@ -138,8 +146,12 @@ export const useDriverStore = defineStore('driver', () => {
 
     try {
       const driver = await createDriver(leagueId, data);
-      // Refresh the driver list to get updated pagination
-      await fetchLeagueDrivers(leagueId);
+
+      // Optimistic update: Add to local state
+      drivers.value.push(driver);
+      totalDrivers.value += 1;
+      lastPage.value = Math.ceil(totalDrivers.value / perPage.value);
+
       return driver;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create driver';
@@ -189,15 +201,13 @@ export const useDriverStore = defineStore('driver', () => {
     try {
       const updatedDriver = await updateDriverService(leagueId, driverId, data);
 
-      // Update in local state
-      // Note: driverId is the actual driver ID, so we need to find by driver_id, not id
+      // Update in local state (use driver_id for matching)
       const index = drivers.value.findIndex((d) => d.driver_id === driverId);
       if (index !== -1) {
         drivers.value[index] = updatedDriver;
       }
 
       // Update current driver if it's the one being edited
-      // Update currentDriver if needed (handled by manual check since we use driver_id)
       if (currentDriver.value?.driver_id === driverId) {
         setCurrentItem(updatedDriver);
       }
@@ -256,7 +266,8 @@ export const useDriverStore = defineStore('driver', () => {
     try {
       const result = await importDriversFromCSV(leagueId, csvData);
 
-      // Refresh the driver list after import
+      // Note: CSV import can add many drivers at once and may affect pagination/filters
+      // For this case, a full refetch is justified to ensure proper pagination state
       await fetchLeagueDrivers(leagueId);
 
       return result;

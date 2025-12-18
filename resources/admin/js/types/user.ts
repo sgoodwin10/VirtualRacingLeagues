@@ -1,3 +1,5 @@
+import type { PaginatedResponse, ApiResponse } from './api';
+
 export interface User {
   id: string;
   first_name: string;
@@ -57,26 +59,6 @@ export interface UserListParams {
   page?: number;
 }
 
-export interface PaginatedResponse<T> {
-  current_page: number;
-  data: T[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: Array<{
-    url: string | null;
-    label: string;
-    active: boolean;
-  }>;
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
-}
-
 export interface UserListResponse {
   users: User[];
   total: number;
@@ -85,12 +67,5 @@ export interface UserListResponse {
   last_page: number;
 }
 
-/**
- * Generic API Response wrapper
- * Backend wraps all responses with { success: true, data: ... }
- */
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-}
+// Re-export for backward compatibility
+export type { PaginatedResponse, ApiResponse };

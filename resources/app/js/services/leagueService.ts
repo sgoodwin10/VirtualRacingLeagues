@@ -17,14 +17,7 @@ import type {
 } from '@app/types/league';
 import type { AxiosResponse } from 'axios';
 import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
-
-/**
- * API response wrapper
- */
-interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}
+import type { ApiResponse } from '@app/types/api';
 
 /**
  * Get all active platforms
@@ -158,6 +151,9 @@ export function buildLeagueFormData(form: CreateLeagueForm): FormData {
   if (form.logo) {
     formData.append('logo', form.logo);
   }
+  if (form.banner) {
+    formData.append('banner', form.banner);
+  }
   if (form.header_image) {
     formData.append('header_image', form.header_image);
   }
@@ -233,6 +229,10 @@ export function buildUpdateLeagueFormData(
   // File uploads (only if new file provided)
   if (form.logo && form.logo !== null) {
     formData.append('logo', form.logo);
+  }
+
+  if (form.banner && form.banner !== null) {
+    formData.append('banner', form.banner);
   }
 
   if (form.header_image && form.header_image !== null) {

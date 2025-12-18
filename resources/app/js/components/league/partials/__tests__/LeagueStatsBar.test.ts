@@ -12,6 +12,7 @@ const mockLeague: League = {
   organizer_name: 'Test Organizer',
   contact_email: 'test@example.com',
   logo_url: null,
+  banner_url: null,
   header_image_url: null,
   timezone: 'America/New_York',
   visibility: 'public',

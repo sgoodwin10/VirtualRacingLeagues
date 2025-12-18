@@ -3,7 +3,17 @@
     <div class="relative group">
       <!-- Image Preview -->
       <div class="aspect-video w-full bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+        <!-- Use ResponsiveImage for MediaObject format -->
+        <ResponsiveImage
+          v-if="mediaObject"
+          :media="mediaObject"
+          :fallback-url="legacyUrl"
+          :alt="fileName || 'Preview'"
+          img-class="w-full h-full object-contain"
+        />
+        <!-- Fallback for File objects or legacy SiteConfigFile -->
         <img
+          v-else
           :src="previewUrl"
           :alt="fileName || 'Preview'"
           class="w-full h-full object-contain"
@@ -26,19 +36,21 @@
     <div class="mt-2 text-sm text-gray-600">
       <div class="flex items-center justify-between">
         <span class="truncate">{{ fileName }}</span>
-        <span class="ml-2 text-gray-500">{{ formatFileSize(fileSize) }}</span>
+        <span v-if="fileSize > 0" class="ml-2 text-gray-500">{{ formatFileSize(fileSize) }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
+import ResponsiveImage from '@admin/components/common/ResponsiveImage.vue';
 import type { SiteConfigFile } from '@admin/types/siteConfig';
+import type { MediaObject } from '@admin/types/media';
 import { logger } from '@admin/utils/logger';
 
 interface Props {
-  file: File | SiteConfigFile | null;
+  file: File | SiteConfigFile | MediaObject | null;
   readonly?: boolean;
 }
 
@@ -53,18 +65,105 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>();
 
 /**
- * Get preview URL for the file
+ * Track the current object URL for cleanup
+ */
+const currentObjectUrl = ref<string | null>(null);
+
+/**
+ * Check if file is a MediaObject (has conversions property)
+ */
+const isMediaObject = (file: unknown): file is MediaObject => {
+  return (
+    typeof file === 'object' &&
+    file !== null &&
+    'id' in file &&
+    'original' in file &&
+    'conversions' in file &&
+    'srcset' in file
+  );
+};
+
+/**
+ * Get MediaObject if available (prefer MediaObject format)
+ */
+const mediaObject = computed(() => {
+  if (!props.file) return null;
+  if (isMediaObject(props.file)) return props.file;
+  return null;
+});
+
+/**
+ * Get legacy URL for backward compatibility
+ */
+const legacyUrl = computed(() => {
+  if (!props.file) return '';
+
+  // If it's a SiteConfigFile (from API), use the URL
+  if ('url' in props.file && typeof props.file.url === 'string') {
+    return props.file.url;
+  }
+
+  return '';
+});
+
+/**
+ * Get preview URL for the file (used for File objects only)
  */
 const previewUrl = computed(() => {
   if (!props.file) return '';
 
-  // If it's a File object (newly uploaded), create object URL
+  // If it's a File object (newly uploaded), use stored object URL
   if (props.file instanceof File) {
-    return URL.createObjectURL(props.file);
+    return currentObjectUrl.value || '';
   }
 
   // If it's a SiteConfigFile (from API), use the URL
-  return (props.file as SiteConfigFile).url;
+  if ('url' in props.file && typeof props.file.url === 'string') {
+    return props.file.url;
+  }
+
+  // If it's a MediaObject, use original
+  if (isMediaObject(props.file)) {
+    return props.file.original;
+  }
+
+  return '';
+});
+
+/**
+ * Cleanup function to revoke object URL
+ */
+const revokeObjectUrl = (): void => {
+  if (currentObjectUrl.value) {
+    URL.revokeObjectURL(currentObjectUrl.value);
+    currentObjectUrl.value = null;
+  }
+};
+
+/**
+ * Watch for file changes and manage object URLs
+ */
+watch(
+  () => props.file,
+  (newFile, oldFile) => {
+    // Cleanup old URL if file changed
+    if (oldFile !== newFile) {
+      revokeObjectUrl();
+    }
+
+    // Create new URL if new file is a File object
+    if (newFile instanceof File) {
+      currentObjectUrl.value = URL.createObjectURL(newFile);
+    }
+  },
+  { immediate: true },
+);
+
+/**
+ * Cleanup on component unmount
+ */
+onUnmounted(() => {
+  revokeObjectUrl();
 });
 
 /**
@@ -77,7 +176,17 @@ const fileName = computed(() => {
     return props.file.name;
   }
 
-  return (props.file as SiteConfigFile).file_name;
+  if ('file_name' in props.file && typeof props.file.file_name === 'string') {
+    return props.file.file_name;
+  }
+
+  if (isMediaObject(props.file)) {
+    // Extract filename from original URL
+    const urlParts = props.file.original.split('/');
+    return urlParts[urlParts.length - 1] || 'Image';
+  }
+
+  return 'Unknown file';
 });
 
 /**
@@ -90,7 +199,12 @@ const fileSize = computed(() => {
     return props.file.size;
   }
 
-  return (props.file as SiteConfigFile).file_size;
+  if ('file_size' in props.file && typeof props.file.file_size === 'number') {
+    return props.file.file_size;
+  }
+
+  // MediaObject doesn't include file size
+  return 0;
 });
 
 /**

@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
@@ -374,6 +374,15 @@ const saveAdminUser = async (formData: AdminUserUpdateData): Promise<void> => {
 onMounted(async () => {
   await loadAdminUsers();
   initialLoading.value = false;
+});
+
+/**
+ * Clean up pending requests on component unmount
+ * Note: useRequestCancellation already handles this automatically,
+ * but we explicitly call it here for clarity and documentation
+ */
+onUnmounted(() => {
+  cancelRequests('AdminUsersView component unmounted');
 });
 </script>
 

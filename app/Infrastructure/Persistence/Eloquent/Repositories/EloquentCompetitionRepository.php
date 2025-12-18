@@ -338,4 +338,22 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
     {
         $competition->setId($id);
     }
+
+    /**
+     * Get the Eloquent model for a competition by ID.
+     * Used for media operations that require the Eloquent model.
+     *
+     * @return CompetitionModel
+     * @throws CompetitionNotFoundException
+     */
+    public function getEloquentModel(int $id): CompetitionModel
+    {
+        $model = CompetitionModel::with('media')->find($id);
+
+        if (!$model) {
+            throw CompetitionNotFoundException::withId($id);
+        }
+
+        return $model;
+    }
 }

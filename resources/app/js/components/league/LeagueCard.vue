@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import Card from 'primevue/card';
@@ -11,9 +10,9 @@ import type { MenuItem } from 'primevue/menuitem';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import InfoItem from '@app/components/common/InfoItem.vue';
 import LeagueVisibilityTag from '@app/components/league/partials/LeagueVisibilityTag.vue';
+import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import { useUserStore } from '@app/stores/userStore';
-import { useImageUrl } from '@app/composables/useImageUrl';
 import type { League } from '@app/types/league';
 import { PhGameController, PhMapPinArea, PhSteeringWheel, PhTrophy } from '@phosphor-icons/vue';
 import HTag from '@app/components/common/HTag.vue';
@@ -31,7 +30,6 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-const router = useRouter();
 const toast = useToast();
 const confirm = useConfirm();
 const leagueStore = useLeagueStore();
@@ -40,12 +38,6 @@ const userStore = useUserStore();
 const isOwner = computed(() => {
   return userStore.user?.id === props.league.owner_user_id;
 });
-
-// Use composable for logo with fallback
-const logo = useImageUrl(() => props.league.logo_url, '/images/default-league-logo.png');
-
-// Use composable for header image
-const headerImage = useImageUrl(() => props.league.header_image_url);
 
 function getPlatformNames(league: League): string {
   if (!league.platforms || league.platforms.length === 0) {
@@ -92,9 +84,8 @@ const speedDialActions = computed<MenuItem[]>(() => [
 ]);
 
 function handleView(): void {
+  // Let parent handle navigation via the 'view' event
   emit('view', props.league.id);
-  // Navigate to league detail page
-  router.push({ name: 'league-detail', params: { id: props.league.id.toString() } });
 }
 
 function handleEdit(): void {
@@ -137,24 +128,25 @@ async function deleteLeague(): Promise<void> {
   <Card class="transition-shadow duration-300 hover:shadow-lg border-blue-100 border">
     <template #header>
       <div class="relative">
-        <!-- Header Image with Error Handling -->
-        <img
-          v-if="headerImage.url.value && !headerImage.hasError.value"
-          :src="headerImage.displayUrl.value"
+        <!-- Header Image - use new media system with fallback -->
+        <ResponsiveImage
+          v-if="league.header_image || league.header_image_url"
+          :media="league.header_image"
+          :fallback-url="league.header_image_url ?? undefined"
           :alt="league.name"
-          class="w-full h-40 object-cover"
-          @load="headerImage.handleLoad"
-          @error="headerImage.handleError"
+          sizes="(max-width: 640px) 100vw, 640px"
+          img-class="w-full h-40 object-cover"
         />
         <div v-else class="w-full h-40 bg-linear-to-br from-blue-500 to-purple-600"></div>
 
-        <!-- Logo with Error Handling and Fallback -->
-        <img
-          :src="logo.displayUrl.value"
+        <!-- Logo - use new media system with fallback -->
+        <ResponsiveImage
+          :media="league.logo"
+          :fallback-url="league.logo_url ?? '/images/default-league-logo.png'"
           :alt="`${league.name} logo`"
-          class="absolute -bottom-8 left-4 w-16 h-16 rounded-lg border-4 border-white shadow-lg object-cover"
-          @load="logo.handleLoad"
-          @error="logo.handleError"
+          sizes="64px"
+          conversion="small"
+          img-class="absolute -bottom-8 left-4 w-16 h-16 rounded-lg border-4 border-white shadow-lg object-cover"
         />
 
         <div class="absolute top-0 left-0 p-2">

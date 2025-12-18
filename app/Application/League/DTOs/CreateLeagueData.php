@@ -44,6 +44,8 @@ final class CreateLeagueData extends Data
         public readonly ?string $description = null,
         #[Sometimes, File, Image, Max(4096)]
         public readonly ?UploadedFile $header_image = null,
+        #[Sometimes, File, Image, Max(2048)]
+        public readonly ?UploadedFile $banner = null,
         #[Sometimes, Url, Max(255)]
         public readonly ?string $discord_url = null,
         #[Sometimes, Url, Max(255)]

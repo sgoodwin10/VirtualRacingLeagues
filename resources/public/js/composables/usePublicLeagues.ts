@@ -34,6 +34,10 @@ export function usePublicLeagues(options: UsePublicLeaguesOptions = {}) {
   const searchQuery = ref('');
   const selectedPlatformId = ref<number | null>(null);
 
+  // Abort controller refs for cancelling pending requests
+  const leaguesAbortController = ref<AbortController | null>(null);
+  const platformsAbortController = ref<AbortController | null>(null);
+
   // Computed values
   const totalPages = computed(() => paginationMeta.value?.last_page ?? 0);
   const totalRecords = computed(() => paginationMeta.value?.total ?? 0);
@@ -63,6 +67,14 @@ export function usePublicLeagues(options: UsePublicLeaguesOptions = {}) {
   }
 
   async function fetchLeagues(): Promise<void> {
+    // Abort any pending request
+    if (leaguesAbortController.value) {
+      leaguesAbortController.value.abort();
+    }
+
+    // Create new abort controller for this request
+    leaguesAbortController.value = new AbortController();
+
     isLoading.value = true;
     error.value = null;
 
@@ -80,7 +92,7 @@ export function usePublicLeagues(options: UsePublicLeaguesOptions = {}) {
         params.platform_id = selectedPlatformId.value;
       }
 
-      const response = await publicApi.fetchLeagues(params);
+      const response = await publicApi.fetchLeagues(params, leaguesAbortController.value.signal);
 
       if (!isMounted.value) return;
 
@@ -88,6 +100,11 @@ export function usePublicLeagues(options: UsePublicLeaguesOptions = {}) {
       paginationMeta.value = response.meta;
     } catch (err) {
       if (!isMounted.value) return;
+
+      // Don't set error if request was aborted
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
 
       error.value = err instanceof Error ? err.message : 'Failed to fetch leagues';
       leagues.value = [];
@@ -100,15 +117,28 @@ export function usePublicLeagues(options: UsePublicLeaguesOptions = {}) {
   }
 
   async function fetchPlatforms(): Promise<void> {
+    // Abort any pending request
+    if (platformsAbortController.value) {
+      platformsAbortController.value.abort();
+    }
+
+    // Create new abort controller for this request
+    platformsAbortController.value = new AbortController();
+
     isLoadingPlatforms.value = true;
     try {
-      const result = await publicApi.fetchPlatforms();
+      const result = await publicApi.fetchPlatforms(platformsAbortController.value.signal);
 
       if (!isMounted.value) return;
 
       platforms.value = result;
     } catch (err) {
       if (!isMounted.value) return;
+
+      // Don't log error if request was aborted
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
 
       console.error('Failed to fetch platforms:', err);
       platforms.value = [];
@@ -172,6 +202,13 @@ export function usePublicLeagues(options: UsePublicLeaguesOptions = {}) {
   // Cleanup on unmount
   onUnmounted(() => {
     isMounted.value = false;
+    // Abort any pending requests
+    if (leaguesAbortController.value) {
+      leaguesAbortController.value.abort();
+    }
+    if (platformsAbortController.value) {
+      platformsAbortController.value.abort();
+    }
     // The isMounted guard in debouncedFetchLeagues prevents state updates after unmount
   });
 

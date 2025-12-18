@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { userService } from '@admin/services/userService';
-import type { User, UserStatus, UserListParams, PaginatedResponse } from '@admin/types/user';
+import type { User, UserStatus, UserListParams } from '@admin/types/user';
+import type { PaginatedResponse } from '@admin/types/api';
 import { logger } from '@admin/utils/logger';
 
 /**
@@ -127,8 +128,7 @@ export const useUserStore = defineStore(
       } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to fetch users';
         logger.error('Failed to fetch users:', err);
-        // Re-throw to allow caller to handle if needed
-        throw err;
+        // Do not re-throw - error state is set, let caller check error state if needed
       } finally {
         isLoading.value = false;
       }
@@ -138,16 +138,18 @@ export const useUserStore = defineStore(
      * Delete (soft delete) a user
      * @param userId - User ID to delete
      * @param signal - Optional AbortSignal for request cancellation
+     * @returns Promise that resolves to true on success, false on error
      */
-    async function deleteUser(userId: string, signal?: AbortSignal): Promise<void> {
+    async function deleteUser(userId: string, signal?: AbortSignal): Promise<boolean> {
       try {
         await userService.deleteUser(userId, signal);
         // Refresh the list after deletion
         await fetchUsers(signal);
+        return true;
       } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to delete user';
         logger.error('Failed to delete user:', err);
-        throw err;
+        return false;
       }
     }
 
@@ -155,8 +157,9 @@ export const useUserStore = defineStore(
      * Restore a soft-deleted user
      * @param userId - User ID to restore
      * @param signal - Optional AbortSignal for request cancellation
+     * @returns Promise that resolves to the restored user on success, null on error
      */
-    async function reactivateUser(userId: string, signal?: AbortSignal): Promise<User> {
+    async function reactivateUser(userId: string, signal?: AbortSignal): Promise<User | null> {
       try {
         const restoredUser = await userService.restoreUser(userId, signal);
         // Refresh the list after restoration
@@ -165,7 +168,7 @@ export const useUserStore = defineStore(
       } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to reactivate user';
         logger.error('Failed to reactivate user:', err);
-        throw err;
+        return null;
       }
     }
 
@@ -174,12 +177,13 @@ export const useUserStore = defineStore(
      * @param userId - User ID to update
      * @param payload - Update payload
      * @param signal - Optional AbortSignal for request cancellation
+     * @returns Promise that resolves to the updated user on success, null on error
      */
     async function updateUser(
       userId: string,
       payload: Partial<User>,
       signal?: AbortSignal,
-    ): Promise<User> {
+    ): Promise<User | null> {
       try {
         const updatedUser = await userService.updateUser(userId, payload, signal);
         // Update the user in the local list
@@ -193,7 +197,7 @@ export const useUserStore = defineStore(
       } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to update user';
         logger.error('Failed to update user:', err);
-        throw err;
+        return null;
       }
     }
 

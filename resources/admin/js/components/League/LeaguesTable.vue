@@ -31,7 +31,15 @@
     <!-- Logo Column -->
     <Column field="logo_url" header="Logo" style="min-width: 80px">
       <template #body="{ data }">
-        <img v-if="data.logo_url" :src="data.logo_url" class="w-8 h-8 rounded object-cover" />
+        <ResponsiveImage
+          v-if="data.logo || data.logo_url"
+          :media="data.logo"
+          :fallback-url="data.logo_url"
+          :alt="`${data.name} logo`"
+          conversion="thumb"
+          img-class="w-8 h-8 rounded object-cover"
+          loading="lazy"
+        />
         <div v-else class="w-8 h-8 rounded bg-gray-200 flex items-center justify-center">
           <span class="text-gray-400 text-xs">N/A</span>
         </div>
@@ -132,12 +140,13 @@
           />
           <Button
             v-if="data.status === 'archived'"
-            v-tooltip.top="'Delete'"
+            v-tooltip.top="'Delete functionality coming soon'"
             icon="pi pi-trash"
             text
             rounded
             severity="danger"
             size="small"
+            :disabled="true"
             @click="handleDelete(data)"
           />
         </div>
@@ -155,6 +164,7 @@ import { useToast } from 'primevue/usetoast';
 import Badge from '@admin/components/common/Badge.vue';
 import EmptyState from '@admin/components/common/EmptyState.vue';
 import LoadingState from '@admin/components/common/LoadingState.vue';
+import ResponsiveImage from '@admin/components/common/ResponsiveImage.vue';
 import { useNameHelpers } from '@admin/composables/useNameHelpers';
 import userService from '@admin/services/userService';
 import { logger } from '@admin/utils/logger';

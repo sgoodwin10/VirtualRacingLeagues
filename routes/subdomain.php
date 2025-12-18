@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UserImpersonationController;
+use App\Http\Controllers\Public\PublicDriverController;
 use App\Http\Controllers\Public\PublicLeagueController;
 use App\Http\Controllers\Public\PublicPlatformController;
 use App\Http\Controllers\User\CompetitionController;
@@ -331,6 +332,9 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
             Route::get('/races/{raceId}/results', [PublicLeagueController::class, 'raceResults'])
                 ->whereNumber('raceId')
                 ->name('races.results');
+            Route::get('/drivers/{seasonDriverId}', [PublicDriverController::class, 'show'])
+                ->whereNumber('seasonDriverId')
+                ->name('drivers.show');
             Route::get('/platforms', [PublicPlatformController::class, 'index'])->name('platforms.index');
         });
 

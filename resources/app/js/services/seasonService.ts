@@ -14,12 +14,12 @@ import type {
 import type { SeasonStandingsResponse } from '@app/types/seasonStandings';
 import type { AxiosResponse } from 'axios';
 import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
-
-// API response wrapper
-interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}
+import {
+  appendIfDefined,
+  appendFileIfProvided,
+  addMethodSpoofing,
+} from '@app/utils/formDataBuilder';
+import type { ApiResponse } from '@app/types/api';
 
 /**
  * Get all seasons for a competition
@@ -67,7 +67,7 @@ export async function createSeason(competitionId: number, formData: FormData): P
  */
 export async function updateSeason(seasonId: number, formData: FormData): Promise<Season> {
   // Laravel method spoofing for PUT with multipart/form-data
-  formData.append('_method', 'PUT');
+  addMethodSpoofing(formData, 'PUT');
 
   const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
     API_ENDPOINTS.seasons.update(seasonId),
@@ -169,39 +169,20 @@ export async function getSeasonStandings(seasonId: number): Promise<SeasonStandi
 export function buildCreateSeasonFormData(data: CreateSeasonRequest): FormData {
   const formData = new FormData();
 
-  formData.append('name', data.name);
-
-  if (data.car_class) {
-    formData.append('car_class', data.car_class);
-  }
-
-  if (data.description) {
-    formData.append('description', data.description);
-  }
-
-  if (data.technical_specs) {
-    formData.append('technical_specs', data.technical_specs);
-  }
-
-  if (data.logo) {
-    formData.append('logo', data.logo);
-  }
-
-  if (data.banner) {
-    formData.append('banner', data.banner);
-  }
-
-  if (data.race_divisions_enabled !== undefined) {
-    formData.append('race_divisions_enabled', data.race_divisions_enabled ? '1' : '0');
-  }
-
-  if (data.team_championship_enabled !== undefined) {
-    formData.append('team_championship_enabled', data.team_championship_enabled ? '1' : '0');
-  }
-
-  if (data.race_times_required !== undefined) {
-    formData.append('race_times_required', data.race_times_required ? '1' : '0');
-  }
+  appendIfDefined(formData, 'name', data.name);
+  appendIfDefined(formData, 'car_class', data.car_class);
+  appendIfDefined(formData, 'description', data.description);
+  appendIfDefined(formData, 'technical_specs', data.technical_specs);
+  appendFileIfProvided(formData, 'logo', data.logo);
+  appendFileIfProvided(formData, 'banner', data.banner);
+  appendIfDefined(formData, 'race_divisions_enabled', data.race_divisions_enabled);
+  appendIfDefined(formData, 'team_championship_enabled', data.team_championship_enabled);
+  appendIfDefined(formData, 'race_times_required', data.race_times_required);
+  appendIfDefined(formData, 'drop_round', data.drop_round);
+  appendIfDefined(formData, 'total_drop_rounds', data.total_drop_rounds);
+  appendIfDefined(formData, 'teams_drivers_for_calculation', data.teams_drivers_for_calculation);
+  appendIfDefined(formData, 'teams_drop_rounds', data.teams_drop_rounds);
+  appendIfDefined(formData, 'teams_total_drop_rounds', data.teams_total_drop_rounds);
 
   return formData;
 }
@@ -219,46 +200,20 @@ export function buildCreateSeasonFormData(data: CreateSeasonRequest): FormData {
 export function buildUpdateSeasonFormData(data: UpdateSeasonRequest): FormData {
   const formData = new FormData();
 
-  if (data.name !== undefined) {
-    formData.append('name', data.name);
-  }
-
-  // Empty string means "clear this field"
-  if (data.car_class !== undefined) {
-    formData.append('car_class', data.car_class || '');
-  }
-
-  // Empty string means "clear this field"
-  if (data.description !== undefined) {
-    formData.append('description', data.description || '');
-  }
-
-  // Empty string means "clear this field"
-  if (data.technical_specs !== undefined) {
-    formData.append('technical_specs', data.technical_specs || '');
-  }
-
-  // Only send if it's an actual File object (new upload)
-  if (data.logo !== undefined && data.logo !== null) {
-    formData.append('logo', data.logo);
-  }
-
-  // Only send if it's an actual File object (new upload)
-  if (data.banner !== undefined && data.banner !== null) {
-    formData.append('banner', data.banner);
-  }
-
-  if (data.race_divisions_enabled !== undefined) {
-    formData.append('race_divisions_enabled', data.race_divisions_enabled ? '1' : '0');
-  }
-
-  if (data.team_championship_enabled !== undefined) {
-    formData.append('team_championship_enabled', data.team_championship_enabled ? '1' : '0');
-  }
-
-  if (data.race_times_required !== undefined) {
-    formData.append('race_times_required', data.race_times_required ? '1' : '0');
-  }
+  appendIfDefined(formData, 'name', data.name);
+  appendIfDefined(formData, 'car_class', data.car_class);
+  appendIfDefined(formData, 'description', data.description);
+  appendIfDefined(formData, 'technical_specs', data.technical_specs);
+  appendFileIfProvided(formData, 'logo', data.logo);
+  appendFileIfProvided(formData, 'banner', data.banner);
+  appendIfDefined(formData, 'race_divisions_enabled', data.race_divisions_enabled);
+  appendIfDefined(formData, 'team_championship_enabled', data.team_championship_enabled);
+  appendIfDefined(formData, 'race_times_required', data.race_times_required);
+  appendIfDefined(formData, 'drop_round', data.drop_round);
+  appendIfDefined(formData, 'total_drop_rounds', data.total_drop_rounds);
+  appendIfDefined(formData, 'teams_drivers_for_calculation', data.teams_drivers_for_calculation);
+  appendIfDefined(formData, 'teams_drop_rounds', data.teams_drop_rounds);
+  appendIfDefined(formData, 'teams_total_drop_rounds', data.teams_total_drop_rounds);
 
   return formData;
 }

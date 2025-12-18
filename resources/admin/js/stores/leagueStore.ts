@@ -161,8 +161,7 @@ export const useLeagueStore = defineStore(
       } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to fetch leagues';
         logger.error('Failed to fetch leagues:', err);
-        // Re-throw to allow caller to handle if needed
-        throw err;
+        // Do not re-throw - error state is set, let caller check error state if needed
       } finally {
         isLoading.value = false;
       }
@@ -172,16 +171,18 @@ export const useLeagueStore = defineStore(
      * Archive a league
      * @param leagueId - League ID to archive
      * @param signal - Optional AbortSignal for request cancellation
+     * @returns Promise that resolves to true on success, false on error
      */
-    async function archiveLeague(leagueId: number, signal?: AbortSignal): Promise<void> {
+    async function archiveLeague(leagueId: number, signal?: AbortSignal): Promise<boolean> {
       try {
         await leagueService.archiveLeague(leagueId, signal);
         // Refresh the list after archiving
         await fetchLeagues(signal);
+        return true;
       } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to archive league';
         logger.error('Failed to archive league:', err);
-        throw err;
+        return false;
       }
     }
 
@@ -189,17 +190,19 @@ export const useLeagueStore = defineStore(
      * Delete a league (placeholder - not implemented)
      * @param leagueId - League ID to delete
      * @param signal - Optional AbortSignal for request cancellation
+     * @returns Promise that resolves to true on success, false on error
      */
-    async function deleteLeague(leagueId: number, signal?: AbortSignal): Promise<void> {
+    async function deleteLeague(leagueId: number, signal?: AbortSignal): Promise<boolean> {
       try {
         // Placeholder - does nothing for now
         await leagueService.deleteLeague(leagueId, signal);
         // Refresh the list after deletion
         await fetchLeagues(signal);
+        return true;
       } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to delete league';
         logger.error('Failed to delete league:', err);
-        throw err;
+        return false;
       }
     }
 

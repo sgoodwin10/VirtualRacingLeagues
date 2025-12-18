@@ -6,6 +6,7 @@ import AdminLoginView from '@admin/views/AdminLoginView.vue';
 import type { AdminRole } from '@admin/types/admin';
 import { logger } from '@admin/utils/logger';
 import { useRoleHelpers } from '@admin/composables/useRoleHelpers';
+import { UNAUTHORIZED_EVENT } from '@admin/services/api';
 
 /**
  * Extend Window interface for GTM dataLayer
@@ -173,8 +174,14 @@ router.beforeEach(async (to, _from, next) => {
   const requiresAuth = to.meta.requiresAuth === true;
 
   if (requiresAuth) {
-    // Always check auth status to ensure it's current
-    const isAuthenticated = await adminStore.checkAuth();
+    // Only check auth if store state is uninitialized (admin is null)
+    // This prevents unnecessary API calls on every navigation
+    let isAuthenticated = adminStore.isAuthenticated;
+
+    if (adminStore.admin === null) {
+      // Store is uninitialized, need to check auth status
+      isAuthenticated = await adminStore.checkAuth();
+    }
 
     if (!isAuthenticated) {
       // Redirect to login with return URL
@@ -215,5 +222,23 @@ router.afterEach((to) => {
     page_title: (to.meta.title as string) || document.title,
   });
 });
+
+/**
+ * Listen for unauthorized events from API service
+ * This handles 401 responses by redirecting to login via Vue Router
+ * instead of using window.location.href which would break SPA state
+ */
+window.addEventListener(UNAUTHORIZED_EVENT, ((event: CustomEvent) => {
+  const { returnUrl } = event.detail || {};
+
+  // Only redirect if not already on login page
+  if (router.currentRoute.value.name !== 'login') {
+    logger.info('Unauthorized event received, redirecting to login');
+    router.push({
+      name: 'login',
+      query: returnUrl ? { redirect: returnUrl } : undefined,
+    });
+  }
+}) as EventListener);
 
 export default router;

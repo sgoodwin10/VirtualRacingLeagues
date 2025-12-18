@@ -326,6 +326,7 @@ class LeagueTest extends TestCase
             tagline: Tagline::from('The Premier F1 League'),
             description: 'A competitive F1 racing league',
             headerImagePath: 'leagues/headers/header.png',
+            bannerPath: null,
             platformIds: [1, 2, 3],
             discordUrl: 'https://discord.gg/league',
             websiteUrl: 'https://league.example.com',

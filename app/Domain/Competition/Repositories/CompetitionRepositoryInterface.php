@@ -52,4 +52,12 @@ interface CompetitionRepositoryInterface
      * @return array<int, array<string, int|string|null>> Keyed by competition ID
      */
     public function getStatsForEntities(array $competitions): array;
+
+    /**
+     * Get the Eloquent model for a competition by ID.
+     * Used for media operations that require the Eloquent model.
+     *
+     * @return \App\Infrastructure\Persistence\Eloquent\Models\Competition
+     */
+    public function getEloquentModel(int $id): \App\Infrastructure\Persistence\Eloquent\Models\Competition;
 }

@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useUserStore } from '../userStore';
 import { userService } from '@admin/services/userService';
-import type { User, PaginatedResponse } from '@admin/types/user';
+import type { User } from '@admin/types/user';
+import type { PaginatedResponse } from '@admin/types/api';
 import { createMockUser } from '@admin/__tests__/helpers/mockFactories';
 
 vi.mock('@admin/services/userService');

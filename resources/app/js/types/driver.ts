@@ -166,3 +166,11 @@ export interface DriverStats {
   inactive: number;
   banned: number;
 }
+
+/**
+ * Dynamic platform form data
+ * Combines CreateDriverRequest with platform-specific fields
+ */
+export type DriverFormData = CreateDriverRequest & {
+  [key: string]: string | number | undefined;
+};

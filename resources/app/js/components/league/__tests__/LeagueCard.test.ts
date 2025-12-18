@@ -69,6 +69,7 @@ describe('LeagueCard', () => {
       tagline: 'A test league',
       description: 'Test description',
       logo_url: '/storage/logos/test.png',
+      banner_url: null,
       header_image_url: '/storage/headers/test.png',
       platform_ids: [1, 2],
       platforms: [

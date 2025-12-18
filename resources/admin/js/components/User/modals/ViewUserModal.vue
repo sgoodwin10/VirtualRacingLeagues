@@ -256,7 +256,7 @@ const resendingVerification = ref(false);
 const loggingInAsUser = ref(false);
 
 // Composables
-const { formatDate } = useDateFormatter();
+const { formatDate, formatDateShort } = useDateFormatter();
 const { getStatusLabel, getStatusVariant, getStatusIcon } = useStatusHelpers();
 const { getFullName, getUserInitials } = useNameHelpers();
 
@@ -287,44 +287,6 @@ watch(
     }
   },
 );
-
-/**
- * Format date (short version) for activity list
- */
-const formatDateShort = (dateString: string): string => {
-  try {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInHours = diffInMs / (1000 * 60 * 60);
-
-    // Less than 1 hour - show minutes ago
-    if (diffInHours < 1) {
-      const minutes = Math.floor(diffInMs / (1000 * 60));
-      return `${minutes}m ago`;
-    }
-
-    // Less than 24 hours - show hours ago
-    if (diffInHours < 24) {
-      const hours = Math.floor(diffInHours);
-      return `${hours}h ago`;
-    }
-
-    // Less than 7 days - show days ago
-    if (diffInHours < 168) {
-      const days = Math.floor(diffInHours / 24);
-      return `${days}d ago`;
-    }
-
-    // Otherwise show date
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
-  } catch {
-    return 'Invalid date';
-  }
-};
 
 /**
  * Copy UUID to clipboard

@@ -7,6 +7,7 @@ import type {
   ApiResponse,
 } from '@admin/types/league';
 import { handleServiceError } from '@admin/utils/errorHandler';
+import { transformPaginatedResponse, type BackendPaginatedResponse } from '@admin/utils/pagination';
 
 /**
  * League Service
@@ -25,64 +26,13 @@ class LeagueService {
   ): Promise<PaginatedResponse<League>> {
     try {
       // Backend returns: { success: true, data: [...leagues], meta: {...pagination} }
-      const response = await apiService.get<{
-        success: boolean;
-        data: League[];
-        meta: {
-          current_page: number;
-          from: number;
-          last_page: number;
-          path: string;
-          per_page: number;
-          to: number;
-          total: number;
-        };
-      }>('/leagues', {
+      const response = await apiService.get<BackendPaginatedResponse<League>>('/leagues', {
         params,
         signal,
       });
 
-      // Transform backend response into PaginatedResponse format
-      if (response.success && response.data) {
-        return {
-          current_page: response.meta.current_page,
-          data: response.data, // Leagues array from response.data
-          first_page_url: `${response.meta.path}?page=1`,
-          from: response.meta.from,
-          last_page: response.meta.last_page,
-          last_page_url: `${response.meta.path}?page=${response.meta.last_page}`,
-          links: [], // Backend doesn't provide links, can be computed if needed
-          next_page_url:
-            response.meta.current_page < response.meta.last_page
-              ? `${response.meta.path}?page=${response.meta.current_page + 1}`
-              : null,
-          path: response.meta.path,
-          per_page: response.meta.per_page,
-          prev_page_url:
-            response.meta.current_page > 1
-              ? `${response.meta.path}?page=${response.meta.current_page - 1}`
-              : null,
-          to: response.meta.to,
-          total: response.meta.total,
-        };
-      }
-
-      // Return empty paginated response if no data
-      return {
-        current_page: 1,
-        data: [],
-        first_page_url: '',
-        from: 0,
-        last_page: 1,
-        last_page_url: '',
-        links: [],
-        next_page_url: null,
-        path: '',
-        per_page: 15,
-        prev_page_url: null,
-        to: 0,
-        total: 0,
-      };
+      // Transform backend response using utility function
+      return transformPaginatedResponse(response);
     } catch (error) {
       handleServiceError(error);
       throw error;

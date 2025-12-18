@@ -44,6 +44,8 @@ final class UpdateLeagueData extends Data
         public readonly ?string $description = null,
         #[Sometimes, File, Image, Max(10240)]
         public readonly ?UploadedFile $header_image = null,
+        #[Sometimes, File, Image, Max(2048)]
+        public readonly ?UploadedFile $banner = null,
         #[Sometimes, Url, Max(255)]
         public readonly ?string $discord_url = null,
         #[Sometimes, Url, Max(255)]

@@ -31,6 +31,7 @@ import {
   getDriverCsvHeaders,
 } from '@app/services/leagueService';
 import { useCrudStore } from '@app/composables/useCrudStore';
+import { logError } from '@app/utils/logger';
 
 export const useLeagueStore = defineStore('league', () => {
   // Use CRUD composable for league management
@@ -54,7 +55,6 @@ export const useLeagueStore = defineStore('league', () => {
   // Additional state specific to league store
   const platforms = ref<Platform[]>([]);
   const timezones = ref<Timezone[]>([]);
-  const currentStep = ref(0);
 
   // Platform configuration state
   const platformColumns = ref<PlatformColumn[]>([]);
@@ -76,6 +76,31 @@ export const useLeagueStore = defineStore('league', () => {
   // Actions
 
   /**
+   * Retry helper for API calls
+   * @param fn - Function to retry
+   * @param maxRetries - Maximum number of retries (default: 3)
+   * @param delay - Delay between retries in ms (default: 1000)
+   */
+  async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, delay = 1000): Promise<T> {
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (err: unknown) {
+        lastError = err;
+
+        if (attempt < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          await new Promise((resolve) => setTimeout(resolve, delay * attempt));
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  /**
    * Fetch all platforms from the API
    */
   async function fetchPlatforms(): Promise<void> {
@@ -88,10 +113,11 @@ export const useLeagueStore = defineStore('league', () => {
     setError(null);
 
     try {
-      platforms.value = await getPlatforms();
+      platforms.value = await withRetry(() => getPlatforms());
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load platforms';
       setError(errorMessage);
+      logError('Failed to load platforms after retries', { context: 'leagueStore', data: err });
       throw err;
     } finally {
       setLoading(false);
@@ -111,10 +137,11 @@ export const useLeagueStore = defineStore('league', () => {
     setError(null);
 
     try {
-      timezones.value = await getTimezones();
+      timezones.value = await withRetry(() => getTimezones());
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load timezones';
       setError(errorMessage);
+      logError('Failed to load timezones after retries', { context: 'leagueStore', data: err });
       throw err;
     } finally {
       setLoading(false);
@@ -143,7 +170,7 @@ export const useLeagueStore = defineStore('league', () => {
         suggestion: result.suggestion,
       };
     } catch (err: unknown) {
-      console.error('Slug check error:', err);
+      logError('Slug check error', { context: 'leagueStore', data: err });
       return { available: false, slug: '', suggestion: null };
     }
   }
@@ -261,21 +288,6 @@ export const useLeagueStore = defineStore('league', () => {
   }
 
   /**
-   * Set the current wizard step
-   * @param step - Step index (0-based)
-   */
-  function setCurrentStep(step: number): void {
-    currentStep.value = step;
-  }
-
-  /**
-   * Reset wizard to first step
-   */
-  function resetWizard(): void {
-    currentStep.value = 0;
-  }
-
-  /**
    * Fetch driver columns configuration for a league's platforms
    * @param leagueId - League ID
    */
@@ -343,7 +355,6 @@ export const useLeagueStore = defineStore('league', () => {
     currentLeague,
     loading,
     error,
-    currentStep,
     platformColumns,
     platformFormFields,
     platformCsvHeaders,
@@ -362,8 +373,6 @@ export const useLeagueStore = defineStore('league', () => {
     fetchLeague,
     updateExistingLeague,
     removeLeague,
-    setCurrentStep,
-    resetWizard,
     fetchDriverColumnsForLeague,
     fetchDriverFormFieldsForLeague,
     fetchDriverCsvHeadersForLeague,

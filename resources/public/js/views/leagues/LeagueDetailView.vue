@@ -68,7 +68,9 @@
         :title="league.name"
         :description="league.tagline || undefined"
         :background-image="league.header_image_url || undefined"
+        :background-media="league.header_image"
         :logo-url="league.logo_url || undefined"
+        :logo="league.logo"
       >
         <template #social-links>
           <div v-if="hasSocialLinks" class="social-links">
@@ -227,11 +229,13 @@
                           class="competition-icon w-14 h-14 flex items-center justify-center flex-shrink-0 shadow-lg rounded"
                           :style="getCompetitionGradient(competition.competition_colour)"
                         >
-                          <img
-                            v-if="competition.logo_url"
-                            :src="competition.logo_url"
+                          <ResponsiveImage
+                            v-if="competition.logo || competition.logo_url"
+                            :media="competition.logo"
+                            :fallback-url="competition.logo_url || undefined"
                             :alt="competition.name"
-                            class="w-full h-full object-cover rounded"
+                            image-class="w-full h-full object-cover rounded"
+                            loading="lazy"
                           />
                           <span v-else class="font-display text-xl text-white">
                             {{ competition.name.substring(0, 3).toUpperCase() }}
@@ -538,6 +542,7 @@ import VrlCard from '@public/components/common/cards/VrlCard.vue';
 import VrlBadge from '@public/components/common/badges/VrlBadge.vue';
 import VrlTabs, { type TabItem } from '@public/components/common/navigation/VrlTabs.vue';
 import PageHeader from '@public/components/common/layout/PageHeader.vue';
+import ResponsiveImage from '@public/components/common/ResponsiveImage.vue';
 
 const route = useRoute();
 const slug = route.params.slug as string;

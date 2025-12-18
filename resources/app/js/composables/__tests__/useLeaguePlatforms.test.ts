@@ -23,6 +23,7 @@ describe('useLeaguePlatforms', () => {
     tagline: null,
     description: null,
     logo_url: null,
+    banner_url: null,
     header_image_url: null,
     platform_ids: [1, 3],
     platforms: undefined,

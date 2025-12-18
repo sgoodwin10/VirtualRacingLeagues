@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@public/stores/authStore';
 import { useToast } from 'primevue/usetoast';
 import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/types/errors';
+import { usePasswordValidation } from '@public/composables/usePasswordValidation';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Message from 'primevue/message';
@@ -19,6 +20,9 @@ const email = ref('');
 const password = ref('');
 const passwordConfirmation = ref('');
 
+// Password validation
+const { passwordStrength, passwordErrors, isPasswordValid } = usePasswordValidation(password);
+
 // Form state
 const isSubmitting = ref(false);
 const errorMessage = ref('');
@@ -33,7 +37,8 @@ const isFormValid = computed(() => {
     lastName.value.trim() !== '' &&
     email.value.trim() !== '' &&
     password.value.trim() !== '' &&
-    passwordConfirmation.value.trim() !== ''
+    passwordConfirmation.value.trim() !== '' &&
+    isPasswordValid.value
   );
 });
 
@@ -75,8 +80,8 @@ const validatePassword = (): boolean => {
     passwordError.value = 'Password is required';
     return false;
   }
-  if (password.value.length < 8) {
-    passwordError.value = 'Password must be at least 8 characters';
+  if (!isPasswordValid.value) {
+    passwordError.value = 'Password does not meet requirements';
     return false;
   }
   if (password.value !== passwordConfirmation.value) {
@@ -255,6 +260,50 @@ const handleSubmit = async (): Promise<void> => {
               aria-label="Password"
               @input="passwordError = ''"
             />
+
+            <!-- Password Strength Indicator -->
+            <div v-if="password" class="mt-2">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-body text-barrier">Password Strength:</span>
+                <span
+                  class="text-xs font-display uppercase tracking-wider font-semibold"
+                  :style="{ color: passwordStrength.color }"
+                >
+                  {{ passwordStrength.label }}
+                </span>
+              </div>
+              <div class="w-full h-1.5 bg-tarmac rounded-full overflow-hidden">
+                <div
+                  class="h-full transition-all duration-300 ease-out rounded-full"
+                  :style="{
+                    width: `${(passwordStrength.score / 4) * 100}%`,
+                    backgroundColor: passwordStrength.color,
+                  }"
+                />
+              </div>
+            </div>
+
+            <!-- Password Requirements -->
+            <div v-if="password && passwordErrors.length > 0" class="mt-3 space-y-1">
+              <p class="text-xs font-body text-barrier mb-1.5">Password must:</p>
+              <ul class="space-y-1">
+                <li
+                  v-for="error in passwordErrors"
+                  :key="error"
+                  class="text-xs font-body text-dnf flex items-start"
+                >
+                  <i class="pi pi-times-circle text-dnf mr-2 mt-0.5 text-[10px]"></i>
+                  <span>{{ error }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Success Check -->
+            <div v-if="password && isPasswordValid" class="mt-2 flex items-center">
+              <i class="pi pi-check-circle text-pole mr-2 text-sm"></i>
+              <span class="text-xs font-body text-pole">Password meets all requirements</span>
+            </div>
+
             <small v-if="passwordError" class="text-dnf mt-1 block font-body text-sm">
               {{ passwordError }}
             </small>

@@ -13,6 +13,7 @@ import Message from 'primevue/message';
 import { PhPlus } from '@phosphor-icons/vue';
 
 import TeamFormModal from './TeamFormModal.vue';
+import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 
 interface Props {
   seasonId: number;
@@ -147,11 +148,14 @@ function handleTeamSaved(): void {
         <Column field="name" header="Team">
           <template #body="{ data }">
             <div class="flex items-center gap-2">
-              <img
-                v-if="data.logo_url"
-                :src="data.logo_url"
+              <ResponsiveImage
+                v-if="data.logo || data.logo_url"
+                :media="data.logo"
+                :fallback-url="data.logo_url ?? undefined"
                 :alt="data.name"
-                class="w-8 h-8 rounded object-cover"
+                sizes="32px"
+                conversion="thumb"
+                img-class="w-8 h-8 rounded object-cover"
               />
               <span class="font-semibold">{{ data.name }}</span>
             </div>

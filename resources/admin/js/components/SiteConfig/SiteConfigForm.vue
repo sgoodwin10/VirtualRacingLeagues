@@ -59,6 +59,7 @@ import Button from 'primevue/button';
 import IdentitySettings from './IdentitySettings.vue';
 import TrackingSettings from './TrackingSettings.vue';
 import type { SiteConfig, UpdateSiteConfigRequest, SiteConfigFile } from '@admin/types/siteConfig';
+import type { MediaObject } from '@admin/types/media';
 
 interface Props {
   config: SiteConfig | null;
@@ -89,9 +90,9 @@ interface CombinedFormData {
   admin_email: string | null;
   maintenance_mode: boolean;
   user_registration_enabled: boolean;
-  logo: File | SiteConfigFile | null;
-  favicon: File | SiteConfigFile | null;
-  og_image: File | SiteConfigFile | null;
+  logo: File | SiteConfigFile | MediaObject | null;
+  favicon: File | SiteConfigFile | MediaObject | null;
+  og_image: File | SiteConfigFile | MediaObject | null;
   remove_logo: boolean;
   remove_favicon: boolean;
   remove_og_image: boolean;
@@ -103,6 +104,22 @@ interface TrackingFormData {
   google_search_console_code: string | null;
 }
 
+// Helper function to get the best available media format (prefer MediaObject)
+const getBestMediaFormat = (
+  mediaObject: MediaObject | null | undefined,
+  legacyFile: SiteConfigFile | null | undefined,
+): MediaObject | SiteConfigFile | null => {
+  // Prefer MediaObject format (new format)
+  if (mediaObject) {
+    return mediaObject;
+  }
+  // Fall back to legacy file format
+  if (legacyFile) {
+    return legacyFile;
+  }
+  return null;
+};
+
 // Combined form data for Identity & Settings tab
 const combinedFormData = ref<CombinedFormData>({
   site_name: props.config?.site_name || '',
@@ -113,9 +130,10 @@ const combinedFormData = ref<CombinedFormData>({
   admin_email: props.config?.admin_email || null,
   maintenance_mode: props.config?.maintenance_mode || false,
   user_registration_enabled: props.config?.user_registration_enabled ?? true,
-  logo: props.config?.files.logo || null,
-  favicon: props.config?.files.favicon || null,
-  og_image: props.config?.files.og_image || null,
+  // Prefer new MediaObject format, fall back to legacy files
+  logo: getBestMediaFormat(props.config?.logo, props.config?.files.logo),
+  favicon: getBestMediaFormat(props.config?.favicon, props.config?.files.favicon),
+  og_image: getBestMediaFormat(props.config?.og_image, props.config?.files.og_image),
   remove_logo: false,
   remove_favicon: false,
   remove_og_image: false,
@@ -141,9 +159,10 @@ watch(
         admin_email: newConfig.admin_email,
         maintenance_mode: newConfig.maintenance_mode,
         user_registration_enabled: newConfig.user_registration_enabled,
-        logo: newConfig.files.logo,
-        favicon: newConfig.files.favicon,
-        og_image: newConfig.files.og_image,
+        // Prefer new MediaObject format, fall back to legacy files
+        logo: getBestMediaFormat(newConfig.logo, newConfig.files.logo),
+        favicon: getBestMediaFormat(newConfig.favicon, newConfig.files.favicon),
+        og_image: getBestMediaFormat(newConfig.og_image, newConfig.files.og_image),
         remove_logo: false,
         remove_favicon: false,
         remove_og_image: false,
