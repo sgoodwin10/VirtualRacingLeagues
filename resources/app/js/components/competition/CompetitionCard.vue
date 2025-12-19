@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useConfirmDialog } from '@app/composables/useConfirmDialog';
@@ -49,6 +49,10 @@ const seasonStore = useSeasonStore();
 
 const vTooltip = Tooltip;
 
+// Toast duration constants
+const TOAST_SUCCESS_DURATION = 3000;
+const TOAST_ERROR_DURATION = 5000;
+
 // State
 const showSeasonDrawer = ref(false);
 const editingSeasonId = ref<number | null>(null);
@@ -73,11 +77,21 @@ const speedDialActions = computed<MenuItem[]>(() => [
 ]);
 
 // Sort seasons by created_at (most recent first)
+// Performance optimization: parse dates once and cache timestamps
 const sortedSeasons = computed(() => {
   if (!props.competition.seasons) return [];
-  return [...props.competition.seasons].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  );
+
+  // Create array with cached timestamps for sorting
+  const seasonsWithTimestamps = props.competition.seasons.map((season) => ({
+    season,
+    timestamp: new Date(season.created_at).getTime(),
+  }));
+
+  // Sort by timestamp (most recent first)
+  seasonsWithTimestamps.sort((a, b) => b.timestamp - a.timestamp);
+
+  // Return just the seasons
+  return seasonsWithTimestamps.map((item) => item.season);
 });
 
 const hasSeasons = computed(() => sortedSeasons.value.length > 0);
@@ -186,7 +200,19 @@ function handleSeasonSaved(): void {
   editingSeasonData.value = null;
 }
 
+function handleDrawerHide(): void {
+  // Reset editing state when drawer closes without saving
+  editingSeasonId.value = null;
+  editingSeasonData.value = null;
+}
+
 async function handleEditSeason(seasonId: number): Promise<void> {
+  // Race condition protection: prevent multiple edit operations
+  // Also check if drawer is already open to prevent rapid successive clicks
+  if (editingSeasonId.value !== null || showSeasonDrawer.value) {
+    return;
+  }
+
   try {
     editingSeasonId.value = seasonId;
     // Fetch full season data for editing
@@ -197,8 +223,11 @@ async function handleEditSeason(seasonId: number): Promise<void> {
       severity: 'error',
       summary: 'Error',
       detail: 'Failed to load season data',
-      life: 5000,
+      life: TOAST_ERROR_DURATION,
     });
+    // Reset editing state on error to allow retry
+    editingSeasonId.value = null;
+    editingSeasonData.value = null;
   }
 }
 
@@ -221,17 +250,17 @@ async function archiveSeason(seasonId: number): Promise<void> {
       severity: 'success',
       summary: 'Season Archived',
       detail: 'Season has been archived successfully',
-      life: 3000,
+      life: TOAST_SUCCESS_DURATION,
     });
   } catch {
     toast.add({
       severity: 'error',
       summary: 'Error',
       detail: 'Failed to archive season',
-      life: 5000,
+      life: TOAST_ERROR_DURATION,
     });
   } finally {
-    seasonOperations.value[seasonId] = false;
+    delete seasonOperations.value[seasonId];
   }
 }
 
@@ -254,17 +283,17 @@ async function unarchiveSeason(seasonId: number): Promise<void> {
       severity: 'success',
       summary: 'Season Restored',
       detail: 'Season has been unarchived successfully',
-      life: 3000,
+      life: TOAST_SUCCESS_DURATION,
     });
   } catch {
     toast.add({
       severity: 'error',
       summary: 'Error',
       detail: 'Failed to unarchive season',
-      life: 5000,
+      life: TOAST_ERROR_DURATION,
     });
   } finally {
-    seasonOperations.value[seasonId] = false;
+    delete seasonOperations.value[seasonId];
   }
 }
 
@@ -282,22 +311,23 @@ async function deleteSeason(seasonId: number): Promise<void> {
   seasonOperations.value[seasonId] = true;
 
   try {
-    await seasonStore.deleteExistingSeason(seasonId);
+    // Pass competition ID to ensure event is emitted even after page refresh
+    await seasonStore.deleteExistingSeason(seasonId, props.competition.id);
     toast.add({
       severity: 'success',
       summary: 'Season Deleted',
       detail: 'Season has been deleted successfully',
-      life: 3000,
+      life: TOAST_SUCCESS_DURATION,
     });
   } catch {
     toast.add({
       severity: 'error',
       summary: 'Error',
       detail: 'Failed to delete season',
-      life: 5000,
+      life: TOAST_ERROR_DURATION,
     });
   } finally {
-    seasonOperations.value[seasonId] = false;
+    delete seasonOperations.value[seasonId];
   }
 }
 
@@ -322,7 +352,7 @@ async function deleteCompetition(): Promise<void> {
       severity: 'success',
       summary: 'Success',
       detail: 'Competition deleted successfully',
-      life: 3000,
+      life: TOAST_SUCCESS_DURATION,
     });
     emit('delete', props.competition.id);
   } catch {
@@ -330,10 +360,15 @@ async function deleteCompetition(): Promise<void> {
       severity: 'error',
       summary: 'Error',
       detail: 'Failed to delete competition',
-      life: 5000,
+      life: TOAST_ERROR_DURATION,
     });
   }
 }
+
+// Cleanup: clear seasonOperations on unmount to prevent memory leaks
+onUnmounted(() => {
+  seasonOperations.value = {};
+});
 </script>
 
 <template>
@@ -396,13 +431,13 @@ async function deleteCompetition(): Promise<void> {
       <InfoItem
         v-if="competition.stats"
         :icon="PhFlag"
-        :text="'Seasons ' + competition.stats.total_seasons"
+        :text="'Seasons ' + (competition.stats?.total_seasons ?? 0)"
         centered
       />
       <InfoItem
         v-if="competition.stats"
         :icon="PhSteeringWheel"
-        :text="'Drivers ' + competition.stats.total_drivers"
+        :text="'Drivers ' + (competition.stats?.total_drivers ?? 0)"
         centered
       />
     </div>
@@ -471,29 +506,29 @@ async function deleteCompetition(): Promise<void> {
 
               <!-- Drivers -->
               <div
-                v-tooltip.top="'Drivers: ' + season.stats.driver_count"
+                v-tooltip.top="'Drivers: ' + (season.stats?.driver_count ?? 0)"
                 class="flex items-center gap-1 text-xs text-slate-600"
               >
                 <PhSteeringWheel :size="16" weight="regular" class="text-slate-400" />
-                <span>{{ season.stats.driver_count }}</span>
+                <span>{{ season.stats?.driver_count ?? 0 }}</span>
               </div>
 
               <!-- Rounds -->
               <div
-                v-tooltip.top="'Rounds: ' + season.stats.round_count"
+                v-tooltip.top="'Rounds: ' + (season.stats?.round_count ?? 0)"
                 class="flex items-center gap-1 text-xs text-slate-600"
               >
                 <PhCalendarBlank :size="16" weight="regular" class="text-slate-400" />
-                <span>{{ season.stats.round_count }}</span>
+                <span>{{ season.stats?.round_count ?? 0 }}</span>
               </div>
 
               <!-- Races -->
               <div
-                v-tooltip.top="'Races: ' + season.stats.race_count"
+                v-tooltip.top="'Races: ' + (season.stats?.race_count ?? 0)"
                 class="flex items-center gap-1 text-xs text-slate-600"
               >
                 <PhFlag :size="16" weight="regular" class="text-slate-400" />
-                <span>{{ season.stats.race_count }}</span>
+                <span>{{ season.stats?.race_count ?? 0 }}</span>
               </div>
             </div>
 
@@ -508,7 +543,7 @@ async function deleteCompetition(): Promise<void> {
                 :button-props="{ size: 'small', rounded: true, severity: 'secondary' }"
                 show-icon="pi pi-ellipsis-h"
                 hide-icon="pi pi-times"
-                :disabled="isSeasonLoading(season.id)"
+                :disabled="isSeasonLoading(season.id) || editingSeasonId !== null"
                 class="speeddial-season"
               />
             </div>
@@ -536,6 +571,7 @@ async function deleteCompetition(): Promise<void> {
       :season="editingSeasonData"
       :is-edit-mode="!!editingSeasonId"
       @season-saved="handleSeasonSaved"
+      @hide="handleDrawerHide"
     />
   </div>
 </template>

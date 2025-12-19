@@ -4,6 +4,7 @@
  */
 
 import { ref } from 'vue';
+import type { Ref } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import type { ConfirmationOptions } from 'primevue/confirmationoptions';
 
@@ -17,7 +18,7 @@ export interface ConfirmDialogOptions {
 }
 
 export interface UseConfirmDialogReturn {
-  isOpen: Readonly<typeof isOpen>;
+  isOpen: Ref<boolean>;
   showConfirmation: (options: ConfirmDialogOptions) => void;
 }
 
@@ -62,14 +63,18 @@ export function useConfirmDialog(): UseConfirmDialogReturn {
       header: options.header,
       icon: options.icon || 'pi pi-exclamation-triangle',
       acceptClass: options.acceptClass || 'p-button-danger',
-      accept: () => {
-        isOpen.value = false;
-        options.onAccept();
+      accept: async () => {
+        try {
+          await options.onAccept();
+        } finally {
+          isOpen.value = false;
+        }
       },
-      reject: () => {
-        isOpen.value = false;
-        if (options.onReject) {
-          options.onReject();
+      reject: async () => {
+        try {
+          await options.onReject?.();
+        } finally {
+          isOpen.value = false;
         }
       },
       onHide: () => {

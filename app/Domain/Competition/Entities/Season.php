@@ -95,7 +95,8 @@ final class Season
         // Validate business rule: cannot have teamsTotalDropRounds > 0 when teamsDropRounds is disabled
         if (!$teamsDropRounds && $teamsTotalDropRounds !== null && $teamsTotalDropRounds > 0) {
             throw new \InvalidArgumentException(
-                'Cannot set teams total drop rounds to a value greater than 0 when teams drop rounds feature is disabled'
+                'Cannot set teams total drop rounds to a value greater than 0 ' .
+                'when teams drop rounds feature is disabled'
             );
         }
 
@@ -206,11 +207,6 @@ final class Season
     public function id(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): void
-    {
-        $this->id = $id;
     }
 
     public function competitionId(): int
@@ -331,8 +327,10 @@ final class Season
         ?string $description,
         ?string $technicalSpecs,
     ): void {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         $changes = [];
@@ -372,7 +370,7 @@ final class Season
         if (!empty($changes)) {
             $this->updatedAt = new DateTimeImmutable();
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: $changes,
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -387,8 +385,10 @@ final class Season
      */
     public function updateBranding(?string $logoPath, ?string $bannerPath): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         $changes = [];
@@ -412,7 +412,7 @@ final class Season
         if (!empty($changes)) {
             $this->updatedAt = new DateTimeImmutable();
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: $changes,
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -427,8 +427,10 @@ final class Season
      */
     public function updateSlug(SeasonSlug $slug): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if (!$this->slug->equals($slug)) {
@@ -444,8 +446,10 @@ final class Season
      */
     public function enableTeamChampionship(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if (!$this->teamChampionshipEnabled) {
@@ -453,7 +457,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['team_championship_enabled' => ['old' => false, 'new' => true]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -468,8 +472,10 @@ final class Season
      */
     public function disableTeamChampionship(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if ($this->teamChampionshipEnabled) {
@@ -477,7 +483,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['team_championship_enabled' => ['old' => true, 'new' => false]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -492,8 +498,10 @@ final class Season
      */
     public function enableRaceDivisions(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if (!$this->raceDivisionsEnabled) {
@@ -501,7 +509,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['race_divisions_enabled' => ['old' => false, 'new' => true]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -516,8 +524,10 @@ final class Season
      */
     public function disableRaceDivisions(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if ($this->raceDivisionsEnabled) {
@@ -525,7 +535,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['race_divisions_enabled' => ['old' => true, 'new' => false]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -540,8 +550,10 @@ final class Season
      */
     public function enableRaceTimes(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if (!$this->raceTimesRequired) {
@@ -549,7 +561,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['race_times_required' => ['old' => false, 'new' => true]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -564,8 +576,10 @@ final class Season
      */
     public function disableRaceTimes(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if ($this->raceTimesRequired) {
@@ -573,7 +587,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['race_times_required' => ['old' => true, 'new' => false]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -588,8 +602,10 @@ final class Season
      */
     public function enableDropRound(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if (!$this->dropRound) {
@@ -597,7 +613,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['drop_round' => ['old' => false, 'new' => true]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -613,8 +629,10 @@ final class Season
      */
     public function disableDropRound(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if ($this->dropRound) {
@@ -631,7 +649,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: $changes,
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -647,8 +665,10 @@ final class Season
      */
     public function updateTotalDropRounds(int $totalDropRounds): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         // Validate business rule: cannot set totalDropRounds > 0 when drop round is disabled
@@ -665,7 +685,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['total_drop_rounds' => ['old' => $oldTotal, 'new' => $totalDropRounds]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -680,8 +700,10 @@ final class Season
      */
     public function updateTeamsDriversForCalculation(?int $count): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if ($this->teamsDriversForCalculation !== $count) {
@@ -690,7 +712,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['teams_drivers_for_calculation' => ['old' => $oldCount, 'new' => $count]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -705,8 +727,10 @@ final class Season
      */
     public function enableTeamsDropRounds(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if (!$this->teamsDropRounds) {
@@ -714,7 +738,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['teams_drop_rounds' => ['old' => false, 'new' => true]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -730,8 +754,10 @@ final class Season
      */
     public function disableTeamsDropRounds(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         if ($this->teamsDropRounds) {
@@ -748,7 +774,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: $changes,
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -764,15 +790,17 @@ final class Season
      */
     public function updateTeamsTotalDropRounds(?int $totalDropRounds): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
-            throw SeasonIsArchivedException::withId($this->id ?? 0);
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         // Validate business rule: cannot set teamsTotalDropRounds > 0 when teams drop rounds is disabled
         if (!$this->teamsDropRounds && $totalDropRounds !== null && $totalDropRounds > 0) {
             throw new \InvalidArgumentException(
-                'Cannot set teams total drop rounds to a value greater than 0 when teams drop rounds feature is disabled. ' .
-                'Enable teams drop rounds first.'
+                'Cannot set teams total drop rounds to a value greater than 0 ' .
+                'when teams drop rounds feature is disabled. Enable teams drop rounds first.'
             );
         }
 
@@ -782,7 +810,7 @@ final class Season
             $this->updatedAt = new DateTimeImmutable();
 
             $this->recordEvent(new SeasonUpdated(
-                seasonId: $this->id ?? 0,
+                seasonId: $this->id,
                 competitionId: $this->competitionId,
                 changes: ['teams_total_drop_rounds' => ['old' => $oldTotal, 'new' => $totalDropRounds]],
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -792,11 +820,20 @@ final class Season
 
     /**
      * Change season status.
+     *
+     * @throws SeasonIsArchivedException if season is archived and not restoring
      */
     public function changeStatus(SeasonStatus $newStatus): void
     {
+        $this->ensureHasId();
+
         if ($this->status === $newStatus) {
             return;
+        }
+
+        // Prevent changing status of archived seasons unless we're restoring (moving from archived to another status)
+        if ($this->status->isArchived() && $newStatus->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id);
         }
 
         $oldStatus = $this->status;
@@ -804,7 +841,7 @@ final class Season
         $this->updatedAt = new DateTimeImmutable();
 
         $this->recordEvent(new SeasonStatusChanged(
-            seasonId: $this->id ?? 0,
+            seasonId: $this->id,
             competitionId: $this->competitionId,
             oldStatus: $oldStatus->value,
             newStatus: $newStatus->value,
@@ -833,6 +870,8 @@ final class Season
      */
     public function archive(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
             return; // Already archived
         }
@@ -841,7 +880,7 @@ final class Season
         $this->updatedAt = new DateTimeImmutable();
 
         $this->recordEvent(new SeasonArchived(
-            seasonId: $this->id ?? 0,
+            seasonId: $this->id,
             competitionId: $this->competitionId,
             occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
         ));
@@ -849,15 +888,17 @@ final class Season
 
     /**
      * Restore from archived status.
-     * Restores to completed status.
+     * By default restores to completed status, but can specify a target status.
+     *
+     * @param SeasonStatus|null $targetStatus The status to restore to (default: COMPLETED)
      */
-    public function restore(): void
+    public function restore(?SeasonStatus $targetStatus = null): void
     {
         if (!$this->status->isArchived()) {
             return; // Not archived
         }
 
-        $this->changeStatus(SeasonStatus::COMPLETED);
+        $this->changeStatus($targetStatus ?? SeasonStatus::COMPLETED);
     }
 
     /**
@@ -865,6 +906,8 @@ final class Season
      */
     public function delete(): void
     {
+        $this->ensureHasId();
+
         if ($this->deletedAt !== null) {
             return; // Already deleted
         }
@@ -873,7 +916,7 @@ final class Season
         $this->updatedAt = $this->deletedAt;
 
         $this->recordEvent(new SeasonDeleted(
-            seasonId: $this->id ?? 0,
+            seasonId: $this->id,
             competitionId: $this->competitionId,
             occurredAt: $this->deletedAt->format('Y-m-d H:i:s'),
         ));
@@ -907,6 +950,22 @@ final class Season
     }
 
     // Domain Events Management
+
+    /**
+     * Ensure the entity has been persisted and has an ID.
+     *
+     * @throws \LogicException if entity has no ID
+     * @phpstan-assert !null $this->id
+     */
+    private function ensureHasId(): void
+    {
+        if ($this->id === null) {
+            throw new \LogicException(
+                'Cannot perform this operation on an unpersisted entity. ' .
+                'The entity must be saved to the database first.'
+            );
+        }
+    }
 
     /**
      * Record a domain event.

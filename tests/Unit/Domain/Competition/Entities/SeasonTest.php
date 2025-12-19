@@ -14,6 +14,18 @@ use PHPUnit\Framework\TestCase;
 
 final class SeasonTest extends TestCase
 {
+    /**
+     * Helper method to set ID on a Season entity using reflection.
+     * This is needed for testing since the entity doesn't expose a public setter.
+     */
+    private function setSeasonId(Season $season, int $id): void
+    {
+        $reflection = new \ReflectionClass($season);
+        $property = $reflection->getProperty('id');
+        $property->setAccessible(true);
+        $property->setValue($season, $id);
+    }
+
     public function test_can_create_season(): void
     {
         $season = Season::create(
@@ -68,6 +80,7 @@ final class SeasonTest extends TestCase
             slug: SeasonSlug::from('season-1'),
             createdByUserId: 1,
         );
+        $this->setSeasonId($season, 1);
 
         $season->updateDetails(
             SeasonName::from('Season 1 Updated'),
@@ -92,7 +105,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->archive();
 
         $this->expectException(SeasonIsArchivedException::class);
@@ -113,6 +126,7 @@ final class SeasonTest extends TestCase
             slug: SeasonSlug::from('season-1'),
             createdByUserId: 1,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertFalse($season->teamChampionshipEnabled());
 
@@ -130,6 +144,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             teamChampionshipEnabled: true,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertTrue($season->teamChampionshipEnabled());
 
@@ -146,6 +161,7 @@ final class SeasonTest extends TestCase
             slug: SeasonSlug::from('season-1'),
             createdByUserId: 1,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertTrue($season->isSetup());
 
@@ -163,6 +179,7 @@ final class SeasonTest extends TestCase
             slug: SeasonSlug::from('season-1'),
             createdByUserId: 1,
         );
+        $this->setSeasonId($season, 1);
 
         $season->activate();
         $season->complete();
@@ -180,7 +197,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->archive();
 
         $this->assertTrue($season->isArchived());
@@ -196,7 +213,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->complete();
         $season->archive();
         $season->restore();
@@ -214,7 +231,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
 
         $this->assertFalse($season->isDeleted());
 
@@ -232,6 +249,7 @@ final class SeasonTest extends TestCase
             slug: SeasonSlug::from('season-1'),
             createdByUserId: 1,
         );
+        $this->setSeasonId($season, 1);
 
         $season->updateBranding('logos/season1.png', 'banners/season1.jpg');
 
@@ -248,7 +266,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->activate();
 
         $this->assertTrue($season->hasEvents());
@@ -268,6 +286,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             raceTimesRequired: false,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertFalse($season->raceTimesRequired());
 
@@ -286,6 +305,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             raceTimesRequired: true,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertTrue($season->raceTimesRequired());
 
@@ -305,7 +325,7 @@ final class SeasonTest extends TestCase
             raceTimesRequired: false,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->archive();
 
         $this->expectException(SeasonIsArchivedException::class);
@@ -323,7 +343,7 @@ final class SeasonTest extends TestCase
             raceTimesRequired: true,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->archive();
 
         $this->expectException(SeasonIsArchivedException::class);
@@ -341,7 +361,7 @@ final class SeasonTest extends TestCase
             teamChampionshipEnabled: false,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->archive();
 
         $this->expectException(SeasonIsArchivedException::class);
@@ -359,7 +379,7 @@ final class SeasonTest extends TestCase
             teamChampionshipEnabled: true,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->archive();
 
         $this->expectException(SeasonIsArchivedException::class);
@@ -377,7 +397,7 @@ final class SeasonTest extends TestCase
             raceDivisionsEnabled: false,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->archive();
 
         $this->expectException(SeasonIsArchivedException::class);
@@ -395,7 +415,7 @@ final class SeasonTest extends TestCase
             raceDivisionsEnabled: true,
         );
 
-        $season->setId(1);
+        $this->setSeasonId($season, 1);
         $season->archive();
 
         $this->expectException(SeasonIsArchivedException::class);
@@ -412,6 +432,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             dropRound: false,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertFalse($season->hasDropRound());
 
@@ -431,6 +452,7 @@ final class SeasonTest extends TestCase
             dropRound: true,
             totalDropRounds: 2,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertTrue($season->hasDropRound());
         $this->assertEquals(2, $season->getTotalDropRounds());
@@ -452,6 +474,7 @@ final class SeasonTest extends TestCase
             dropRound: true,
             totalDropRounds: 3,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertEquals(3, $season->getTotalDropRounds());
 
@@ -469,6 +492,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             dropRound: true,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertEquals(0, $season->getTotalDropRounds());
 
@@ -487,6 +511,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             dropRound: false,
         );
+        $this->setSeasonId($season, 1);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage(
@@ -537,6 +562,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             dropRound: false,
         );
+        $this->setSeasonId($season, 1);
 
         // Setting to 0 should always be allowed
         $season->updateTotalDropRounds(0);
@@ -554,6 +580,7 @@ final class SeasonTest extends TestCase
             slug: SeasonSlug::from('season-1'),
             createdByUserId: 1,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertNull($season->getTeamsDriversForCalculation());
 
@@ -572,6 +599,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             teamsDriversForCalculation: 3,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertEquals(3, $season->getTeamsDriversForCalculation());
 
@@ -589,6 +617,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             teamsDropRounds: false,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertFalse($season->hasTeamsDropRounds());
 
@@ -608,6 +637,7 @@ final class SeasonTest extends TestCase
             teamsDropRounds: true,
             teamsTotalDropRounds: 2,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertTrue($season->hasTeamsDropRounds());
         $this->assertEquals(2, $season->getTeamsTotalDropRounds());
@@ -629,6 +659,7 @@ final class SeasonTest extends TestCase
             teamsDropRounds: true,
             teamsTotalDropRounds: 3,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertEquals(3, $season->getTeamsTotalDropRounds());
 
@@ -646,6 +677,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             teamsDropRounds: true,
         );
+        $this->setSeasonId($season, 1);
 
         $this->assertNull($season->getTeamsTotalDropRounds());
 
@@ -664,6 +696,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             teamsDropRounds: false,
         );
+        $this->setSeasonId($season, 1);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage(
@@ -714,6 +747,7 @@ final class SeasonTest extends TestCase
             createdByUserId: 1,
             teamsDropRounds: false,
         );
+        $this->setSeasonId($season, 1);
 
         // Setting to null should always be allowed
         $season->updateTeamsTotalDropRounds(null);

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PhGameController, PhMapPinArea, PhSteeringWheel, PhTrophy } from '@phosphor-icons/vue';
 import InfoItem from '@app/components/common/InfoItem.vue';
-import type { League } from '@app/types/league';
+import type { League, Platform } from '@app/types/league';
 
 interface Props {
   league: League;
@@ -10,15 +10,20 @@ interface Props {
 defineProps<Props>();
 
 function getPlatformNames(league: League): string {
-  if (!league.platforms || league.platforms.length === 0) {
+  if (!league.platforms) {
     return 'No platforms';
   }
 
-  if (league.platforms.length <= 2) {
-    return league.platforms.map((p) => p.name).join(', ');
+  // Ensure platforms is an array (handle edge case where it might be an object)
+  const platformsArray = Array.isArray(league.platforms)
+    ? league.platforms
+    : (Object.values(league.platforms) as Platform[]);
+
+  if (platformsArray.length === 0) {
+    return 'No platforms';
   }
 
-  return league.platforms.map((p) => p.name).join(', ');
+  return platformsArray.map((p) => p.name).join(', ');
 }
 
 function getCompetitionText(count: number): string {

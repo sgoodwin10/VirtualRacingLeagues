@@ -98,11 +98,14 @@ interface SeasonRepositoryInterface
     public function getSeasonsWithStatsForCompetition(int $competitionId): array;
 
     /**
-     * Get the Eloquent model for a season by ID.
-     * Used for media operations that require the Eloquent model.
+     * Batch get all seasons with statistics for multiple competitions.
+     * Returns seasons ordered by most recent first (latest created_at).
      *
-     * @return \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent
-     * @throws SeasonNotFoundException
+     * @param array<int> $competitionIds
+     * @return array<int, array<array{
+     *     season: Season,
+     *     stats: array{driver_count: int, round_count: int, race_count: int}
+     * }>>
      */
-    public function getEloquentModel(int $id): \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
+    public function getBatchSeasonsWithStatsForCompetitions(array $competitionIds): array;
 }

@@ -23,6 +23,11 @@ import {
 } from '@app/services/competitionService';
 import { useStoreEvents } from '@app/composables/useStoreEvents';
 import { useCrudStore } from '@app/composables/useCrudStore';
+import { getErrorMessage } from '@app/types/errors';
+
+// Import EventHandler type from useStoreEvents for compatibility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type EventHandler = (...args: any[]) => void;
 
 export const useCompetitionStore = defineStore('competition', () => {
   // Use CRUD composable for competition management
@@ -44,59 +49,84 @@ export const useCompetitionStore = defineStore('competition', () => {
   } = crud;
 
   // Set up event listeners for season events with cleanup
+  // Using a flag to ensure event handlers are only registered once per store instance
   const events = useStoreEvents();
+  let listenersRegistered = false;
 
-  // Store event handlers for cleanup
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handlers = new Map<string, (...args: any[]) => void>();
+  // Track all registered handlers so we can clean them up properly
+  const registeredHandlers = new Map<string, EventHandler[]>();
 
-  // Helper to register event handler with cleanup tracking
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function registerEventHandler(event: string, handler: (...args: any[]) => void): void {
-    events.on(event, handler);
-    handlers.set(event, handler);
+  /**
+   * Register event listeners for season events
+   * This function is idempotent - it will only register listeners once
+   */
+  function setupEventListeners(): void {
+    if (listenersRegistered) {
+      return;
+    }
+
+    // Define all event handlers
+    const seasonCreatedHandler = (competitionId: number, season: CompetitionSeason) => {
+      addSeasonToCompetition(competitionId, season);
+    };
+    const seasonUpdatedHandler = (competitionId: number, season: CompetitionSeason) => {
+      updateSeasonInCompetition(competitionId, season);
+    };
+    const seasonDeletedHandler = (competitionId: number, seasonId: number) => {
+      removeSeasonFromCompetition(competitionId, seasonId);
+    };
+    const seasonArchivedHandler = (competitionId: number, season: CompetitionSeason) => {
+      updateSeasonInCompetition(competitionId, season);
+    };
+    const seasonUnarchivedHandler = (competitionId: number, season: CompetitionSeason) => {
+      updateSeasonInCompetition(competitionId, season);
+    };
+    const seasonActivatedHandler = (competitionId: number, season: CompetitionSeason) => {
+      updateSeasonInCompetition(competitionId, season);
+    };
+    const seasonCompletedHandler = (competitionId: number, season: CompetitionSeason) => {
+      updateSeasonInCompetition(competitionId, season);
+    };
+    const seasonRestoredHandler = (competitionId: number, season: CompetitionSeason) => {
+      addSeasonToCompetition(competitionId, season);
+    };
+
+    // Register all season event handlers
+    events.on('season:created', seasonCreatedHandler);
+    events.on('season:updated', seasonUpdatedHandler);
+    events.on('season:deleted', seasonDeletedHandler);
+    events.on('season:archived', seasonArchivedHandler);
+    events.on('season:unarchived', seasonUnarchivedHandler);
+    events.on('season:activated', seasonActivatedHandler);
+    events.on('season:completed', seasonCompletedHandler);
+    events.on('season:restored', seasonRestoredHandler);
+
+    // Store references to all handlers for cleanup
+    registeredHandlers.set('season:created', [seasonCreatedHandler]);
+    registeredHandlers.set('season:updated', [seasonUpdatedHandler]);
+    registeredHandlers.set('season:deleted', [seasonDeletedHandler]);
+    registeredHandlers.set('season:archived', [seasonArchivedHandler]);
+    registeredHandlers.set('season:unarchived', [seasonUnarchivedHandler]);
+    registeredHandlers.set('season:activated', [seasonActivatedHandler]);
+    registeredHandlers.set('season:completed', [seasonCompletedHandler]);
+    registeredHandlers.set('season:restored', [seasonRestoredHandler]);
+
+    listenersRegistered = true;
+
+    // Clean up only this store's event listeners when store scope is disposed
+    onScopeDispose(() => {
+      registeredHandlers.forEach((handlers, eventName) => {
+        handlers.forEach((handler) => {
+          events.off(eventName, handler);
+        });
+      });
+      registeredHandlers.clear();
+      listenersRegistered = false;
+    });
   }
 
-  // Register all season event handlers
-  registerEventHandler('season:created', (competitionId: number, season: CompetitionSeason) => {
-    addSeasonToCompetition(competitionId, season);
-  });
-
-  registerEventHandler('season:updated', (competitionId: number, season: CompetitionSeason) => {
-    updateSeasonInCompetition(competitionId, season);
-  });
-
-  registerEventHandler('season:deleted', (competitionId: number, seasonId: number) => {
-    removeSeasonFromCompetition(competitionId, seasonId);
-  });
-
-  registerEventHandler('season:archived', (competitionId: number, season: CompetitionSeason) => {
-    updateSeasonInCompetition(competitionId, season);
-  });
-
-  registerEventHandler('season:unarchived', (competitionId: number, season: CompetitionSeason) => {
-    updateSeasonInCompetition(competitionId, season);
-  });
-
-  registerEventHandler('season:activated', (competitionId: number, season: CompetitionSeason) => {
-    updateSeasonInCompetition(competitionId, season);
-  });
-
-  registerEventHandler('season:completed', (competitionId: number, season: CompetitionSeason) => {
-    updateSeasonInCompetition(competitionId, season);
-  });
-
-  registerEventHandler('season:restored', (competitionId: number, season: CompetitionSeason) => {
-    addSeasonToCompetition(competitionId, season);
-  });
-
-  // Clean up event listeners when store scope is disposed
-  onScopeDispose(() => {
-    handlers.forEach((handler, event) => {
-      events.off(event, handler);
-    });
-    handlers.clear();
-  });
+  // Register listeners immediately
+  setupEventListeners();
 
   // Getters
   const activeCompetitions = computed(() => competitions.value.filter((c) => c.is_active));
@@ -109,10 +139,8 @@ export const useCompetitionStore = defineStore('competition', () => {
       if (!grouped[comp.platform_id]) {
         grouped[comp.platform_id] = [];
       }
-      const platformGroup = grouped[comp.platform_id];
-      if (platformGroup) {
-        platformGroup.push(comp);
-      }
+      // Non-null assertion: platformGroup will always exist after the check above
+      grouped[comp.platform_id]!.push(comp);
     });
     return grouped;
   });
@@ -130,7 +158,7 @@ export const useCompetitionStore = defineStore('competition', () => {
       const fetchedCompetitions = await getLeagueCompetitions(leagueId, filters);
       setItems(fetchedCompetitions);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load competitions';
+      const errorMessage = getErrorMessage(err, 'Failed to load competitions');
       setError(errorMessage);
       throw err;
     } finally {
@@ -150,7 +178,7 @@ export const useCompetitionStore = defineStore('competition', () => {
       setCurrentItem(competition);
       return competition;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load competition';
+      const errorMessage = getErrorMessage(err, 'Failed to load competition');
       setError(errorMessage);
       throw err;
     } finally {
@@ -188,7 +216,7 @@ export const useCompetitionStore = defineStore('competition', () => {
       setCurrentItem(competition);
       return competition;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create competition';
+      const errorMessage = getErrorMessage(err, 'Failed to create competition');
       setError(errorMessage);
       throw err;
     } finally {
@@ -223,7 +251,7 @@ export const useCompetitionStore = defineStore('competition', () => {
       updateItemInList(updatedCompetition);
       return updatedCompetition;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update competition';
+      const errorMessage = getErrorMessage(err, 'Failed to update competition');
       setError(errorMessage);
       throw err;
     } finally {
@@ -241,26 +269,20 @@ export const useCompetitionStore = defineStore('competition', () => {
     try {
       await archiveCompetition(id);
 
-      // Update local state
-      const index = competitions.value.findIndex((c) => c.id === id);
-      if (index !== -1) {
-        const comp = competitions.value[index];
-        if (comp) {
-          comp.is_archived = true;
-          comp.is_active = false;
-          comp.status = 'archived';
-          comp.archived_at = new Date().toISOString();
-        }
-      }
-
-      if (currentCompetition.value?.id === id) {
-        currentCompetition.value.is_archived = true;
-        currentCompetition.value.is_active = false;
-        currentCompetition.value.status = 'archived';
-        currentCompetition.value.archived_at = new Date().toISOString();
+      // Update local state using updateItemInList for consistency
+      const comp = competitions.value.find((c) => c.id === id);
+      if (comp) {
+        const updatedComp: Competition = {
+          ...comp,
+          is_archived: true,
+          is_active: false,
+          status: 'archived',
+          archived_at: new Date().toISOString(),
+        };
+        updateItemInList(updatedComp);
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to archive competition';
+      const errorMessage = getErrorMessage(err, 'Failed to archive competition');
       setError(errorMessage);
       throw err;
     } finally {
@@ -279,7 +301,7 @@ export const useCompetitionStore = defineStore('competition', () => {
       await deleteCompetition(id);
       removeItemFromList(id);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete competition';
+      const errorMessage = getErrorMessage(err, 'Failed to delete competition');
       setError(errorMessage);
       throw err;
     } finally {
@@ -299,19 +321,38 @@ export const useCompetitionStore = defineStore('competition', () => {
    * This is called when a season is created to update the local competition state
    */
   function addSeasonToCompetition(competitionId: number, season: CompetitionSeason): void {
+    // Update competition in the list
     const competition = competitions.value.find((c) => c.id === competitionId);
     if (competition) {
       if (!competition.seasons) {
         competition.seasons = [];
       }
-      competition.seasons.push(season);
 
-      // Update stats
-      competition.stats.total_seasons += 1;
+      // Validate season doesn't already exist before adding
+      const seasonExists = competition.seasons.some((s) => s.id === season.id);
+      if (!seasonExists) {
+        competition.seasons.push(season);
+
+        // Increment total_seasons count and reassign entire stats object to ensure reactivity
+        // We increment rather than using array length because the backend stats may differ
+        // from the locally loaded seasons (e.g., pagination, lazy loading)
+        if (competition.stats) {
+          competition.stats = {
+            ...competition.stats,
+            total_seasons: (competition.stats.total_seasons || 0) + 1,
+          };
+        }
+      }
+
+      // If currentCompetition points to the same object reference, we're done
+      // No need to update it separately as they share the same reference
+      if (currentCompetition.value === competition) {
+        return;
+      }
     }
 
-    // Also update currentCompetition if it matches AND it's a different object reference
-    // (to avoid duplicate additions when currentCompetition is the same reference as the one in competitions array)
+    // Only update currentCompetition if it's a DIFFERENT object reference
+    // This prevents duplicate additions when both point to the same object
     if (
       currentCompetition.value?.id === competitionId &&
       currentCompetition.value !== competition
@@ -319,8 +360,18 @@ export const useCompetitionStore = defineStore('competition', () => {
       if (!currentCompetition.value.seasons) {
         currentCompetition.value.seasons = [];
       }
-      currentCompetition.value.seasons.push(season);
-      currentCompetition.value.stats.total_seasons += 1;
+
+      // Validate season doesn't already exist before adding
+      const seasonExists = currentCompetition.value.seasons.some((s) => s.id === season.id);
+      if (!seasonExists) {
+        currentCompetition.value.seasons.push(season);
+        if (currentCompetition.value.stats) {
+          currentCompetition.value.stats = {
+            ...currentCompetition.value.stats,
+            total_seasons: (currentCompetition.value.stats.total_seasons || 0) + 1,
+          };
+        }
+      }
     }
   }
 
@@ -333,7 +384,8 @@ export const useCompetitionStore = defineStore('competition', () => {
     if (competition?.seasons) {
       const index = competition.seasons.findIndex((s) => s.id === season.id);
       if (index !== -1) {
-        competition.seasons[index] = season;
+        // Use splice for guaranteed reactivity
+        competition.seasons.splice(index, 1, season);
       }
     }
 
@@ -345,7 +397,8 @@ export const useCompetitionStore = defineStore('competition', () => {
     ) {
       const index = currentCompetition.value.seasons.findIndex((s) => s.id === season.id);
       if (index !== -1) {
-        currentCompetition.value.seasons[index] = season;
+        // Use splice for guaranteed reactivity
+        currentCompetition.value.seasons.splice(index, 1, season);
       }
     }
   }
@@ -357,8 +410,16 @@ export const useCompetitionStore = defineStore('competition', () => {
   function removeSeasonFromCompetition(competitionId: number, seasonId: number): void {
     const competition = competitions.value.find((c) => c.id === competitionId);
     if (competition?.seasons) {
+      // Filter out the deleted season (creates new array reference for better reactivity)
       competition.seasons = competition.seasons.filter((s) => s.id !== seasonId);
-      competition.stats.total_seasons = Math.max(0, competition.stats.total_seasons - 1);
+      // Derive stats from actual data instead of manual decrement
+      // Reassign entire stats object to ensure reactivity
+      if (competition.stats) {
+        competition.stats = {
+          ...competition.stats,
+          total_seasons: competition.seasons.length,
+        };
+      }
     }
 
     // Also update currentCompetition if it matches AND it's a different object reference
@@ -370,10 +431,12 @@ export const useCompetitionStore = defineStore('competition', () => {
       currentCompetition.value.seasons = currentCompetition.value.seasons.filter(
         (s) => s.id !== seasonId,
       );
-      currentCompetition.value.stats.total_seasons = Math.max(
-        0,
-        currentCompetition.value.stats.total_seasons - 1,
-      );
+      if (currentCompetition.value.stats) {
+        currentCompetition.value.stats = {
+          ...currentCompetition.value.stats,
+          total_seasons: currentCompetition.value.seasons.length,
+        };
+      }
     }
   }
 

@@ -99,7 +99,7 @@ parameters:
             message: '#(Access to an undefined property|Call to an undefined method|Call to an undefined static method) .+(Model|Competition|Driver|League|Platform|PlatformTrack|Season|User|Admin|Request|Team|SeasonDriver|LeagueDriver|SiteConfigModel|SiteConfigFileModel|PlatformTrackLocation|LeagueDriverEloquent|SeasonDriverEloquent)::#'
         # Eloquent models query builder methods (instance and static)
         -
-            message: '#Call to an undefined (method|static method) (App\\Infrastructure\\Persistence\\Eloquent\\Models\\)?(UserEloquent|AdminEloquent|Competition|Driver|League|Platform|PlatformTrack|SeasonDriverEloquent|LeagueDriverEloquent|SiteConfigModel)(\|.+Builder.+)?::(find|findOrFail|get|paginate|count|whereIn|where|orderBy|latest|first|exists)#'
+            message: '#Call to an undefined (method|static method) (App\\Infrastructure\\Persistence\\Eloquent\\Models\\)?(UserEloquent|AdminEloquent|Competition|Driver|League|Platform|PlatformTrack|SeasonDriverEloquent|LeagueDriverEloquent|SeasonEloquent|SiteConfigModel)(\|.+Builder.+)?::(find|findOrFail|get|paginate|count|whereIn|where|orderBy|latest|first|exists)#'
         # Laravel Schema facade connection method
         -
             message: '#Call to an undefined static method Illuminate\\Support\\Facades\\Schema::connection\(\)#'
@@ -205,3 +205,7 @@ parameters:
         -
             message: '#Generic type .+ in PHPDoc tag @return does not specify all template types of class#'
             path: app/Infrastructure/Persistence/Eloquent/Models/*
+        # Spatie Media Library trait methods
+        -
+            message: '#Call to an undefined method Spatie\\MediaLibrary\\HasMedia::(getFirstMedia|addMedia|clearMediaCollection)\(\)#'
+            path: app/Infrastructure/Media/*

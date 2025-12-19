@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use App\Domain\Competition\ValueObjects\CompetitionStatus;
 use App\Infrastructure\Persistence\Eloquent\Traits\HasMediaCollections;
 use Database\Factories\CompetitionFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -12,7 +13,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 
@@ -34,7 +34,6 @@ use Spatie\MediaLibrary\HasMedia;
  * @property \Illuminate\Support\Carbon|null $archived_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read string|null $logo_url
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\League $league
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\Platform $platform
@@ -44,13 +43,11 @@ use Spatie\MediaLibrary\HasMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition forLeague(int $leagueId)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereArchivedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereCompetitionColour($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereCreatedByUserId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereLeagueId($value)
@@ -60,13 +57,10 @@ use Spatie\MediaLibrary\HasMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition withTrashed(bool $withTrashed = true)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition withoutTrashed()
  */
 class Competition extends Model implements HasMedia
 {
     use HasFactory;
-    use SoftDeletes;
     use HasMediaCollections;
 
     /**
@@ -100,7 +94,6 @@ class Competition extends Model implements HasMedia
         'archived_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
     ];
 
     // Relationships
@@ -146,26 +139,28 @@ class Competition extends Model implements HasMedia
      * @param \Illuminate\Database\Eloquent\Builder<Competition> $query
      * @return \Illuminate\Database\Eloquent\Builder<Competition>
      */
-    public function scopeActive($query)
+    public function scopeActive(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
-        return $query->where('status', 'active');
+        return $query->where('status', CompetitionStatus::ACTIVE->value);
     }
 
     /**
      * @param \Illuminate\Database\Eloquent\Builder<Competition> $query
      * @return \Illuminate\Database\Eloquent\Builder<Competition>
      */
-    public function scopeArchived($query)
+    public function scopeArchived(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
-        return $query->where('status', 'archived');
+        return $query->where('status', CompetitionStatus::ARCHIVED->value);
     }
 
     /**
      * @param \Illuminate\Database\Eloquent\Builder<Competition> $query
      * @return \Illuminate\Database\Eloquent\Builder<Competition>
      */
-    public function scopeForLeague($query, int $leagueId)
-    {
+    public function scopeForLeague(
+        \Illuminate\Database\Eloquent\Builder $query,
+        int $leagueId
+    ): \Illuminate\Database\Eloquent\Builder {
         return $query->where('league_id', $leagueId);
     }
 
@@ -192,6 +187,6 @@ class Competition extends Model implements HasMedia
     {
         $this->addMediaCollection('logo')
             ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
     }
 }

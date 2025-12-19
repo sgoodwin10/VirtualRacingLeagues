@@ -11,6 +11,8 @@ use App\Domain\Competition\ValueObjects\CompetitionName;
 use App\Domain\Competition\ValueObjects\CompetitionSlug;
 use App\Domain\Competition\ValueObjects\CompetitionStatus;
 use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionModel;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Eloquent implementation of CompetitionRepositoryInterface.
@@ -20,56 +22,70 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
 {
     public function save(Competition $competition): void
     {
-        $data = $this->mapToEloquent($competition);
-        $model = CompetitionModel::create($data);
+        DB::transaction(function () use ($competition): void {
+            $data = $this->mapToEloquent($competition);
 
-        // Set ID on entity using reflection (needed for events)
-        $this->setEntityId($competition, $model->id);
+            // If entity has an ID, update existing record
+            if ($competition->id() !== null) {
+                CompetitionModel::where('id', $competition->id())->update($data);
+            } else {
+                // If no ID, create new record and set ID on entity
+                $model = CompetitionModel::create($data);
+                $this->setEntityId($competition, $model->id);
+            }
+        });
     }
 
     public function update(Competition $competition): void
     {
-        $data = $this->mapToEloquent($competition);
+        DB::transaction(function () use ($competition): void {
+            $competitionId = $competition->id();
 
-        CompetitionModel::where('id', $competition->id())->update($data);
+            if ($competitionId === null) {
+                throw new \InvalidArgumentException('Cannot update competition without an ID');
+            }
+
+            $data = $this->mapToEloquent($competition);
+
+            CompetitionModel::where('id', $competitionId)->update($data);
+        });
     }
 
     public function delete(Competition $competition): void
     {
-        $competitionId = $competition->id();
+        DB::transaction(function () use ($competition): void {
+            $competitionId = $competition->id();
 
-        // Cascade soft delete: First delete all seasons, which will cascade to rounds
-        $seasons = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
-            ->where('competition_id', $competitionId)
-            ->get();
+            // Get all season IDs first
+            $seasonIds = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
+                ->where('competition_id', $competitionId)
+                ->pluck('id');
 
-        foreach ($seasons as $season) {
-            // Soft delete all rounds for this season
-            \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
-                ->where('season_id', $season->id)
-                ->delete();
+            // Bulk delete rounds for all seasons (force delete to bypass soft deletes)
+            if ($seasonIds->isNotEmpty()) {
+                /** @phpstan-ignore method.notFound (forceDelete exists on SoftDeletes models) */
+                \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
+                    ->whereIn('season_id', $seasonIds)
+                    ->forceDelete();
+            }
 
-            // Soft delete the season
-            $season->delete();
-        }
+            // Bulk delete seasons (force delete to bypass soft deletes)
+            \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
+                ->where('competition_id', $competitionId)
+                ->forceDelete();
 
-        // Finally, soft delete the competition itself
-        CompetitionModel::where('id', $competitionId)->delete();
+            // Delete the competition itself (regular delete as it doesn't use SoftDeletes)
+            CompetitionModel::where('id', $competitionId)->delete();
+        });
     }
 
     public function findById(int $id): Competition
     {
         /** @var CompetitionModel|null $model */
-        $model = CompetitionModel::withTrashed()
-            ->with('platform')
-            ->withCount([
-                'seasons as total_seasons',
-                'seasons as active_seasons' => function ($query): void {
-                    $query->where('status', 'active');
-                },
-                'seasonDrivers as total_drivers',
-            ])
-            ->find($id);
+        $model = $this->applyDefaultIncludes(
+            /** @phpstan-ignore-next-line */
+            CompetitionModel::query()
+        )->find($id);
 
         if (!$model) {
             throw CompetitionNotFoundException::withId($id);
@@ -80,17 +96,10 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
 
     public function findBySlug(string $slug, int $leagueId): Competition
     {
-        $model = CompetitionModel::where('slug', $slug)
-            ->where('league_id', $leagueId)
-            ->with('platform')
-            ->withCount([
-                'seasons as total_seasons',
-                'seasons as active_seasons' => function ($query): void {
-                    $query->where('status', 'active');
-                },
-                'seasonDrivers as total_drivers',
-            ])
-            ->first();
+        $model = $this->applyDefaultIncludes(
+            CompetitionModel::where('slug', $slug)
+                ->where('league_id', $leagueId)
+        )->first();
 
         if (!$model) {
             throw CompetitionNotFoundException::withSlug($slug, $leagueId);
@@ -104,15 +113,9 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
      */
     public function findByLeagueId(int $leagueId): array
     {
-        return CompetitionModel::where('league_id', $leagueId)
-            ->with('platform')
-            ->withCount([
-                'seasons as total_seasons',
-                'seasons as active_seasons' => function ($query): void {
-                    $query->where('status', 'active');
-                },
-                'seasonDrivers as total_drivers',
-            ])
+        return $this->applyDefaultIncludes(
+            CompetitionModel::where('league_id', $leagueId)
+        )
             ->get()
             ->map(fn(CompetitionModel $model) => $this->mapToEntity($model))
             ->all();
@@ -143,7 +146,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
     public function countActiveByLeagueId(int $leagueId): int
     {
         return CompetitionModel::where('league_id', $leagueId)
-            ->where('status', 'active')
+            ->where('status', CompetitionStatus::ACTIVE->value)
             ->count();
     }
 
@@ -170,7 +173,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             ->withCount([
                 'seasons as total_seasons',
                 'seasons as active_seasons' => function ($query): void {
-                    $query->where('status', 'active');
+                    $query->where('status', CompetitionStatus::ACTIVE->value);
                 },
                 'seasonDrivers as total_drivers',
             ])
@@ -236,7 +239,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             ->withCount([
                 'seasons as total_seasons',
                 'seasons as active_seasons' => function ($query): void {
-                    $query->where('status', 'active');
+                    $query->where('status', CompetitionStatus::ACTIVE->value);
                 },
                 'seasonDrivers as total_drivers',
             ])
@@ -270,6 +273,12 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
         $stats = [];
         foreach ($competitionIds as $id) {
             $model = $models->get($id);
+
+            // Skip if model doesn't exist (shouldn't happen, but add null safety)
+            if ($model === null) {
+                continue;
+            }
+
             $stats[$id] = [
                 'total_seasons' => (int) ($model->total_seasons ?? 0),
                 'active_seasons' => (int) ($model->active_seasons ?? 0),
@@ -281,6 +290,25 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
         }
 
         return $stats;
+    }
+
+    /**
+     * Apply default includes (eager loading and counts) to a query builder.
+     *
+     * @param Builder<CompetitionModel> $query
+     * @return Builder<CompetitionModel>
+     */
+    private function applyDefaultIncludes(Builder $query): Builder
+    {
+        // Note: Platform relation is not eager loaded as it's not used in entity mapping
+        // Platform data is fetched separately via PlatformRepository when needed
+        return $query->withCount([
+                'seasons as total_seasons',
+                'seasons as active_seasons' => function ($query): void {
+                    $query->where('status', CompetitionStatus::ACTIVE->value);
+                },
+                'seasonDrivers as total_drivers',
+            ]);
     }
 
     /**
@@ -299,13 +327,14 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             description: $model->description,
             logoPath: $model->logo_path,
             competitionColour: $model->competition_colour,
-            createdAt: new \DateTimeImmutable($model->created_at->toDateTimeString()),
-            updatedAt: new \DateTimeImmutable($model->updated_at->toDateTimeString()),
-            deletedAt: $model->deleted_at
-                ? new \DateTimeImmutable($model->deleted_at->toDateTimeString())
-                : null,
+            createdAt: $model->created_at
+                ? \DateTimeImmutable::createFromInterface($model->created_at)
+                : new \DateTimeImmutable(),
+            updatedAt: $model->updated_at
+                ? \DateTimeImmutable::createFromInterface($model->updated_at)
+                : new \DateTimeImmutable(),
             archivedAt: $model->archived_at
-                ? new \DateTimeImmutable($model->archived_at->toDateTimeString())
+                ? \DateTimeImmutable::createFromInterface($model->archived_at)
                 : null,
         );
     }
@@ -317,7 +346,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
      */
     private function mapToEloquent(Competition $competition): array
     {
-        return [
+        $data = [
             'league_id' => $competition->leagueId(),
             'platform_id' => $competition->platformId(),
             'created_by_user_id' => $competition->createdByUserId(),
@@ -329,14 +358,26 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             'status' => $competition->status()->value,
             'archived_at' => $competition->archivedAt()?->format('Y-m-d H:i:s'),
         ];
+
+        // Only include created_at for new records (when entity has no ID)
+        // For updates, let Laravel's automatic timestamp management handle updated_at
+        if ($competition->id() === null) {
+            $data['created_at'] = $competition->createdAt()->format('Y-m-d H:i:s');
+        }
+
+        return $data;
     }
 
     /**
      * Set ID on entity using reflection.
+     * This avoids exposing a public setter on the entity.
      */
     private function setEntityId(Competition $competition, int $id): void
     {
-        $competition->setId($id);
+        $reflection = new \ReflectionClass($competition);
+        $property = $reflection->getProperty('id');
+        $property->setAccessible(true);
+        $property->setValue($competition, $id);
     }
 
     /**

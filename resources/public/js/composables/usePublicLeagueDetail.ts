@@ -85,7 +85,8 @@ export function usePublicLeagueDetail(slug: string) {
   });
 
   const platformsList = computed(() => {
-    return league.value?.platforms || [];
+    const platforms = league.value?.platforms;
+    return Array.isArray(platforms) ? platforms : [];
   });
 
   // Fetch league data

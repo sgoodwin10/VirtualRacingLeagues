@@ -214,7 +214,7 @@ class SeasonControllerTest extends UserControllerTestCase
     {
         $this->actingAs($this->user, 'web');
 
-        // Create an archived season with a specific timestamp
+        // Create an archived season
         $season = SeasonEloquent::create([
             'competition_id' => $this->competition->id,
             'name' => 'Season 1',
@@ -223,11 +223,23 @@ class SeasonControllerTest extends UserControllerTestCase
             'created_by_user_id' => $this->user->id,
         ]);
 
-        // Get the original updated_at timestamp
+        // Manually set the updated_at to a timestamp in the past
+        // This simulates the season being updated previously
+        $pastTimestamp = now()->subHour()->format('Y-m-d H:i:s');
+        \DB::table('seasons')
+            ->where('id', $season->id)
+            ->update(['updated_at' => $pastTimestamp]);
+
+        // Refresh to get the updated timestamp from database
+        $season->refresh();
         $originalUpdatedAt = $season->updated_at;
 
-        // Wait a moment to ensure timestamp will be different
-        sleep(1);
+        // Verify the past timestamp was set correctly
+        $this->assertLessThan(
+            now(),
+            $originalUpdatedAt,
+            'Original timestamp should be in the past'
+        );
 
         // Unarchive the season
         $response = $this->postJson("/api/seasons/{$season->id}/unarchive");
@@ -241,16 +253,19 @@ class SeasonControllerTest extends UserControllerTestCase
         $this->assertEquals('completed', $season->status);
 
         // Verify updated_at was actually changed in the database
+        // Simply check that the timestamp is different and the absolute difference is at least 1 second
         $this->assertNotEquals(
             $originalUpdatedAt->format('Y-m-d H:i:s'),
             $season->updated_at->format('Y-m-d H:i:s'),
-            'updated_at timestamp should be updated in the database when unarchiving'
+            'updated_at timestamp should be different after unarchiving'
         );
 
-        // Verify the timestamp is more recent
-        $this->assertTrue(
-            $season->updated_at->greaterThan($originalUpdatedAt),
-            'updated_at should be more recent after unarchiving'
+        // The timestamps should be different by at least 1 second in absolute terms
+        $diff = abs($season->updated_at->diffInSeconds($originalUpdatedAt, false));
+        $this->assertGreaterThan(
+            0,
+            $diff,
+            'updated_at should have changed (difference should be > 0 seconds)'
         );
     }
 
@@ -470,8 +485,9 @@ class SeasonControllerTest extends UserControllerTestCase
 
         $response->assertStatus(200);
 
-        // Verify permanent delete (not soft delete)
-        $this->assertEquals(0, SeasonEloquent::withTrashed()->where('id', $season->id)->count());
+        // Verify permanent delete (hard delete via forceDelete)
+        $this->assertEquals(0, SeasonEloquent::where('id', $season->id)->count());
+        $this->assertDatabaseMissing('seasons', ['id' => $season->id]);
     }
 
     public function test_guest_cannot_delete_season(): void

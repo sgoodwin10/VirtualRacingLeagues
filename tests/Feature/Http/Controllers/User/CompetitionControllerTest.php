@@ -180,6 +180,48 @@ class CompetitionControllerTest extends UserControllerTestCase
         $response->assertStatus(403);
     }
 
+    public function test_old_logo_is_deleted_when_updating_logo(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create competition with initial logo
+        $oldLogo = UploadedFile::fake()->image('old-logo.png', 500, 500);
+
+        $competition = Competition::factory()->create([
+            'league_id' => $this->league->id,
+            'platform_id' => $this->platform->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Upload initial logo
+        $this->putJson("/api/competitions/{$competition->id}", [
+            'logo' => $oldLogo,
+        ]);
+
+        $competition->refresh();
+        $oldLogoPath = $competition->logo_path;
+        Storage::disk('public')->assertExists($oldLogoPath);
+
+        // Update with new logo
+        $newLogo = UploadedFile::fake()->image('new-logo.png', 500, 500);
+        $response = $this->putJson("/api/competitions/{$competition->id}", [
+            'logo' => $newLogo,
+        ]);
+
+        $response->assertStatus(200);
+
+        $competition->refresh();
+        $newLogoPath = $competition->logo_path;
+
+        // Assert old logo is deleted and new logo exists
+        // Note: Old logo deletion happens in DB::afterCommit() callback.
+        // In tests with RefreshDatabase, the callback executes after the HTTP request completes
+        // and the transaction commits, so the old file should be deleted by this point.
+        Storage::disk('public')->assertMissing($oldLogoPath);
+        Storage::disk('public')->assertExists($newLogoPath);
+        $this->assertNotSame($oldLogoPath, $newLogoPath);
+    }
+
     // ==================== CRUD Tests ====================
 
     public function test_user_can_list_league_competitions(): void
@@ -392,7 +434,7 @@ class CompetitionControllerTest extends UserControllerTestCase
 
         $response->assertStatus(204);
 
-        $this->assertSoftDeleted('competitions', [
+        $this->assertDatabaseMissing('competitions', [
             'id' => $competition->id,
         ]);
     }
@@ -455,17 +497,17 @@ class CompetitionControllerTest extends UserControllerTestCase
 
         $response->assertStatus(204);
 
-        // Assert competition is soft deleted
-        $this->assertSoftDeleted('competitions', ['id' => $competition->id]);
+        // Assert competition is hard deleted (no longer in database)
+        $this->assertDatabaseMissing('competitions', ['id' => $competition->id]);
 
-        // Assert all seasons are soft deleted
-        $this->assertSoftDeleted('seasons', ['id' => $season1->id]);
-        $this->assertSoftDeleted('seasons', ['id' => $season2->id]);
+        // Assert all seasons are hard deleted
+        $this->assertDatabaseMissing('seasons', ['id' => $season1->id]);
+        $this->assertDatabaseMissing('seasons', ['id' => $season2->id]);
 
-        // Assert all rounds are soft deleted
-        $this->assertSoftDeleted('rounds', ['id' => $round1->id]);
-        $this->assertSoftDeleted('rounds', ['id' => $round2->id]);
-        $this->assertSoftDeleted('rounds', ['id' => $round3->id]);
+        // Assert all rounds are hard deleted
+        $this->assertDatabaseMissing('rounds', ['id' => $round1->id]);
+        $this->assertDatabaseMissing('rounds', ['id' => $round2->id]);
+        $this->assertDatabaseMissing('rounds', ['id' => $round3->id]);
     }
 
     public function test_user_can_archive_competition(): void
@@ -557,6 +599,19 @@ class CompetitionControllerTest extends UserControllerTestCase
             ->assertJsonValidationErrors(['platform_id']);
     }
 
+    public function test_cannot_create_competition_with_null_platform_id(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        $response = $this->postJson("/api/leagues/{$this->league->id}/competitions", [
+            'name' => 'GT3 Championship',
+            'platform_id' => null,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['platform_id']);
+    }
+
     public function test_create_competition_validates_description_max_length(): void
     {
         $this->actingAs($this->user, 'web');
@@ -601,6 +656,35 @@ class CompetitionControllerTest extends UserControllerTestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['logo']);
+    }
+
+    public function test_cannot_update_competition_platform_id(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create a second platform
+        $secondPlatform = Platform::create([
+            'name' => 'Assetto Corsa',
+            'slug' => 'assetto-corsa',
+        ]);
+
+        // Create competition with first platform
+        $competition = Competition::factory()->create([
+            'league_id' => $this->league->id,
+            'platform_id' => $this->platform->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Attempt to update platform_id (should be ignored)
+        $response = $this->putJson("/api/competitions/{$competition->id}", [
+            'platform_id' => $secondPlatform->id,
+        ]);
+
+        $response->assertStatus(200);
+
+        // Platform should remain unchanged
+        $competition->refresh();
+        $this->assertSame($this->platform->id, $competition->platform_id);
     }
 
     // ==================== Business Logic Tests ====================
@@ -670,6 +754,61 @@ class CompetitionControllerTest extends UserControllerTestCase
 
         $response->assertStatus(201)
             ->assertJsonFragment(['slug' => 'gt3-championship-1']);
+    }
+
+    public function test_slug_is_unique_for_similar_names(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create first competition with "GT3 Championship"
+        $response1 = $this->postJson("/api/leagues/{$this->league->id}/competitions", [
+            'name' => 'GT3 Championship',
+            'platform_id' => $this->platform->id,
+        ]);
+
+        $response1->assertStatus(201)
+            ->assertJsonFragment(['slug' => 'gt3-championship']);
+
+        // Create second competition with different capitalization but similar name
+        // This will test that slug generation is case-insensitive and unique
+        $response2 = $this->postJson("/api/leagues/{$this->league->id}/competitions", [
+            'name' => 'GT3 Championship 2024',
+            'platform_id' => $this->platform->id,
+        ]);
+
+        // Should get a different slug since "gt3-championship-2024" is different from "gt3-championship"
+        $response2->assertStatus(201);
+
+        $slug2 = $response2->json('data.slug');
+        $this->assertSame('gt3-championship-2024', $slug2);
+
+        // Now create a third one with exactly the same name as first
+        $response3 = $this->postJson("/api/leagues/{$this->league->id}/competitions", [
+            'name' => 'GT3 Championship',
+            'platform_id' => $this->platform->id,
+        ]);
+
+        $response3->assertStatus(201)
+            ->assertJsonFragment(['slug' => 'gt3-championship-1']); // Should increment to make unique
+
+        // Verify all competitions exist with unique slugs
+        $this->assertDatabaseHas('competitions', [
+            'league_id' => $this->league->id,
+            'name' => 'GT3 Championship',
+            'slug' => 'gt3-championship',
+        ]);
+
+        $this->assertDatabaseHas('competitions', [
+            'league_id' => $this->league->id,
+            'name' => 'GT3 Championship 2024',
+            'slug' => 'gt3-championship-2024',
+        ]);
+
+        $this->assertDatabaseHas('competitions', [
+            'league_id' => $this->league->id,
+            'name' => 'GT3 Championship',
+            'slug' => 'gt3-championship-1',
+        ]);
     }
 
     public function test_logo_url_is_null_when_no_logo_uploaded(): void

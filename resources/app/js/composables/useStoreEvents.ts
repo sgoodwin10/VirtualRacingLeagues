@@ -18,12 +18,19 @@ class StoreEventBus {
    * Subscribe to an event
    * @param event - Event name
    * @param handler - Handler function to be called when event is emitted
+   * Note: Duplicate handler prevention - the same handler will not be registered twice
    */
   on(event: string, handler: EventHandler): void {
     if (!this.events.has(event)) {
       this.events.set(event, []);
     }
-    this.events.get(event)!.push(handler);
+
+    const handlers = this.events.get(event)!;
+
+    // Prevent duplicate handler registration
+    if (!handlers.includes(handler)) {
+      handlers.push(handler);
+    }
   }
 
   /**
@@ -50,7 +57,8 @@ class StoreEventBus {
   emit(event: string, ...args: any[]): void {
     const handlers = this.events.get(event);
     if (handlers) {
-      handlers.forEach((handler) => handler(...args));
+      // Iterate over a copy to prevent issues if handlers are modified during emit
+      [...handlers].forEach((handler) => handler(...args));
     }
   }
 
@@ -64,6 +72,14 @@ class StoreEventBus {
     } else {
       this.events.clear();
     }
+  }
+
+  /**
+   * Remove all listeners from all events
+   * This is an alias for clear() with no arguments for compatibility
+   */
+  removeAllListeners(): void {
+    this.events.clear();
   }
 
   /**

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\DTOs;
 
+use App\Application\Shared\DTOs\MediaData;
+use App\Application\Shared\Factories\MediaDataFactory;
 use App\Domain\Competition\Entities\Competition;
 use Spatie\LaravelData\Data;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Output DTO representing a competition with full details.
@@ -14,33 +15,35 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class CompetitionData extends Data
 {
     public function __construct(
-        public int $id,
-        public int $league_id,
-        public string $name,
-        public string $slug,
-        public ?string $description,
-        public int $platform_id,
-        public string $platform_name,
-        public string $platform_slug,
-        public ?CompetitionLeagueData $league,
-        // OLD FORMAT (backward compatibility) - will be deprecated
-        public ?string $logo_url,
-        // NEW FORMAT - media object with all conversion URLs
-        public ?array $logo,
-        public bool $has_own_logo,
-        public ?string $competition_colour,
-        public string $status,
-        public bool $is_active,
-        public bool $is_archived,
-        public bool $is_deleted,
-        public ?string $archived_at,
-        public string $created_at,
-        public string $updated_at,
-        public ?string $deleted_at,
-        public int $created_by_user_id,
-        public CompetitionStatsData $stats,
+        public readonly int $id,
+        public readonly int $league_id,
+        public readonly string $name,
+        public readonly string $slug,
+        public readonly ?string $description,
+        public readonly int $platform_id,
+        public readonly string $platform_name,
+        public readonly string $platform_slug,
+        public readonly ?CompetitionLeagueData $league,
+        /**
+         * @deprecated Use $logo instead. This field is maintained for backward compatibility only.
+         */
+        public readonly ?string $logo_url,
+        /**
+         * NEW FORMAT - media object with all conversion URLs.
+         */
+        public readonly ?MediaData $logo,
+        public readonly bool $has_own_logo,
+        public readonly ?string $competition_colour,
+        public readonly string $status,
+        public readonly bool $is_active,
+        public readonly bool $is_archived,
+        public readonly ?string $archived_at,
+        public readonly string $created_at,
+        public readonly string $updated_at,
+        public readonly int $created_by_user_id,
+        public readonly CompetitionStatsData $stats,
         /** @var array<CompetitionSeasonData> */
-        public array $seasons = [],
+        public readonly array $seasons = [],
     ) {
     }
 
@@ -51,7 +54,8 @@ class CompetitionData extends Data
      * @param array{id: int, name: string, slug: string}|null $leagueData
      * @param array<string, int|string|null> $aggregates
      * @param array<CompetitionSeasonData> $seasons
-     * @param \App\Infrastructure\Persistence\Eloquent\Models\Competition|null $eloquentModel Optional eloquent model for media
+     * @param \App\Infrastructure\Persistence\Eloquent\Models\Competition|null $eloquentModel
+     * @throws \InvalidArgumentException If competition has not been persisted yet (ID is null)
      */
     public static function fromEntity(
         Competition $competition,
@@ -62,15 +66,25 @@ class CompetitionData extends Data
         array $seasons = [],
         ?\App\Infrastructure\Persistence\Eloquent\Models\Competition $eloquentModel = null
     ): self {
+        // Ensure competition has been persisted (has an ID)
+        $competitionId = $competition->id();
+        if ($competitionId === null) {
+            throw new \InvalidArgumentException(
+                'Cannot create CompetitionData from unpersisted Competition entity. ' .
+                'The competition must be saved to the database before converting to DTO.'
+            );
+        }
+
         // Extract media from eloquent model if available
         $logo = null;
 
         if ($eloquentModel !== null) {
-            $logo = self::mediaToArray($eloquentModel->getFirstMedia('logo'));
+            $mediaFactory = app(MediaDataFactory::class);
+            $logo = $mediaFactory->fromMedia($eloquentModel->getFirstMedia('logo'));
         }
 
         return new self(
-            id: $competition->id() ?? 0,
+            id: $competitionId,
             league_id: $competition->leagueId(),
             name: $competition->name()->value(),
             slug: $competition->slug()->value(),
@@ -94,11 +108,9 @@ class CompetitionData extends Data
             status: $competition->status()->value,
             is_active: $competition->isActive(),
             is_archived: $competition->isArchived(),
-            is_deleted: $competition->isDeleted(),
             archived_at: $competition->archivedAt()?->format('Y-m-d H:i:s'),
             created_at: $competition->createdAt()->format('Y-m-d H:i:s'),
             updated_at: $competition->updatedAt()->format('Y-m-d H:i:s'),
-            deleted_at: $competition->deletedAt()?->format('Y-m-d H:i:s'),
             created_by_user_id: $competition->createdByUserId(),
             stats: new CompetitionStatsData(
                 total_seasons: (int) ($aggregates['total_seasons'] ?? 0),
@@ -111,52 +123,5 @@ class CompetitionData extends Data
             ),
             seasons: $seasons,
         );
-    }
-
-    /**
-     * Convert Spatie Media model to array representation
-     *
-     * @param Media|null $media
-     * @return array{id: int, original: string, conversions: array<string, string>, srcset: string}|null
-     */
-    public static function mediaToArray(?Media $media): ?array
-    {
-        if ($media === null) {
-            return null;
-        }
-
-        $conversions = [];
-        $conversionNames = ['thumb', 'small', 'medium', 'large', 'og'];
-
-        foreach ($conversionNames as $conversion) {
-            try {
-                $conversions[$conversion] = $media->getUrl($conversion);
-            } catch (\Exception $e) {
-                // Conversion may not exist yet (queued) or may not apply to this file type
-                // Skip silently
-            }
-        }
-
-        // Generate srcset for responsive images
-        $srcsetParts = [];
-        $widths = [
-            'thumb' => '150w',
-            'small' => '320w',
-            'medium' => '640w',
-            'large' => '1280w',
-        ];
-
-        foreach ($widths as $conversionName => $width) {
-            if (isset($conversions[$conversionName])) {
-                $srcsetParts[] = "{$conversions[$conversionName]} {$width}";
-            }
-        }
-
-        return [
-            'id' => $media->getKey(),
-            'original' => $media->getUrl(),
-            'conversions' => $conversions,
-            'srcset' => implode(', ', $srcsetParts),
-        ];
     }
 }

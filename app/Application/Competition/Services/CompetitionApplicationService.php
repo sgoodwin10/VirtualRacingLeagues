@@ -19,10 +19,12 @@ use App\Domain\Competition\ValueObjects\CompetitionSlug;
 use App\Domain\League\Exceptions\InvalidPlatformException;
 use App\Domain\League\Exceptions\LeagueNotFoundException;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Platform\Exceptions\PlatformNotFoundException;
+use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
-use App\Infrastructure\Persistence\Eloquent\Models\Platform;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -41,6 +43,7 @@ final class CompetitionApplicationService
     public function __construct(
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
+        private readonly PlatformRepositoryInterface $platformRepository,
         private readonly SeasonRepositoryInterface $seasonRepository,
         private readonly MediaServiceInterface $mediaService,
     ) {
@@ -103,9 +106,17 @@ final class CompetitionApplicationService
             $competition->recordCreationEvent();
             $this->dispatchEvents($competition);
 
-            // 9. Get stats and return CompetitionData DTO
+            // 9. Log activity
+            $this->logActivity($competition, $userId, 'competition_created', [
+                'name' => $data->name,
+                'league_id' => $data->league_id,
+                'platform_id' => $data->platform_id,
+                'description' => $data->description,
+            ]);
+
+            // 10. Get stats and return CompetitionData DTO
             $stats = $this->competitionRepository->getStatsForEntity($competition);
-            return $this->toCompetitionData($competition, $league->logoPath(), $stats);
+            return $this->toCompetitionData($competition, $stats);
         });
     }
 
@@ -124,32 +135,56 @@ final class CompetitionApplicationService
             // 2. Authorize (league owner)
             $this->authorizeLeagueOwner($competition, $userId);
 
+            // Track changes for activity logging
+            $changes = [];
+
             // 3. Update name and description if provided
             if ($data->name !== null) {
                 $newName = CompetitionName::from($data->name);
 
-                // If name changes, update slug
+                // If name changes, update slug silently (without separate event)
+                // The updateDetails() call will record a single event with both changes
                 if (!$competition->name()->equals($newName)) {
+                    $changes['name'] = [
+                        'old' => $competition->name()->value(),
+                        'new' => $newName->value(),
+                    ];
+
+                    // Capture old slug BEFORE updating it
+                    $oldSlug = $competition->slug()->value();
+
                     $newSlug = $this->generateUniqueSlug(
                         CompetitionSlug::fromName($data->name),
                         $competition->leagueId(),
                         $competitionId
                     );
-                    $competition->updateSlug($newSlug);
+                    // Use silent update to avoid double event recording
+                    $competition->updateSlugSilent($newSlug);
+
+                    $changes['slug'] = [
+                        'old' => $oldSlug,
+                        'new' => $newSlug->value(),
+                    ];
                 }
 
                 $competition->updateDetails($newName, $data->description ?? $competition->description());
             } elseif ($data->description !== null) {
+                if ($competition->description() !== $data->description) {
+                    $changes['description'] = [
+                        'old' => $competition->description(),
+                        'new' => $data->description,
+                    ];
+                }
                 $competition->updateDetails($competition->name(), $data->description);
             }
 
-            // 4. Update logo if provided (delete old, upload new)
+            // 4. Update logo if provided (FIXED: Upload new logo FIRST, then delete old)
+            $oldLogoPath = null;
             if ($data->logo) {
-                // Delete old logo if exists and is not default
-                if ($competition->logoPath()) {
-                    Storage::disk('public')->delete($competition->logoPath());
-                }
+                // Store old logo path for cleanup after transaction
+                $oldLogoPath = $competition->logoPath();
 
+                // Upload new logo first
                 $logoPath = $data->logo->store('competitions/logos', 'public');
                 if (!$logoPath) {
                     throw new \RuntimeException('Failed to store competition logo');
@@ -162,10 +197,21 @@ final class CompetitionApplicationService
                     $eloquentCompetition = $this->competitionRepository->getEloquentModel($competition->id());
                     $this->mediaService->upload($data->logo, $eloquentCompetition, 'logo');
                 }
+
+                $changes['logo'] = [
+                    'old' => $oldLogoPath,
+                    'new' => $logoPath,
+                ];
             }
 
             // 5. Update competition colour if provided
             if ($data->competition_colour !== null) {
+                if ($competition->competitionColour() !== $data->competition_colour) {
+                    $changes['competition_colour'] = [
+                        'old' => $competition->competitionColour(),
+                        'new' => $data->competition_colour,
+                    ];
+                }
                 $competition->updateCompetitionColour($data->competition_colour);
             }
 
@@ -173,12 +219,28 @@ final class CompetitionApplicationService
             $this->competitionRepository->update($competition);
             $this->dispatchEvents($competition);
 
-            // 6. Get league for logo fallback
-            $league = $this->leagueRepository->findById($competition->leagueId());
+            // 7. Delete old logo after transaction commits successfully (FIXED: Race condition)
+            if ($oldLogoPath) {
+                DB::afterCommit(function () use ($oldLogoPath) {
+                    try {
+                        Storage::disk('public')->delete($oldLogoPath);
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to delete old competition logo', [
+                            'logo_path' => $oldLogoPath,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                });
+            }
 
-            // 7. Get stats and return DTO
+            // 8. Log activity if changes were made
+            if (!empty($changes)) {
+                $this->logActivity($competition, $userId, 'competition_updated', ['changes' => $changes]);
+            }
+
+            // 9. Get stats and return DTO
             $stats = $this->competitionRepository->getStatsForEntity($competition);
-            return $this->toCompetitionData($competition, $league->logoPath(), $stats);
+            return $this->toCompetitionData($competition, $stats);
         });
     }
 
@@ -190,10 +252,9 @@ final class CompetitionApplicationService
     public function getCompetitionById(int $id): CompetitionData
     {
         $competition = $this->competitionRepository->findById($id);
-        $league = $this->leagueRepository->findById($competition->leagueId());
         $stats = $this->competitionRepository->getStatsForEntity($competition);
 
-        return $this->toCompetitionData($competition, $league->logoPath(), $stats);
+        return $this->toCompetitionData($competition, $stats);
     }
 
     /**
@@ -204,10 +265,9 @@ final class CompetitionApplicationService
     public function getCompetitionBySlug(string $slug, int $leagueId): CompetitionData
     {
         $competition = $this->competitionRepository->findBySlug($slug, $leagueId);
-        $league = $this->leagueRepository->findById($competition->leagueId());
         $stats = $this->competitionRepository->getStatsForEntity($competition);
 
-        return $this->toCompetitionData($competition, $league->logoPath(), $stats);
+        return $this->toCompetitionData($competition, $stats);
     }
 
     /**
@@ -218,13 +278,33 @@ final class CompetitionApplicationService
     public function getLeagueCompetitions(int $leagueId): array
     {
         $competitions = $this->competitionRepository->findByLeagueId($leagueId);
-        $league = $this->leagueRepository->findById($leagueId);
         $statsMap = $this->competitionRepository->getStatsForEntities($competitions);
 
+        // Optimize: Fetch league once (all competitions have same league)
+        $league = $this->leagueRepository->findById($leagueId);
+
+        // Optimize: Batch fetch platforms for all competitions
+        $platformIds = array_unique(array_map(
+            fn(Competition $c) => $c->platformId(),
+            $competitions
+        ));
+        $platformsMap = $this->platformRepository->findByIds($platformIds);
+
+        // Optimize: Batch fetch seasons for all competitions
+        $seasonsDataMap = $this->batchGetSeasonsForCompetitions(
+            array_filter(array_map(fn(Competition $c) => $c->id(), $competitions))
+        );
+
         return array_map(
-            function (Competition $competition) use ($league, $statsMap) {
+            function (Competition $competition) use ($statsMap, $league, $platformsMap, $seasonsDataMap) {
                 $stats = $statsMap[$competition->id() ?? 0] ?? [];
-                return $this->toCompetitionData($competition, $league->logoPath(), $stats);
+                return $this->toCompetitionDataOptimized(
+                    $competition,
+                    $stats,
+                    $league,
+                    $platformsMap[$competition->platformId()] ?? null,
+                    $seasonsDataMap[$competition->id() ?? 0] ?? []
+                );
             },
             $competitions
         );
@@ -245,11 +325,17 @@ final class CompetitionApplicationService
             $competition->archive();
             $this->competitionRepository->update($competition);
             $this->dispatchEvents($competition);
+
+            // Log activity
+            $this->logActivity($competition, $userId, 'competition_archived', [
+                'name' => $competition->name()->value(),
+                'league_id' => $competition->leagueId(),
+            ]);
         });
     }
 
     /**
-     * Delete a competition (soft delete).
+     * Delete a competition (hard delete - permanent deletion).
      *
      * @throws CompetitionNotFoundException
      * @throws UnauthorizedException
@@ -259,6 +345,13 @@ final class CompetitionApplicationService
         DB::transaction(function () use ($id, $userId) {
             $competition = $this->competitionRepository->findById($id);
             $this->authorizeLeagueOwner($competition, $userId);
+
+            // Log activity before deletion (must happen before entity is deleted)
+            $this->logActivity($competition, $userId, 'competition_deleted', [
+                'name' => $competition->name()->value(),
+                'league_id' => $competition->leagueId(),
+                'slug' => $competition->slug()->value(),
+            ]);
 
             $competition->delete();
             $this->competitionRepository->delete($competition);
@@ -301,10 +394,16 @@ final class CompetitionApplicationService
         int $leagueId,
         ?int $excludeId = null
     ): CompetitionSlug {
+        $maxAttempts = 100;
         $slug = $baseSlug->value();
         $counter = 1;
 
         while (!$this->competitionRepository->isSlugAvailable($slug, $leagueId, $excludeId)) {
+            if ($counter >= $maxAttempts) {
+                throw new \RuntimeException(
+                    "Unable to generate unique slug after {$maxAttempts} attempts for base slug: {$baseSlug->value()}"
+                );
+            }
             $slug = $baseSlug->value() . '-' . $counter;
             $counter++;
         }
@@ -320,9 +419,8 @@ final class CompetitionApplicationService
      */
     private function validatePlatformForLeague(int $platformId, array $leaguePlatformIds): void
     {
-        // Check platform exists
-        $platform = Platform::find($platformId);
-        if (!$platform) {
+        // Check platform exists using repository
+        if (!$this->platformRepository->exists($platformId)) {
             throw InvalidPlatformException::notFound($platformId);
         }
 
@@ -360,13 +458,12 @@ final class CompetitionApplicationService
 
     /**
      * Convert Competition entity to CompetitionData DTO.
-     * Accepts league logo path to avoid re-fetching the league entity when already available.
      *
      * @param array<string, int|string|null> $aggregates
      */
-    private function toCompetitionData(Competition $competition, ?string $leagueLogoPath, array $aggregates = []): CompetitionData
+    private function toCompetitionData(Competition $competition, array $aggregates = []): CompetitionData
     {
-        // Fetch league for additional data (we need more than just logo path now)
+        // Fetch league for additional data (name, slug, logo)
         $league = $this->leagueRepository->findById($competition->leagueId());
 
         $leagueData = [
@@ -375,16 +472,11 @@ final class CompetitionApplicationService
             'slug' => $league->slug()->value(),
         ];
 
-        // Get platform data
-        $platform = Platform::findOrFail($competition->platformId());
-        $platformData = [
-            'id' => $platform->id,
-            'name' => $platform->name,
-            'slug' => $platform->slug,
-        ];
+        // Get platform data using repository
+        $platformData = $this->platformRepository->findById($competition->platformId());
 
         // Resolve logo URL with fallback to league logo
-        $logoUrl = $this->resolveLogoUrl($competition, $leagueLogoPath);
+        $logoUrl = $this->resolveLogoUrl($competition, $league->logoPath());
 
         // Get seasons with stats for this competition
         $seasonsData = $this->getSeasonsForCompetition($competition->id() ?? 0);
@@ -392,11 +484,7 @@ final class CompetitionApplicationService
         // Get eloquent model for media extraction
         $eloquentModel = null;
         if ($competition->id()) {
-            try {
-                $eloquentModel = $this->competitionRepository->getEloquentModel($competition->id());
-            } catch (\Exception $e) {
-                // Model not found or error loading media - continue without media
-            }
+            $eloquentModel = $this->getEloquentModelSafely($competition->id());
         }
 
         // Return DTO
@@ -464,5 +552,143 @@ final class CompetitionApplicationService
         }
 
         return null;
+    }
+
+    /**
+     * Batch fetch seasons for multiple competitions.
+     *
+     * @param array<int> $competitionIds
+     * @return array<int, array<CompetitionSeasonData>>
+     */
+    private function batchGetSeasonsForCompetitions(array $competitionIds): array
+    {
+        if (empty($competitionIds)) {
+            return [];
+        }
+
+        // Use the batch repository method to avoid N+1 queries
+        $seasonsWithStatsByCompetition = $this->seasonRepository
+            ->getBatchSeasonsWithStatsForCompetitions($competitionIds);
+
+        // Map to CompetitionSeasonData DTOs
+        $result = [];
+        foreach ($seasonsWithStatsByCompetition as $competitionId => $seasonsWithStats) {
+            $result[$competitionId] = array_map(
+                function (array $item): CompetitionSeasonData {
+                    $season = $item['season'];
+                    $stats = $item['stats'];
+
+                    return new CompetitionSeasonData(
+                        id: $season->id() ?? 0,
+                        name: $season->name()->value(),
+                        slug: $season->slug()->value(),
+                        status: $season->status()->value,
+                        is_active: $season->isActive(),
+                        is_archived: $season->isArchived(),
+                        created_at: $season->createdAt()->format('Y-m-d H:i:s'),
+                        stats: new CompetitionSeasonStatsData(
+                            driver_count: $stats['driver_count'],
+                            round_count: $stats['round_count'],
+                            race_count: $stats['race_count'],
+                        ),
+                    );
+                },
+                $seasonsWithStats
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Optimized version of toCompetitionData that accepts pre-fetched data.
+     *
+     * @param array<string, int|string|null> $aggregates
+     * @param array{id: int, name: string, slug: string}|null $platformData
+     * @param array<CompetitionSeasonData> $seasonsData
+     */
+    private function toCompetitionDataOptimized(
+        Competition $competition,
+        array $aggregates,
+        \App\Domain\League\Entities\League $league,
+        ?array $platformData,
+        array $seasonsData
+    ): CompetitionData {
+        // Handle missing platform data
+        if ($platformData === null) {
+            $platformData = $this->platformRepository->findById($competition->platformId());
+        }
+
+        $leagueData = [
+            'id' => $league->id() ?? 0,
+            'name' => $league->name()->value(),
+            'slug' => $league->slug()->value(),
+        ];
+
+        // Resolve logo URL with fallback to league logo
+        $logoUrl = $this->resolveLogoUrl($competition, $league->logoPath());
+
+        // Get eloquent model for media extraction
+        $eloquentModel = null;
+        if ($competition->id()) {
+            $eloquentModel = $this->getEloquentModelSafely($competition->id());
+        }
+
+        // Return DTO
+        return CompetitionData::fromEntity(
+            competition: $competition,
+            platformData: $platformData,
+            logoUrl: $logoUrl,
+            leagueData: $leagueData,
+            aggregates: $aggregates,
+            seasons: $seasonsData,
+            eloquentModel: $eloquentModel,
+        );
+    }
+
+    /**
+     * Safely get eloquent model with error logging.
+     *
+     * @return \App\Infrastructure\Persistence\Eloquent\Models\Competition|null
+     */
+    private function getEloquentModelSafely(
+        int $competitionId
+    ): ?\App\Infrastructure\Persistence\Eloquent\Models\Competition {
+        try {
+            return $this->competitionRepository->getEloquentModel($competitionId);
+        } catch (\Exception $e) {
+            Log::warning('Failed to load eloquent model for competition', [
+                'competition_id' => $competitionId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Log activity for a competition.
+     *
+     * @param array<string, mixed> $properties
+     */
+    private function logActivity(Competition $competition, int $userId, string $logName, array $properties = []): void
+    {
+        if (!$competition->id()) {
+            return;
+        }
+
+        $eloquentCompetition = $this->getEloquentModelSafely($competition->id());
+        if (!$eloquentCompetition) {
+            Log::warning('Cannot log activity: eloquent model not found', [
+                'competition_id' => $competition->id(),
+                'log_name' => $logName,
+            ]);
+            return;
+        }
+
+        activity()
+            ->performedOn($eloquentCompetition)
+            ->causedBy($userId)
+            ->withProperties($properties)
+            ->log($logName);
     }
 }

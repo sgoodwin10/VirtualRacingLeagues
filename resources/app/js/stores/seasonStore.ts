@@ -29,6 +29,7 @@ import {
 } from '@app/services/seasonService';
 import { useStoreEvents } from '@app/composables/useStoreEvents';
 import { useCrudStore } from '@app/composables/useCrudStore';
+import { getErrorMessage } from '@app/types/errors';
 
 export const useSeasonStore = defineStore('season', () => {
   // Use CRUD composable for season management
@@ -85,7 +86,14 @@ export const useSeasonStore = defineStore('season', () => {
    * Get the current page of seasons (client-side pagination)
    */
   const paginatedSeasons = computed(() => {
-    const start = (currentPage.value - 1) * perPage.value;
+    // Prevent division by zero and validate page number
+    if (perPage.value <= 0) {
+      return seasons.value;
+    }
+
+    // Ensure currentPage is at least 1
+    const validPage = Math.max(1, currentPage.value);
+    const start = (validPage - 1) * perPage.value;
     const end = start + perPage.value;
     return seasons.value.slice(start, end);
   });
@@ -107,7 +115,8 @@ export const useSeasonStore = defineStore('season', () => {
       created_at: season.created_at,
       stats: {
         driver_count: season.stats?.total_drivers || 0,
-        round_count: season.stats?.total_rounds || season.stats?.total_races || 0,
+        // Use fallback to 0 to ensure stats are always numbers
+        round_count: season.stats?.total_rounds || 0,
         race_count: season.stats?.total_races || 0,
       },
     };
@@ -135,16 +144,16 @@ export const useSeasonStore = defineStore('season', () => {
       // Store all seasons
       setItems(allSeasons);
 
-      // Client-side pagination calculations
+      // Client-side pagination calculations with validation
       totalSeasons.value = allSeasons.length;
-      lastPage.value = Math.ceil(allSeasons.length / perPage.value) || 1;
+      lastPage.value = perPage.value > 0 ? Math.ceil(allSeasons.length / perPage.value) || 1 : 1;
 
       // Ensure current page is valid
       if (currentPage.value > lastPage.value) {
         currentPage.value = lastPage.value;
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load seasons';
+      const errorMessage = getErrorMessage(err, 'Failed to load seasons');
       setError(errorMessage);
       throw err;
     } finally {
@@ -164,7 +173,7 @@ export const useSeasonStore = defineStore('season', () => {
       setCurrentItem(season);
       return season;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load season';
+      const errorMessage = getErrorMessage(err, 'Failed to load season');
       setError(errorMessage);
       throw err;
     } finally {
@@ -188,13 +197,13 @@ export const useSeasonStore = defineStore('season', () => {
       addItem(season);
       setCurrentItem(season);
 
-      // Emit event for competition store to listen to
+      // Emit event for competition store to listen to (after successful API call)
       const events = useStoreEvents();
       events.emit('season:created', competitionId, toCompetitionSeason(season));
 
       return season;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create season';
+      const errorMessage = getErrorMessage(err, 'Failed to create season');
       setError(errorMessage);
       throw err;
     } finally {
@@ -229,7 +238,7 @@ export const useSeasonStore = defineStore('season', () => {
 
       return updatedSeason;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update season';
+      const errorMessage = getErrorMessage(err, 'Failed to update season');
       setError(errorMessage);
       throw err;
     } finally {
@@ -247,15 +256,8 @@ export const useSeasonStore = defineStore('season', () => {
     try {
       const archivedSeason = await archiveSeason(seasonId);
 
-      // Update local state
-      const index = seasons.value.findIndex((s) => s.id === seasonId);
-      if (index !== -1) {
-        seasons.value[index] = archivedSeason;
-      }
-
-      if (currentSeason.value?.id === seasonId) {
-        currentSeason.value = archivedSeason;
-      }
+      // Update local state using consistent CRUD method
+      updateItemInList(archivedSeason);
 
       // Emit event for competition store to listen to
       const events = useStoreEvents();
@@ -267,7 +269,7 @@ export const useSeasonStore = defineStore('season', () => {
 
       return archivedSeason;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to archive season';
+      const errorMessage = getErrorMessage(err, 'Failed to archive season');
       setError(errorMessage);
       throw err;
     } finally {
@@ -285,15 +287,8 @@ export const useSeasonStore = defineStore('season', () => {
     try {
       const activatedSeason = await activateSeason(seasonId);
 
-      // Update local state
-      const index = seasons.value.findIndex((s) => s.id === seasonId);
-      if (index !== -1) {
-        seasons.value[index] = activatedSeason;
-      }
-
-      if (currentSeason.value?.id === seasonId) {
-        currentSeason.value = activatedSeason;
-      }
+      // Update local state using consistent CRUD method
+      updateItemInList(activatedSeason);
 
       // Emit event for competition store to listen to
       const events = useStoreEvents();
@@ -305,7 +300,7 @@ export const useSeasonStore = defineStore('season', () => {
 
       return activatedSeason;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to activate season';
+      const errorMessage = getErrorMessage(err, 'Failed to activate season');
       setError(errorMessage);
       throw err;
     } finally {
@@ -323,15 +318,8 @@ export const useSeasonStore = defineStore('season', () => {
     try {
       const completedSeason = await completeSeason(seasonId);
 
-      // Update local state
-      const index = seasons.value.findIndex((s) => s.id === seasonId);
-      if (index !== -1) {
-        seasons.value[index] = completedSeason;
-      }
-
-      if (currentSeason.value?.id === seasonId) {
-        currentSeason.value = completedSeason;
-      }
+      // Update local state using consistent CRUD method
+      updateItemInList(completedSeason);
 
       // Emit event for competition store to listen to
       const events = useStoreEvents();
@@ -343,7 +331,7 @@ export const useSeasonStore = defineStore('season', () => {
 
       return completedSeason;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to complete season';
+      const errorMessage = getErrorMessage(err, 'Failed to complete season');
       setError(errorMessage);
       throw err;
     } finally {
@@ -353,28 +341,40 @@ export const useSeasonStore = defineStore('season', () => {
 
   /**
    * Delete a season (soft delete)
+   * @param seasonId - The ID of the season to delete
+   * @param competitionId - Competition ID (optional, will try to get from store if not provided)
    */
-  async function deleteExistingSeason(seasonId: number): Promise<void> {
+  async function deleteExistingSeason(seasonId: number, competitionId?: number): Promise<void> {
+    // Try to get competitionId from the season in the store if not provided
+    let finalCompetitionId = competitionId;
+    if (!finalCompetitionId) {
+      const season = seasons.value.find((s) => s.id === seasonId);
+      if (season) {
+        finalCompetitionId = season.competition_id;
+      }
+    }
+
+    if (!finalCompetitionId) {
+      throw new Error(
+        'competitionId is required for deleteExistingSeason to maintain UI consistency. ' +
+          'Provide it as a parameter or ensure the season exists in the store.',
+      );
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Store competition_id before deletion
-      const season = seasons.value.find((s) => s.id === seasonId);
-      const competitionId = season?.competition_id;
-
       await deleteSeason(seasonId);
 
       // Remove from local state
       removeItemFromList(seasonId);
 
       // Emit event for competition store to listen to
-      if (competitionId) {
-        const events = useStoreEvents();
-        events.emit('season:deleted', competitionId, seasonId);
-      }
+      const events = useStoreEvents();
+      events.emit('season:deleted', finalCompetitionId, seasonId);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete season';
+      const errorMessage = getErrorMessage(err, 'Failed to delete season');
       setError(errorMessage);
       throw err;
     } finally {
@@ -392,15 +392,8 @@ export const useSeasonStore = defineStore('season', () => {
     try {
       const unarchivedSeason = await unarchiveSeason(seasonId);
 
-      // Update local state
-      const index = seasons.value.findIndex((s) => s.id === seasonId);
-      if (index !== -1) {
-        seasons.value[index] = unarchivedSeason;
-      }
-
-      if (currentSeason.value?.id === seasonId) {
-        currentSeason.value = unarchivedSeason;
-      }
+      // Update local state using consistent CRUD method
+      updateItemInList(unarchivedSeason);
 
       // Emit event for competition store to listen to
       const events = useStoreEvents();
@@ -412,7 +405,7 @@ export const useSeasonStore = defineStore('season', () => {
 
       return unarchivedSeason;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to unarchive season';
+      const errorMessage = getErrorMessage(err, 'Failed to unarchive season');
       setError(errorMessage);
       throw err;
     } finally {
@@ -443,7 +436,7 @@ export const useSeasonStore = defineStore('season', () => {
 
       return restoredSeason;
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to restore season';
+      const errorMessage = getErrorMessage(err, 'Failed to restore season');
       setError(errorMessage);
       throw err;
     } finally {
@@ -475,6 +468,11 @@ export const useSeasonStore = defineStore('season', () => {
   }
 
   function goToPage(page: number): void {
+    // Validate that page is an integer
+    if (!Number.isInteger(page)) {
+      throw new Error(`Page must be an integer, received: ${page}`);
+    }
+
     if (page >= 1 && page <= lastPage.value) {
       currentPage.value = page;
     }

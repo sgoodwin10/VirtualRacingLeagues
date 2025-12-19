@@ -12,6 +12,7 @@ use App\Domain\Competition\ValueObjects\SeasonSlug;
 use App\Domain\Competition\ValueObjects\SeasonStatus;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Eloquent implementation of SeasonRepositoryInterface.
@@ -21,16 +22,18 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
 {
     public function save(Season $season): void
     {
-        $data = $this->mapToEloquent($season);
+        DB::transaction(function () use ($season): void {
+            $data = $this->mapToEloquent($season);
 
-        if ($season->id() === null) {
-            // Create new season
-            $model = SeasonEloquent::create($data);
-            $season->setId($model->id);
-        } else {
-            // Update existing season
-            SeasonEloquent::where('id', $season->id())->update($data);
-        }
+            if ($season->id() === null) {
+                // Create new season
+                $model = SeasonEloquent::create($data);
+                $this->setEntityId($season, $model->id);
+            } else {
+                // Update existing season
+                SeasonEloquent::where('id', $season->id())->update($data);
+            }
+        });
     }
 
     public function findById(int $id): Season
@@ -238,13 +241,86 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
     }
 
     /**
+     * Batch get all seasons with statistics for multiple competitions.
+     * Returns seasons ordered by most recent first (latest created_at).
+     *
+     * @param array<int> $competitionIds
+     * @return array<int, array<array{
+     *     season: Season,
+     *     stats: array{driver_count: int, round_count: int, race_count: int}
+     * }>>
+     */
+    public function getBatchSeasonsWithStatsForCompetitions(array $competitionIds): array
+    {
+        if (empty($competitionIds)) {
+            return [];
+        }
+
+        // Get all seasons for all competitions ordered by most recent first
+        $seasons = SeasonEloquent::whereIn('competition_id', $competitionIds)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($seasons->isEmpty()) {
+            return array_fill_keys($competitionIds, []);
+        }
+
+        /** @var array<int> $seasonIds */
+        $seasonIds = $seasons->pluck('id')->toArray();
+
+        // Get driver counts for all seasons in one query
+        $driverCounts = \Illuminate\Support\Facades\DB::table('season_drivers')
+            ->select('season_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->whereIn('season_id', $seasonIds)
+            ->groupBy('season_id')
+            ->pluck('total', 'season_id')
+            ->toArray();
+
+        // Get round counts for all seasons in one query
+        $roundCounts = \Illuminate\Support\Facades\DB::table('rounds')
+            ->select('season_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->whereIn('season_id', $seasonIds)
+            ->whereNull('deleted_at')
+            ->groupBy('season_id')
+            ->pluck('total', 'season_id')
+            ->toArray();
+
+        // Get race counts for all seasons in one query
+        $raceCounts = \Illuminate\Support\Facades\DB::table('races')
+            ->select('rounds.season_id', \Illuminate\Support\Facades\DB::raw('COUNT(races.id) as total'))
+            ->join('rounds', 'races.round_id', '=', 'rounds.id')
+            ->whereIn('rounds.season_id', $seasonIds)
+            ->whereNull('rounds.deleted_at')
+            ->groupBy('rounds.season_id')
+            ->pluck('total', 'season_id')
+            ->toArray();
+
+        // Group seasons by competition_id
+        $result = array_fill_keys($competitionIds, []);
+        /** @var SeasonEloquent $seasonModel */
+        foreach ($seasons as $seasonModel) {
+            $competitionId = $seasonModel->competition_id;
+            $result[$competitionId][] = [
+                'season' => $this->mapToEntity($seasonModel),
+                'stats' => [
+                    'driver_count' => (int) ($driverCounts[$seasonModel->id] ?? 0),
+                    'round_count' => (int) ($roundCounts[$seasonModel->id] ?? 0),
+                    'race_count' => (int) ($raceCounts[$seasonModel->id] ?? 0),
+                ],
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * Check if slug exists, optionally excluding a specific season.
+     * Note: SoftDeletes trait automatically filters out soft-deleted records.
      */
     private function slugExistsExcluding(string $slug, int $competitionId, ?int $excludeSeasonId): bool
     {
         $query = SeasonEloquent::where('slug', $slug)
-            ->where('competition_id', $competitionId)
-            ->whereNull('deleted_at');
+            ->where('competition_id', $competitionId);
 
         if ($excludeSeasonId !== null) {
             $query->where('id', '!=', $excludeSeasonId);
@@ -312,13 +388,16 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             'total_drop_rounds' => $season->getTotalDropRounds(),
             'status' => $season->status()->value,
             'created_by_user_id' => $season->createdByUserId(),
-            'updated_at' => $season->updatedAt()->format('Y-m-d H:i:s'),
+            // Note: We don't include 'updated_at' here to let Laravel's automatic
+            // timestamp management handle it. This ensures proper behavior with
+            // Laravel's time travel testing helpers.
         ];
     }
 
     /**
      * Get the Eloquent model for a season by ID.
-     * Used for media operations that require the Eloquent model.
+     * This is a helper method for the application layer to access Eloquent-specific
+     * features like media operations. Not part of the domain repository interface.
      *
      * @return SeasonEloquent
      * @throws SeasonNotFoundException
@@ -332,5 +411,17 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
         }
 
         return $model;
+    }
+
+    /**
+     * Set ID on entity using reflection.
+     * This avoids exposing a public setter on the entity.
+     */
+    private function setEntityId(Season $season, int $id): void
+    {
+        $reflection = new \ReflectionClass($season);
+        $property = $reflection->getProperty('id');
+        $property->setAccessible(true);
+        $property->setValue($season, $id);
     }
 }

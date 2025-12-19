@@ -22,15 +22,18 @@ use App\Domain\Competition\ValueObjects\CompetitionStatus;
  * 1. Platform ID is immutable after creation (no setter method)
  * 2. Cannot archive already archived competition
  * 3. Cannot update archived competition
- * 4. Cannot delete already deleted competition
- * 5. Updating name also updates slug
+ * 4. Deletion is permanent (hard delete)
+ * 5. Slug changes are handled via updateSlug() by the application service
  * 6. Archive sets status and archived timestamp
- * 7. Delete sets deleted timestamp
+ * 7. Deletion is idempotent (can call delete() multiple times safely)
  */
 final class Competition
 {
     /** @var array<object> */
     private array $domainEvents = [];
+
+    /** Tracks if entity has been marked for deletion to ensure idempotency */
+    private bool $isDeleted = false;
 
     private function __construct(
         private ?int $id,
@@ -45,7 +48,6 @@ final class Competition
         private int $createdByUserId,
         private \DateTimeImmutable $createdAt,
         private \DateTimeImmutable $updatedAt,
-        private ?\DateTimeImmutable $deletedAt,
         private ?\DateTimeImmutable $archivedAt,
     ) {
     }
@@ -78,7 +80,6 @@ final class Competition
             createdByUserId: $createdByUserId,
             createdAt: $now,
             updatedAt: $now,
-            deletedAt: null,
             archivedAt: null,
         );
     }
@@ -99,7 +100,6 @@ final class Competition
         ?string $competitionColour,
         \DateTimeImmutable $createdAt,
         \DateTimeImmutable $updatedAt,
-        ?\DateTimeImmutable $deletedAt,
         ?\DateTimeImmutable $archivedAt,
     ): self {
         return new self(
@@ -115,7 +115,6 @@ final class Competition
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
-            deletedAt: $deletedAt,
             archivedAt: $archivedAt,
         );
     }
@@ -145,11 +144,6 @@ final class Competition
     public function id(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): void
-    {
-        $this->id = $id;
     }
 
     public function leagueId(): int
@@ -211,11 +205,6 @@ final class Competition
         return $this->updatedAt;
     }
 
-    public function deletedAt(): ?\DateTimeImmutable
-    {
-        return $this->deletedAt;
-    }
-
     public function archivedAt(): ?\DateTimeImmutable
     {
         return $this->archivedAt;
@@ -225,12 +214,15 @@ final class Competition
 
     /**
      * Update competition details (name and description).
-     * Updating the name also updates the slug.
+     * Note: Slug changes should be handled separately via updateSlug() by the application service.
      *
      * @throws CompetitionIsArchivedException if competition is archived
+     * @throws \LogicException if entity has no ID (not yet persisted)
      */
     public function updateDetails(CompetitionName $name, ?string $description): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
             throw new CompetitionIsArchivedException();
         }
@@ -256,7 +248,7 @@ final class Competition
         if (!empty($changes)) {
             $this->updatedAt = new \DateTimeImmutable();
             $this->recordEvent(new CompetitionUpdated(
-                competitionId: $this->id ?? 0,
+                competitionId: $this->id,
                 leagueId: $this->leagueId,
                 changes: $changes,
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -268,9 +260,12 @@ final class Competition
      * Update competition logo.
      *
      * @throws CompetitionIsArchivedException if competition is archived
+     * @throws \LogicException if entity has no ID (not yet persisted)
      */
     public function updateLogo(?string $logoPath): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
             throw new CompetitionIsArchivedException();
         }
@@ -287,7 +282,7 @@ final class Competition
             $this->updatedAt = new \DateTimeImmutable();
 
             $this->recordEvent(new CompetitionUpdated(
-                competitionId: $this->id ?? 0,
+                competitionId: $this->id,
                 leagueId: $this->leagueId,
                 changes: $changes,
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -299,9 +294,12 @@ final class Competition
      * Update competition colour.
      *
      * @throws CompetitionIsArchivedException if competition is archived
+     * @throws \LogicException if entity has no ID (not yet persisted)
      */
     public function updateCompetitionColour(?string $competitionColour): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
             throw new CompetitionIsArchivedException();
         }
@@ -318,7 +316,7 @@ final class Competition
             $this->updatedAt = new \DateTimeImmutable();
 
             $this->recordEvent(new CompetitionUpdated(
-                competitionId: $this->id ?? 0,
+                competitionId: $this->id,
                 leagueId: $this->leagueId,
                 changes: $changes,
                 occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
@@ -327,13 +325,58 @@ final class Competition
     }
 
     /**
-     * Update competition slug.
-     * This is typically called when the name changes.
+     * Update competition slug manually.
+     * This method is used by the application service to update slugs independently
+     * (e.g., when manually setting a custom slug, not as part of a name change).
      *
      * @throws CompetitionIsArchivedException if competition is archived
+     * @throws \LogicException if entity has no ID (not yet persisted)
      */
     public function updateSlug(CompetitionSlug $slug): void
     {
+        $this->ensureHasId();
+
+        if ($this->status->isArchived()) {
+            throw new CompetitionIsArchivedException();
+        }
+
+        if (!$this->slug->equals($slug)) {
+            $changes = [
+                'slug' => [
+                    'old' => $this->slug->value(),
+                    'new' => $slug->value(),
+                ],
+            ];
+
+            $this->slug = $slug;
+            $this->updatedAt = new \DateTimeImmutable();
+
+            $this->recordEvent(new CompetitionUpdated(
+                competitionId: $this->id,
+                leagueId: $this->leagueId,
+                changes: $changes,
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Update slug silently (without recording event).
+     * Used internally when slug change is part of another operation (e.g., name change).
+     *
+     * Note: This method intentionally updates the updatedAt timestamp even though it doesn't
+     * record a separate domain event. The timestamp update ensures the entity modification
+     * is tracked, while the silent behavior prevents duplicate events when the slug change
+     * is already captured as part of a parent operation (e.g., updateDetails() already
+     * records a CompetitionUpdated event that includes the slug change).
+     *
+     * @throws CompetitionIsArchivedException if competition is archived
+     * @throws \LogicException if entity has no ID (not yet persisted)
+     */
+    public function updateSlugSilent(CompetitionSlug $slug): void
+    {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
             throw new CompetitionIsArchivedException();
         }
@@ -348,9 +391,12 @@ final class Competition
      * Archive the competition.
      *
      * @throws CompetitionAlreadyArchivedException if already archived
+     * @throws \LogicException if entity has no ID (not yet persisted)
      */
     public function archive(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isArchived()) {
             throw new CompetitionAlreadyArchivedException();
         }
@@ -360,7 +406,7 @@ final class Competition
         $this->updatedAt = $this->archivedAt;
 
         $this->recordEvent(new CompetitionArchived(
-            competitionId: $this->id ?? 0,
+            competitionId: $this->id,
             leagueId: $this->leagueId,
             occurredAt: $this->archivedAt->format('Y-m-d H:i:s'),
         ));
@@ -368,9 +414,13 @@ final class Competition
 
     /**
      * Restore the competition from archived status.
+     *
+     * @throws \LogicException if entity has no ID (not yet persisted)
      */
     public function restore(): void
     {
+        $this->ensureHasId();
+
         if ($this->status->isActive()) {
             return; // Already active, nothing to do
         }
@@ -380,29 +430,35 @@ final class Competition
         $this->updatedAt = new \DateTimeImmutable();
 
         $this->recordEvent(new CompetitionUpdated(
-            competitionId: $this->id ?? 0,
+            competitionId: $this->id,
             leagueId: $this->leagueId,
-            changes: ['status' => ['old' => 'archived', 'new' => 'active']],
+            changes: ['status' => ['old' => CompetitionStatus::ARCHIVED->value, 'new' => CompetitionStatus::ACTIVE->value]],
             occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
         ));
     }
 
     /**
-     * Soft delete the competition.
+     * Mark competition for deletion (hard delete).
+     * The actual deletion is handled by the repository.
+     * This method is idempotent - calling it multiple times is safe.
+     *
+     * @throws \LogicException if entity has no ID (not yet persisted)
      */
     public function delete(): void
     {
-        if ($this->deletedAt !== null) {
-            return; // Already deleted
+        $this->ensureHasId();
+
+        if ($this->isDeleted) {
+            return; // Already marked for deletion, no-op
         }
 
-        $this->deletedAt = new \DateTimeImmutable();
-        $this->updatedAt = $this->deletedAt;
+        $this->isDeleted = true;
+        $deletedAt = new \DateTimeImmutable();
 
         $this->recordEvent(new CompetitionDeleted(
-            competitionId: $this->id ?? 0,
+            competitionId: $this->id,
             leagueId: $this->leagueId,
-            occurredAt: $this->deletedAt->format('Y-m-d H:i:s'),
+            occurredAt: $deletedAt->format('Y-m-d H:i:s'),
         ));
     }
 
@@ -418,12 +474,23 @@ final class Competition
         return $this->status->isArchived();
     }
 
-    public function isDeleted(): bool
-    {
-        return $this->deletedAt !== null;
-    }
-
     // Domain Events Management
+
+    /**
+     * Ensure the entity has been persisted and has an ID.
+     *
+     * @throws \LogicException if entity has no ID
+     * @phpstan-assert !null $this->id
+     */
+    private function ensureHasId(): void
+    {
+        if ($this->id === null) {
+            throw new \LogicException(
+                'Cannot perform this operation on an unpersisted entity. ' .
+                'The entity must be saved to the database first.'
+            );
+        }
+    }
 
     /**
      * Record a domain event.

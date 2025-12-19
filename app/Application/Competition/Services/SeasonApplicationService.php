@@ -131,7 +131,7 @@ final class SeasonApplicationService
                     $this->seasonRepository->save($season);
 
                     // 8. Upload media using new media service (dual-write during transition)
-                    if ($season->id()) {
+                    if ($season->id() && $this->seasonRepository instanceof \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository) {
                         $eloquentSeason = $this->seasonRepository->getEloquentModel($season->id());
                         if ($data->logo) {
                             $this->mediaService->upload($data->logo, $eloquentSeason, 'logo');
@@ -279,7 +279,7 @@ final class SeasonApplicationService
                 $season->updateBranding($logoPath, $season->bannerPath());
 
                 // Upload via media service (dual-write)
-                if ($season->id()) {
+                if ($season->id() && $this->seasonRepository instanceof \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository) {
                     $eloquentSeason = $this->seasonRepository->getEloquentModel($season->id());
                     $this->mediaService->upload($data->logo, $eloquentSeason, 'logo');
                 }
@@ -295,7 +295,7 @@ final class SeasonApplicationService
                 $season->updateBranding($season->logoPath(), $bannerPath);
 
                 // Upload via media service (dual-write)
-                if ($season->id()) {
+                if ($season->id() && $this->seasonRepository instanceof \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository) {
                     $eloquentSeason = $this->seasonRepository->getEloquentModel($season->id());
                     $this->mediaService->upload($data->banner, $eloquentSeason, 'banner');
                 }
@@ -638,7 +638,7 @@ final class SeasonApplicationService
 
         // Get eloquent model for media extraction
         $eloquentModel = null;
-        if ($season->id()) {
+        if ($season->id() && $this->seasonRepository instanceof \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository) {
             try {
                 $eloquentModel = $this->seasonRepository->getEloquentModel($season->id());
             } catch (\Exception $e) {

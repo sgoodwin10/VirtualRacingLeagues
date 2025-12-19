@@ -48,6 +48,7 @@ const props = withDefaults(defineProps<Props>(), {
 interface Emits {
   (e: 'update:visible', value: boolean): void;
   (e: 'season-saved', season: Season): void;
+  (e: 'hide'): void;
 }
 
 const emit = defineEmits<Emits>();
@@ -379,6 +380,7 @@ function cancelNameChange(): void {
     :dismissable-mask="false"
     :loading="isLoadingData"
     content-class="bg-slate-50"
+    @hide="emit('hide')"
   >
     <div class="space-y-3">
       <!-- Two-Column Layout: Main Fields (Left) + Toggles (Right) -->

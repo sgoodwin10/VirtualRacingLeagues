@@ -6,6 +6,7 @@ namespace App\Infrastructure\Media;
 
 use App\Application\Shared\Services\MediaServiceInterface;
 use App\Domain\Shared\ValueObjects\MediaReference;
+use App\Infrastructure\Media\Services\MediaConversionServiceInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\HasMedia;
@@ -20,6 +21,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class SpatieMediaService implements MediaServiceInterface
 {
+    public function __construct(
+        private readonly MediaConversionServiceInterface $conversionService
+    ) {
+    }
     /**
      * Upload a file and attach it to a model
      *
@@ -34,20 +39,35 @@ class SpatieMediaService implements MediaServiceInterface
         object $model,
         string $collection = 'default'
     ): MediaReference {
-        assert($model instanceof HasMedia);
-        try {
-            // Delete existing media in the same collection (e.g., replace logo)
-            $model->clearMediaCollection($collection);
+        if (!$model instanceof HasMedia) {
+            throw new \InvalidArgumentException(
+                sprintf('Model %s must implement HasMedia interface', get_class($model))
+            );
+        }
 
-            // Upload new media
+        try {
+            // Get existing media before upload to prevent race condition
+            /** @var Media|null $existingMedia */
+            $existingMedia = $model->getFirstMedia($collection);
+
+            // Upload new media first (don't delete old media until upload succeeds)
             $media = $model
                 ->addMedia($file)
                 ->toMediaCollection($collection);
 
+            // Only delete old media after successful upload
+            if ($existingMedia !== null && $existingMedia->getKey() !== $media->getKey()) {
+                $existingMedia->delete();
+            }
+
+            // Use MediaConversionService to get conversions
+            $mediaArray = $this->conversionService->mediaToArray($media);
+            $conversions = $mediaArray !== null ? $mediaArray['conversions'] : [];
+
             return new MediaReference(
                 id: $media->getKey(),
                 collection: $collection,
-                conversions: $this->getConversionUrls($media),
+                conversions: $conversions,
             );
         } catch (FileCannotBeAdded $e) {
             Log::error('Media upload failed', [
@@ -119,64 +139,21 @@ class SpatieMediaService implements MediaServiceInterface
         /** @var Media $media */
         $media = Media::query()->findOrFail($reference->id);
 
-        $conversions = $this->getConversionUrls($media);
+        // Use MediaConversionService for consistent conversion logic
+        $mediaArray = $this->conversionService->mediaToArray($media);
+
+        if ($mediaArray === null) {
+            return [
+                'original' => '',
+                'conversions' => [],
+                'srcset' => '',
+            ];
+        }
 
         return [
-            'original' => $media->getUrl(),
-            'conversions' => $conversions,
-            'srcset' => $this->generateSrcset($conversions),
+            'original' => $mediaArray['original'],
+            'conversions' => $mediaArray['conversions'],
+            'srcset' => $mediaArray['srcset'],
         ];
-    }
-
-    /**
-     * Get conversion URLs from a Media model
-     *
-     * @param Media $media
-     * @return array<string, string>
-     */
-    private function getConversionUrls(Media $media): array
-    {
-        $conversions = [];
-        $conversionNames = ['thumb', 'small', 'medium', 'large', 'og'];
-
-        foreach ($conversionNames as $conversion) {
-            try {
-                $conversions[$conversion] = $media->getUrl($conversion);
-            } catch (\Exception $e) {
-                // Conversion may not exist yet (queued) or may not apply to this file type
-                // Log but continue
-                Log::debug('Conversion not available', [
-                    'media_id' => $media->getKey(),
-                    'conversion' => $conversion,
-                ]);
-            }
-        }
-
-        return $conversions;
-    }
-
-    /**
-     * Generate srcset string for responsive images
-     *
-     * @param array<string, string> $conversions
-     * @return string
-     */
-    private function generateSrcset(array $conversions): string
-    {
-        $srcsetParts = [];
-        $widths = [
-            'thumb' => '150w',
-            'small' => '320w',
-            'medium' => '640w',
-            'large' => '1280w',
-        ];
-
-        foreach ($widths as $conversion => $width) {
-            if (isset($conversions[$conversion])) {
-                $srcsetParts[] = "{$conversions[$conversion]} {$width}";
-            }
-        }
-
-        return implode(', ', $srcsetParts);
     }
 }
