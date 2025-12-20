@@ -374,14 +374,15 @@ describe('driverStore', () => {
       };
 
       vi.mocked(driverService.createDriver).mockResolvedValue(mockDriver);
-      vi.mocked(driverService.getLeagueDrivers).mockResolvedValue(mockResponse);
 
       const store = useDriverStore();
       const result = await store.createNewDriver(1, driverData);
 
       expect(result).toEqual(mockDriver);
       expect(driverService.createDriver).toHaveBeenCalledWith(1, driverData);
-      expect(driverService.getLeagueDrivers).toHaveBeenCalled();
+      // createNewDriver does NOT refetch - it does optimistic update
+      expect(store.drivers).toContainEqual(mockDriver);
+      expect(store.totalDrivers).toBe(1);
     });
 
     it('should handle errors when creating driver', async () => {
@@ -771,10 +772,17 @@ describe('driverStore', () => {
   });
 
   describe('utility actions', () => {
-    it('should clear error message', () => {
+    it('should clear error message', async () => {
       const store = useDriverStore();
-      store.error = 'Test error';
 
+      // Trigger an error first by failing a fetch
+      vi.mocked(driverService.getLeagueDrivers).mockRejectedValue(new Error('Test error'));
+      await expect(store.fetchLeagueDrivers(1)).rejects.toThrow('Test error');
+
+      // Verify error was set
+      expect(store.error).toBe('Test error');
+
+      // Now clear it
       store.clearError();
 
       expect(store.error).toBeNull();
@@ -782,10 +790,10 @@ describe('driverStore', () => {
 
     it('should reset store to initial state', () => {
       const store = useDriverStore();
+
+      // Set mutable state
       store.drivers = [createMockLeagueDriver({ id: 1 })];
       store.currentDriver = createMockLeagueDriver({ id: 1 });
-      store.loading = true;
-      store.error = 'Error';
       store.currentPage = 3;
       store.searchQuery = 'test';
       store.statusFilter = 'active';

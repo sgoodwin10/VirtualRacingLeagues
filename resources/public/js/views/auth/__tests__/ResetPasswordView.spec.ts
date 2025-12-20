@@ -93,8 +93,8 @@ describe('ResetPasswordView', () => {
     const passwordInput = wrapper.find('#password input');
     const confirmInput = wrapper.find('#password-confirmation input');
 
-    await passwordInput.setValue('password123');
-    await confirmInput.setValue('different123');
+    await passwordInput.setValue('Password123!');
+    await confirmInput.setValue('Different123!');
 
     const form = wrapper.find('form');
     await form.trigger('submit.prevent');
@@ -110,8 +110,8 @@ describe('ResetPasswordView', () => {
     const passwordInput = wrapper.find('#password input');
     const confirmInput = wrapper.find('#password-confirmation input');
 
-    await passwordInput.setValue('password123');
-    await confirmInput.setValue('password123');
+    await passwordInput.setValue('Password123!');
+    await confirmInput.setValue('Password123!');
 
     const form = wrapper.find('form');
     await form.trigger('submit.prevent');
@@ -121,8 +121,8 @@ describe('ResetPasswordView', () => {
     expect(authService.resetPassword).toHaveBeenCalledWith({
       email: 'test@example.com',
       token: 'test-token',
-      password: 'password123',
-      password_confirmation: 'password123',
+      password: 'Password123!',
+      password_confirmation: 'Password123!',
     });
   });
 
@@ -133,8 +133,8 @@ describe('ResetPasswordView', () => {
     const passwordInput = wrapper.find('#password input');
     const confirmInput = wrapper.find('#password-confirmation input');
 
-    await passwordInput.setValue('password123');
-    await confirmInput.setValue('password123');
+    await passwordInput.setValue('Password123!');
+    await confirmInput.setValue('Password123!');
 
     const form = wrapper.find('form');
     await form.trigger('submit.prevent');

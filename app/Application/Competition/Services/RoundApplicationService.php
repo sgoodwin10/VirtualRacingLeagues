@@ -12,6 +12,7 @@ use App\Application\Competition\DTOs\RoundResultsData;
 use App\Application\Competition\DTOs\RaceEventResultData;
 use App\Application\Competition\DTOs\RaceResultData;
 use App\Application\Competition\DTOs\DivisionData;
+use Spatie\LaravelData\DataCollection;
 use App\Domain\Competition\Entities\Round;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
@@ -590,6 +591,7 @@ final class RoundApplicationService
 
         // Fetch divisions for the season using repository
         $divisions = [];
+        $hasOrphanedResults = false;
         if ($season['race_divisions_enabled']) {
             $divisionEntities = $this->divisionRepository->findBySeasonId($season['id']);
 
@@ -600,6 +602,9 @@ final class RoundApplicationService
                     description: $divisionEntity->description()->value(),
                 );
             }
+
+            // Check for orphaned results (only relevant when divisions are enabled)
+            $hasOrphanedResults = $this->raceResultRepository->hasOrphanedResultsForRound($roundId);
         }
 
         // Build round summary from entity
@@ -679,8 +684,9 @@ final class RoundApplicationService
 
         $resultData = new RoundResultsData(
             round: $roundSummaryTyped,
-            divisions: $divisions,
-            race_events: $raceEvents,
+            divisions: new DataCollection(DivisionData::class, $divisions),
+            race_events: new DataCollection(RaceEventResultData::class, $raceEvents),
+            has_orphaned_results: $hasOrphanedResults,
         );
 
         // Cache the results for cross-subdomain access

@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, shallowRef, onMounted, onBeforeUnmount, watch } from 'vue';
 import {
   Chart,
   LineController,
@@ -54,7 +54,7 @@ const { theme } = useTheme();
 // Template ref - will be HTMLCanvasElement when mounted
 // eslint-disable-next-line no-undef
 const chartCanvas = ref<HTMLCanvasElement | null>(null);
-let chartInstance: Chart | null = null;
+const chartInstance = shallowRef<Chart | null>(null);
 
 // Get theme-aware colors
 const getThemeColors = () => {
@@ -108,22 +108,49 @@ const driverColors = [
 
 // Generate chart data
 const generateChartData = () => {
-  // X-axis labels (round numbers)
-  const labels = props.rounds.map((r) => r.name);
+  // Handle empty data
+  if (props.rounds.length === 0) {
+    return { labels: [], datasets: [] };
+  }
+
+  if (props.drivers.length === 0) {
+    return {
+      labels: props.rounds.map((r) => r.name ?? `Round ${r.round_number}`),
+      datasets: [],
+    };
+  }
+
+  // X-axis labels (round numbers) - handle null round names
+  const labels = props.rounds.map((r) => r.name ?? `Round ${r.round_number}`);
 
   // Create datasets for each driver (all drivers included)
   const datasets = props.drivers.map((driver, index) => {
+    // Find the last round index where this driver has actual data
+    let lastRoundIndex = -1;
+    props.rounds.forEach((round, idx) => {
+      const roundData = driver.rounds.find((r) => r.round_id === round.round_id);
+      if (roundData) {
+        lastRoundIndex = idx;
+      }
+    });
+
     // Calculate cumulative points for each round
-    const cumulativePoints: number[] = [];
+    const cumulativePoints: (number | null)[] = [];
     let runningTotal = 0;
 
-    props.rounds.forEach((round) => {
+    props.rounds.forEach((round, idx) => {
       // Find the round data for this driver
       const roundData = driver.rounds.find((r) => r.round_id === round.round_id);
       if (roundData) {
         runningTotal += roundData.points;
       }
-      cumulativePoints.push(runningTotal);
+
+      // Push actual points up to last round with data, then null
+      if (idx <= lastRoundIndex) {
+        cumulativePoints.push(runningTotal);
+      } else {
+        cumulativePoints.push(null);
+      }
     });
 
     const color = driverColors[index % driverColors.length];
@@ -179,20 +206,20 @@ const createChartConfig = (): ChartConfiguration<'line'> => {
           onClick: (_e, legendItem, _legend) => {
             // Toggle visibility of dataset when legend item is clicked
             const index = legendItem.datasetIndex;
-            if (index !== undefined && chartInstance) {
-              const meta = chartInstance.getDatasetMeta(index);
-              const dataset = chartInstance.data.datasets[index];
+            if (index !== undefined && chartInstance.value) {
+              const meta = chartInstance.value.getDatasetMeta(index);
+              const dataset = chartInstance.value.data.datasets[index];
               if (dataset) {
                 // Toggle hidden state - Chart.js uses null to represent visible
                 const isCurrentlyHidden = meta.hidden !== null ? meta.hidden : !!dataset.hidden;
                 meta.hidden = !isCurrentlyHidden;
               }
-              chartInstance.update();
+              chartInstance.value.update();
             }
           },
         },
         tooltip: {
-          enabled: false,
+          enabled: true,
           backgroundColor: colors.tooltipBg,
           titleColor: colors.tooltipTitle,
           bodyColor: colors.tooltipBody,
@@ -269,28 +296,33 @@ const initChart = () => {
   const canvas = chartCanvas.value;
   if (!canvas) return;
 
-  // Destroy existing chart if any
-  if (chartInstance && typeof chartInstance.destroy === 'function') {
-    chartInstance.destroy();
-  }
+  try {
+    // Destroy existing chart if any
+    if (chartInstance.value && typeof chartInstance.value.destroy === 'function') {
+      chartInstance.value.destroy();
+    }
 
-  // Create new chart
-  const config = createChartConfig();
-  chartInstance = new Chart(canvas, config);
+    // Create new chart
+    const config = createChartConfig();
+    chartInstance.value = new Chart(canvas, config);
+  } catch (error) {
+    console.error('Failed to initialize chart:', error);
+    // The chart simply won't render, but the page won't crash
+  }
 };
 
 // Update chart when data changes
 const updateChart = () => {
-  if (!chartInstance || typeof chartInstance.update !== 'function') {
+  if (!chartInstance.value || typeof chartInstance.value.update !== 'function') {
     initChart();
     return;
   }
 
   // Update data
   const newData = generateChartData();
-  chartInstance.data.labels = newData.labels;
-  chartInstance.data.datasets = newData.datasets;
-  chartInstance.update();
+  chartInstance.value.data.labels = newData.labels;
+  chartInstance.value.data.datasets = newData.datasets;
+  chartInstance.value.update();
 };
 
 // Lifecycle hooks
@@ -299,9 +331,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (chartInstance && typeof chartInstance.destroy === 'function') {
-    chartInstance.destroy();
-    chartInstance = null;
+  if (chartInstance.value && typeof chartInstance.value.destroy === 'function') {
+    chartInstance.value.destroy();
+    chartInstance.value = null;
   }
 });
 
@@ -314,6 +346,10 @@ watch(
     driverHash: props.drivers.map((d) => d.driver_id).join(','),
     // Hash of round IDs to detect actual data changes
     roundHash: props.rounds.map((r) => r.round_id).join(','),
+    // Track actual point values to detect changes within driver rounds
+    pointsHash: props.drivers
+      .map((d) => d.rounds.map((r) => `${r.round_id}:${r.points}`).join('|'))
+      .join(','),
   }),
   () => {
     updateChart();

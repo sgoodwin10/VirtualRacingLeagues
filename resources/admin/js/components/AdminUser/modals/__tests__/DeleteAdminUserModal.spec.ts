@@ -281,70 +281,34 @@ describe('DeleteAdminUserModal', () => {
     });
   });
 
-  describe('Helper Functions', () => {
-    it('correctly extracts first name from admin user', () => {
+  describe('Name Display', () => {
+    it('displays full name correctly', () => {
       const wrapper = mount(DeleteAdminUserModal, {
         props: defaultProps,
       });
 
-      const vm = wrapper.vm as any;
-      expect(vm.getFirstName(mockAdminUser)).toBe('John');
+      expect(wrapper.text()).toContain('John Doe');
     });
 
-    it('extracts first name from name field when first_name is missing', () => {
-      const wrapper = mount(DeleteAdminUserModal, {
-        props: defaultProps,
-      });
-
-      const vm = wrapper.vm as any;
+    it('displays name from name field when first_name/last_name are missing', () => {
       const userWithOnlyName = {
         ...mockAdminUser,
         first_name: '',
-        name: 'Jane Smith',
-      };
-
-      expect(vm.getFirstName(userWithOnlyName)).toBe('Jane');
-    });
-
-    it('correctly extracts last name from admin user', () => {
-      const wrapper = mount(DeleteAdminUserModal, {
-        props: defaultProps,
-      });
-
-      const vm = wrapper.vm as any;
-      expect(vm.getLastName(mockAdminUser)).toBe('Doe');
-    });
-
-    it('extracts last name from name field when last_name is missing', () => {
-      const wrapper = mount(DeleteAdminUserModal, {
-        props: defaultProps,
-      });
-
-      const vm = wrapper.vm as any;
-      const userWithOnlyName = {
-        ...mockAdminUser,
         last_name: '',
         name: 'Jane Smith',
       };
 
-      expect(vm.getLastName(userWithOnlyName)).toBe('Smith');
-    });
-
-    it('constructs full name correctly', () => {
       const wrapper = mount(DeleteAdminUserModal, {
-        props: defaultProps,
+        props: {
+          ...defaultProps,
+          adminUser: userWithOnlyName,
+        },
       });
 
-      const vm = wrapper.vm as any;
-      expect(vm.getFullName(mockAdminUser)).toBe('John Doe');
+      expect(wrapper.text()).toContain('Jane Smith');
     });
 
     it('handles middle names in full name', () => {
-      const wrapper = mount(DeleteAdminUserModal, {
-        props: defaultProps,
-      });
-
-      const vm = wrapper.vm as any;
       const userWithMiddleName = {
         ...mockAdminUser,
         first_name: '',
@@ -352,23 +316,32 @@ describe('DeleteAdminUserModal', () => {
         name: 'John Michael Doe',
       };
 
-      expect(vm.getFullName(userWithMiddleName)).toBe('John Michael Doe');
+      const wrapper = mount(DeleteAdminUserModal, {
+        props: {
+          ...defaultProps,
+          adminUser: userWithMiddleName,
+        },
+      });
+
+      expect(wrapper.text()).toContain('John Michael Doe');
     });
 
     it('handles user with only first name', () => {
-      const wrapper = mount(DeleteAdminUserModal, {
-        props: defaultProps,
-      });
-
-      const vm = wrapper.vm as any;
       const userWithOnlyFirstName = {
         ...mockAdminUser,
         first_name: 'John',
         last_name: '',
-        name: 'John',
+        name: '',
       };
 
-      expect(vm.getFullName(userWithOnlyFirstName)).toBe('John');
+      const wrapper = mount(DeleteAdminUserModal, {
+        props: {
+          ...defaultProps,
+          adminUser: userWithOnlyFirstName,
+        },
+      });
+
+      expect(wrapper.text()).toContain('John');
     });
   });
 
@@ -446,36 +419,48 @@ describe('DeleteAdminUserModal', () => {
       expect(wrapper.find('.base-modal').exists()).toBe(true);
     });
 
-    it('handles adminUser with special characters in name', () => {
+    it('handles adminUser with special characters in name', async () => {
       const userWithSpecialChars: Admin = {
         ...mockAdminUser,
+        id: 999,
         first_name: "John-O'Brien",
         last_name: 'Müller',
+        name: '', // Clear the name field so first_name and last_name are used
+        email: 'special@example.com',
       };
 
       const wrapper = mount(DeleteAdminUserModal, {
         props: {
-          ...defaultProps,
+          visible: true,
           adminUser: userWithSpecialChars,
+          deleting: false,
         },
       });
+
+      await nextTick();
 
       expect(wrapper.text()).toContain("John-O'Brien Müller");
     });
 
-    it('handles adminUser with very long names', () => {
+    it('handles adminUser with very long names', async () => {
       const userWithLongName: Admin = {
         ...mockAdminUser,
+        id: 998,
         first_name: 'Johnathon',
         last_name: 'VeryLongLastNameThatMightBreakLayout',
+        name: '', // Clear the name field so first_name and last_name are used
+        email: 'longname@example.com',
       };
 
       const wrapper = mount(DeleteAdminUserModal, {
         props: {
-          ...defaultProps,
+          visible: true,
           adminUser: userWithLongName,
+          deleting: false,
         },
       });
+
+      await nextTick();
 
       expect(wrapper.text()).toContain('Johnathon VeryLongLastNameThatMightBreakLayout');
     });

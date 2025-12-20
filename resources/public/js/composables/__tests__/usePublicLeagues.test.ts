@@ -340,6 +340,7 @@ describe('usePublicLeagues', () => {
       expect.objectContaining({
         search: 'GT7',
       }),
+      expect.any(AbortSignal),
     );
 
     vi.useRealTimers();
@@ -364,6 +365,7 @@ describe('usePublicLeagues', () => {
       expect.not.objectContaining({
         search: expect.anything(),
       }),
+      expect.any(AbortSignal),
     );
   });
 });

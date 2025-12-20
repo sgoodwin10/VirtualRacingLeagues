@@ -34,6 +34,8 @@ export interface Race {
   race_notes: string | null;
   is_qualifier: boolean;
   status: 'scheduled' | 'completed';
+  // Orphaned results indicator (only populated for completed races with divisions enabled)
+  has_orphaned_results?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -143,6 +145,12 @@ export interface RaceFormErrors {
   minimum_pit_time?: string;
   points_system?: string;
   grid_source_race_id?: string;
+}
+
+// Orphaned results response
+export interface OrphanedResultsResponse {
+  drivers: Array<{ id: number; name: string }>;
+  count: number;
 }
 
 // Platform settings configuration

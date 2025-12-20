@@ -36,8 +36,7 @@ class DatabaseSeeder extends Seeder
                 SeasonSeeder::class,
                 DivisionSeeder::class,
                 RoundSeeder::class,
-                RaceSeeder::class,
-                RaceResultSeeder::class,
+                RaceSeeder::class
             ]);
         }
     }

@@ -78,12 +78,50 @@ export const useTrackStore = defineStore('track', () => {
   }
 
   async function searchTracks(platformId: number, search: string): Promise<TrackLocationGroup[]> {
-    const params: TrackSearchParams = {
-      platform_id: platformId,
-      search,
-      is_active: true,
-    };
-    return await fetchTracks(params);
+    setLoading(true);
+    setError(null);
+    try {
+      const params: TrackSearchParams = {
+        platform_id: platformId,
+        search,
+        is_active: true,
+      };
+
+      // Fetch search results WITHOUT modifying the main tracks array
+      const locationGroups = await trackService.getTracks(params);
+
+      // Ensure locationGroups is an array
+      if (!Array.isArray(locationGroups)) {
+        console.error(
+          'Expected locationGroups to be an array, got:',
+          typeof locationGroups,
+          locationGroups,
+        );
+        throw new Error('Invalid response format from tracks API');
+      }
+
+      // Extract tracks from search results and add any missing tracks to the store
+      // This ensures searched tracks are available via getTrackById while preserving existing tracks
+      const searchedTracks = locationGroups.flatMap((group) => group.tracks);
+      searchedTracks.forEach((searchedTrack) => {
+        const existingIndex = tracks.value.findIndex((t) => t.id === searchedTrack.id);
+        if (existingIndex === -1) {
+          // Track not in store yet, add it
+          tracks.value.push(searchedTrack);
+        } else {
+          // Track already exists, update it with latest data
+          tracks.value[existingIndex] = searchedTrack;
+        }
+      });
+
+      // Return search results for display in autocomplete
+      return locationGroups;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to search tracks');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function fetchTrack(trackId: number): Promise<Track> {

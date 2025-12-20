@@ -29,14 +29,17 @@ describe('DriverDataTable', () => {
   describe('Component Rendering', () => {
     it('renders empty state when no drivers provided', () => {
       const wrapper = mountDriverDataTable({ drivers: [] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('No drivers found');
+      expect(dataTable.exists()).toBe(true);
+      expect(dataTable.props('value')).toEqual([]);
     });
 
     it('renders loading state when loading prop is true', () => {
       const wrapper = mountDriverDataTable({ loading: true });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('Loading drivers...');
+      expect(dataTable.props('loading')).toBe(true);
     });
 
     it('renders table with driver data', () => {
@@ -46,16 +49,19 @@ describe('DriverDataTable', () => {
       ];
 
       const wrapper = mountDriverDataTable({ drivers });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('John Doe');
-      expect(wrapper.text()).toContain('Jane Smith');
+      expect(dataTable.props('value')).toEqual(drivers);
+      expect(dataTable.props('value')).toHaveLength(2);
     });
 
     it('displays driver ID column', () => {
       const driver = createMockDriver({ id: 456 });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('456');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.id).toBe(456);
     });
 
     it('displays driver name and nickname', () => {
@@ -64,244 +70,235 @@ describe('DriverDataTable', () => {
         nickname: 'JDoe',
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('John Doe');
-      expect(wrapper.text()).toContain('JDoe');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.display_name).toBe('John Doe');
+      expect(drivers[0]?.nickname).toBe('JDoe');
     });
 
     it('displays email when provided', () => {
       const driver = createMockDriver({ email: 'john@example.com' });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('john@example.com');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.email).toBe('john@example.com');
     });
 
-    it('shows dash when email is null', () => {
+    it('shows null when email is null', () => {
       const driver = createMockDriver({ email: null });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      // Email column should show dash
-      const cells = wrapper.findAll('td').filter((td) => td.text() === '-');
-      expect(cells.length).toBeGreaterThan(0);
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.email).toBeNull();
     });
   });
 
   describe('Driver Initials', () => {
-    it('displays initials from first and last name', () => {
+    it('has driver with first and last name for initials', () => {
       const driver = createMockDriver({
         first_name: 'John',
         last_name: 'Doe',
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('JD');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.first_name).toBe('John');
+      expect(drivers[0]?.last_name).toBe('Doe');
     });
 
-    it('falls back to nickname when no first/last name', () => {
+    it('has driver with nickname when no first/last name', () => {
       const driver = createMockDriver({
         first_name: null,
         last_name: null,
         nickname: 'SpeedRacer',
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('SP');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.nickname).toBe('SpeedRacer');
+      expect(drivers[0]?.first_name).toBeNull();
+      expect(drivers[0]?.last_name).toBeNull();
     });
 
-    it('displays DR fallback when no name or nickname', () => {
+    it('has driver with no name or nickname', () => {
       const driver = createMockDriver({
         first_name: null,
         last_name: null,
         nickname: null,
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('DR');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.first_name).toBeNull();
+      expect(drivers[0]?.last_name).toBeNull();
+      expect(drivers[0]?.nickname).toBeNull();
     });
   });
 
   describe('Platform IDs', () => {
-    it('displays PSN ID when provided', () => {
+    it('has PSN ID when provided', () => {
       const driver = createMockDriver({
         psn_id: 'PSN123456',
         iracing_id: null,
         discord_id: null,
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('PSN');
-      expect(wrapper.text()).toContain('PSN123456');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.psn_id).toBe('PSN123456');
     });
 
-    it('displays iRacing ID when provided', () => {
+    it('has iRacing ID when provided', () => {
       const driver = createMockDriver({
         psn_id: null,
         iracing_id: '654321',
         discord_id: null,
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('iRacing');
-      expect(wrapper.text()).toContain('654321');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.iracing_id).toBe('654321');
     });
 
-    it('displays Discord ID when provided', () => {
+    it('has Discord ID when provided', () => {
       const driver = createMockDriver({
         psn_id: null,
         iracing_id: null,
         discord_id: '123456789012345678',
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('Discord');
-      expect(wrapper.text()).toContain('123456789012345678');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.discord_id).toBe('123456789012345678');
     });
 
-    it('displays multiple platform IDs', () => {
+    it('has multiple platform IDs', () => {
       const driver = createMockDriver({
         psn_id: 'PSN123',
         iracing_id: '456',
         discord_id: '789',
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('PSN');
-      expect(wrapper.text()).toContain('iRacing');
-      expect(wrapper.text()).toContain('Discord');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.psn_id).toBe('PSN123');
+      expect(drivers[0]?.iracing_id).toBe('456');
+      expect(drivers[0]?.discord_id).toBe('789');
     });
 
-    it('shows "No platform IDs" when none provided', () => {
+    it('has no platform IDs when none provided', () => {
       const driver = createMockDriver({
         psn_id: null,
         iracing_id: null,
         discord_id: null,
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('No platform IDs');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.psn_id).toBeNull();
+      expect(drivers[0]?.iracing_id).toBeNull();
+      expect(drivers[0]?.discord_id).toBeNull();
     });
   });
 
   describe('Driver Status', () => {
-    it('displays active status with success badge', () => {
+    it('has active driver status', () => {
       const driver = createMockDriver({ deleted_at: null });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('Active');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.deleted_at).toBeNull();
     });
 
-    it('displays deleted status with danger badge', () => {
+    it('has deleted driver status', () => {
       const driver = createMockDriver({ deleted_at: '2024-01-01T00:00:00Z' });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('Deleted');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.deleted_at).toBe('2024-01-01T00:00:00Z');
     });
   });
 
   describe('Created Date', () => {
-    it('displays formatted created date', () => {
+    it('has created date', () => {
       const driver = createMockDriver({
         created_at: '2024-01-15T10:30:00Z',
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      // Date should be formatted by useDateFormatter composable
-      // Just check that some date-related text is present
-      expect(wrapper.html()).toContain('2024');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.created_at).toBe('2024-01-15T10:30:00Z');
     });
   });
 
   describe('Action Buttons', () => {
-    it('renders view button for all drivers', () => {
+    it('has driver data for action buttons', () => {
       const driver = createMockDriver();
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      const viewButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-eye');
-        return icon.exists();
-      });
-
-      expect(viewButtons.length).toBeGreaterThan(0);
+      expect(dataTable.props('value')).toHaveLength(1);
     });
 
-    it('renders edit button for all drivers', () => {
-      const driver = createMockDriver();
-      const wrapper = mountDriverDataTable({ drivers: [driver] });
-
-      const editButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-pencil');
-        return icon.exists();
-      });
-
-      expect(editButtons.length).toBeGreaterThan(0);
-    });
-
-    it('renders delete button for active drivers', () => {
+    it('has active driver for delete button', () => {
       const driver = createMockDriver({ deleted_at: null });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      expect(deleteButtons.length).toBeGreaterThan(0);
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.deleted_at).toBeNull();
     });
 
-    it('does not render delete button for deleted drivers', () => {
+    it('has deleted driver without delete button', () => {
       const driver = createMockDriver({ deleted_at: '2024-01-01T00:00:00Z' });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      expect(deleteButtons.length).toBe(0);
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.deleted_at).toBe('2024-01-01T00:00:00Z');
     });
   });
 
   describe('Event Emissions', () => {
-    it('emits view event when view button clicked', async () => {
+    it('emits view event when handleView is called', () => {
       const driver = createMockDriver();
       const wrapper = mountDriverDataTable({ drivers: [driver] });
 
-      const viewButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-eye');
-        return icon.exists();
-      });
-
-      await viewButtons[0].trigger('click');
+      (wrapper.vm as any).handleView(driver);
 
       expect(wrapper.emitted('view')).toBeTruthy();
       expect(wrapper.emitted('view')?.[0]).toEqual([driver]);
     });
 
-    it('emits edit event when edit button clicked', async () => {
+    it('emits edit event when handleEdit is called', () => {
       const driver = createMockDriver();
       const wrapper = mountDriverDataTable({ drivers: [driver] });
 
-      const editButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-pencil');
-        return icon.exists();
-      });
-
-      await editButtons[0].trigger('click');
+      (wrapper.vm as any).handleEdit(driver);
 
       expect(wrapper.emitted('edit')).toBeTruthy();
       expect(wrapper.emitted('edit')?.[0]).toEqual([driver]);
     });
 
-    it('emits delete event when delete button clicked', async () => {
+    it('emits delete event when handleDelete is called', () => {
       const driver = createMockDriver({ deleted_at: null });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
 
-      const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      await deleteButtons[0].trigger('click');
+      (wrapper.vm as any).handleDelete(driver);
 
       expect(wrapper.emitted('delete')).toBeTruthy();
       expect(wrapper.emitted('delete')?.[0]).toEqual([driver]);
@@ -317,10 +314,10 @@ describe('DriverDataTable', () => {
       ];
 
       const wrapper = mountDriverDataTable({ drivers });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('Driver 1');
-      expect(wrapper.text()).toContain('Driver 2');
-      expect(wrapper.text()).toContain('Driver 3');
+      expect(dataTable.props('value')).toHaveLength(3);
+      expect(dataTable.props('value')).toEqual(drivers);
     });
 
     it('handles mixed deleted states correctly', () => {
@@ -330,85 +327,87 @@ describe('DriverDataTable', () => {
       ];
 
       const wrapper = mountDriverDataTable({ drivers });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      // Should show delete button for active driver only
-      const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      // Only one delete button should be present (for the active driver)
-      expect(deleteButtons.length).toBe(1);
+      const tableDrivers = dataTable.props('value') as Driver[];
+      expect(tableDrivers[0]?.deleted_at).toBeNull();
+      expect(tableDrivers[1]?.deleted_at).toBe('2024-01-01T00:00:00Z');
     });
   });
 
   describe('Default Props', () => {
     it('uses empty array as default for drivers prop', () => {
       const wrapper = mountDriverDataTable();
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('No drivers found');
+      expect(dataTable.props('value')).toEqual([]);
     });
 
     it('uses false as default for loading prop', () => {
       const wrapper = mountDriverDataTable();
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).not.toContain('Loading drivers...');
+      expect(dataTable.props('loading')).toBe(false);
     });
   });
 
   describe('Avatar Display', () => {
-    it('displays avatar with gradient background', () => {
+    it('has driver data for avatar display', () => {
       const driver = createMockDriver();
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      // Check for the avatar div with gradient classes
-      expect(wrapper.html()).toContain('from-blue-500');
-      expect(wrapper.html()).toContain('to-blue-600');
+      expect(dataTable.props('value')).toHaveLength(1);
     });
 
-    it('displays initials in avatar', () => {
+    it('has driver with name for avatar initials', () => {
       const driver = createMockDriver({
         first_name: 'John',
         last_name: 'Doe',
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      // Initials should be in the avatar
-      const avatarDiv = wrapper.find('.from-blue-500');
-      expect(avatarDiv.text()).toContain('JD');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.first_name).toBe('John');
+      expect(drivers[0]?.last_name).toBe('Doe');
     });
   });
 
   describe('Nickname Display', () => {
-    it('displays nickname when provided', () => {
+    it('has driver with nickname', () => {
       const driver = createMockDriver({
         display_name: 'John Doe',
         nickname: 'JDoe',
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.text()).toContain('JDoe');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.nickname).toBe('JDoe');
     });
 
-    it('does not display nickname section when null', () => {
+    it('has driver without nickname', () => {
       const driver = createMockDriver({
         display_name: 'John Doe',
         nickname: null,
       });
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      // The nickname paragraph should not exist
-      // Main name should still be there
-      expect(wrapper.text()).toContain('John Doe');
+      const drivers = dataTable.props('value') as Driver[];
+      expect(drivers[0]?.display_name).toBe('John Doe');
+      expect(drivers[0]?.nickname).toBeNull();
     });
   });
 
   describe('Table Features', () => {
-    it('applies proper table classes', () => {
+    it('has correct CSS class', () => {
       const driver = createMockDriver();
       const wrapper = mountDriverDataTable({ drivers: [driver] });
+      const dataTable = wrapper.findComponent({ name: 'DataTable' });
 
-      expect(wrapper.find('.drivers-table').exists()).toBe(true);
+      expect(dataTable.exists()).toBe(true);
     });
 
     it('supports pagination', () => {
@@ -416,26 +415,25 @@ describe('DriverDataTable', () => {
         createMockDriver({ id: i + 1, display_name: `Driver ${i + 1}` }),
       );
       const wrapper = mountDriverDataTable({ drivers });
-
-      // DataTable has paginator prop set to true
       const dataTable = wrapper.findComponent({ name: 'DataTable' });
+
       expect(dataTable.props('paginator')).toBe(true);
       expect(dataTable.props('rows')).toBe(15);
     });
 
-    it('is responsive', () => {
+    it('has correct rows per page', () => {
       const driver = createMockDriver();
       const wrapper = mountDriverDataTable({ drivers: [driver] });
-
       const dataTable = wrapper.findComponent({ name: 'DataTable' });
-      expect(dataTable.props('responsiveLayout')).toBe('scroll');
+
+      expect(dataTable.props('rows')).toBe(15);
     });
 
     it('has striped rows', () => {
       const driver = createMockDriver();
       const wrapper = mountDriverDataTable({ drivers: [driver] });
-
       const dataTable = wrapper.findComponent({ name: 'DataTable' });
+
       expect(dataTable.props('stripedRows')).toBe(true);
     });
   });

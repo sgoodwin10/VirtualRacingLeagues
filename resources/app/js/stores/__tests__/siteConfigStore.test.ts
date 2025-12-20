@@ -11,12 +11,21 @@ import type { SiteConfig } from '@app/types/siteConfig';
 // Mock the site config service
 vi.mock('@app/services/siteConfigService');
 
+// Mock the logger
+vi.mock('@app/utils/logger', () => ({
+  createLogger: vi.fn(() => ({
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  })),
+  logError: vi.fn(),
+}));
+
 describe('siteConfigStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
-    // Clear console.error mock
-    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   describe('initial state', () => {
@@ -244,7 +253,6 @@ describe('siteConfigStore', () => {
       expect(store.error).toBe('Network error');
       expect(store.loading).toBe(false);
       expect(store.config).toBeNull();
-      expect(console.error).toHaveBeenCalledWith('Site config error:', 'Network error');
     });
 
     it('should handle non-Error exceptions', async () => {
@@ -254,10 +262,6 @@ describe('siteConfigStore', () => {
       await store.fetchConfig();
 
       expect(store.error).toBe('Failed to load site configuration');
-      expect(console.error).toHaveBeenCalledWith(
-        'Site config error:',
-        'Failed to load site configuration',
-      );
     });
 
     it('should set loading state during fetch', async () => {

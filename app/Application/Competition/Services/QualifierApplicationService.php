@@ -172,7 +172,19 @@ final class QualifierApplicationService
     public function getQualifier(int $qualifierId): RaceData
     {
         $qualifier = $this->raceRepository->findQualifierById($qualifierId);
-        return RaceData::fromEntity($qualifier);
+
+        // Check for orphaned results if qualifier is completed and season has divisions enabled
+        $hasOrphanedResults = false;
+        if ($qualifier->status()->value === 'completed' && $qualifier->id() !== null) {
+            $round = $this->roundRepository->findById($qualifier->roundId());
+            $season = $this->seasonRepository->findById($round->seasonId());
+
+            if ($season->raceDivisionsEnabled()) {
+                $hasOrphanedResults = $this->raceResultRepository->hasOrphanedResultsForRace($qualifier->id());
+            }
+        }
+
+        return RaceData::fromEntity($qualifier, $hasOrphanedResults);
     }
 
     public function getQualifierByRound(int $roundId): ?RaceData
@@ -183,7 +195,18 @@ final class QualifierApplicationService
             return null;
         }
 
-        return RaceData::fromEntity($qualifier);
+        // Check for orphaned results if qualifier is completed and season has divisions enabled
+        $hasOrphanedResults = false;
+        if ($qualifier->status()->value === 'completed' && $qualifier->id() !== null) {
+            $round = $this->roundRepository->findById($roundId);
+            $season = $this->seasonRepository->findById($round->seasonId());
+
+            if ($season->raceDivisionsEnabled()) {
+                $hasOrphanedResults = $this->raceResultRepository->hasOrphanedResultsForRace($qualifier->id());
+            }
+        }
+
+        return RaceData::fromEntity($qualifier, $hasOrphanedResults);
     }
 
     public function deleteQualifier(int $qualifierId): void

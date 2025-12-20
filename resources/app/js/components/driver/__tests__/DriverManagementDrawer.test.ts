@@ -33,19 +33,54 @@ vi.mock('primevue/useconfirm', () => ({
 const mockFetchLeagueDrivers = vi.fn().mockResolvedValue(undefined);
 const mockResetFilters = vi.fn();
 
-vi.mock('@app/stores/driverStore', () => ({
-  useDriverStore: vi.fn(() => ({
-    statusFilter: 'all',
-    currentPage: 1,
-    fetchLeagueDrivers: mockFetchLeagueDrivers,
-    createNewDriver: vi.fn(),
-    updateDriver: vi.fn(),
-    removeDriver: vi.fn(),
-    importCSV: vi.fn(),
-    setSearchQuery: vi.fn(),
-    resetFilters: mockResetFilters,
-  })),
-}));
+vi.mock('@app/stores/driverStore', () => {
+  const { ref, computed } = require('vue');
+  return {
+    useDriverStore: vi.fn(() => ({
+      statusFilter: 'all',
+      currentPage: ref(1),
+      perPage: ref(10),
+      drivers: ref([]),
+      loading: ref(false),
+      totalDrivers: ref(0),
+      fetchLeagueDrivers: mockFetchLeagueDrivers,
+      createNewDriver: vi.fn(),
+      updateDriver: vi.fn(),
+      removeDriver: vi.fn(),
+      importCSV: vi.fn(),
+      setSearchQuery: vi.fn(),
+      resetFilters: mockResetFilters,
+    })),
+  };
+});
+
+// Mock league store - create shared refs outside the factory
+const { ref: vueRef } = require('vue');
+const mockPlatformColumns = vueRef([]);
+const mockPlatformCsvHeaders = vueRef([]);
+const mockPlatformFormFields = vueRef([]);
+
+vi.mock('@app/stores/leagueStore', () => {
+  return {
+    useLeagueStore: vi.fn(() => ({
+      platformColumns: mockPlatformColumns,
+      platformCsvHeaders: mockPlatformCsvHeaders,
+      platformFormFields: mockPlatformFormFields,
+      fetchDriverColumnsForLeague: vi.fn().mockImplementation(async () => {
+        // Mock implementation that ensures the arrays stay as arrays
+        mockPlatformColumns.value = [];
+      }),
+      fetchDriverFormFieldsForLeague: vi.fn().mockImplementation(async () => {
+        // Mock implementation that ensures the arrays stay as arrays
+        mockPlatformFormFields.value = [];
+      }),
+      fetchDriverCsvHeadersForLeague: vi.fn().mockImplementation(async () => {
+        // Mock implementation that ensures the arrays stay as arrays
+        mockPlatformCsvHeaders.value = [];
+      }),
+    })),
+  };
+});
 
 describe('DriverManagementDrawer', () => {
   let mockDriver: LeagueDriver;

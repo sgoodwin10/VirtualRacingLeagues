@@ -70,23 +70,25 @@ final class DriverControllerTest extends TestCase
 
     public function test_can_list_drivers_with_search(): void
     {
+        // Use unique names to avoid conflicts with other tests
+        $uniqueName = 'Xanderbert' . uniqid();
         Driver::factory()->create([
-            'first_name' => 'John',
-            'last_name' => 'Doe',
+            'first_name' => $uniqueName,
+            'last_name' => 'Zylophone',
             'nickname' => null,
         ]);
         Driver::factory()->create([
-            'first_name' => 'Jane',
-            'last_name' => 'Smith',
+            'first_name' => 'Yolanda',
+            'last_name' => 'Quisp',
             'nickname' => null,
         ]);
 
         $response = $this->actingAs($this->admin, 'admin')
-            ->getJson('/api/admin/drivers?search=John');
+            ->getJson('/api/admin/drivers?search=' . $uniqueName);
 
         $response->assertStatus(200);
         $response->assertJsonCount(1, 'data');
-        $response->assertJsonPath('data.0.first_name', 'John');
+        $response->assertJsonPath('data.0.first_name', $uniqueName);
     }
 
     public function test_can_create_driver_with_valid_data(): void

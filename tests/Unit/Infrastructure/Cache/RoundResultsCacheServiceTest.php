@@ -10,6 +10,7 @@ use App\Application\Competition\DTOs\RoundResultsData;
 use App\Infrastructure\Cache\RoundResultsCacheService;
 use Illuminate\Support\Facades\Cache;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\LaravelData\DataCollection;
 use Tests\TestCase;
 
 final class RoundResultsCacheServiceTest extends TestCase
@@ -186,8 +187,8 @@ final class RoundResultsCacheServiceTest extends TestCase
                 'race_time_results' => null,
                 'fastest_lap_results' => null,
             ],
-            divisions: $divisions ?? [],
-            race_events: $raceEvents ?? [],
+            divisions: new DataCollection(DivisionData::class, $divisions ?? []),
+            race_events: new DataCollection(RaceEventResultData::class, $raceEvents ?? []),
         );
     }
 }

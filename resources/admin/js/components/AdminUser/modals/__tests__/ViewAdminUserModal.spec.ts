@@ -417,27 +417,6 @@ describe('ViewAdminUserModal', () => {
   });
 
   describe('Helper Functions', () => {
-    it('correctly extracts first name from admin user', () => {
-      const wrapper = createWrapper(defaultProps);
-
-      const vm = wrapper.vm as any;
-      expect(vm.getFirstName(mockAdminUser)).toBe('John');
-    });
-
-    it('correctly extracts last name from admin user', () => {
-      const wrapper = createWrapper(defaultProps);
-
-      const vm = wrapper.vm as any;
-      expect(vm.getLastName(mockAdminUser)).toBe('Doe');
-    });
-
-    it('constructs full name correctly', () => {
-      const wrapper = createWrapper(defaultProps);
-
-      const vm = wrapper.vm as any;
-      expect(vm.getFullName(mockAdminUser)).toBe('John Doe');
-    });
-
     it('returns correct role label', () => {
       const wrapper = createWrapper(defaultProps);
 

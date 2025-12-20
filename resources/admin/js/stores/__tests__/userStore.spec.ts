@@ -60,8 +60,10 @@ describe('useUserStore', () => {
 
     vi.mocked(userService.getUsers).mockRejectedValue(new Error('Failed to fetch'));
 
-    await expect(store.fetchUsers()).rejects.toThrow('Failed to fetch');
+    await store.fetchUsers();
+
     expect(store.error).toBe('Failed to fetch');
+    expect(store.users).toEqual([]);
   });
 
   it('should return activeUsers getter', () => {

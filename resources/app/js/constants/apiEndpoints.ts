@@ -104,6 +104,7 @@ export const API_ENDPOINTS = {
     update: (id: number) => `/races/${id}`,
     delete: (id: number) => `/races/${id}`,
     results: (raceId: number) => `/races/${raceId}/results`,
+    orphanedResults: (raceId: number) => `/races/${raceId}/orphaned-results`,
   },
 
   // Qualifier endpoints

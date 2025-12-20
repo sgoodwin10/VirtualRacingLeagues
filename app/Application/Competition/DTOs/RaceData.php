@@ -9,67 +9,80 @@ use Spatie\LaravelData\Data;
 
 final class RaceData extends Data
 {
+    /**
+     * @param array<int, int> $points_system Points system array (position => points)
+     */
     public function __construct(
-        public int $id,
-        public int $round_id,
-        public bool $is_qualifier,
-        public ?int $race_number,
-        public ?string $name,
-        public string $race_type,
+        public readonly int $id,
+        public readonly int $round_id,
+        public readonly bool $is_qualifier,
+        public readonly ?int $race_number,
+        public readonly ?string $name,
+        public readonly string $race_type,
         // Qualifying
-        public string $qualifying_format,
-        public ?int $qualifying_length,
-        public ?string $qualifying_tire,
+        public readonly string $qualifying_format,
+        public readonly ?int $qualifying_length,
+        public readonly ?string $qualifying_tire,
         // Grid
-        public string $grid_source,
-        public ?int $grid_source_race_id,
+        public readonly string $grid_source,
+        public readonly ?int $grid_source_race_id,
         // Length
-        public string $length_type,
-        public int $length_value,
-        public bool $extra_lap_after_time,
+        public readonly string $length_type,
+        public readonly int $length_value,
+        public readonly bool $extra_lap_after_time,
         // Platform settings
-        public ?string $weather,
-        public ?string $tire_restrictions,
-        public ?string $fuel_usage,
-        public ?string $damage_model,
+        public readonly ?string $weather,
+        public readonly ?string $tire_restrictions,
+        public readonly ?string $fuel_usage,
+        public readonly ?string $damage_model,
         // Penalties & Rules
-        public bool $track_limits_enforced,
-        public bool $false_start_detection,
-        public bool $collision_penalties,
-        public bool $mandatory_pit_stop,
-        public ?int $minimum_pit_time,
-        public ?string $assists_restrictions,
+        public readonly bool $track_limits_enforced,
+        public readonly bool $false_start_detection,
+        public readonly bool $collision_penalties,
+        public readonly bool $mandatory_pit_stop,
+        public readonly ?int $minimum_pit_time,
+        public readonly ?string $assists_restrictions,
         // Bonus Points
-        public ?int $fastest_lap,
-        public bool $fastest_lap_top_10,
-        public ?int $qualifying_pole,
-        public bool $qualifying_pole_top_10,
+        public readonly ?int $fastest_lap,
+        public readonly bool $fastest_lap_top_10,
+        public readonly ?int $qualifying_pole,
+        public readonly bool $qualifying_pole_top_10,
         // Points
-        public array $points_system,
-        public int $dnf_points,
-        public int $dns_points,
-        public bool $race_points,
+        public readonly array $points_system,
+        public readonly int $dnf_points,
+        public readonly int $dns_points,
+        public readonly bool $race_points,
         // Notes
-        public ?string $race_notes,
+        public readonly ?string $race_notes,
         // Status
-        public string $status,
+        public readonly string $status,
+        // Orphaned results flag
+        public readonly bool $has_orphaned_results,
         // Timestamps
-        public string $created_at,
-        public string $updated_at,
+        public readonly string $created_at,
+        public readonly string $updated_at,
     ) {
     }
 
-    public static function fromEntity(Race $race): self
+    public static function fromEntity(Race $race, bool $hasOrphanedResults = false): self
     {
         $isQualifier = $race->isQualifier();
+        $raceId = $race->id();
+
+        if ($raceId === null) {
+            throw new \InvalidArgumentException('Race entity must have a valid ID');
+        }
 
         return new self(
-            id: $race->id() ?? 0,
+            id: $raceId,
             round_id: $race->roundId(),
             is_qualifier: $isQualifier,
             race_number: $isQualifier ? null : $race->raceNumber(),
             name: $race->name()?->value(),
-            race_type: $isQualifier ? 'qualifying' : ($race->type()->value ?? 'feature'),
+            race_type: match (true) {
+                $isQualifier => 'qualifying',
+                default => $race->type()->value ?? 'feature',
+            },
             qualifying_format: $race->qualifyingFormat()->value,
             qualifying_length: $race->qualifyingLength(),
             qualifying_tire: $race->qualifyingTire(),
@@ -98,6 +111,7 @@ final class RaceData extends Data
             race_points: $race->racePoints(),
             race_notes: $race->raceNotes(),
             status: $race->status()->value,
+            has_orphaned_results: $hasOrphanedResults,
             created_at: $race->createdAt()->format('Y-m-d H:i:s'),
             updated_at: $race->updatedAt()->format('Y-m-d H:i:s'),
         );

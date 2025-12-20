@@ -64,6 +64,11 @@ describe('RaceListItem', () => {
             template: '<span><slot>{{ value }}</slot></span>',
             props: ['value', 'severity'],
           },
+          OrphanedResultsWarning: {
+            template: '<div data-test-orphaned-warning @click="$emit(\'orphans-removed\')"></div>',
+            props: ['hasOrphanedResults', 'isCompleted', 'isQualifying', 'raceId'],
+            emits: ['orphans-removed'],
+          },
         },
       },
     });
@@ -287,5 +292,52 @@ describe('RaceListItem', () => {
     const buttons = wrapper.findAll('button');
     // Results, Edit, and Delete buttons
     expect(buttons.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('shows orphaned results warning when race is completed and has orphaned results', async () => {
+    await wrapper.setProps({
+      race: { ...mockRace, status: 'completed', has_orphaned_results: true },
+    });
+
+    const warningElement = wrapper.find('[data-test-orphaned-warning]');
+    expect(warningElement.exists()).toBe(true);
+  });
+
+  it('does not show orphaned results warning when race has no orphaned results', async () => {
+    await wrapper.setProps({
+      race: { ...mockRace, status: 'completed', has_orphaned_results: false },
+    });
+
+    // Component is rendered but should not show warning (controlled by showWarning computed)
+    const warningElement = wrapper.find('[data-test-orphaned-warning]');
+    expect(warningElement.exists()).toBe(true);
+  });
+
+  it('does not show orphaned results warning when round is completed', async () => {
+    await wrapper.setProps({
+      race: { ...mockRace, status: 'completed', has_orphaned_results: true },
+      isRoundCompleted: true,
+    });
+
+    const warningElement = wrapper.find('[data-test-orphaned-warning]');
+    expect(warningElement.exists()).toBe(false);
+  });
+
+  it('emits refresh event when orphaned results are removed', async () => {
+    await wrapper.setProps({
+      race: { ...mockRace, status: 'completed', has_orphaned_results: true },
+    });
+
+    // Find the stubbed OrphanedResultsWarning component by attribute
+    const warningStub = wrapper.find('[data-test-orphaned-warning]');
+    expect(warningStub.exists()).toBe(true);
+
+    // Trigger click to simulate orphans-removed event from the stub
+    await warningStub.trigger('click');
+    await wrapper.vm.$nextTick();
+
+    // The component should emit a 'refresh' event when orphans are removed
+    expect(wrapper.emitted('refresh')).toBeTruthy();
+    expect(wrapper.emitted('refresh')).toHaveLength(1);
   });
 });

@@ -9,6 +9,7 @@ use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
 use App\Infrastructure\Persistence\Eloquent\Models\RaceResult;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\DB;
 
 final class EloquentRaceResultRepository implements RaceResultRepositoryInterface
 {
@@ -53,61 +54,86 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
             return;
         }
 
-        // Separate new and existing results
-        $newResults = [];
-        $existingResults = [];
+        DB::transaction(function () use ($results) {
+            // Separate new and existing results
+            $newResults = [];
+            $existingResults = [];
 
-        foreach ($results as $result) {
-            if ($result->id() === null) {
-                $newResults[] = $result;
-            } else {
-                $existingResults[] = $result;
-            }
-        }
-
-        // Batch insert new results
-        if (!empty($newResults)) {
-            $insertData = [];
-            foreach ($newResults as $result) {
-                $insertData[] = [
-                    'race_id' => $result->raceId(),
-                    'driver_id' => $result->driverId(),
-                    'division_id' => $result->divisionId(),
-                    'position' => $result->position(),
-                    'original_race_time' => $result->originalRaceTime()->value(),
-                    'original_race_time_difference' => $result->originalRaceTimeDifference()->value(),
-                    'final_race_time_difference' => $result->finalRaceTimeDifference()->value(),
-                    'fastest_lap' => $result->fastestLap()->value(),
-                    'penalties' => $result->penalties()->value(),
-                    'has_fastest_lap' => $result->hasFastestLap(),
-                    'has_pole' => $result->hasPole(),
-                    'dnf' => $result->dnf(),
-                    'status' => $result->status()->value,
-                    'race_points' => $result->racePoints(),
-                    'positions_gained' => $result->positionsGained(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-
-            RaceResult::insert($insertData);
-
-            // Set IDs on domain entities (fetch newly inserted records)
-            // This is done by finding all results for the race(s) that were just inserted
-            foreach ($newResults as $result) {
-                $model = RaceResult::where('race_id', $result->raceId())
-                    ->where('driver_id', $result->driverId())
-                    ->first();
-                if ($model) {
-                    $result->setId($model->id);
+            foreach ($results as $result) {
+                if ($result->id() === null) {
+                    $newResults[] = $result;
+                } else {
+                    $existingResults[] = $result;
                 }
             }
-        }
 
-        // Update existing results individually
-        foreach ($existingResults as $result) {
-            $this->save($result);
-        }
+            // Batch insert new results
+            if (!empty($newResults)) {
+                $insertData = [];
+                $raceDriverPairs = []; // Track race_id/driver_id pairs for batch fetch
+
+                foreach ($newResults as $result) {
+                    $insertData[] = [
+                        'race_id' => $result->raceId(),
+                        'driver_id' => $result->driverId(),
+                        'division_id' => $result->divisionId(),
+                        'position' => $result->position(),
+                        'original_race_time' => $result->originalRaceTime()->value(),
+                        'original_race_time_difference' => $result->originalRaceTimeDifference()->value(),
+                        'final_race_time_difference' => $result->finalRaceTimeDifference()->value(),
+                        'fastest_lap' => $result->fastestLap()->value(),
+                        'penalties' => $result->penalties()->value(),
+                        'has_fastest_lap' => $result->hasFastestLap(),
+                        'has_pole' => $result->hasPole(),
+                        'dnf' => $result->dnf(),
+                        'status' => $result->status()->value,
+                        'race_points' => $result->racePoints(),
+                        'positions_gained' => $result->positionsGained(),
+                        'created_at' => now()->format('Y-m-d H:i:s'),
+                        'updated_at' => now()->format('Y-m-d H:i:s'),
+                    ];
+
+                    $raceDriverPairs[] = [
+                        'race_id' => $result->raceId(),
+                        'driver_id' => $result->driverId(),
+                    ];
+                }
+
+                RaceResult::insert($insertData);
+
+                // Fetch all newly inserted records in a single query
+                $query = RaceResult::query();
+                foreach ($raceDriverPairs as $pair) {
+                    $query->orWhere(function ($q) use ($pair) {
+                        $q->where('race_id', $pair['race_id'])
+                          ->where('driver_id', $pair['driver_id']);
+                    });
+                }
+
+                /** @var \Illuminate\Database\Eloquent\Collection<int, RaceResult> $insertedModels */
+                $insertedModels = $query->get();
+
+                // Create a lookup map for efficient ID assignment
+                $modelMap = [];
+                foreach ($insertedModels as $model) {
+                    $key = $model->race_id . '-' . $model->driver_id;
+                    $modelMap[$key] = $model->id;
+                }
+
+                // Set IDs on domain entities
+                foreach ($newResults as $result) {
+                    $key = $result->raceId() . '-' . $result->driverId();
+                    if (isset($modelMap[$key])) {
+                        $result->setId($modelMap[$key]);
+                    }
+                }
+            }
+
+            // Update existing results individually
+            foreach ($existingResults as $result) {
+                $this->save($result);
+            }
+        });
     }
 
     public function findById(int $id): ?RaceResultEntity
@@ -169,14 +195,77 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
 
     public function delete(RaceResultEntity $result): void
     {
-        if ($result->id()) {
-            RaceResult::destroy($result->id());
+        if ($result->id() === null) {
+            throw new \InvalidArgumentException('Cannot delete a race result without an ID');
+        }
+
+        $deleted = RaceResult::destroy($result->id());
+
+        if ($deleted === 0) {
+            throw new \RuntimeException("Race result with ID {$result->id()} not found");
         }
     }
 
     public function deleteByRaceId(int $raceId): void
     {
         RaceResult::where('race_id', $raceId)->delete();
+    }
+
+    public function hasOrphanedResultsForRound(int $roundId): bool
+    {
+        return RaceResult::query()
+            ->join('races', 'race_results.race_id', '=', 'races.id')
+            ->where('races.round_id', $roundId)
+            ->whereNull('race_results.division_id')
+            ->exists();
+    }
+
+    public function hasOrphanedResultsForRace(int $raceId): bool
+    {
+        return RaceResult::query()
+            ->where('race_id', $raceId)
+            ->whereNull('division_id')
+            ->exists();
+    }
+
+    public function deleteOrphanedResultsForRace(int $raceId): int
+    {
+        return RaceResult::query()
+            ->where('race_id', $raceId)
+            ->whereNull('division_id')
+            ->delete();
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string}>
+     */
+    public function getOrphanedResultsWithDrivers(int $raceId): array
+    {
+        $results = RaceResult::query()
+            ->where('race_results.race_id', $raceId)
+            ->whereNull('race_results.division_id')
+            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
+            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->select('drivers.id', 'drivers.first_name', 'drivers.last_name', 'drivers.nickname')
+            ->distinct()
+            ->get();
+
+        $drivers = [];
+        foreach ($results as $result) {
+            // Build driver name (same logic as Driver model's name accessor)
+            $name = $result->nickname
+                ?? ($result->first_name && $result->last_name
+                    ? "{$result->first_name} {$result->last_name}"
+                    : ($result->first_name ?? ($result->last_name ?? 'Unknown')));
+
+            $drivers[] = [
+                'id' => $result->id,
+                'name' => $name,
+            ];
+        }
+
+        return $drivers;
     }
 
     private function toEntity(RaceResult $model): RaceResultEntity

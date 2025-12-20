@@ -52,6 +52,13 @@
           @click="handleEnterResults"
         />
         <div v-if="!isRoundCompleted" class="flex items-center gap-2">
+          <OrphanedResultsWarning
+            :race-id="race.id"
+            :has-orphaned-results="race.has_orphaned_results"
+            :is-completed="isCompleted"
+            :is-qualifying="true"
+            @orphans-removed="handleOrphansRemoved"
+          />
           <ToggleSwitch v-model="isCompleted" @update:model-value="handleToggleStatus">
             <template #handle="{ checked }">
               <i :class="['!text-xs pi', { 'pi-check': checked, 'pi-times': !checked }]" />
@@ -74,6 +81,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import ToggleSwitch from 'primevue/toggleswitch';
 import { EditButton, DeleteButton } from '@app/components/common/buttons';
+import OrphanedResultsWarning from './OrphanedResultsWarning.vue';
 import type { Race } from '@app/types/race';
 import { QUALIFYING_FORMAT_OPTIONS } from '@app/types/race';
 import { PhTimer } from '@phosphor-icons/vue';
@@ -88,6 +96,7 @@ interface Emits {
   (e: 'delete', race: Race): void;
   (e: 'enterResults', race: Race): void;
   (e: 'toggleStatus', race: Race, newStatus: 'scheduled' | 'completed'): void;
+  (e: 'refresh'): void;
 }
 
 const props = defineProps<Props>();
@@ -124,5 +133,9 @@ function handleEnterResults(): void {
 function handleToggleStatus(checked: boolean): void {
   const newStatus = checked ? 'completed' : 'scheduled';
   emit('toggleStatus', props.race, newStatus);
+}
+
+function handleOrphansRemoved(): void {
+  emit('refresh');
 }
 </script>

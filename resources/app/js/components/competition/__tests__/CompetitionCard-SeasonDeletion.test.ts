@@ -270,8 +270,8 @@ describe('CompetitionCard - Season Deletion Reactivity', () => {
     // Call the delete method directly
     await vm.deleteSeason(2);
 
-    // Verify the season store method was called
-    expect(deleteSeasonSpy).toHaveBeenCalledWith(2);
+    // Verify the season store method was called with seasonId and competitionId
+    expect(deleteSeasonSpy).toHaveBeenCalledWith(2, competition.id);
   });
 
   it('should reactively update when season is added after deletion', async () => {

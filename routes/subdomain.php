@@ -239,11 +239,29 @@ Route::domain($appDomain)->middleware('web')->group(function () {
                 ->name('rounds.uncomplete');
 
             // Races
-            Route::get('/rounds/{roundId}/races', [RaceController::class, 'index'])->name('rounds.races.index');
-            Route::post('/rounds/{roundId}/races', [RaceController::class, 'store'])->name('rounds.races.store');
-            Route::get('/races/{raceId}', [RaceController::class, 'show'])->name('races.show');
-            Route::put('/races/{raceId}', [RaceController::class, 'update'])->name('races.update');
-            Route::delete('/races/{raceId}', [RaceController::class, 'destroy'])->name('races.destroy');
+            Route::get('/rounds/{roundId}/races', [RaceController::class, 'index'])
+                ->whereNumber('roundId')
+                ->name('rounds.races.index');
+            Route::post('/rounds/{roundId}/races', [RaceController::class, 'store'])
+                ->whereNumber('roundId')
+                ->name('rounds.races.store');
+            Route::get('/races/{raceId}', [RaceController::class, 'show'])
+                ->whereNumber('raceId')
+                ->name('races.show');
+            Route::put('/races/{raceId}', [RaceController::class, 'update'])
+                ->whereNumber('raceId')
+                ->name('races.update');
+            Route::delete('/races/{raceId}', [RaceController::class, 'destroy'])
+                ->whereNumber('raceId')
+                ->middleware('throttle:20,1')
+                ->name('races.destroy');
+            Route::get('/races/{raceId}/orphaned-results', [RaceController::class, 'getOrphanedResults'])
+                ->whereNumber('raceId')
+                ->name('races.orphaned-results.index');
+            Route::delete('/races/{raceId}/orphaned-results', [RaceController::class, 'removeOrphanedResults'])
+                ->whereNumber('raceId')
+                ->middleware('throttle:20,1')
+                ->name('races.orphaned-results.destroy');
 
             // Qualifiers
             Route::get('/rounds/{roundId}/qualifier', [QualifierController::class, 'show'])->name('rounds.qualifier.show');

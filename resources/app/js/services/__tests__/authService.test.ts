@@ -50,9 +50,14 @@ describe('AuthService', () => {
     });
 
     it('should not throw error if logout fails', async () => {
+      // Mock console.error to suppress error output in tests
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(apiClient.post).mockRejectedValue(new Error('Network error'));
 
       await expect(authService.logout()).resolves.not.toThrow();
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Logout API error:', expect.any(Error));
+
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -76,12 +81,10 @@ describe('AuthService', () => {
       expect(result).toEqual(mockUser);
     });
 
-    it('should return null if not authenticated', async () => {
+    it('should throw error if not authenticated', async () => {
       vi.mocked(apiClient.get).mockRejectedValue(new Error('Unauthorized'));
 
-      const result = await authService.checkAuth();
-
-      expect(result).toBeNull();
+      await expect(authService.checkAuth()).rejects.toThrow('Unauthorized');
     });
   });
 
@@ -148,9 +151,9 @@ describe('AuthService', () => {
         message: 'timeout of 30000ms exceeded',
       });
 
-      const result = await authService.checkAuth();
-
-      expect(result).toBeNull();
+      await expect(authService.checkAuth()).rejects.toMatchObject({
+        code: 'ECONNABORTED',
+      });
     });
 
     it('should handle network timeout on updateProfile', async () => {

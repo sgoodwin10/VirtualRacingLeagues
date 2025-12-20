@@ -23,6 +23,12 @@ vi.mock('@admin/utils/logger', () => ({
   },
 }));
 
+vi.mock('@admin/composables/useRequestCancellation', () => ({
+  useRequestCancellation: vi.fn(() => ({
+    getSignal: vi.fn(() => undefined),
+  })),
+}));
+
 import { siteConfigService } from '@admin/services/siteConfigService';
 import { useSiteConfigStore } from '@admin/stores/siteConfigStore';
 
@@ -129,7 +135,7 @@ describe('useSiteConfig', () => {
 
       const result = await updateConfig(updateData);
 
-      expect(siteConfigService.updateSiteConfig).toHaveBeenCalledWith(updateData);
+      expect(siteConfigService.updateSiteConfig).toHaveBeenCalledWith(updateData, undefined);
       expect(store.updateConfig).toHaveBeenCalledWith(mockConfig);
       expect(config.value).toEqual(mockConfig);
       expect(saving.value).toBe(false);

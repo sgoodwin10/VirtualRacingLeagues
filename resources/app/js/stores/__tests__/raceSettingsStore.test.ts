@@ -52,7 +52,11 @@ describe('raceSettingsStore', () => {
 
     it('should return cached settings if available', async () => {
       const store = useRaceSettingsStore();
-      store.settingsCache.set(1, mockSettings);
+      // Set cache with valid timestamp (cache expects { data, timestamp } structure)
+      store.settingsCache.set(1, {
+        data: mockSettings,
+        timestamp: Date.now(), // Fresh timestamp to ensure cache is valid
+      });
 
       const result = await store.fetchRaceSettings(1);
 

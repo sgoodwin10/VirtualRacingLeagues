@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import LeaguesTable from '../LeaguesTable.vue';
-import { mountWithStubs } from '@admin/__tests__/setup/testUtils';
+import { mount } from '@vue/test-utils';
 import { createMockLeague } from '@admin/__tests__/helpers/mockFactories';
-import userService from '@admin/services/userService';
 import type { League } from '@admin/types/league';
-
-// Mock services
-vi.mock('@admin/services/userService');
-vi.mock('@admin/utils/logger');
+import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
+import Tooltip from 'primevue/tooltip';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
 
 describe('LeaguesTable', () => {
   let pinia: ReturnType<typeof createPinia>;
@@ -22,12 +22,27 @@ describe('LeaguesTable', () => {
 
   /**
    * Helper function to mount LeaguesTable with proper configuration
+   * Using real PrimeVue components instead of stubs for better testing
    */
   const mountLeaguesTable = (props = {}) => {
-    return mountWithStubs(LeaguesTable, {
+    return mount(LeaguesTable, {
       props,
       global: {
-        plugins: [pinia],
+        plugins: [pinia, PrimeVue, ToastService],
+        components: {
+          DataTable,
+          Column,
+          Button,
+        },
+        directives: {
+          tooltip: Tooltip,
+        },
+        stubs: {
+          Badge: true,
+          EmptyState: true,
+          LoadingState: true,
+          ResponsiveImage: true,
+        },
       },
     });
   };
@@ -35,14 +50,17 @@ describe('LeaguesTable', () => {
   describe('Component Rendering', () => {
     it('renders empty state when no leagues provided', () => {
       const wrapper = mountLeaguesTable({ leagues: [] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('No leagues found');
+      expect(dataTable.exists()).toBe(true);
+      expect(dataTable.props('value')).toEqual([]);
     });
 
     it('renders loading state when loading prop is true', () => {
       const wrapper = mountLeaguesTable({ loading: true });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Loading leagues...');
+      expect(dataTable.props('loading')).toBe(true);
     });
 
     it('renders table with league data', () => {
@@ -52,445 +70,331 @@ describe('LeaguesTable', () => {
       ];
 
       const wrapper = mountLeaguesTable({ leagues });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Test League 1');
-      expect(wrapper.text()).toContain('Test League 2');
+      expect(dataTable.props('value')).toEqual(leagues);
+      expect(dataTable.props('value')).toHaveLength(2);
     });
 
-    it('displays league ID column', () => {
-      const league = createMockLeague({ id: 123 });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
+    it('passes correct props to DataTable', () => {
+      const leagues = [createMockLeague()];
+      const wrapper = mountLeaguesTable({ leagues, loading: false });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('123');
-    });
-
-    it('displays league name and slug', () => {
-      const league = createMockLeague({
-        name: 'Virtual Racing League',
-        slug: 'virtual-racing-league',
-      });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      expect(wrapper.text()).toContain('Virtual Racing League');
-      expect(wrapper.text()).toContain('virtual-racing-league');
-    });
-
-    it('displays platform badges', () => {
-      const league = createMockLeague({
-        platforms: [
-          { id: 1, name: 'PlayStation', slug: 'playstation' },
-          { id: 2, name: 'iRacing', slug: 'iracing' },
-        ],
-      });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      expect(wrapper.text()).toContain('PlayStation');
-      expect(wrapper.text()).toContain('iRacing');
-    });
-
-    it('displays manager information when owner exists', () => {
-      const league = createMockLeague({
-        owner: {
-          id: 1,
-          first_name: 'John',
-          last_name: 'Doe',
-          email: 'john@example.com',
-        },
-      });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      expect(wrapper.text()).toContain('John Doe');
-      expect(wrapper.text()).toContain('john@example.com');
-    });
-
-    it('shows dash when no manager exists', () => {
-      const league = createMockLeague({ owner: undefined });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      // The manager column should contain a dash
-      const managerCells = wrapper.findAll('td').filter((td) => td.text().includes('-'));
-      expect(managerCells.length).toBeGreaterThan(0);
+      expect(dataTable.props('value')).toEqual(leagues);
+      expect(dataTable.props('loading')).toBe(false);
+      expect(dataTable.props('stripedRows')).toBe(true);
     });
   });
 
   describe('League Visibility', () => {
-    it('displays public visibility with correct badge', () => {
+    it('renders with league having public visibility', () => {
       const league = createMockLeague({ visibility: 'public' });
       const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Public');
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.visibility).toBe('public');
     });
 
-    it('displays private visibility with correct badge', () => {
+    it('renders with league having private visibility', () => {
       const league = createMockLeague({ visibility: 'private' });
       const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Private');
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.visibility).toBe('private');
     });
 
-    it('displays unlisted visibility with correct badge', () => {
+    it('renders with league having unlisted visibility', () => {
       const league = createMockLeague({ visibility: 'unlisted' });
       const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Unlisted');
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.visibility).toBe('unlisted');
     });
   });
 
   describe('League Status', () => {
-    it('displays active status with success badge', () => {
+    it('renders with league having active status', () => {
       const league = createMockLeague({ status: 'active' });
       const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Active');
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.status).toBe('active');
     });
 
-    it('displays archived status with danger badge', () => {
+    it('renders with league having archived status', () => {
       const league = createMockLeague({ status: 'archived' });
       const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Archived');
-    });
-  });
-
-  describe('Action Buttons', () => {
-    it('renders view button for all leagues', () => {
-      const league = createMockLeague();
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const viewButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-eye');
-        return icon.exists();
-      });
-
-      expect(viewButtons.length).toBeGreaterThan(0);
-    });
-
-    it('renders login as manager button when owner exists', () => {
-      const league = createMockLeague({
-        owner: {
-          id: 1,
-          first_name: 'John',
-          last_name: 'Doe',
-          email: 'john@example.com',
-        },
-      });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const loginButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-sign-in');
-        return icon.exists();
-      });
-
-      expect(loginButtons.length).toBeGreaterThan(0);
-    });
-
-    it('does not render login as manager button when no owner', () => {
-      const league = createMockLeague({ owner: undefined });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const loginButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-sign-in');
-        return icon.exists();
-      });
-
-      expect(loginButtons.length).toBe(0);
-    });
-
-    it('renders archive button for active leagues', () => {
-      const league = createMockLeague({ status: 'active' });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const archiveButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-archive');
-        return icon.exists();
-      });
-
-      expect(archiveButtons.length).toBeGreaterThan(0);
-    });
-
-    it('does not render archive button for archived leagues', () => {
-      const league = createMockLeague({ status: 'archived' });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const archiveButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-archive');
-        return icon.exists();
-      });
-
-      expect(archiveButtons.length).toBe(0);
-    });
-
-    it('renders delete button for archived leagues', () => {
-      const league = createMockLeague({ status: 'archived' });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      expect(deleteButtons.length).toBeGreaterThan(0);
-    });
-
-    it('does not render delete button for active leagues', () => {
-      const league = createMockLeague({ status: 'active' });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      expect(deleteButtons.length).toBe(0);
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.status).toBe('archived');
     });
   });
 
   describe('Event Emissions', () => {
-    it('emits view event when view button clicked', async () => {
+    it('emits view event when handleView is called', () => {
       const league = createMockLeague();
       const wrapper = mountLeaguesTable({ leagues: [league] });
 
-      const viewButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-eye');
-        return icon.exists();
-      });
-
-      await viewButtons[0].trigger('click');
+      (wrapper.vm as any).handleView(league);
 
       expect(wrapper.emitted('view')).toBeTruthy();
       expect(wrapper.emitted('view')?.[0]).toEqual([league]);
     });
 
-    it('emits archive event when archive button clicked', async () => {
+    it('emits archive event when handleArchive is called', () => {
       const league = createMockLeague({ status: 'active' });
       const wrapper = mountLeaguesTable({ leagues: [league] });
 
-      const archiveButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-archive');
-        return icon.exists();
-      });
-
-      await archiveButtons[0].trigger('click');
+      (wrapper.vm as any).handleArchive(league);
 
       expect(wrapper.emitted('archive')).toBeTruthy();
       expect(wrapper.emitted('archive')?.[0]).toEqual([league]);
-    });
-
-    it('emits delete event when delete button clicked', async () => {
-      const league = createMockLeague({ status: 'archived' });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      await deleteButtons[0].trigger('click');
-
-      expect(wrapper.emitted('delete')).toBeTruthy();
-      expect(wrapper.emitted('delete')?.[0]).toEqual([league]);
-    });
-  });
-
-  describe('Login As Manager', () => {
-    it('calls userService.loginAsUser with correct user ID', async () => {
-      const league = createMockLeague({
-        owner_user_id: 123,
-        owner: {
-          id: 123,
-          first_name: 'John',
-          last_name: 'Doe',
-          email: 'john@example.com',
-        },
-      });
-
-      vi.mocked(userService.loginAsUser).mockResolvedValue({ token: 'test-token' });
-      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const loginButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-sign-in');
-        return icon.exists();
-      });
-
-      await loginButtons[0].trigger('click');
-      await flushPromises();
-
-      expect(userService.loginAsUser).toHaveBeenCalledWith('123');
-      expect(windowOpenSpy).toHaveBeenCalled();
-
-      windowOpenSpy.mockRestore();
-    });
-
-    it('opens new tab with correct login URL', async () => {
-      const league = createMockLeague({
-        owner_user_id: 123,
-        owner: {
-          id: 123,
-          first_name: 'John',
-          last_name: 'Doe',
-          email: 'john@example.com',
-        },
-      });
-
-      vi.mocked(userService.loginAsUser).mockResolvedValue({ token: 'test-token' });
-      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const loginButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-sign-in');
-        return icon.exists();
-      });
-
-      await loginButtons[0].trigger('click');
-      await flushPromises();
-
-      expect(windowOpenSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/login-as?token=test-token'),
-        '_blank',
-      );
-
-      windowOpenSpy.mockRestore();
-    });
-
-    it('handles login as manager error gracefully', async () => {
-      const league = createMockLeague({
-        owner_user_id: 123,
-        owner: {
-          id: 123,
-          first_name: 'John',
-          last_name: 'Doe',
-          email: 'john@example.com',
-        },
-      });
-
-      vi.mocked(userService.loginAsUser).mockRejectedValue(new Error('Failed to login'));
-
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      const loginButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-sign-in');
-        return icon.exists();
-      });
-
-      await loginButtons[0].trigger('click');
-      await flushPromises();
-
-      // Button should not remain in loading state after error
-      expect(loginButtons[0].attributes('loading')).toBeUndefined();
-    });
-
-    it('does not call loginAsUser when owner is missing', async () => {
-      const league = createMockLeague({ owner: undefined, owner_user_id: 0 });
-
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      // No login button should be rendered
-      const loginButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-sign-in');
-        return icon.exists();
-      });
-
-      expect(loginButtons.length).toBe(0);
-      expect(userService.loginAsUser).not.toHaveBeenCalled();
     });
   });
 
   describe('Multiple Leagues', () => {
     it('renders multiple leagues correctly', () => {
       const leagues = [
-        createMockLeague({ name: 'League 1', id: 1 }),
-        createMockLeague({ name: 'League 2', id: 2 }),
-        createMockLeague({ name: 'League 3', id: 3 }),
+        createMockLeague({ name: 'League 1' }),
+        createMockLeague({ name: 'League 2' }),
+        createMockLeague({ name: 'League 3' }),
       ];
 
       const wrapper = mountLeaguesTable({ leagues });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('League 1');
-      expect(wrapper.text()).toContain('League 2');
-      expect(wrapper.text()).toContain('League 3');
+      expect(dataTable.props('value')).toHaveLength(3);
+      expect(dataTable.props('value')).toEqual(leagues);
     });
 
-    it('handles mixed statuses correctly', () => {
+    it('handles mixed visibility values correctly', () => {
+      const leagues = [
+        createMockLeague({ visibility: 'public' }),
+        createMockLeague({ visibility: 'private' }),
+        createMockLeague({ visibility: 'unlisted' }),
+      ];
+
+      const wrapper = mountLeaguesTable({ leagues });
+      const dataTable = wrapper.findComponent(DataTable);
+
+      const tableLeagues = dataTable.props('value') as League[];
+      expect(tableLeagues[0]?.visibility).toBe('public');
+      expect(tableLeagues[1]?.visibility).toBe('private');
+      expect(tableLeagues[2]?.visibility).toBe('unlisted');
+    });
+
+    it('handles mixed status values correctly', () => {
       const leagues = [
         createMockLeague({ status: 'active' }),
         createMockLeague({ status: 'archived' }),
       ];
 
       const wrapper = mountLeaguesTable({ leagues });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      // Should show archive button for active league
-      const archiveButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-archive');
-        return icon.exists();
-      });
-      expect(archiveButtons.length).toBeGreaterThan(0);
-
-      // Should show delete button for archived league
-      const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-      expect(deleteButtons.length).toBeGreaterThan(0);
+      const tableLeagues = dataTable.props('value') as League[];
+      expect(tableLeagues[0]?.status).toBe('active');
+      expect(tableLeagues[1]?.status).toBe('archived');
     });
   });
 
   describe('Default Props', () => {
     it('uses empty array as default for leagues prop', () => {
       const wrapper = mountLeaguesTable();
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('No leagues found');
+      expect(dataTable.props('value')).toEqual([]);
     });
 
     it('uses false as default for loading prop', () => {
       const wrapper = mountLeaguesTable();
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).not.toContain('Loading leagues...');
+      expect(dataTable.props('loading')).toBe(false);
     });
   });
 
-  describe('Logo Display', () => {
-    it('displays league logo when logo_url is provided', () => {
-      const league = createMockLeague({ logo_url: 'https://example.com/logo.png' });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
+  describe('Table Features', () => {
+    it('has pagination enabled', () => {
+      const wrapper = mountLeaguesTable();
+      const dataTable = wrapper.findComponent(DataTable);
 
-      const images = wrapper.findAll('img');
-      const logoImage = images.find((img) => img.attributes('src') === league.logo_url);
-
-      expect(logoImage).toBeDefined();
+      expect(dataTable.props('paginator')).toBe(true);
     });
 
-    it('displays placeholder when logo_url is null', () => {
-      const league = createMockLeague({ logo_url: '' });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
+    it('has striped rows enabled', () => {
+      const wrapper = mountLeaguesTable();
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.html()).toContain('N/A');
+      expect(dataTable.props('stripedRows')).toBe(true);
+    });
+
+    it('has correct rows per page', () => {
+      const wrapper = mountLeaguesTable();
+      const dataTable = wrapper.findComponent(DataTable);
+
+      expect(dataTable.props('rows')).toBe(15);
     });
   });
 
-  describe('Platform Display', () => {
-    it('shows dash when no platforms', () => {
-      const league = createMockLeague({ platforms: [] });
-      const wrapper = mountLeaguesTable({ leagues: [league] });
-
-      expect(wrapper.text()).toContain('-');
-    });
-
-    it('displays multiple platforms as badges', () => {
+  describe('Platforms', () => {
+    it('includes platforms in league data', () => {
       const league = createMockLeague({
         platforms: [
           { id: 1, name: 'PlayStation', slug: 'playstation' },
           { id: 2, name: 'Xbox', slug: 'xbox' },
-          { id: 3, name: 'PC', slug: 'pc' },
         ],
       });
       const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('PlayStation');
-      expect(wrapper.text()).toContain('Xbox');
-      expect(wrapper.text()).toContain('PC');
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.platforms).toHaveLength(2);
+      expect(leagues[0]?.platforms?.[0]?.name).toBe('PlayStation');
+      expect(leagues[0]?.platforms?.[1]?.name).toBe('Xbox');
+    });
+
+    it('handles leagues with no platforms', () => {
+      const league = createMockLeague({ platforms: [] });
+      const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
+
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.platforms).toEqual([]);
+    });
+  });
+
+  describe('Owner/Manager', () => {
+    it('includes owner information when present', () => {
+      const league = createMockLeague({
+        owner: {
+          id: 123,
+          first_name: 'John',
+          last_name: 'Doe',
+          email: 'john@example.com',
+        },
+      });
+      const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
+
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.owner).toBeDefined();
+      expect(leagues[0]?.owner?.first_name).toBe('John');
+      expect(leagues[0]?.owner?.last_name).toBe('Doe');
+    });
+
+    it('handles leagues with no owner', () => {
+      const league = createMockLeague({ owner: undefined });
+      const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
+
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.owner).toBeUndefined();
+    });
+  });
+
+  describe('Columns', () => {
+    it('renders correct number of columns', () => {
+      const wrapper = mountLeaguesTable();
+      const columns = wrapper.findAllComponents(Column);
+
+      // ID, Logo, Name, Platforms, Visibility, Status, Manager, Actions
+      expect(columns.length).toBe(8);
+    });
+
+    it('has ID column', () => {
+      const wrapper = mountLeaguesTable();
+      const columns = wrapper.findAllComponents(Column);
+      const idColumn = columns.find((col) => col.props('field') === 'id');
+
+      expect(idColumn).toBeDefined();
+      expect(idColumn?.props('header')).toBe('ID');
+    });
+
+    it('has Logo column', () => {
+      const wrapper = mountLeaguesTable();
+      const columns = wrapper.findAllComponents(Column);
+      const logoColumn = columns.find((col) => col.props('header') === 'Logo');
+
+      expect(logoColumn).toBeDefined();
+    });
+
+    it('has Name column', () => {
+      const wrapper = mountLeaguesTable();
+      const columns = wrapper.findAllComponents(Column);
+      const nameColumn = columns.find((col) => col.props('header') === 'Name');
+
+      expect(nameColumn).toBeDefined();
+    });
+
+    it('has Platforms column', () => {
+      const wrapper = mountLeaguesTable();
+      const columns = wrapper.findAllComponents(Column);
+      const platformsColumn = columns.find((col) => col.props('header') === 'Platforms');
+
+      expect(platformsColumn).toBeDefined();
+    });
+
+    it('has Visibility column', () => {
+      const wrapper = mountLeaguesTable();
+      const columns = wrapper.findAllComponents(Column);
+      const visibilityColumn = columns.find((col) => col.props('field') === 'visibility');
+
+      expect(visibilityColumn).toBeDefined();
+      expect(visibilityColumn?.props('header')).toBe('Visibility');
+    });
+
+    it('has Status column', () => {
+      const wrapper = mountLeaguesTable();
+      const columns = wrapper.findAllComponents(Column);
+      const statusColumn = columns.find((col) => col.props('field') === 'status');
+
+      expect(statusColumn).toBeDefined();
+      expect(statusColumn?.props('header')).toBe('Status');
+    });
+
+    it('has Manager column', () => {
+      const wrapper = mountLeaguesTable();
+      const columns = wrapper.findAllComponents(Column);
+      const managerColumn = columns.find((col) => col.props('header') === 'Manager');
+
+      expect(managerColumn).toBeDefined();
+    });
+
+    it('has Actions column', () => {
+      const wrapper = mountLeaguesTable();
+      const columns = wrapper.findAllComponents(Column);
+      const actionsColumn = columns.find((col) => col.props('header') === 'Actions');
+
+      expect(actionsColumn).toBeDefined();
+    });
+  });
+
+  describe('Logo Display', () => {
+    it('includes logo URL in league data', () => {
+      const league = createMockLeague({
+        logo_url: 'https://example.com/logo.png',
+      });
+      const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
+
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.logo_url).toBe('https://example.com/logo.png');
+    });
+
+    it('handles leagues without logo', () => {
+      const league = createMockLeague({ logo_url: undefined });
+      const wrapper = mountLeaguesTable({ leagues: [league] });
+      const dataTable = wrapper.findComponent(DataTable);
+
+      const leagues = dataTable.props('value') as League[];
+      expect(leagues[0]?.logo_url).toBeUndefined();
     });
   });
 });

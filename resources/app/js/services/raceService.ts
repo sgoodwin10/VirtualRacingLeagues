@@ -1,6 +1,11 @@
 import { apiClient } from './api';
 import type { AxiosResponse } from 'axios';
-import type { Race, CreateRaceRequest, UpdateRaceRequest } from '@app/types/race';
+import type {
+  Race,
+  CreateRaceRequest,
+  UpdateRaceRequest,
+  OrphanedResultsResponse,
+} from '@app/types/race';
 import { API_ENDPOINTS } from '@app/constants/apiEndpoints';
 import type { ApiResponse } from '@app/types/api';
 
@@ -63,4 +68,20 @@ export async function deleteRace(raceId: number): Promise<void> {
 // DELETE qualifier
 export async function deleteQualifier(qualifierId: number): Promise<void> {
   await apiClient.delete(API_ENDPOINTS.qualifiers.delete(qualifierId));
+}
+
+// GET orphaned results for a race
+export async function getOrphanedResults(raceId: number): Promise<OrphanedResultsResponse> {
+  const response: AxiosResponse<ApiResponse<OrphanedResultsResponse>> = await apiClient.get(
+    API_ENDPOINTS.races.orphanedResults(raceId),
+  );
+  return response.data.data;
+}
+
+// DELETE orphaned results for a race
+export async function deleteOrphanedResults(raceId: number): Promise<{ message: string }> {
+  const response: AxiosResponse<ApiResponse<{ message: string }>> = await apiClient.delete(
+    API_ENDPOINTS.races.orphanedResults(raceId),
+  );
+  return response.data.data;
 }

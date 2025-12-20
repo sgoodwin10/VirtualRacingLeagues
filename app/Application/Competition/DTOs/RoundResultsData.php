@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\DTOs;
 
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\DataCollection;
 
 /**
  * DTO for round results response.
@@ -22,26 +24,17 @@ final class RoundResultsData extends Data
      *     race_time_results: array<mixed>|null,
      *     fastest_lap_results: array<mixed>|null
      * } $round
-     * @param array<int, DivisionData> $divisions
-     * @param array<int, RaceEventResultData> $race_events
+     * @param DataCollection<int, DivisionData> $divisions
+     * @param DataCollection<int, RaceEventResultData> $race_events
+     * @param bool $has_orphaned_results Whether the round has results with NULL division_id
      */
     public function __construct(
         public readonly array $round,
-        public readonly array $divisions,
-        public readonly array $race_events,
+        #[DataCollectionOf(DivisionData::class)]
+        public readonly DataCollection $divisions,
+        #[DataCollectionOf(RaceEventResultData::class)]
+        public readonly DataCollection $race_events,
+        public readonly bool $has_orphaned_results = false,
     ) {
-        // Runtime validation: ensure all divisions are DivisionData instances
-        foreach ($divisions as $division) {
-            if (!$division instanceof DivisionData) {
-                throw new \InvalidArgumentException('All divisions must be instances of DivisionData');
-            }
-        }
-
-        // Runtime validation: ensure all race_events are RaceEventResultData instances
-        foreach ($race_events as $event) {
-            if (!$event instanceof RaceEventResultData) {
-                throw new \InvalidArgumentException('All race_events must be instances of RaceEventResultData');
-            }
-        }
     }
 }

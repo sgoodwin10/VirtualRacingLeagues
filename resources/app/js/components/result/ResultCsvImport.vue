@@ -1,5 +1,5 @@
 <template>
-  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50 max-w-3xl">
+  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50 w-full">
     <div class="flex items-center gap-2 mb-3">
       <PhFileCsv :size="20" class="text-gray-600" />
       <h3 class="font-medium text-gray-900">Import from CSV</h3>
@@ -74,6 +74,14 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const { parseTimeToMs, formatMsToTime, normalizeTimeInput } = useRaceTimeCalculation();
 
+/**
+ * Time penalty per lap when calculating race time from laps down.
+ * Adds 500ms (0.5s) to the fastest lap time to account for the fact that drivers
+ * who are lapped are typically slower than the race leader's fastest lap pace.
+ * This provides a more realistic estimated race time for lapped drivers.
+ */
+const LAP_TIME_PENALTY_MS = 500;
+
 // Computed properties for dynamic text based on context
 const placeholderText = computed(() => {
   if (!props.raceTimesRequired) {
@@ -109,7 +117,7 @@ const expectedColumnsText = computed(() => {
   } else if (props.isQualifying) {
     return 'Expected columns: driver, fastest_lap_time';
   } else {
-    return 'Expected columns: driver, race_time, original_race_time_difference (or DNF), fastest_lap_time';
+    return 'Expected columns: driver, race_time, original_race_time_difference, fastest_lap_time';
   }
 });
 
@@ -151,8 +159,8 @@ function calculateRaceTimeFromLaps(fastestLapTime: string | undefined, lapsDown:
     throw new Error('Cannot calculate race time from laps: invalid fastest lap time format');
   }
 
-  // Add 500ms to the fastest lap, then multiply by number of laps
-  const calculatedMs = (fastestLapMs + 500) * lapsDown;
+  // Add penalty to the fastest lap, then multiply by number of laps
+  const calculatedMs = (fastestLapMs + LAP_TIME_PENALTY_MS) * lapsDown;
   return formatMsToTime(calculatedMs);
 }
 

@@ -25,6 +25,9 @@ export interface Round {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  // Indicates if this round has orphaned results (results with NULL division_id when divisions are enabled)
+  // Only populated for completed rounds when divisions are enabled
+  has_orphaned_results?: boolean;
 }
 
 export type RoundStatus = 'scheduled' | 'pre_race' | 'in_progress' | 'completed' | 'cancelled';

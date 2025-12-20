@@ -94,8 +94,8 @@ describe('RegisterView', () => {
     await firstNameInput.setValue('John');
     await lastNameInput.setValue('Doe');
     await emailInput.setValue('test@example.com');
-    await passwordInput.setValue('password123');
-    await confirmInput.setValue('password123');
+    await passwordInput.setValue('Password123!');
+    await confirmInput.setValue('Password123!');
 
     const form = wrapper.find('form');
     await form.trigger('submit.prevent');
@@ -105,8 +105,8 @@ describe('RegisterView', () => {
       first_name: 'John',
       last_name: 'Doe',
       email: 'test@example.com',
-      password: 'password123',
-      password_confirmation: 'password123',
+      password: 'Password123!',
+      password_confirmation: 'Password123!',
     });
   });
 
@@ -136,8 +136,8 @@ describe('RegisterView', () => {
     await firstNameInput.setValue('John');
     await lastNameInput.setValue('Doe');
     await emailInput.setValue('existing@example.com');
-    await passwordInput.setValue('password123');
-    await confirmInput.setValue('password123');
+    await passwordInput.setValue('Password123!');
+    await confirmInput.setValue('Password123!');
 
     const form = wrapper.find('form');
     await form.trigger('submit.prevent');

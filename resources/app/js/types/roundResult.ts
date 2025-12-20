@@ -65,6 +65,8 @@ export interface RoundResultsResponse {
     name: string;
   }>;
   race_events: RaceEventResults[];
+  // Indicates if this round has orphaned results (results with NULL division_id when divisions are enabled)
+  has_orphaned_results?: boolean;
 }
 
 /**

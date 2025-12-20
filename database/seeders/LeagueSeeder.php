@@ -25,26 +25,22 @@ class LeagueSeeder extends Seeder
 
         // Create a default league for development
         League::firstOrCreate(
-            ['slug' => 'virtual-racing-league'],
+            ['slug' => 'race-on-oz'],
             [
-                'name' => 'Virtual Racing League',
+                'name' => 'Race on Oz',
                 'tagline' => 'Where Champions Are Made',
-                'description' => 'Welcome to the Virtual Racing League! We are a community of passionate sim racers competing in exciting championships across multiple platforms.',
+                'description' => 'Welcome to the Race on Oz! We are a community of passionate sim racers competing in exciting championships across multiple platforms.',
                 'logo_path' => null,
                 'header_image_path' => null,
-                'platform_ids' => [1], // Gran Turismo 7
-                'discord_url' => 'https://discord.gg/example',
-                'website_url' => null,
-                'twitter_handle' => null,
-                'instagram_handle' => null,
-                'youtube_url' => null,
-                'twitch_url' => null,
+                'platform_ids' => [1], // iRacing
+                'discord_url' => 'https://discord.gg/raceonoz',
+                'website_url' => 'https://raceonoz.com',
+                'twitter_handle' => 'raceonoz',
+                'instagram_handle' => 'raceonoz',
+                'youtube_url' => 'https://youtube.com/raceonoz',
+                'twitch_url' => 'https://twitch.com/raceonoz',
                 'visibility' => 'public',
                 'timezone' => 'Australia/Sydney',
-                'owner_user_id' => $owner->id,
-                'contact_email' => 'contact@example.com',
-                'organizer_name' => 'VRL Admin Team',
-                'status' => 'active',
             ]
         );
 

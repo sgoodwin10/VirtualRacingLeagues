@@ -205,21 +205,23 @@
                   <template v-for="race in getAllRaceEvents(round.id)" :key="race.id">
                     <QualifierListItem
                       v-if="isQualifier(race)"
-                      :race="race"
+                      :race="getRaceWithOrphanedFlag(race, round)"
                       :is-round-completed="round.status === 'completed'"
                       @edit="handleEditQualifier"
                       @delete="handleDeleteQualifier"
                       @enter-results="handleEnterResults($event, round)"
                       @toggle-status="handleToggleRaceStatus"
+                      @refresh="handleRefreshOrphanedResults(round)"
                     />
                     <RaceListItem
                       v-else
-                      :race="race"
+                      :race="getRaceWithOrphanedFlag(race, round)"
                       :is-round-completed="round.status === 'completed'"
                       @edit="handleEditRace"
                       @delete="handleDeleteRace"
                       @enter-results="handleEnterResults($event, round)"
                       @toggle-status="handleToggleRaceStatus"
+                      @refresh="handleRefreshOrphanedResults(round)"
                     />
                   </template>
                 </div>
@@ -319,6 +321,7 @@ import type { Race } from '@app/types/race';
 import { isQualifier } from '@app/types/race';
 import type { RGBColor } from '@app/types/competition';
 import { useColorRange } from '@app/composables/useColorRange';
+import { useOrphanedResults } from '@app/composables/useOrphanedResults';
 import { createLogger } from '@app/utils/logger';
 import { DEFAULT_COLOR_RANGE_STEPS } from '@app/constants/pagination';
 
@@ -335,6 +338,14 @@ const raceStore = useRaceStore();
 const trackStore = useTrackStore();
 const toast = useToast();
 const confirm = useConfirm();
+
+// Orphaned results management
+const {
+  fetchBatchOrphanedResults,
+  hasOrphanedResults,
+  fetchOrphanedResultsStatus,
+  clearOrphanedResultsCache,
+} = useOrphanedResults();
 
 // Create a logger instance for this component
 const logger = createLogger('RoundsPanel');
@@ -424,15 +435,27 @@ onMounted(async () => {
       // Continue anyway - tracks are just for display names
     }
 
-    // Then fetch races for all rounds
+    // Then fetch races for all rounds in parallel
     loadingRaces.value = true;
     const fetchedRounds = roundStore.roundsBySeasonId(props.seasonId);
 
-    for (const round of fetchedRounds) {
-      await raceStore.fetchRaces(round.id);
-    }
+    await Promise.all(fetchedRounds.map((round) => raceStore.fetchRaces(round.id)));
 
     loadingRaces.value = false;
+
+    // Fetch orphaned results status for all completed rounds (non-blocking)
+    const completedRoundIds = fetchedRounds
+      .filter((r) => r.status === 'completed')
+      .map((r) => r.id);
+
+    if (completedRoundIds.length > 0) {
+      try {
+        await fetchBatchOrphanedResults(completedRoundIds);
+      } catch (orphanedError) {
+        logger.error('Error loading orphaned results status', { data: orphanedError });
+        // Continue anyway - orphaned results are just warnings
+      }
+    }
   } catch {
     loadingRaces.value = false;
     // Mark initial load as complete even on error to prevent perpetual skeleton
@@ -592,6 +615,10 @@ async function handleToggleCompletion(round: Round): Promise<void> {
       // Uncompleting a round - just update the round status
       // DO NOT cascade to child races - they keep their current status
       await roundStore.uncompleteRound(round.id);
+
+      // Clear orphaned results cache for this round
+      clearOrphanedResultsCache(round.id);
+
       toast.add({
         severity: 'success',
         summary: 'Success',
@@ -612,6 +639,14 @@ async function handleToggleCompletion(round: Round): Promise<void> {
           existingRace.status = 'completed';
         }
       });
+
+      // Fetch orphaned results status for this newly completed round
+      try {
+        await fetchOrphanedResultsStatus(round.id);
+      } catch (orphanedError) {
+        logger.error('Error fetching orphaned results status', { data: orphanedError });
+        // Continue anyway - orphaned results are just warnings
+      }
 
       toast.add({
         severity: 'success',
@@ -634,6 +669,29 @@ async function handleToggleCompletion(round: Round): Promise<void> {
 
 function getAllRaceEvents(roundId: number): Race[] {
   return allRaceEventsByRound.value.get(roundId) || [];
+}
+
+/**
+ * Enriches a race with the orphaned results flag from the round-level data
+ * @param race - The race to enrich
+ * @param round - The round this race belongs to
+ * @returns Race object with has_orphaned_results populated
+ */
+function getRaceWithOrphanedFlag(race: Race, round: Round): Race {
+  // If race already has the flag, return as is
+  if (race.has_orphaned_results !== undefined) {
+    return race;
+  }
+
+  // Check if the round has orphaned results (only for completed rounds)
+  if (round.status === 'completed') {
+    return {
+      ...race,
+      has_orphaned_results: hasOrphanedResults(race),
+    };
+  }
+
+  return race;
 }
 
 async function handleEditQualifier(qualifier: Race): Promise<void> {
@@ -739,6 +797,11 @@ async function handleRaceSaved(): Promise<void> {
   selectedRace.value = null;
   selectedRoundId.value = null;
 
+  // Clear orphaned results cache since race structure changed
+  if (roundId) {
+    clearOrphanedResultsCache(roundId);
+  }
+
   const entityType = raceFormType.value === 'qualifier' ? 'Qualifying session' : 'Race';
   const action = raceFormMode.value === 'edit' ? 'updated' : 'created';
 
@@ -766,6 +829,16 @@ function handleEnterResults(race: Race, round: Round): void {
 }
 
 function handleResultsSaved(): void {
+  // Clear orphaned results cache for this round since results changed
+  if (selectedRoundForResults.value) {
+    clearOrphanedResultsCache(selectedRoundForResults.value.id);
+
+    // Re-fetch orphaned results status
+    fetchOrphanedResultsStatus(selectedRoundForResults.value.id).catch((error) => {
+      logger.error('Error re-fetching orphaned results status', { data: error });
+    });
+  }
+
   toast.add({
     severity: 'success',
     summary: 'Success',
@@ -786,6 +859,15 @@ async function handleToggleRaceStatus(
   try {
     // Call the race store to update the race status
     await raceStore.updateExistingRace(race.id, { status: newStatus }, race.is_qualifier);
+
+    // If race was completed, refresh orphaned results status
+    if (newStatus === 'completed') {
+      try {
+        await fetchOrphanedResultsStatus(race.round_id);
+      } catch (error) {
+        logger.error('Error fetching orphaned results status', { data: error });
+      }
+    }
 
     // Determine the success message
     let detail: string;
@@ -822,6 +904,20 @@ async function handleToggleRaceStatus(
       detail: error instanceof Error ? error.message : 'Failed to update race status',
       life: 5000,
     });
+  }
+}
+
+async function handleRefreshOrphanedResults(round: Round): Promise<void> {
+  // Clear the orphaned results cache for this round
+  clearOrphanedResultsCache(round.id);
+
+  // Re-fetch the orphaned results status to update the UI
+  try {
+    await fetchOrphanedResultsStatus(round.id);
+    logger.debug('Orphaned results status refreshed', { roundId: round.id });
+  } catch (error) {
+    logger.error('Error refreshing orphaned results status', { data: error, roundId: round.id });
+    // Don't show error toast - this is a background refresh
   }
 }
 </script>

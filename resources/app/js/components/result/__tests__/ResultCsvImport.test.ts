@@ -429,7 +429,7 @@ Jane Doe,01:33.123`;
         'driver,race_time,original_race_time_difference,fastest_lap_time',
       );
       expect(vm.expectedColumnsText).toBe(
-        'Expected columns: driver, race_time, original_race_time_difference (or DNF), fastest_lap_time',
+        'Expected columns: driver, race_time, original_race_time_difference, fastest_lap_time',
       );
     });
 

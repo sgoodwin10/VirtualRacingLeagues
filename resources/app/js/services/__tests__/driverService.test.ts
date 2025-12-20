@@ -4,7 +4,7 @@ import {
   getLeagueDrivers,
   createDriver,
   getLeagueDriver,
-  updateLeagueDriver,
+  updateDriver,
   removeDriverFromLeague,
   importDriversFromCSV,
 } from '../driverService';
@@ -217,7 +217,7 @@ describe('driverService', () => {
     });
   });
 
-  describe('updateLeagueDriver', () => {
+  describe('updateDriver', () => {
     it('should update league-specific driver settings', async () => {
       const updateData: UpdateLeagueDriverRequest = {
         driver_number: 10,
@@ -236,7 +236,7 @@ describe('driverService', () => {
         data: { data: mockDriver },
       });
 
-      const result = await updateLeagueDriver(1, 1, updateData);
+      const result = await updateDriver(1, 1, updateData);
 
       expect(apiClient.put).toHaveBeenCalledWith('/leagues/1/drivers/1', updateData);
       expect(result.driver_number).toBe(10);
@@ -386,7 +386,7 @@ describe('driverService', () => {
       });
     });
 
-    it('should handle network connection error on updateLeagueDriver', async () => {
+    it('should handle network connection error on updateDriver', async () => {
       const updateData: UpdateLeagueDriverRequest = {
         driver_number: 10,
         status: 'inactive',
@@ -397,7 +397,7 @@ describe('driverService', () => {
         message: 'Network Error',
       });
 
-      await expect(updateLeagueDriver(1, 1, updateData)).rejects.toMatchObject({
+      await expect(updateDriver(1, 1, updateData)).rejects.toMatchObject({
         code: 'ERR_NETWORK',
       });
     });

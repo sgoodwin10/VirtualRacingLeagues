@@ -28,43 +28,60 @@ class PlatformTrackLocationSeeder extends Seeder
         }
 
         $locations = [
-            // European Tracks
+            // European Tracks - Real Circuits
             ['name' => 'Brands Hatch', 'country' => 'United Kingdom', 'sort_order' => 1],
-            ['name' => 'Circuit de Spa-Francorchamps', 'country' => 'Belgium', 'sort_order' => 2],
-            ['name' => 'Autodromo Nazionale Monza', 'country' => 'Italy', 'sort_order' => 3],
-            ['name' => 'Circuit de Barcelona-Catalunya', 'country' => 'Spain', 'sort_order' => 4],
-            ['name' => 'Nürburgring', 'country' => 'Germany', 'sort_order' => 5],
-            ['name' => 'Red Bull Ring', 'country' => 'Austria', 'sort_order' => 6],
-            ['name' => 'Circuit de la Sarthe', 'country' => 'France', 'sort_order' => 7],
-            ['name' => 'Autodrome Lago Maggiore', 'country' => 'Italy', 'sort_order' => 8],
-            ['name' => 'Circuit de Sainte-Croix', 'country' => 'France', 'sort_order' => 9],
-            ['name' => 'Goodwood Motor Circuit', 'country' => 'United Kingdom', 'sort_order' => 10],
+            ['name' => 'Goodwood Motor Circuit', 'country' => 'United Kingdom', 'sort_order' => 2],
+            ['name' => 'Circuit de Spa-Francorchamps', 'country' => 'Belgium', 'sort_order' => 3],
+            ['name' => 'Autodromo Nazionale Monza', 'country' => 'Italy', 'sort_order' => 4],
+            ['name' => 'Circuit de Barcelona-Catalunya', 'country' => 'Spain', 'sort_order' => 5],
+            ['name' => 'Nürburgring', 'country' => 'Germany', 'sort_order' => 6],
+            ['name' => 'Red Bull Ring', 'country' => 'Austria', 'sort_order' => 7],
+            ['name' => '24 Heures du Mans Racing Circuit', 'country' => 'France', 'sort_order' => 8],
 
-            // Asian/Pacific Tracks
-            ['name' => 'Suzuka Circuit', 'country' => 'Japan', 'sort_order' => 11],
-            ['name' => 'Fuji Speedway', 'country' => 'Japan', 'sort_order' => 12],
-            ['name' => 'Tokyo Expressway', 'country' => 'Japan', 'sort_order' => 13],
-            ['name' => 'Autopolis', 'country' => 'Japan', 'sort_order' => 14],
-            ['name' => 'Mount Panorama Circuit', 'country' => 'Australia', 'sort_order' => 15],
+            // European Tracks - Fictional/Original
+            ['name' => 'Alsace', 'country' => 'France', 'sort_order' => 9],
+            ['name' => 'Circuit de Sainte-Croix', 'country' => 'France', 'sort_order' => 10],
+            ['name' => 'Autodrome Lago Maggiore', 'country' => 'Italy', 'sort_order' => 11],
+            ['name' => 'Sardegna - Road Track', 'country' => 'Italy', 'sort_order' => 12],
+            ['name' => 'Sardegna - Windmills', 'country' => 'Italy', 'sort_order' => 13],
+            ['name' => 'Eiger Nordwand', 'country' => 'Switzerland', 'sort_order' => 14],
+            ['name' => 'Deep Forest Raceway', 'country' => 'Switzerland', 'sort_order' => 15],
+            ['name' => 'Dragon Trail', 'country' => 'Croatia', 'sort_order' => 16],
 
-            // North American Tracks
-            ['name' => 'WeatherTech Raceway Laguna Seca', 'country' => 'United States', 'sort_order' => 16],
-            ['name' => 'Daytona International Speedway', 'country' => 'United States', 'sort_order' => 17],
-            ['name' => 'Willow Springs International Raceway', 'country' => 'United States', 'sort_order' => 18],
-            ['name' => 'Circuit of the Americas', 'country' => 'United States', 'sort_order' => 19],
-            ['name' => 'Mazda Raceway', 'country' => 'United States', 'sort_order' => 20],
-            ['name' => 'Watkins Glen International', 'country' => 'United States', 'sort_order' => 21],
+            // Asian/Pacific Tracks - Real Circuits
+            ['name' => 'Suzuka Circuit', 'country' => 'Japan', 'sort_order' => 17],
+            ['name' => 'Fuji International Speedway', 'country' => 'Japan', 'sort_order' => 18],
+            ['name' => 'Autopolis International Racing Course', 'country' => 'Japan', 'sort_order' => 19],
+            ['name' => 'Tsukuba Circuit', 'country' => 'Japan', 'sort_order' => 20],
+            ['name' => 'Mount Panorama Circuit', 'country' => 'Australia', 'sort_order' => 21],
+            ['name' => 'Yas Marina Circuit', 'country' => 'United Arab Emirates', 'sort_order' => 22],
 
-            // Fictional GT Tracks
-            ['name' => 'Dragon Trail', 'country' => 'Croatia', 'sort_order' => 22],
-            ['name' => 'Blue Moon Bay Speedway', 'country' => 'United States', 'sort_order' => 23],
-            ['name' => 'Northern Isle Speedway', 'country' => 'United Kingdom', 'sort_order' => 24],
-            ['name' => 'Alsace', 'country' => 'France', 'sort_order' => 25],
-            ['name' => 'Kyoto Driving Park', 'country' => 'Japan', 'sort_order' => 26],
-            ['name' => 'Broad Bean Raceway', 'country' => 'Japan', 'sort_order' => 27],
-            ['name' => 'High Speed Ring', 'country' => 'Japan', 'sort_order' => 28],
-            ['name' => 'Trial Mountain', 'country' => 'United States', 'sort_order' => 29],
-            ['name' => 'Deep Forest Raceway', 'country' => 'United States', 'sort_order' => 30],
+            // Asian/Pacific Tracks - Fictional/Original
+            ['name' => 'Tokyo Expressway', 'country' => 'Japan', 'sort_order' => 23],
+            ['name' => 'Kyoto Driving Park', 'country' => 'Japan', 'sort_order' => 24],
+            ['name' => 'Broad Bean Raceway', 'country' => 'Japan', 'sort_order' => 25],
+            ['name' => 'High Speed Ring', 'country' => 'Japan', 'sort_order' => 26],
+
+            // North American Tracks - Real Circuits
+            ['name' => 'WeatherTech Raceway Laguna Seca', 'country' => 'United States', 'sort_order' => 27],
+            ['name' => 'Daytona International Speedway', 'country' => 'United States', 'sort_order' => 28],
+            ['name' => 'Willow Springs International Raceway', 'country' => 'United States', 'sort_order' => 29],
+            ['name' => 'Michelin Raceway Road Atlanta', 'country' => 'United States', 'sort_order' => 30],
+            ['name' => 'Watkins Glen International', 'country' => 'United States', 'sort_order' => 31],
+            ['name' => 'Circuit Gilles-Villeneuve', 'country' => 'Canada', 'sort_order' => 32],
+
+            // North American Tracks - Fictional/Original
+            ['name' => 'Blue Moon Bay Speedway', 'country' => 'United States', 'sort_order' => 33],
+            ['name' => 'Northern Isle Speedway', 'country' => 'United States', 'sort_order' => 34],
+            ['name' => 'Grand Valley', 'country' => 'United States', 'sort_order' => 35],
+            ['name' => 'Trial Mountain Circuit', 'country' => 'United States', 'sort_order' => 36],
+            ['name' => 'Special Stage Route X', 'country' => 'United States', 'sort_order' => 37],
+            ['name' => 'Colorado Springs', 'country' => 'United States', 'sort_order' => 38],
+            ['name' => 'Fishermans Ranch', 'country' => 'United States', 'sort_order' => 39],
+            ['name' => 'Lake Louise', 'country' => 'Canada', 'sort_order' => 40],
+
+            // South American Tracks
+            ['name' => 'Autódromo de Interlagos', 'country' => 'Brazil', 'sort_order' => 41],
         ];
 
         foreach ($locations as $location) {

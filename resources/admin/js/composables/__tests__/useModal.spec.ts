@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useModal, useModalGroup } from '../useModal';
 
+// Mock PrimeVue's useConfirm
+vi.mock('primevue/useconfirm', () => ({
+  useConfirm: vi.fn(() => ({
+    require: vi.fn(({ accept, reject }) => {
+      // Simulate user accepting by default
+      if (accept) accept();
+    }),
+  })),
+}));
+
 describe('useModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -74,12 +84,14 @@ describe('useModal', () => {
   });
 
   describe('confirm close', () => {
-    beforeEach(() => {
-      vi.stubGlobal('confirm', vi.fn());
-    });
-
     it('should prompt for confirmation when confirmClose is true and has unsaved changes', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const { useConfirm } = await import('primevue/useconfirm');
+      const mockRequire = vi.fn(({ reject }) => {
+        // Simulate user rejecting (keeping modal open)
+        if (reject) reject();
+      });
+      vi.mocked(useConfirm).mockReturnValue({ require: mockRequire } as any);
+
       const hasUnsavedChanges = vi.fn().mockReturnValue(true);
       const { visible, openModal, closeModal } = useModal({
         confirmClose: true,
@@ -89,12 +101,18 @@ describe('useModal', () => {
       await openModal();
       await closeModal();
 
-      expect(confirmSpy).toHaveBeenCalled();
+      expect(mockRequire).toHaveBeenCalled();
       expect(visible.value).toBe(true); // Should remain open
     });
 
     it('should close if user confirms', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const { useConfirm } = await import('primevue/useconfirm');
+      const mockRequire = vi.fn(({ accept }) => {
+        // Simulate user accepting (closing modal)
+        if (accept) accept();
+      });
+      vi.mocked(useConfirm).mockReturnValue({ require: mockRequire } as any);
+
       const hasUnsavedChanges = vi.fn().mockReturnValue(true);
       const { visible, openModal, closeModal } = useModal({
         confirmClose: true,
@@ -104,12 +122,15 @@ describe('useModal', () => {
       await openModal();
       await closeModal();
 
-      expect(confirmSpy).toHaveBeenCalled();
+      expect(mockRequire).toHaveBeenCalled();
       expect(visible.value).toBe(false);
     });
 
     it('should not prompt if no unsaved changes', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm');
+      const { useConfirm } = await import('primevue/useconfirm');
+      const mockRequire = vi.fn();
+      vi.mocked(useConfirm).mockReturnValue({ require: mockRequire } as any);
+
       const hasUnsavedChanges = vi.fn().mockReturnValue(false);
       const { visible, openModal, closeModal } = useModal({
         confirmClose: true,
@@ -119,12 +140,15 @@ describe('useModal', () => {
       await openModal();
       await closeModal();
 
-      expect(confirmSpy).not.toHaveBeenCalled();
+      expect(mockRequire).not.toHaveBeenCalled();
       expect(visible.value).toBe(false);
     });
 
     it('should force close when force parameter is true', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm');
+      const { useConfirm } = await import('primevue/useconfirm');
+      const mockRequire = vi.fn();
+      vi.mocked(useConfirm).mockReturnValue({ require: mockRequire } as any);
+
       const hasUnsavedChanges = vi.fn().mockReturnValue(true);
       const { visible, openModal, closeModal } = useModal({
         confirmClose: true,
@@ -134,13 +158,18 @@ describe('useModal', () => {
       await openModal();
       await closeModal(true); // Force close
 
-      expect(confirmSpy).not.toHaveBeenCalled();
+      expect(mockRequire).not.toHaveBeenCalled();
       expect(visible.value).toBe(false);
     });
 
     it('should use custom confirm message', async () => {
+      const { useConfirm } = await import('primevue/useconfirm');
       const customMessage = 'Custom confirmation message';
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const mockRequire = vi.fn(({ accept }) => {
+        if (accept) accept();
+      });
+      vi.mocked(useConfirm).mockReturnValue({ require: mockRequire } as any);
+
       const hasUnsavedChanges = vi.fn().mockReturnValue(true);
       const { openModal, closeModal } = useModal({
         confirmClose: true,
@@ -151,7 +180,11 @@ describe('useModal', () => {
       await openModal();
       await closeModal();
 
-      expect(confirmSpy).toHaveBeenCalledWith(customMessage);
+      expect(mockRequire).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: customMessage,
+        }),
+      );
     });
   });
 });

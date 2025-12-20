@@ -207,18 +207,28 @@ class SpatieMediaServiceTest extends TestCase
         $file1 = UploadedFile::fake()->image('logo1.png');
         $reference1 = $this->service->upload($file1, $model, 'logo');
 
+        // Verify first upload was successful
+        $this->assertDatabaseHas('media', ['id' => $reference1->id]);
+
+        // Refresh the model to load the media relationship
+        // This simulates real-world usage where the model would be reloaded between operations
+        $model->refresh();
+
         // Upload second file to same collection (should replace first)
         $file2 = UploadedFile::fake()->image('logo2.png');
         $reference2 = $this->service->upload($file2, $model, 'logo');
 
-        // First media should be deleted
-        $this->assertDatabaseMissing('media', ['id' => $reference1->id]);
-
         // Second media should exist
         $this->assertDatabaseHas('media', ['id' => $reference2->id]);
 
+        // First media should be deleted
+        $this->assertDatabaseMissing('media', ['id' => $reference1->id]);
+
+        // Reload model from database to get fresh media relationship
+        $freshModel = TestMediaModel::find($model->id);
+
         // Model should only have one media item in 'logo' collection
-        $mediaCount = $model->fresh()->getMedia('logo')->count();
+        $mediaCount = $freshModel->getMedia('logo')->count();
         $this->assertEquals(1, $mediaCount);
     }
 

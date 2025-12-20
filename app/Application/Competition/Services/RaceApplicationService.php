@@ -13,6 +13,9 @@ use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
+use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
+use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Competition\ValueObjects\GridSource;
 use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
@@ -33,13 +36,17 @@ final class RaceApplicationService
         private readonly RaceResultRepositoryInterface $raceResultRepository,
         private readonly RoundRepositoryInterface $roundRepository,
         private readonly SeasonRepositoryInterface $seasonRepository,
+        private readonly CompetitionRepositoryInterface $competitionRepository,
+        private readonly LeagueRepositoryInterface $leagueRepository,
         private readonly RaceResultsCacheService $raceResultsCache,
     ) {
     }
 
-    public function createRace(CreateRaceData $data, int $roundId): RaceData
+    public function createRace(CreateRaceData $data, int $roundId, int $userId): RaceData
     {
-        return DB::transaction(function () use ($data, $roundId) {
+        return DB::transaction(function () use ($data, $roundId, $userId) {
+            // Authorize user owns the league
+            $this->authorizeRoundOwnership($roundId, $userId);
             // Auto-increment race_number if not provided (excluding qualifiers with race_number = 0)
             $raceNumber = $data->race_number ?? $this->raceRepository->getNextRaceNumber($roundId);
 
@@ -137,7 +144,7 @@ final class RaceApplicationService
         });
     }
 
-    public function updateRace(int $raceId, UpdateRaceData $data): RaceData
+    public function updateRace(int $raceId, UpdateRaceData $data, int $userId): RaceData
     {
         // Track whether cache should be invalidated
         // Cache invalidation is needed for:
@@ -145,8 +152,11 @@ final class RaceApplicationService
         // 2. Any configuration changes (cached data includes race metadata)
         $shouldInvalidateCache = false;
 
-        $raceData = DB::transaction(function () use ($raceId, $data, &$shouldInvalidateCache) {
+        $raceData = DB::transaction(function () use ($raceId, $data, $userId, &$shouldInvalidateCache) {
             $race = $this->raceRepository->findById($raceId);
+
+            // Authorize user owns the league
+            $this->authorizeRaceOwnership($raceId, $userId);
 
             // Handle status change if provided
             $statusChanged = false;
@@ -423,7 +433,19 @@ final class RaceApplicationService
     public function getRace(int $raceId): RaceData
     {
         $race = $this->raceRepository->findById($raceId);
-        return RaceData::fromEntity($race);
+
+        // Check for orphaned results if race is completed and season has divisions enabled
+        $hasOrphanedResults = false;
+        if ($race->status()->value === 'completed' && $race->id() !== null) {
+            $round = $this->roundRepository->findById($race->roundId());
+            $season = $this->seasonRepository->findById($round->seasonId());
+
+            if ($season->raceDivisionsEnabled()) {
+                $hasOrphanedResults = $this->raceResultRepository->hasOrphanedResultsForRace($race->id());
+            }
+        }
+
+        return RaceData::fromEntity($race, $hasOrphanedResults);
     }
 
     /**
@@ -432,15 +454,32 @@ final class RaceApplicationService
     public function getRacesByRound(int $roundId): array
     {
         $races = $this->raceRepository->findByRoundId($roundId);
+
+        // Get season info to check if divisions are enabled
+        $round = $this->roundRepository->findById($roundId);
+        $season = $this->seasonRepository->findById($round->seasonId());
+        $divisionsEnabled = $season->raceDivisionsEnabled();
+
         return array_map(
-            fn(Race $race) => RaceData::fromEntity($race),
+            function (Race $race) use ($divisionsEnabled) {
+                // Check for orphaned results if race is completed and season has divisions enabled
+                $hasOrphanedResults = false;
+                if ($divisionsEnabled && $race->status()->value === 'completed' && $race->id() !== null) {
+                    $hasOrphanedResults = $this->raceResultRepository->hasOrphanedResultsForRace($race->id());
+                }
+
+                return RaceData::fromEntity($race, $hasOrphanedResults);
+            },
             $races
         );
     }
 
-    public function deleteRace(int $raceId): void
+    public function deleteRace(int $raceId, int $userId): void
     {
-        DB::transaction(function () use ($raceId) {
+        DB::transaction(function () use ($raceId, $userId) {
+            // Authorize user owns the league
+            $this->authorizeRaceOwnership($raceId, $userId);
+
             $race = $this->raceRepository->findById($raceId);
             $this->raceRepository->delete($race);
         });
@@ -449,6 +488,68 @@ final class RaceApplicationService
     public function getNextRaceNumber(int $roundId): int
     {
         return $this->raceRepository->getNextRaceNumber($roundId);
+    }
+
+    /**
+     * Remove all orphaned results for a race.
+     * Orphaned results are results where the driver has no division assignment.
+     *
+     * @throws RaceNotFoundException if race not found
+     * @throws UnauthorizedException if user does not own the league
+     * @throws \DomainException if divisions are not enabled for the season
+     * @return int Number of orphaned results removed
+     */
+    public function removeOrphanedResults(int $raceId, int $userId): int
+    {
+        return DB::transaction(function () use ($raceId, $userId) {
+            // Authorize user owns the league
+            $this->authorizeRaceOwnership($raceId, $userId);
+
+            // Get the race
+            $race = $this->raceRepository->findById($raceId);
+
+            // Get the season via round -> championship -> season
+            $round = $this->roundRepository->findById($race->roundId());
+            $season = $this->seasonRepository->findById($round->seasonId());
+
+            // Check if divisions are enabled for the season
+            if (!$season->raceDivisionsEnabled()) {
+                throw new \DomainException('Divisions are not enabled for this season');
+            }
+
+            // Delete orphaned results
+            $deletedCount = $this->raceResultRepository->deleteOrphanedResultsForRace($raceId);
+
+            // Invalidate cache after deletion
+            $this->raceResultsCache->forget($raceId);
+
+            return $deletedCount;
+        });
+    }
+
+    /**
+     * Get all orphaned results for a race with driver information.
+     * Orphaned results are results where the driver has no division assignment.
+     *
+     * @throws RaceNotFoundException if race not found
+     * @throws UnauthorizedException if user does not own the league
+     * @return array{drivers: array<int, array{id: int, name: string}>, count: int}
+     */
+    public function getOrphanedResults(int $raceId, int $userId): array
+    {
+        // Authorize user owns the league
+        $this->authorizeRaceOwnership($raceId, $userId);
+
+        // Get the race to ensure it exists
+        $race = $this->raceRepository->findById($raceId);
+
+        // Get orphaned results with driver information
+        $drivers = $this->raceResultRepository->getOrphanedResultsWithDrivers($raceId);
+
+        return [
+            'drivers' => $drivers,
+            'count' => count($drivers),
+        ];
     }
 
     private function dispatchEvents(Race $race): void
@@ -798,6 +899,41 @@ final class RaceApplicationService
                 hasPole: true,
                 dnf: $poleDriver->dnf(),
             );
+        }
+    }
+
+    /**
+     * Authorize that the user owns the league for a given round.
+     *
+     * @throws UnauthorizedException
+     */
+    private function authorizeRoundOwnership(int $roundId, int $userId): void
+    {
+        $round = $this->roundRepository->findById($roundId);
+        $season = $this->seasonRepository->findById($round->seasonId());
+        $competition = $this->competitionRepository->findById($season->competitionId());
+        $league = $this->leagueRepository->findById($competition->leagueId());
+
+        if ($league->ownerUserId() !== $userId) {
+            throw new UnauthorizedException('Only league owner can manage races');
+        }
+    }
+
+    /**
+     * Authorize that the user owns the league for a given race.
+     *
+     * @throws UnauthorizedException
+     */
+    private function authorizeRaceOwnership(int $raceId, int $userId): void
+    {
+        $race = $this->raceRepository->findById($raceId);
+        $round = $this->roundRepository->findById($race->roundId());
+        $season = $this->seasonRepository->findById($round->seasonId());
+        $competition = $this->competitionRepository->findById($season->competitionId());
+        $league = $this->leagueRepository->findById($competition->leagueId());
+
+        if ($league->ownerUserId() !== $userId) {
+            throw new UnauthorizedException('Only league owner can manage races');
         }
     }
 }

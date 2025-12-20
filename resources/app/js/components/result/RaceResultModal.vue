@@ -168,7 +168,7 @@ const localDrivers = ref<SeasonDriver[]>([]);
 // Determine modal width for qualifying or race
 const modalWidth = computed(() => {
   if (isQualifying.value) {
-    return 'xl';
+    return '3xl';
   }
   return '5xl';
 });
@@ -656,13 +656,17 @@ async function loadData(): Promise<void> {
         page: currentPage,
       });
 
-      // Add drivers from current page
-      allDrivers.push(...seasonDriverStore.seasonDrivers);
+      // Get the current page data (store replaces data on each fetch)
+      const currentPageDrivers = [...seasonDriverStore.seasonDrivers];
+      const returnedCount = currentPageDrivers.length;
 
-      // Check if there are more pages
-      // Assuming the store has pagination info; if not, we need to check the returned data length
-      const returnedCount = seasonDriverStore.seasonDrivers.length;
-      hasMorePages = returnedCount === perPage;
+      // Add drivers from current page to our local array
+      allDrivers.push(...currentPageDrivers);
+
+      // Check if there are more pages based on:
+      // 1. Number of drivers returned (if less than perPage, we've reached the end)
+      // 2. Store pagination metadata (more reliable)
+      hasMorePages = returnedCount === perPage && currentPage < seasonDriverStore.lastPage;
       currentPage++;
 
       // Safety check to prevent infinite loops
@@ -695,6 +699,14 @@ async function loadData(): Promise<void> {
 
     // Populate form with existing results
     populateFormWithResults();
+  } catch (error) {
+    console.error('Error loading data:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load drivers and results',
+      life: 5000,
+    });
   } finally {
     isLoadingDrivers.value = false;
   }

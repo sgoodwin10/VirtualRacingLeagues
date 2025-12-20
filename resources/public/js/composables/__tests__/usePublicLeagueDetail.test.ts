@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { nextTick } from 'vue';
+import { nextTick, createApp } from 'vue';
 import { usePublicLeagueDetail } from '../usePublicLeagueDetail';
 import { publicApi } from '@public/services/publicApi';
 import type { PublicLeagueDetailResponse } from '@public/types/public';
@@ -10,6 +10,19 @@ vi.mock('@public/services/publicApi', () => ({
     fetchLeague: vi.fn(),
   },
 }));
+
+// Helper to mount composable in a component context
+function withSetup<T>(composable: () => T): T {
+  let result: T;
+  const app = createApp({
+    setup() {
+      result = composable();
+      return () => {};
+    },
+  });
+  app.mount(document.createElement('div'));
+  return result!;
+}
 
 describe('usePublicLeagueDetail', () => {
   const mockLeagueSlug = 'test-league';
@@ -107,7 +120,7 @@ describe('usePublicLeagueDetail', () => {
 
   describe('initial state', () => {
     it('should initialize with correct default values', () => {
-      const composable = usePublicLeagueDetail(mockLeagueSlug);
+      const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
 
       expect(composable.isLoading.value).toBe(false);
       expect(composable.error.value).toBe(null);
@@ -124,7 +137,7 @@ describe('usePublicLeagueDetail', () => {
     it('should fetch league data successfully', async () => {
       vi.mocked(publicApi.fetchLeague).mockResolvedValue(mockResponse);
 
-      const composable = usePublicLeagueDetail(mockLeagueSlug);
+      const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
 
       expect(composable.isLoading.value).toBe(false);
 
@@ -147,7 +160,7 @@ describe('usePublicLeagueDetail', () => {
       expect(composable.upcomingRaces.value).toEqual(mockResponse.upcoming_races);
       expect(composable.championshipLeaders.value).toEqual(mockResponse.championship_leaders);
 
-      expect(publicApi.fetchLeague).toHaveBeenCalledWith(mockLeagueSlug);
+      expect(publicApi.fetchLeague).toHaveBeenCalledWith(mockLeagueSlug, expect.any(AbortSignal));
       expect(publicApi.fetchLeague).toHaveBeenCalledTimes(1);
     });
 
@@ -155,7 +168,7 @@ describe('usePublicLeagueDetail', () => {
       const errorMessage = 'League not found';
       vi.mocked(publicApi.fetchLeague).mockRejectedValue(new Error(errorMessage));
 
-      const composable = usePublicLeagueDetail(mockLeagueSlug);
+      const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
 
       await composable.fetchLeague();
       await nextTick();
@@ -168,7 +181,7 @@ describe('usePublicLeagueDetail', () => {
     it('should handle fetch errors with unknown error type', async () => {
       vi.mocked(publicApi.fetchLeague).mockRejectedValue('Unknown error');
 
-      const composable = usePublicLeagueDetail(mockLeagueSlug);
+      const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
 
       await composable.fetchLeague();
       await nextTick();
@@ -181,7 +194,7 @@ describe('usePublicLeagueDetail', () => {
     it('should reset error state on new fetch attempt', async () => {
       vi.mocked(publicApi.fetchLeague).mockRejectedValueOnce(new Error('First error'));
 
-      const composable = usePublicLeagueDetail(mockLeagueSlug);
+      const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
 
       await composable.fetchLeague();
       expect(composable.error.value).toBe('First error');
@@ -201,7 +214,7 @@ describe('usePublicLeagueDetail', () => {
       it('should return true when league has social links', async () => {
         vi.mocked(publicApi.fetchLeague).mockResolvedValue(mockResponse);
 
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         await composable.fetchLeague();
         await nextTick();
 
@@ -223,7 +236,7 @@ describe('usePublicLeagueDetail', () => {
 
         vi.mocked(publicApi.fetchLeague).mockResolvedValue(noSocialLinksResponse);
 
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         await composable.fetchLeague();
         await nextTick();
 
@@ -231,7 +244,7 @@ describe('usePublicLeagueDetail', () => {
       });
 
       it('should return false when league is null', () => {
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         expect(composable.hasSocialLinks.value).toBe(false);
       });
 
@@ -250,7 +263,7 @@ describe('usePublicLeagueDetail', () => {
 
         vi.mocked(publicApi.fetchLeague).mockResolvedValue(oneSocialLinkResponse);
 
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         await composable.fetchLeague();
         await nextTick();
 
@@ -358,7 +371,7 @@ describe('usePublicLeagueDetail', () => {
 
         vi.mocked(publicApi.fetchLeague).mockResolvedValue(multiCompetitionResponse);
 
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         await composable.fetchLeague();
         await nextTick();
 
@@ -367,7 +380,7 @@ describe('usePublicLeagueDetail', () => {
       });
 
       it('should return 0 when no competitions exist', () => {
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         expect(composable.totalSeasons.value).toBe(0);
       });
 
@@ -392,7 +405,7 @@ describe('usePublicLeagueDetail', () => {
 
         vi.mocked(publicApi.fetchLeague).mockResolvedValue(noSeasonsResponse);
 
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         await composable.fetchLeague();
         await nextTick();
 
@@ -404,7 +417,7 @@ describe('usePublicLeagueDetail', () => {
       it('should return platforms array when league exists', async () => {
         vi.mocked(publicApi.fetchLeague).mockResolvedValue(mockResponse);
 
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         await composable.fetchLeague();
         await nextTick();
 
@@ -415,7 +428,7 @@ describe('usePublicLeagueDetail', () => {
       });
 
       it('should return empty array when league is null', () => {
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         expect(composable.platformsList.value).toEqual([]);
       });
 
@@ -430,7 +443,7 @@ describe('usePublicLeagueDetail', () => {
 
         vi.mocked(publicApi.fetchLeague).mockResolvedValue(noPlatformsResponse);
 
-        const composable = usePublicLeagueDetail(mockLeagueSlug);
+        const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
         await composable.fetchLeague();
         await nextTick();
 
@@ -446,7 +459,7 @@ describe('usePublicLeagueDetail', () => {
 
       vi.mocked(publicApi.fetchLeague).mockRejectedValue(testError);
 
-      const composable = usePublicLeagueDetail(mockLeagueSlug);
+      const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
       await composable.fetchLeague();
 
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error fetching league:', testError);
@@ -457,7 +470,7 @@ describe('usePublicLeagueDetail', () => {
     it('should be callable multiple times', async () => {
       vi.mocked(publicApi.fetchLeague).mockResolvedValue(mockResponse);
 
-      const composable = usePublicLeagueDetail(mockLeagueSlug);
+      const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
 
       await composable.fetchLeague();
       await composable.fetchLeague();
@@ -479,7 +492,7 @@ describe('usePublicLeagueDetail', () => {
 
       vi.mocked(publicApi.fetchLeague).mockResolvedValueOnce(firstResponse);
 
-      const composable = usePublicLeagueDetail(mockLeagueSlug);
+      const composable = withSetup(() => usePublicLeagueDetail(mockLeagueSlug));
 
       await composable.fetchLeague();
       expect(composable.league.value?.name).toBe('Test League');

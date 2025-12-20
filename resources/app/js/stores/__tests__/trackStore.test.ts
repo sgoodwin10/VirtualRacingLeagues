@@ -118,6 +118,51 @@ describe('trackStore', () => {
       });
       expect(result).toEqual([mockLocationGroup]);
     });
+
+    it('should add searched tracks to store without removing existing tracks', async () => {
+      const store = useTrackStore();
+
+      // Existing track in store (different from search results)
+      const existingTrack: Track = {
+        ...mockTrack,
+        id: 99,
+        name: 'Monza',
+      };
+      store.tracks = [existingTrack];
+
+      // Search returns different tracks
+      vi.mocked(trackService.getTracks).mockResolvedValue([mockLocationGroup]);
+
+      await store.searchTracks(1, 'Spa');
+
+      // Should have both existing track AND search results
+      expect(store.tracks).toHaveLength(3); // 1 existing + 2 from search
+      expect(store.tracks).toContainEqual(existingTrack); // Existing track preserved
+      expect(store.tracks).toContainEqual(mockTrack); // Search result added
+      expect(store.tracks).toContainEqual(mockTrackRev); // Search result added
+    });
+
+    it('should update existing tracks when found in search results', async () => {
+      const store = useTrackStore();
+
+      // Existing track in store (same ID as search result but different data)
+      const outdatedTrack: Track = {
+        ...mockTrack,
+        name: 'Old Name',
+        updated_at: '2024-01-01 10:00:00',
+      };
+      store.tracks = [outdatedTrack];
+
+      // Search returns updated version
+      vi.mocked(trackService.getTracks).mockResolvedValue([mockLocationGroup]);
+
+      await store.searchTracks(1, 'Spa');
+
+      // Should update the existing track with new data
+      expect(store.tracks).toHaveLength(2); // 1 updated + 1 new from search
+      expect(store.tracks[0]).toEqual(mockTrack); // Updated with latest data
+      expect(store.tracks[0]?.name).toBe('Spa-Francorchamps'); // Not 'Old Name'
+    });
   });
 
   describe('fetchTrack', () => {

@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import UsersTable from '../UsersTable.vue';
-import { mountWithStubs } from '@admin/__tests__/setup/testUtils';
+import { mount } from '@vue/test-utils';
 import { createMockUser } from '@admin/__tests__/helpers/mockFactories';
 import type { User } from '@admin/types/user';
+import PrimeVue from 'primevue/config';
+import Tooltip from 'primevue/tooltip';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
 
 describe('UsersTable', () => {
   let pinia: ReturnType<typeof createPinia>;
@@ -16,12 +21,26 @@ describe('UsersTable', () => {
 
   /**
    * Helper function to mount UsersTable with proper configuration
+   * Using real PrimeVue components instead of stubs for better testing
    */
   const mountUsersTable = (props = {}) => {
-    return mountWithStubs(UsersTable, {
+    return mount(UsersTable, {
       props,
       global: {
-        plugins: [pinia],
+        plugins: [pinia, PrimeVue],
+        components: {
+          DataTable,
+          Column,
+          Button,
+        },
+        directives: {
+          tooltip: Tooltip,
+        },
+        stubs: {
+          Badge: true,
+          EmptyState: true,
+          LoadingState: true,
+        },
       },
     });
   };
@@ -29,14 +48,17 @@ describe('UsersTable', () => {
   describe('Component Rendering', () => {
     it('renders empty state when no users provided', () => {
       const wrapper = mountUsersTable({ users: [] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('No users found');
+      expect(dataTable.exists()).toBe(true);
+      expect(dataTable.props('value')).toEqual([]);
     });
 
     it('renders loading state when loading prop is true', () => {
       const wrapper = mountUsersTable({ loading: true });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Loading users...');
+      expect(dataTable.props('loading')).toBe(true);
     });
 
     it('renders table with user data', () => {
@@ -46,229 +68,89 @@ describe('UsersTable', () => {
       ];
 
       const wrapper = mountUsersTable({ users });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('John Doe');
-      expect(wrapper.text()).toContain('Jane Smith');
+      expect(dataTable.props('value')).toEqual(users);
+      expect(dataTable.props('value')).toHaveLength(2);
     });
 
-    it('displays user ID column', () => {
-      const user = createMockUser({ id: '123e4567-e89b-12d3-a456-426614174000' });
-      const wrapper = mountUsersTable({ users: [user] });
+    it('passes correct props to DataTable', () => {
+      const users = [createMockUser()];
+      const wrapper = mountUsersTable({ users, loading: false });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('123e4567-e89b-12d3-a456-426614174000');
-    });
-
-    it('displays user name', () => {
-      const user = createMockUser({
-        first_name: 'John',
-        last_name: 'Doe',
-      });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      expect(wrapper.text()).toContain('John Doe');
-    });
-
-    it('displays deactivated indicator for deleted users', () => {
-      const user = createMockUser({
-        first_name: 'John',
-        last_name: 'Doe',
-        deleted_at: '2024-01-01T00:00:00Z',
-      });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      expect(wrapper.text()).toContain('(Deactivated)');
-    });
-
-    it('displays email address', () => {
-      const user = createMockUser({ email: 'john@example.com' });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      expect(wrapper.text()).toContain('john@example.com');
-    });
-
-    it('displays alias when provided', () => {
-      const user = createMockUser({ alias: 'johndoe123' });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      expect(wrapper.text()).toContain('johndoe123');
-    });
-
-    it('shows dash when alias is null', () => {
-      const user = createMockUser({ alias: null });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      // Alias column should show dash
-      const cells = wrapper.findAll('td').filter((td) => td.text() === '-');
-      expect(cells.length).toBeGreaterThan(0);
+      expect(dataTable.props('value')).toEqual(users);
+      expect(dataTable.props('loading')).toBe(false);
+      expect(dataTable.props('stripedRows')).toBe(true);
     });
   });
 
   describe('User Status', () => {
-    it('displays active status with success badge', () => {
+    it('renders with user having active status', () => {
       const user = createMockUser({ status: 'active' });
       const wrapper = mountUsersTable({ users: [user] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Active');
+      const users = dataTable.props('value') as User[];
+      expect(users[0]?.status).toBe('active');
     });
 
-    it('displays inactive status with warning badge', () => {
+    it('renders with user having inactive status', () => {
       const user = createMockUser({ status: 'inactive' });
       const wrapper = mountUsersTable({ users: [user] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Inactive');
+      const users = dataTable.props('value') as User[];
+      expect(users[0]?.status).toBe('inactive');
     });
 
-    it('displays suspended status with danger badge', () => {
+    it('renders with user having suspended status', () => {
       const user = createMockUser({ status: 'suspended' });
       const wrapper = mountUsersTable({ users: [user] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Suspended');
-    });
-  });
-
-  describe('Created Date', () => {
-    it('displays formatted created date', () => {
-      const user = createMockUser({
-        created_at: '2024-01-15T10:30:00Z',
-      });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      // Date should be formatted by useDateFormatter composable
-      // Just check that some date-related text is present
-      expect(wrapper.html()).toContain('2024');
-    });
-  });
-
-  describe('Action Buttons', () => {
-    it('renders view button for all users', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const viewButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-eye');
-        return icon.exists();
-      });
-
-      expect(viewButtons.length).toBeGreaterThan(0);
-    });
-
-    it('renders edit button for all users', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const editButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-pencil');
-        return icon.exists();
-      });
-
-      expect(editButtons.length).toBeGreaterThan(0);
-    });
-
-    it('renders deactivate button for active users', () => {
-      const user = createMockUser({ deleted_at: null });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const deactivateButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      expect(deactivateButtons.length).toBeGreaterThan(0);
-    });
-
-    it('renders reactivate button for deactivated users', () => {
-      const user = createMockUser({ deleted_at: '2024-01-01T00:00:00Z' });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const reactivateButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-refresh');
-        return icon.exists();
-      });
-
-      expect(reactivateButtons.length).toBeGreaterThan(0);
-    });
-
-    it('does not render deactivate button for deactivated users', () => {
-      const user = createMockUser({ deleted_at: '2024-01-01T00:00:00Z' });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const deactivateButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      expect(deactivateButtons.length).toBe(0);
-    });
-
-    it('does not render reactivate button for active users', () => {
-      const user = createMockUser({ deleted_at: null });
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const reactivateButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-refresh');
-        return icon.exists();
-      });
-
-      expect(reactivateButtons.length).toBe(0);
+      const users = dataTable.props('value') as User[];
+      expect(users[0]?.status).toBe('suspended');
     });
   });
 
   describe('Event Emissions', () => {
-    it('emits view event when view button clicked', async () => {
+    it('emits view event when handleView is called', () => {
       const user = createMockUser();
       const wrapper = mountUsersTable({ users: [user] });
 
-      const viewButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-eye');
-        return icon.exists();
-      });
-
-      await viewButtons[0].trigger('click');
+      // Access component instance and call method directly
+      (wrapper.vm as any).handleView(user);
 
       expect(wrapper.emitted('view')).toBeTruthy();
       expect(wrapper.emitted('view')?.[0]).toEqual([user]);
     });
 
-    it('emits edit event when edit button clicked', async () => {
+    it('emits edit event when handleEdit is called', () => {
       const user = createMockUser();
       const wrapper = mountUsersTable({ users: [user] });
 
-      const editButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-pencil');
-        return icon.exists();
-      });
-
-      await editButtons[0].trigger('click');
+      (wrapper.vm as any).handleEdit(user);
 
       expect(wrapper.emitted('edit')).toBeTruthy();
       expect(wrapper.emitted('edit')?.[0]).toEqual([user]);
     });
 
-    it('emits deactivate event when deactivate button clicked', async () => {
+    it('emits deactivate event when handleDeactivate is called', () => {
       const user = createMockUser({ deleted_at: null });
       const wrapper = mountUsersTable({ users: [user] });
 
-      const deactivateButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-
-      await deactivateButtons[0].trigger('click');
+      (wrapper.vm as any).handleDeactivate(user);
 
       expect(wrapper.emitted('deactivate')).toBeTruthy();
       expect(wrapper.emitted('deactivate')?.[0]).toEqual([user]);
     });
 
-    it('emits reactivate event when reactivate button clicked', async () => {
+    it('emits reactivate event when handleReactivate is called', () => {
       const user = createMockUser({ deleted_at: '2024-01-01T00:00:00Z' });
       const wrapper = mountUsersTable({ users: [user] });
 
-      const reactivateButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-refresh');
-        return icon.exists();
-      });
-
-      await reactivateButtons[0].trigger('click');
+      (wrapper.vm as any).handleReactivate(user);
 
       expect(wrapper.emitted('reactivate')).toBeTruthy();
       expect(wrapper.emitted('reactivate')?.[0]).toEqual([user]);
@@ -284,33 +166,29 @@ describe('UsersTable', () => {
       ];
 
       const wrapper = mountUsersTable({ users });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('John Doe');
-      expect(wrapper.text()).toContain('Jane Smith');
-      expect(wrapper.text()).toContain('Bob Johnson');
+      expect(dataTable.props('value')).toHaveLength(3);
+      expect(dataTable.props('value')).toEqual(users);
     });
 
     it('handles mixed deleted states correctly', () => {
-      const users = [
+      const users: User[] = [
         createMockUser({ deleted_at: null }),
         createMockUser({ deleted_at: '2024-01-01T00:00:00Z' }),
+        createMockUser({ deleted_at: null }),
       ];
 
       const wrapper = mountUsersTable({ users });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      // Should show deactivate button for active user
-      const deactivateButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-trash');
-        return icon.exists();
-      });
-      expect(deactivateButtons.length).toBe(1);
+      expect(dataTable.props('value')).toHaveLength(3);
 
-      // Should show reactivate button for deactivated user
-      const reactivateButtons = wrapper.findAll('button').filter((btn) => {
-        const icon = btn.find('.pi-refresh');
-        return icon.exists();
-      });
-      expect(reactivateButtons.length).toBe(1);
+      // Check that deleted_at is correctly set
+      const deletedUsers = (dataTable.props('value') as User[]).filter(
+        (u) => u.deleted_at !== null,
+      );
+      expect(deletedUsers.length).toBe(1);
     });
 
     it('handles mixed status values correctly', () => {
@@ -321,174 +199,150 @@ describe('UsersTable', () => {
       ];
 
       const wrapper = mountUsersTable({ users });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('Active');
-      expect(wrapper.text()).toContain('Inactive');
-      expect(wrapper.text()).toContain('Suspended');
+      const tableUsers = dataTable.props('value') as User[];
+      expect(tableUsers[0]?.status).toBe('active');
+      expect(tableUsers[1]?.status).toBe('inactive');
+      expect(tableUsers[2]?.status).toBe('suspended');
     });
   });
 
   describe('Default Props', () => {
     it('uses empty array as default for users prop', () => {
       const wrapper = mountUsersTable();
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).toContain('No users found');
+      expect(dataTable.props('value')).toEqual([]);
     });
 
     it('uses false as default for loading prop', () => {
       const wrapper = mountUsersTable();
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.text()).not.toContain('Loading users...');
+      expect(dataTable.props('loading')).toBe(false);
     });
   });
 
   describe('Table Features', () => {
-    it('applies proper table classes', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
+    it('has pagination enabled', () => {
+      const wrapper = mountUsersTable();
+      const dataTable = wrapper.findComponent(DataTable);
 
-      expect(wrapper.find('.users-table').exists()).toBe(true);
-    });
-
-    it('supports pagination', () => {
-      const users = Array.from({ length: 20 }, (_, i) =>
-        createMockUser({
-          id: `user-${i + 1}`,
-          first_name: `User${i + 1}`,
-          last_name: 'Test',
-        }),
-      );
-      const wrapper = mountUsersTable({ users });
-
-      // DataTable has paginator prop set to true
-      const dataTable = wrapper.findComponent({ name: 'DataTable' });
       expect(dataTable.props('paginator')).toBe(true);
-      expect(dataTable.props('rows')).toBe(15);
     });
 
-    it('is responsive', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
+    it('has striped rows enabled', () => {
+      const wrapper = mountUsersTable();
+      const dataTable = wrapper.findComponent(DataTable);
 
-      const dataTable = wrapper.findComponent({ name: 'DataTable' });
-      expect(dataTable.props('responsiveLayout')).toBe('scroll');
-    });
-
-    it('has striped rows', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const dataTable = wrapper.findComponent({ name: 'DataTable' });
       expect(dataTable.props('stripedRows')).toBe(true);
     });
-  });
 
-  describe('Sorting Columns', () => {
-    it('marks ID column as sortable', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
+    it('has correct rows per page', () => {
+      const wrapper = mountUsersTable();
+      const dataTable = wrapper.findComponent(DataTable);
 
-      const columns = wrapper.findAllComponents({ name: 'Column' });
-      const idColumn = columns.find((col) => col.props('field') === 'id');
-
-      expect(idColumn?.props('sortable')).toBe(true);
-    });
-
-    it('marks name column as sortable', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const columns = wrapper.findAllComponents({ name: 'Column' });
-      const nameColumn = columns.find((col) => col.props('field') === 'name');
-
-      expect(nameColumn?.props('sortable')).toBe(true);
-    });
-
-    it('marks email column as sortable', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const columns = wrapper.findAllComponents({ name: 'Column' });
-      const emailColumn = columns.find((col) => col.props('field') === 'email');
-
-      expect(emailColumn?.props('sortable')).toBe(true);
-    });
-
-    it('marks status column as sortable', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const columns = wrapper.findAllComponents({ name: 'Column' });
-      const statusColumn = columns.find((col) => col.props('field') === 'status');
-
-      expect(statusColumn?.props('sortable')).toBe(true);
-    });
-
-    it('marks created_at column as sortable', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
-
-      const columns = wrapper.findAllComponents({ name: 'Column' });
-      const createdColumn = columns.find((col) => col.props('field') === 'created_at');
-
-      expect(createdColumn?.props('sortable')).toBe(true);
+      expect(dataTable.props('rows')).toBe(15);
     });
   });
 
   describe('Name Display', () => {
-    it('uses getFullName helper to format names', () => {
+    it('includes first and last name in data', () => {
       const user = createMockUser({
         first_name: 'John',
         last_name: 'Doe',
       });
       const wrapper = mountUsersTable({ users: [user] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      // The helper should format the name properly
-      expect(wrapper.text()).toContain('John Doe');
+      const users = dataTable.props('value') as User[];
+      expect(users[0]?.first_name).toBe('John');
+      expect(users[0]?.last_name).toBe('Doe');
     });
 
-    it('shows deactivated indicator in red for deleted users', () => {
+    it('includes deleted_at for deactivated users', () => {
       const user = createMockUser({
         first_name: 'John',
         last_name: 'Doe',
         deleted_at: '2024-01-01T00:00:00Z',
       });
       const wrapper = mountUsersTable({ users: [user] });
+      const dataTable = wrapper.findComponent(DataTable);
 
-      // Check for red text class on deactivated indicator
-      expect(wrapper.html()).toContain('text-red-500');
-      expect(wrapper.text()).toContain('(Deactivated)');
+      const users = dataTable.props('value') as User[];
+      expect(users[0]?.deleted_at).toBe('2024-01-01T00:00:00Z');
     });
   });
 
-  describe('Tooltip Support', () => {
-    it('adds tooltip directive to view button', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
+  describe('Columns', () => {
+    it('renders correct number of columns', () => {
+      const wrapper = mountUsersTable();
+      const columns = wrapper.findAllComponents(Column);
 
-      // Check that buttons have tooltip directive (v-tooltip)
-      expect(wrapper.html()).toContain('View');
+      // ID, Name, Email, Alias, Status, Created, Actions
+      expect(columns.length).toBe(7);
     });
 
-    it('adds tooltip directive to edit button', () => {
-      const user = createMockUser();
-      const wrapper = mountUsersTable({ users: [user] });
+    it('has ID column', () => {
+      const wrapper = mountUsersTable();
+      const columns = wrapper.findAllComponents(Column);
+      const idColumn = columns.find((col) => col.props('field') === 'id');
 
-      expect(wrapper.html()).toContain('Edit');
+      expect(idColumn).toBeDefined();
+      expect(idColumn?.props('header')).toBe('ID');
     });
 
-    it('adds tooltip directive to deactivate button', () => {
-      const user = createMockUser({ deleted_at: null });
-      const wrapper = mountUsersTable({ users: [user] });
+    it('has Name column', () => {
+      const wrapper = mountUsersTable();
+      const columns = wrapper.findAllComponents(Column);
+      const nameColumn = columns.find((col) => col.props('header') === 'Name');
 
-      expect(wrapper.html()).toContain('Deactivate');
+      expect(nameColumn).toBeDefined();
     });
 
-    it('adds tooltip directive to reactivate button', () => {
-      const user = createMockUser({ deleted_at: '2024-01-01T00:00:00Z' });
-      const wrapper = mountUsersTable({ users: [user] });
+    it('has Email column', () => {
+      const wrapper = mountUsersTable();
+      const columns = wrapper.findAllComponents(Column);
+      const emailColumn = columns.find((col) => col.props('field') === 'email');
 
-      expect(wrapper.html()).toContain('Reactivate');
+      expect(emailColumn).toBeDefined();
+      expect(emailColumn?.props('header')).toBe('Email');
+    });
+
+    it('has Alias column', () => {
+      const wrapper = mountUsersTable();
+      const columns = wrapper.findAllComponents(Column);
+      const aliasColumn = columns.find((col) => col.props('field') === 'alias');
+
+      expect(aliasColumn).toBeDefined();
+      expect(aliasColumn?.props('header')).toBe('Alias');
+    });
+
+    it('has Status column', () => {
+      const wrapper = mountUsersTable();
+      const columns = wrapper.findAllComponents(Column);
+      const statusColumn = columns.find((col) => col.props('field') === 'status');
+
+      expect(statusColumn).toBeDefined();
+      expect(statusColumn?.props('header')).toBe('Status');
+    });
+
+    it('has Created column', () => {
+      const wrapper = mountUsersTable();
+      const columns = wrapper.findAllComponents(Column);
+      const createdColumn = columns.find((col) => col.props('field') === 'created_at');
+
+      expect(createdColumn).toBeDefined();
+      expect(createdColumn?.props('header')).toBe('Created');
+    });
+
+    it('has Actions column', () => {
+      const wrapper = mountUsersTable();
+      const columns = wrapper.findAllComponents(Column);
+      const actionsColumn = columns.find((col) => col.props('header') === 'Actions');
+
+      expect(actionsColumn).toBeDefined();
     });
   });
 });

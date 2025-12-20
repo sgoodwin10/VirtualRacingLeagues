@@ -1,7 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import TimeResultsTable from '../TimeResultsTable.vue';
 import type { TimeResult } from '@public/types/public';
+
+// Mock vue-router
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+  useRoute: () => ({
+    params: {},
+    query: {},
+  }),
+}));
 
 describe('TimeResultsTable', () => {
   const mockResults: TimeResult[] = [

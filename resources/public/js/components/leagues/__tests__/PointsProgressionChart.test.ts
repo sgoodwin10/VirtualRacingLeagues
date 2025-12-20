@@ -397,7 +397,7 @@ describe('PointsProgressionChart', () => {
     const datasets = chartConfig?.data?.datasets;
 
     expect(datasets).toBeDefined();
-    expect(datasets?.[0]?.data).toEqual([25, 25, 25]); // Points should stay at 25 for missing rounds
+    expect(datasets?.[0]?.data).toEqual([25, null, null]); // Missing rounds show as null
   });
 
   it('generates correct round labels', () => {

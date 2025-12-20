@@ -260,7 +260,7 @@ describe('PublicApiService', () => {
 
       expect(result).toHaveLength(3);
       expect(result[0]?.name).toBe('GT7');
-      expect(mockGet).toHaveBeenCalledWith('/platforms');
+      expect(mockGet).toHaveBeenCalledWith('/platforms', expect.objectContaining({ signal: undefined }));
     });
 
     it('throws NotFoundError for 404 status', async () => {

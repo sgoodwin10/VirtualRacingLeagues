@@ -275,7 +275,7 @@ describe('competitionService', () => {
       const formData = buildCompetitionFormData(form);
 
       expect(formData.get('name')).toBe('GT3 Championship');
-      expect(formData.get('description')).toBeNull();
+      expect(formData.get('description')).toBe(''); // FormData returns empty string for empty values
       expect(formData.get('platform_id')).toBe('1');
       expect(formData.get('logo')).toBeNull();
     });
@@ -369,14 +369,17 @@ describe('competitionService', () => {
     });
 
     it('should handle network connection error on updateCompetition', async () => {
-      const formData = new FormData();
+      // Use buildUpdateCompetitionFormData to create proper FormData with append method
+      const formData = buildUpdateCompetitionFormData({
+        name: 'Test Competition',
+      });
 
       vi.mocked(apiClient.post).mockRejectedValue({
         code: 'ERR_NETWORK',
         message: 'Network Error',
       });
 
-      await expect(updateCompetition(1, 1, formData)).rejects.toMatchObject({
+      await expect(updateCompetition(1, formData)).rejects.toMatchObject({
         code: 'ERR_NETWORK',
       });
     });
