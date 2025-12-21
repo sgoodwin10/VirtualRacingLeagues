@@ -23,7 +23,7 @@ class DriverSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // Get the default league
-        $league = League::where('slug', 'virtual-racing-league')->first();
+        $league = League::where('slug', 'race-on-oz')->first();
 
         if (!$league) {
             $this->command->error('League not found. Please run LeagueSeeder first.');

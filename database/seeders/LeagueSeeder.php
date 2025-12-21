@@ -27,6 +27,7 @@ class LeagueSeeder extends Seeder
         League::firstOrCreate(
             ['slug' => 'race-on-oz'],
             [
+                'owner_user_id' => $owner->id,
                 'name' => 'Race on Oz',
                 'tagline' => 'Where Champions Are Made',
                 'description' => 'Welcome to the Race on Oz! We are a community of passionate sim racers competing in exciting championships across multiple platforms.',
