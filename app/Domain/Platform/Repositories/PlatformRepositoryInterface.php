@@ -48,4 +48,11 @@ interface PlatformRepositoryInterface
      * @return array<array{id: int, name: string, slug: string}>
      */
     public function getAllActive(): array;
+
+    /**
+     * Find a platform ID by name.
+     *
+     * @throws \App\Domain\Platform\Exceptions\PlatformNotFoundException if platform not found
+     */
+    public function findIdByName(string $name): int;
 }

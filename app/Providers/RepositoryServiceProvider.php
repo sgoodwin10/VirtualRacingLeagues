@@ -13,11 +13,15 @@ use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Platform\Repositories\CarBrandRepositoryInterface;
+use App\Domain\Platform\Repositories\CarRepositoryInterface;
 use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Repositories\AdminReadModelService;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentAdminRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentCarBrandRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentCarRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetitionRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDivisionRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDriverRepository;
@@ -63,6 +67,18 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             PlatformRepositoryInterface::class,
             EloquentPlatformRepository::class
+        );
+
+        // Bind Car Repository
+        $this->app->bind(
+            CarRepositoryInterface::class,
+            EloquentCarRepository::class
+        );
+
+        // Bind CarBrand Repository
+        $this->app->bind(
+            CarBrandRepositoryInterface::class,
+            EloquentCarBrandRepository::class
         );
 
         // Bind Driver Repository

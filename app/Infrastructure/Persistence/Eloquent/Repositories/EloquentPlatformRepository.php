@@ -103,6 +103,22 @@ final class EloquentPlatformRepository implements PlatformRepositoryInterface
     }
 
     /**
+     * Find a platform ID by name.
+     *
+     * @throws PlatformNotFoundException
+     */
+    public function findIdByName(string $name): int
+    {
+        $platform = Platform::where('name', $name)->first(['id']);
+
+        if (!$platform) {
+            throw PlatformNotFoundException::withName($name);
+        }
+
+        return $platform->id;
+    }
+
+    /**
      * Map Platform model to array.
      * DRY helper to avoid repeating array structure.
      *

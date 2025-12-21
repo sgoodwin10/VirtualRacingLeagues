@@ -15,6 +15,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\AdminActivityLogController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminLeagueController;
+use App\Http\Controllers\Admin\AdminPlatformCarController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\SiteConfigController;
@@ -126,5 +127,10 @@ Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(
         Route::get('/{id}/details', [DriverController::class, 'details'])->name('details');
         Route::put('/{id}', [DriverController::class, 'update'])->name('update');
         Route::delete('/{id}', [DriverController::class, 'destroy'])->name('destroy');
+    });
+
+    // Platform Cars Import (Admin - GT7 car import from KudosPrime)
+    Route::prefix('platform-cars')->name('platform-cars.')->group(function () {
+        Route::post('/import', [AdminPlatformCarController::class, 'import'])->name('import');
     });
 });

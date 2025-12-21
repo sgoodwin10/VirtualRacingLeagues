@@ -19,6 +19,7 @@ import type {
 } from '@admin/types/league';
 import type { Driver, DriverStatus } from '@admin/types/driver';
 import type { MediaObject } from '@admin/types/media';
+import type { PlatformCarImportSummary } from '@admin/types/platformCar';
 
 /**
  * Create a mock Admin user with all required fields
@@ -285,6 +286,23 @@ export function createMockSeason(overrides?: Partial<Season>): Season {
     banner: createMockMedia(),
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
+    ...overrides,
+  };
+}
+
+/**
+ * Create a mock PlatformCarImportSummary with all required fields
+ */
+export function createMockPlatformCarImportSummary(
+  overrides?: Partial<PlatformCarImportSummary>,
+): PlatformCarImportSummary {
+  return {
+    carsCreated: faker.number.int({ min: 50, max: 200 }),
+    carsUpdated: faker.number.int({ min: 0, max: 50 }),
+    carsDeactivated: faker.number.int({ min: 0, max: 10 }),
+    brandsCreated: faker.number.int({ min: 10, max: 30 }),
+    brandsUpdated: faker.number.int({ min: 0, max: 10 }),
+    errors: [],
     ...overrides,
   };
 }

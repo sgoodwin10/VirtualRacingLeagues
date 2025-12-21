@@ -1,0 +1,3 @@
+
+
+i want to create a plan to create a cron job that will download the excel spreadsheet from https://www.kudosprime.com/gt7/listmaker.php once a month (or triggered Manually), parse the file then update/insert the cars into the database. the data base will need a couple of new tables. one for the car (which will also include the platform id), one for the car brand. research this funcationlity and create a plan in docs/crontab

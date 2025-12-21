@@ -18,6 +18,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if column doesn't exist (already removed or never added)
+        if (!Schema::hasColumn('competitions', 'deleted_at')) {
+            return;
+        }
+
         DB::transaction(function () {
             // Check for soft-deleted competitions before removing the column
             $softDeletedCount = DB::table('competitions')
@@ -127,6 +132,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Skip if column already exists
+        if (Schema::hasColumn('competitions', 'deleted_at')) {
+            return;
+        }
+
         DB::transaction(function () {
             // Restore the soft deletes column
             Schema::table('competitions', function (Blueprint $table) {
