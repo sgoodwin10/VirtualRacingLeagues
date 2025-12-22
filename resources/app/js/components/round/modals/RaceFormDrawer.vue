@@ -606,7 +606,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, computed } from 'vue';
+import { ref, reactive, watch, computed, nextTick } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRaceStore } from '@app/stores/raceStore';
 import { useRoundStore } from '@app/stores/roundStore';
@@ -677,9 +677,9 @@ const toast = useToast();
 const form = reactive<RaceForm>({
   race_number: 1,
   name: '',
-  race_type: 'sprint',
+  race_type: 'feature',
   qualifying_format: 'standard',
-  qualifying_length: 15,
+  qualifying_length: 10,
   qualifying_tire: '',
   grid_source: 'qualifying',
   grid_source_race_id: null,
@@ -708,6 +708,12 @@ const form = reactive<RaceForm>({
 });
 
 const isQualifying = computed(() => form.race_type === 'qualifying');
+
+// Computed property to determine if this is the first race for the round
+const isFirstRaceForRound = computed(() => {
+  const races = raceStore.racesByRoundId(props.roundId);
+  return races.length === 0;
+});
 
 // Pass the reactive computed ref to useRaceValidation so validation adapts dynamically
 const { errors, validateAll, clearErrors } = useRaceValidation(form, isQualifying);
@@ -940,10 +946,13 @@ watch(
       if (props.race) {
         loadRaceIntoForm(props.race);
       } else {
+        // Use nextTick to ensure all reactive data (including race store) is ready
+        await nextTick();
         resetForm();
       }
     }
   },
+  { immediate: true },
 );
 
 // Watch for changes to the race prop (e.g., when switching between edit races)
@@ -956,6 +965,17 @@ watch(
   },
   { deep: true },
 );
+
+// Watch for changes in isFirstRaceForRound to update race_type in create mode
+// This ensures the form updates reactively when race data becomes available
+// NOTE: No immediate option - we only want this to run when the race count CHANGES,
+// not on initial mount (resetForm handles the initial value)
+watch(isFirstRaceForRound, (isFirst) => {
+  // Only update if in create mode, modal is visible, and no race is being edited
+  if (props.visible && props.mode === 'create' && !props.race) {
+    form.race_type = isFirst ? 'qualifying' : 'sprint';
+  }
+});
 
 async function loadPlatformSettings(): Promise<void> {
   loadingSettings.value = true;
@@ -1007,7 +1027,9 @@ function loadRaceIntoForm(race: Race): void {
 function resetForm(): void {
   form.race_number = 1;
   form.name = '';
-  form.race_type = 'sprint';
+  // Default to 'qualifying' if this is the first race, otherwise 'sprint'
+  // Use .value to access the computed property
+  form.race_type = isFirstRaceForRound.value ? 'qualifying' : 'sprint';
   form.qualifying_format = 'standard';
   form.qualifying_length = 15;
   form.qualifying_tire = '';

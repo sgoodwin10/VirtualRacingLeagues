@@ -1610,17 +1610,18 @@ final class RoundApplicationService
 
     /**
      * Calculate and store team championship results for a round.
-     * Aggregates driver points per team and respects the teams_drivers_for_calculation setting.
+     * Aggregates driver points per team from round_results and respects the teams_drivers_for_calculation setting.
      *
      * Business Rules:
      * - Only runs if season.team_championship_enabled = true
+     * - Uses total_points from round_results (includes race points, bonuses, round points)
      * - Drivers with team_id = null (privateers) are excluded
      * - Teams with no drivers are excluded from standings
      * - If teams_drivers_for_calculation is set, only top N drivers count
      * - Tie-breaking: Teams with equal points are sorted alphabetically by name
      *
-     * NOTE: This method is quite long (130+ lines) and could be refactored in the future.
-     * Consider extracting domain logic into a TeamChampionshipService when time permits.
+     * NOTE: This method gets driver points from round_results instead of raw race_results.
+     * The round_results field contains the final calculated standings with all bonuses applied.
      */
     private function calculateTeamChampionshipResults(Round $round): void
     {
@@ -1632,15 +1633,12 @@ final class RoundApplicationService
             return;
         }
 
-        // Get all races for this round
-        $races = $this->raceRepository->findAllByRoundId($round->id() ?? 0);
-        if (empty($races)) {
-            return;
-        }
-
-        // Get all race results for this round
-        $allRaceResults = $this->raceResultRepository->findByRoundId($round->id() ?? 0);
-        if (empty($allRaceResults)) {
+        // Get round results which contain the final driver standings
+        $roundResults = $round->roundResults();
+        if ($roundResults === null || !isset($roundResults['standings']) || empty($roundResults['standings'])) {
+            Log::warning('Team championship calculation skipped: no round results available', [
+                'round_id' => $round->id(),
+            ]);
             return;
         }
 
@@ -1648,7 +1646,7 @@ final class RoundApplicationService
         $seasonDrivers = $this->seasonDriverRepository->findBySeason($season->id() ?? 0);
 
         // Map season_driver_id to team_id
-        // Note: race_results.driver_id stores season_driver_id, not actual driver_id
+        // Note: round_results uses season_driver_id (stored as driver_id in race_results)
         $driverToTeamMap = [];
         foreach ($seasonDrivers as $seasonDriver) {
             $teamId = $seasonDriver->teamId();
@@ -1664,15 +1662,31 @@ final class RoundApplicationService
             return;
         }
 
-        // Build team standings
-        $teamPoints = [];
-        $teamRaceResultIds = [];
+        // Extract driver standings from round results
+        // Handle both division-based and non-division-based results
+        $driverStandings = [];
+        $standings = $roundResults['standings'];
 
-        // Group race results by team
-        foreach ($allRaceResults as $raceResult) {
-            $driverId = $raceResult->driverId();
+        if (is_array($standings) && isset($standings[0]['division_id'])) {
+            // Division-based results: flatten all division standings
+            foreach ($standings as $divisionStanding) {
+                foreach ($divisionStanding['results'] ?? [] as $driverResult) {
+                    $driverStandings[] = $driverResult;
+                }
+            }
+        } else {
+            // Non-division results: use standings directly
+            $driverStandings = $standings;
+        }
 
-            // Find the team for this driver using the pre-built map
+        // Build team standings from round results
+        $teamDriverPoints = [];
+
+        foreach ($driverStandings as $driverResult) {
+            $driverId = $driverResult['driver_id'];
+            $totalPoints = $driverResult['total_points'] ?? 0;
+
+            // Find the team for this driver
             $teamId = $driverToTeamMap[$driverId] ?? null;
 
             // Skip if driver has no team (privateer)
@@ -1681,14 +1695,14 @@ final class RoundApplicationService
             }
 
             // Initialize team data if not exists
-            if (!isset($teamPoints[$teamId])) {
-                $teamPoints[$teamId] = [];
+            if (!isset($teamDriverPoints[$teamId])) {
+                $teamDriverPoints[$teamId] = [];
             }
 
-            // Store this result for the team
-            $teamPoints[$teamId][] = [
-                'race_result_id' => $raceResult->id(),
-                'points' => $raceResult->racePoints(),
+            // Store driver's total points for the team
+            $teamDriverPoints[$teamId][] = [
+                'driver_id' => $driverId,
+                'points' => $totalPoints,
             ];
         }
 
@@ -1698,30 +1712,30 @@ final class RoundApplicationService
 
         foreach ($teams as $team) {
             $teamId = $team->id();
-            if ($teamId === null || !isset($teamPoints[$teamId])) {
+            if ($teamId === null || !isset($teamDriverPoints[$teamId])) {
                 // Skip teams with no results
                 continue;
             }
 
-            $results = $teamPoints[$teamId];
+            $driverPoints = $teamDriverPoints[$teamId];
 
-            // Sort results by points descending
-            usort($results, fn($a, $b) => $b['points'] <=> $a['points']);
+            // Sort drivers by points descending
+            usort($driverPoints, fn($a, $b) => $b['points'] <=> $a['points']);
 
             // Apply teams_drivers_for_calculation limit if set
             if ($driversForCalculation !== null && $driversForCalculation > 0) {
-                $results = array_slice($results, 0, $driversForCalculation);
+                $driverPoints = array_slice($driverPoints, 0, $driversForCalculation);
             }
 
-            // Sum the points
-            $totalPoints = array_sum(array_column($results, 'points'));
-            $raceResultIds = array_column($results, 'race_result_id');
+            // Sum the points from top drivers
+            $totalPoints = array_sum(array_column($driverPoints, 'points'));
+            $driverIds = array_column($driverPoints, 'driver_id');
 
             $standings[] = [
                 'team_id' => $teamId,
                 'team_name' => $team->name()->value(),
                 'total_points' => $totalPoints,
-                'race_result_ids' => $raceResultIds,
+                'driver_ids' => $driverIds, // Store driver IDs instead of race_result_ids
             ];
         }
 

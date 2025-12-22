@@ -277,6 +277,7 @@ describe('RaceFormDrawer', () => {
       form: {
         race_number: number;
         name: string;
+        race_type: string;
         length_value: number;
       };
     };
@@ -284,7 +285,9 @@ describe('RaceFormDrawer', () => {
     // Verify form has default values
     expect(vm.form.race_number).toBe(1);
     expect(vm.form.name).toBe('');
-    expect(vm.form.length_value).toBe(20);
+    // When no races exist for the round, it should default to qualifying (first race)
+    expect(vm.form.race_type).toBe('qualifying');
+    expect(vm.form.length_value).toBe(15); // Qualifying default length
   });
 
   it('should hide fastest lap bonus when round has fastest lap configured', async () => {
@@ -786,8 +789,8 @@ describe('RaceFormDrawer', () => {
         hasQualifyingPole: boolean;
       };
 
-      // Initially qualifying pole should be 1
-      expect(vm.form.qualifying_pole).toBe(1);
+      // Initially qualifying pole should be null (from the race data)
+      expect(vm.form.qualifying_pole).toBe(null);
 
       // Disable qualifying pole bonus
       vm.hasQualifyingPole = false;

@@ -18,8 +18,8 @@
     </div>
 
     <div class="mt-3 flex items-center justify-between">
-      <span class="text-sm text-gray-500">
-        {{ expectedColumnsText }}
+      <span class="text-sm text-gray-500" v-html="expectedColumnsText">
+        
       </span>
       <div class="flex gap-2">
         <input
@@ -86,24 +86,21 @@ const LAP_TIME_PENALTY_MS = 500;
 const placeholderText = computed(() => {
   if (!props.raceTimesRequired) {
     // Race times not required - only need driver
-    return `Paste CSV data here...
-Example:
+    return `Paste CSV data here. Example:
 driver
 John Smith
 Jane Doe
 Bob Wilson`;
   } else if (props.isQualifying) {
     // Qualifying with race times required - need driver and fastest_lap_time
-    return `Paste CSV data here...
-Example:
+    return `Paste CSV data here. Example:
 driver,fastest_lap_time
 John Smith,01:32.456
 Jane Doe,01:33.123
 Bob Wilson,01:35.000`;
   } else {
     // Race with times required - need time columns
-    return `Paste CSV data here...
-Example:
+    return `Paste CSV data here. Example:
 driver,race_time,original_race_time_difference,fastest_lap_time
 John Smith,01:23:45.678,,01:32.456
 Jane Doe,,,01:33.123
@@ -113,11 +110,11 @@ Bob Wilson,,DNF,01:35.000`;
 
 const expectedColumnsText = computed(() => {
   if (!props.raceTimesRequired) {
-    return 'Expected columns: driver (times optional)';
+    return 'Required Column Headers: driver (`fastest_lap_time` optional)';
   } else if (props.isQualifying) {
-    return 'Expected columns: driver, fastest_lap_time';
+    return 'Required Column Headers: driver, fastest_lap_time';
   } else {
-    return 'Expected columns: driver, race_time, original_race_time_difference, fastest_lap_time';
+    return 'Required Column Headers: driver, race_time, original_race_time_difference, fastest_lap_time <br /> Data can be blank if not applicable';
   }
 });
 

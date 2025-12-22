@@ -1,2 +1,2 @@
-Fix any issues reported. Check all php files waiting to be added to git, and look and fix any unused variables, files, functions , etc. Run phpstan, phpcs and phpcbf on all the backend files. 
+ Check all php files and look to fix any unused variables, files, functions, fully qualified domain names, domain logic etc. Run phpstan, Larastan, phpcs and phpcbf on all the backend files. 
 Use agent @dev-be
