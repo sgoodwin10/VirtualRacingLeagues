@@ -491,9 +491,7 @@ final class LeagueApplicationService
             $bannerUrl = $this->computeBannerUrl($league);
 
             // Reload eloquent model to get updated media relationships
-            if ($eloquentLeague) {
-                $eloquentLeague->load('media');
-            }
+            $eloquentLeague->load('media');
 
             return LeagueData::fromEntity(
                 $league,
@@ -1268,11 +1266,16 @@ final class LeagueApplicationService
         }
 
         // CRITICAL: Verify season belongs to the specified league
+        // @phpstan-ignore-next-line (relationships are eager-loaded with ->with() so they won't be null, but PHPStan doesn't know this)
+        if ($eloquentSeason->competition === null || $eloquentSeason->competition->league === null) {
+            return null;
+        }
+
         if ($eloquentSeason->competition->league->slug !== $leagueSlug) {
             return null;
         }
 
-        // Generate logo/banner URLs
+        // Generate logo/banner URLs (competition is guaranteed non-null after the check above)
         $logoUrl = $eloquentSeason->logo_path
             ? Storage::disk('public')->url($eloquentSeason->logo_path)
             : ($eloquentSeason->competition->logo_path
@@ -1371,8 +1374,8 @@ final class LeagueApplicationService
                 $eloquentSeason->race_divisions_enabled
             );
 
-            // Use existing round_results from database
-            $roundStandings = $round->round_results;
+            // Use existing round_results from database (default to empty array if null)
+            $roundStandings = $round->round_results ?? [];
 
             $rounds[] = [
                 'id' => $round->id,
@@ -1481,6 +1484,7 @@ final class LeagueApplicationService
 
         // Format results - always group by round with flat results
         $groupedResults = [];
+        /** @var RaceResult&object{round_number: int, round_name: string|null, division_name: string|null, first_name: string, last_name: string, nickname: string|null, driver_number: int|null} $result */
         foreach ($results as $result) {
             $roundKey = $result->round_number;
 
@@ -1770,6 +1774,7 @@ final class LeagueApplicationService
         $enrichedResults = [];
         foreach ($results as $result) {
             $raceResultId = $result['race_result_id'];
+            /** @var (RaceResult&object{race_result_id: int, driver_number: int|null, division_name: string|null, first_name: string, last_name: string, nickname: string|null})|null $driverData */
             $driverData = $raceResultsData->get($raceResultId);
 
             if (!$driverData) {

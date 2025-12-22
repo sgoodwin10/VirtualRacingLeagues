@@ -79,9 +79,6 @@ class CleanupLegacyMediaCommand extends Command
         $modelsList = $model ? [$model] : ['league', 'competition', 'season', 'team', 'division', 'siteconfig'];
 
         foreach ($modelsList as $modelType) {
-            if (!is_string($modelType)) {
-                continue;
-            }
             $this->cleanupModel($modelType, $dryRun, $deleteFiles);
         }
 

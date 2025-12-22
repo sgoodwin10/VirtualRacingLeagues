@@ -59,29 +59,24 @@ trait HasMediaCollections
             ->width(150)
             ->height(150)
             ->sharpen(10)
-            ->format('webp')
-            ->performOnCollections('*');
+            ->format('webp');
 
         $this->addMediaConversion('small')
             ->width(320)
-            ->format('webp')
-            ->performOnCollections('*');
+            ->format('webp');
 
         $this->addMediaConversion('medium')
             ->width(640)
-            ->format('webp')
-            ->performOnCollections('*');
+            ->format('webp');
 
         $this->addMediaConversion('large')
             ->width(1280)
-            ->format('webp')
-            ->performOnCollections('*');
+            ->format('webp');
 
         $this->addMediaConversion('og')
             ->width(1200)
             ->height(630)
             ->fit(Fit::Crop, 1200, 630)
-            ->format('webp')
-            ->performOnCollections('*');
+            ->format('webp');
     }
 }

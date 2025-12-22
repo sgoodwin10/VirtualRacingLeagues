@@ -1,0 +1,253 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:session\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: app/Http/Controllers/Admin/AdminAuthController.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\IndexAdminUsersRequest\:\:input\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminUserController.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\UpdateSiteConfigRequest\:\:ip\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/SiteConfigController.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\IndexUsersRequest\:\:input\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/UserController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:only\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Auth/PasswordResetController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:session\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/Auth/UserImpersonationController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:all\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/User/RoundController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:hasAny\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/User/RoundController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:except\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/User/SeasonDriverController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:input\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/User/SeasonDriverController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:url\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/User/SeasonDriverController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/User/SeasonDriverController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:expectsJson\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/AdminAuthenticate.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:is\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/AdminAuthenticate.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:session\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/AdminAuthenticate.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:session\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/AdminOrSuperAdminOnly.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:session\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/AdminRole.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 4
+			path: app/Http/Middleware/AdminSessionMiddleware.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:session\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/SuperAdminOnly.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:expectsJson\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/UserAuthenticate.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:is\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/UserAuthenticate.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:session\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/UserAuthenticate.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\IndexUsersRequest\:\:input\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Admin/IndexUsersRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\IndexUsersRequest\:\:merge\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Admin/IndexUsersRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\UpdateAdminUserRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Admin/UpdateAdminUserRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\UpdateSiteConfigRequest\:\:merge\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Admin/UpdateSiteConfigRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\UpdateUserRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Admin/UpdateUserRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Auth\\UpdateProfileRequest\:\:user\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Auth/UpdateProfileRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowPublicLeagueRequest\:\:all\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Public/ShowPublicLeagueRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowPublicLeagueRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Requests/Public/ShowPublicLeagueRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowPublicSeasonRequest\:\:all\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Public/ShowPublicSeasonRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowPublicSeasonRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: app/Http/Requests/Public/ShowPublicSeasonRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowRaceResultsRequest\:\:all\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Public/ShowRaceResultsRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowRaceResultsRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Requests/Public/ShowRaceResultsRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\BulkRaceResultsRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/BulkRaceResultsRequest.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 3
+			path: app/Http/Requests/User/BulkRaceResultsRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateLeagueRequest\:\:all\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateLeagueRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateLeagueRequest\:\:replace\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateLeagueRequest.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:ip\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: app/Infrastructure/Listeners/LogUserActivity.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:userAgent\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: app/Infrastructure/Listeners/LogUserActivity.php
+
+		-
+			message: '#^Parameter \#1 \$model of method Spatie\\Activitylog\\ActivityLogger\:\:performedOn\(\) expects Illuminate\\Database\\Eloquent\\Model, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Infrastructure/Listeners/LogUserImpersonated.php
+
+		-
+			message: '#^Parameter \#1 \$model of method Spatie\\Activitylog\\ActivityLogger\:\:performedOn\(\) expects Illuminate\\Database\\Eloquent\\Model, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Infrastructure/Listeners/LogUserImpersonationStarted.php

@@ -42,12 +42,12 @@ use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
  *     \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
- * @method static Builder<static>|User filterByStatus(?string $status)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User filterByStatus(?string $status)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
- * @method static Builder<static>|User search(?string $search)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User search(?string $search)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAlias($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDeletedAt($value)

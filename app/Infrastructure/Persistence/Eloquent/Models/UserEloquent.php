@@ -135,6 +135,9 @@ class UserEloquent extends Authenticatable implements MustVerifyEmail
 
     /**
      * Scope a query to search across user fields.
+     *
+     * @param Builder<UserEloquent> $query
+     * @return Builder<UserEloquent>
      */
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
@@ -152,6 +155,9 @@ class UserEloquent extends Authenticatable implements MustVerifyEmail
 
     /**
      * Scope a query to filter by status.
+     *
+     * @param Builder<UserEloquent> $query
+     * @return Builder<UserEloquent>
      */
     public function scopeFilterByStatus(Builder $query, ?string $status): Builder
     {

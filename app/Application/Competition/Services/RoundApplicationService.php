@@ -1647,20 +1647,14 @@ final class RoundApplicationService
         // Get all season drivers with team assignments
         $seasonDrivers = $this->seasonDriverRepository->findBySeason($season->id() ?? 0);
 
-        // Get mapping of league_driver_id to driver_id (batch query to avoid N+1)
-        $leagueDriverToDriverIdMap = $this->seasonDriverRepository->getLeagueDriverToDriverIdMap($season->id() ?? 0);
-
-        // Map driver_id to team_id
+        // Map season_driver_id to team_id
+        // Note: race_results.driver_id stores season_driver_id, not actual driver_id
         $driverToTeamMap = [];
         foreach ($seasonDrivers as $seasonDriver) {
             $teamId = $seasonDriver->teamId();
-            if ($teamId !== null) {
-                $leagueDriverId = $seasonDriver->leagueDriverId();
-                // Get the actual driver_id from the pre-fetched map
-                $driverId = $leagueDriverToDriverIdMap[$leagueDriverId] ?? null;
-                if ($driverId !== null) {
-                    $driverToTeamMap[$driverId] = $teamId;
-                }
+            $seasonDriverId = $seasonDriver->id();
+            if ($teamId !== null && $seasonDriverId !== null) {
+                $driverToTeamMap[$seasonDriverId] = $teamId;
             }
         }
 

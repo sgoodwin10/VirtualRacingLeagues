@@ -22,7 +22,7 @@ class SiteConfigSeeder extends Seeder
 
         // Create default site configuration
         SiteConfigModel::create([
-            'site_name' => env('APP_NAME', 'Laravel Application'),
+            'site_name' => config('app.name', 'Laravel Application'),
             'timezone' => 'UTC',
             'maintenance_mode' => false,
             'user_registration_enabled' => true,

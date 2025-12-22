@@ -250,11 +250,11 @@ final class EloquentUserRepository implements UserRepositoryInterface
      */
     private function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
-        if (isset($filters['search']) && $filters['search'] !== null && $filters['search'] !== '') {
+        if (isset($filters['search']) && $filters['search'] !== '') {
             $query->search($filters['search']);
         }
 
-        if (isset($filters['status']) && $filters['status'] !== null && $filters['status'] !== '') {
+        if (isset($filters['status']) && $filters['status'] !== '') {
             $query->filterByStatus($filters['status']);
         }
 

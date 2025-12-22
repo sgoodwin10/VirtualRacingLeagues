@@ -56,7 +56,7 @@ if (! function_exists('configToArray')) {
     function configToArray(SiteConfig $config): array
     {
         $files = [];
-        foreach ($config->getFiles() as $file) {
+        foreach ($config->files() as $file) {
             $files[$file->getFileType()] = [
                 'id' => $file->getId(),
                 'url' => \Illuminate\Support\Facades\Storage::disk($file->getStorageDisk())->url($file->getFilePath()),
@@ -67,17 +67,17 @@ if (! function_exists('configToArray')) {
         }
 
         return [
-            'id' => $config->getId(),
-            'site_name' => $config->getSiteName()->value(),
-            'google_tag_manager_id' => $config->getGoogleTagManagerId()?->value(),
-            'google_analytics_id' => $config->getGoogleAnalyticsId()?->value(),
-            'google_search_console_code' => $config->getGoogleSearchConsoleCode(),
-            'discord_link' => $config->getDiscordLink(),
-            'support_email' => $config->getSupportEmail()?->value(),
-            'contact_email' => $config->getContactEmail()?->value(),
-            'admin_email' => $config->getAdminEmail()?->value(),
+            'id' => $config->id(),
+            'site_name' => $config->siteName()->value(),
+            'google_tag_manager_id' => $config->googleTagManagerId()?->value(),
+            'google_analytics_id' => $config->googleAnalyticsId()?->value(),
+            'google_search_console_code' => $config->googleSearchConsoleCode(),
+            'discord_link' => $config->discordLink(),
+            'support_email' => $config->supportEmail()?->value(),
+            'contact_email' => $config->contactEmail()?->value(),
+            'admin_email' => $config->adminEmail()?->value(),
             'maintenance_mode' => $config->isMaintenanceMode(),
-            'timezone' => $config->getTimezone()->value(),
+            'timezone' => $config->timezone()->value(),
             'user_registration_enabled' => $config->isUserRegistrationEnabled(),
             'files' => $files,
         ];

@@ -336,7 +336,7 @@ final class SeasonDriverApplicationService
                     'id' => $leagueDriver->id,
                     'driver_id' => $leagueDriver->driver_id,
                     'driver_name' => $leagueDriver->driver->name ?? 'Unknown',
-                    'number' => $leagueDriver->number,
+                    'number' => $leagueDriver->number !== null ? (string) $leagueDriver->number : null,
                     'team_name' => $leagueDriver->team_name,
                 ];
             }
@@ -427,11 +427,8 @@ final class SeasonDriverApplicationService
                 'id' => $leagueDriver->id,
                 'driver_id' => $leagueDriver->driver_id,
                 'driver_name' => $leagueDriver->driver->name ?? 'Unknown',
-                'number' => $leagueDriver->number,
+                'number' => $leagueDriver->number !== null ? (string) $leagueDriver->number : null,
                 'team_name' => $leagueDriver->team_name,
-                'psn_id' => $leagueDriver->driver->psn_id ?? null,
-                'iracing_id' => $leagueDriver->driver->iracing_id ?? null,
-                'discord_id' => $leagueDriver->driver->discord_id ?? null,
             ];
         }, $paginator->items());
 

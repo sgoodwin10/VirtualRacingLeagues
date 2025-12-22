@@ -252,6 +252,7 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
             ->get();
 
         $drivers = [];
+        /** @var RaceResult&object{first_name: string, last_name: string, nickname: string|null} $result */
         foreach ($results as $result) {
             // Build driver name (same logic as Driver model's name accessor)
             $name = $result->nickname

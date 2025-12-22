@@ -139,7 +139,7 @@ final class EloquentAdminRepository implements AdminRepositoryInterface
      */
     private function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
-        if (isset($filters['search']) && $filters['search'] !== null && $filters['search'] !== '') {
+        if (isset($filters['search']) && $filters['search'] !== '') {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")

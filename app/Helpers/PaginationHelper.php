@@ -18,8 +18,10 @@ class PaginationHelper
      */
     public static function buildLinks(Request $request, int $currentPage, int $lastPage): array
     {
-        $baseUrl = $request->url();
-        $queryParams = $request->except('page');
+        /** @var string $baseUrl */
+        $baseUrl = $request->url(); // @phpstan-ignore-line
+        /** @var array<string, mixed> $queryParams */
+        $queryParams = $request->except('page'); // @phpstan-ignore-line
 
         return [
             'first' => $baseUrl . '?' . http_build_query(array_merge($queryParams, ['page' => 1])),

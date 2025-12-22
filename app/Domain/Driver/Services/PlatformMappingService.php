@@ -67,7 +67,6 @@ final class PlatformMappingService
             foreach ($fields as $field) {
                 if (
                     isset($driverData[$field])
-                    && $driverData[$field] !== null
                     && trim((string)$driverData[$field]) !== ''
                 ) {
                     return true;
@@ -91,7 +90,6 @@ final class PlatformMappingService
         foreach (self::getAllPlatformFields() as $field) {
             if (
                 isset($driverData[$field])
-                && $driverData[$field] !== null
                 && trim((string)$driverData[$field]) !== ''
             ) {
                 $providedFields[] = $field;

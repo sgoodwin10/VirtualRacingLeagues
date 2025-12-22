@@ -26,8 +26,8 @@ class SiteConfigFileData extends Data
     public static function fromEntity(ConfigurationFile $file): self
     {
         $disk = Storage::disk($file->getStorageDisk());
-        // Use path() method which is available on FilesystemAdapter
-        $url = method_exists($disk, 'url') ? $disk->url($file->getFilePath()) : '';
+        // FilesystemAdapter always has url() method
+        $url = $disk->url($file->getFilePath());
 
         return new self(
             id: $file->getId(),
