@@ -66,7 +66,7 @@ final class RaceApplicationService
             $pointsSystem = $data->points_system ?? [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
             $dnfPoints = $data->dnf_points ?? 0;
             $dnsPoints = $data->dns_points ?? 0;
-            $racePoints = $data->race_points ?? false;
+            $racePoints = $data->race_points ?? true; // Default to true - races should calculate points by default
             $fastestLap = $data->fastest_lap ?? null;
             $fastestLapTop10 = $data->fastest_lap_top_10 ?? false;
             $qualifyingPole = $data->qualifying_pole ?? null;

@@ -80,3 +80,8 @@ docker volume prune
 
 # Remove unused networks
 docker network prune
+
+
+
+
+php artisan db:seed --class="Database\Seeders\Backup\DatabaseBackupSeeder"

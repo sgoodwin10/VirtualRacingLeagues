@@ -7,6 +7,7 @@ namespace App\Application\Competition\DTOs;
 use App\Application\Shared\DTOs\MediaData;
 use App\Application\Shared\Factories\MediaDataFactory;
 use App\Domain\Competition\Entities\Competition;
+use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionEloquent;
 use Spatie\LaravelData\Data;
 
 /**
@@ -54,7 +55,7 @@ class CompetitionData extends Data
      * @param array{id: int, name: string, slug: string}|null $leagueData
      * @param array<string, int|string|null> $aggregates
      * @param array<CompetitionSeasonData> $seasons
-     * @param \App\Infrastructure\Persistence\Eloquent\Models\Competition|null $eloquentModel
+     * @param CompetitionEloquent|null $eloquentModel
      * @throws \InvalidArgumentException If competition has not been persisted yet (ID is null)
      */
     public static function fromEntity(
@@ -64,7 +65,7 @@ class CompetitionData extends Data
         ?array $leagueData = null,
         array $aggregates = [],
         array $seasons = [],
-        ?\App\Infrastructure\Persistence\Eloquent\Models\Competition $eloquentModel = null
+        ?CompetitionEloquent $eloquentModel = null
     ): self {
         // Ensure competition has been persisted (has an ID)
         $competitionId = $competition->id();

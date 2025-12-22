@@ -7,7 +7,9 @@ namespace App\Infrastructure\Listeners;
 use App\Domain\SiteConfig\Events\SiteConfigApplicationSettingsUpdated;
 use App\Domain\SiteConfig\Events\SiteConfigIdentityUpdated;
 use App\Domain\SiteConfig\Events\SiteConfigTrackingUpdated;
+use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SiteConfigModel;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Listener for logging SiteConfig domain events to activity log.
@@ -89,7 +91,7 @@ final class LogSiteConfigActivity
     /**
      * Get SiteConfig model for activity log.
      */
-    private function getSiteConfig(int $siteConfigId): ?\Illuminate\Database\Eloquent\Model
+    private function getSiteConfig(int $siteConfigId): ?Model
     {
         return SiteConfigModel::find($siteConfigId);
     }
@@ -97,9 +99,9 @@ final class LogSiteConfigActivity
     /**
      * Get current authenticated admin.
      */
-    private function getCurrentAdmin(): ?\Illuminate\Database\Eloquent\Model
+    private function getCurrentAdmin(): ?Model
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
+        /** @var AdminEloquent|null $admin */
         $admin = auth('admin')->user();
         return $admin;
     }
@@ -109,7 +111,7 @@ final class LogSiteConfigActivity
      */
     private function getCurrentAdminName(): string
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
+        /** @var AdminEloquent|null $admin */
         $admin = auth('admin')->user();
         return $admin ? "{$admin->first_name} {$admin->last_name}" : 'System';
     }

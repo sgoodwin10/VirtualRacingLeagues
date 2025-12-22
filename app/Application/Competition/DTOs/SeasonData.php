@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Competition\DTOs;
 
 use App\Domain\Competition\Entities\Season;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use Spatie\LaravelData\Data;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -56,7 +57,7 @@ class SeasonData extends Data
      * Create from domain entity with competition data and URLs.
      *
      * @param array<string, int> $aggregates
-     * @param \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent|null $eloquentModel Optional eloquent model for media
+     * @param SeasonEloquent|null $eloquentModel Optional eloquent model for media
      */
     public static function fromEntity(
         Season $season,
@@ -64,7 +65,7 @@ class SeasonData extends Data
         ?string $logoUrl,
         ?string $bannerUrl,
         array $aggregates = [],
-        ?\App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent $eloquentModel = null
+        ?SeasonEloquent $eloquentModel = null
     ): self {
         // Extract media from eloquent model if available
         $logo = null;

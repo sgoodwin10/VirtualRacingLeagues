@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Competition\Repositories;
 
 use App\Domain\Competition\Entities\Competition;
+use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionModel;
 
 /**
  * Repository interface for Competition aggregate.
@@ -56,8 +57,6 @@ interface CompetitionRepositoryInterface
     /**
      * Get the Eloquent model for a competition by ID.
      * Used for media operations that require the Eloquent model.
-     *
-     * @return \App\Infrastructure\Persistence\Eloquent\Models\Competition
      */
-    public function getEloquentModel(int $id): \App\Infrastructure\Persistence\Eloquent\Models\Competition;
+    public function getEloquentModel(int $id): CompetitionModel;
 }

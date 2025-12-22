@@ -16,6 +16,7 @@ use App\Domain\Admin\ValueObjects\AdminRole;
 use App\Domain\Admin\ValueObjects\AdminStatus;
 use App\Domain\Shared\ValueObjects\EmailAddress;
 use App\Domain\Shared\ValueObjects\FullName;
+use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
 use App\Infrastructure\Persistence\Eloquent\Repositories\AdminReadModelService;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -43,13 +44,13 @@ final class AdminApplicationService
      */
     public function createAdmin(CreateAdminData $data, ?Admin $performedBy = null): AdminData
     {
-        // Check if email already exists
-        $email = EmailAddress::from($data->email);
-        if ($this->adminRepository->emailExists($email)) {
-            throw new DomainException("Admin with email '{$data->email}' already exists");
-        }
-
         return DB::transaction(function () use ($data, $performedBy) {
+            // Check if email already exists (inside transaction to prevent race conditions)
+            $email = EmailAddress::from($data->email);
+            if ($this->adminRepository->emailExists($email)) {
+                throw new DomainException("Admin with email '{$data->email}' already exists");
+            }
+
             // Create domain entity
             $role = AdminRole::from($data->role);
 
@@ -94,9 +95,7 @@ final class AdminApplicationService
             $admin = $this->adminRepository->findById($adminId);
 
             // Permission check: can the performer manage this admin?
-            if ($performedBy && !$performedBy->canManage($admin)) {
-                throw new DomainException('Insufficient permissions to manage this admin');
-            }
+            $this->ensureCanManage($admin, $performedBy);
 
             // Check email uniqueness if being changed
             if (!$data->email instanceof Optional && $data->email !== (string) $admin->email()) {
@@ -296,7 +295,7 @@ final class AdminApplicationService
                     'super_admin' => 3,
                     'admin' => 2,
                     'moderator' => 1,
-                    default => 0
+                    default => throw new DomainException("Invalid admin role: {$adminData->role}")
                 },
                 last_login_at: $lastLoginAt,
                 created_at: $adminData->created_at,
@@ -336,9 +335,7 @@ final class AdminApplicationService
             $admin = $this->adminRepository->findById($adminId);
 
             // Permission check
-            if ($performedBy && !$performedBy->canManage($admin)) {
-                throw new DomainException('Insufficient permissions to manage this admin');
-            }
+            $this->ensureCanManage($admin, $performedBy);
 
             $admin->activate();
 
@@ -360,9 +357,7 @@ final class AdminApplicationService
             $admin = $this->adminRepository->findById($adminId);
 
             // Permission check
-            if ($performedBy && !$performedBy->canManage($admin)) {
-                throw new DomainException('Insufficient permissions to manage this admin');
-            }
+            $this->ensureCanManage($admin, $performedBy);
 
             $admin->deactivate();
 
@@ -389,9 +384,7 @@ final class AdminApplicationService
             }
 
             // Permission check
-            if ($performedBy && !$performedBy->canManage($admin)) {
-                throw new DomainException('Insufficient permissions to manage this admin');
-            }
+            $this->ensureCanManage($admin, $performedBy);
 
             $admin->delete();
 
@@ -411,9 +404,7 @@ final class AdminApplicationService
             $admin = $this->adminRepository->findById($adminId);
 
             // Permission check
-            if ($performedBy && !$performedBy->canManage($admin)) {
-                throw new DomainException('Insufficient permissions to manage this admin');
-            }
+            $this->ensureCanManage($admin, $performedBy);
 
             $admin->restore();
 
@@ -452,7 +443,7 @@ final class AdminApplicationService
      */
     public function getCurrentAuthenticatedAdmin(): Admin
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $eloquentAdmin */
+        /** @var AdminEloquent|null $eloquentAdmin */
         $eloquentAdmin = \Illuminate\Support\Facades\Auth::guard('admin')->user();
 
         if (!$eloquentAdmin) {
@@ -492,6 +483,18 @@ final class AdminApplicationService
         $lastLoginAt = $this->readModelService->getLastLoginTimestamp($adminId);
 
         return DetailedAdminData::fromEntity($admin, $lastLoginAt);
+    }
+
+    /**
+     * Ensure the performer has permission to manage the target admin.
+     *
+     * @throws DomainException if performer lacks permission
+     */
+    private function ensureCanManage(Admin $admin, ?Admin $performedBy): void
+    {
+        if ($performedBy && !$performedBy->canManage($admin)) {
+            throw new DomainException('Insufficient permissions to manage this admin');
+        }
     }
 
     /**

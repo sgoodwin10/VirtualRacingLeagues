@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 
@@ -128,7 +130,7 @@ class League extends Model implements HasMedia
      * Get the platform_ids attribute with integer casting.
      * Laravel's 'array' cast returns strings, but we need integers for frontend compatibility.
      *
-     * @return array<int>
+     * @return Attribute<array<int>, array<int>>
      */
     protected function platformIds(): Attribute
     {
@@ -173,9 +175,9 @@ class League extends Model implements HasMedia
     /**
      * Get the competitions (seasons) for this league.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough<SeasonEloquent>
+     * @return HasManyThrough<SeasonEloquent>
      */
-    public function seasons(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    public function seasons(): HasManyThrough
     {
         return $this->hasManyThrough(
             SeasonEloquent::class,
@@ -190,9 +192,9 @@ class League extends Model implements HasMedia
     /**
      * Get the competitions for this league.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Competition>
+     * @return HasMany<Competition>
      */
-    public function competitions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function competitions(): HasMany
     {
         return $this->hasMany(Competition::class, 'league_id');
     }

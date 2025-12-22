@@ -57,7 +57,7 @@ final class LeagueDriverEloquent extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'league_id',
@@ -104,19 +104,12 @@ final class LeagueDriverEloquent extends Model
     /**
      * Accessor for 'number' - alias for 'driver_number'.
      * Provides backward compatibility with existing code.
+     *
+     * @deprecated Use driver_number directly instead
      */
     public function getNumberAttribute(): ?int
     {
         return $this->driver_number;
-    }
-
-    /**
-     * Accessor for 'team_name' - placeholder for future implementation.
-     * Currently returns null as the schema doesn't include team_name yet.
-     */
-    public function getTeamNameAttribute(): null
-    {
-        return null;
     }
 
     /**

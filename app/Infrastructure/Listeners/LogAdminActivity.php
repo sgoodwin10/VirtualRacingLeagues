@@ -13,7 +13,8 @@ use App\Domain\Admin\Events\AdminPasswordChanged;
 use App\Domain\Admin\Events\AdminProfileUpdated;
 use App\Domain\Admin\Events\AdminRestored;
 use App\Domain\Admin\Events\AdminRoleChanged;
-use App\Models\Admin;
+use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Listener for logging admin domain events to activity log.
@@ -118,7 +119,11 @@ final class LogAdminActivity
         }
 
         activity('admin')
+            ->causedBy($this->getCurrentAdmin())
             ->performedOn($admin)
+            ->withProperties([
+                'updated_by' => $this->getCurrentAdminName(),
+            ])
             ->log('Admin account activated');
     }
 
@@ -135,7 +140,11 @@ final class LogAdminActivity
         }
 
         activity('admin')
+            ->causedBy($this->getCurrentAdmin())
             ->performedOn($admin)
+            ->withProperties([
+                'updated_by' => $this->getCurrentAdminName(),
+            ])
             ->log('Admin account deactivated');
     }
 
@@ -175,7 +184,11 @@ final class LogAdminActivity
         }
 
         activity('admin')
+            ->causedBy($this->getCurrentAdmin())
             ->performedOn($admin)
+            ->withProperties([
+                'restored_by' => $this->getCurrentAdminName(),
+            ])
             ->log('Admin account restored');
     }
 
@@ -239,33 +252,33 @@ final class LogAdminActivity
     /**
      * Get admin model for activity log.
      */
-    private function getAdmin(int $adminId): ?\Illuminate\Database\Eloquent\Model
+    private function getAdmin(int $adminId): ?Model
     {
         if ($adminId === 0) {
             return null;
         }
 
-        return Admin::find($adminId);
+        return AdminEloquent::find($adminId);
     }
 
     /**
      * Get admin model for activity log (including soft-deleted).
      */
-    private function getAdminWithTrashed(int $adminId): ?\Illuminate\Database\Eloquent\Model
+    private function getAdminWithTrashed(int $adminId): ?Model
     {
         if ($adminId === 0) {
             return null;
         }
 
-        return Admin::withTrashed()->find($adminId);
+        return AdminEloquent::withTrashed()->find($adminId);
     }
 
     /**
      * Get current authenticated admin.
      */
-    private function getCurrentAdmin(): ?\Illuminate\Database\Eloquent\Model
+    private function getCurrentAdmin(): ?Model
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
+        /** @var AdminEloquent|null $admin */
         $admin = auth('admin')->user();
         return $admin;
     }
@@ -275,7 +288,7 @@ final class LogAdminActivity
      */
     private function getCurrentAdminName(): string
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
+        /** @var AdminEloquent|null $admin */
         $admin = auth('admin')->user();
         return $admin ? "{$admin->first_name} {$admin->last_name}" : 'System';
     }

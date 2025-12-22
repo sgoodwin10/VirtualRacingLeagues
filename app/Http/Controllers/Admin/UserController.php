@@ -15,6 +15,7 @@ use App\Helpers\ApiResponse;
 use App\Helpers\FilterBuilder;
 use App\Helpers\PaginationHelper;
 use App\Http\Controllers\Controller;
+use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
 use App\Http\Requests\Admin\CreateUserRequest;
 use App\Http\Requests\Admin\IndexUsersRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
@@ -179,11 +180,16 @@ final class UserController extends Controller
     public function loginAs(int $id): JsonResponse
     {
         try {
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
+            /** @var AdminEloquent|null $admin */
             $admin = Auth::guard('admin')->user();
 
             if (!$admin) {
                 return ApiResponse::error('Unauthorized', null, 401);
+            }
+
+            // Check role authorization - only super_admin and admin can impersonate
+            if (!in_array($admin->role, ['super_admin', 'admin'], true)) {
+                return ApiResponse::error('Insufficient permissions to impersonate users', null, 403);
             }
 
             // Generate impersonation token

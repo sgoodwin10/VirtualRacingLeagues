@@ -14,6 +14,8 @@ use App\Application\Competition\DTOs\RaceResultData;
 use App\Application\Competition\DTOs\DivisionData;
 use Spatie\LaravelData\DataCollection;
 use App\Domain\Competition\Entities\Round;
+use App\Domain\Competition\Entities\Race;
+use App\Domain\Competition\Entities\RaceResult;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
@@ -22,6 +24,7 @@ use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Competition\ValueObjects\RoundName;
 use App\Domain\Competition\ValueObjects\RoundNumber;
@@ -58,6 +61,7 @@ final class RoundApplicationService
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly DivisionRepositoryInterface $divisionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
+        private readonly TeamRepositoryInterface $teamRepository,
         private readonly RaceApplicationService $raceApplicationService,
         private readonly RoundResultsCacheService $roundResultsCache,
     ) {
@@ -392,6 +396,9 @@ final class RoundApplicationService
             // Calculate and store round results
             $this->calculateAndStoreRoundResults($round, $races, $hasDivisions, $data);
 
+            // Calculate and store team championship results
+            $this->calculateTeamChampionshipResults($round);
+
             // Mark round as completed
             $round->complete();
             $this->roundRepository->save($round);
@@ -415,7 +422,7 @@ final class RoundApplicationService
      * Cascade completion to all races (including qualifiers).
      * Uses batch fetching to avoid N+1 queries.
      *
-     * @param array<\App\Domain\Competition\Entities\Race> $races
+     * @param array<Race> $races
      * @param int $roundId Round ID for batch fetching results
      */
     private function cascadeRaceCompletion(array $races, int $roundId): void
@@ -467,7 +474,7 @@ final class RoundApplicationService
      * Calculate and store round results with cross-division results.
      *
      * @param Round $round
-     * @param array<\App\Domain\Competition\Entities\Race> $races
+     * @param array<Race> $races
      * @param bool $hasDivisions
      * @param CompleteRoundData|null $data Optional data from frontend
      */
@@ -700,8 +707,8 @@ final class RoundApplicationService
      *
      * @param Round $round
      * @param array<array{
-     *     race: \App\Domain\Competition\Entities\Race,
-     *     result: \App\Domain\Competition\Entities\RaceResult
+     *     race: Race,
+     *     result: RaceResult
      * }> $allRaceResults
      * @param bool $hasDivisions
      * @return array<mixed>
@@ -734,8 +741,8 @@ final class RoundApplicationService
      *
      * @param Round $round
      * @param array<array{
-     *     race: \App\Domain\Competition\Entities\Race,
-     *     result: \App\Domain\Competition\Entities\RaceResult
+     *     race: Race,
+     *     result: RaceResult
      * }> $allRaceResults
      * @return array<mixed>
      */
@@ -775,7 +782,7 @@ final class RoundApplicationService
     /**
      * Extract and batch fetch driver names from race results.
      *
-     * @param array<array{race: \App\Domain\Competition\Entities\Race, result: \App\Domain\Competition\Entities\RaceResult}> $allRaceResults
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
      * @return array<int, string>
      */
     private function fetchDriverNamesFromResults(array $allRaceResults): array
@@ -791,7 +798,7 @@ final class RoundApplicationService
     /**
      * Aggregate driver points, positions gained, and race results.
      *
-     * @param array<array{race: \App\Domain\Competition\Entities\Race, result: \App\Domain\Competition\Entities\RaceResult}> $allRaceResults
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
      * @param array<int, string> $driverNames
      * @return array{driverPoints: array<int, int>, driverData: array<int, array<string, mixed>>, raceResultsByDriver: array<int, array<mixed>>, driverPositionsGained: array<int, int>, driverBestTimes: array<int, array<string, int|null>>, driverHasDnfOrDns: array<int, bool>}
      */
@@ -1115,7 +1122,7 @@ final class RoundApplicationService
      * Apply bonus points based on round configuration.
      *
      * @param Round $round
-     * @param array<array{race: \App\Domain\Competition\Entities\Race, result: \App\Domain\Competition\Entities\RaceResult}> $allRaceResults
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
      * @param array<mixed> $standings
      * @param bool $roundPointsEnabled
      * @return array<mixed>
@@ -1151,8 +1158,8 @@ final class RoundApplicationService
      *
      * @param Round $round
      * @param array<array{
-     *     race: \App\Domain\Competition\Entities\Race,
-     *     result: \App\Domain\Competition\Entities\RaceResult
+     *     race: Race,
+     *     result: RaceResult
      * }> $allRaceResults
      * @return array<mixed>
      */
@@ -1213,8 +1220,8 @@ final class RoundApplicationService
      *
      * @param Round $round
      * @param array<array{
-     *     race: \App\Domain\Competition\Entities\Race,
-     *     result: \App\Domain\Competition\Entities\RaceResult
+     *     race: Race,
+     *     result: RaceResult
      * }> $allRaceResults
      * @param array<mixed> $standings
      * @param bool $roundPointsEnabled Whether round points mode is enabled
@@ -1296,8 +1303,8 @@ final class RoundApplicationService
      *
      * @param Round $round
      * @param array<array{
-     *     race: \App\Domain\Competition\Entities\Race,
-     *     result: \App\Domain\Competition\Entities\RaceResult
+     *     race: Race,
+     *     result: RaceResult
      * }> $allRaceResults
      * @param array<mixed> $standings
      * @param bool $roundPointsEnabled Whether round points mode is enabled
@@ -1416,8 +1423,8 @@ final class RoundApplicationService
      * this method extracts them for display purposes.
      *
      * @param array<array{
-     *     race: \App\Domain\Competition\Entities\Race,
-     *     result: \App\Domain\Competition\Entities\RaceResult
+     *     race: Race,
+     *     result: RaceResult
      * }> $allRaceResults
      * @param array<mixed> $standings
      * @return array<mixed>
@@ -1464,8 +1471,8 @@ final class RoundApplicationService
      * Calculate cross-division results for qualifying, race time, and fastest lap.
      *
      * @param array<array{
-     *     race: \App\Domain\Competition\Entities\Race,
-     *     result: \App\Domain\Competition\Entities\RaceResult
+     *     race: Race,
+     *     result: RaceResult
      * }> $allRaceResults
      * @return array{
      *     qualifying_results: array<mixed>,
@@ -1599,6 +1606,153 @@ final class RoundApplicationService
         return $data->qualifying_results !== null
             || $data->race_time_results !== null
             || $data->fastest_lap_results !== null;
+    }
+
+    /**
+     * Calculate and store team championship results for a round.
+     * Aggregates driver points per team and respects the teams_drivers_for_calculation setting.
+     *
+     * Business Rules:
+     * - Only runs if season.team_championship_enabled = true
+     * - Drivers with team_id = null (privateers) are excluded
+     * - Teams with no drivers are excluded from standings
+     * - If teams_drivers_for_calculation is set, only top N drivers count
+     * - Tie-breaking: Teams with equal points are sorted alphabetically by name
+     *
+     * NOTE: This method is quite long (130+ lines) and could be refactored in the future.
+     * Consider extracting domain logic into a TeamChampionshipService when time permits.
+     */
+    private function calculateTeamChampionshipResults(Round $round): void
+    {
+        // Get season to check team championship configuration
+        $season = $this->seasonRepository->findById($round->seasonId());
+
+        // Early return if team championship is not enabled
+        if (!$season->teamChampionshipEnabled()) {
+            return;
+        }
+
+        // Get all races for this round
+        $races = $this->raceRepository->findAllByRoundId($round->id() ?? 0);
+        if (empty($races)) {
+            return;
+        }
+
+        // Get all race results for this round
+        $allRaceResults = $this->raceResultRepository->findByRoundId($round->id() ?? 0);
+        if (empty($allRaceResults)) {
+            return;
+        }
+
+        // Get all season drivers with team assignments
+        $seasonDrivers = $this->seasonDriverRepository->findBySeason($season->id() ?? 0);
+
+        // Get mapping of league_driver_id to driver_id (batch query to avoid N+1)
+        $leagueDriverToDriverIdMap = $this->seasonDriverRepository->getLeagueDriverToDriverIdMap($season->id() ?? 0);
+
+        // Map driver_id to team_id
+        $driverToTeamMap = [];
+        foreach ($seasonDrivers as $seasonDriver) {
+            $teamId = $seasonDriver->teamId();
+            if ($teamId !== null) {
+                $leagueDriverId = $seasonDriver->leagueDriverId();
+                // Get the actual driver_id from the pre-fetched map
+                $driverId = $leagueDriverToDriverIdMap[$leagueDriverId] ?? null;
+                if ($driverId !== null) {
+                    $driverToTeamMap[$driverId] = $teamId;
+                }
+            }
+        }
+
+        // Get all teams for this season
+        $teams = $this->teamRepository->findBySeasonId($season->id() ?? 0);
+        if (empty($teams)) {
+            return;
+        }
+
+        // Build team standings
+        $teamPoints = [];
+        $teamRaceResultIds = [];
+
+        // Group race results by team
+        foreach ($allRaceResults as $raceResult) {
+            $driverId = $raceResult->driverId();
+
+            // Find the team for this driver using the pre-built map
+            $teamId = $driverToTeamMap[$driverId] ?? null;
+
+            // Skip if driver has no team (privateer)
+            if ($teamId === null) {
+                continue;
+            }
+
+            // Initialize team data if not exists
+            if (!isset($teamPoints[$teamId])) {
+                $teamPoints[$teamId] = [];
+            }
+
+            // Store this result for the team
+            $teamPoints[$teamId][] = [
+                'race_result_id' => $raceResult->id(),
+                'points' => $raceResult->racePoints(),
+            ];
+        }
+
+        // Calculate final standings for each team
+        $standings = [];
+        $driversForCalculation = $season->getTeamsDriversForCalculation();
+
+        foreach ($teams as $team) {
+            $teamId = $team->id();
+            if ($teamId === null || !isset($teamPoints[$teamId])) {
+                // Skip teams with no results
+                continue;
+            }
+
+            $results = $teamPoints[$teamId];
+
+            // Sort results by points descending
+            usort($results, fn($a, $b) => $b['points'] <=> $a['points']);
+
+            // Apply teams_drivers_for_calculation limit if set
+            if ($driversForCalculation !== null && $driversForCalculation > 0) {
+                $results = array_slice($results, 0, $driversForCalculation);
+            }
+
+            // Sum the points
+            $totalPoints = array_sum(array_column($results, 'points'));
+            $raceResultIds = array_column($results, 'race_result_id');
+
+            $standings[] = [
+                'team_id' => $teamId,
+                'team_name' => $team->name()->value(),
+                'total_points' => $totalPoints,
+                'race_result_ids' => $raceResultIds,
+            ];
+        }
+
+        // Sort standings: by total_points descending, then by team_name alphabetically
+        usort($standings, function ($a, $b) {
+            if ($a['total_points'] !== $b['total_points']) {
+                return $b['total_points'] <=> $a['total_points'];
+            }
+            return strcmp($a['team_name'], $b['team_name']);
+        });
+
+        // Remove team_name from final output (only needed for sorting)
+        foreach ($standings as &$standing) {
+            unset($standing['team_name']);
+        }
+
+        // Store results in round entity
+        $teamChampionshipResults = ['standings' => $standings];
+        $round->setTeamChampionshipResults($teamChampionshipResults);
+        $this->roundRepository->save($round);
+
+        Log::info('Team championship results calculated', [
+            'round_id' => $round->id(),
+            'teams_count' => count($standings),
+        ]);
     }
 
     /**

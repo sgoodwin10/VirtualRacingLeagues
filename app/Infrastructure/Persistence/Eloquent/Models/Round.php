@@ -37,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array<mixed>|null $qualifying_results
  * @property array<mixed>|null $race_time_results
  * @property array<mixed>|null $fastest_lap_results
+ * @property array<mixed>|null $team_championship_results
  * @property int $created_by_user_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
@@ -92,6 +93,7 @@ final class Round extends Model
         'qualifying_results',
         'race_time_results',
         'fastest_lap_results',
+        'team_championship_results',
         'created_by_user_id',
     ];
 
@@ -107,6 +109,7 @@ final class Round extends Model
         'qualifying_results' => 'json',
         'race_time_results' => 'json',
         'fastest_lap_results' => 'json',
+        'team_championship_results' => 'json',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

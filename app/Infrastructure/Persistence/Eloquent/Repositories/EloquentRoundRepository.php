@@ -13,6 +13,7 @@ use App\Domain\Competition\ValueObjects\RoundStatus;
 use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\Exceptions\RoundNotFoundException;
 use App\Infrastructure\Persistence\Eloquent\Models\Round as RoundEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use DateTimeImmutable;
 
 /**
@@ -77,8 +78,8 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
 
         $round = $this->toDomainEntity($eloquent);
 
-        // Extract season data without accessing property dynamically
-        /** @phpstan-ignore-next-line property.notFound (loaded via eager loading) */
+        // Extract season data - relation is eagerly loaded
+        /** @var SeasonEloquent $seasonModel */
         $seasonModel = $eloquent->season;
 
         $season = [
@@ -201,6 +202,7 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
         $model->qualifying_results = $entity->qualifyingResults();
         $model->race_time_results = $entity->raceTimeResults();
         $model->fastest_lap_results = $entity->fastestLapResults();
+        $model->team_championship_results = $entity->teamChampionshipResults();
         $model->created_by_user_id = $entity->createdByUserId();
     }
 
@@ -220,6 +222,9 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
 
         /** @var array<mixed>|null $fastestLapResults Laravel's JSON cast returns array or null */
         $fastestLapResults = $model->getAttribute('fastest_lap_results');
+
+        /** @var array<mixed>|null $teamChampionshipResults Laravel's JSON cast returns array or null */
+        $teamChampionshipResults = $model->getAttribute('team_championship_results');
 
         return Round::reconstitute(
             id: $model->id,
@@ -246,6 +251,7 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
             qualifyingResults: $qualifyingResults,
             raceTimeResults: $raceTimeResults,
             fastestLapResults: $fastestLapResults,
+            teamChampionshipResults: $teamChampionshipResults,
             createdByUserId: $model->created_by_user_id,
             createdAt: new DateTimeImmutable($model->created_at->toDateTimeString()),
             updatedAt: new DateTimeImmutable($model->updated_at->toDateTimeString()),

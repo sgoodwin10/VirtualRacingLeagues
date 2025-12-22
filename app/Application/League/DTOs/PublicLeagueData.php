@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\League\DTOs;
 
+use App\Application\League\Traits\MediaArrayConversion;
 use App\Domain\League\Entities\League;
+use App\Infrastructure\Persistence\Eloquent\Models\League as LeagueEloquent;
 use Spatie\LaravelData\Data;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Public League DTO - excludes sensitive fields like owner info.
@@ -14,6 +15,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 final class PublicLeagueData extends Data
 {
+    use MediaArrayConversion;
+
     /**
      * @param array<int, array{id: int, name: string, slug: string}> $platforms
      */
@@ -53,7 +56,7 @@ final class PublicLeagueData extends Data
      * @param string|null $logoUrl Optional pre-computed logo URL (infrastructure concern - DEPRECATED)
      * @param string|null $headerImageUrl Optional pre-computed header image URL (infrastructure concern - DEPRECATED)
      * @param string|null $bannerUrl Optional pre-computed banner URL (infrastructure concern - DEPRECATED)
-     * @param \App\Infrastructure\Persistence\Eloquent\Models\League|null $eloquentModel Optional eloquent model for media
+     * @param LeagueEloquent|null $eloquentModel Optional eloquent model for media
      * @return self
      */
     public static function fromEntity(
@@ -64,7 +67,7 @@ final class PublicLeagueData extends Data
         ?string $logoUrl = null,
         ?string $headerImageUrl = null,
         ?string $bannerUrl = null,
-        ?\App\Infrastructure\Persistence\Eloquent\Models\League $eloquentModel = null
+        ?LeagueEloquent $eloquentModel = null
     ): self {
         // Extract media from eloquent model if available
         $logo = null;
@@ -101,52 +104,5 @@ final class PublicLeagueData extends Data
             competitions_count: $competitionsCount,
             drivers_count: $driversCount,
         );
-    }
-
-    /**
-     * Convert Spatie Media model to array representation
-     *
-     * @param Media|null $media
-     * @return array{id: int, original: string, conversions: array<string, string>, srcset: string}|null
-     */
-    public static function mediaToArray(?Media $media): ?array
-    {
-        if ($media === null) {
-            return null;
-        }
-
-        $conversions = [];
-        $conversionNames = ['thumb', 'small', 'medium', 'large', 'og'];
-
-        foreach ($conversionNames as $conversion) {
-            try {
-                $conversions[$conversion] = $media->getUrl($conversion);
-            } catch (\Exception $e) {
-                // Conversion may not exist yet (queued) or may not apply to this file type
-                // Skip silently
-            }
-        }
-
-        // Generate srcset for responsive images
-        $srcsetParts = [];
-        $widths = [
-            'thumb' => '150w',
-            'small' => '320w',
-            'medium' => '640w',
-            'large' => '1280w',
-        ];
-
-        foreach ($widths as $conversionName => $width) {
-            if (isset($conversions[$conversionName])) {
-                $srcsetParts[] = "{$conversions[$conversionName]} {$width}";
-            }
-        }
-
-        return [
-            'id' => $media->getKey(),
-            'original' => $media->getUrl(),
-            'conversions' => $conversions,
-            'srcset' => implode(', ', $srcsetParts),
-        ];
     }
 }

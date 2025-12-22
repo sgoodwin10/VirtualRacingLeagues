@@ -154,10 +154,6 @@ final class EloquentDivisionRepository implements DivisionRepositoryInterface
     /**
      * Bulk update division orders using a single CASE/WHEN query.
      *
-     * The PHPDoc type annotation @param array<int, int> provides compile-time type safety.
-     * Runtime validation below provides defense-in-depth against type coercion vulnerabilities
-     * that could occur if the array is constructed from untrusted sources (e.g., JSON decode).
-     *
      * @param array<int, int> $divisionOrders Map of division ID => order
      * @throws \InvalidArgumentException if array contains non-integer values
      */
@@ -165,20 +161,6 @@ final class EloquentDivisionRepository implements DivisionRepositoryInterface
     {
         if (empty($divisionOrders)) {
             return;
-        }
-
-        // Runtime validation ensures type safety even if PHPDoc types are bypassed
-        // This protects against SQL injection via type coercion vulnerabilities
-        foreach ($divisionOrders as $divisionId => $order) {
-            if (
-                !is_int($divisionId) // @phpstan-ignore-line booleanOr.alwaysFalse
-                || !is_int($order) // @phpstan-ignore-line function.alreadyNarrowedType
-            ) {
-                throw new \InvalidArgumentException(
-                    'Division IDs and orders must be integers. ' .
-                    'Got divisionId: ' . gettype($divisionId) . ', order: ' . gettype($order)
-                );
-            }
         }
 
         $cases = [];

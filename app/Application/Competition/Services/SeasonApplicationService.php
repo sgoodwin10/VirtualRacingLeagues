@@ -30,10 +30,16 @@ use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use App\Infrastructure\Cache\RaceResultsCacheService;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository;
+use Exception;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+use Throwable;
 
 /**
  * Season Application Service.
@@ -131,7 +137,7 @@ final class SeasonApplicationService
                     $this->seasonRepository->save($season);
 
                     // 8. Upload media using new media service (dual-write during transition)
-                    if ($season->id() && $this->seasonRepository instanceof \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository) {
+                    if ($season->id() && $this->seasonRepository instanceof EloquentSeasonRepository) {
                         $eloquentSeason = $this->seasonRepository->getEloquentModel($season->id());
                         if ($data->logo) {
                             $this->mediaService->upload($data->logo, $eloquentSeason, 'logo');
@@ -150,15 +156,15 @@ final class SeasonApplicationService
                     return $this->toSeasonData($season, $competition->logoPath());
                 });
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Cleanup uploaded files on failure
             // Wrap cleanup in try-catch to prevent cleanup failures from masking the original exception
             if ($logoPath) {
                 try {
                     $this->deleteSeasonImage($logoPath);
-                } catch (\Throwable $cleanupException) {
+                } catch (Throwable $cleanupException) {
                     // Log cleanup failure but don't throw - preserve original exception
-                    \Log::warning('Failed to cleanup season logo during error handling', [
+                    Log::warning('Failed to cleanup season logo during error handling', [
                         'logo_path' => $logoPath,
                         'cleanup_error' => $cleanupException->getMessage(),
                         'original_error' => $e->getMessage(),
@@ -168,9 +174,9 @@ final class SeasonApplicationService
             if ($bannerPath) {
                 try {
                     $this->deleteSeasonImage($bannerPath);
-                } catch (\Throwable $cleanupException) {
+                } catch (Throwable $cleanupException) {
                     // Log cleanup failure but don't throw - preserve original exception
-                    \Log::warning('Failed to cleanup season banner during error handling', [
+                    Log::warning('Failed to cleanup season banner during error handling', [
                         'banner_path' => $bannerPath,
                         'cleanup_error' => $cleanupException->getMessage(),
                         'original_error' => $e->getMessage(),
@@ -279,7 +285,7 @@ final class SeasonApplicationService
                 $season->updateBranding($logoPath, $season->bannerPath());
 
                 // Upload via media service (dual-write)
-                if ($season->id() && $this->seasonRepository instanceof \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository) {
+                if ($season->id() && $this->seasonRepository instanceof EloquentSeasonRepository) {
                     $eloquentSeason = $this->seasonRepository->getEloquentModel($season->id());
                     $this->mediaService->upload($data->logo, $eloquentSeason, 'logo');
                 }
@@ -295,7 +301,7 @@ final class SeasonApplicationService
                 $season->updateBranding($season->logoPath(), $bannerPath);
 
                 // Upload via media service (dual-write)
-                if ($season->id() && $this->seasonRepository instanceof \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository) {
+                if ($season->id() && $this->seasonRepository instanceof EloquentSeasonRepository) {
                     $eloquentSeason = $this->seasonRepository->getEloquentModel($season->id());
                     $this->mediaService->upload($data->banner, $eloquentSeason, 'banner');
                 }
@@ -565,7 +571,7 @@ final class SeasonApplicationService
         $path = $file->store($directory, 'public');
 
         if (!$path) {
-            throw new \RuntimeException("Failed to store season {$type}");
+            throw new RuntimeException("Failed to store season {$type}");
         }
 
         return $path;
@@ -638,10 +644,10 @@ final class SeasonApplicationService
 
         // Get eloquent model for media extraction
         $eloquentModel = null;
-        if ($season->id() && $this->seasonRepository instanceof \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository) {
+        if ($season->id() && $this->seasonRepository instanceof EloquentSeasonRepository) {
             try {
                 $eloquentModel = $this->seasonRepository->getEloquentModel($season->id());
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Model not found or error loading media - continue without media
             }
         }
@@ -829,8 +835,7 @@ final class SeasonApplicationService
             }
 
             // Sort by drop total descending
-            // @phpstan-ignore-next-line nullCoalesce.offset
-            uasort($driverTotals, fn($a, $b) => ($b['drop_total'] ?? 0) <=> ($a['drop_total'] ?? 0));
+            uasort($driverTotals, fn($a, $b) => $b['drop_total'] <=> $a['drop_total']);
         } else {
             // Sort by total points descending
             uasort($driverTotals, fn($a, $b) => $b['total_points'] <=> $a['total_points']);
@@ -1000,17 +1005,19 @@ final class SeasonApplicationService
                 }
 
                 // Sort drivers by drop total descending
-                // @phpstan-ignore-next-line nullCoalesce.offset
-                uasort($divisionTotals['drivers'], fn($a, $b) => ($b['drop_total'] ?? 0) <=> ($a['drop_total'] ?? 0));
+                // PHPStan loses type information after uasort - the array structure is preserved but PHPStan can't infer it
+                uasort($divisionDriverTotals[$divisionId]['drivers'], fn($a, $b) => ($b['drop_total'] ?? 0) <=> ($a['drop_total'] ?? 0));
             } else {
                 // Sort drivers by total points descending
-                uasort($divisionTotals['drivers'], fn($a, $b) => $b['total_points'] <=> $a['total_points']);
+                uasort($divisionDriverTotals[$divisionId]['drivers'], fn($a, $b) => $b['total_points'] <=> $a['total_points']);
             }
 
             // Build driver standings with positions
             $drivers = [];
             $position = 1;
-            foreach ($divisionTotals['drivers'] as $driverId => $driverData) {
+            foreach ($divisionDriverTotals[$divisionId]['drivers'] as $driverId => $driverData) {
+                // PHPStan loses type information after uasort - the array structure is preserved but PHPStan can't infer it
+                /** @var array{driver_id: mixed, driver_name: string, total_points: float|int, podiums: int, poles: int, drop_total?: float|int} $driverData */
                 $driver = [
                     'position' => $position++,
                     'driver_id' => $driverData['driver_id'],
@@ -1022,7 +1029,6 @@ final class SeasonApplicationService
                 ];
 
                 // Add drop_total if drop rounds are enabled
-                // @phpstan-ignore-next-line isset.offset, booleanAnd.alwaysFalse
                 if ($dropRoundEnabled && $totalDropRounds > 0 && isset($driverData['drop_total'])) {
                     $driver['drop_total'] = $driverData['drop_total'];
                 }
@@ -1059,7 +1065,7 @@ final class SeasonApplicationService
      * @param callable(): T $callback
      * @param int $maxRetries
      * @return T
-     * @throws \Throwable
+     * @throws Throwable
      */
     private function executeWithRetry(callable $callback, int $maxRetries = 3): mixed
     {
@@ -1067,7 +1073,7 @@ final class SeasonApplicationService
         while (true) {
             try {
                 return $callback();
-            } catch (\Illuminate\Database\QueryException $e) {
+            } catch (QueryException $e) {
                 // Check for unique constraint violation (MySQL: 23000, PostgreSQL: 23505)
                 if ($attempt < $maxRetries && in_array($e->getCode(), ['23000', '23505'])) {
                     $attempt++;

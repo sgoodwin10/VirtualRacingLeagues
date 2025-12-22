@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
 use Database\Factories\PlatformFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -63,10 +64,10 @@ class Platform extends Model
     /**
      * Scope query to only active platforms.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<Platform>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Platform>
+     * @param  Builder<Platform>  $query
+     * @return Builder<Platform>
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
@@ -74,10 +75,10 @@ class Platform extends Model
     /**
      * Scope query to order platforms by sort_order.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<Platform>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Platform>
+     * @param  Builder<Platform>  $query
+     * @return Builder<Platform>
      */
-    public function scopeOrdered($query)
+    public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort_order');
     }

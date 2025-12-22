@@ -30,6 +30,7 @@ final class Round
      * @param array<mixed>|null $qualifyingResults
      * @param array<mixed>|null $raceTimeResults
      * @param array<mixed>|null $fastestLapResults
+     * @param array<mixed>|null $teamChampionshipResults
      */
     private function __construct(
         private ?int $id,
@@ -56,6 +57,7 @@ final class Round
         private ?array $qualifyingResults,
         private ?array $raceTimeResults,
         private ?array $fastestLapResults,
+        private ?array $teamChampionshipResults,
         private int $createdByUserId,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
@@ -112,6 +114,7 @@ final class Round
             qualifyingResults: null,
             raceTimeResults: null,
             fastestLapResults: null,
+            teamChampionshipResults: null,
             createdByUserId: $createdByUserId,
             createdAt: new DateTimeImmutable(),
             updatedAt: new DateTimeImmutable(),
@@ -126,6 +129,7 @@ final class Round
      * @param array<mixed>|null $qualifyingResults
      * @param array<mixed>|null $raceTimeResults
      * @param array<mixed>|null $fastestLapResults
+     * @param array<mixed>|null $teamChampionshipResults
      */
     public static function reconstitute(
         int $id,
@@ -152,6 +156,7 @@ final class Round
         ?array $qualifyingResults,
         ?array $raceTimeResults,
         ?array $fastestLapResults,
+        ?array $teamChampionshipResults,
         int $createdByUserId,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
@@ -182,6 +187,7 @@ final class Round
             qualifyingResults: $qualifyingResults,
             raceTimeResults: $raceTimeResults,
             fastestLapResults: $fastestLapResults,
+            teamChampionshipResults: $teamChampionshipResults,
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
@@ -217,7 +223,11 @@ final class Round
             $hasChanges = true;
         }
 
-        if ($this->name?->equals($name) === false || ($this->name === null && $name !== null)) {
+        $nameChanged = ($this->name === null && $name !== null)
+            || ($this->name !== null && $name === null)
+            || ($this->name !== null && $name !== null && !$this->name->equals($name));
+
+        if ($nameChanged) {
             $this->name = $name;
             $hasChanges = true;
         }
@@ -227,7 +237,7 @@ final class Round
             $hasChanges = true;
         }
 
-        if ($this->scheduledAt != $scheduledAt) {
+        if ($this->scheduledAt?->getTimestamp() !== $scheduledAt?->getTimestamp()) {
             $this->scheduledAt = $scheduledAt;
             $hasChanges = true;
         }
@@ -541,6 +551,14 @@ final class Round
         return $this->fastestLapResults;
     }
 
+    /**
+     * @return array<mixed>|null
+     */
+    public function teamChampionshipResults(): ?array
+    {
+        return $this->teamChampionshipResults;
+    }
+
     public function createdByUserId(): int
     {
         return $this->createdByUserId;
@@ -603,6 +621,31 @@ final class Round
         $this->raceTimeResults = $raceTimeResults;
         $this->fastestLapResults = $fastestLapResults;
         $this->updatedAt = new DateTimeImmutable();
+
+        // Record domain event
+        $this->recordEvent(new RoundResultsCalculated(
+            roundId: $this->id ?? 0,
+            seasonId: $this->seasonId,
+            occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+        ));
+    }
+
+    /**
+     * Set team championship results after calculation.
+     *
+     * @param array<mixed> $results
+     */
+    public function setTeamChampionshipResults(array $results): void
+    {
+        $this->teamChampionshipResults = $results;
+        $this->updatedAt = new DateTimeImmutable();
+
+        // Record domain event
+        $this->recordEvent(new RoundResultsCalculated(
+            roundId: $this->id ?? 0,
+            seasonId: $this->seasonId,
+            occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+        ));
     }
 
     /**

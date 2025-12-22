@@ -44,8 +44,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $race_points
  * @property string|null $race_notes
  * @property string $status
- * @property string $created_at
- * @property string $updated_at
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
  * @method static Race firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  *
  * @method static \Illuminate\Database\Eloquent\Builder<Race> where($column, $operator = null, $value = null, $boolean = 'and')
@@ -157,7 +157,7 @@ final class Race extends Model
      * @param \Illuminate\Database\Eloquent\Builder<Race> $query
      * @return \Illuminate\Database\Eloquent\Builder<Race>
      */
-    public function scopeQualifiers($query)
+    public function scopeQualifiers(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('is_qualifier', true);
     }
@@ -168,7 +168,7 @@ final class Race extends Model
      * @param \Illuminate\Database\Eloquent\Builder<Race> $query
      * @return \Illuminate\Database\Eloquent\Builder<Race>
      */
-    public function scopeRaces($query)
+    public function scopeRaces(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('is_qualifier', false);
     }
@@ -180,7 +180,7 @@ final class Race extends Model
      * @param int $roundId
      * @return \Illuminate\Database\Eloquent\Builder<Race>
      */
-    public function scopeForRound($query, int $roundId)
+    public function scopeForRound(\Illuminate\Database\Eloquent\Builder $query, int $roundId): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('round_id', $roundId);
     }

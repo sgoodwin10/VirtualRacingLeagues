@@ -12,4 +12,9 @@ class PlatformNotFoundException extends DomainNotFoundException
     {
         return new self("Platform with ID {$id} not found");
     }
+
+    public static function withName(string $name): self
+    {
+        return new self("Platform with name '{$name}' not found");
+    }
 }

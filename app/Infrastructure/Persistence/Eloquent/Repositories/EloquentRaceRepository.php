@@ -213,10 +213,8 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
             racePoints: $model->race_points,
             raceNotes: $model->race_notes,
             status: RaceStatus::from($model->status),
-            /** @phpstan-ignore-next-line */
-            createdAt: DateTimeImmutable::createFromMutable($model->created_at),
-            /** @phpstan-ignore-next-line */
-            updatedAt: DateTimeImmutable::createFromMutable($model->updated_at),
+            createdAt: new DateTimeImmutable($model->created_at->toDateTimeString()),
+            updatedAt: new DateTimeImmutable($model->updated_at->toDateTimeString()),
         );
     }
 

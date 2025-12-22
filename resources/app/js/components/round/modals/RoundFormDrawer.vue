@@ -184,6 +184,7 @@
                   show-time
                   hour-format="24"
                   date-format="yy-mm-dd"
+                  :step-minute="15"
                   :invalid="!!validationErrors.scheduled_at"
                   placeholder="Select date and time"
                   size="small"

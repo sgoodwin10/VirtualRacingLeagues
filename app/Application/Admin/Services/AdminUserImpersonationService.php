@@ -12,10 +12,9 @@ use App\Domain\User\Entities\User;
 use App\Domain\User\Events\UserImpersonated;
 use App\Domain\User\Exceptions\UserNotFoundException;
 use App\Domain\User\Repositories\UserRepositoryInterface;
-use Illuminate\Support\Facades\Auth;
+use DomainException;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Str;
 
 /**
  * Admin User Impersonation Service.
@@ -39,7 +38,7 @@ final class AdminUserImpersonationService
      * @param int $adminId The admin performing the impersonation
      * @return string The generated token
      * @throws UserNotFoundException If user not found
-     * @throws \DomainException If user is an admin or authorization fails
+     * @throws DomainException If user is an admin or authorization fails
      */
     public function generateImpersonationToken(int $userId, int $adminId): string
     {
@@ -48,7 +47,7 @@ final class AdminUserImpersonationService
 
         // Check admin authorization (only super_admin and admin can impersonate)
         if (!$this->canImpersonate($admin)) {
-            throw new \DomainException('Only super admins and admins can impersonate users');
+            throw new DomainException('Only super admins and admins can impersonate users');
         }
 
         // Get the user to impersonate
@@ -56,11 +55,11 @@ final class AdminUserImpersonationService
 
         // Business Rule: Cannot impersonate deleted users
         if ($user->isDeleted()) {
-            throw new \DomainException('Cannot impersonate deleted users');
+            throw new DomainException('Cannot impersonate deleted users');
         }
 
-        // Generate secure token (UUID v4)
-        $token = Str::uuid()->toString();
+        // Generate cryptographically secure token
+        $token = bin2hex(random_bytes(32));
 
         // Store token in Redis with expiry
         $data = [
@@ -73,8 +72,14 @@ final class AdminUserImpersonationService
         ];
 
         $redisKey = self::REDIS_KEY_PREFIX . $token;
-        /** @phpstan-ignore-next-line */
-        Redis::setex($redisKey, self::TOKEN_EXPIRY_SECONDS, json_encode($data, JSON_THROW_ON_ERROR));
+
+        try {
+            $jsonData = json_encode($data, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new DomainException('Failed to encode impersonation token data: ' . $e->getMessage());
+        }
+
+        Redis::setex($redisKey, self::TOKEN_EXPIRY_SECONDS, $jsonData);
 
         // Dispatch domain event
         Event::dispatch(new UserImpersonationStarted(
@@ -93,7 +98,7 @@ final class AdminUserImpersonationService
      *
      * @param string $token The impersonation token
      * @return array{user: User, admin_id: int, admin_email: string} User and admin info
-     * @throws \DomainException If token is invalid or expired
+     * @throws DomainException If token is invalid or expired
      * @throws UserNotFoundException If user not found
      */
     public function consumeImpersonationToken(string $token): array
@@ -101,31 +106,39 @@ final class AdminUserImpersonationService
         $redisKey = self::REDIS_KEY_PREFIX . $token;
 
         // Get token data from Redis
-        /** @phpstan-ignore-next-line */
         $data = Redis::get($redisKey);
 
         if ($data === null) {
-            throw new \DomainException('Invalid or expired impersonation token');
+            throw new DomainException('Invalid or expired impersonation token');
         }
 
         // Delete the token (single-use)
-        /** @phpstan-ignore-next-line */
         Redis::del($redisKey);
 
         // Parse token data
-        $tokenData = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+        try {
+            $tokenData = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new DomainException('Failed to decode impersonation token data: ' . $e->getMessage());
+        }
 
         // Get the user
         $user = $this->userRepository->findById($tokenData['user_id']);
 
         // Business Rule: Cannot impersonate deleted users
         if ($user->isDeleted()) {
-            throw new \DomainException('Cannot impersonate deleted users');
+            throw new DomainException('Cannot impersonate deleted users');
+        }
+
+        // Ensure user has an ID
+        $userId = $user->id();
+        if ($userId === null) {
+            throw new DomainException('Cannot impersonate user without ID');
         }
 
         // Dispatch domain event
         Event::dispatch(new UserImpersonated(
-            userId: $user->id() ?? 0,
+            userId: $userId,
             userEmail: $user->email()->value(),
             adminId: $tokenData['admin_id'],
             adminEmail: $tokenData['admin_email'],
@@ -136,6 +149,18 @@ final class AdminUserImpersonationService
             'admin_id' => $tokenData['admin_id'],
             'admin_email' => $tokenData['admin_email'],
         ];
+    }
+
+    /**
+     * Revoke an impersonation token.
+     *
+     * @param string $token The impersonation token to revoke
+     * @return void
+     */
+    public function revokeImpersonationToken(string $token): void
+    {
+        $redisKey = self::REDIS_KEY_PREFIX . $token;
+        Redis::del($redisKey);
     }
 
     /**

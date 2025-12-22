@@ -18,7 +18,7 @@ use App\Domain\User\Events\UserRestored;
 use App\Domain\User\Events\UserUpdated;
 use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
-use Spatie\Activitylog\Models\Activity;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Listener for logging user domain events to activity log.
@@ -82,7 +82,7 @@ final class LogUserActivity
                 'user_agent' => request()->userAgent(),
                 'registered_at' => now()->toDateTimeString(),
             ])
-            ->log('created user');
+            ->log('User created');
     }
 
     private function logUserUpdated(UserUpdated $event): void
@@ -112,7 +112,7 @@ final class LogUserActivity
                 'old' => $old,
                 'attributes' => $attributes,
             ])
-            ->log('updated user');
+            ->log('User updated');
     }
 
     private function logUserActivated(UserActivated $event): void
@@ -123,8 +123,12 @@ final class LogUserActivity
         }
 
         activity('user')
+            ->causedBy($this->getCausedBy())
             ->performedOn($user)
-            ->log('User account activated');
+            ->withProperties([
+                'updated_by' => $this->getCausedByName(),
+            ])
+            ->log('User activated');
     }
 
     private function logUserDeactivated(UserDeactivated $event): void
@@ -135,8 +139,12 @@ final class LogUserActivity
         }
 
         activity('user')
+            ->causedBy($this->getCausedBy())
             ->performedOn($user)
-            ->log('User account deactivated');
+            ->withProperties([
+                'updated_by' => $this->getCausedByName(),
+            ])
+            ->log('User deactivated');
     }
 
     private function logUserDeleted(UserDeleted $event): void
@@ -149,7 +157,10 @@ final class LogUserActivity
         activity('user')
             ->causedBy($this->getCausedBy())
             ->performedOn($user)
-            ->log('deactivated user');
+            ->withProperties([
+                'deleted_by' => $this->getCausedByName(),
+            ])
+            ->log('User deleted');
     }
 
     private function logUserRestored(UserRestored $event): void
@@ -162,7 +173,10 @@ final class LogUserActivity
         activity('user')
             ->causedBy($this->getCausedBy())
             ->performedOn($user)
-            ->log('reactivated user');
+            ->withProperties([
+                'restored_by' => $this->getCausedByName(),
+            ])
+            ->log('User restored');
     }
 
     private function logEmailVerificationRequested(EmailVerificationRequested $event): void
@@ -185,7 +199,7 @@ final class LogUserActivity
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ])
-            ->log('email verification requested');
+            ->log('User email verification requested');
     }
 
     private function logEmailVerified(EmailVerified $event): void
@@ -208,7 +222,7 @@ final class LogUserActivity
                 'verified_at' => now()->toDateTimeString(),
                 'ip_address' => request()->ip(),
             ])
-            ->log('email verified');
+            ->log('User email verified');
     }
 
     private function logPasswordResetRequested(PasswordResetRequested $event): void
@@ -231,7 +245,7 @@ final class LogUserActivity
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ])
-            ->log('password reset requested');
+            ->log('User password reset requested');
     }
 
     private function logPasswordResetCompleted(PasswordResetCompleted $event): void
@@ -254,7 +268,7 @@ final class LogUserActivity
                 'reset_at' => now()->toDateTimeString(),
                 'ip_address' => request()->ip(),
             ])
-            ->log('password reset completed');
+            ->log('User password reset completed');
     }
 
     private function logUserLoggedIn(UserLoggedIn $event): void
@@ -273,7 +287,7 @@ final class LogUserActivity
                 'user_agent' => request()->userAgent(),
                 'logged_in_at' => now()->toDateTimeString(),
             ])
-            ->log('user logged in');
+            ->log('User logged in');
     }
 
     private function logUserLoggedOut(UserLoggedOut $event): void
@@ -291,13 +305,13 @@ final class LogUserActivity
                 'ip_address' => request()->ip(),
                 'logged_out_at' => now()->toDateTimeString(),
             ])
-            ->log('user logged out');
+            ->log('User logged out');
     }
 
     /**
      * Get user model for activity log.
      */
-    private function getUser(int $userId): ?\Illuminate\Database\Eloquent\Model
+    private function getUser(int $userId): ?Model
     {
         if ($userId === 0) {
             return null;
@@ -309,7 +323,7 @@ final class LogUserActivity
     /**
      * Get user model for activity log (including soft-deleted).
      */
-    private function getUserWithTrashed(int $userId): ?\Illuminate\Database\Eloquent\Model
+    private function getUserWithTrashed(int $userId): ?Model
     {
         if ($userId === 0) {
             return null;
@@ -321,22 +335,44 @@ final class LogUserActivity
     /**
      * Get the user or admin who caused this action.
      */
-    private function getCausedBy(): ?\Illuminate\Database\Eloquent\Model
+    private function getCausedBy(): ?Model
     {
         // Check admin guard first (admin actions take precedence)
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent|null $admin */
+        /** @var AdminEloquent|null $admin */
         $admin = auth('admin')->user();
         if ($admin) {
             return $admin;
         }
 
         // Check web guard (user actions)
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
+        /** @var UserEloquent|null $user */
         $user = auth('web')->user();
         if ($user) {
             return $user;
         }
 
         return null;
+    }
+
+    /**
+     * Get the name of the user or admin who caused this action.
+     */
+    private function getCausedByName(): string
+    {
+        // Check admin guard first (admin actions take precedence)
+        /** @var AdminEloquent|null $admin */
+        $admin = auth('admin')->user();
+        if ($admin) {
+            return "{$admin->first_name} {$admin->last_name}";
+        }
+
+        // Check web guard (user actions)
+        /** @var UserEloquent|null $user */
+        $user = auth('web')->user();
+        if ($user) {
+            return "{$user->first_name} {$user->last_name}";
+        }
+
+        return 'System';
     }
 }

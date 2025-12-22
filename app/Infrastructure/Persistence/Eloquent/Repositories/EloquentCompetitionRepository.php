@@ -11,6 +11,8 @@ use App\Domain\Competition\ValueObjects\CompetitionName;
 use App\Domain\Competition\ValueObjects\CompetitionSlug;
 use App\Domain\Competition\ValueObjects\CompetitionStatus;
 use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionModel;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\Round;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -57,22 +59,21 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             $competitionId = $competition->id();
 
             // Get all season IDs first
-            $seasonIds = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
+            $seasonIds = SeasonEloquent::query()
                 ->where('competition_id', $competitionId)
                 ->pluck('id');
 
             // Bulk delete rounds for all seasons (force delete to bypass soft deletes)
             if ($seasonIds->isNotEmpty()) {
-                /** @phpstan-ignore method.notFound (forceDelete exists on SoftDeletes models) */
-                \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
-                    ->whereIn('season_id', $seasonIds)
-                    ->forceDelete();
+                /** @var \Illuminate\Database\Eloquent\Builder<Round> $roundsQuery */
+                $roundsQuery = Round::query()->whereIn('season_id', $seasonIds);
+                $roundsQuery->forceDelete();
             }
 
             // Bulk delete seasons (force delete to bypass soft deletes)
-            \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
-                ->where('competition_id', $competitionId)
-                ->forceDelete();
+            /** @var \Illuminate\Database\Eloquent\Builder<SeasonEloquent> $seasonsQuery */
+            $seasonsQuery = SeasonEloquent::query()->where('competition_id', $competitionId);
+            $seasonsQuery->forceDelete();
 
             // Delete the competition itself (regular delete as it doesn't use SoftDeletes)
             CompetitionModel::where('id', $competitionId)->delete();
@@ -81,11 +82,10 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
 
     public function findById(int $id): Competition
     {
+        /** @var Builder<CompetitionModel> $query */
+        $query = CompetitionModel::query();
         /** @var CompetitionModel|null $model */
-        $model = $this->applyDefaultIncludes(
-            /** @phpstan-ignore-next-line */
-            CompetitionModel::query()
-        )->find($id);
+        $model = $this->applyDefaultIncludes($query)->find($id);
 
         if (!$model) {
             throw CompetitionNotFoundException::withId($id);

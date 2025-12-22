@@ -6,6 +6,7 @@ namespace App\Domain\Competition\Repositories;
 
 use App\Domain\Competition\Entities\SeasonDriver;
 use App\Domain\Competition\Exceptions\SeasonDriverNotFoundException;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 
 /**
  * SeasonDriver Repository Interface.
@@ -118,13 +119,9 @@ interface SeasonDriverRepositoryInterface
      * Find season driver by ID with all relationships loaded.
      * Used after team assignment to return complete driver data.
      *
-     * @param int $seasonDriverId
-     * @return \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent
      * @throws SeasonDriverNotFoundException
      */
-    public function findByIdWithRelations(
-        int $seasonDriverId
-    ): \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+    public function findByIdWithRelations(int $seasonDriverId): SeasonDriverEloquent;
 
     /**
      * Batch fetch driver names for multiple season driver IDs.
@@ -134,4 +131,13 @@ interface SeasonDriverRepositoryInterface
      * @return array<int, string> Map of season driver ID => driver name
      */
     public function findDriverNamesByIds(array $seasonDriverIds): array;
+
+    /**
+     * Get mapping of league_driver_id to driver_id for all drivers in a season.
+     * Used to avoid N+1 queries when mapping league drivers to actual drivers.
+     *
+     * @param int $seasonId
+     * @return array<int, int> Map of league_driver_id => driver_id
+     */
+    public function getLeagueDriverToDriverIdMap(int $seasonId): array;
 }

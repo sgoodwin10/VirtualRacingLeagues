@@ -244,9 +244,9 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
         $results = RaceResult::query()
             ->where('race_results.race_id', $raceId)
             ->whereNull('race_results.division_id')
-            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
-            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
-            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->join('drivers', 'race_results.driver_id', '=', 'drivers.id')
+            ->join('league_drivers', 'drivers.id', '=', 'league_drivers.driver_id')
+            ->join('season_drivers', 'league_drivers.id', '=', 'season_drivers.league_driver_id')
             ->select('drivers.id', 'drivers.first_name', 'drivers.last_name', 'drivers.nickname')
             ->distinct()
             ->get();

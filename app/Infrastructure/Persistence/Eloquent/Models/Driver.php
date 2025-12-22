@@ -112,6 +112,8 @@ final class Driver extends Model
      * 3. First name only (if exists)
      * 4. Last name only (if exists)
      * 5. "Unknown" (fallback)
+     *
+     * @return Attribute<string, never>
      */
     protected function name(): Attribute
     {

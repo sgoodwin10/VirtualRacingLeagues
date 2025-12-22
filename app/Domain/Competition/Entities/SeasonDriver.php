@@ -31,6 +31,7 @@ final class SeasonDriver
         private ?int $id,
         private int $seasonId,
         private int $leagueDriverId,
+        private ?int $teamId,
         private SeasonDriverStatus $status,
         private ?string $notes,
         private DateTimeImmutable $addedAt,
@@ -44,6 +45,7 @@ final class SeasonDriver
     public static function create(
         int $seasonId,
         int $leagueDriverId,
+        ?int $teamId = null,
         ?SeasonDriverStatus $status = null,
         ?string $notes = null,
     ): self {
@@ -53,6 +55,7 @@ final class SeasonDriver
             id: null,
             seasonId: $seasonId,
             leagueDriverId: $leagueDriverId,
+            teamId: $teamId,
             status: $status ?? SeasonDriverStatus::ACTIVE,
             notes: $notes,
             addedAt: $now,
@@ -67,6 +70,7 @@ final class SeasonDriver
         int $id,
         int $seasonId,
         int $leagueDriverId,
+        ?int $teamId,
         SeasonDriverStatus $status,
         ?string $notes,
         DateTimeImmutable $addedAt,
@@ -76,6 +80,7 @@ final class SeasonDriver
             id: $id,
             seasonId: $seasonId,
             leagueDriverId: $leagueDriverId,
+            teamId: $teamId,
             status: $status,
             notes: $notes,
             addedAt: $addedAt,
@@ -140,6 +145,11 @@ final class SeasonDriver
     public function leagueDriverId(): int
     {
         return $this->leagueDriverId;
+    }
+
+    public function teamId(): ?int
+    {
+        return $this->teamId;
     }
 
     public function status(): SeasonDriverStatus

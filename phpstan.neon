@@ -1,3 +1,6 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
 parameters:
     level: 8
     paths:
@@ -22,17 +25,10 @@ parameters:
         -
             message: '#PHPDoc type array<string> of property .+::\$fillable is not covariant#'
             path: app/Infrastructure/Persistence/Eloquent/Models/*
-        # Laravel Route facade - name() method on array|Route
-        -
-            message: '#Cannot call method name\(\) on array\|Illuminate\\Routing\\Route#'
-            path: routes/subdomain.php
         # Undefined $this in console routes (Laravel closure context)
         -
             message: '#Undefined variable: \$this#'
             path: routes/console.php
-        # Eloquent dynamic methods (where, create, firstOrCreate, etc.)
-        -
-            message: '#Call to an undefined static method .+Eloquent::(where|create|firstOrCreate|find)\(\)#'
         # Object property access in seeders (Laravel factory returns)
         -
             message: '#Access to an undefined property object::\$id#'
@@ -40,19 +36,9 @@ parameters:
         # Unused methods in domain entities (used via events/reflection)
         -
             message: '#Method .+::recordEvent\(\) is unused#'
-        # Laravel Auth Guard method resolution
-        -
-            message: '#Call to an undefined method Illuminate\\Contracts\\Auth\\Guard::(login|logout|attempt)\(\)#'
         # Always false negation checks (from PHPDoc types)
         -
             message: '#Negated boolean expression is always false#'
-        # Strict comparison issues in domain services
-        -
-            message: '#Strict comparison using !== between mixed and null will always evaluate to true#'
-        # Helper function undefined method calls (SiteConfig getters)
-        -
-            message: '#Call to an undefined method App\\Domain\\SiteConfig\\Entities\\SiteConfig::get.+\(\)#'
-            path: app/Helpers/site_config.php
         # Missing type hints for array parameters (will fix gradually)
         -
             message: '#has parameter \$.+ with no (value type specified in iterable type array|type specified)#'
@@ -76,7 +62,7 @@ parameters:
             path: app/Application/*/Services/*
         # Static method calls on exception classes
         -
-            message: '#Call to an undefined static method .+Exception::(notFound|withId|withEmail)\(\)#'
+            message: '#Call to an undefined static method .+Exception::(notFound|withId|withEmail|withName)\(\)#'
         # Migration missing return types
         -
             message: '#Method .+(up|down)\(\) has no return type specified#'
@@ -85,59 +71,24 @@ parameters:
         -
             message: '#Call to an undefined method .+ForeignKeyDefinition::comment\(\)#'
             path: database/migrations/*
-        # Eloquent model property access (dynamic properties)
-        -
-            message: '#Access to an undefined property (Eloquent|.+Eloquent|\(Eloquent\|stdClass\))::\$.+#'
-        # Request undefined properties
-        -
-            message: '#Access to an undefined property .+Request::\$.+#'
         # HasFactory trait generic type usage
         -
             message: '#uses generic trait .+HasFactory but does not specify its types#'
-        # Eloquent model and other Laravel model types
-        -
-            message: '#(Access to an undefined property|Call to an undefined method|Call to an undefined static method) .+(Model|Competition|Driver|League|Platform|PlatformTrack|Season|User|Admin|Request|Team|SeasonDriver|LeagueDriver|SiteConfigModel|SiteConfigFileModel|PlatformTrackLocation|LeagueDriverEloquent|SeasonDriverEloquent)::#'
-        # Eloquent models query builder methods (instance and static)
-        -
-            message: '#Call to an undefined (method|static method) (App\\Infrastructure\\Persistence\\Eloquent\\Models\\)?(UserEloquent|AdminEloquent|Competition|Driver|League|Platform|PlatformTrack|SeasonDriverEloquent|LeagueDriverEloquent|SeasonEloquent|SiteConfigModel)(\|.+Builder.+)?::(find|findOrFail|get|paginate|count|whereIn|where|orderBy|latest|first|exists)#'
         # Laravel Schema facade connection method
         -
             message: '#Call to an undefined static method Illuminate\\Support\\Facades\\Schema::connection\(\)#'
             path: database/migrations/*
-        # LocalFilesystemAdapter url method
-        -
-            message: '#Call to function method_exists\(\) with Illuminate\\Filesystem\\LocalFilesystemAdapter and ''url'' will always evaluate to true#'
-        # PHPDoc parsing errors in models
-        -
-            message: '#PHPDoc tag @(method|property|mixin) .+#'
-            path: app/Models/*
-        # Custom query scopes on Eloquent Builder
-        -
-            message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder.+::(search|filterByStatus|withTrashed|onlyTrashed)\(\)#'
-        # Eloquent withCount method on Models
-        -
-            message: '#Call to an undefined method .+::withCount\(\)#'
-            path: app/Infrastructure/Persistence/Eloquent/Repositories/*
         # Carbon/DateTime type conversion issues
         -
             message: '#Parameter \#1 \$object of static method DateTimeImmutable::createFromMutable\(\) expects DateTime, Illuminate\\Support\\Carbon\|null given#'
         -
             message: '#does not accept Carbon\\Carbon\|null#'
-        # Eloquent Builder parameter type mismatches
-        -
-            message: '#Parameter .+ of method .+::applyFilters\(\) expects .+, .+ given#'
         # Object property access (stdClass from queries)
         -
             message: '#Access to an undefined property object::\$.+#'
-        # Parameter type issues with query builder return types
-        -
-            message: '#Parameter \#1 \$model of method .+EloquentSiteConfigRepository::toDomain\(\) expects .+SiteConfigModel, .+SiteConfigModel\|.+Builder.+ given#'
         # Carbon null check issues
         -
             message: '#Cannot call method toDateTimeString\(\) on Illuminate\\Support\\Carbon\|null#'
-        # Custom query scope methods on Builder
-        -
-            message: '#Call to an undefined method .+Platform.+::ordered\(\)#'
         # Instanceof always true (domain events)
         -
             message: '#Instanceof between .+ and .+ will always evaluate to true#'
@@ -159,36 +110,20 @@ parameters:
         -
             message: '#Unable to resolve the template type .+ in call to method .+(belongsTo|hasMany|belongsToMany|morphMany|hasOne|morphOne)#'
             path: app/Infrastructure/Persistence/Eloquent/Models/*
-        # Model casts property type
-        -
-            message: '#Property .+::\$casts type has no value type specified in iterable type array#'
-            path: app/Infrastructure/Persistence/Eloquent/Models/*
         # Class not found (wrong model name)
         -
             message: '#Class App\\Infrastructure\\Persistence\\Eloquent\\Models\\(User|CompetitionEloquent) not found#'
-        # Attribute return type issues
-        -
-            message: '#PHPDoc tag @return with type .+ is incompatible with native type .+Attribute#'
-            path: app/Infrastructure/Persistence/Eloquent/Models/*
         -
             message: '#Anonymous function should return .+ but returns .+#'
-            path: app/Infrastructure/Persistence/Eloquent/Models/*
-        # Query Builder vs Eloquent Builder return type
-        -
-            message: '#but returns Illuminate\\Database\\Query\\Builder#'
             path: app/Infrastructure/Persistence/Eloquent/Models/*
         # belongsTo/belongsToMany argument type
         -
             message: '#Parameter \#1 .+ of method .+::(belongsTo|belongsToMany)\(\) expects class-string.+, string given#'
             path: app/Infrastructure/Persistence/Eloquent/Models/*
-        # Property type mismatches
+        # Property type mismatches in repositories
         -
             message: '#Property .+ does not accept .+#'
             path: app/Infrastructure/Persistence/Eloquent/Repositories/*
-        # Eloquent scope methods missing generic types
-        -
-            message: '#Method .+::scope.+#'
-            path: app/Infrastructure/Persistence/Eloquent/Models/*
         # Model method return types with relations
         -
             message: '#Method .+::(league|platform|createdBy|leagues|drivers|owner|competition)\(\)#'

@@ -19,6 +19,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Eloquent implementation of League Repository.
@@ -92,7 +93,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
     public function findByIdWithCounts(int $id): array
     {
-        /** @phpstan-ignore-next-line */
+        /** @var LeagueEloquent|null $eloquentLeague */
         $eloquentLeague = LeagueEloquent::withTrashed()
             ->withCount([
                 'competitions as competitions_count',
@@ -104,16 +105,21 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             throw LeagueNotFoundException::withId($id);
         }
 
+        /** @var int $competitionsCount */
+        $competitionsCount = $eloquentLeague->competitions_count ?? 0;
+        /** @var int $driversCount */
+        $driversCount = $eloquentLeague->drivers_count ?? 0;
+
         return [
             'league' => $this->toDomainEntity($eloquentLeague),
-            'competitions_count' => $eloquentLeague->competitions_count ?? 0,
-            'drivers_count' => $eloquentLeague->drivers_count ?? 0,
+            'competitions_count' => $competitionsCount,
+            'drivers_count' => $driversCount,
         ];
     }
 
     public function findByUserIdWithCounts(int $userId): array
     {
-        /** @phpstan-ignore-next-line */
+        /** @var \Illuminate\Database\Eloquent\Collection<int, LeagueEloquent> $eloquentLeagues */
         $eloquentLeagues = LeagueEloquent::where('owner_user_id', $userId)
             ->withCount([
                 'competitions as competitions_count',
@@ -122,11 +128,16 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return $eloquentLeagues->map(function ($eloquentLeague) {
+        return $eloquentLeagues->map(function (LeagueEloquent $eloquentLeague) {
+            /** @var int $competitionsCount */
+            $competitionsCount = $eloquentLeague->competitions_count ?? 0;
+            /** @var int $driversCount */
+            $driversCount = $eloquentLeague->drivers_count ?? 0;
+
             return [
                 'league' => $this->toDomainEntity($eloquentLeague),
-                'competitions_count' => $eloquentLeague->competitions_count ?? 0,
-                'drivers_count' => $eloquentLeague->drivers_count ?? 0,
+                'competitions_count' => $competitionsCount,
+                'drivers_count' => $driversCount,
             ];
         })->all();
     }
@@ -255,10 +266,10 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
     /**
      * Apply filters to query.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<LeagueEloquent> $query
+     * @param Builder<LeagueEloquent> $query
      * @param array<string, mixed> $filters
      */
-    private function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
+    private function applyFilters(Builder $query, array $filters): void
     {
         if (isset($filters['owner_user_id'])) {
             $query->where('owner_user_id', $filters['owner_user_id']);
@@ -390,7 +401,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
     public function getPaginatedForAdmin(int $page, int $perPage, array $filters = []): array
     {
-        /** @phpstan-ignore-next-line */
+        /** @var Builder<LeagueEloquent> $query */
         $query = LeagueEloquent::query()
             ->with('owner:id,first_name,last_name,email')
             ->withCount([
@@ -460,10 +471,15 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         // Map to domain entities with counts
         $leagues = [];
         foreach ($eloquentLeagues as $eloquentLeague) {
+            /** @var int $competitionsCount */
+            $competitionsCount = $eloquentLeague->competitions_count ?? 0;
+            /** @var int $driversCount */
+            $driversCount = $eloquentLeague->drivers_count ?? 0;
+
             $leagues[] = [
                 'league' => $this->toDomainEntity($eloquentLeague),
-                'competitions_count' => $eloquentLeague->competitions_count ?? 0,
-                'drivers_count' => $eloquentLeague->drivers_count ?? 0,
+                'competitions_count' => $competitionsCount,
+                'drivers_count' => $driversCount,
             ];
         }
 
@@ -485,12 +501,33 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $competitionData = $competitions->map(function ($competition) {
+        $competitionData = $competitions->map(function (CompetitionModel $competition) {
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Platform|null $platform */
+            $platform = $competition->platform;
+            /** @var int $seasonsCount */
+            $seasonsCount = $competition->seasons_count ?? 0;
+
             return [
-                'competition' => $competition,
-                'platform_name' => $competition->platform->name ?? 'Unknown',
-                'platform_slug' => $competition->platform->slug ?? 'unknown',
-                'seasons_count' => $competition->seasons_count ?? 0,
+                'competition' => [
+                    'id' => $competition->id,
+                    'league_id' => $competition->league_id,
+                    'platform_id' => $competition->platform_id,
+                    'created_by_user_id' => $competition->created_by_user_id,
+                    'name' => $competition->name,
+                    'slug' => $competition->slug,
+                    'description' => $competition->description,
+                    'logo_path' => $competition->logo_path,
+                    'competition_colour' => $competition->competition_colour,
+                    'status' => $competition->status,
+                    'archived_at' => $competition->archived_at,
+                    'created_at' => $competition->created_at,
+                    'updated_at' => $competition->updated_at,
+                    'deleted_at' => null,
+                    'seasons_count' => $seasonsCount,
+                ],
+                'platform_name' => $platform !== null ? $platform->name : 'Unknown',
+                'platform_slug' => $platform !== null ? $platform->slug : 'unknown',
+                'seasons_count' => $seasonsCount,
             ];
         })->all();
 
@@ -565,7 +602,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
     public function getPaginatedPublic(int $page, int $perPage = 12, array $filters = []): array
     {
-        /** @phpstan-ignore-next-line */
+        /** @var Builder<LeagueEloquent> $query */
         $query = LeagueEloquent::query()
             ->withCount([
                 'competitions as competitions_count',
@@ -603,10 +640,15 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         // Map to domain entities with counts
         $leagues = [];
         foreach ($eloquentLeagues as $eloquentLeague) {
+            /** @var int $competitionsCount */
+            $competitionsCount = $eloquentLeague->competitions_count ?? 0;
+            /** @var int $driversCount */
+            $driversCount = $eloquentLeague->drivers_count ?? 0;
+
             $leagues[] = [
                 'league' => $this->toDomainEntity($eloquentLeague),
-                'competitions_count' => $eloquentLeague->competitions_count ?? 0,
-                'drivers_count' => $eloquentLeague->drivers_count ?? 0,
+                'competitions_count' => $competitionsCount,
+                'drivers_count' => $driversCount,
             ];
         }
 

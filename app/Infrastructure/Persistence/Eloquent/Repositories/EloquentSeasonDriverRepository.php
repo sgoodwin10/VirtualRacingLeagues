@@ -9,6 +9,8 @@ use App\Domain\Competition\Exceptions\SeasonDriverNotFoundException;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\ValueObjects\SeasonDriverStatus;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\Driver;
 use DateTimeImmutable;
 
 /**
@@ -213,7 +215,8 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
 
         // Apply search filter (search by driver fields)
         if (isset($filters['search']) && $filters['search'] !== '') {
-            $search = $filters['search'];
+            // Escape wildcard characters to prevent SQL injection
+            $search = str_replace(['%', '_'], ['\\%', '\\_'], $filters['search']);
             $query->whereHas('leagueDriver.driver', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
@@ -236,8 +239,14 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
 
             $query->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
                 ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
-                ->orderByRaw("{$nameExpression} {$orderDirection}")
                 ->select('season_drivers.*'); // Ensure we only select season_drivers columns
+
+            // Use separate method calls instead of string interpolation to prevent SQL injection
+            if ($orderDirection === 'asc') {
+                $query->orderByRaw("{$nameExpression} ASC");
+            } else {
+                $query->orderByRaw("{$nameExpression} DESC");
+            }
         } elseif (in_array($orderBy, ['discord_id', 'psn_id', 'iracing_id'])) {
             // Sort by driver platform IDs (with NULL values last)
             $query->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
@@ -265,7 +274,14 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
                 ->select('season_drivers.*');
         } else {
             // Default ordering (added_at, status, etc.)
-            $query->orderBy("season_drivers.{$orderBy}", $orderDirection);
+            // Whitelist allowed orderBy columns to prevent SQL injection
+            $allowedOrderBy = ['added_at', 'status', 'updated_at'];
+            if (in_array($orderBy, $allowedOrderBy)) {
+                $query->orderBy("season_drivers.{$orderBy}", $orderDirection);
+            } else {
+                // Fallback to default if invalid orderBy provided
+                $query->orderBy('season_drivers.added_at', 'desc');
+            }
         }
     }
 
@@ -278,6 +294,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
             id: $model->id,
             seasonId: $model->season_id,
             leagueDriverId: $model->league_driver_id,
+            teamId: $model->team_id,
             status: SeasonDriverStatus::fromString($model->status),
             notes: $model->notes,
             addedAt: new DateTimeImmutable($model->added_at->toDateTimeString()),
@@ -337,11 +354,36 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
 
         $driverNames = [];
         foreach ($seasonDrivers as $seasonDriver) {
-            // @phpstan-ignore-next-line (nullCoalesce.expr is safe due to optional chaining)
-            $driverNames[$seasonDriver->id] = $seasonDriver->leagueDriver?->driver?->name ?? 'Unknown Driver';
+            /** @var LeagueDriverEloquent|null $leagueDriver */
+            $leagueDriver = $seasonDriver->leagueDriver;
+            /** @var Driver|null $driver */
+            $driver = $leagueDriver !== null ? $leagueDriver->driver : null;
+            $driverNames[$seasonDriver->id] = $driver !== null ? $driver->name : 'Unknown Driver';
         }
 
         return $driverNames;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getLeagueDriverToDriverIdMap(int $seasonId): array
+    {
+        /** @var \Illuminate\Database\Eloquent\Collection<int, SeasonDriverEloquent> $seasonDrivers */
+        $seasonDrivers = SeasonDriverEloquent::with('leagueDriver')
+            ->where('season_id', $seasonId)
+            ->get();
+
+        $map = [];
+        foreach ($seasonDrivers as $seasonDriver) {
+            /** @var LeagueDriverEloquent|null $leagueDriver */
+            $leagueDriver = $seasonDriver->leagueDriver;
+            if ($leagueDriver !== null) {
+                $map[$leagueDriver->id] = $leagueDriver->driver_id;
+            }
+        }
+
+        return $map;
     }
 
     /**
@@ -354,6 +396,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
         return [
             'season_id' => $seasonDriver->seasonId(),
             'league_driver_id' => $seasonDriver->leagueDriverId(),
+            'team_id' => $seasonDriver->teamId(),
             'status' => $seasonDriver->status()->value,
             'notes' => $seasonDriver->notes(),
             'added_at' => $seasonDriver->addedAt()->format('Y-m-d H:i:s'),

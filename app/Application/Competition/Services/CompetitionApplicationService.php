@@ -12,6 +12,7 @@ use App\Application\Competition\DTOs\UpdateCompetitionData;
 use App\Application\Shared\Services\MediaServiceInterface;
 use App\Domain\Competition\Entities\Competition;
 use App\Domain\Competition\Exceptions\CompetitionNotFoundException;
+use App\Domain\League\Entities\League;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\ValueObjects\CompetitionName;
@@ -22,6 +23,7 @@ use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Platform\Exceptions\PlatformNotFoundException;
 use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
+use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionEloquent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -610,7 +612,7 @@ final class CompetitionApplicationService
     private function toCompetitionDataOptimized(
         Competition $competition,
         array $aggregates,
-        \App\Domain\League\Entities\League $league,
+        League $league,
         ?array $platformData,
         array $seasonsData
     ): CompetitionData {
@@ -649,11 +651,11 @@ final class CompetitionApplicationService
     /**
      * Safely get eloquent model with error logging.
      *
-     * @return \App\Infrastructure\Persistence\Eloquent\Models\Competition|null
+     * @return CompetitionEloquent|null
      */
     private function getEloquentModelSafely(
         int $competitionId
-    ): ?\App\Infrastructure\Persistence\Eloquent\Models\Competition {
+    ): ?CompetitionEloquent {
         try {
             return $this->competitionRepository->getEloquentModel($competitionId);
         } catch (\Exception $e) {

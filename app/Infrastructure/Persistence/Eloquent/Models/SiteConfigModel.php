@@ -6,6 +6,7 @@ namespace App\Infrastructure\Persistence\Eloquent\Models;
 
 use App\Infrastructure\Persistence\Eloquent\Traits\HasMediaCollections;
 use Database\Factories\SiteConfigFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -73,7 +74,7 @@ class SiteConfigModel extends Model implements HasMedia
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'site_name',
@@ -117,20 +118,12 @@ class SiteConfigModel extends Model implements HasMedia
     /**
      * Scope to get only active configuration.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<SiteConfigModel>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<SiteConfigModel>
+     * @param  Builder<SiteConfigModel>  $query
+     * @return Builder<SiteConfigModel>
      */
-    public function scopeActive(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
-    }
-
-    /**
-     * Get a file by type.
-     */
-    public function getFileByType(string $fileType): ?SiteConfigFileModel
-    {
-        return $this->files->firstWhere('file_type', $fileType);
     }
 
     /**

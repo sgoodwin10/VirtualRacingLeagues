@@ -14,6 +14,7 @@ use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\CheckSlugRequest;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use App\Http\Requests\User\CreateLeagueRequest;
 use App\Http\Requests\User\UpdateLeagueRequest;
 use Illuminate\Http\JsonResponse;
@@ -29,13 +30,13 @@ class LeagueController extends Controller
     /**
      * Get the authenticated user.
      *
-     * @return \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent
+     * @return UserEloquent
      */
-    private function authenticatedUser(): \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent
+    private function authenticatedUser(): UserEloquent
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent $user */
+        /** @var UserEloquent $user */
         $user = Auth::guard('web')->user();
-        assert($user instanceof \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent);
+        assert($user instanceof UserEloquent);
 
         return $user;
     }
@@ -126,6 +127,8 @@ class LeagueController extends Controller
      */
     public function checkSlug(CheckSlugRequest $request): JsonResponse
     {
+        $user = $this->authenticatedUser();
+
         $validated = $request->validated();
         $excludeLeagueId = isset($validated['league_id']) ? (int) $validated['league_id'] : null;
         $result = $this->leagueService->checkSlugAvailability($validated['name'], $excludeLeagueId);

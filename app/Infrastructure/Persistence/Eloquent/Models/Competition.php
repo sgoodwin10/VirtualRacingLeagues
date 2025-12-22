@@ -7,6 +7,7 @@ namespace App\Infrastructure\Persistence\Eloquent\Models;
 use App\Domain\Competition\ValueObjects\CompetitionStatus;
 use App\Infrastructure\Persistence\Eloquent\Traits\HasMediaCollections;
 use Database\Factories\CompetitionFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -72,7 +73,7 @@ class Competition extends Model implements HasMedia
     }
 
     /**
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'league_id',
@@ -136,31 +137,31 @@ class Competition extends Model implements HasMedia
     // Scopes
 
     /**
-     * @param \Illuminate\Database\Eloquent\Builder<Competition> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Competition>
+     * @param Builder<Competition> $query
+     * @return Builder<Competition>
      */
-    public function scopeActive(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', CompetitionStatus::ACTIVE->value);
     }
 
     /**
-     * @param \Illuminate\Database\Eloquent\Builder<Competition> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Competition>
+     * @param Builder<Competition> $query
+     * @return Builder<Competition>
      */
-    public function scopeArchived(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeArchived(Builder $query): Builder
     {
         return $query->where('status', CompetitionStatus::ARCHIVED->value);
     }
 
     /**
-     * @param \Illuminate\Database\Eloquent\Builder<Competition> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Competition>
+     * @param Builder<Competition> $query
+     * @return Builder<Competition>
      */
     public function scopeForLeague(
-        \Illuminate\Database\Eloquent\Builder $query,
+        Builder $query,
         int $leagueId
-    ): \Illuminate\Database\Eloquent\Builder {
+    ): Builder {
         return $query->where('league_id', $leagueId);
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
 use Database\Factories\PlatformTrackFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -108,10 +109,10 @@ class PlatformTrack extends Model
     /**
      * Scope query to only active tracks.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<PlatformTrack>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<PlatformTrack>
+     * @param  Builder<PlatformTrack>  $query
+     * @return Builder<PlatformTrack>
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
@@ -119,10 +120,10 @@ class PlatformTrack extends Model
     /**
      * Scope query to order tracks by sort_order.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<PlatformTrack>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<PlatformTrack>
+     * @param  Builder<PlatformTrack>  $query
+     * @return Builder<PlatformTrack>
      */
-    public function scopeOrdered($query)
+    public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort_order');
     }
@@ -130,11 +131,11 @@ class PlatformTrack extends Model
     /**
      * Scope query to filter by platform.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<PlatformTrack>  $query
+     * @param  Builder<PlatformTrack>  $query
      * @param  int  $platformId
-     * @return \Illuminate\Database\Eloquent\Builder<PlatformTrack>
+     * @return Builder<PlatformTrack>
      */
-    public function scopeForPlatform($query, int $platformId)
+    public function scopeForPlatform(Builder $query, int $platformId): Builder
     {
         return $query->where('platform_id', $platformId);
     }
@@ -142,11 +143,11 @@ class PlatformTrack extends Model
     /**
      * Scope query to filter by location.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<PlatformTrack>  $query
+     * @param  Builder<PlatformTrack>  $query
      * @param  int  $locationId
-     * @return \Illuminate\Database\Eloquent\Builder<PlatformTrack>
+     * @return Builder<PlatformTrack>
      */
-    public function scopeForLocation($query, int $locationId)
+    public function scopeForLocation(Builder $query, int $locationId): Builder
     {
         return $query->where('platform_track_location_id', $locationId);
     }

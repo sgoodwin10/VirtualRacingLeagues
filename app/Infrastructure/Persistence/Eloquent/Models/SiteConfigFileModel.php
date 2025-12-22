@@ -48,7 +48,7 @@ class SiteConfigFileModel extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'site_config_id',

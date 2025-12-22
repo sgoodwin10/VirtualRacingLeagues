@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,7 @@ class UserAuthenticate
      */
     public function handle(Request $request, Closure $next): Response
     {
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
+        /** @var UserEloquent|null $user */
         $user = Auth::guard('web')->user();
 
         // Check if user is authenticated

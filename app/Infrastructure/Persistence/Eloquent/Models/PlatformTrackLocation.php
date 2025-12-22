@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
 use Database\Factories\PlatformTrackLocationFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -96,10 +97,10 @@ class PlatformTrackLocation extends Model
     /**
      * Scope query to only active locations.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<PlatformTrackLocation>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<PlatformTrackLocation>
+     * @param  Builder<PlatformTrackLocation>  $query
+     * @return Builder<PlatformTrackLocation>
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
@@ -107,10 +108,10 @@ class PlatformTrackLocation extends Model
     /**
      * Scope query to order locations by sort_order.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<PlatformTrackLocation>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<PlatformTrackLocation>
+     * @param  Builder<PlatformTrackLocation>  $query
+     * @return Builder<PlatformTrackLocation>
      */
-    public function scopeOrdered($query)
+    public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort_order');
     }

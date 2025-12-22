@@ -42,6 +42,15 @@ use App\Helpers\FilterBuilder;
 use App\Helpers\PaginationHelper;
 use App\Http\Requests\Admin\IndexLeaguesRequest;
 use App\Infrastructure\Cache\RaceResultsCacheService;
+use App\Infrastructure\Persistence\Eloquent\Models\Competition;
+use App\Infrastructure\Persistence\Eloquent\Models\Driver;
+use App\Infrastructure\Persistence\Eloquent\Models\League as EloquentLeague;
+use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\Race;
+use App\Infrastructure\Persistence\Eloquent\Models\RaceResult;
+use App\Infrastructure\Persistence\Eloquent\Models\Round;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -145,7 +154,7 @@ final class LeagueApplicationService
                 $this->dispatchEvents($league);
 
                 // Fetch the Eloquent model for media operations (with proper null check)
-                $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::findOrFail($league->id());
+                $eloquentLeague = EloquentLeague::findOrFail($league->id());
 
                 // Upload media using new media service (this replaces old media if it exists)
                 // NOTE: Spatie's clearMediaCollection() is called inside upload(), which is safe
@@ -243,8 +252,7 @@ final class LeagueApplicationService
 
         // Fix N+1: Batch load all Eloquent models with media BEFORE the loop
         $leagueIds = array_map(fn(array $item) => $item['league']->id(), $leaguesWithCounts);
-        // @phpstan-ignore-next-line (Laravel Eloquent Builder query chain)
-        $eloquentLeagues = \App\Infrastructure\Persistence\Eloquent\Models\League::query()
+        $eloquentLeagues = EloquentLeague::query()
             ->whereIn('id', $leagueIds)
             ->with('media')
             ->get()
@@ -297,7 +305,7 @@ final class LeagueApplicationService
         $bannerUrl = $this->computeBannerUrl($league);
 
         // Fetch eloquent model for media relationships
-        $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($leagueId);
+        $eloquentLeague = EloquentLeague::with('media')->find($leagueId);
 
         return LeagueData::fromEntity(
             $league,
@@ -390,7 +398,7 @@ final class LeagueApplicationService
             }
 
             // Fetch the Eloquent model for media operations (with proper null check)
-            $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::findOrFail($leagueId);
+            $eloquentLeague = EloquentLeague::findOrFail($leagueId);
 
             // Track new old-format file paths for cleanup on failure
             $newLogoPath = null;
@@ -717,8 +725,7 @@ final class LeagueApplicationService
 
         // Fix N+1: Batch load all Eloquent models with media BEFORE the loop
         $leagueIds = array_map(fn(array $item) => $item['league']->id(), $result['data']);
-        // @phpstan-ignore-next-line (Laravel Eloquent Builder query chain)
-        $eloquentLeagues = \App\Infrastructure\Persistence\Eloquent\Models\League::query()
+        $eloquentLeagues = EloquentLeague::query()
             ->whereIn('id', $leagueIds)
             ->with('media')
             ->get()
@@ -782,7 +789,7 @@ final class LeagueApplicationService
         $ownerData = $owners[$league->ownerUserId()] ?? null;
 
         // Fetch eloquent model for media relationships
-        $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($leagueId);
+        $eloquentLeague = EloquentLeague::with('media')->find($leagueId);
 
         return LeagueData::fromEntity(
             $league,
@@ -827,7 +834,7 @@ final class LeagueApplicationService
             $ownerData = $owners[$league->ownerUserId()] ?? null;
 
             // Fetch eloquent model for media relationships
-            $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::with('media')->find($leagueId);
+            $eloquentLeague = EloquentLeague::with('media')->find($leagueId);
 
             return LeagueData::fromEntity(
                 $league,
@@ -958,8 +965,7 @@ final class LeagueApplicationService
 
         // Fix N+1: Batch load all Eloquent models with media BEFORE the loop
         $leagueIds = array_map(fn(array $item) => $item['league']->id(), $result['data']);
-        // @phpstan-ignore-next-line (Laravel Eloquent Builder query chain)
-        $eloquentLeagues = \App\Infrastructure\Persistence\Eloquent\Models\League::query()
+        $eloquentLeagues = EloquentLeague::query()
             ->whereIn('id', $leagueIds)
             ->with('media')
             ->get()
@@ -1027,8 +1033,7 @@ final class LeagueApplicationService
 
         // Fix N+1: Batch load all Eloquent models with media BEFORE the loop
         $leagueIds = array_map(fn(array $item) => $item['league']->id(), $result['data']);
-        // @phpstan-ignore-next-line (Laravel Eloquent Builder query chain)
-        $eloquentLeagues = \App\Infrastructure\Persistence\Eloquent\Models\League::query()
+        $eloquentLeagues = EloquentLeague::query()
             ->whereIn('id', $leagueIds)
             ->with('media')
             ->get()
@@ -1212,14 +1217,14 @@ final class LeagueApplicationService
     public function getPublicSeasonDetail(string $leagueSlug, string $seasonSlug): ?PublicSeasonDetailData
     {
         // Find league by slug (Eloquent for visibility check)
-        $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::where('slug', $leagueSlug)->first();
+        $eloquentLeague = EloquentLeague::where('slug', $leagueSlug)->first();
 
         if ($eloquentLeague === null || $eloquentLeague->visibility === LeagueVisibility::PRIVATE->value) {
             return null;
         }
 
         // Find season by slug
-        $eloquentSeason = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
+        $eloquentSeason = SeasonEloquent::query()
             ->whereHas('competition', function ($query) use ($eloquentLeague) {
                 $query->where('league_id', $eloquentLeague->id);
             })
@@ -1244,7 +1249,7 @@ final class LeagueApplicationService
         $totalRaces = 0;
         $completedRaces = 0;
         if ($eloquentSeason) {
-            $raceStats = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+            $raceStats = Race::query()
                 ->whereIn('round_id', function ($query) use ($eloquentSeason) {
                     $query->select('id')
                         ->from('rounds')
@@ -1323,7 +1328,7 @@ final class LeagueApplicationService
         ];
 
         // Fetch rounds with races
-        $eloquentRounds = \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
+        $eloquentRounds = Round::query()
             ->where('season_id', $eloquentSeason->id)
             ->with([
                 'races:id,round_id,race_number,name,race_type,status,is_qualifier',
@@ -1434,7 +1439,7 @@ final class LeagueApplicationService
     private function fetchQualifyingResults(int $seasonId, bool $hasDivisions): array
     {
         // Get all qualifying race IDs for this season
-        $qualifyingRaceIds = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+        $qualifyingRaceIds = Race::query()
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->where('rounds.season_id', $seasonId)
             ->where('races.is_qualifier', true)
@@ -1447,11 +1452,11 @@ final class LeagueApplicationService
         }
 
         // Fetch results from qualifying races grouped by round
-        $results = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+        $results = RaceResult::query()
             ->whereIn('race_id', $qualifyingRaceIds)
-            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
-            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
-            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->join('drivers', 'race_results.driver_id', '=', 'drivers.id')
+            ->join('league_drivers', 'drivers.id', '=', 'league_drivers.driver_id')
+            ->join('season_drivers', 'league_drivers.id', '=', 'season_drivers.league_driver_id')
             ->join('races', 'race_results.race_id', '=', 'races.id')
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
@@ -1513,7 +1518,7 @@ final class LeagueApplicationService
     private function fetchFastestLapResults(int $seasonId, bool $hasDivisions): array
     {
         // Get all non-qualifying race IDs for this season
-        $raceIds = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+        $raceIds = Race::query()
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->where('rounds.season_id', $seasonId)
             ->where('races.is_qualifier', false)
@@ -1526,13 +1531,13 @@ final class LeagueApplicationService
         }
 
         // Fetch results with fastest laps, sorted by time globally (not per division)
-        $results = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+        $results = RaceResult::query()
             ->whereIn('race_id', $raceIds)
             ->whereNotNull('race_results.fastest_lap')
             ->where('race_results.fastest_lap', '!=', '')
-            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
-            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
-            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->join('drivers', 'race_results.driver_id', '=', 'drivers.id')
+            ->join('league_drivers', 'drivers.id', '=', 'league_drivers.driver_id')
+            ->join('season_drivers', 'league_drivers.id', '=', 'season_drivers.league_driver_id')
             ->join('races', 'race_results.race_id', '=', 'races.id')
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
@@ -1583,7 +1588,7 @@ final class LeagueApplicationService
     private function fetchRaceTimeResults(int $seasonId, bool $hasDivisions): array
     {
         // Get all non-qualifying race IDs for this season
-        $raceIds = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+        $raceIds = Race::query()
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->where('rounds.season_id', $seasonId)
             ->where('races.is_qualifier', false)
@@ -1596,13 +1601,13 @@ final class LeagueApplicationService
         }
 
         // Fetch results with race times, sorted by time globally (not per division)
-        $results = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+        $results = RaceResult::query()
             ->whereIn('race_id', $raceIds)
             ->whereNotNull('race_results.original_race_time')
             ->where('race_results.original_race_time', '!=', '')
-            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
-            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
-            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->join('drivers', 'race_results.driver_id', '=', 'drivers.id')
+            ->join('league_drivers', 'drivers.id', '=', 'league_drivers.driver_id')
+            ->join('season_drivers', 'league_drivers.id', '=', 'season_drivers.league_driver_id')
             ->join('races', 'race_results.race_id', '=', 'races.id')
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
@@ -1738,11 +1743,11 @@ final class LeagueApplicationService
         $raceResultIds = array_column($results, 'race_result_id');
 
         // Fetch all race results with driver and division info
-        $raceResultsData = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+        $raceResultsData = RaceResult::query()
             ->whereIn('race_results.id', $raceResultIds)
-            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
-            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
-            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->join('drivers', 'race_results.driver_id', '=', 'drivers.id')
+            ->join('league_drivers', 'drivers.id', '=', 'league_drivers.driver_id')
+            ->join('season_drivers', 'league_drivers.id', '=', 'season_drivers.league_driver_id')
             ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
             ->select([
                 'race_results.id as race_result_id',
@@ -1884,7 +1889,7 @@ final class LeagueApplicationService
     {
         // Find race with its round -> season -> competition -> league relationships
         // IMPORTANT: We must check visibility BEFORE returning cached data
-        $race = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+        $race = Race::query()
             ->with(['round.season.competition.league:id,visibility'])
             ->find($raceId);
 
@@ -1893,26 +1898,26 @@ final class LeagueApplicationService
         }
 
         // Load relationships - use getRelation() for PHPStan compatibility
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\Round|null $round */
+        /** @var Round|null $round */
         $round = $race->getRelation('round');
         if ($round === null) {
             return null;
         }
 
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent|null $season */
+        /** @var SeasonEloquent|null $season */
         $season = $round->getRelation('season');
         if ($season === null) {
             return null;
         }
 
         // Check if league is public or unlisted
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\Competition|null $competition */
+        /** @var Competition|null $competition */
         $competition = $season->getRelation('competition');
         if ($competition === null) {
             return null;
         }
 
-        /** @var \App\Infrastructure\Persistence\Eloquent\Models\League|null $league */
+        /** @var EloquentLeague|null $league */
         $league = $competition->getRelation('league');
         if ($league === null || $league->visibility === LeagueVisibility::PRIVATE->value) {
             // If league is private but cache exists (visibility changed), invalidate cache
@@ -1942,11 +1947,11 @@ final class LeagueApplicationService
         ];
 
         // Fetch results with driver names
-        $results = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+        $results = RaceResult::query()
             ->where('race_id', $raceId)
-            ->join('season_drivers', 'race_results.driver_id', '=', 'season_drivers.id')
-            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
-            ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
+            ->join('drivers', 'race_results.driver_id', '=', 'drivers.id')
+            ->join('league_drivers', 'drivers.id', '=', 'league_drivers.driver_id')
+            ->join('season_drivers', 'league_drivers.id', '=', 'season_drivers.league_driver_id')
             ->leftJoin('divisions', 'race_results.division_id', '=', 'divisions.id')
             ->select([
                 'race_results.position',
@@ -2049,7 +2054,7 @@ final class LeagueApplicationService
     private function invalidateLeagueRaceResultsCache(int $leagueId): void
     {
         // Get all race IDs for this league through the competition -> season -> round -> race hierarchy
-        $raceIds = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+        $raceIds = Race::query()
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
             ->join('competitions', 'seasons.competition_id', '=', 'competitions.id')
@@ -2079,7 +2084,7 @@ final class LeagueApplicationService
         // Check cache first
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($seasonDriverId) {
             // Find season_driver and get league_driver_id
-            $seasonDriver = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::query()
+            $seasonDriver = SeasonDriverEloquent::query()
                 ->with([
                     'season.competition.league:id,visibility',
                     'leagueDriver.driver:id,nickname,first_name,last_name,psn_id,discord_id,iracing_id',
@@ -2092,32 +2097,32 @@ final class LeagueApplicationService
             }
 
             // Use getRelation for PHPStan compatibility
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent|null $season */
+            /** @var SeasonEloquent|null $season */
             $season = $seasonDriver->getRelation('season');
             if ($season === null) {
                 return null;
             }
 
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Competition|null $competition */
+            /** @var Competition|null $competition */
             $competition = $season->getRelation('competition');
             if ($competition === null) {
                 return null;
             }
 
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\League|null $league */
+            /** @var EloquentLeague|null $league */
             $league = $competition->getRelation('league');
             if ($league === null || $league->visibility === LeagueVisibility::PRIVATE->value) {
                 return null;
             }
 
             // Get the actual driver
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent|null $leagueDriver */
+            /** @var LeagueDriverEloquent|null $leagueDriver */
             $leagueDriver = $seasonDriver->getRelation('leagueDriver');
             if ($leagueDriver === null) {
                 return null;
             }
 
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Driver|null $driver */
+            /** @var Driver|null $driver */
             $driver = $leagueDriver->getRelation('driver');
             if ($driver === null) {
                 return null;
@@ -2139,10 +2144,13 @@ final class LeagueApplicationService
             }
 
             // Get all season_drivers for this driver (via league_drivers)
+            // IMPORTANT: The race_results.driver_id column is a foreign key to season_drivers.id (NOT drivers.id)
+            // Schema: race_results.driver_id -> season_drivers.id -> league_drivers.id -> drivers.id
+            // So we must query with season_driver IDs to get this driver's results across all seasons
             $allSeasonDriverIds = DB::table('season_drivers')
                 ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
-                ->where('league_drivers.driver_id', $driverId)
-                ->pluck('season_drivers.id')
+                ->where('league_drivers.driver_id', $driverId)  // Filter by drivers.id
+                ->pluck('season_drivers.id')  // Get season_drivers.id values
                 ->toArray();
 
             if (empty($allSeasonDriverIds)) {
@@ -2151,12 +2159,13 @@ final class LeagueApplicationService
             }
 
             // Calculate career stats (total poles and podiums)
-            $totalPoles = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+            // CORRECT: Using season_driver IDs because race_results.driver_id -> season_drivers.id
+            $totalPoles = RaceResult::query()
                 ->whereIn('driver_id', $allSeasonDriverIds)
                 ->where('has_pole', true)
                 ->count();
 
-            $totalPodiums = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+            $totalPodiums = RaceResult::query()
                 ->whereIn('driver_id', $allSeasonDriverIds)
                 ->whereIn('position', [1, 2, 3])
                 ->count();
@@ -2214,12 +2223,12 @@ final class LeagueApplicationService
      * Returns array with eloquent model and entity, or null if not found or private.
      *
      * @param string $slug
-     * @return array{eloquent: \App\Infrastructure\Persistence\Eloquent\Models\League, entity: League}|null
+     * @return array{eloquent: EloquentLeague, entity: League}|null
      */
     private function findPublicLeague(string $slug): ?array
     {
         // Find league by slug (using Eloquent to get timestamps and media)
-        $eloquentLeague = \App\Infrastructure\Persistence\Eloquent\Models\League::where('slug', $slug)
+        $eloquentLeague = EloquentLeague::where('slug', $slug)
             ->with('media')
             ->first();
 
@@ -2244,8 +2253,8 @@ final class LeagueApplicationService
      */
     private function fetchCompetitionsWithSeasons(int $leagueId): \Illuminate\Support\Collection
     {
-        /** @var \Illuminate\Database\Eloquent\Builder<\App\Infrastructure\Persistence\Eloquent\Models\Competition> $query */
-        $query = \App\Infrastructure\Persistence\Eloquent\Models\Competition::query();
+        /** @var \Illuminate\Database\Eloquent\Builder<Competition> $query */
+        $query = Competition::query();
 
         return $query
             ->where('league_id', $leagueId)
@@ -2289,13 +2298,13 @@ final class LeagueApplicationService
 
         // Count unique drivers across all seasons
         if ($totalCompetitions > 0) {
-            $seasonIds = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::query()
+            $seasonIds = SeasonEloquent::query()
                 ->whereIn('competition_id', $competitions->pluck('id'))
                 ->pluck('id')
                 ->toArray();
 
             if (!empty($seasonIds)) {
-                $totalDrivers = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::query()
+                $totalDrivers = SeasonDriverEloquent::query()
                     ->whereIn('season_id', $seasonIds)
                     ->distinct()
                     ->count('league_driver_id');
