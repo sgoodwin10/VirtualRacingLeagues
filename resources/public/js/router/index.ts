@@ -16,13 +16,6 @@ declare module 'vue-router' {
   }
 }
 
-// Extend Window interface to include dataLayer for GTM
-declare global {
-  interface Window {
-    dataLayer: Record<string, unknown>[];
-  }
-}
-
 const router = createRouter({
   history: createWebHistory(),
   routes: [

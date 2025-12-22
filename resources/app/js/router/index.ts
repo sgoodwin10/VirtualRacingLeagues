@@ -9,12 +9,6 @@ declare module 'vue-router' {
   }
 }
 
-declare global {
-  interface Window {
-    dataLayer: Record<string, unknown>[];
-  }
-}
-
 /**
  * Validates that route params are numeric
  * @param paramNames - Array of param names to validate

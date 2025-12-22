@@ -33,10 +33,10 @@ class DatabaseSeeder extends Seeder
                 LeagueSeeder::class,
                 DriverSeeder::class,
                 CompetitionSeeder::class,
-                SeasonSeeder::class,
-                DivisionSeeder::class,
-                RoundSeeder::class,
-                RaceSeeder::class
+                // SeasonSeeder::class,
+                // DivisionSeeder::class,
+                // RoundSeeder::class,
+                // RaceSeeder::class
             ]);
         }
     }
