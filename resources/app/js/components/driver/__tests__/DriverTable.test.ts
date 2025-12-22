@@ -90,7 +90,8 @@ vi.mock('primevue/column', () => ({
 vi.mock('primevue/button', () => ({
   default: {
     name: 'Button',
-    template: '<button :aria-label="ariaLabel" :title="title" @click="$emit(\'click\', $event)"><i v-if="icon" :class="icon"></i></button>',
+    template:
+      '<button :aria-label="ariaLabel" :title="title" @click="$emit(\'click\', $event)"><i v-if="icon" :class="icon"></i></button>',
     props: ['label', 'icon', 'size', 'text', 'severity', 'disabled', 'ariaLabel', 'title'],
   },
 }));
@@ -99,7 +100,8 @@ vi.mock('primevue/button', () => ({
 vi.mock('@app/components/common/buttons/ViewButton.vue', () => ({
   default: {
     name: 'ViewButton',
-    template: '<button aria-label="View driver details" @click="$emit(\'click\', $event)">View</button>',
+    template:
+      '<button aria-label="View driver details" @click="$emit(\'click\', $event)">View</button>',
     props: ['disabled', 'ariaLabel', 'title'],
   },
 }));
@@ -115,7 +117,8 @@ vi.mock('@app/components/common/buttons/EditButton.vue', () => ({
 vi.mock('@app/components/common/buttons/DeleteButton.vue', () => ({
   default: {
     name: 'DeleteButton',
-    template: '<button aria-label="Remove driver" @click="$emit(\'click\', $event)">Delete</button>',
+    template:
+      '<button aria-label="Remove driver" @click="$emit(\'click\', $event)">Delete</button>',
     props: ['disabled', 'ariaLabel', 'title'],
   },
 }));

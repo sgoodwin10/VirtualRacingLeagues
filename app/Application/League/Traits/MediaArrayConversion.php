@@ -29,20 +29,34 @@ trait MediaArrayConversion
         $conversions = [];
         $conversionNames = ['thumb', 'small', 'medium', 'large', 'og'];
 
+        // Get generated conversions from the media model
+        // This is an array of conversion names that have actually been generated
+        $generatedConversions = $media->generated_conversions ?? [];
+
         foreach ($conversionNames as $conversion) {
-            try {
-                $conversions[$conversion] = $media->getUrl($conversion);
-            } catch (\Exception $e) {
-                // Conversion may not exist yet (queued) or may not apply to this file type
-                Log::debug('Media conversion not available', [
+            // Only include conversions that have actually been generated
+            // Check if the conversion is in the generated_conversions array and is truthy
+            if (isset($generatedConversions[$conversion]) && $generatedConversions[$conversion]) {
+                try {
+                    $conversions[$conversion] = $media->getUrl($conversion);
+                } catch (\Exception $e) {
+                    // Conversion may not be accessible despite being marked as generated
+                    Log::debug('Media conversion not available', [
+                        'media_id' => $media->getKey(),
+                        'conversion' => $conversion,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            } else {
+                // Conversion not yet generated (likely queued)
+                Log::debug('Media conversion not yet generated', [
                     'media_id' => $media->getKey(),
                     'conversion' => $conversion,
-                    'error' => $e->getMessage(),
                 ]);
             }
         }
 
-        // Generate srcset for responsive images
+        // Generate srcset for responsive images (only for generated conversions)
         $srcsetParts = [];
         $widths = [
             'thumb' => '150w',

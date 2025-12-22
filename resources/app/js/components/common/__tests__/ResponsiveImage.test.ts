@@ -149,6 +149,56 @@ describe('ResponsiveImage', () => {
     expect(img.attributes('srcset')).toBe(mockMediaObject.srcset);
   });
 
+  it('falls back to original when requested conversion is missing', () => {
+    const mediaWithMissingConversions: MediaObject = {
+      id: 2,
+      original: '/media/original.jpg',
+      conversions: {
+        thumb: '',
+        small: '',
+        medium: '',
+        large: '',
+      },
+      srcset: '',
+    };
+
+    const wrapper = mount(ResponsiveImage, {
+      props: {
+        media: mediaWithMissingConversions,
+        alt: 'Test image',
+        conversion: 'medium',
+      },
+    });
+
+    const img = wrapper.find('img');
+    expect(img.attributes('src')).toBe('/media/original.jpg');
+  });
+
+  it('does not use srcset when it is empty', () => {
+    const mediaWithEmptySrcset: MediaObject = {
+      id: 3,
+      original: '/media/original.jpg',
+      conversions: {
+        thumb: '',
+        small: '',
+        medium: '',
+        large: '',
+      },
+      srcset: '',
+    };
+
+    const wrapper = mount(ResponsiveImage, {
+      props: {
+        media: mediaWithEmptySrcset,
+        alt: 'Test image',
+      },
+    });
+
+    const img = wrapper.find('img');
+    expect(img.attributes('src')).toBe('/media/original.jpg');
+    expect(img.attributes('srcset')).toBe('');
+  });
+
   describe('Loading Placeholder', () => {
     it('shows placeholder by default when image is not loaded', () => {
       const wrapper = mount(ResponsiveImage, {

@@ -29,18 +29,33 @@ const hasError = ref(false);
 
 /**
  * Compute the src - prefer media object, fallback to old URL
+ * If a specific conversion is requested but not available, fall back to original
  */
 const imageSrc = computed(() => {
   if (props.media) {
-    return props.conversion ? props.media.conversions[props.conversion] : props.media.original;
+    // If a specific conversion is requested
+    if (props.conversion) {
+      // Check if the conversion exists in the conversions object
+      const conversionUrl = props.media.conversions[props.conversion];
+      // Fall back to original if conversion doesn't exist
+      return conversionUrl || props.media.original;
+    }
+    // No specific conversion requested, use original
+    return props.media.original;
   }
   return props.fallbackUrl || '';
 });
 
 /**
  * Use srcset if available from media object
+ * Only use srcset if it's not empty (conversions have been generated)
  */
-const imageSrcset = computed(() => props.media?.srcset || '');
+const imageSrcset = computed(() => {
+  const srcset = props.media?.srcset || '';
+  // Only return srcset if it's not empty
+  // Empty srcset means conversions haven't been generated yet
+  return srcset.trim() ? srcset : '';
+});
 
 /**
  * Determine if we have an image to display

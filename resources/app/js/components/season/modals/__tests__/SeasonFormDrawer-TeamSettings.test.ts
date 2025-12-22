@@ -83,7 +83,17 @@ vi.mock('primevue/inputnumber', () => ({
     name: 'InputNumber',
     template:
       '<input type="number" :id="id" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" :min="min" :max="max" />',
-    props: ['id', 'modelValue', 'min', 'max', 'disabled', 'showButtons', 'buttonLayout', 'class', 'size'],
+    props: [
+      'id',
+      'modelValue',
+      'min',
+      'max',
+      'disabled',
+      'showButtons',
+      'buttonLayout',
+      'class',
+      'size',
+    ],
     emits: ['update:modelValue'],
   },
 }));

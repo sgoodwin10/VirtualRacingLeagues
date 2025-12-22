@@ -18,9 +18,7 @@
     </div>
 
     <div class="mt-3 flex items-center justify-between">
-      <span class="text-sm text-gray-500" v-html="expectedColumnsText">
-        
-      </span>
+      <span class="text-sm text-gray-500" v-html="expectedColumnsText"> </span>
       <div class="flex gap-2">
         <input
           ref="fileInputRef"

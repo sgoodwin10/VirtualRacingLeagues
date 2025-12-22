@@ -73,10 +73,7 @@ export function useGtm() {
    * trackEvent('season_started', { season_id: 456 });
    * ```
    */
-  const trackEvent = (
-    eventName: string,
-    params?: Record<string, unknown>
-  ): void => {
+  const trackEvent = (eventName: string, params?: Record<string, unknown>): void => {
     pushToDataLayer({
       event: eventName,
       ...params,
@@ -98,12 +95,7 @@ export function useGtm() {
    * trackClick('Season', 'delete', 'season_123', 1);
    * ```
    */
-  const trackClick = (
-    category: string,
-    action: string,
-    label?: string,
-    value?: number
-  ): void => {
+  const trackClick = (category: string, action: string, label?: string, value?: number): void => {
     const event: GtmClickEvent = {
       event: 'click',
       event_category: category,
@@ -137,7 +129,7 @@ export function useGtm() {
   const trackFormSubmit = (
     formName: string,
     action?: string,
-    additionalData?: Record<string, unknown>
+    additionalData?: Record<string, unknown>,
   ): void => {
     pushToDataLayer({
       event: 'form_submit',
@@ -180,11 +172,7 @@ export function useGtm() {
    * trackSocial('discord', 'join', 'league_server');
    * ```
    */
-  const trackSocial = (
-    network: string,
-    action: string,
-    target?: string
-  ): void => {
+  const trackSocial = (network: string, action: string, target?: string): void => {
     pushToDataLayer({
       event: 'social_interaction',
       social_network: network,
