@@ -79,7 +79,7 @@ router.beforeEach(async (to, _from, next) => {
 
   // Set page title
   const title = to.meta.title as string;
-  document.title = title ? `${title} - User Dashboard` : 'User Dashboard';
+  document.title = title ? `${title} - App Dashboard` : 'App Dashboard';
 
   // All routes require authentication - check auth status
   const isAuthenticated = await userStore.checkAuth();

@@ -344,6 +344,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { usePageTitle } from '@public/composables/usePageTitle';
 import {
   PhWarningCircle,
   PhUsers,
@@ -454,6 +455,22 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
   { label: leagueName.value || 'League', to: `/leagues/${route.params.slug}` },
   { label: season.value?.name || 'Season' },
 ]);
+
+// Dynamic page title: "Season Name - Competition Name - League Name"
+const pageTitle = computed(() => {
+  const parts = [];
+  if (season.value?.name) {
+    parts.push(season.value.name);
+  }
+  if (competitionName.value) {
+    parts.push(competitionName.value);
+  }
+  if (leagueName.value) {
+    parts.push(leagueName.value);
+  }
+  return parts.length > 0 ? parts : null;
+});
+usePageTitle(pageTitle);
 
 const roundHeaders = computed(() => {
   return rounds.value.map((r) => ({

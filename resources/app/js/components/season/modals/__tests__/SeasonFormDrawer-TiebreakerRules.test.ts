@@ -222,9 +222,7 @@ describe('SeasonFormDrawer - Tiebreaker Rules', () => {
 
     // Import and configure the mocked function
     const seasonService = await import('@app/services/seasonService');
-    vi.mocked(seasonService.getSeasonTiebreakerRules).mockResolvedValue(
-      mockSeasonTiebreakerRules,
-    );
+    vi.mocked(seasonService.getSeasonTiebreakerRules).mockResolvedValue(mockSeasonTiebreakerRules);
 
     wrapper = mount(SeasonFormDrawer, {
       global: {

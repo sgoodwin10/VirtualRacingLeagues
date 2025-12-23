@@ -507,6 +507,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { usePageTitle } from '@public/composables/usePageTitle';
 import {
   PhWarningCircle,
   PhDiscordLogo,
@@ -567,6 +568,10 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
   { label: 'Leagues', to: '/leagues' },
   { label: league.value?.name || 'League' },
 ]);
+
+// Dynamic page title
+const pageTitle = computed(() => league.value?.name || null);
+usePageTitle(pageTitle);
 
 // Tabs configuration
 const activeTabIndex = ref(0);

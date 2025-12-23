@@ -1462,12 +1462,12 @@ final class RoundApplicationService
 
     /**
      * Apply round points based on final standings positions.
-     * Round points are stored separately and NOT added to total_points.
+     * Round points are stored separately and added to total_points along with bonuses.
      *
-     * BUSINESS LOGIC: Drivers with ANY DNF in the round receive 0 round points.
-     * This is intentional - even if a driver wins other races in the round, having
-     * a DNF in any race disqualifies them from earning round points. This ensures
-     * consistency and rewards drivers who complete all races successfully.
+     * Note: Drivers with DNF in one or more races still receive round_points based on
+     * their final position. The DNF already penalizes them by giving 0 race_points for
+     * that race, which affects their overall position. This ensures drivers who complete
+     * other races successfully are still rewarded for those performances.
      *
      * @param Round $round
      * @param array<mixed> $standings
@@ -1483,13 +1483,6 @@ final class RoundApplicationService
         $pointsArray = $pointsSystem->toArray();
 
         foreach ($standings as &$standing) {
-            // IMPORTANT: Drivers with ANY DNF in the round should NOT receive round points.
-            // This is intentional business logic to ensure consistency and reward completion.
-            if ($standing['has_any_dnf'] ?? false) {
-                $standing['round_points'] = 0;
-                continue;
-            }
-
             $position = $standing['position'];
             if (isset($pointsArray[$position])) {
                 $roundPoints = $pointsArray[$position];

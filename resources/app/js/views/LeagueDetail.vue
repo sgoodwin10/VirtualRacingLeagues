@@ -15,6 +15,7 @@ import TabPanel from 'primevue/tabpanel';
 import Toast from 'primevue/toast';
 import { getLeagueById } from '@app/services/leagueService';
 import { useLeagueDrivers } from '@app/composables/useLeagueDrivers';
+import { usePageTitle } from '@app/composables/usePageTitle';
 import DriverFormDialog from '@app/components/driver/modals/DriverFormDialog.vue';
 import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
 import CSVImportDialog from '@app/components/driver/modals/CSVImportDialog.vue';
@@ -70,6 +71,10 @@ const { loadDrivers, addDriver, updateDriver, removeDriver, importFromCSV } = us
     onError: (msg) => toast.add({ severity: 'error', summary: 'Error', detail: msg, life: 5000 }),
   },
 );
+
+// Set dynamic page title based on league name
+const pageTitle = computed(() => league.value?.name);
+usePageTitle(pageTitle);
 
 // Watch for active tab changes
 watch(activeTab, async (newTab) => {

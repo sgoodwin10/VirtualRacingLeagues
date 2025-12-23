@@ -85,7 +85,7 @@ const router = createRouter({
       name: 'leagues',
       component: () => import('@public/views/leagues/PublicLeaguesView.vue'),
       meta: {
-        title: 'Public Leagues',
+        title: 'Leagues',
       },
     },
     {

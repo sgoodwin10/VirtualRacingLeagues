@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToastError, TOAST_DURATION } from '@app/composables/useToastError';
+import { usePageTitle } from '@app/composables/usePageTitle';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import { useTeamStore } from '@app/stores/teamStore';
@@ -74,6 +75,24 @@ const seasonId = computed(() => parseInt(route.params.seasonId as string, 10));
 const stats = computed(() => seasonDriverStore.stats);
 const teams = computed(() => teamStore.teams);
 const divisions = computed(() => divisionStore.divisions);
+
+// Set dynamic page title: <season name> - <competition name> - <league name> - App Dashboard
+const pageTitle = computed(() => {
+  if (!season.value) return null;
+
+  const seasonName = season.value.name;
+  const competitionName = season.value.competition?.name || season.value.competition_name;
+  const leagueName = season.value.competition?.league?.name;
+
+  // Build title parts in order: season, competition, league
+  const parts: string[] = [];
+  if (seasonName) parts.push(seasonName);
+  if (competitionName) parts.push(competitionName);
+  if (leagueName) parts.push(leagueName);
+
+  return parts.length > 0 ? parts : null;
+});
+usePageTitle(pageTitle);
 
 onMounted(async () => {
   const seasonLoaded = await loadSeason();
