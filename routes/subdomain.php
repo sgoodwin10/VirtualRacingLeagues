@@ -26,6 +26,7 @@ use App\Http\Controllers\User\SiteConfigController as UserSiteConfigController;
 use App\Http\Controllers\User\TeamController;
 use App\Http\Controllers\User\TimezoneController;
 use App\Http\Controllers\User\TrackController;
+use App\Http\Controllers\App\TiebreakerRuleController;
 use App\Http\Middleware\AdminSessionMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -181,6 +182,14 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::post('/seasons/{id}/restore', [SeasonController::class, 'restore'])
                 ->middleware('throttle:20,1')
                 ->name('seasons.restore');
+
+            // Tiebreaker Rules
+            Route::get('/tiebreaker-rules', [TiebreakerRuleController::class, 'index'])
+                ->name('tiebreaker-rules.index');
+            Route::get('/seasons/{seasonId}/tiebreaker-rules', [TiebreakerRuleController::class, 'getSeasonRules'])
+                ->name('seasons.tiebreaker-rules.show');
+            Route::put('/seasons/{seasonId}/tiebreaker-rules', [TiebreakerRuleController::class, 'updateSeasonRules'])
+                ->name('seasons.tiebreaker-rules.update');
 
             // Season Drivers
             Route::get('/seasons/{seasonId}/drivers', [SeasonDriverController::class, 'index'])->name('seasons.drivers.index');

@@ -4,8 +4,13 @@ import { useDebounceFn } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import { useSeasonValidation } from '@app/composables/useSeasonValidation';
-import { checkSeasonSlugAvailability } from '@app/services/seasonService';
-import type { Season, SeasonForm, SlugCheckResponse } from '@app/types/season';
+import { checkSeasonSlugAvailability, getSeasonTiebreakerRules } from '@app/services/seasonService';
+import type {
+  Season,
+  SeasonForm,
+  SlugCheckResponse,
+  SeasonTiebreakerRule,
+} from '@app/types/season';
 
 // PrimeVue Components
 import InputText from 'primevue/inputtext';
@@ -21,6 +26,7 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
+import OrderList from 'primevue/orderlist';
 
 // Common Components
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
@@ -81,12 +87,18 @@ const form = reactive<InternalSeasonForm>({
   teams_drivers_for_calculation: 'all',
   teams_drop_rounds: false,
   teams_total_drop_rounds: null,
+  round_totals_tiebreaker_rules_enabled: false,
 });
 
 const originalName = ref('');
 const isSubmitting = ref(false);
 const isLoadingData = ref(false);
 const showNameChangeDialog = ref(false);
+
+// Tiebreaker rules state
+const orderedRules = ref<SeasonTiebreakerRule[]>([]);
+const isLoadingRules = ref(false);
+const tiebreakerRulesError = ref<string | null>(null);
 
 // Slug preview state
 const slugPreview = ref('');
@@ -188,6 +200,37 @@ watch(
   },
 );
 
+// Watch tiebreaker toggle
+watch(
+  () => form.round_totals_tiebreaker_rules_enabled,
+  async (enabled) => {
+    if (enabled) {
+      // Load available rules from store
+      await seasonStore.fetchTiebreakerRules();
+
+      if (props.isEditMode && props.season?.id) {
+        // Edit mode: Load existing rules for this season
+        await loadSeasonTiebreakerRules(props.season.id);
+      } else {
+        // Create mode: Use default order from available rules
+        orderedRules.value = seasonStore.availableTiebreakerRules.map((rule, index) => ({
+          id: 0, // New rule, no ID yet
+          season_id: 0,
+          rule_id: rule.id,
+          rule_name: rule.name,
+          rule_slug: rule.slug,
+          rule_description: rule.description,
+          order: index + 1,
+        }));
+      }
+    } else {
+      // Disabled: Clear rules
+      orderedRules.value = [];
+      tiebreakerRulesError.value = null;
+    }
+  },
+);
+
 // Watch drawer visibility
 watch(
   () => props.visible,
@@ -204,6 +247,21 @@ watch(
 );
 
 // Methods
+async function loadSeasonTiebreakerRules(seasonId: number): Promise<void> {
+  isLoadingRules.value = true;
+  tiebreakerRulesError.value = null;
+
+  try {
+    const rules = await getSeasonTiebreakerRules(seasonId);
+    orderedRules.value = rules;
+  } catch (error) {
+    tiebreakerRulesError.value = 'Failed to load tiebreaker rules';
+    console.error('Error loading tiebreaker rules:', error);
+  } finally {
+    isLoadingRules.value = false;
+  }
+}
+
 function loadSeasonData(): void {
   if (!props.season) return;
 
@@ -233,6 +291,7 @@ function loadSeasonData(): void {
       : props.season.teams_drivers_for_calculation;
   form.teams_drop_rounds = props.season.teams_drop_rounds;
   form.teams_total_drop_rounds = props.season.teams_total_drop_rounds;
+  form.round_totals_tiebreaker_rules_enabled = props.season.round_totals_tiebreaker_rules_enabled;
 
   originalName.value = props.season.name;
 
@@ -257,10 +316,14 @@ function resetForm(): void {
   form.teams_drivers_for_calculation = 'all'; // Default to 'all' instead of null
   form.teams_drop_rounds = false;
   form.teams_total_drop_rounds = null;
+  form.round_totals_tiebreaker_rules_enabled = false;
   originalName.value = '';
   slugPreview.value = '';
   slugStatus.value = null;
   slugSuggestion.value = null;
+  orderedRules.value = [];
+  isLoadingRules.value = false;
+  tiebreakerRulesError.value = null;
   clearErrors();
 }
 
@@ -307,7 +370,17 @@ async function submitForm(): Promise<void> {
         teams_drivers_for_calculation: teamsDriversValue,
         teams_drop_rounds: form.teams_drop_rounds,
         teams_total_drop_rounds: form.teams_total_drop_rounds,
+        round_totals_tiebreaker_rules_enabled: form.round_totals_tiebreaker_rules_enabled,
       });
+
+      // Update tiebreaker rules order if enabled
+      if (form.round_totals_tiebreaker_rules_enabled && orderedRules.value.length > 0) {
+        const ruleOrder = orderedRules.value.map((rule, index) => ({
+          rule_id: rule.rule_id,
+          order: index + 1,
+        }));
+        await seasonStore.updateTiebreakerRulesOrder(updated.id, ruleOrder);
+      }
 
       toast.add({
         severity: 'success',
@@ -333,7 +406,17 @@ async function submitForm(): Promise<void> {
         teams_drivers_for_calculation: teamsDriversValue,
         teams_drop_rounds: form.teams_drop_rounds,
         teams_total_drop_rounds: form.teams_total_drop_rounds,
+        round_totals_tiebreaker_rules_enabled: form.round_totals_tiebreaker_rules_enabled,
       });
+
+      // Update tiebreaker rules order if enabled
+      if (form.round_totals_tiebreaker_rules_enabled && orderedRules.value.length > 0) {
+        const ruleOrder = orderedRules.value.map((rule, index) => ({
+          rule_id: rule.rule_id,
+          order: index + 1,
+        }));
+        await seasonStore.updateTiebreakerRulesOrder(created.id, ruleOrder);
+      }
 
       toast.add({
         severity: 'success',
@@ -627,6 +710,99 @@ function cancelNameChange(): void {
                   text="Number of lowest scoring rounds to exclude from team standings"
                 />
               </FormInputGroup>
+            </div>
+          </BasePanel>
+
+          <!-- Tiebreaker Rules Toggle -->
+          <FormInputGroup>
+            <div class="flex items-center gap-3">
+              <Checkbox
+                v-model="form.round_totals_tiebreaker_rules_enabled"
+                input-id="tiebreaker_rules"
+                :binary="true"
+                :disabled="isSubmitting"
+              />
+              <FormLabel
+                for="tiebreaker_rules"
+                text="Enable Tiebreaker Rules"
+                class="mb-0 cursor-pointer"
+              />
+            </div>
+            <FormOptionalText text="Apply tiebreaker rules when drivers have equal points" />
+          </FormInputGroup>
+
+          <!-- Tiebreaker Rules Configuration Panel -->
+          <BasePanel
+            v-if="form.round_totals_tiebreaker_rules_enabled"
+            class="bg-amber-50/50 border-amber-200"
+          >
+            <div class="p-3 space-y-2.5">
+              <div class="flex items-center gap-2 mb-2">
+                <i class="pi pi-sort-alt text-amber-600"></i>
+                <h4 class="font-semibold text-amber-900">Tiebreaker Rule Priority</h4>
+              </div>
+
+              <p class="text-sm text-gray-600 mb-3">
+                Drag and drop to reorder. Rules are applied from top to bottom until a tie is
+                broken.
+              </p>
+
+              <!-- Error State -->
+              <Message v-if="tiebreakerRulesError" severity="error" :closable="false">
+                {{ tiebreakerRulesError }}
+              </Message>
+
+              <!-- Loading State -->
+              <div v-else-if="isLoadingRules" class="flex items-center justify-center py-4">
+                <i class="pi pi-spinner pi-spin text-2xl text-amber-600"></i>
+              </div>
+
+              <!-- Empty State -->
+              <Message v-else-if="orderedRules.length === 0" severity="warn" :closable="false">
+                No tiebreaker rules available
+              </Message>
+
+              <!-- OrderList Component -->
+              <OrderList
+                v-else
+                v-model="orderedRules"
+                data-key="rule_id"
+                :pt="{
+                  list: { class: 'space-y-2' },
+                  item: { class: 'bg-white border border-amber-200 rounded-md p-3 shadow-sm' },
+                }"
+              >
+                <template #item="{ item, index }">
+                  <div class="flex items-start gap-3">
+                    <!-- Position Badge -->
+                    <div
+                      class="flex-shrink-0 w-7 h-7 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-sm"
+                    >
+                      {{ index + 1 }}
+                    </div>
+
+                    <!-- Rule Details -->
+                    <div class="flex-1 min-w-0">
+                      <div class="font-semibold text-gray-900">{{ item.rule_name }}</div>
+                      <div v-if="item.rule_description" class="text-sm text-gray-600 mt-1">
+                        {{ item.rule_description }}
+                      </div>
+                    </div>
+
+                    <!-- Drag Handle Icon -->
+                    <div class="flex-shrink-0 text-gray-400">
+                      <i class="pi pi-bars cursor-move"></i>
+                    </div>
+                  </div>
+                </template>
+              </OrderList>
+
+              <!-- Info Message -->
+              <Message severity="info" :closable="false" class="mt-3">
+                <i class="pi pi-info-circle mr-2"></i>
+                If no rule breaks the tie, drivers will share the same position and receive
+                identical points.
+              </Message>
             </div>
           </BasePanel>
 

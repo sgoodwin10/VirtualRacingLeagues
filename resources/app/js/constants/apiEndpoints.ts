@@ -123,4 +123,11 @@ export const API_ENDPOINTS = {
   siteConfig: {
     get: () => '/site-config',
   },
+
+  // Tiebreaker rules endpoints
+  tiebreakerRules: {
+    list: () => '/tiebreaker-rules',
+    forSeason: (seasonId: number) => `/seasons/${seasonId}/tiebreaker-rules`,
+    updateOrder: (seasonId: number) => `/seasons/${seasonId}/tiebreaker-rules`,
+  },
 } as const;

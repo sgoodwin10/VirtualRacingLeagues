@@ -19,11 +19,14 @@ use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
+use App\Domain\Competition\Repositories\RoundTiebreakerRuleRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\ValueObjects\SeasonName;
 use App\Domain\Competition\ValueObjects\SeasonSlug;
 use App\Domain\Competition\ValueObjects\SeasonStatus;
+use App\Domain\Competition\ValueObjects\TiebreakerRuleConfiguration;
+use App\Domain\Competition\ValueObjects\TiebreakerRuleReference;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
@@ -69,6 +72,7 @@ final class SeasonApplicationService
         private readonly RaceResultRepositoryInterface $raceResultRepository,
         private readonly RaceResultsCacheService $raceResultsCacheService,
         private readonly MediaServiceInterface $mediaService,
+        private readonly RoundTiebreakerRuleRepositoryInterface $tiebreakerRuleRepository,
     ) {
     }
 
@@ -135,6 +139,11 @@ final class SeasonApplicationService
 
                     // 7. Save via repository
                     $this->seasonRepository->save($season);
+
+                    // 7b. Copy default tiebreaker rules if enabled
+                    if ($data->round_totals_tiebreaker_rules_enabled) {
+                        $this->copyDefaultTiebreakerRules($season);
+                    }
 
                     // 8. Upload media using new media service (dual-write during transition)
                     if ($season->id() && $this->seasonRepository instanceof EloquentSeasonRepository) {
@@ -1194,5 +1203,77 @@ final class SeasonApplicationService
         foreach ($events as $event) {
             Event::dispatch($event);
         }
+    }
+
+    /**
+     * Copy default tiebreaker rules to a season.
+     * This is called when a season is created with tiebreaker rules enabled.
+     */
+    private function copyDefaultTiebreakerRules(Season $season): void
+    {
+        if ($season->id() === null) {
+            throw new \LogicException('Cannot copy tiebreaker rules to unpersisted season');
+        }
+
+        // Get all active tiebreaker rules ordered by default_order
+        $defaultRules = $this->tiebreakerRuleRepository->getAllActive();
+
+        if (empty($defaultRules)) {
+            return; // No default rules to copy
+        }
+
+        // Build configuration from default rules
+        $ruleReferences = [];
+        foreach ($defaultRules as $index => $rule) {
+            $ruleReferences[] = new TiebreakerRuleReference(
+                id: $rule->id() ?? 0,
+                slug: $rule->slug(),
+                order: $index + 1, // Order starts at 1
+            );
+        }
+
+        $configuration = TiebreakerRuleConfiguration::from($ruleReferences);
+
+        // Enable tiebreaker rules on the season
+        $season->enableTiebreakerRules($configuration);
+
+        // Save the updated season
+        $this->seasonRepository->save($season);
+        $this->dispatchEvents($season);
+    }
+
+    /**
+     * Update the order of tiebreaker rules for a season.
+     *
+     * @param int $seasonId
+     * @param array<array{id: int, order: int}> $rulesOrder Array of rule IDs with their new order
+     * @throws SeasonNotFoundException
+     */
+    public function updateTiebreakerRulesOrder(int $seasonId, array $rulesOrder): void
+    {
+        DB::transaction(function () use ($seasonId, $rulesOrder): void {
+            // Load season
+            $season = $this->seasonRepository->findById($seasonId);
+
+            // Build new configuration
+            $ruleReferences = [];
+            foreach ($rulesOrder as $ruleData) {
+                $rule = $this->tiebreakerRuleRepository->findById($ruleData['id']);
+                $ruleReferences[] = new TiebreakerRuleReference(
+                    id: $rule->id() ?? 0,
+                    slug: $rule->slug(),
+                    order: $ruleData['order'],
+                );
+            }
+
+            $configuration = TiebreakerRuleConfiguration::from($ruleReferences);
+
+            // Update season
+            $season->updateTiebreakerRules($configuration);
+
+            // Save
+            $this->seasonRepository->save($season);
+            $this->dispatchEvents($season);
+        });
     }
 }

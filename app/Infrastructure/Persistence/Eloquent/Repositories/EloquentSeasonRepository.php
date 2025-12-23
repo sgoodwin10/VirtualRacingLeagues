@@ -10,6 +10,9 @@ use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\ValueObjects\SeasonName;
 use App\Domain\Competition\ValueObjects\SeasonSlug;
 use App\Domain\Competition\ValueObjects\SeasonStatus;
+use App\Domain\Competition\ValueObjects\TiebreakerRuleConfiguration;
+use App\Domain\Competition\ValueObjects\TiebreakerRuleReference;
+use App\Domain\Competition\ValueObjects\TiebreakerRuleSlug;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
@@ -29,16 +32,24 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
                 // Create new season
                 $model = SeasonEloquent::create($data);
                 $this->setEntityId($season, $model->id);
+
+                // Sync tiebreaker rules if any
+                if ($season->hasTiebreakerRulesEnabled() && !$season->getTiebreakerRules()->isEmpty()) {
+                    $this->syncTiebreakerRules($model->id, $season->getTiebreakerRules());
+                }
             } else {
                 // Update existing season
                 SeasonEloquent::where('id', $season->id())->update($data);
+
+                // Sync tiebreaker rules
+                $this->syncTiebreakerRules($season->id(), $season->getTiebreakerRules());
             }
         });
     }
 
     public function findById(int $id): Season
     {
-        $model = SeasonEloquent::find($id);
+        $model = SeasonEloquent::with('tiebreakerRules')->find($id);
 
         if (!$model) {
             throw SeasonNotFoundException::withId($id);
@@ -49,7 +60,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
 
     public function findByIdWithTrashed(int $id): Season
     {
-        $model = SeasonEloquent::withTrashed()->find($id);
+        $model = SeasonEloquent::withTrashed()->with('tiebreakerRules')->find($id);
 
         if (!$model) {
             throw SeasonNotFoundException::withId($id);
@@ -356,6 +367,8 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             raceTimesRequired: $model->race_times_required ?? true,
             dropRound: $model->drop_round ?? false,
             totalDropRounds: $model->total_drop_rounds ?? 0,
+            roundTotalsTiebreakerRulesEnabled: $model->round_totals_tiebreaker_rules_enabled ?? false,
+            tiebreakerRuleConfiguration: $this->mapTiebreakerRulesFromModel($model),
             deletedAt: $model->deleted_at
                 ? new DateTimeImmutable($model->deleted_at->toDateTimeString())
                 : null,
@@ -386,12 +399,59 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             'race_times_required' => $season->raceTimesRequired(),
             'drop_round' => $season->hasDropRound(),
             'total_drop_rounds' => $season->getTotalDropRounds(),
+            'round_totals_tiebreaker_rules_enabled' => $season->hasTiebreakerRulesEnabled(),
             'status' => $season->status()->value,
             'created_by_user_id' => $season->createdByUserId(),
             // Note: We don't include 'updated_at' here to let Laravel's automatic
             // timestamp management handle it. This ensures proper behavior with
             // Laravel's time travel testing helpers.
         ];
+    }
+
+    /**
+     * Map tiebreaker rules from Eloquent model to domain value object.
+     */
+    private function mapTiebreakerRulesFromModel(SeasonEloquent $model): TiebreakerRuleConfiguration
+    {
+        $pivotRules = $model->tiebreakerRules;
+
+        if ($pivotRules->isEmpty()) {
+            return TiebreakerRuleConfiguration::empty();
+        }
+
+        $ruleReferences = [];
+        foreach ($pivotRules as $pivotRule) {
+            // PHPStan doesn't recognize dynamic pivot properties
+            /** @phpstan-ignore property.notFound */
+            $order = $pivotRule->pivot->order ?? 0;
+            $ruleReferences[] = new TiebreakerRuleReference(
+                id: $pivotRule->id,
+                slug: TiebreakerRuleSlug::from($pivotRule->slug),
+                order: $order,
+            );
+        }
+
+        return TiebreakerRuleConfiguration::from($ruleReferences);
+    }
+
+    /**
+     * Sync tiebreaker rules for a season.
+     *
+     * @param int $seasonId
+     * @param TiebreakerRuleConfiguration $configuration
+     */
+    public function syncTiebreakerRules(int $seasonId, TiebreakerRuleConfiguration $configuration): void
+    {
+        $model = SeasonEloquent::findOrFail($seasonId);
+
+        // Prepare sync data: rule_id => ['order' => X]
+        $syncData = [];
+        foreach ($configuration->rules() as $rule) {
+            $syncData[$rule->id()] = ['order' => $rule->order()];
+        }
+
+        // Sync with pivot data
+        $model->tiebreakerRules()->sync($syncData);
     }
 
     /**

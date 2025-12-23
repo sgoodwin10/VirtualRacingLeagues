@@ -9,6 +9,7 @@ use Database\Factories\SeasonFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
@@ -36,6 +37,7 @@ use Spatie\MediaLibrary\HasMedia;
  * @property bool $race_times_required
  * @property bool $drop_round
  * @property int $total_drop_rounds
+ * @property bool $round_totals_tiebreaker_rules_enabled
  * @property string $status
  * @property int $created_by_user_id
  * @property \Illuminate\Support\Carbon $created_at
@@ -76,6 +78,7 @@ final class SeasonEloquent extends Model implements HasMedia
         'race_times_required',
         'drop_round',
         'total_drop_rounds',
+        'round_totals_tiebreaker_rules_enabled',
         'status',
         'created_by_user_id',
     ];
@@ -94,6 +97,7 @@ final class SeasonEloquent extends Model implements HasMedia
         'race_times_required' => 'boolean',
         'drop_round' => 'boolean',
         'total_drop_rounds' => 'integer',
+        'round_totals_tiebreaker_rules_enabled' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -137,6 +141,21 @@ final class SeasonEloquent extends Model implements HasMedia
     public function rounds(): HasMany
     {
         return $this->hasMany(Round::class, 'season_id');
+    }
+
+    /**
+     * Get the tiebreaker rules for this season.
+     *
+     * @return BelongsToMany<RoundTiebreakerRuleEloquent, $this>
+     */
+    public function tiebreakerRules(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            RoundTiebreakerRuleEloquent::class,
+            'season_round_tiebreaker_rules',
+            'season_id',
+            'round_tiebreaker_rule_id'
+        )->withPivot('order')->withTimestamps()->orderBy('order');
     }
 
     /**

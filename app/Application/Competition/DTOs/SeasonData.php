@@ -39,6 +39,9 @@ class SeasonData extends Data
         public bool $race_times_required,
         public bool $drop_round,
         public int $total_drop_rounds,
+        public bool $round_totals_tiebreaker_rules_enabled,
+        /** @var array<SeasonTiebreakerRuleData> */
+        public array $tiebreaker_rules,
         public string $status,
         public bool $is_setup,
         public bool $is_active,
@@ -101,6 +104,17 @@ class SeasonData extends Data
             race_times_required: $season->raceTimesRequired(),
             drop_round: $season->hasDropRound(),
             total_drop_rounds: $season->getTotalDropRounds(),
+            round_totals_tiebreaker_rules_enabled: $season->hasTiebreakerRulesEnabled(),
+            tiebreaker_rules: array_map(
+                fn($rule) => new SeasonTiebreakerRuleData(
+                    id: $rule->id(),
+                    name: $eloquentModel?->tiebreakerRules->firstWhere('id', $rule->id())?->name ?? '',
+                    slug: $rule->slug()->value(),
+                    description: $eloquentModel?->tiebreakerRules->firstWhere('id', $rule->id())?->description,
+                    order: $rule->order(),
+                ),
+                $season->getTiebreakerRules()->rules()
+            ),
             status: $season->status()->value,
             is_setup: $season->isSetup(),
             is_active: $season->isActive(),

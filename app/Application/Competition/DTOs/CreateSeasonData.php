@@ -35,6 +35,7 @@ class CreateSeasonData extends Data
         public bool $race_times_required = true,
         public bool $drop_round = false,
         public int $total_drop_rounds = 0,
+        public bool $round_totals_tiebreaker_rules_enabled = false,
     ) {
     }
 
@@ -64,6 +65,7 @@ class CreateSeasonData extends Data
             'race_times_required' => ['boolean'],
             'drop_round' => ['boolean'],
             'total_drop_rounds' => ['integer', 'min:0', 'max:20', new ValidateDropRounds()],
+            'round_totals_tiebreaker_rules_enabled' => ['boolean'],
         ];
     }
 }

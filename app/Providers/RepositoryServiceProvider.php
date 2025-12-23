@@ -8,6 +8,7 @@ use App\Domain\Admin\Repositories\AdminRepositoryInterface;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
+use App\Domain\Competition\Repositories\RoundTiebreakerRuleRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
@@ -29,6 +30,7 @@ use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentLeagueRepositor
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentPlatformRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRaceRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRaceResultRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoundTiebreakerRuleRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonDriverRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentTeamRepository;
@@ -133,6 +135,12 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             RaceResultRepositoryInterface::class,
             EloquentRaceResultRepository::class
+        );
+
+        // Bind RoundTiebreakerRule Repository
+        $this->app->bind(
+            RoundTiebreakerRuleRepositoryInterface::class,
+            EloquentRoundTiebreakerRuleRepository::class
         );
 
         // Bind Admin Read Model Service (singleton for better performance)

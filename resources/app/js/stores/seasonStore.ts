@@ -11,6 +11,7 @@ import type {
   CreateSeasonRequest,
   UpdateSeasonRequest,
   SeasonStatus,
+  TiebreakerRule,
 } from '@app/types/season';
 import type { CompetitionSeason } from '@app/types/competition';
 import {
@@ -26,6 +27,8 @@ import {
   restoreSeason,
   buildCreateSeasonFormData,
   buildUpdateSeasonFormData,
+  getTiebreakerRules,
+  updateSeasonTiebreakerRulesOrder,
 } from '@app/services/seasonService';
 import { useStoreEvents } from '@app/composables/useStoreEvents';
 import { useCrudStore } from '@app/composables/useCrudStore';
@@ -58,6 +61,10 @@ export const useSeasonStore = defineStore('season', () => {
   // Filters
   const searchQuery = ref('');
   const statusFilter = ref<SeasonStatus | 'all'>('all');
+
+  // Tiebreaker Rules
+  const availableTiebreakerRules = ref<TiebreakerRule[]>([]);
+  const isLoadingTiebreakerRules = ref(false);
 
   // Getters
   const activeSeasons = computed(() =>
@@ -497,6 +504,64 @@ export const useSeasonStore = defineStore('season', () => {
     lastPage.value = 1;
     searchQuery.value = '';
     statusFilter.value = 'all';
+    availableTiebreakerRules.value = [];
+    isLoadingTiebreakerRules.value = false;
+  }
+
+  /**
+   * Fetch all available tiebreaker rules
+   */
+  async function fetchTiebreakerRules(): Promise<void> {
+    // Return cached rules if already loaded
+    if (availableTiebreakerRules.value.length > 0) {
+      return;
+    }
+
+    isLoadingTiebreakerRules.value = true;
+
+    try {
+      const rules = await getTiebreakerRules();
+      availableTiebreakerRules.value = rules;
+    } catch (err: unknown) {
+      const errorMessage = getErrorMessage(err, 'Failed to load tiebreaker rules');
+      setError(errorMessage);
+      throw err;
+    } finally {
+      isLoadingTiebreakerRules.value = false;
+    }
+  }
+
+  /**
+   * Update the order of tiebreaker rules for a season
+   */
+  async function updateTiebreakerRulesOrder(
+    seasonId: number,
+    ruleOrder: { rule_id: number; order: number }[],
+  ): Promise<void> {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await updateSeasonTiebreakerRulesOrder(seasonId, ruleOrder);
+
+      // Optionally refetch the season to get updated tiebreaker rules
+      // This ensures the store has the latest data
+      await fetchSeason(seasonId);
+    } catch (err: unknown) {
+      const errorMessage = getErrorMessage(err, 'Failed to update tiebreaker rules order');
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /**
+   * Clear the tiebreaker rules cache
+   * Use this if you need to force a refresh of the available rules
+   */
+  function clearTiebreakerRulesCache(): void {
+    availableTiebreakerRules.value = [];
   }
 
   return {
@@ -543,5 +608,12 @@ export const useSeasonStore = defineStore('season', () => {
     resetFilters,
     clearError,
     resetStore,
+
+    // Tiebreaker Rules
+    availableTiebreakerRules,
+    isLoadingTiebreakerRules,
+    fetchTiebreakerRules,
+    updateTiebreakerRulesOrder,
+    clearTiebreakerRulesCache,
   };
 });

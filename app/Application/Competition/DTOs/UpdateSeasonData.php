@@ -34,6 +34,7 @@ class UpdateSeasonData extends Data
         public ?bool $drop_round = null,
         #[WithCast(EmptyStringToNullCast::class)]
         public ?int $total_drop_rounds = null,
+        public ?bool $round_totals_tiebreaker_rules_enabled = null,
         public ?bool $remove_logo = null,
         public ?bool $remove_banner = null,
     ) {
@@ -61,6 +62,7 @@ class UpdateSeasonData extends Data
             'race_times_required' => ['nullable', 'boolean'],
             'drop_round' => ['nullable', 'boolean'],
             'total_drop_rounds' => ['nullable', 'integer', 'min:0', 'max:20', new ValidateDropRounds()],
+            'round_totals_tiebreaker_rules_enabled' => ['nullable', 'boolean'],
             'remove_logo' => ['nullable', 'boolean'],
             'remove_banner' => ['nullable', 'boolean'],
         ];

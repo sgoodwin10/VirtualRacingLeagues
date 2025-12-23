@@ -16,6 +16,7 @@ use Spatie\LaravelData\DataCollection;
 use App\Domain\Competition\Entities\Round;
 use App\Domain\Competition\Entities\Race;
 use App\Domain\Competition\Entities\RaceResult;
+use App\Domain\Competition\Entities\Season;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
@@ -34,6 +35,7 @@ use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
 use App\Application\Competition\Traits\BatchFetchHelpersTrait;
 use App\Infrastructure\Cache\RoundResultsCacheService;
+use App\Domain\Competition\Services\RoundTiebreakerDomainService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -64,6 +66,7 @@ final class RoundApplicationService
         private readonly TeamRepositoryInterface $teamRepository,
         private readonly RaceApplicationService $raceApplicationService,
         private readonly RoundResultsCacheService $roundResultsCache,
+        private readonly RoundTiebreakerDomainService $tiebreakerDomainService,
     ) {
     }
 
@@ -484,6 +487,9 @@ final class RoundApplicationService
         bool $hasDivisions,
         ?CompleteRoundData $data = null
     ): void {
+        // Fetch season to check tiebreaker configuration
+        $season = $this->seasonRepository->findById($round->seasonId());
+
         // Fetch all race results for the round (now with calculated race points)
         $allRaceResults = [];
         foreach ($races as $race) {
@@ -499,8 +505,8 @@ final class RoundApplicationService
             }
         }
 
-        // Calculate round results
-        $roundResults = $this->calculateRoundResults($round, $allRaceResults, $hasDivisions);
+        // Calculate round results (now with tiebreaker support)
+        $roundResults = $this->calculateRoundResults($round, $allRaceResults, $hasDivisions, $season);
 
         // Use provided cross-division results if available, otherwise calculate them
         if ($data !== null && $this->hasAnyCrossDivisionResults($data)) {
@@ -711,15 +717,16 @@ final class RoundApplicationService
      *     result: RaceResult
      * }> $allRaceResults
      * @param bool $hasDivisions
+     * @param Season $season
      * @return array<mixed>
      */
-    private function calculateRoundResults(Round $round, array $allRaceResults, bool $hasDivisions): array
+    private function calculateRoundResults(Round $round, array $allRaceResults, bool $hasDivisions, Season $season): array
     {
         if ($hasDivisions) {
-            return $this->calculateRoundResultsWithDivisions($round, $allRaceResults);
+            return $this->calculateRoundResultsWithDivisions($round, $allRaceResults, $season);
         }
 
-        return $this->calculateRoundResultsWithoutDivisions($round, $allRaceResults);
+        return $this->calculateRoundResultsWithoutDivisions($round, $allRaceResults, $season);
     }
 
     /**
@@ -744,9 +751,10 @@ final class RoundApplicationService
      *     race: Race,
      *     result: RaceResult
      * }> $allRaceResults
+     * @param Season $season
      * @return array<mixed>
      */
-    private function calculateRoundResultsWithoutDivisions(Round $round, array $allRaceResults): array
+    private function calculateRoundResultsWithoutDivisions(Round $round, array $allRaceResults, Season $season): array
     {
         $roundPointsEnabled = $round->roundPoints();
 
@@ -756,13 +764,18 @@ final class RoundApplicationService
         // Aggregate driver points and statistics
         $aggregatedData = $this->aggregateDriverPoints($allRaceResults, $driverNames);
 
-        // Sort drivers with tie-breaking
-        $sortedDriverPoints = $this->sortDriversWithTieBreaking(
+        // Sort drivers with tie-breaking (now with Season for tiebreaker rules)
+        $sortResult = $this->sortDriversWithTieBreaking(
             $aggregatedData['driverPoints'],
             $aggregatedData['raceResultsByDriver'],
             $aggregatedData['driverBestTimes'],
-            $aggregatedData['driverHasDnfOrDns']
+            $aggregatedData['driverHasDnfOrDns'],
+            $season,
+            $allRaceResults
         );
+
+        $sortedDriverPoints = $sortResult['sortedDriverPoints'];
+        $tiebreakerInfo = $sortResult['tiebreakerInfo'];
 
         // Build initial standings
         $standings = $this->buildStandingsFromSortedPoints(
@@ -775,6 +788,11 @@ final class RoundApplicationService
 
         // Apply round or race-level bonuses
         $standings = $this->applyBonusPoints($round, $allRaceResults, $standings, $roundPointsEnabled);
+
+        // Store tiebreaker information on the round if tiebreaker was used
+        if ($tiebreakerInfo !== null) {
+            $round->setTiebreakerInformation($tiebreakerInfo);
+        }
 
         return ['standings' => $standings];
     }
@@ -915,25 +933,27 @@ final class RoundApplicationService
     /**
      * Sort drivers by points with tie-breaking logic.
      *
-     * When all drivers have 0 points (no round_points configured on races),
-     * sorting falls back to time-based ordering:
-     * 1. Best race time (fastest race finish time)
-     * 2. Best qualifier time (if no race time)
-     * 3. Best fastest lap (if no race or qualifier time)
-     *
-     * Drivers with only DNF/DNS results (no valid finishes) are placed at the bottom.
+     * BUSINESS RULES:
+     * - When tiebreaker DISABLED (Mode 1): Tied drivers share SAME position and SAME points, next driver skips positions
+     * - When tiebreaker ENABLED (Mode 2): Apply configured tiebreaker rules to resolve ties
+     * - Drivers with only DNF/DNS results (no valid finishes) are placed at the bottom
+     * - When all drivers have 0 points (no round_points configured), sort by time-based ordering
      *
      * @param array<int, int> $driverPoints
      * @param array<int, array<mixed>> $raceResultsByDriver
      * @param array<int, array<string, int|null>> $driverBestTimes
      * @param array<int, bool> $driverHasDnfOrDns
-     * @return array<int, int> Sorted driver points (driver ID => points)
+     * @param Season $season
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
+     * @return array{sortedDriverPoints: array<int, int>, tiebreakerInfo: \App\Domain\Competition\ValueObjects\TiebreakerInformation|null}
      */
     private function sortDriversWithTieBreaking(
         array $driverPoints,
         array $raceResultsByDriver,
         array $driverBestTimes = [],
-        array $driverHasDnfOrDns = []
+        array $driverHasDnfOrDns = [],
+        ?Season $season = null,
+        array $allRaceResults = []
     ): array {
         $sortableDrivers = [];
         foreach ($driverPoints as $driverId => $points) {
@@ -953,57 +973,118 @@ final class RoundApplicationService
         // Check if all drivers have 0 points (no round_points on races)
         $allZeroPoints = !empty($driverPoints) && array_sum($driverPoints) === 0;
 
-        uasort($sortableDrivers, function ($driverA, $driverB) use ($raceResultsByDriver, $driverBestTimes, $allZeroPoints) {
-            // First: Drivers with only DNF/DNS go to the bottom
-            $aOnlyDnfDns = $driverA['has_only_dnf_or_dns'];
-            $bOnlyDnfDns = $driverB['has_only_dnf_or_dns'];
+        // Check if tiebreaker is enabled
+        $tiebreakerEnabled = $season !== null && $season->hasTiebreakerRulesEnabled();
+        $tiebreakerInfo = null;
 
-            if ($aOnlyDnfDns !== $bOnlyDnfDns) {
-                // Driver with valid results comes first
-                return $aOnlyDnfDns ? 1 : -1;
-            }
+        if ($tiebreakerEnabled && !empty($allRaceResults)) {
+            // MODE 2: Tiebreaker ENABLED - Apply tiebreaker rules to resolve ties
+            // First, sort by points to create initial standings
+            uasort($sortableDrivers, function ($driverA, $driverB) {
+                // Drivers with only DNF/DNS go to the bottom
+                $aOnlyDnfDns = $driverA['has_only_dnf_or_dns'];
+                $bOnlyDnfDns = $driverB['has_only_dnf_or_dns'];
 
-            // If both have only DNF/DNS, they're equal (both at bottom)
-            if ($aOnlyDnfDns && $bOnlyDnfDns) {
-                return 0;
-            }
+                if ($aOnlyDnfDns !== $bOnlyDnfDns) {
+                    return $aOnlyDnfDns ? 1 : -1;
+                }
 
-            // Primary sort: by points (descending)
-            if ($driverA['points'] !== $driverB['points']) {
+                if ($aOnlyDnfDns && $bOnlyDnfDns) {
+                    return 0;
+                }
+
+                // Sort by points (descending)
                 return $driverB['points'] <=> $driverA['points'];
+            });
+
+            // Build initial standings for tiebreaker service
+            $initialStandings = [];
+            foreach ($sortableDrivers as $driverId => $data) {
+                $initialStandings[] = [
+                    'driver_id' => $driverId,
+                    'total_points' => $data['points'],
+                ];
             }
 
-            // When all drivers have 0 points, sort by time instead of best race result
-            if ($allZeroPoints && !empty($driverBestTimes)) {
-                return $this->compareDriversByTime(
-                    $driverA['driver_id'],
-                    $driverB['driver_id'],
-                    $driverBestTimes
-                );
+            // Apply tiebreaker rules
+            $tiebreakerRules = $season->getTiebreakerRules();
+            $result = $this->tiebreakerDomainService->resolveTies(
+                $initialStandings,
+                $tiebreakerRules,
+                $allRaceResults
+            );
+
+            $resolvedStandings = $result['standings'];
+            $tiebreakerInfo = $result['tiebreakerInfo'];
+
+            // Re-sort sortableDrivers based on resolved standings order
+            $positionMap = [];
+            foreach ($resolvedStandings as $index => $standing) {
+                $positionMap[$standing['driver_id']] = $index;
             }
 
-            // Tie-breaking: driver with better single best race result wins
-            $racePointsA = array_column($raceResultsByDriver[$driverA['driver_id']], 'race_points');
-            $racePointsB = array_column($raceResultsByDriver[$driverB['driver_id']], 'race_points');
+            uasort($sortableDrivers, function ($driverA, $driverB) use ($positionMap) {
+                $posA = $positionMap[$driverA['driver_id']] ?? PHP_INT_MAX;
+                $posB = $positionMap[$driverB['driver_id']] ?? PHP_INT_MAX;
+                return $posA <=> $posB;
+            });
+        } else {
+            // MODE 1: Tiebreaker DISABLED - Drivers with same points share position
+            // Sort using traditional tie-breaking (best race result, then time)
+            uasort($sortableDrivers, function ($driverA, $driverB) use ($raceResultsByDriver, $driverBestTimes, $allZeroPoints) {
+                // First: Drivers with only DNF/DNS go to the bottom
+                $aOnlyDnfDns = $driverA['has_only_dnf_or_dns'];
+                $bOnlyDnfDns = $driverB['has_only_dnf_or_dns'];
 
-            $bestA = !empty($racePointsA) ? max($racePointsA) : 0;
-            $bestB = !empty($racePointsB) ? max($racePointsB) : 0;
+                if ($aOnlyDnfDns !== $bOnlyDnfDns) {
+                    return $aOnlyDnfDns ? 1 : -1;
+                }
 
-            if ($bestA !== $bestB) {
-                return $bestB <=> $bestA;
-            }
+                if ($aOnlyDnfDns && $bOnlyDnfDns) {
+                    return 0;
+                }
 
-            // Final tie-breaker: compare by time if available
-            if (!empty($driverBestTimes)) {
-                return $this->compareDriversByTime(
-                    $driverA['driver_id'],
-                    $driverB['driver_id'],
-                    $driverBestTimes
-                );
-            }
+                // Primary sort: by points (descending)
+                if ($driverA['points'] !== $driverB['points']) {
+                    return $driverB['points'] <=> $driverA['points'];
+                }
 
-            return 0;
-        });
+                // IMPORTANT: When tiebreaker is DISABLED, tied drivers should share position
+                // We return 0 to indicate they are equal (will be handled in position assignment)
+                // However, we still need a stable sort order for display purposes
+
+                // When all drivers have 0 points, sort by time for stable ordering
+                if ($allZeroPoints && !empty($driverBestTimes)) {
+                    return $this->compareDriversByTime(
+                        $driverA['driver_id'],
+                        $driverB['driver_id'],
+                        $driverBestTimes
+                    );
+                }
+
+                // For non-zero points ties, use best race result for stable ordering (but they'll share position)
+                $racePointsA = array_column($raceResultsByDriver[$driverA['driver_id']], 'race_points');
+                $racePointsB = array_column($raceResultsByDriver[$driverB['driver_id']], 'race_points');
+
+                $bestA = !empty($racePointsA) ? max($racePointsA) : 0;
+                $bestB = !empty($racePointsB) ? max($racePointsB) : 0;
+
+                if ($bestA !== $bestB) {
+                    return $bestB <=> $bestA;
+                }
+
+                // Final stable sort: compare by time if available
+                if (!empty($driverBestTimes)) {
+                    return $this->compareDriversByTime(
+                        $driverA['driver_id'],
+                        $driverB['driver_id'],
+                        $driverBestTimes
+                    );
+                }
+
+                return 0;
+            });
+        }
 
         // Extract sorted driver points
         $sorted = [];
@@ -1011,7 +1092,10 @@ final class RoundApplicationService
             $sorted[$driverId] = $data['points'];
         }
 
-        return $sorted;
+        return [
+            'sortedDriverPoints' => $sorted,
+            'tiebreakerInfo' => $tiebreakerInfo,
+        ];
     }
 
     /**
@@ -1161,9 +1245,10 @@ final class RoundApplicationService
      *     race: Race,
      *     result: RaceResult
      * }> $allRaceResults
+     * @param Season $season
      * @return array<mixed>
      */
-    private function calculateRoundResultsWithDivisions(Round $round, array $allRaceResults): array
+    private function calculateRoundResultsWithDivisions(Round $round, array $allRaceResults, Season $season): array
     {
         // Extract unique division IDs for batch fetch
         $divisionIds = [];
@@ -1195,7 +1280,7 @@ final class RoundApplicationService
         // Calculate standings for each division
         $divisionStandings = [];
         foreach ($resultsByDivision as $divisionId => $divisionResults) {
-            $divisionData = $this->calculateRoundResultsWithoutDivisions($round, $divisionResults);
+            $divisionData = $this->calculateRoundResultsWithoutDivisions($round, $divisionResults, $season);
 
             $divisionStandings[] = [
                 'division_id' => $divisionId === 0 ? null : $divisionId,

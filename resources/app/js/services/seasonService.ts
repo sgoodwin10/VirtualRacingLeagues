@@ -10,6 +10,8 @@ import type {
   UpdateSeasonRequest,
   SeasonQueryParams,
   SlugCheckResponse,
+  TiebreakerRule,
+  SeasonTiebreakerRule,
 } from '@app/types/season';
 import type { SeasonStandingsResponse } from '@app/types/seasonStandings';
 import type { AxiosResponse } from 'axios';
@@ -183,6 +185,11 @@ export function buildCreateSeasonFormData(data: CreateSeasonRequest): FormData {
   appendIfDefined(formData, 'teams_drivers_for_calculation', data.teams_drivers_for_calculation);
   appendIfDefined(formData, 'teams_drop_rounds', data.teams_drop_rounds);
   appendIfDefined(formData, 'teams_total_drop_rounds', data.teams_total_drop_rounds);
+  appendIfDefined(
+    formData,
+    'round_totals_tiebreaker_rules_enabled',
+    data.round_totals_tiebreaker_rules_enabled,
+  );
 
   return formData;
 }
@@ -214,6 +221,43 @@ export function buildUpdateSeasonFormData(data: UpdateSeasonRequest): FormData {
   appendIfDefined(formData, 'teams_drivers_for_calculation', data.teams_drivers_for_calculation);
   appendIfDefined(formData, 'teams_drop_rounds', data.teams_drop_rounds);
   appendIfDefined(formData, 'teams_total_drop_rounds', data.teams_total_drop_rounds);
+  appendIfDefined(
+    formData,
+    'round_totals_tiebreaker_rules_enabled',
+    data.round_totals_tiebreaker_rules_enabled,
+  );
 
   return formData;
+}
+
+/**
+ * Get all available tiebreaker rules
+ */
+export async function getTiebreakerRules(): Promise<TiebreakerRule[]> {
+  const response: AxiosResponse<ApiResponse<TiebreakerRule[]>> = await apiClient.get(
+    API_ENDPOINTS.tiebreakerRules.list(),
+  );
+  return response.data.data;
+}
+
+/**
+ * Get tiebreaker rules configured for a specific season
+ */
+export async function getSeasonTiebreakerRules(seasonId: number): Promise<SeasonTiebreakerRule[]> {
+  const response: AxiosResponse<ApiResponse<SeasonTiebreakerRule[]>> = await apiClient.get(
+    API_ENDPOINTS.tiebreakerRules.forSeason(seasonId),
+  );
+  return response.data.data;
+}
+
+/**
+ * Update the order of tiebreaker rules for a season
+ */
+export async function updateSeasonTiebreakerRulesOrder(
+  seasonId: number,
+  ruleOrder: { rule_id: number; order: number }[],
+): Promise<void> {
+  await apiClient.put(API_ENDPOINTS.tiebreakerRules.updateOrder(seasonId), {
+    rules: ruleOrder,
+  });
 }

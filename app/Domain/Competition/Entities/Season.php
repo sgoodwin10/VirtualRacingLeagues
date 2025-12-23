@@ -9,10 +9,14 @@ use App\Domain\Competition\Events\SeasonCreated;
 use App\Domain\Competition\Events\SeasonDeleted;
 use App\Domain\Competition\Events\SeasonStatusChanged;
 use App\Domain\Competition\Events\SeasonUpdated;
+use App\Domain\Competition\Events\SeasonTiebreakerRulesEnabled;
+use App\Domain\Competition\Events\SeasonTiebreakerRulesDisabled;
+use App\Domain\Competition\Events\SeasonTiebreakerRulesUpdated;
 use App\Domain\Competition\Exceptions\SeasonIsArchivedException;
 use App\Domain\Competition\ValueObjects\SeasonName;
 use App\Domain\Competition\ValueObjects\SeasonSlug;
 use App\Domain\Competition\ValueObjects\SeasonStatus;
+use App\Domain\Competition\ValueObjects\TiebreakerRuleConfiguration;
 use DateTimeImmutable;
 
 /**
@@ -52,6 +56,8 @@ final class Season
         private bool $raceTimesRequired,
         private bool $dropRound,
         private int $totalDropRounds,
+        private bool $roundTotalsTiebreakerRulesEnabled,
+        private TiebreakerRuleConfiguration $tiebreakerRuleConfiguration,
         private SeasonStatus $status,
         private int $createdByUserId,
         private DateTimeImmutable $createdAt,
@@ -120,6 +126,8 @@ final class Season
             raceTimesRequired: $raceTimesRequired,
             dropRound: $dropRound,
             totalDropRounds: $totalDropRounds,
+            roundTotalsTiebreakerRulesEnabled: false,
+            tiebreakerRuleConfiguration: TiebreakerRuleConfiguration::empty(),
             status: SeasonStatus::SETUP,
             createdByUserId: $createdByUserId,
             createdAt: $now,
@@ -153,6 +161,8 @@ final class Season
         bool $raceTimesRequired = true,
         bool $dropRound = false,
         int $totalDropRounds = 0,
+        bool $roundTotalsTiebreakerRulesEnabled = false,
+        ?TiebreakerRuleConfiguration $tiebreakerRuleConfiguration = null,
         ?DateTimeImmutable $deletedAt = null,
     ): self {
         return new self(
@@ -173,6 +183,8 @@ final class Season
             raceTimesRequired: $raceTimesRequired,
             dropRound: $dropRound,
             totalDropRounds: $totalDropRounds,
+            roundTotalsTiebreakerRulesEnabled: $roundTotalsTiebreakerRulesEnabled,
+            tiebreakerRuleConfiguration: $tiebreakerRuleConfiguration ?? TiebreakerRuleConfiguration::empty(),
             status: $status,
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
@@ -1002,5 +1014,98 @@ final class Season
     public function hasEvents(): bool
     {
         return !empty($this->domainEvents);
+    }
+
+    // Tiebreaker Rules Methods
+
+    public function hasTiebreakerRulesEnabled(): bool
+    {
+        return $this->roundTotalsTiebreakerRulesEnabled;
+    }
+
+    public function getTiebreakerRules(): TiebreakerRuleConfiguration
+    {
+        return $this->tiebreakerRuleConfiguration;
+    }
+
+    /**
+     * Enable tiebreaker rules.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function enableTiebreakerRules(TiebreakerRuleConfiguration $configuration): void
+    {
+        $this->ensureHasId();
+
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id);
+        }
+
+        if (!$this->roundTotalsTiebreakerRulesEnabled) {
+            $this->roundTotalsTiebreakerRulesEnabled = true;
+            $this->tiebreakerRuleConfiguration = $configuration;
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonTiebreakerRulesEnabled(
+                seasonId: $this->id,
+                competitionId: $this->competitionId,
+                ruleSlugs: $configuration->getSlugsInOrder(),
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Disable tiebreaker rules.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function disableTiebreakerRules(): void
+    {
+        $this->ensureHasId();
+
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id);
+        }
+
+        if ($this->roundTotalsTiebreakerRulesEnabled) {
+            $this->roundTotalsTiebreakerRulesEnabled = false;
+            $this->tiebreakerRuleConfiguration = TiebreakerRuleConfiguration::empty();
+            $this->updatedAt = new DateTimeImmutable();
+
+            $this->recordEvent(new SeasonTiebreakerRulesDisabled(
+                seasonId: $this->id,
+                competitionId: $this->competitionId,
+                occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+            ));
+        }
+    }
+
+    /**
+     * Update tiebreaker rules configuration.
+     *
+     * @throws SeasonIsArchivedException if season is archived
+     */
+    public function updateTiebreakerRules(TiebreakerRuleConfiguration $configuration): void
+    {
+        $this->ensureHasId();
+
+        if ($this->status->isArchived()) {
+            throw SeasonIsArchivedException::withId($this->id);
+        }
+
+        $oldConfiguration = $this->tiebreakerRuleConfiguration;
+        $this->tiebreakerRuleConfiguration = $configuration;
+        $this->updatedAt = new DateTimeImmutable();
+
+        $this->recordEvent(new SeasonTiebreakerRulesUpdated(
+            seasonId: $this->id,
+            competitionId: $this->competitionId,
+            changes: [
+                'old' => $oldConfiguration->toArray(),
+                'new' => $configuration->toArray(),
+            ],
+            occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+        ));
     }
 }

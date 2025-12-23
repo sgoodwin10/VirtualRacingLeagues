@@ -9,11 +9,13 @@ use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
 use App\Domain\Competition\ValueObjects\PointsSystem;
+use App\Domain\Competition\ValueObjects\TiebreakerInformation;
 use App\Domain\Competition\Events\RoundCreated;
 use App\Domain\Competition\Events\RoundUpdated;
 use App\Domain\Competition\Events\RoundDeleted;
 use App\Domain\Competition\Events\RoundStatusChanged;
 use App\Domain\Competition\Events\RoundResultsCalculated;
+use App\Domain\Competition\Events\RoundTiebreakerApplied;
 use DateTimeImmutable;
 
 /**
@@ -58,6 +60,7 @@ final class Round
         private ?array $raceTimeResults,
         private ?array $fastestLapResults,
         private ?array $teamChampionshipResults,
+        private ?TiebreakerInformation $tiebreakerInformation,
         private int $createdByUserId,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
@@ -115,6 +118,7 @@ final class Round
             raceTimeResults: null,
             fastestLapResults: null,
             teamChampionshipResults: null,
+            tiebreakerInformation: null,
             createdByUserId: $createdByUserId,
             createdAt: new DateTimeImmutable(),
             updatedAt: new DateTimeImmutable(),
@@ -157,6 +161,7 @@ final class Round
         ?array $raceTimeResults,
         ?array $fastestLapResults,
         ?array $teamChampionshipResults,
+        ?TiebreakerInformation $tiebreakerInformation,
         int $createdByUserId,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
@@ -188,6 +193,7 @@ final class Round
             raceTimeResults: $raceTimeResults,
             fastestLapResults: $fastestLapResults,
             teamChampionshipResults: $teamChampionshipResults,
+            tiebreakerInformation: $tiebreakerInformation,
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
@@ -667,5 +673,40 @@ final class Round
     public function hasEvents(): bool
     {
         return !empty($this->events);
+    }
+
+    /**
+     * Get tiebreaker information.
+     */
+    public function tiebreakerInformation(): ?TiebreakerInformation
+    {
+        return $this->tiebreakerInformation;
+    }
+
+    /**
+     * Set tiebreaker information after applying rules.
+     */
+    public function setTiebreakerInformation(TiebreakerInformation $information): void
+    {
+        $this->tiebreakerInformation = $information;
+        $this->updatedAt = new DateTimeImmutable();
+
+        // Record domain event
+        $this->recordEvent(new RoundTiebreakerApplied(
+            roundId: $this->id ?? 0,
+            seasonId: $this->seasonId,
+            resolutionsCount: count($information->resolutions()),
+            hadUnresolvedTies: $information->hadUnresolvedTies(),
+            occurredAt: $this->updatedAt->format('Y-m-d H:i:s'),
+        ));
+    }
+
+    /**
+     * Clear tiebreaker information.
+     */
+    public function clearTiebreakerInformation(): void
+    {
+        $this->tiebreakerInformation = null;
+        $this->updatedAt = new DateTimeImmutable();
     }
 }

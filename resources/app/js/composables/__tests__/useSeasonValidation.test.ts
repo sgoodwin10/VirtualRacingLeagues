@@ -24,6 +24,7 @@ describe('useSeasonValidation', () => {
       teams_drivers_for_calculation: null,
       teams_drop_rounds: false,
       teams_total_drop_rounds: null,
+      round_totals_tiebreaker_rules_enabled: false,
     });
   });
 

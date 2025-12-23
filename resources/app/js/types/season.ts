@@ -11,6 +11,31 @@ import type { MediaObject } from './media';
 export type SeasonStatus = 'setup' | 'active' | 'completed' | 'archived';
 
 /**
+ * Tiebreaker Rule (from tiebreaker_rules table)
+ */
+export interface TiebreakerRule {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  is_active: boolean;
+  default_order: number;
+}
+
+/**
+ * Season Tiebreaker Rule (from season_tiebreaker_rules pivot)
+ */
+export interface SeasonTiebreakerRule {
+  id: number;
+  season_id: number;
+  rule_id: number;
+  rule_name: string;
+  rule_slug: string;
+  rule_description: string | null;
+  order: number;
+}
+
+/**
  * Competition reference (subset for season context)
  */
 export interface SeasonCompetition {
@@ -76,6 +101,10 @@ export interface Season {
   teams_drop_rounds: boolean;
   teams_total_drop_rounds: number | null;
 
+  // Tiebreaker Settings
+  round_totals_tiebreaker_rules_enabled: boolean;
+  tiebreaker_rules?: SeasonTiebreakerRule[];
+
   // Status
   status: SeasonStatus;
   is_setup: boolean;
@@ -134,6 +163,7 @@ export interface CreateSeasonRequest {
   teams_drivers_for_calculation?: number | null;
   teams_drop_rounds?: boolean;
   teams_total_drop_rounds?: number | null;
+  round_totals_tiebreaker_rules_enabled?: boolean;
 }
 
 /**
@@ -179,6 +209,8 @@ export interface UpdateSeasonRequest {
   teams_drop_rounds?: boolean;
   /** Total number of team drop rounds (omit to keep, null to clear) */
   teams_total_drop_rounds?: number | null;
+  /** Enable tiebreaker rules (omit to keep current) */
+  round_totals_tiebreaker_rules_enabled?: boolean;
 }
 
 /**
@@ -201,6 +233,7 @@ export interface SeasonForm {
   teams_drivers_for_calculation: number | null;
   teams_drop_rounds: boolean;
   teams_total_drop_rounds: number | null;
+  round_totals_tiebreaker_rules_enabled: boolean;
 }
 
 /**

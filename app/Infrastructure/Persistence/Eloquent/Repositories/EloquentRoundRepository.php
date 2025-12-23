@@ -11,6 +11,7 @@ use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
 use App\Domain\Competition\ValueObjects\PointsSystem;
+use App\Domain\Competition\ValueObjects\TiebreakerInformation;
 use App\Domain\Competition\Exceptions\RoundNotFoundException;
 use App\Infrastructure\Persistence\Eloquent\Models\Round as RoundEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
@@ -252,6 +253,9 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
             raceTimeResults: $raceTimeResults,
             fastestLapResults: $fastestLapResults,
             teamChampionshipResults: $teamChampionshipResults,
+            tiebreakerInformation: $model->round_totals_tiebreaker_rules_information
+                ? TiebreakerInformation::fromArray($model->round_totals_tiebreaker_rules_information)
+                : null,
             createdByUserId: $model->created_by_user_id,
             createdAt: new DateTimeImmutable($model->created_at->toDateTimeString()),
             updatedAt: new DateTimeImmutable($model->updated_at->toDateTimeString()),
