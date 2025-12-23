@@ -26,26 +26,39 @@
 
     <!-- Standings Content -->
     <div v-else class="p-4 overflow-x-auto">
-      <!-- Divisions: TabView -->
+      <!-- Divisions or Teams: TabView -->
       <Tabs
-        v-if="standingsData.has_divisions && divisionsWithStandings.length > 0"
-        v-model:value="activeDivisionId"
+        v-if="
+          (standingsData.has_divisions && divisionsWithStandings.length > 0) ||
+          showTeamsChampionship
+        "
+        v-model:value="activeTabId"
       >
         <TabList>
+          <!-- Division Tabs -->
           <Tab
             v-for="division in divisionsWithStandings"
-            :key="division.division_id"
-            :value="division.division_id"
+            :key="`division-${division.division_id}`"
+            :value="`division-${division.division_id}`"
           >
             {{ division.division_name }}
           </Tab>
+
+          <!-- Drivers Tab (when no divisions but teams championship enabled) -->
+          <Tab v-if="!standingsData.has_divisions && showTeamsChampionship" :value="'drivers'">
+            Drivers
+          </Tab>
+
+          <!-- Teams Tab -->
+          <Tab v-if="showTeamsChampionship" :value="'teams'">Team Championship</Tab>
         </TabList>
 
         <TabPanels>
+          <!-- Division Panels -->
           <TabPanel
             v-for="division in divisionsWithStandings"
-            :key="division.division_id"
-            :value="division.division_id"
+            :key="`division-${division.division_id}`"
+            :value="`division-${division.division_id}`"
           >
             <StandingsTable
               :drivers="division.drivers"
@@ -53,10 +66,27 @@
               :drop-round-enabled="standingsData.drop_round_enabled"
             />
           </TabPanel>
+
+          <!-- Drivers Panel (when no divisions but teams championship enabled) -->
+          <TabPanel v-if="!standingsData.has_divisions && showTeamsChampionship" :value="'drivers'">
+            <StandingsTable
+              :drivers="flatDriverStandings"
+              :rounds="getRoundNumbers(flatDriverStandings)"
+              :drop-round-enabled="standingsData.drop_round_enabled"
+            />
+          </TabPanel>
+
+          <!-- Teams Panel -->
+          <TabPanel v-if="showTeamsChampionship" :value="'teams'">
+            <TeamsStandingsTable
+              :teams="teamChampionshipResults"
+              :rounds="getTeamRoundNumbers(teamChampionshipResults)"
+            />
+          </TabPanel>
         </TabPanels>
       </Tabs>
 
-      <!-- No Divisions: Single Table -->
+      <!-- No Divisions and No Teams: Single Table -->
       <StandingsTable
         v-else
         :drivers="flatDriverStandings"
@@ -85,6 +115,7 @@ import type {
   SeasonStandingDriver,
   SeasonStandingDivision,
   RoundPoints,
+  TeamChampionshipStanding,
 } from '@app/types/seasonStandings';
 import { isDivisionStandings } from '@app/types/seasonStandings';
 
@@ -98,11 +129,11 @@ const isLoading = ref(false);
 const error = ref<string | null>(null);
 const standingsData = ref<SeasonStandingsResponse | null>(null);
 /**
- * Active division ID for tab selection
- * Initialized to 0 as a placeholder (invalid division ID)
- * Will be set to the first division's ID when standings data loads
+ * Active tab ID for tab selection
+ * Format: 'division-{id}', 'drivers', or 'teams'
+ * Will be set to the first available tab when standings data loads
  */
-const activeDivisionId = ref<number>(0);
+const activeTabId = ref<string>('drivers');
 
 /**
  * Get divisions with standings (only when divisions enabled), sorted by order
@@ -135,6 +166,25 @@ const flatDriverStandings = computed<readonly SeasonStandingDriver[]>(() => {
 });
 
 /**
+ * Check if teams championship should be displayed
+ */
+const showTeamsChampionship = computed<boolean>(() => {
+  return standingsData.value?.team_championship_enabled === true;
+});
+
+/**
+ * Get team championship results, ensuring they are sorted by position
+ */
+const teamChampionshipResults = computed<readonly TeamChampionshipStanding[]>(() => {
+  if (!standingsData.value || !showTeamsChampionship.value) {
+    return [];
+  }
+
+  // Ensure results are sorted by position (should already be sorted from API)
+  return [...standingsData.value.team_championship_results].sort((a, b) => a.position - b.position);
+});
+
+/**
  * Extract unique round numbers from drivers array
  * Aggregates round numbers from ALL drivers to ensure all rounds are included
  */
@@ -157,6 +207,28 @@ function getRoundNumbers(drivers: readonly SeasonStandingDriver[]): number[] {
 }
 
 /**
+ * Extract unique round numbers from teams array
+ * Aggregates round numbers from ALL teams to ensure all rounds are included
+ */
+function getTeamRoundNumbers(teams: readonly TeamChampionshipStanding[]): number[] {
+  if (!teams || teams.length === 0) {
+    return [];
+  }
+
+  // Aggregate unique round numbers from all teams
+  const roundNumbers = new Set<number>();
+  for (const team of teams) {
+    if (team.rounds) {
+      for (const round of team.rounds) {
+        roundNumbers.add(round.round_number);
+      }
+    }
+  }
+
+  return Array.from(roundNumbers).sort((a, b) => a - b);
+}
+
+/**
  * Fetch season standings from API
  */
 async function fetchStandings(): Promise<void> {
@@ -166,16 +238,16 @@ async function fetchStandings(): Promise<void> {
   try {
     standingsData.value = await getSeasonStandings(props.seasonId);
 
-    // Set initial active division if divisions exist (only if not already set to a valid ID)
-    if (
-      standingsData.value.has_divisions &&
-      divisionsWithStandings.value.length > 0 &&
-      activeDivisionId.value === 0
-    ) {
+    // Set initial active tab based on available data
+    if (standingsData.value.has_divisions && divisionsWithStandings.value.length > 0) {
+      // If divisions exist, set to first division
       const firstDivision = divisionsWithStandings.value[0];
       if (firstDivision) {
-        activeDivisionId.value = firstDivision.division_id;
+        activeTabId.value = `division-${firstDivision.division_id}`;
       }
+    } else if (standingsData.value.team_championship_enabled) {
+      // If no divisions but teams championship enabled, default to drivers tab
+      activeTabId.value = 'drivers';
     }
   } catch (err) {
     console.error('Failed to fetch season standings:', err);
@@ -187,6 +259,117 @@ async function fetchStandings(): Promise<void> {
 
 onMounted(() => {
   fetchStandings();
+});
+
+/**
+ * TeamsStandingsTable - Internal component for rendering the teams standings table with round-by-round points
+ */
+const TeamsStandingsTable = defineComponent({
+  name: 'TeamsStandingsTable',
+  props: {
+    teams: {
+      type: Array as () => readonly TeamChampionshipStanding[],
+      required: true,
+    },
+    rounds: {
+      type: Array as () => readonly number[],
+      required: true,
+    },
+  },
+  setup(tableProps) {
+    /**
+     * Get round data for a team
+     */
+    function getTeamRoundData(
+      team: TeamChampionshipStanding,
+      roundNumber: number,
+    ): { points: number } | null {
+      return team.rounds.find((r) => r.round_number === roundNumber) ?? null;
+    }
+
+    return () =>
+      h('div', { class: 'overflow-x-auto' }, [
+        h('table', { class: 'w-full text-sm border-collapse' }, [
+          // Header
+          h('thead', {}, [
+            h('tr', { class: 'bg-gray-50 border-b border-gray-300' }, [
+              h(
+                'th',
+                {
+                  class: 'px-3 py-2 text-center font-semibold text-gray-700 w-12',
+                },
+                '#',
+              ),
+              h(
+                'th',
+                {
+                  class: 'px-3 py-2 text-left font-semibold text-gray-700 min-w-[160px]',
+                },
+                'Team',
+              ),
+              ...tableProps.rounds.map((roundNum) =>
+                h(
+                  'th',
+                  {
+                    key: `round-${roundNum}`,
+                    class: 'px-2 py-2 text-center font-semibold text-gray-700 w-16',
+                  },
+                  `R${roundNum}`,
+                ),
+              ),
+              h(
+                'th',
+                {
+                  class: 'w-20 px-3 py-2 text-center font-bold text-gray-900 bg-gray-100',
+                },
+                'Total',
+              ),
+            ]),
+          ]),
+          // Body
+          h(
+            'tbody',
+            {},
+            tableProps.teams.map((team) =>
+              h(
+                'tr',
+                {
+                  key: team.team_id,
+                  class: [getPodiumRowClass(team.position), 'border-b border-gray-100'],
+                },
+                [
+                  // Position
+                  h('td', { class: 'px-3 py-2 text-center font-bold' }, team.position),
+                  // Team name
+                  h('td', { class: 'px-3 py-2 font-medium text-gray-900' }, team.team_name),
+                  // Round columns
+                  ...tableProps.rounds.map((roundNum) => {
+                    const roundData = getTeamRoundData(team, roundNum);
+                    return h(
+                      'td',
+                      {
+                        key: `${team.team_id}-${roundNum}`,
+                        class: 'px-2 py-2 text-center text-gray-700',
+                      },
+                      roundData?.points ?? 0,
+                    );
+                  }),
+                  // Total points
+                  h(
+                    'td',
+                    {
+                      class:
+                        'w-20 px-3 py-2 text-center font-bold text-lg text-gray-900 bg-gray-50',
+                    },
+                    team.total_points,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ]),
+      ]);
+  },
 });
 
 /**

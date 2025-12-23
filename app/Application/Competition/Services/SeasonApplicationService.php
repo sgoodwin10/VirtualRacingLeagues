@@ -688,7 +688,14 @@ final class SeasonApplicationService
      * Returns cumulative standings for all drivers across all completed rounds.
      *
      * @param int $seasonId
-     * @return array{standings: array<mixed>, has_divisions: bool, drop_round_enabled: bool, total_drop_rounds: int}
+     * @return array{
+     *     standings: array<mixed>,
+     *     has_divisions: bool,
+     *     drop_round_enabled: bool,
+     *     total_drop_rounds: int,
+     *     team_championship_enabled: bool,
+     *     team_championship_results: array<mixed>
+     * }
      */
     public function getSeasonStandings(int $seasonId): array
     {
@@ -697,6 +704,7 @@ final class SeasonApplicationService
         $hasDivisions = $season->raceDivisionsEnabled();
         $dropRoundEnabled = $season->hasDropRound();
         $totalDropRounds = $season->getTotalDropRounds();
+        $teamChampionshipEnabled = $season->teamChampionshipEnabled();
 
         // Fetch all rounds with results (completed rounds only)
         $rounds = $this->roundRepository->findBySeasonId($seasonId);
@@ -711,7 +719,15 @@ final class SeasonApplicationService
                 'has_divisions' => $hasDivisions,
                 'drop_round_enabled' => $dropRoundEnabled,
                 'total_drop_rounds' => $totalDropRounds,
+                'team_championship_enabled' => $teamChampionshipEnabled,
+                'team_championship_results' => [],
             ];
+        }
+
+        // Aggregate team championship results if enabled
+        $teamChampionshipResults = [];
+        if ($teamChampionshipEnabled) {
+            $teamChampionshipResults = $this->aggregateTeamChampionshipStandings($completedRounds);
         }
 
         if ($hasDivisions) {
@@ -720,6 +736,8 @@ final class SeasonApplicationService
                 'has_divisions' => true,
                 'drop_round_enabled' => $dropRoundEnabled,
                 'total_drop_rounds' => $totalDropRounds,
+                'team_championship_enabled' => $teamChampionshipEnabled,
+                'team_championship_results' => $teamChampionshipResults,
             ];
         }
 
@@ -728,6 +746,8 @@ final class SeasonApplicationService
             'has_divisions' => false,
             'drop_round_enabled' => $dropRoundEnabled,
             'total_drop_rounds' => $totalDropRounds,
+            'team_championship_enabled' => $teamChampionshipEnabled,
+            'team_championship_results' => $teamChampionshipResults,
         ];
     }
 
@@ -1046,6 +1066,86 @@ final class SeasonApplicationService
 
         // Sort standings by division order
         usort($standings, fn($a, $b) => $a['order'] <=> $b['order']);
+
+        return $standings;
+    }
+
+    /**
+     * Aggregate team championship standings across all completed rounds.
+     *
+     * @param array<\App\Domain\Competition\Entities\Round> $rounds
+     * @return array<mixed>
+     */
+    private function aggregateTeamChampionshipStandings(array $rounds): array
+    {
+        // Aggregate team points across all rounds
+        $teamTotals = [];
+        $teamRoundData = [];
+        $teamIds = [];
+
+        foreach ($rounds as $round) {
+            $teamResults = $round->teamChampionshipResults();
+            if ($teamResults === null || !isset($teamResults['standings'])) {
+                continue;
+            }
+
+            $roundId = $round->id();
+            $roundNumber = $round->roundNumber()->value();
+
+            foreach ($teamResults['standings'] as $standing) {
+                $teamId = $standing['team_id'];
+                $points = $standing['total_points'];
+
+                // Track team IDs for batch fetch
+                $teamIds[$teamId] = true;
+
+                if (!isset($teamTotals[$teamId])) {
+                    $teamTotals[$teamId] = [
+                        'team_id' => $teamId,
+                        'total_points' => 0,
+                    ];
+                    $teamRoundData[$teamId] = [];
+                }
+
+                $teamTotals[$teamId]['total_points'] += $points;
+
+                // Store per-round points
+                $teamRoundData[$teamId][] = [
+                    'round_id' => $roundId,
+                    'round_number' => $roundNumber,
+                    'points' => $points,
+                ];
+            }
+        }
+
+        // Batch fetch team names
+        $teamIds = array_keys($teamIds);
+        $teams = \App\Infrastructure\Persistence\Eloquent\Models\Team::query()
+            ->whereIn('id', $teamIds)
+            ->get(['id', 'name'])
+            ->keyBy('id');
+
+        // Build final standings with team names
+        $standings = [];
+        foreach ($teamTotals as $teamId => $data) {
+            $team = $teams->get($teamId);
+
+            $standings[] = [
+                'team_id' => $data['team_id'],
+                'team_name' => $team !== null ? $team->name : 'Unknown Team',
+                'total_points' => $data['total_points'],
+                'rounds' => $teamRoundData[$teamId],
+            ];
+        }
+
+        // Sort by total points descending
+        usort($standings, fn($a, $b) => $b['total_points'] <=> $a['total_points']);
+
+        // Assign positions
+        $position = 1;
+        foreach ($standings as &$standing) {
+            $standing['position'] = $position++;
+        }
 
         return $standings;
     }

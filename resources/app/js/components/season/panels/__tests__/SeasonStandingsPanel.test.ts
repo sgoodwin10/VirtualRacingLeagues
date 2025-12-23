@@ -142,6 +142,8 @@ describe('SeasonStandingsPanel', () => {
     has_divisions: false,
     drop_round_enabled: false,
     total_drop_rounds: 0,
+    team_championship_enabled: false,
+    team_championship_results: [],
   };
 
   const mockDivisionStandings: SeasonStandingsResponse = {
@@ -200,6 +202,8 @@ describe('SeasonStandingsPanel', () => {
     has_divisions: true,
     drop_round_enabled: false,
     total_drop_rounds: 0,
+    team_championship_enabled: false,
+    team_championship_results: [],
   };
 
   beforeEach(() => {
@@ -341,11 +345,11 @@ describe('SeasonStandingsPanel', () => {
       expect(vm.divisionsWithStandings[1].drivers[0].driver_name).toBe('George Russell');
     });
 
-    it('should set initial active division', () => {
+    it('should set initial active division tab', () => {
       // Component should set the first division (sorted by order) as active
       // "Pro Division" (order: 1, id: 1) comes before "Am Division" (order: 2, id: 2)
       const vm = wrapper.vm as any;
-      expect(vm.activeDivisionId).toBe(1); // First division by order is "Pro Division" with id=1
+      expect(vm.activeTabId).toBe('division-1'); // First division by order is "Pro Division" with id=1
     });
   });
 
@@ -468,6 +472,207 @@ describe('SeasonStandingsPanel', () => {
       await nextTick();
 
       expect(getSeasonStandingsSpy).toHaveBeenCalledWith(99);
+    });
+  });
+
+  describe('Teams Championship', () => {
+    it('should not display teams tab when disabled', async () => {
+      getSeasonStandingsSpy.mockResolvedValue(mockFlatStandings);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      expect(wrapper.text()).not.toContain('Teams');
+      const vm = wrapper.vm as any;
+      expect(vm.showTeamsChampionship).toBe(false);
+    });
+
+    it('should display teams tab when enabled with results', async () => {
+      const mockStandingsWithTeams: SeasonStandingsResponse = {
+        ...mockFlatStandings,
+        team_championship_enabled: true,
+        team_championship_results: [
+          {
+            team_id: 1,
+            team_name: 'Mercedes',
+            total_points: 290,
+            position: 1,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 145 },
+              { round_id: 2, round_number: 2, points: 145 },
+            ],
+          },
+          {
+            team_id: 2,
+            team_name: 'Red Bull Racing',
+            total_points: 280,
+            position: 2,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 140 },
+              { round_id: 2, round_number: 2, points: 140 },
+            ],
+          },
+          {
+            team_id: 3,
+            team_name: 'Ferrari',
+            total_points: 260,
+            position: 3,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 130 },
+              { round_id: 2, round_number: 2, points: 130 },
+            ],
+          },
+        ],
+      };
+
+      getSeasonStandingsSpy.mockResolvedValue(mockStandingsWithTeams);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      expect(wrapper.text()).toContain('Teams');
+      const vm = wrapper.vm as any;
+      expect(vm.showTeamsChampionship).toBe(true);
+      expect(vm.teamChampionshipResults).toHaveLength(3);
+    });
+
+    it('should sort teams by position', async () => {
+      const mockStandingsWithTeams: SeasonStandingsResponse = {
+        ...mockFlatStandings,
+        team_championship_enabled: true,
+        team_championship_results: [
+          {
+            team_id: 2,
+            team_name: 'Red Bull Racing',
+            total_points: 280,
+            position: 2,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 140 },
+              { round_id: 2, round_number: 2, points: 140 },
+            ],
+          },
+          {
+            team_id: 1,
+            team_name: 'Mercedes',
+            total_points: 290,
+            position: 1,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 145 },
+              { round_id: 2, round_number: 2, points: 145 },
+            ],
+          },
+          {
+            team_id: 3,
+            team_name: 'Ferrari',
+            total_points: 260,
+            position: 3,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 130 },
+              { round_id: 2, round_number: 2, points: 130 },
+            ],
+          },
+        ],
+      };
+
+      getSeasonStandingsSpy.mockResolvedValue(mockStandingsWithTeams);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      const vm = wrapper.vm as any;
+      expect(vm.teamChampionshipResults[0].team_name).toBe('Mercedes');
+      expect(vm.teamChampionshipResults[1].team_name).toBe('Red Bull Racing');
+      expect(vm.teamChampionshipResults[2].team_name).toBe('Ferrari');
+    });
+
+    it('should render tabs when teams championship enabled (no divisions)', async () => {
+      const mockStandingsWithTeams: SeasonStandingsResponse = {
+        ...mockFlatStandings,
+        team_championship_enabled: true,
+        team_championship_results: [
+          {
+            team_id: 1,
+            team_name: 'Mercedes',
+            total_points: 290,
+            position: 1,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 145 },
+              { round_id: 2, round_number: 2, points: 145 },
+            ],
+          },
+        ],
+      };
+
+      getSeasonStandingsSpy.mockResolvedValue(mockStandingsWithTeams);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      // Should have tabs when teams championship enabled, even without divisions
+      expect(wrapper.find('.p-tabs').exists()).toBe(true);
+      expect(wrapper.text()).toContain('Drivers');
+      expect(wrapper.text()).toContain('Teams');
+
+      const vm = wrapper.vm as any;
+      expect(vm.activeTabId).toBe('drivers');
+    });
+
+    it('should extract team round numbers correctly', async () => {
+      const mockStandingsWithTeams: SeasonStandingsResponse = {
+        ...mockFlatStandings,
+        team_championship_enabled: true,
+        team_championship_results: [
+          {
+            team_id: 1,
+            team_name: 'Mercedes',
+            total_points: 290,
+            position: 1,
+            rounds: [
+              { round_id: 1, round_number: 1, points: 145 },
+              { round_id: 2, round_number: 2, points: 145 },
+            ],
+          },
+        ],
+      };
+
+      getSeasonStandingsSpy.mockResolvedValue(mockStandingsWithTeams);
+
+      wrapper = mount(SeasonStandingsPanel, {
+        props: {
+          seasonId: 1,
+        },
+      });
+
+      await nextTick();
+      await nextTick();
+
+      const vm = wrapper.vm as any;
+      const roundNumbers = vm.getTeamRoundNumbers(vm.teamChampionshipResults);
+      expect(roundNumbers).toEqual([1, 2]);
     });
   });
 });

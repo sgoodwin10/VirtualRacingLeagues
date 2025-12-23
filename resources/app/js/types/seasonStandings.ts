@@ -28,6 +28,26 @@ export interface SeasonStandingDriver {
 }
 
 /**
+ * Points earned by a team in a specific round
+ */
+export interface TeamRoundPoints {
+  readonly round_id: number;
+  readonly round_number: number;
+  readonly points: number;
+}
+
+/**
+ * Team standing in championship (cumulative team points)
+ */
+export interface TeamChampionshipStanding {
+  readonly team_id: number;
+  readonly team_name: string;
+  readonly total_points: number;
+  readonly position: number;
+  readonly rounds: readonly TeamRoundPoints[];
+}
+
+/**
  * Division standing (when divisions enabled)
  * Contains all drivers in a specific division
  */
@@ -46,6 +66,8 @@ export interface SeasonStandingsResponseFlat {
   readonly has_divisions: false;
   readonly drop_round_enabled: boolean;
   readonly total_drop_rounds: number;
+  readonly team_championship_enabled: boolean;
+  readonly team_championship_results: readonly TeamChampionshipStanding[];
 }
 
 /**
@@ -56,6 +78,8 @@ export interface SeasonStandingsResponseDivisions {
   readonly has_divisions: true;
   readonly drop_round_enabled: boolean;
   readonly total_drop_rounds: number;
+  readonly team_championship_enabled: boolean;
+  readonly team_championship_results: readonly TeamChampionshipStanding[];
 }
 
 /**
