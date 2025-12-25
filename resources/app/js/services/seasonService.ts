@@ -241,13 +241,36 @@ export async function getTiebreakerRules(): Promise<TiebreakerRule[]> {
 }
 
 /**
+ * API response structure for season tiebreaker rules
+ */
+interface SeasonTiebreakerRulesResponse {
+  enabled: boolean;
+  rules: Array<{
+    id: number;
+    slug: string;
+    order: number;
+  }>;
+}
+
+/**
  * Get tiebreaker rules configured for a specific season
  */
 export async function getSeasonTiebreakerRules(seasonId: number): Promise<SeasonTiebreakerRule[]> {
-  const response: AxiosResponse<ApiResponse<SeasonTiebreakerRule[]>> = await apiClient.get(
+  const response: AxiosResponse<ApiResponse<SeasonTiebreakerRulesResponse>> = await apiClient.get(
     API_ENDPOINTS.tiebreakerRules.forSeason(seasonId),
   );
-  return response.data.data;
+
+  // Extract rules from the response and map to SeasonTiebreakerRule format
+  const data = response.data.data;
+  return data.rules.map((rule) => ({
+    id: rule.id,
+    season_id: seasonId,
+    rule_id: rule.id,
+    rule_name: '', // Will be populated by the store from available rules
+    rule_slug: rule.slug,
+    rule_description: null,
+    order: rule.order,
+  }));
 }
 
 /**
@@ -255,7 +278,7 @@ export async function getSeasonTiebreakerRules(seasonId: number): Promise<Season
  */
 export async function updateSeasonTiebreakerRulesOrder(
   seasonId: number,
-  ruleOrder: { rule_id: number; order: number }[],
+  ruleOrder: { id: number; order: number }[],
 ): Promise<void> {
   await apiClient.put(API_ENDPOINTS.tiebreakerRules.updateOrder(seasonId), {
     rules: ruleOrder,

@@ -24,7 +24,6 @@ use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Competition\ValueObjects\SeasonName;
 use App\Domain\Competition\ValueObjects\SeasonSlug;
-use App\Domain\Competition\ValueObjects\SeasonStatus;
 use App\Domain\Competition\ValueObjects\TiebreakerRuleConfiguration;
 use App\Domain\Competition\ValueObjects\TiebreakerRuleReference;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
@@ -284,6 +283,20 @@ final class SeasonApplicationService
                 $season->updateTeamsTotalDropRounds($data->teams_total_drop_rounds);
             }
 
+            // 5i. Handle tiebreaker rules toggle
+            if ($data->round_totals_tiebreaker_rules_enabled !== null) {
+                $currentlyEnabled = $season->hasTiebreakerRulesEnabled();
+                $shouldEnable = $data->round_totals_tiebreaker_rules_enabled;
+
+                if ($shouldEnable && ! $currentlyEnabled) {
+                    // Enabling tiebreaker rules - copy default rules
+                    $this->copyDefaultTiebreakerRules($season);
+                } elseif (! $shouldEnable && $currentlyEnabled) {
+                    // Disabling tiebreaker rules
+                    $season->disableTiebreakerRules();
+                }
+            }
+
             // 6. Handle logo updates
             if ($data->remove_logo) {
                 $this->deleteSeasonImage($season->logoPath());
@@ -349,7 +362,7 @@ final class SeasonApplicationService
         $competition = $this->competitionRepository->findById($competitionId);
 
         return array_map(
-            fn(Season $season) => $this->toSeasonData($season, $competition->logoPath()),
+            fn (Season $season) => $this->toSeasonData($season, $competition->logoPath()),
             $seasons
         );
     }
@@ -553,7 +566,7 @@ final class SeasonApplicationService
         );
 
         $suggestion = null;
-        if (!$available) {
+        if (! $available) {
             $suggestion = $this->seasonRepository->generateUniqueSlug(
                 $baseSlug->value(),
                 $competitionId,
@@ -579,7 +592,7 @@ final class SeasonApplicationService
 
         $path = $file->store($directory, 'public');
 
-        if (!$path) {
+        if (! $path) {
             throw new RuntimeException("Failed to store season {$type}");
         }
 
@@ -627,7 +640,7 @@ final class SeasonApplicationService
         // Get round counts
         $rounds = $this->roundRepository->findBySeasonId($season->id() ?? 0);
         $totalRounds = count($rounds);
-        $completedRounds = count(array_filter($rounds, fn($round) => $round->status()->isCompleted()));
+        $completedRounds = count(array_filter($rounds, fn ($round) => $round->status()->isCompleted()));
 
         // Get platform data via repository (returns array)
         $platformArray = $this->platformRepository->findById($competition->platformId());
@@ -696,7 +709,6 @@ final class SeasonApplicationService
      * Get season standings by aggregating round standings.
      * Returns cumulative standings for all drivers across all completed rounds.
      *
-     * @param int $seasonId
      * @return array{
      *     standings: array<mixed>,
      *     has_divisions: bool,
@@ -719,7 +731,7 @@ final class SeasonApplicationService
         $rounds = $this->roundRepository->findBySeasonId($seasonId);
 
         // Filter to completed rounds with round_results populated
-        $completedRounds = array_filter($rounds, fn($round) => $this->isRoundCompleteWithResults($round));
+        $completedRounds = array_filter($rounds, fn ($round) => $this->isRoundCompleteWithResults($round));
 
         if (empty($completedRounds)) {
             // No completed rounds yet
@@ -763,9 +775,7 @@ final class SeasonApplicationService
     /**
      * Aggregate standings across rounds without divisions.
      *
-     * @param array<\App\Domain\Competition\Entities\Round> $rounds
-     * @param bool $dropRoundEnabled
-     * @param int $totalDropRounds
+     * @param  array<\App\Domain\Competition\Entities\Round>  $rounds
      * @return array<mixed>
      */
     private function aggregateStandingsWithoutDivisions(array $rounds, bool $dropRoundEnabled, int $totalDropRounds): array
@@ -774,7 +784,7 @@ final class SeasonApplicationService
         $driverIds = [];
         foreach ($rounds as $round) {
             $roundResults = $round->roundResults();
-            if ($roundResults === null || !isset($roundResults['standings'])) {
+            if ($roundResults === null || ! isset($roundResults['standings'])) {
                 continue;
             }
 
@@ -793,7 +803,7 @@ final class SeasonApplicationService
 
         foreach ($rounds as $round) {
             $roundResults = $round->roundResults();
-            if ($roundResults === null || !isset($roundResults['standings'])) {
+            if ($roundResults === null || ! isset($roundResults['standings'])) {
                 continue;
             }
 
@@ -807,7 +817,7 @@ final class SeasonApplicationService
                 $hasFastestLap = ($standing['fastest_lap_points'] ?? 0) > 0;
                 $position = $standing['position'] ?? null;
 
-                if (!isset($driverTotals[$driverId])) {
+                if (! isset($driverTotals[$driverId])) {
                     $driverTotals[$driverId] = [
                         'driver_id' => $driverId,
                         'driver_name' => $driverNames[$driverId] ?? 'Unknown Driver',
@@ -845,7 +855,7 @@ final class SeasonApplicationService
         if ($dropRoundEnabled && $totalDropRounds > 0) {
             foreach ($driverTotals as $driverId => $data) {
                 // Get all round points for this driver
-                $roundPoints = array_map(fn($round) => $round['points'], $driverRoundData[$driverId]);
+                $roundPoints = array_map(fn ($round) => $round['points'], $driverRoundData[$driverId]);
 
                 // Sort points ascending to identify lowest scores
                 sort($roundPoints, SORT_NUMERIC);
@@ -864,10 +874,10 @@ final class SeasonApplicationService
             }
 
             // Sort by drop total descending
-            uasort($driverTotals, fn($a, $b) => $b['drop_total'] <=> $a['drop_total']);
+            uasort($driverTotals, fn ($a, $b) => $b['drop_total'] <=> $a['drop_total']);
         } else {
             // Sort by total points descending
-            uasort($driverTotals, fn($a, $b) => $b['total_points'] <=> $a['total_points']);
+            uasort($driverTotals, fn ($a, $b) => $b['total_points'] <=> $a['total_points']);
         }
 
         // Build final standings with positions
@@ -898,9 +908,7 @@ final class SeasonApplicationService
     /**
      * Aggregate standings across rounds with divisions.
      *
-     * @param array<\App\Domain\Competition\Entities\Round> $rounds
-     * @param bool $dropRoundEnabled
-     * @param int $totalDropRounds
+     * @param  array<\App\Domain\Competition\Entities\Round>  $rounds
      * @return array<mixed>
      */
     private function aggregateStandingsWithDivisions(array $rounds, bool $dropRoundEnabled, int $totalDropRounds): array
@@ -911,7 +919,7 @@ final class SeasonApplicationService
 
         foreach ($rounds as $round) {
             $roundResults = $round->roundResults();
-            if ($roundResults === null || !isset($roundResults['standings'])) {
+            if ($roundResults === null || ! isset($roundResults['standings'])) {
                 continue;
             }
 
@@ -939,7 +947,7 @@ final class SeasonApplicationService
 
         foreach ($rounds as $round) {
             $roundResults = $round->roundResults();
-            if ($roundResults === null || !isset($roundResults['standings'])) {
+            if ($roundResults === null || ! isset($roundResults['standings'])) {
                 continue;
             }
 
@@ -956,7 +964,7 @@ final class SeasonApplicationService
                     ? PHP_INT_MAX
                     : ($divisionInfo['order'] ?? (PHP_INT_MAX - 1));
 
-                if (!isset($divisionDriverTotals[$divisionId])) {
+                if (! isset($divisionDriverTotals[$divisionId])) {
                     $divisionDriverTotals[$divisionId] = [
                         'division_id' => $divisionId === 0 ? null : $divisionId,
                         'division_name' => $divisionName,
@@ -973,7 +981,7 @@ final class SeasonApplicationService
                     $hasFastestLap = ($standing['fastest_lap_points'] ?? 0) > 0;
                     $position = $standing['position'] ?? null;
 
-                    if (!isset($divisionDriverTotals[$divisionId]['drivers'][$driverId])) {
+                    if (! isset($divisionDriverTotals[$divisionId]['drivers'][$driverId])) {
                         $divisionDriverTotals[$divisionId]['drivers'][$driverId] = [
                             'driver_id' => $driverId,
                             'driver_name' => $driverNames[$driverId] ?? 'Unknown Driver',
@@ -1015,7 +1023,7 @@ final class SeasonApplicationService
             if ($dropRoundEnabled && $totalDropRounds > 0) {
                 foreach ($divisionTotals['drivers'] as $driverId => $data) {
                     // Get all round points for this driver
-                    $roundPoints = array_map(fn($round) => $round['points'], $divisionDriverRoundData[$divisionId][$driverId]);
+                    $roundPoints = array_map(fn ($round) => $round['points'], $divisionDriverRoundData[$divisionId][$driverId]);
 
                     // Sort points ascending to identify lowest scores
                     sort($roundPoints, SORT_NUMERIC);
@@ -1035,10 +1043,10 @@ final class SeasonApplicationService
 
                 // Sort drivers by drop total descending
                 // PHPStan loses type information after uasort - the array structure is preserved but PHPStan can't infer it
-                uasort($divisionDriverTotals[$divisionId]['drivers'], fn($a, $b) => ($b['drop_total'] ?? 0) <=> ($a['drop_total'] ?? 0));
+                uasort($divisionDriverTotals[$divisionId]['drivers'], fn ($a, $b) => ($b['drop_total'] ?? 0) <=> ($a['drop_total'] ?? 0));
             } else {
                 // Sort drivers by total points descending
-                uasort($divisionDriverTotals[$divisionId]['drivers'], fn($a, $b) => $b['total_points'] <=> $a['total_points']);
+                uasort($divisionDriverTotals[$divisionId]['drivers'], fn ($a, $b) => $b['total_points'] <=> $a['total_points']);
             }
 
             // Build driver standings with positions
@@ -1074,7 +1082,7 @@ final class SeasonApplicationService
         }
 
         // Sort standings by division order
-        usort($standings, fn($a, $b) => $a['order'] <=> $b['order']);
+        usort($standings, fn ($a, $b) => $a['order'] <=> $b['order']);
 
         return $standings;
     }
@@ -1082,7 +1090,7 @@ final class SeasonApplicationService
     /**
      * Aggregate team championship standings across all completed rounds.
      *
-     * @param array<\App\Domain\Competition\Entities\Round> $rounds
+     * @param  array<\App\Domain\Competition\Entities\Round>  $rounds
      * @return array<mixed>
      */
     private function aggregateTeamChampionshipStandings(array $rounds): array
@@ -1094,7 +1102,7 @@ final class SeasonApplicationService
 
         foreach ($rounds as $round) {
             $teamResults = $round->teamChampionshipResults();
-            if ($teamResults === null || !isset($teamResults['standings'])) {
+            if ($teamResults === null || ! isset($teamResults['standings'])) {
                 continue;
             }
 
@@ -1108,7 +1116,7 @@ final class SeasonApplicationService
                 // Track team IDs for batch fetch
                 $teamIds[$teamId] = true;
 
-                if (!isset($teamTotals[$teamId])) {
+                if (! isset($teamTotals[$teamId])) {
                     $teamTotals[$teamId] = [
                         'team_id' => $teamId,
                         'total_points' => 0,
@@ -1148,7 +1156,7 @@ final class SeasonApplicationService
         }
 
         // Sort by total points descending
-        usort($standings, fn($a, $b) => $b['total_points'] <=> $a['total_points']);
+        usort($standings, fn ($a, $b) => $b['total_points'] <=> $a['total_points']);
 
         // Assign positions
         $position = 1;
@@ -1171,9 +1179,10 @@ final class SeasonApplicationService
      * Execute a callback with retry logic for unique constraint violations.
      *
      * @template T
-     * @param callable(): T $callback
-     * @param int $maxRetries
+     *
+     * @param  callable(): T  $callback
      * @return T
+     *
      * @throws Throwable
      */
     private function executeWithRetry(callable $callback, int $maxRetries = 3): mixed
@@ -1186,6 +1195,7 @@ final class SeasonApplicationService
                 // Check for unique constraint violation (MySQL: 23000, PostgreSQL: 23505)
                 if ($attempt < $maxRetries && in_array($e->getCode(), ['23000', '23505'])) {
                     $attempt++;
+
                     continue;
                 }
                 throw $e;
@@ -1245,8 +1255,8 @@ final class SeasonApplicationService
     /**
      * Update the order of tiebreaker rules for a season.
      *
-     * @param int $seasonId
-     * @param array<array{id: int, order: int}> $rulesOrder Array of rule IDs with their new order
+     * @param  array<array{id: int, order: int}>  $rulesOrder  Array of rule IDs with their new order
+     *
      * @throws SeasonNotFoundException
      */
     public function updateTiebreakerRulesOrder(int $seasonId, array $rulesOrder): void

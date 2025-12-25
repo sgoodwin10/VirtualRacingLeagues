@@ -61,6 +61,7 @@ class TeamChampionshipCalculationTest extends TestCase
             'team_championship_enabled' => true,
             'teams_drivers_for_calculation' => 2, // Only top 2 drivers per team
             'race_divisions_enabled' => false, // Explicitly disable divisions for base tests
+            'round_totals_tiebreaker_rules_enabled' => true, // Enable tiebreaker for sequential positions
         ]);
 
         // Create two teams

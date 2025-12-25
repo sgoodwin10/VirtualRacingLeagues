@@ -764,27 +764,50 @@ final class RoundApplicationService
         // Aggregate driver points and statistics
         $aggregatedData = $this->aggregateDriverPoints($allRaceResults, $driverNames);
 
-        // Sort drivers with tie-breaking (now with Season for tiebreaker rules)
-        $sortResult = $this->sortDriversWithTieBreaking(
-            $aggregatedData['driverPoints'],
-            $aggregatedData['raceResultsByDriver'],
-            $aggregatedData['driverBestTimes'],
-            $aggregatedData['driverHasDnfOrDns'],
-            $season,
-            $allRaceResults
-        );
+        // Check if we should use race positions instead of points
+        // This happens when round_points is enabled and all race_points are 0
+        $allZeroPoints = !empty($aggregatedData['driverPoints']) && array_sum($aggregatedData['driverPoints']) === 0;
+        $useRacePositions = $roundPointsEnabled && $allZeroPoints;
 
-        $sortedDriverPoints = $sortResult['sortedDriverPoints'];
-        $tiebreakerInfo = $sortResult['tiebreakerInfo'];
+        if ($useRacePositions) {
+            // When round_points is enabled and no race points are awarded,
+            // determine standings based on actual race finishing positions
+            $standings = $this->buildStandingsFromRacePositions(
+                $allRaceResults,
+                $aggregatedData['driverData'],
+                $aggregatedData['driverPositionsGained'],
+                $aggregatedData['driverHasDnfOrDns'],
+                $aggregatedData['driverTotalPenalties']
+            );
+            $tiebreakerInfo = null;
+        } else {
+            // Traditional points-based sorting with tie-breaking
+            $sortResult = $this->sortDriversWithTieBreaking(
+                $aggregatedData['driverPoints'],
+                $aggregatedData['raceResultsByDriver'],
+                $aggregatedData['driverBestTimes'],
+                $aggregatedData['driverHasDnfOrDns'],
+                $season,
+                $allRaceResults
+            );
 
-        // Build initial standings
-        $standings = $this->buildStandingsFromSortedPoints(
-            $sortedDriverPoints,
-            $aggregatedData['driverData'],
-            $aggregatedData['driverPositionsGained'],
-            $aggregatedData['driverHasDnfOrDns'],
-            $roundPointsEnabled
-        );
+            $sortedDriverPoints = $sortResult['sortedDriverPoints'];
+            $tiebreakerInfo = $sortResult['tiebreakerInfo'];
+
+            // Determine if tiebreaker rules are enabled for this season
+            $tiebreakerEnabled = $season->hasTiebreakerRulesEnabled();
+
+            // Build initial standings
+            $standings = $this->buildStandingsFromSortedPoints(
+                $sortedDriverPoints,
+                $aggregatedData['driverData'],
+                $aggregatedData['driverPositionsGained'],
+                $aggregatedData['driverHasDnfOrDns'],
+                $roundPointsEnabled,
+                $tiebreakerEnabled,
+                $aggregatedData['driverTotalPenalties']
+            );
+        }
 
         // Apply round or race-level bonuses
         $standings = $this->applyBonusPoints($round, $allRaceResults, $standings, $roundPointsEnabled);
@@ -818,7 +841,7 @@ final class RoundApplicationService
      *
      * @param array<array{race: Race, result: RaceResult}> $allRaceResults
      * @param array<int, string> $driverNames
-     * @return array{driverPoints: array<int, int>, driverData: array<int, array<string, mixed>>, raceResultsByDriver: array<int, array<mixed>>, driverPositionsGained: array<int, int>, driverBestTimes: array<int, array<string, int|null>>, driverHasDnfOrDns: array<int, bool>}
+     * @return array{driverPoints: array<int, int>, driverData: array<int, array<string, mixed>>, raceResultsByDriver: array<int, array<mixed>>, driverPositionsGained: array<int, int>, driverBestTimes: array<int, array<string, int|null>>, driverHasDnfOrDns: array<int, bool>, driverTotalPenalties: array<int, int>}
      */
     private function aggregateDriverPoints(array $allRaceResults, array $driverNames): array
     {
@@ -828,6 +851,7 @@ final class RoundApplicationService
         $driverPositionsGained = [];
         $driverBestTimes = [];
         $driverHasDnfOrDns = [];
+        $driverTotalPenalties = [];
 
         foreach ($allRaceResults as $item) {
             $race = $item['race'];
@@ -852,6 +876,7 @@ final class RoundApplicationService
                     'fastest_lap_ms' => null,
                 ];
                 $driverHasDnfOrDns[$driverId] = false;
+                $driverTotalPenalties[$driverId] = 0;
             }
 
             // Check for DNF - driver gets 0 points for this race
@@ -878,6 +903,12 @@ final class RoundApplicationService
             // Accumulate positions gained
             if ($result->positionsGained() !== null) {
                 $driverPositionsGained[$driverId] += $result->positionsGained();
+            }
+
+            // Accumulate total penalties (in milliseconds)
+            $penaltyMs = $result->penalties()->toMilliseconds();
+            if ($penaltyMs !== null && $penaltyMs > 0) {
+                $driverTotalPenalties[$driverId] += $penaltyMs;
             }
 
             // Store result for tie-breaking
@@ -927,6 +958,7 @@ final class RoundApplicationService
             'driverPositionsGained' => $driverPositionsGained,
             'driverBestTimes' => $driverBestTimes,
             'driverHasDnfOrDns' => $driverHasDnfOrDns,
+            'driverTotalPenalties' => $driverTotalPenalties,
         ];
     }
 
@@ -1167,11 +1199,23 @@ final class RoundApplicationService
     /**
      * Build standings array from sorted driver points.
      *
+     * When tiebreaker is DISABLED, drivers with the same race_points share the same
+     * position and the next driver skips positions accordingly. For example:
+     * - Driver A: 25 pts → Position 1
+     * - Driver B: 20 pts → Position 2 (tied)
+     * - Driver C: 20 pts → Position 2 (tied, same as Driver B)
+     * - Driver D: 15 pts → Position 4 (skips position 3)
+     *
+     * When tiebreaker is ENABLED, positions are always sequential since the sorting
+     * algorithm already determined a winner among tied drivers.
+     *
      * @param array<int, int> $sortedDriverPoints
      * @param array<int, array<string, mixed>> $driverData
      * @param array<int, int> $driverPositionsGained
      * @param array<int, bool> $driverHasDnfOrDns
      * @param bool $roundPointsEnabled
+     * @param bool $tiebreakerEnabled
+     * @param array<int, int> $driverTotalPenalties Total penalties in milliseconds per driver
      * @return array<mixed>
      */
     private function buildStandingsFromSortedPoints(
@@ -1179,24 +1223,286 @@ final class RoundApplicationService
         array $driverData,
         array $driverPositionsGained,
         array $driverHasDnfOrDns,
-        bool $roundPointsEnabled
+        bool $roundPointsEnabled,
+        bool $tiebreakerEnabled,
+        array $driverTotalPenalties = []
     ): array {
         $standings = [];
-        $position = 1;
 
-        foreach ($sortedDriverPoints as $driverId => $racePoints) {
-            $standings[] = [
-                'position' => $position++,
-                'driver_id' => $driverId,
-                'driver_name' => $driverData[$driverId]['driver_name'],
-                'race_points' => $racePoints,
-                'fastest_lap_points' => 0,
-                'pole_position_points' => 0,
-                'round_points' => 0,
-                'total_points' => $roundPointsEnabled ? 0 : $racePoints,
-                'total_positions_gained' => $driverPositionsGained[$driverId],
-                'has_any_dnf' => $driverHasDnfOrDns[$driverId] ?? false,
-            ];
+        // Use sequential positions only when tiebreaker is enabled (sorting already determined a winner)
+        // When tiebreaker is disabled, tied drivers should share the same position
+        $useSequentialPositions = $tiebreakerEnabled;
+
+        if ($useSequentialPositions) {
+            // Positions are always sequential - sorting already determined the order
+            $position = 1;
+            foreach ($sortedDriverPoints as $driverId => $racePoints) {
+                $totalPenaltiesMs = $driverTotalPenalties[$driverId] ?? 0;
+                $totalPenaltiesSeconds = $totalPenaltiesMs > 0
+                    ? number_format($totalPenaltiesMs / 1000, 3, '.', '')
+                    : '0.000';
+
+                $standings[] = [
+                    'position' => $position++,
+                    'driver_id' => $driverId,
+                    'driver_name' => $driverData[$driverId]['driver_name'],
+                    'race_points' => $racePoints,
+                    'fastest_lap_points' => 0,
+                    'pole_position_points' => 0,
+                    'round_points' => 0,
+                    'total_points' => $roundPointsEnabled ? 0 : $racePoints,
+                    'total_positions_gained' => $driverPositionsGained[$driverId],
+                    'has_any_dnf' => $driverHasDnfOrDns[$driverId] ?? false,
+                    'total_penalties' => $totalPenaltiesSeconds,
+                ];
+            }
+        } else {
+            // Tiebreaker DISABLED:
+            // Drivers with same race_points share the same position
+            // and the next driver with different points skips positions accordingly
+            $position = 1;
+            $previousPoints = null;
+            $driversAtCurrentPosition = 0;
+
+            foreach ($sortedDriverPoints as $driverId => $racePoints) {
+                if ($previousPoints !== null && $racePoints !== $previousPoints) {
+                    // Points changed, advance position by number of drivers at previous position
+                    $position += $driversAtCurrentPosition;
+                    $driversAtCurrentPosition = 0;
+                }
+
+                $totalPenaltiesMs = $driverTotalPenalties[$driverId] ?? 0;
+                $totalPenaltiesSeconds = $totalPenaltiesMs > 0
+                    ? number_format($totalPenaltiesMs / 1000, 3, '.', '')
+                    : '0.000';
+
+                $standings[] = [
+                    'position' => $position,
+                    'driver_id' => $driverId,
+                    'driver_name' => $driverData[$driverId]['driver_name'],
+                    'race_points' => $racePoints,
+                    'fastest_lap_points' => 0,
+                    'pole_position_points' => 0,
+                    'round_points' => 0,
+                    'total_points' => $roundPointsEnabled ? 0 : $racePoints,
+                    'total_positions_gained' => $driverPositionsGained[$driverId],
+                    'has_any_dnf' => $driverHasDnfOrDns[$driverId] ?? false,
+                    'total_penalties' => $totalPenaltiesSeconds,
+                ];
+
+                $driversAtCurrentPosition++;
+                $previousPoints = $racePoints;
+            }
+        }
+
+        return $standings;
+    }
+
+    /**
+     * Build standings from actual race finishing positions.
+     *
+     * When round_points is enabled and all race_points are 0, standings should be
+     * determined by the actual finishing positions in the main race (non-qualifier).
+     * This method finds the main race and uses those positions to create the standings.
+     *
+     * Business Rules:
+     * - Main race is the non-qualifier race (typically race_number = 1 or the last non-qualifier)
+     * - If multiple non-qualifier races exist, use the last one (race with highest race_number)
+     * - In SINGLE-RACE rounds: DNF drivers receive 0 round_points (filtered out from standings, placed at bottom)
+     * - In MULTI-RACE rounds: DNF drivers in one race can still score points if they finished another race
+     * - All drivers start with race_points = 0 (will be filled later by applyRoundPoints)
+     *
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
+     * @param array<int, array<string, mixed>> $driverData
+     * @param array<int, int> $driverPositionsGained
+     * @param array<int, bool> $driverHasDnfOrDns
+     * @param array<int, int> $driverTotalPenalties Total penalties in milliseconds per driver
+     * @return array<mixed>
+     */
+    private function buildStandingsFromRacePositions(
+        array $allRaceResults,
+        array $driverData,
+        array $driverPositionsGained,
+        array $driverHasDnfOrDns,
+        array $driverTotalPenalties = []
+    ): array {
+        // Find the main race (non-qualifier race, preferably race_number = 1)
+        // If multiple non-qualifier races exist, use the one with the highest race_number
+        $mainRaceResults = [];
+        $mainRaceNumber = null;
+        $totalRaceCount = 0; // Track total number of races (qualifiers + main races)
+
+        foreach ($allRaceResults as $item) {
+            $race = $item['race'];
+            $result = $item['result'];
+
+            // Skip qualifiers for main race results, but count them for total
+            if ($race->isQualifier()) {
+                // Count unique qualifiers
+                $raceNumber = $race->raceNumber() ?? 0;
+                if ($raceNumber > $totalRaceCount) {
+                    $totalRaceCount = $raceNumber;
+                }
+                continue;
+            }
+
+            $raceNumber = $race->raceNumber() ?? 0;
+
+            // Track highest race number for total count
+            if ($raceNumber > $totalRaceCount) {
+                $totalRaceCount = $raceNumber;
+            }
+
+            // If this is the first non-qualifier race, or has a higher race_number, use it
+            if ($mainRaceNumber === null || $raceNumber > $mainRaceNumber) {
+                $mainRaceNumber = $raceNumber;
+                $mainRaceResults = [];
+            }
+
+            // Collect results for this race number
+            if ($raceNumber === $mainRaceNumber) {
+                $mainRaceResults[] = [
+                    'driver_id' => $result->driverId(),
+                    'position' => $result->position(),
+                    'dnf' => $result->dnf(),
+                ];
+            }
+        }
+
+        // If no main race found, return empty standings
+        if (empty($mainRaceResults)) {
+            return [];
+        }
+
+        // Detect if this is a single-race round (1 main race, possibly with 1 qualifier)
+        // Count unique main race IDs (non-qualifiers)
+        $mainRaceIds = [];
+        foreach ($allRaceResults as $item) {
+            $race = $item['race'];
+            if (!$race->isQualifier()) {
+                $raceId = $race->id();
+                if ($raceId !== null) {
+                    $mainRaceIds[$raceId] = true;
+                }
+            }
+        }
+
+        // Single-race round: exactly 1 main race (qualifiers don't count)
+        $isSingleRaceRound = count($mainRaceIds) === 1;
+
+        // In single-race rounds, separate DNF drivers from finishers
+        if ($isSingleRaceRound) {
+            $finishers = [];
+            $dnfDrivers = [];
+
+            foreach ($mainRaceResults as $result) {
+                if ($result['dnf']) {
+                    $dnfDrivers[] = $result;
+                } else {
+                    $finishers[] = $result;
+                }
+            }
+
+            // Sort finishers by race position (ascending - lower is better)
+            usort($finishers, function ($a, $b) {
+                $posA = $a['position'] ?? PHP_INT_MAX;
+                $posB = $b['position'] ?? PHP_INT_MAX;
+                return $posA <=> $posB;
+            });
+
+            // Sort DNF drivers by race position (they still have positions in the results)
+            usort($dnfDrivers, function ($a, $b) {
+                $posA = $a['position'] ?? PHP_INT_MAX;
+                $posB = $b['position'] ?? PHP_INT_MAX;
+                return $posA <=> $posB;
+            });
+
+            // Build standings: finishers first, then DNF drivers
+            $standings = [];
+            $position = 1;
+
+            // Add finishers to standings (they will receive round_points)
+            foreach ($finishers as $result) {
+                $driverId = $result['driver_id'];
+                $totalPenaltiesMs = $driverTotalPenalties[$driverId] ?? 0;
+                $totalPenaltiesSeconds = $totalPenaltiesMs > 0
+                    ? number_format($totalPenaltiesMs / 1000, 3, '.', '')
+                    : '0.000';
+
+                $standings[] = [
+                    'position' => $position++,
+                    'driver_id' => $driverId,
+                    'driver_name' => $driverData[$driverId]['driver_name'] ?? 'Unknown Driver',
+                    'race_points' => 0, // Will be populated by applyRoundPoints
+                    'fastest_lap_points' => 0,
+                    'pole_position_points' => 0,
+                    'round_points' => 0,
+                    'total_points' => 0,
+                    'total_positions_gained' => $driverPositionsGained[$driverId] ?? 0,
+                    'has_any_dnf' => $driverHasDnfOrDns[$driverId] ?? false,
+                    'should_receive_zero_points' => false, // Flag for applyRoundPoints
+                    'total_penalties' => $totalPenaltiesSeconds,
+                ];
+            }
+
+            // Add DNF drivers at the bottom (they will NOT receive round_points)
+            foreach ($dnfDrivers as $result) {
+                $driverId = $result['driver_id'];
+                $totalPenaltiesMs = $driverTotalPenalties[$driverId] ?? 0;
+                $totalPenaltiesSeconds = $totalPenaltiesMs > 0
+                    ? number_format($totalPenaltiesMs / 1000, 3, '.', '')
+                    : '0.000';
+
+                $standings[] = [
+                    'position' => $position++,
+                    'driver_id' => $driverId,
+                    'driver_name' => $driverData[$driverId]['driver_name'] ?? 'Unknown Driver',
+                    'race_points' => 0,
+                    'fastest_lap_points' => 0,
+                    'pole_position_points' => 0,
+                    'round_points' => 0,
+                    'total_points' => 0,
+                    'total_positions_gained' => $driverPositionsGained[$driverId] ?? 0,
+                    'has_any_dnf' => true,
+                    'should_receive_zero_points' => true, // Flag for applyRoundPoints to skip awarding points
+                    'total_penalties' => $totalPenaltiesSeconds,
+                ];
+            }
+        } else {
+            // Multi-race round: existing behavior (DNF in one race but finished another = still gets points)
+            // Sort by race position (ascending - lower is better)
+            usort($mainRaceResults, function ($a, $b) {
+                $posA = $a['position'] ?? PHP_INT_MAX;
+                $posB = $b['position'] ?? PHP_INT_MAX;
+                return $posA <=> $posB;
+            });
+
+            // Build standings from race positions
+            $standings = [];
+            $position = 1;
+
+            foreach ($mainRaceResults as $result) {
+                $driverId = $result['driver_id'];
+                $totalPenaltiesMs = $driverTotalPenalties[$driverId] ?? 0;
+                $totalPenaltiesSeconds = $totalPenaltiesMs > 0
+                    ? number_format($totalPenaltiesMs / 1000, 3, '.', '')
+                    : '0.000';
+
+                $standings[] = [
+                    'position' => $position++,
+                    'driver_id' => $driverId,
+                    'driver_name' => $driverData[$driverId]['driver_name'] ?? 'Unknown Driver',
+                    'race_points' => 0, // Will be populated by applyRoundPoints
+                    'fastest_lap_points' => 0,
+                    'pole_position_points' => 0,
+                    'round_points' => 0,
+                    'total_points' => 0,
+                    'total_positions_gained' => $driverPositionsGained[$driverId] ?? 0,
+                    'has_any_dnf' => $driverHasDnfOrDns[$driverId] ?? false,
+                    'should_receive_zero_points' => false,
+                    'total_penalties' => $totalPenaltiesSeconds,
+                ];
+            }
         }
 
         return $standings;
@@ -1464,10 +1770,13 @@ final class RoundApplicationService
      * Apply round points based on final standings positions.
      * Round points are stored separately and added to total_points along with bonuses.
      *
-     * Note: Drivers with DNF in one or more races still receive round_points based on
-     * their final position. The DNF already penalizes them by giving 0 race_points for
-     * that race, which affects their overall position. This ensures drivers who complete
-     * other races successfully are still rewarded for those performances.
+     * Note: In multi-race rounds, drivers with DNF in one or more races still receive
+     * round_points based on their final position. The DNF already penalizes them by
+     * giving 0 race_points for that race, which affects their overall position. This
+     * ensures drivers who complete other races successfully are still rewarded.
+     *
+     * However, in single-race rounds, drivers with DNF receive 0 round_points
+     * (flagged by should_receive_zero_points).
      *
      * @param Round $round
      * @param array<mixed> $standings
@@ -1483,6 +1792,12 @@ final class RoundApplicationService
         $pointsArray = $pointsSystem->toArray();
 
         foreach ($standings as &$standing) {
+            // Check if this driver should receive zero points (DNF in single-race round)
+            if (isset($standing['should_receive_zero_points']) && $standing['should_receive_zero_points'] === true) {
+                $standing['round_points'] = 0;
+                continue;
+            }
+
             $position = $standing['position'];
             if (isset($pointsArray[$position])) {
                 $roundPoints = $pointsArray[$position];

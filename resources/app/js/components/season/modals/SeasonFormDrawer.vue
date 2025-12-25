@@ -253,7 +253,18 @@ async function loadSeasonTiebreakerRules(seasonId: number): Promise<void> {
 
   try {
     const rules = await getSeasonTiebreakerRules(seasonId);
-    orderedRules.value = rules;
+
+    // Enrich rules with names and descriptions from available rules
+    orderedRules.value = rules.map((rule) => {
+      const availableRule = seasonStore.availableTiebreakerRules.find(
+        (ar) => ar.slug === rule.rule_slug,
+      );
+      return {
+        ...rule,
+        rule_name: availableRule?.name ?? rule.rule_slug,
+        rule_description: availableRule?.description ?? null,
+      };
+    });
   } catch (error) {
     tiebreakerRulesError.value = 'Failed to load tiebreaker rules';
     console.error('Error loading tiebreaker rules:', error);
@@ -376,7 +387,7 @@ async function submitForm(): Promise<void> {
       // Update tiebreaker rules order if enabled
       if (form.round_totals_tiebreaker_rules_enabled && orderedRules.value.length > 0) {
         const ruleOrder = orderedRules.value.map((rule, index) => ({
-          rule_id: rule.rule_id,
+          id: rule.rule_id,
           order: index + 1,
         }));
         await seasonStore.updateTiebreakerRulesOrder(updated.id, ruleOrder);
@@ -412,7 +423,7 @@ async function submitForm(): Promise<void> {
       // Update tiebreaker rules order if enabled
       if (form.round_totals_tiebreaker_rules_enabled && orderedRules.value.length > 0) {
         const ruleOrder = orderedRules.value.map((rule, index) => ({
-          rule_id: rule.rule_id,
+          id: rule.rule_id,
           order: index + 1,
         }));
         await seasonStore.updateTiebreakerRulesOrder(created.id, ruleOrder);

@@ -521,4 +521,169 @@ class SeasonControllerTest extends UserControllerTestCase
 
         $response->assertStatus(403);
     }
+
+    // ==================== Tiebreaker Rules Tests ====================
+
+    public function test_user_can_enable_tiebreaker_rules_on_season_update(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create default tiebreaker rules (using valid slugs)
+        \App\Infrastructure\Persistence\Eloquent\Models\RoundTiebreakerRuleEloquent::create([
+            'name' => 'Highest Qualifying Position',
+            'slug' => 'highest-qualifying-position',
+            'description' => 'Driver with highest qualifying position',
+            'is_active' => true,
+            'default_order' => 1,
+        ]);
+        \App\Infrastructure\Persistence\Eloquent\Models\RoundTiebreakerRuleEloquent::create([
+            'name' => 'Best Result All Races',
+            'slug' => 'best-result-all-races',
+            'description' => 'Driver with best single result across all races',
+            'is_active' => true,
+            'default_order' => 2,
+        ]);
+
+        // Create season without tiebreaker rules
+        $season = SeasonEloquent::create([
+            'competition_id' => $this->competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'status' => 'setup',
+            'created_by_user_id' => $this->user->id,
+            'round_totals_tiebreaker_rules_enabled' => false,
+        ]);
+
+        $this->assertDatabaseHas('seasons', [
+            'id' => $season->id,
+            'round_totals_tiebreaker_rules_enabled' => false,
+        ]);
+
+        // Update season to enable tiebreaker rules
+        $response = $this->putJson("/api/seasons/{$season->id}", [
+            'name' => 'Season 1',
+            'round_totals_tiebreaker_rules_enabled' => true,
+        ]);
+
+        $response->assertStatus(200);
+
+        // Verify tiebreaker rules are enabled
+        $this->assertDatabaseHas('seasons', [
+            'id' => $season->id,
+            'round_totals_tiebreaker_rules_enabled' => true,
+        ]);
+
+        // Verify default rules were copied to season
+        $this->assertDatabaseHas('season_round_tiebreaker_rules', [
+            'season_id' => $season->id,
+            'order' => 1,
+        ]);
+        $this->assertDatabaseHas('season_round_tiebreaker_rules', [
+            'season_id' => $season->id,
+            'order' => 2,
+        ]);
+
+        // Verify response includes tiebreaker rules
+        $response->assertJson([
+            'success' => true,
+            'data' => [
+                'round_totals_tiebreaker_rules_enabled' => true,
+            ],
+        ]);
+    }
+
+    public function test_user_can_disable_tiebreaker_rules_on_season_update(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create default tiebreaker rules (using valid slug)
+        $rule1 = \App\Infrastructure\Persistence\Eloquent\Models\RoundTiebreakerRuleEloquent::create([
+            'name' => 'Highest Qualifying Position',
+            'slug' => 'highest-qualifying-position',
+            'description' => 'Driver with highest qualifying position',
+            'is_active' => true,
+            'default_order' => 1,
+        ]);
+
+        // Create season with tiebreaker rules enabled
+        $season = SeasonEloquent::create([
+            'competition_id' => $this->competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'status' => 'setup',
+            'created_by_user_id' => $this->user->id,
+            'round_totals_tiebreaker_rules_enabled' => true,
+        ]);
+
+        // Add tiebreaker rule to season via the relationship
+        $season->tiebreakerRules()->attach($rule1->id, ['order' => 1]);
+
+        $this->assertDatabaseHas('seasons', [
+            'id' => $season->id,
+            'round_totals_tiebreaker_rules_enabled' => true,
+        ]);
+        $this->assertDatabaseHas('season_round_tiebreaker_rules', [
+            'season_id' => $season->id,
+        ]);
+
+        // Update season to disable tiebreaker rules
+        $response = $this->putJson("/api/seasons/{$season->id}", [
+            'name' => 'Season 1',
+            'round_totals_tiebreaker_rules_enabled' => false,
+        ]);
+
+        $response->assertStatus(200);
+
+        // Verify tiebreaker rules are disabled
+        $this->assertDatabaseHas('seasons', [
+            'id' => $season->id,
+            'round_totals_tiebreaker_rules_enabled' => false,
+        ]);
+
+        // Verify rules were removed from season
+        $this->assertDatabaseMissing('season_round_tiebreaker_rules', [
+            'season_id' => $season->id,
+        ]);
+
+        // Verify response
+        $response->assertJson([
+            'success' => true,
+            'data' => [
+                'round_totals_tiebreaker_rules_enabled' => false,
+            ],
+        ]);
+    }
+
+    public function test_updating_season_without_tiebreaker_rules_field_does_not_change_existing_value(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create season with tiebreaker rules enabled
+        $season = SeasonEloquent::create([
+            'competition_id' => $this->competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'status' => 'setup',
+            'created_by_user_id' => $this->user->id,
+            'round_totals_tiebreaker_rules_enabled' => true,
+        ]);
+
+        $this->assertDatabaseHas('seasons', [
+            'id' => $season->id,
+            'round_totals_tiebreaker_rules_enabled' => true,
+        ]);
+
+        // Update season without including the tiebreaker rules field
+        $response = $this->putJson("/api/seasons/{$season->id}", [
+            'name' => 'Season 1 Updated',
+        ]);
+
+        $response->assertStatus(200);
+
+        // Verify tiebreaker rules setting was not changed
+        $this->assertDatabaseHas('seasons', [
+            'id' => $season->id,
+            'round_totals_tiebreaker_rules_enabled' => true,
+        ]);
+    }
 }

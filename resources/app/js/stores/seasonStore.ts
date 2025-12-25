@@ -536,7 +536,7 @@ export const useSeasonStore = defineStore('season', () => {
    */
   async function updateTiebreakerRulesOrder(
     seasonId: number,
-    ruleOrder: { rule_id: number; order: number }[],
+    ruleOrder: { id: number; order: number }[],
   ): Promise<void> {
     setLoading(true);
     setError(null);

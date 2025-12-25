@@ -255,6 +255,10 @@ final class RoundPointsCalculationTest extends TestCase
 
     public function test_tie_breaking_uses_best_single_race_result(): void
     {
+        // Enable tiebreaker rules for this test
+        // When tiebreaker is enabled, tied drivers should be assigned sequential positions
+        $this->season->update(['round_totals_tiebreaker_rules_enabled' => true]);
+
         // Arrange: Two drivers with same total points but different best results
         $round = Round::factory()->create([
             'season_id' => $this->season->id,
@@ -1191,6 +1195,308 @@ final class RoundPointsCalculationTest extends TestCase
         $this->assertEquals(0, $results['standings'][2]['pole_position_points']);
         $this->assertEquals(15, $results['standings'][2]['round_points']);
         $this->assertEquals(15, $results['standings'][2]['total_points']); // 15 round + 0 fastest_lap + 0 pole
+    }
+
+    public function test_round_points_enabled_with_zero_race_points_uses_actual_race_positions(): void
+    {
+        // This test covers the bug where driver with best qualifying position
+        // was placed first in standings even though they finished last in the main race.
+
+        // Arrange: Create a round with round_points enabled
+        $round = Round::factory()->create([
+            'season_id' => $this->season->id,
+            'round_number' => 1,
+            'status' => 'scheduled',
+            'fastest_lap' => 1, // 1 point for fastest lap
+            'qualifying_pole' => 1, // 1 point for pole
+            'round_points' => true, // ENABLED: Award points based on standings position
+            'points_system' => json_encode([
+                '1' => 25,
+                '2' => 20,
+                '3' => 16,
+            ]),
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        [$driver1, $driver2, $driver3] = $this->createDrivers(3);
+
+        // Qualifier race
+        $qualifier = $this->createRace([
+            'round_id' => $round->id,
+            'is_qualifier' => true,
+            'race_number' => null,
+            'status' => 'scheduled',
+        ]);
+
+        // Driver1 gets pole position (P1 in qualifying)
+        RaceResult::create([
+            'race_id' => $qualifier->id,
+            'driver_id' => $driver1->id,
+            'position' => 1,
+            'fastest_lap' => '00:00:50.100',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0, // No race points in qualifier
+            'has_pole' => true,
+        ]);
+
+        // Driver2 qualifies P2
+        RaceResult::create([
+            'race_id' => $qualifier->id,
+            'driver_id' => $driver2->id,
+            'position' => 2,
+            'fastest_lap' => '00:00:50.200',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+        ]);
+
+        // Driver3 qualifies P3
+        RaceResult::create([
+            'race_id' => $qualifier->id,
+            'driver_id' => $driver3->id,
+            'position' => 3,
+            'fastest_lap' => '00:00:50.300',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+        ]);
+
+        // Main race
+        $mainRace = $this->createRace([
+            'round_id' => $round->id,
+            'is_qualifier' => false,
+            'race_number' => 1,
+            'status' => 'scheduled',
+        ]);
+
+        // Driver2 wins the main race (P1)
+        RaceResult::create([
+            'race_id' => $mainRace->id,
+            'driver_id' => $driver2->id,
+            'position' => 1,
+            'original_race_time' => '00:58:50.000',
+            'fastest_lap' => '00:00:49.500', // Fastest lap
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0, // No race points when round_points is enabled
+            'has_fastest_lap' => true,
+            'positions_gained' => 1, // Started P2, finished P1
+        ]);
+
+        // Driver3 finishes P2 in main race
+        RaceResult::create([
+            'race_id' => $mainRace->id,
+            'driver_id' => $driver3->id,
+            'position' => 2,
+            'original_race_time' => '00:59:00.000',
+            'fastest_lap' => '00:00:50.000',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+            'positions_gained' => 1, // Started P3, finished P2
+        ]);
+
+        // Driver1 finishes LAST in main race (P3) despite having pole
+        RaceResult::create([
+            'race_id' => $mainRace->id,
+            'driver_id' => $driver1->id,
+            'position' => 3,
+            'original_race_time' => '01:00:30.000',
+            'fastest_lap' => '00:00:51.000',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+            'positions_gained' => -2, // Started P1, finished P3
+        ]);
+
+        // Act: Complete the round
+        $response = $this->putJson(self::APP_URL . "/api/rounds/{$round->id}/complete");
+
+        // Assert: Standings should be based on main race positions, NOT qualifying
+        $response->assertStatus(200);
+
+        $round->refresh();
+        $results = $round->round_results;
+
+        // Verify positions are based on main race finish, not qualifying
+        $this->assertEquals(1, $results['standings'][0]['position'], 'Position 1 should go to race winner');
+        $this->assertEquals($driver2->id, $results['standings'][0]['driver_id'], 'Driver2 won the race');
+        $this->assertEquals(0, $results['standings'][0]['race_points'], 'No race points awarded');
+        $this->assertEquals(1, $results['standings'][0]['fastest_lap_points'], 'Fastest lap bonus');
+        $this->assertEquals(0, $results['standings'][0]['pole_position_points'], 'Driver2 did not get pole');
+        $this->assertEquals(25, $results['standings'][0]['round_points'], 'P1 gets 25 round points');
+        $this->assertEquals(26, $results['standings'][0]['total_points'], '25 + 1 = 26');
+
+        $this->assertEquals(2, $results['standings'][1]['position'], 'Position 2 should go to P2 finisher');
+        $this->assertEquals($driver3->id, $results['standings'][1]['driver_id'], 'Driver3 finished P2');
+        $this->assertEquals(20, $results['standings'][1]['round_points'], 'P2 gets 20 round points');
+
+        $this->assertEquals(3, $results['standings'][2]['position'], 'Position 3 should go to last place finisher');
+        $this->assertEquals($driver1->id, $results['standings'][2]['driver_id'], 'Driver1 finished last despite pole');
+        $this->assertEquals(1, $results['standings'][2]['pole_position_points'], 'Driver1 gets pole bonus');
+        $this->assertEquals(16, $results['standings'][2]['round_points'], 'P3 gets 16 round points');
+        $this->assertEquals(17, $results['standings'][2]['total_points'], '16 + 1 = 17');
+        $this->assertEquals(-2, $results['standings'][2]['total_positions_gained'], 'Driver1 lost 2 positions');
+    }
+
+    public function test_single_race_round_with_dnf_receives_zero_round_points(): void
+    {
+        // Arrange: Create a single-race round with round_points enabled
+        $round = Round::factory()->create([
+            'season_id' => $this->season->id,
+            'round_number' => 1,
+            'status' => 'scheduled',
+            'fastest_lap' => 1,
+            'qualifying_pole' => 1,
+            'round_points' => true,
+            'points_system' => json_encode([1 => 25, 2 => 20, 3 => 16, 4 => 13, 5 => 11]),
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        [$driver1, $driver2, $driver3, $driver4] = $this->createDrivers(4);
+
+        // Create qualifying session
+        $qualifying = $this->createRace([
+            'round_id' => $round->id,
+            'is_qualifier' => true,
+            'race_number' => 0,
+            'status' => 'scheduled',
+        ]);
+
+        // Qualifying results (Driver1 gets pole)
+        RaceResult::create([
+            'race_id' => $qualifying->id,
+            'driver_id' => $driver1->id,
+            'position' => 1,
+            'fastest_lap' => '00:00:45.000',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+        ]);
+
+        RaceResult::create([
+            'race_id' => $qualifying->id,
+            'driver_id' => $driver2->id,
+            'position' => 2,
+            'fastest_lap' => '00:00:46.000',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+        ]);
+
+        RaceResult::create([
+            'race_id' => $qualifying->id,
+            'driver_id' => $driver3->id,
+            'position' => 3,
+            'fastest_lap' => '00:00:47.000',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+        ]);
+
+        RaceResult::create([
+            'race_id' => $qualifying->id,
+            'driver_id' => $driver4->id,
+            'position' => 4,
+            'fastest_lap' => '00:00:48.000',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+        ]);
+
+        // Create main race
+        $mainRace = $this->createRace([
+            'round_id' => $round->id,
+            'is_qualifier' => false,
+            'race_number' => 1,
+            'status' => 'scheduled',
+        ]);
+
+        // Main race results - Driver1 DNFs, others finish
+        // Driver1 DNFs (should get 0 round_points)
+        RaceResult::create([
+            'race_id' => $mainRace->id,
+            'driver_id' => $driver1->id,
+            'position' => 4, // DNF'd but still has a position
+            'original_race_time' => null,
+            'fastest_lap' => null,
+            'dnf' => true,
+            'status' => 'pending',
+            'race_points' => 0,
+            'positions_gained' => -3,
+        ]);
+
+        // Driver2 wins the race and gets fastest lap
+        RaceResult::create([
+            'race_id' => $mainRace->id,
+            'driver_id' => $driver2->id,
+            'position' => 1,
+            'original_race_time' => '00:45:30.000',
+            'fastest_lap' => '00:00:50.000',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+            'positions_gained' => 1,
+        ]);
+
+        // Driver3 finishes P2
+        RaceResult::create([
+            'race_id' => $mainRace->id,
+            'driver_id' => $driver3->id,
+            'position' => 2,
+            'original_race_time' => '00:45:35.000',
+            'fastest_lap' => '00:00:51.000',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+            'positions_gained' => 1,
+        ]);
+
+        // Driver4 finishes P3
+        RaceResult::create([
+            'race_id' => $mainRace->id,
+            'driver_id' => $driver4->id,
+            'position' => 3,
+            'original_race_time' => '00:45:40.000',
+            'fastest_lap' => '00:00:52.000',
+            'dnf' => false,
+            'status' => 'pending',
+            'race_points' => 0,
+            'positions_gained' => 1,
+        ]);
+
+        // Act: Complete the round
+        $response = $this->putJson(self::APP_URL . "/api/rounds/{$round->id}/complete");
+
+        // Assert: Verify DNF driver gets 0 round_points
+        $response->assertStatus(200);
+
+        $round->refresh();
+        $results = $round->round_results;
+
+        // Verify finishers get round points
+        $this->assertEquals(1, $results['standings'][0]['position'], 'Driver2 should be P1');
+        $this->assertEquals($driver2->id, $results['standings'][0]['driver_id']);
+        $this->assertEquals(25, $results['standings'][0]['round_points'], 'P1 gets 25 round points');
+        $this->assertEquals(1, $results['standings'][0]['fastest_lap_points'], 'Fastest lap bonus');
+        $this->assertEquals(26, $results['standings'][0]['total_points'], '25 + 1 = 26');
+
+        $this->assertEquals(2, $results['standings'][1]['position'], 'Driver3 should be P2');
+        $this->assertEquals($driver3->id, $results['standings'][1]['driver_id']);
+        $this->assertEquals(20, $results['standings'][1]['round_points'], 'P2 gets 20 round points');
+
+        $this->assertEquals(3, $results['standings'][2]['position'], 'Driver4 should be P3');
+        $this->assertEquals($driver4->id, $results['standings'][2]['driver_id']);
+        $this->assertEquals(16, $results['standings'][2]['round_points'], 'P3 gets 16 round points');
+
+        // CRITICAL: DNF driver should be at bottom with 0 round_points
+        $this->assertEquals(4, $results['standings'][3]['position'], 'Driver1 (DNF) should be P4');
+        $this->assertEquals($driver1->id, $results['standings'][3]['driver_id']);
+        $this->assertEquals(0, $results['standings'][3]['round_points'], 'DNF driver gets 0 round points');
+        $this->assertEquals(1, $results['standings'][3]['pole_position_points'], 'Still gets pole bonus');
+        $this->assertEquals(1, $results['standings'][3]['total_points'], 'Only pole bonus, no round points');
+        $this->assertTrue($results['standings'][3]['has_any_dnf'], 'DNF flag should be true');
     }
 
     /**
