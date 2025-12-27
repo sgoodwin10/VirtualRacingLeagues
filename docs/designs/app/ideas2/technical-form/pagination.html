@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagination - Technical Blueprint Component Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #1c2128;
+            --bg-elevated: #21262d;
+            --bg-highlight: #272d36;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --cyan: #58a6ff;
+            --cyan-dim: rgba(88, 166, 255, 0.15);
+            --green: #7ee787;
+            --border: #30363d;
+            --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+            --radius: 6px;
+            --grid-color: rgba(88, 166, 255, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .library-header { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 24px 32px; }
+        .header-content { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; gap: 20px; }
+        .logo { width: 48px; height: 48px; background: linear-gradient(135deg, var(--cyan), var(--green)); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .logo svg { width: 28px; height: 28px; color: var(--bg-dark); }
+        .header-title { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); }
+        .header-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
+
+        .library-nav { background: var(--bg-panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-content { max-width: 1400px; margin: 0 auto; padding: 0 32px; }
+        .nav-list { display: flex; gap: 0; list-style: none; overflow-x: auto; }
+        .nav-list li a { display: block; padding: 14px 18px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); text-decoration: none; border-bottom: 2px solid transparent; transition: all 0.15s ease; white-space: nowrap; }
+        .nav-list li a:hover { color: var(--text-secondary); background: var(--bg-elevated); }
+        .nav-list li a.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+        .library-content { max-width: 1400px; margin: 0 auto; padding: 40px 32px; }
+        .page-header { margin-bottom: 40px; }
+        .page-title { font-family: var(--font-mono); font-size: 28px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+        .page-title span { color: var(--cyan); }
+        .page-desc { font-size: 15px; color: var(--text-secondary); max-width: 600px; }
+
+        .section { margin-bottom: 48px; }
+        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .section-title { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+
+        .demo-row {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .demo-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+
+        .demo-label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pagination-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .pagination-item:hover:not(.disabled):not(.active) {
+            background: var(--bg-highlight);
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+
+        .pagination-item.active {
+            background: var(--cyan);
+            color: var(--bg-dark);
+            border-color: var(--cyan);
+        }
+
+        .pagination-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination-ellipsis {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        .pagination-item svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Compact Pagination */
+        .pagination.compact .pagination-item {
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            font-size: 12px;
+        }
+
+        .pagination.compact .pagination-ellipsis {
+            width: 32px;
+            height: 32px;
+        }
+
+        /* Large Pagination */
+        .pagination.large .pagination-item {
+            min-width: 44px;
+            height: 44px;
+            padding: 0 14px;
+            font-size: 14px;
+        }
+
+        .pagination.large .pagination-ellipsis {
+            width: 44px;
+            height: 44px;
+        }
+
+        /* Simple Pagination */
+        .pagination-simple {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pagination-simple .pagination-info {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .pagination-simple .pagination-info strong {
+            color: var(--text-primary);
+        }
+
+        /* Per Page Selector */
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .per-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .per-page-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .per-page-select {
+            padding: 8px 32px 8px 12px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e7681' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+
+        .per-page-select:hover {
+            border-color: var(--text-muted);
+        }
+
+        /* Results Info */
+        .results-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .results-info strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Jump to Page */
+        .jump-to-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .jump-to-page label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .jump-to-page input {
+            width: 60px;
+            padding: 8px 10px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+        }
+
+        .jump-to-page input:hover {
+            border-color: var(--text-muted);
+        }
+
+        .jump-to-page input:focus {
+            outline: none;
+            border-color: var(--cyan);
+        }
+
+        .jump-btn {
+            padding: 8px 14px;
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+        }
+
+        .jump-btn:hover {
+            background: var(--bg-highlight);
+            color: var(--text-primary);
+        }
+
+        .note-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--cyan);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            padding: 16px 20px;
+            margin-top: 24px;
+        }
+
+        .note-box .note-title { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: var(--cyan); margin-bottom: 8px; }
+        .note-box .note-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-panel); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-highlight); border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <header class="library-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                    <polyline points="2 17 12 22 22 17"/>
+                    <polyline points="2 12 12 17 22 12"/>
+                </svg>
+            </a>
+            <div>
+                <div class="header-title">//TECHNICAL_BLUEPRINT</div>
+                <div class="header-subtitle">Component Library & Design System</div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="library-nav">
+        <div class="nav-content">
+            <ul class="nav-list">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="colors.html">Colors</a></li>
+                <li><a href="typography.html">Typography</a></li>
+                <li><a href="buttons.html">Buttons</a></li>
+                <li><a href="cards.html">Cards</a></li>
+                <li><a href="tables.html">Tables</a></li>
+                <li><a href="badges.html">Badges</a></li>
+                <li><a href="forms.html">Forms</a></li>
+                <li><a href="navigation.html">Navigation</a></li>
+                <li><a href="modals.html">Modals</a></li>
+                <li><a href="drawers.html">Drawers</a></li>
+                <li><a href="dialogs.html">Dialogs</a></li>
+                <li><a href="pagination.html" class="active">Pagination</a></li>
+                <li><a href="terminal.html">Terminal</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="library-content">
+        <div class="page-header">
+            <h1 class="page-title">//<span>PAGINATION</span></h1>
+            <p class="page-desc">
+                Page navigation controls for data tables and lists.
+                Available in multiple sizes with navigation arrows and page numbers.
+            </p>
+        </div>
+
+        <!-- Full Pagination -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-title">Full Pagination</span>
+            </div>
+
+            <div class="demo-row">
+                <div class="demo-item">
+                    <div class="demo-label">//DEFAULT_SIZE</div>
+                    <nav class="pagination">
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+                        </a>
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </a>
+                        <a class="pagination-item" href="#">1</a>
+                        <a class="pagination-item" href="#">2</a>
+                        <a class="pagination-item active" href="#">3</a>
+                        <a class="pagination-item" href="#">4</a>
+                        <a class="pagination-item" href="#">5</a>
+                        <span class="pagination-ellipsis">...</span>
+                        <a class="pagination-item" href="#">20</a>
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-label">//COMPACT_SIZE</div>
+                    <nav class="pagination compact">
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </a>
+                        <a class="pagination-item" href="#">1</a>
+                        <a class="pagination-item" href="#">2</a>
+                        <a class="pagination-item active" href="#">3</a>
+                        <a class="pagination-item" href="#">4</a>
+                        <a class="pagination-item" href="#">5</a>
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-label">//LARGE_SIZE</div>
+                    <nav class="pagination large">
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </a>
+                        <a class="pagination-item" href="#">1</a>
+                        <a class="pagination-item active" href="#">2</a>
+                        <a class="pagination-item" href="#">3</a>
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simple Pagination -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-title">Simple Pagination</span>
+            </div>
+
+            <div class="demo-row">
+                <div class="demo-item">
+                    <div class="demo-label">//WITH_PAGE_INFO</div>
+                    <div class="pagination-simple">
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </a>
+                        <span class="pagination-info">Page <strong>3</strong> of <strong>20</strong></span>
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-label">//DISABLED_STATE</div>
+                    <div class="pagination-simple">
+                        <a class="pagination-item disabled" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </a>
+                        <span class="pagination-info">Page <strong>1</strong> of <strong>20</strong></span>
+                        <a class="pagination-item" href="#">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pagination with Controls -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-title">Pagination with Controls</span>
+            </div>
+
+            <div class="demo-row">
+                <div class="demo-item">
+                    <div class="demo-label">//FULL_CONTROLS</div>
+                    <div class="pagination-controls">
+                        <div class="per-page">
+                            <span class="per-page-label">ROWS PER PAGE</span>
+                            <select class="per-page-select">
+                                <option>10</option>
+                                <option selected>25</option>
+                                <option>50</option>
+                                <option>100</option>
+                            </select>
+                        </div>
+                        <span class="results-info">Showing <strong>51-75</strong> of <strong>500</strong> results</span>
+                        <nav class="pagination">
+                            <a class="pagination-item" href="#">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                            </a>
+                            <a class="pagination-item" href="#">1</a>
+                            <a class="pagination-item" href="#">2</a>
+                            <a class="pagination-item active" href="#">3</a>
+                            <a class="pagination-item" href="#">4</a>
+                            <a class="pagination-item" href="#">5</a>
+                            <span class="pagination-ellipsis">...</span>
+                            <a class="pagination-item" href="#">20</a>
+                            <a class="pagination-item" href="#">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-label">//WITH_JUMP_TO_PAGE</div>
+                    <div class="pagination-controls">
+                        <span class="results-info">Showing <strong>1-25</strong> of <strong>500</strong> drivers</span>
+                        <div class="jump-to-page">
+                            <label>GO TO PAGE</label>
+                            <input type="number" value="1" min="1" max="20">
+                            <button class="jump-btn">Go</button>
+                        </div>
+                        <nav class="pagination compact">
+                            <a class="pagination-item disabled" href="#">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                            </a>
+                            <a class="pagination-item active" href="#">1</a>
+                            <a class="pagination-item" href="#">2</a>
+                            <a class="pagination-item" href="#">3</a>
+                            <span class="pagination-ellipsis">...</span>
+                            <a class="pagination-item" href="#">20</a>
+                            <a class="pagination-item" href="#">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="note-box">
+            <div class="note-title">PAGINATION GUIDELINES</div>
+            <p class="note-text">
+                Use <strong>full pagination</strong> for tables with many pages.
+                Use <strong>simple pagination</strong> for compact spaces.
+                Always show total pages/results for context.
+                Disable navigation buttons at boundaries.
+                Use ellipsis for large page ranges.
+            </p>
+        </div>
+    </main>
+</body>
+</html>

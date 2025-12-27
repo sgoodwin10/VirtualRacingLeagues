@@ -30,7 +30,7 @@ final class CreateQualifierData extends Data
         public readonly bool $collision_penalties,
         public readonly ?string $assists_restrictions,
         // Bonus Points
-        public readonly ?int $qualifying_pole,
+        public readonly int|float|null $qualifying_pole,
         public readonly ?bool $qualifying_pole_top_10,
         // Notes
         public readonly ?string $race_notes,
@@ -58,7 +58,7 @@ final class CreateQualifierData extends Data
             'false_start_detection' => ['required', 'boolean'],
             'collision_penalties' => ['required', 'boolean'],
             'assists_restrictions' => ['nullable', 'string'],
-            'qualifying_pole' => ['nullable', 'integer', 'min:1'],
+            'qualifying_pole' => ['nullable', 'numeric', 'min:0'],
             'qualifying_pole_top_10' => [
                 'nullable',
                 'boolean',

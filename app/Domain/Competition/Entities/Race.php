@@ -56,14 +56,14 @@ final class Race
         private ?int $minimumPitTime,
         private ?string $assistsRestrictions,
         // Bonus Points
-        private ?int $fastestLap,
+        private ?float $fastestLap,
         private bool $fastestLapTop10,
-        private ?int $qualifyingPole,
+        private ?float $qualifyingPole,
         private bool $qualifyingPoleTop10,
         // Points
         private PointsSystem $pointsSystem,
-        private int $dnfPoints,
-        private int $dnsPoints,
+        private float $dnfPoints,
+        private float $dnsPoints,
         private bool $racePoints,
         // Notes
         private ?string $raceNotes,
@@ -98,13 +98,13 @@ final class Race
         bool $mandatoryPitStop,
         ?int $minimumPitTime,
         ?string $assistsRestrictions,
-        ?int $fastestLap,
+        ?float $fastestLap,
         bool $fastestLapTop10,
-        ?int $qualifyingPole,
+        ?float $qualifyingPole,
         bool $qualifyingPoleTop10,
         PointsSystem $pointsSystem,
-        int $dnfPoints,
-        int $dnsPoints,
+        float $dnfPoints,
+        float $dnsPoints,
         bool $racePoints,
         ?string $raceNotes,
     ): self {
@@ -186,13 +186,13 @@ final class Race
         bool $mandatoryPitStop,
         ?int $minimumPitTime,
         ?string $assistsRestrictions,
-        ?int $fastestLap,
+        ?float $fastestLap,
         bool $fastestLapTop10,
-        ?int $qualifyingPole,
+        ?float $qualifyingPole,
         bool $qualifyingPoleTop10,
         PointsSystem $pointsSystem,
-        int $dnfPoints,
-        int $dnsPoints,
+        float $dnfPoints,
+        float $dnsPoints,
         bool $racePoints,
         ?string $raceNotes,
         RaceStatus $status,
@@ -260,13 +260,13 @@ final class Race
         bool $mandatoryPitStop,
         ?int $minimumPitTime,
         ?string $assistsRestrictions,
-        ?int $fastestLap,
+        ?float $fastestLap,
         bool $fastestLapTop10,
-        ?int $qualifyingPole,
+        ?float $qualifyingPole,
         bool $qualifyingPoleTop10,
         PointsSystem $pointsSystem,
-        int $dnfPoints,
-        int $dnsPoints,
+        float $dnfPoints,
+        float $dnsPoints,
         bool $racePoints,
         ?string $raceNotes,
     ): void {
@@ -438,7 +438,7 @@ final class Race
         ?string $fuelUsage,
         ?string $damageModel,
         ?string $assistsRestrictions,
-        ?int $qualifyingPole,
+        ?float $qualifyingPole,
         bool $qualifyingPoleTop10,
         ?string $raceNotes,
     ): self {
@@ -514,7 +514,7 @@ final class Race
         ?string $fuelUsage,
         ?string $damageModel,
         ?string $assistsRestrictions,
-        ?int $qualifyingPole,
+        ?float $qualifyingPole,
         bool $qualifyingPoleTop10,
         ?string $raceNotes,
     ): void {
@@ -733,7 +733,7 @@ final class Race
         return $this->pointsSystem;
     }
 
-    public function fastestLap(): ?int
+    public function fastestLap(): ?float
     {
         return $this->fastestLap;
     }
@@ -743,7 +743,7 @@ final class Race
         return $this->fastestLapTop10;
     }
 
-    public function qualifyingPole(): ?int
+    public function qualifyingPole(): ?float
     {
         return $this->qualifyingPole;
     }
@@ -753,12 +753,12 @@ final class Race
         return $this->qualifyingPoleTop10;
     }
 
-    public function dnfPoints(): int
+    public function dnfPoints(): float
     {
         return $this->dnfPoints;
     }
 
-    public function dnsPoints(): int
+    public function dnsPoints(): float
     {
         return $this->dnsPoints;
     }

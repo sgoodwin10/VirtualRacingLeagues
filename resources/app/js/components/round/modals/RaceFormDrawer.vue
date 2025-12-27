@@ -127,6 +127,7 @@
                     <InputNumber
                       v-if="hasQualifyingPole"
                       v-model="form.qualifying_pole"
+                      :max-fraction-digits="2"
                       :min="1"
                       placeholder="Pts"
                       size="small"
@@ -434,6 +435,7 @@
                           <InputNumber
                             v-if="hasFastestLapBonus"
                             v-model="form.fastest_lap"
+                            :max-fraction-digits="2"
                             :min="1"
                             :max="99"
                             fluid
@@ -470,6 +472,7 @@
                       <InputNumber
                         id="dnf_points"
                         v-model="form.dnf_points"
+                        :max-fraction-digits="2"
                         :min="0"
                         :max="99"
                         size="small"
@@ -501,6 +504,7 @@
                       <InputNumber
                         v-if="hasFastestLapBonus"
                         v-model="form.fastest_lap"
+                        :max-fraction-digits="2"
                         :min="1"
                         placeholder="Pts"
                         size="small"
@@ -532,6 +536,7 @@
                       <InputNumber
                         id="dnf_points_disabled"
                         v-model="form.dnf_points"
+                        :max-fraction-digits="2"
                         :min="0"
                         :max="99"
                         size="small"

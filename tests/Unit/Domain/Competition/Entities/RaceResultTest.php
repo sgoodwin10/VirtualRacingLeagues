@@ -40,7 +40,7 @@ final class RaceResultTest extends TestCase
         $this->assertFalse($result->hasPole());
         $this->assertFalse($result->dnf());
         $this->assertSame(RaceResultStatus::PENDING, $result->status());
-        $this->assertSame(0, $result->racePoints());
+        $this->assertSame(0.0, $result->racePoints());
     }
 
     public function test_creates_race_result_with_null_times(): void
@@ -198,7 +198,7 @@ final class RaceResultTest extends TestCase
 
         $result->setRacePoints(25);
 
-        $this->assertSame(25, $result->racePoints());
+        $this->assertSame(25.0, $result->racePoints());
     }
 
     public function test_confirms_result(): void
@@ -529,7 +529,7 @@ final class RaceResultTest extends TestCase
 
         $result->setRacePoints(0);
 
-        $this->assertSame(0, $result->racePoints());
+        $this->assertSame(0.0, $result->racePoints());
     }
 
     public function test_throws_exception_when_positions_gained_exceeds_maximum(): void

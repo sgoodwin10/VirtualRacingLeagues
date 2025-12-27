@@ -15,7 +15,8 @@ final class PointsSystemTest extends TestCase
         $points = [1 => 10, 2 => 8, 3 => 6, 4 => 4, 5 => 2];
         $pointsSystem = PointsSystem::from($points);
 
-        $this->assertSame($points, $pointsSystem->toArray());
+        $expected = [1 => 10.0, 2 => 8.0, 3 => 6.0, 4 => 4.0, 5 => 2.0];
+        $this->assertSame($expected, $pointsSystem->toArray());
     }
 
     public function test_creates_f1_standard_points_system(): void
@@ -23,8 +24,8 @@ final class PointsSystemTest extends TestCase
         $pointsSystem = PointsSystem::f1Standard();
 
         $expected = [
-            1 => 25, 2 => 18, 3 => 15, 4 => 12, 5 => 10,
-            6 => 8, 7 => 6, 8 => 4, 9 => 2, 10 => 1,
+            1 => 25.0, 2 => 18.0, 3 => 15.0, 4 => 12.0, 5 => 10.0,
+            6 => 8.0, 7 => 6.0, 8 => 4.0, 9 => 2.0, 10 => 1.0,
         ];
 
         $this->assertSame($expected, $pointsSystem->toArray());
@@ -34,17 +35,17 @@ final class PointsSystemTest extends TestCase
     {
         $pointsSystem = PointsSystem::f1Standard();
 
-        $this->assertSame(25, $pointsSystem->getPointsForPosition(1));
-        $this->assertSame(18, $pointsSystem->getPointsForPosition(2));
-        $this->assertSame(1, $pointsSystem->getPointsForPosition(10));
+        $this->assertSame(25.0, $pointsSystem->getPointsForPosition(1));
+        $this->assertSame(18.0, $pointsSystem->getPointsForPosition(2));
+        $this->assertSame(1.0, $pointsSystem->getPointsForPosition(10));
     }
 
     public function test_get_points_for_non_points_position_returns_zero(): void
     {
         $pointsSystem = PointsSystem::f1Standard();
 
-        $this->assertSame(0, $pointsSystem->getPointsForPosition(11));
-        $this->assertSame(0, $pointsSystem->getPointsForPosition(20));
+        $this->assertSame(0.0, $pointsSystem->getPointsForPosition(11));
+        $this->assertSame(0.0, $pointsSystem->getPointsForPosition(20));
     }
 
     public function test_throws_exception_for_empty_points_system(): void
@@ -74,7 +75,7 @@ final class PointsSystemTest extends TestCase
     public function test_throws_exception_for_negative_points(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Points must be non-negative integer');
+        $this->expectExceptionMessage('Points must be non-negative');
 
         PointsSystem::from([1 => -5]);
     }
@@ -83,7 +84,7 @@ final class PointsSystemTest extends TestCase
     {
         $pointsSystem = PointsSystem::from([1 => 10, 2 => 0]);
 
-        $this->assertSame(0, $pointsSystem->getPointsForPosition(2));
+        $this->assertSame(0.0, $pointsSystem->getPointsForPosition(2));
     }
 
     public function test_converts_to_json(): void
@@ -94,7 +95,9 @@ final class PointsSystemTest extends TestCase
         $json = $pointsSystem->toJson();
         $decoded = json_decode($json, true);
 
-        $this->assertSame($points, $decoded);
+        // JSON encoding converts floats to integers when they're whole numbers
+        $expected = [1 => 25, 2 => 18, 3 => 15];
+        $this->assertSame($expected, $decoded);
     }
 
     public function test_creates_from_json(): void
@@ -104,7 +107,8 @@ final class PointsSystemTest extends TestCase
 
         $pointsSystem = PointsSystem::fromJson($json);
 
-        $this->assertSame($points, $pointsSystem->toArray());
+        $expected = [1 => 25.0, 2 => 18.0, 3 => 15.0];
+        $this->assertSame($expected, $pointsSystem->toArray());
     }
 
     public function test_creates_from_json_or_null_with_null(): void
@@ -122,7 +126,8 @@ final class PointsSystemTest extends TestCase
         $pointsSystem = PointsSystem::fromJsonOrNull($json);
 
         $this->assertNotNull($pointsSystem);
-        $this->assertSame($points, $pointsSystem->toArray());
+        $expected = [1 => 25.0, 2 => 18.0, 3 => 15.0];
+        $this->assertSame($expected, $pointsSystem->toArray());
     }
 
     public function test_throws_exception_for_invalid_json(): void

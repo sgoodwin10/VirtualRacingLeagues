@@ -81,6 +81,7 @@
             <TeamsStandingsTable
               :teams="teamChampionshipResults"
               :rounds="getTeamRoundNumbers(teamChampionshipResults)"
+              :teams-drop-round-enabled="teamsDropRoundEnabled"
             />
           </TabPanel>
         </TabPanels>
@@ -170,6 +171,13 @@ const flatDriverStandings = computed<readonly SeasonStandingDriver[]>(() => {
  */
 const showTeamsChampionship = computed<boolean>(() => {
   return standingsData.value?.team_championship_enabled === true;
+});
+
+/**
+ * Check if teams drop rounds are enabled
+ */
+const teamsDropRoundEnabled = computed<boolean>(() => {
+  return standingsData.value?.teams_drop_rounds_enabled === true;
 });
 
 /**
@@ -275,6 +283,10 @@ const TeamsStandingsTable = defineComponent({
       type: Array as () => readonly number[],
       required: true,
     },
+    teamsDropRoundEnabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(tableProps) {
     /**
@@ -324,6 +336,17 @@ const TeamsStandingsTable = defineComponent({
                 },
                 'Total',
               ),
+              ...(tableProps.teamsDropRoundEnabled
+                ? [
+                    h(
+                      'th',
+                      {
+                        class: 'w-20 px-3 py-2 text-center font-bold text-gray-900 bg-blue-50',
+                      },
+                      'Drop',
+                    ),
+                  ]
+                : []),
             ]),
           ]),
           // Body
@@ -363,6 +386,19 @@ const TeamsStandingsTable = defineComponent({
                     },
                     team.total_points,
                   ),
+                  // Drop total (conditional)
+                  ...(tableProps.teamsDropRoundEnabled
+                    ? [
+                        h(
+                          'td',
+                          {
+                            class:
+                              'w-20 px-3 py-2 text-center font-bold text-lg text-blue-900 bg-blue-50',
+                          },
+                          team.drop_total,
+                        ),
+                      ]
+                    : []),
                 ],
               ),
             ),
@@ -426,7 +462,7 @@ const StandingsTable = defineComponent({
                 'th',
                 {
                   class:
-                    'w-16 px-2 py-2 text-center font-semibold text-gray-700 border-r border-gray-200',
+                    'w-16 px-2 py-2 text-center font-semibold text-gray-700 border-r border-l border-gray-200',
                   rowspan: 2,
                   title: 'Podium finishes (1st, 2nd, or 3rd place)',
                 },
@@ -519,7 +555,7 @@ const StandingsTable = defineComponent({
                     'td',
                     {
                       class:
-                        'w-16 px-2 py-2 text-center font-semibold text-amber-700 border-r border-gray-200',
+                        'w-16 px-2 py-2 text-center font-semibold border-r border-l border-gray-200',
                     },
                     driver.podiums,
                   ),

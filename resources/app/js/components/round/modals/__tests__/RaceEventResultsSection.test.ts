@@ -378,6 +378,54 @@ describe('RaceEventResultsSection', () => {
 
       expect(wrapper.text()).not.toContain('Points');
     });
+
+    it('should display decimal points correctly (up to 2 decimal places)', () => {
+      const raceWithDecimalPoints = {
+        ...mockRaceEvent,
+        results: [
+          {
+            ...mockRaceEvent.results[0],
+            race_points: 12.5,
+          },
+          {
+            ...mockRaceEvent.results[1],
+            race_points: 9.75,
+          },
+          {
+            ...mockRaceEvent.results[2],
+            race_points: 6.25,
+          },
+        ],
+      };
+      const wrapper = createWrapper({ raceEvent: raceWithDecimalPoints });
+
+      expect(wrapper.text()).toContain('12.5');
+      expect(wrapper.text()).toContain('9.75');
+      expect(wrapper.text()).toContain('6.25');
+    });
+
+    it('should display whole numbers without decimal points', () => {
+      const raceWithWholePoints = {
+        ...mockRaceEvent,
+        results: [
+          {
+            ...mockRaceEvent.results[0],
+            race_points: 25,
+          },
+          {
+            ...mockRaceEvent.results[1],
+            race_points: 18,
+          },
+        ],
+      };
+      const wrapper = createWrapper({ raceEvent: raceWithWholePoints });
+
+      // Should not have decimal points for whole numbers
+      expect(wrapper.text()).toContain('25');
+      expect(wrapper.text()).toContain('18');
+      expect(wrapper.text()).not.toContain('25.0');
+      expect(wrapper.text()).not.toContain('18.0');
+    });
   });
 
   describe('Division Filtering', () => {

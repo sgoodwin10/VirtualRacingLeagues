@@ -227,6 +227,69 @@ describe('RoundStandingsSection', () => {
       expect(wrapper.text()).toContain('1');
     });
 
+    it('should display decimal race points correctly (up to 2 decimal places)', () => {
+      const standingsWithDecimalPoints: RoundStandings = {
+        standings: [
+          {
+            position: 1,
+            driver_id: 1,
+            driver_name: 'Driver 1',
+            total_points: 27.5,
+            race_points: 25.5,
+            fastest_lap_points: 2,
+            pole_position_points: 0,
+            total_positions_gained: 0,
+          },
+          {
+            position: 2,
+            driver_id: 2,
+            driver_name: 'Driver 2',
+            total_points: 19.75,
+            race_points: 18.75,
+            fastest_lap_points: 1,
+            pole_position_points: 0,
+            total_positions_gained: 0,
+          },
+        ],
+      };
+
+      const wrapper = createWrapper({
+        roundStandings: standingsWithDecimalPoints,
+        hasRacePointsEnabled: true,
+      });
+
+      expect(wrapper.text()).toContain('25.5');
+      expect(wrapper.text()).toContain('18.75');
+      expect(wrapper.text()).toContain('27.5');
+      expect(wrapper.text()).toContain('19.75');
+    });
+
+    it('should display whole numbers without decimal points in race_points', () => {
+      const standingsWithWholePoints: RoundStandings = {
+        standings: [
+          {
+            position: 1,
+            driver_id: 1,
+            driver_name: 'Driver 1',
+            total_points: 25,
+            race_points: 25,
+            fastest_lap_points: 0,
+            pole_position_points: 0,
+            total_positions_gained: 0,
+          },
+        ],
+      };
+
+      const wrapper = createWrapper({
+        roundStandings: standingsWithWholePoints,
+        hasRacePointsEnabled: true,
+      });
+
+      // Should display whole numbers without decimals
+      expect(wrapper.text()).toContain('25');
+      expect(wrapper.text()).not.toContain('25.0');
+    });
+
     it('should display pole position points', () => {
       const wrapper = createWrapper();
 

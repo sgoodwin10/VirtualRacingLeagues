@@ -766,7 +766,7 @@ final class RoundApplicationService
 
         // Check if we should use race positions instead of points
         // This happens when round_points is enabled and all race_points are 0
-        $allZeroPoints = !empty($aggregatedData['driverPoints']) && array_sum($aggregatedData['driverPoints']) === 0;
+        $allZeroPoints = !empty($aggregatedData['driverPoints']) && array_sum($aggregatedData['driverPoints']) === 0.0;
         $useRacePositions = $roundPointsEnabled && $allZeroPoints;
 
         if ($useRacePositions) {
@@ -841,7 +841,7 @@ final class RoundApplicationService
      *
      * @param array<array{race: Race, result: RaceResult}> $allRaceResults
      * @param array<int, string> $driverNames
-     * @return array{driverPoints: array<int, int>, driverData: array<int, array<string, mixed>>, raceResultsByDriver: array<int, array<mixed>>, driverPositionsGained: array<int, int>, driverBestTimes: array<int, array<string, int|null>>, driverHasDnfOrDns: array<int, bool>, driverTotalPenalties: array<int, int>}
+     * @return array{driverPoints: array<int, float>, driverData: array<int, array<string, mixed>>, raceResultsByDriver: array<int, array<mixed>>, driverPositionsGained: array<int, int>, driverBestTimes: array<int, array<string, int|null>>, driverHasDnfOrDns: array<int, bool>, driverTotalPenalties: array<int, int>}
      */
     private function aggregateDriverPoints(array $allRaceResults, array $driverNames): array
     {
@@ -971,13 +971,13 @@ final class RoundApplicationService
      * - Drivers with only DNF/DNS results (no valid finishes) are placed at the bottom
      * - When all drivers have 0 points (no round_points configured), sort by time-based ordering
      *
-     * @param array<int, int> $driverPoints
+     * @param array<int, float> $driverPoints
      * @param array<int, array<mixed>> $raceResultsByDriver
      * @param array<int, array<string, int|null>> $driverBestTimes
      * @param array<int, bool> $driverHasDnfOrDns
      * @param Season $season
      * @param array<array{race: Race, result: RaceResult}> $allRaceResults
-     * @return array{sortedDriverPoints: array<int, int>, tiebreakerInfo: \App\Domain\Competition\ValueObjects\TiebreakerInformation|null}
+     * @return array{sortedDriverPoints: array<int, float>, tiebreakerInfo: \App\Domain\Competition\ValueObjects\TiebreakerInformation|null}
      */
     private function sortDriversWithTieBreaking(
         array $driverPoints,
@@ -1003,7 +1003,7 @@ final class RoundApplicationService
         }
 
         // Check if all drivers have 0 points (no round_points on races)
-        $allZeroPoints = !empty($driverPoints) && array_sum($driverPoints) === 0;
+        $allZeroPoints = !empty($driverPoints) && array_sum($driverPoints) === 0.0;
 
         // Check if tiebreaker is enabled
         $tiebreakerEnabled = $season !== null && $season->hasTiebreakerRulesEnabled();
@@ -1209,7 +1209,7 @@ final class RoundApplicationService
      * When tiebreaker is ENABLED, positions are always sequential since the sorting
      * algorithm already determined a winner among tied drivers.
      *
-     * @param array<int, int> $sortedDriverPoints
+     * @param array<int, float> $sortedDriverPoints
      * @param array<int, array<string, mixed>> $driverData
      * @param array<int, int> $driverPositionsGained
      * @param array<int, bool> $driverHasDnfOrDns

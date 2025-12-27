@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League Manager - Retro Heritage (Design 3)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Retro Racing Heritage - Vintage Motorsport */
+            --bg-paper: #f4efe6;
+            --bg-cream: #ebe5d8;
+            --bg-card: #fffcf5;
+            --bg-dark: #1c1a17;
+
+            --text-primary: #2d2a24;
+            --text-secondary: #5a554a;
+            --text-muted: #8a8477;
+            --text-inverse: #f4efe6;
+
+            --racing-green: #004225;
+            --racing-red: #c41e3a;
+            --racing-yellow: #f4c430;
+            --racing-orange: #e65c00;
+            --racing-blue: #1e3d59;
+
+            --border-dark: #2d2a24;
+            --border-medium: #c4bda8;
+            --border-light: #ddd7c8;
+
+            --font-display: 'Bebas Neue', Impact, sans-serif;
+            --font-serif: 'Source Serif 4', Georgia, serif;
+            --font-body: 'Archivo', -apple-system, sans-serif;
+
+            --radius-sm: 2px;
+            --radius-md: 4px;
+            --radius-lg: 6px;
+
+            --shadow-vintage: 4px 4px 0 var(--border-dark);
+            --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-paper);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            background-image:
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c4bda8' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* === LAYOUT === */
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-dark);
+            color: var(--text-inverse);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--racing-yellow),
+                var(--racing-yellow) 10px,
+                var(--bg-dark) 10px,
+                var(--bg-dark) 20px
+            );
+        }
+
+        .sidebar-header {
+            padding: 32px 24px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-brand {
+            font-family: var(--font-display);
+            font-size: 36px;
+            letter-spacing: 3px;
+            line-height: 1;
+            color: var(--racing-yellow);
+        }
+
+        .sidebar-tagline {
+            font-family: var(--font-serif);
+            font-size: 12px;
+            font-style: italic;
+            color: rgba(255,255,255,0.6);
+            margin-top: 6px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 28px;
+        }
+
+        .nav-label {
+            font-family: var(--font-display);
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: rgba(255,255,255,0.4);
+            padding: 0 24px;
+            margin-bottom: 12px;
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 24px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: var(--text-inverse);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .nav-link.active {
+            color: var(--racing-yellow);
+            background: rgba(244, 196, 48, 0.1);
+            border-left-color: var(--racing-yellow);
+        }
+
+        .nav-link svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .nav-link .count {
+            margin-left: auto;
+            font-family: var(--font-display);
+            font-size: 14px;
+            color: var(--racing-yellow);
+        }
+
+        /* === MAIN CONTENT === */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* === HEADER === */
+        .header {
+            background: var(--bg-card);
+            border-bottom: 3px solid var(--border-dark);
+            padding: 0;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 32px;
+        }
+
+        .header-title {
+            font-family: var(--font-display);
+            font-size: 42px;
+            letter-spacing: 2px;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-tabs {
+            display: flex;
+            gap: 0;
+            padding: 0 32px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .header-tab {
+            padding: 16px 24px;
+            font-family: var(--font-display);
+            font-size: 16px;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .header-tab:hover {
+            color: var(--text-secondary);
+        }
+
+        .header-tab.active {
+            color: var(--racing-green);
+        }
+
+        .header-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--racing-green);
+        }
+
+        /* === BUTTONS === */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            font-family: var(--font-display);
+            font-size: 16px;
+            letter-spacing: 1px;
+            border: 3px solid var(--border-dark);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background: var(--racing-green);
+            color: var(--text-inverse);
+        }
+
+        .btn-primary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: var(--shadow-vintage);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-cream);
+        }
+
+        .btn-danger {
+            background: var(--racing-red);
+            color: var(--text-inverse);
+        }
+
+        .btn-danger:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: var(--shadow-vintage);
+        }
+
+        .btn-sm {
+            padding: 8px 14px;
+            font-size: 14px;
+            border-width: 2px;
+        }
+
+        .btn-icon {
+            padding: 10px;
+        }
+
+        /* === PAGE CONTENT === */
+        .page-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        /* === STATS BANNER === */
+        .stats-banner {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            margin-bottom: 32px;
+            border: 3px solid var(--border-dark);
+            background: var(--bg-card);
+        }
+
+        .stat-item {
+            padding: 24px;
+            text-align: center;
+            border-right: 3px solid var(--border-dark);
+            position: relative;
+        }
+
+        .stat-item:last-child {
+            border-right: none;
+        }
+
+        .stat-item .number {
+            font-family: var(--font-display);
+            font-size: 56px;
+            line-height: 1;
+            color: var(--racing-green);
+        }
+
+        .stat-item.red .number { color: var(--racing-red); }
+        .stat-item.orange .number { color: var(--racing-orange); }
+        .stat-item.blue .number { color: var(--racing-blue); }
+
+        .stat-item .label {
+            font-family: var(--font-display);
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        /* === CONTENT LAYOUT === */
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 32px;
+        }
+
+        /* === CARDS === */
+        .card {
+            background: var(--bg-card);
+            border: 3px solid var(--border-dark);
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 3px solid var(--border-dark);
+            background: var(--racing-green);
+            color: var(--text-inverse);
+        }
+
+        .card-header.red { background: var(--racing-red); }
+        .card-header.orange { background: var(--racing-orange); }
+        .card-header.blue { background: var(--racing-blue); }
+        .card-header.dark { background: var(--bg-dark); }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 22px;
+            letter-spacing: 2px;
+        }
+
+        .card-body {
+            padding: 0;
+        }
+
+        .card-body.padded {
+            padding: 24px;
+        }
+
+        /* === TABLE === */
+        .vintage-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .vintage-table th {
+            text-align: left;
+            font-family: var(--font-display);
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            padding: 14px 20px;
+            background: var(--bg-cream);
+            border-bottom: 2px solid var(--border-dark);
+        }
+
+        .vintage-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 15px;
+        }
+
+        .vintage-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .vintage-table tr:hover td {
+            background: var(--bg-cream);
+        }
+
+        .vintage-table .pos {
+            font-family: var(--font-display);
+            font-size: 28px;
+            width: 50px;
+        }
+
+        .vintage-table .pos.gold { color: var(--racing-yellow); }
+        .vintage-table .pos.silver { color: #8a8477; }
+        .vintage-table .pos.bronze { color: #b87333; }
+
+        .driver-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .driver-number {
+            width: 44px;
+            height: 44px;
+            background: var(--racing-red);
+            color: white;
+            font-family: var(--font-display);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-dark);
+        }
+
+        .driver-number.green { background: var(--racing-green); }
+        .driver-number.blue { background: var(--racing-blue); }
+        .driver-number.orange { background: var(--racing-orange); }
+
+        .driver-details .name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .driver-details .team {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .points-cell {
+            font-family: var(--font-display);
+            font-size: 24px;
+        }
+
+        /* === FORMS === */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 14px;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-family: var(--font-body);
+            font-size: 15px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 3px solid var(--border-dark);
+            transition: all 0.15s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            transform: translate(-2px, -2px);
+            box-shadow: var(--shadow-vintage);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            font-family: var(--font-body);
+            font-size: 15px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 3px solid var(--border-dark);
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232d2a24' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+        }
+
+        .form-select:focus {
+            outline: none;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .form-checkbox input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--racing-green);
+        }
+
+        .form-checkbox span {
+            font-size: 14px;
+        }
+
+        /* === ALERTS === */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px 20px;
+            border: 3px solid var(--border-dark);
+            margin-bottom: 24px;
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-family: var(--font-display);
+            font-size: 16px;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .alert-message {
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left: 6px solid var(--racing-green);
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-left: 6px solid var(--racing-yellow);
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border-left: 6px solid var(--racing-red);
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-left: 6px solid var(--racing-blue);
+        }
+
+        /* === MODAL === */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(28, 26, 23, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 4px solid var(--border-dark);
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 8px 8px 0 var(--border-dark);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            background: var(--racing-green);
+            color: var(--text-inverse);
+            border-bottom: 3px solid var(--border-dark);
+        }
+
+        .modal-title {
+            font-family: var(--font-display);
+            font-size: 26px;
+            letter-spacing: 2px;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--text-inverse);
+            border: 2px solid var(--border-dark);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            background: var(--racing-yellow);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 3px solid var(--border-dark);
+            background: var(--bg-cream);
+        }
+
+        /* === RACE CARD === */
+        .race-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .race-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            border-bottom: 2px solid var(--border-light);
+            transition: background 0.2s ease;
+        }
+
+        .race-item:last-child {
+            border-bottom: none;
+        }
+
+        .race-item:hover {
+            background: var(--bg-cream);
+        }
+
+        .race-round {
+            width: 48px;
+            height: 48px;
+            background: var(--racing-green);
+            color: var(--text-inverse);
+            font-family: var(--font-display);
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-dark);
+        }
+
+        .race-round.completed {
+            background: var(--bg-cream);
+            color: var(--text-muted);
+        }
+
+        .race-info {
+            flex: 1;
+        }
+
+        .race-name {
+            font-family: var(--font-display);
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
+        .race-date {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .race-status {
+            font-family: var(--font-display);
+            font-size: 12px;
+            letter-spacing: 1px;
+            padding: 6px 12px;
+            background: var(--racing-yellow);
+            border: 2px solid var(--border-dark);
+        }
+
+        .race-status.completed {
+            background: var(--bg-cream);
+            color: var(--text-muted);
+        }
+
+        /* === SCROLLBAR === */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-cream);
+            border: 2px solid var(--border-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--racing-green);
+            border: 2px solid var(--border-dark);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">RACING<br>LEAGUE</div>
+                <div class="sidebar-tagline">Est. 2024 - Victory Through Speed</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-label">DASHBOARD</div>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="#" class="nav-link active">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                Overview
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                                Standings
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-label">MANAGEMENT</div>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="#" class="nav-link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                Races
+                                <span class="count">22</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                Teams
+                                <span class="count">10</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                Drivers
+                                <span class="count">20</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-label">SETTINGS</div>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="#" class="nav-link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                                League Config
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-top">
+                    <h1 class="header-title">CHAMPIONSHIP 2024</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            EXPORT
+                        </button>
+                        <button class="btn btn-primary" onclick="document.getElementById('addTeamModal').style.display='flex'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            ADD TEAM
+                        </button>
+                    </div>
+                </div>
+                <div class="header-tabs">
+                    <button class="header-tab active">OVERVIEW</button>
+                    <button class="header-tab">RACES</button>
+                    <button class="header-tab">TEAMS</button>
+                    <button class="header-tab">DRIVERS</button>
+                    <button class="header-tab">STATISTICS</button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Alert -->
+                <div class="alert alert-warning">
+                    <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div class="alert-content">
+                        <div class="alert-title">RACE RESULTS PENDING</div>
+                        <div class="alert-message">Round 15 - Dutch Grand Prix results await confirmation</div>
+                    </div>
+                </div>
+
+                <!-- Stats Banner -->
+                <div class="stats-banner">
+                    <div class="stat-item">
+                        <div class="number">20</div>
+                        <div class="label">ACTIVE DRIVERS</div>
+                    </div>
+                    <div class="stat-item red">
+                        <div class="number">10</div>
+                        <div class="label">TEAMS</div>
+                    </div>
+                    <div class="stat-item orange">
+                        <div class="number">14</div>
+                        <div class="label">RACES RUN</div>
+                    </div>
+                    <div class="stat-item blue">
+                        <div class="number">8</div>
+                        <div class="label">REMAINING</div>
+                    </div>
+                </div>
+
+                <!-- Content Layout -->
+                <div class="content-layout">
+                    <!-- Main Table Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">DRIVER CHAMPIONSHIP</h2>
+                            <button class="btn btn-sm" style="background: var(--racing-yellow); color: var(--text-primary);">VIEW ALL</button>
+                        </div>
+                        <div class="card-body">
+                            <table class="vintage-table">
+                                <thead>
+                                    <tr>
+                                        <th>POS</th>
+                                        <th>DRIVER</th>
+                                        <th>TEAM</th>
+                                        <th>WINS</th>
+                                        <th>POINTS</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="pos gold">1</td>
+                                        <td>
+                                            <div class="driver-row">
+                                                <div class="driver-number blue">1</div>
+                                                <div class="driver-details">
+                                                    <div class="name">Max Verstappen</div>
+                                                    <div class="team">Netherlands</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>Red Bull Racing</td>
+                                        <td>7</td>
+                                        <td class="points-cell">331</td>
+                                        <td><button class="btn btn-secondary btn-sm btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pos silver">2</td>
+                                        <td>
+                                            <div class="driver-row">
+                                                <div class="driver-number orange">4</div>
+                                                <div class="driver-details">
+                                                    <div class="name">Lando Norris</div>
+                                                    <div class="team">United Kingdom</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>McLaren</td>
+                                        <td>2</td>
+                                        <td class="points-cell">279</td>
+                                        <td><button class="btn btn-secondary btn-sm btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pos bronze">3</td>
+                                        <td>
+                                            <div class="driver-row">
+                                                <div class="driver-number">16</div>
+                                                <div class="driver-details">
+                                                    <div class="name">Charles Leclerc</div>
+                                                    <div class="team">Monaco</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>Ferrari</td>
+                                        <td>3</td>
+                                        <td class="points-cell">245</td>
+                                        <td><button class="btn btn-secondary btn-sm btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pos">4</td>
+                                        <td>
+                                            <div class="driver-row">
+                                                <div class="driver-number">55</div>
+                                                <div class="driver-details">
+                                                    <div class="name">Carlos Sainz</div>
+                                                    <div class="team">Spain</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>Ferrari</td>
+                                        <td>1</td>
+                                        <td class="points-cell">190</td>
+                                        <td><button class="btn btn-secondary btn-sm btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pos">5</td>
+                                        <td>
+                                            <div class="driver-row">
+                                                <div class="driver-number orange">81</div>
+                                                <div class="driver-details">
+                                                    <div class="name">Oscar Piastri</div>
+                                                    <div class="team">Australia</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>McLaren</td>
+                                        <td>1</td>
+                                        <td class="points-cell">179</td>
+                                        <td><button class="btn btn-secondary btn-sm btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                        <!-- Upcoming Races -->
+                        <div class="card">
+                            <div class="card-header red">
+                                <h2 class="card-title">RACE CALENDAR</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="race-list">
+                                    <div class="race-item">
+                                        <div class="race-round completed">13</div>
+                                        <div class="race-info">
+                                            <div class="race-name">HUNGARIAN GP</div>
+                                            <div class="race-date">July 21, 2024</div>
+                                        </div>
+                                        <div class="race-status completed">DONE</div>
+                                    </div>
+                                    <div class="race-item">
+                                        <div class="race-round completed">14</div>
+                                        <div class="race-info">
+                                            <div class="race-name">BELGIAN GP</div>
+                                            <div class="race-date">July 28, 2024</div>
+                                        </div>
+                                        <div class="race-status completed">DONE</div>
+                                    </div>
+                                    <div class="race-item">
+                                        <div class="race-round">15</div>
+                                        <div class="race-info">
+                                            <div class="race-name">DUTCH GP</div>
+                                            <div class="race-date">August 25, 2024</div>
+                                        </div>
+                                        <div class="race-status">NEXT</div>
+                                    </div>
+                                    <div class="race-item">
+                                        <div class="race-round">16</div>
+                                        <div class="race-info">
+                                            <div class="race-name">ITALIAN GP</div>
+                                            <div class="race-date">September 1, 2024</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="card">
+                            <div class="card-header dark">
+                                <h2 class="card-title">QUICK ACTIONS</h2>
+                            </div>
+                            <div class="card-body padded">
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <button class="btn btn-primary" style="width: 100%; justify-content: center;">ENTER RESULTS</button>
+                                    <button class="btn btn-secondary" style="width: 100%; justify-content: center;">ADD DRIVER</button>
+                                    <button class="btn btn-secondary" style="width: 100%; justify-content: center;">SCHEDULE RACE</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Team Modal -->
+    <div class="modal-overlay" id="addTeamModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">ADD NEW TEAM</h3>
+                <button class="modal-close" onclick="document.getElementById('addTeamModal').style.display='none'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <div class="alert-content">
+                        <div class="alert-message">Team will be added to the current championship.</div>
+                    </div>
+                </div>
+
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">TEAM NAME</label>
+                        <input type="text" class="form-input" placeholder="e.g., Scuderia Ferrari">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">SHORT NAME</label>
+                            <input type="text" class="form-input" placeholder="e.g., FER">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">COUNTRY</label>
+                            <select class="form-select">
+                                <option>Select country...</option>
+                                <option>Italy</option>
+                                <option>United Kingdom</option>
+                                <option>Germany</option>
+                                <option>France</option>
+                                <option>Austria</option>
+                                <option>United States</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">PRIMARY COLOR</label>
+                            <input type="color" class="form-input" value="#dc0000" style="height: 52px; padding: 8px;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SECONDARY COLOR</label>
+                            <input type="color" class="form-input" value="#ffeb3b" style="height: 52px; padding: 8px;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-checkbox">
+                            <input type="checkbox" checked>
+                            <span>Team is active for current season</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="document.getElementById('addTeamModal').style.display='none'">CANCEL</button>
+                <button class="btn btn-primary">ADD TEAM</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

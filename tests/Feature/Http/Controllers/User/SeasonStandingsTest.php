@@ -276,6 +276,290 @@ class SeasonStandingsTest extends TestCase
         ]);
     }
 
+    public function test_calculates_drop_totals_correctly_without_divisions(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Enable drop rounds on season
+        $this->season->update([
+            'drop_round' => true,
+            'total_drop_rounds' => 1,
+        ]);
+
+        // Create two drivers with different participation levels
+        [$driver1Id, $driver2Id] = $this->createDrivers(['Driver 1', 'Driver 2']);
+
+        // Driver 1 participates in 6 rounds with scores: 20, 20, 16, 26, 26, 25
+        // Should drop 16 (lowest), resulting in drop_total = 117
+        $this->createRoundWithStandings(1, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 20],
+            ['driver_id' => $driver2Id, 'driver_name' => 'Driver 2', 'total_points' => 10],
+        ]);
+
+        $this->createRoundWithStandings(2, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 20],
+            ['driver_id' => $driver2Id, 'driver_name' => 'Driver 2', 'total_points' => 16],
+        ]);
+
+        $this->createRoundWithStandings(3, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 16],
+        ]);
+
+        // Driver 2 doesn't participate in round 4
+        $this->createRoundWithStandings(4, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 26],
+        ]);
+
+        // Driver 2 doesn't participate in round 5
+        $this->createRoundWithStandings(5, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 26],
+        ]);
+
+        $this->createRoundWithStandings(6, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 25],
+        ]);
+
+        $url = "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/standings";
+        $response = $this->getJson($url);
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('success', true);
+        $response->assertJsonPath('data.drop_round_enabled', true);
+        $response->assertJsonPath('data.total_drop_rounds', 1);
+
+        $standings = $response->json('data.standings');
+
+        // Find Driver 1
+        $driver1 = collect($standings)->firstWhere('driver_id', $driver1Id);
+        $this->assertNotNull($driver1);
+        $this->assertEquals(133, $driver1['total_points']); // 20+20+16+26+26+25
+        $this->assertEquals(117, $driver1['drop_total']); // 133 - 16 (dropped lowest)
+
+        // Find Driver 2 - only participated in 2 rounds out of 6
+        // Missing rounds count as 0 points (per documentation)
+        // Array: [10, 16, 0, 0, 0, 0] -> sorted: [0, 0, 0, 0, 10, 16]
+        // Drops 1 lowest (0), drop_total = 26
+        $driver2 = collect($standings)->firstWhere('driver_id', $driver2Id);
+        $this->assertNotNull($driver2);
+        $this->assertEquals(26, $driver2['total_points']); // 10+16
+        $this->assertEquals(26, $driver2['drop_total']); // 26 - 0 (dropped one of the missing rounds)
+    }
+
+    public function test_calculates_drop_totals_correctly_with_divisions(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Enable divisions and drop rounds on season
+        $this->season->update([
+            'race_divisions_enabled' => true,
+            'drop_round' => true,
+            'total_drop_rounds' => 1,
+        ]);
+
+        // Create division
+        $divisionA = Division::create([
+            'season_id' => $this->season->id,
+            'name' => 'Division A',
+        ]);
+
+        // Create two drivers
+        [$driver1Id, $driver2Id] = $this->createDrivers(['Driver 1', 'Driver 2']);
+
+        // Driver 1 participates in 3 rounds with scores: 25, 18, 15
+        // Should drop 15 (lowest), resulting in drop_total = 43
+        $this->createRoundWithDivisionStandings(1, [
+            [
+                'division_id' => $divisionA->id,
+                'division_name' => 'Division A',
+                'results' => [
+                    ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 25],
+                    ['driver_id' => $driver2Id, 'driver_name' => 'Driver 2', 'total_points' => 10],
+                ],
+            ],
+        ]);
+
+        $this->createRoundWithDivisionStandings(2, [
+            [
+                'division_id' => $divisionA->id,
+                'division_name' => 'Division A',
+                'results' => [
+                    ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 18],
+                ],
+            ],
+        ]);
+
+        $this->createRoundWithDivisionStandings(3, [
+            [
+                'division_id' => $divisionA->id,
+                'division_name' => 'Division A',
+                'results' => [
+                    ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 15],
+                ],
+            ],
+        ]);
+
+        $url = "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/standings";
+        $response = $this->getJson($url);
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('success', true);
+        $response->assertJsonPath('data.has_divisions', true);
+        $response->assertJsonPath('data.drop_round_enabled', true);
+        $response->assertJsonPath('data.total_drop_rounds', 1);
+
+        $standings = $response->json('data.standings');
+        $divA = collect($standings)->firstWhere('division_id', $divisionA->id);
+        $this->assertNotNull($divA);
+
+        // Find Driver 1
+        $driver1 = collect($divA['drivers'])->firstWhere('driver_id', $driver1Id);
+        $this->assertNotNull($driver1);
+        $this->assertEquals(58, $driver1['total_points']); // 25+18+15
+        $this->assertEquals(43, $driver1['drop_total']); // 58 - 15 (dropped lowest)
+
+        // Find Driver 2 - only participated in 1 round
+        $driver2 = collect($divA['drivers'])->firstWhere('driver_id', $driver2Id);
+        $this->assertNotNull($driver2);
+        $this->assertEquals(10, $driver2['total_points']);
+        $this->assertEquals(10, $driver2['drop_total']); // Can't drop when only 1 round participated
+    }
+
+    public function test_handles_tied_positions_correctly_without_divisions(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create drivers with tied points
+        // Driver 2 and 3 tied at 26pts (should both be 5th)
+        // Driver 5 should be 7th (skipping 6th)
+        [$driver1Id, $driver2Id, $driver3Id, $driver4Id, $driver5Id] = $this->createDrivers([
+            'Driver 1',
+            'Driver 2',
+            'Driver 3',
+            'Driver 4',
+            'Driver 5',
+        ]);
+
+        // Round 1
+        $this->createRoundWithStandings(1, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 28],
+            ['driver_id' => $driver2Id, 'driver_name' => 'Driver 2', 'total_points' => 26],
+            ['driver_id' => $driver3Id, 'driver_name' => 'Driver 3', 'total_points' => 26],
+            ['driver_id' => $driver4Id, 'driver_name' => 'Driver 4', 'total_points' => 24],
+            ['driver_id' => $driver5Id, 'driver_name' => 'Driver 5', 'total_points' => 23],
+        ]);
+
+        $url = "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/standings";
+        $response = $this->getJson($url);
+
+        $response->assertStatus(200);
+        $standings = $response->json('data.standings');
+        $this->assertCount(5, $standings);
+
+        // Verify positions with standard competition ranking
+        $this->assertEquals(1, $standings[0]['position']); // Driver 1: 28pts
+        $this->assertEquals(2, $standings[1]['position']); // Driver 2: 26pts (tied)
+        $this->assertEquals(2, $standings[2]['position']); // Driver 3: 26pts (tied)
+        $this->assertEquals(4, $standings[3]['position']); // Driver 4: 24pts (skips 3rd)
+        $this->assertEquals(5, $standings[4]['position']); // Driver 5: 23pts
+    }
+
+    public function test_handles_tied_positions_correctly_with_divisions(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Enable divisions on season
+        $this->season->update(['race_divisions_enabled' => true]);
+
+        // Create division
+        $divisionA = Division::create([
+            'season_id' => $this->season->id,
+            'name' => 'Division A',
+        ]);
+
+        // Create drivers
+        [$driver1Id, $driver2Id, $driver3Id, $driver4Id] = $this->createDrivers([
+            'Driver 1',
+            'Driver 2',
+            'Driver 3',
+            'Driver 4',
+        ]);
+
+        // Create round with tied drivers
+        $this->createRoundWithDivisionStandings(1, [
+            [
+                'division_id' => $divisionA->id,
+                'division_name' => 'Division A',
+                'results' => [
+                    ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 30],
+                    ['driver_id' => $driver2Id, 'driver_name' => 'Driver 2', 'total_points' => 25],
+                    ['driver_id' => $driver3Id, 'driver_name' => 'Driver 3', 'total_points' => 25],
+                    ['driver_id' => $driver4Id, 'driver_name' => 'Driver 4', 'total_points' => 20],
+                ],
+            ],
+        ]);
+
+        $url = "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/standings";
+        $response = $this->getJson($url);
+
+        $response->assertStatus(200);
+        $standings = $response->json('data.standings');
+        $divA = collect($standings)->firstWhere('division_id', $divisionA->id);
+        $this->assertNotNull($divA);
+
+        // Verify positions with standard competition ranking
+        $this->assertEquals(1, $divA['drivers'][0]['position']); // Driver 1: 30pts
+        $this->assertEquals(2, $divA['drivers'][1]['position']); // Driver 2: 25pts (tied)
+        $this->assertEquals(2, $divA['drivers'][2]['position']); // Driver 3: 25pts (tied)
+        $this->assertEquals(4, $divA['drivers'][3]['position']); // Driver 4: 20pts (skips 3rd)
+    }
+
+    public function test_handles_tied_positions_with_drop_rounds(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Enable drop rounds on season
+        $this->season->update([
+            'drop_round' => true,
+            'total_drop_rounds' => 1,
+        ]);
+
+        // Create drivers
+        [$driver1Id, $driver2Id, $driver3Id] = $this->createDrivers(['Driver 1', 'Driver 2', 'Driver 3']);
+
+        // Create rounds where drivers are tied after drop round is applied
+        $this->createRoundWithStandings(1, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 25],
+            ['driver_id' => $driver2Id, 'driver_name' => 'Driver 2', 'total_points' => 20],
+            ['driver_id' => $driver3Id, 'driver_name' => 'Driver 3', 'total_points' => 20],
+        ]);
+
+        $this->createRoundWithStandings(2, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 10],
+            ['driver_id' => $driver2Id, 'driver_name' => 'Driver 2', 'total_points' => 25],
+            ['driver_id' => $driver3Id, 'driver_name' => 'Driver 3', 'total_points' => 25],
+        ]);
+
+        $url = "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/standings";
+        $response = $this->getJson($url);
+
+        $response->assertStatus(200);
+        $standings = $response->json('data.standings');
+
+        // After drop rounds:
+        // Driver 2: 45 total, drops 20, = 25 drop_total
+        // Driver 3: 45 total, drops 20, = 25 drop_total
+        // Driver 1: 35 total, drops 10, = 25 drop_total
+        // All three should be tied at position 1
+
+        $this->assertCount(3, $standings);
+        $this->assertEquals(1, $standings[0]['position']);
+        $this->assertEquals(1, $standings[1]['position']);
+        $this->assertEquals(1, $standings[2]['position']);
+        $this->assertEquals(25, $standings[0]['drop_total']);
+        $this->assertEquals(25, $standings[1]['drop_total']);
+        $this->assertEquals(25, $standings[2]['drop_total']);
+    }
+
     /**
      * Helper: Create drivers and return their season driver IDs.
      *

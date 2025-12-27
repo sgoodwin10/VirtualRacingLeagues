@@ -8,16 +8,25 @@ use InvalidArgumentException;
 
 final readonly class PointsSystem
 {
+    /** @var array<int, float> */
+    private array $positions;
+
     /**
-     * @param array<int, int> $positions Position => Points mapping
+     * @param array<int, int|float> $positions Position => Points mapping
      */
-    private function __construct(private array $positions)
+    private function __construct(array $positions)
     {
+        // Normalize positions (int) and points (float) (may receive from JSON or database)
+        $normalized = [];
+        foreach ($positions as $position => $points) {
+            $normalized[(int) $position] = (float) $points;
+        }
+        $this->positions = $normalized;
         $this->validate();
     }
 
     /**
-     * @param array<int, int> $positions
+     * @param array<int, int|float> $positions
      */
     public static function from(array $positions): self
     {
@@ -33,6 +42,7 @@ final readonly class PointsSystem
         if (!is_array($decoded)) {
             throw new InvalidArgumentException('Invalid JSON for points system');
         }
+
         return new self($decoded);
     }
 
@@ -74,22 +84,22 @@ final readonly class PointsSystem
                 throw new InvalidArgumentException('Position must be positive integer');
             }
             if ($points < 0) {
-                throw new InvalidArgumentException('Points must be non-negative integer');
+                throw new InvalidArgumentException('Points must be non-negative');
             }
         }
     }
 
     /**
-     * @return array<int, int>
+     * @return array<int, float>
      */
     public function toArray(): array
     {
         return $this->positions;
     }
 
-    public function getPointsForPosition(int $position): int
+    public function getPointsForPosition(int $position): float
     {
-        return $this->positions[$position] ?? 0;
+        return $this->positions[$position] ?? 0.0;
     }
 
     /**

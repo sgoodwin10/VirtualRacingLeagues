@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Pit Crew - League Management Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --concrete-dark: #1c1c1c;
+            --concrete-mid: #2a2a2a;
+            --concrete-light: #3d3d3d;
+            --steel: #525252;
+            --aluminum: #a3a3a3;
+            --white: #fafafa;
+            --safety-orange: #ff6b00;
+            --safety-yellow: #ffc107;
+            --caution-stripe: repeating-linear-gradient(
+                45deg,
+                var(--safety-yellow),
+                var(--safety-yellow) 10px,
+                var(--concrete-dark) 10px,
+                var(--concrete-dark) 20px
+            );
+            --danger-red: #dc2626;
+            --success-green: #16a34a;
+            --info-blue: #0284c7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--concrete-dark);
+            color: var(--aluminum);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 20% 50%, rgba(255, 107, 0, 0.03) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        }
+
+        /* Header */
+        .header {
+            background: var(--concrete-mid);
+            border-bottom: 4px solid var(--safety-orange);
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--caution-stripe);
+        }
+
+        .header-inner {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 72px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-mark {
+            width: 48px;
+            height: 48px;
+            background: var(--safety-orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+        }
+
+        .logo-mark svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--concrete-dark);
+        }
+
+        .logo-text {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.75rem;
+            color: var(--white);
+            letter-spacing: 2px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 0;
+            height: 72px;
+        }
+
+        .nav-item {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 1.25rem;
+            color: var(--aluminum);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: color 0.15s;
+        }
+
+        .nav-item:hover {
+            color: var(--white);
+        }
+
+        .nav-item.active {
+            color: var(--safety-orange);
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--safety-orange);
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--concrete-light);
+            padding: 0.5rem 1rem;
+            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--steel);
+            border: 2px solid var(--safety-orange);
+        }
+
+        .user-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 72px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--concrete-mid);
+            border-right: 1px solid var(--concrete-light);
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--concrete-light);
+        }
+
+        .season-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--safety-orange);
+            color: var(--concrete-dark);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            padding: 0.5rem 1rem;
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+        }
+
+        .sidebar-section {
+            padding: 1rem 0;
+        }
+
+        .sidebar-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--steel);
+            padding: 0 1.5rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-title::before {
+            content: '//';
+            color: var(--safety-orange);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            color: var(--aluminum);
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+        }
+
+        .sidebar-item:hover {
+            background: var(--concrete-light);
+            color: var(--white);
+        }
+
+        .sidebar-item.active {
+            background: rgba(255, 107, 0, 0.1);
+            border-left-color: var(--safety-orange);
+            color: var(--safety-orange);
+        }
+
+        .sidebar-icon {
+            width: 18px;
+            height: 18px;
+            opacity: 0.7;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background: var(--concrete-dark);
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--white);
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+
+        .page-subtitle {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--steel);
+            margin-top: 0.25rem;
+        }
+
+        /* Buttons */
+        .btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.15s;
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+        }
+
+        .btn-primary {
+            background: var(--safety-orange);
+            color: var(--concrete-dark);
+        }
+
+        .btn-primary:hover {
+            background: #ff8533;
+        }
+
+        .btn-secondary {
+            background: var(--concrete-light);
+            color: var(--white);
+        }
+
+        .btn-secondary:hover {
+            background: var(--steel);
+        }
+
+        .btn-danger {
+            background: var(--danger-red);
+            color: var(--white);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            clip-path: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--concrete-mid);
+            border: 1px solid var(--concrete-light);
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--safety-orange);
+        }
+
+        .stat-number {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--steel);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--white);
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--steel);
+            margin-top: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-change.up {
+            color: var(--success-green);
+        }
+
+        .stat-change.down {
+            color: var(--danger-red);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--concrete-mid);
+            border: 1px solid var(--concrete-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--concrete-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(180deg, var(--concrete-light) 0%, var(--concrete-mid) 100%);
+        }
+
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.25rem;
+            color: var(--white);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--safety-orange);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--steel);
+            text-align: left;
+            padding: 1rem;
+            background: var(--concrete-dark);
+            border-bottom: 2px solid var(--safety-orange);
+        }
+
+        .data-table td {
+            padding: 1rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--concrete-light);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 107, 0, 0.05);
+        }
+
+        .position-badge {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.25rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid;
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+        }
+
+        .position-badge.p1 {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            border-color: #fbbf24;
+            color: var(--concrete-dark);
+        }
+
+        .position-badge.p2 {
+            background: linear-gradient(135deg, #d1d5db 0%, #6b7280 100%);
+            border-color: #d1d5db;
+            color: var(--concrete-dark);
+        }
+
+        .position-badge.p3 {
+            background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+            border-color: #f97316;
+            color: var(--white);
+        }
+
+        .position-badge.other {
+            background: var(--concrete-light);
+            border-color: var(--steel);
+            color: var(--aluminum);
+        }
+
+        .driver-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .driver-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--concrete-light);
+            border: 2px solid var(--steel);
+        }
+
+        .driver-name {
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .driver-team {
+            font-size: 0.75rem;
+            color: var(--steel);
+        }
+
+        .points-badge {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 700;
+            background: var(--safety-orange);
+            color: var(--concrete-dark);
+            padding: 0.35rem 0.75rem;
+            clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-left: 4px solid;
+            font-size: 0.875rem;
+        }
+
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.1);
+            border-left-color: var(--safety-yellow);
+            color: var(--safety-yellow);
+        }
+
+        .alert-success {
+            background: rgba(22, 163, 74, 0.1);
+            border-left-color: var(--success-green);
+            color: var(--success-green);
+        }
+
+        .alert-danger {
+            background: rgba(220, 38, 38, 0.1);
+            border-left-color: var(--danger-red);
+            color: var(--danger-red);
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+        }
+
+        /* Form Elements */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--steel);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-label::before {
+            content: '>';
+            color: var(--safety-orange);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--concrete-dark);
+            border: 1px solid var(--concrete-light);
+            color: var(--white);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--safety-orange);
+        }
+
+        .form-input::placeholder {
+            color: var(--steel);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--concrete-dark);
+            border: 1px solid var(--concrete-light);
+            color: var(--white);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23ff6b00' viewBox='0 0 16 16'%3E%3Cpath d='M8 12L2 6h12l-6 6z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--safety-orange);
+        }
+
+        .form-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .form-checkbox {
+            width: 20px;
+            height: 20px;
+            background: var(--concrete-dark);
+            border: 2px solid var(--steel);
+            cursor: pointer;
+            appearance: none;
+            position: relative;
+        }
+
+        .form-checkbox:checked {
+            background: var(--safety-orange);
+            border-color: var(--safety-orange);
+        }
+
+        .form-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--concrete-dark);
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .form-checkbox-label {
+            font-size: 0.875rem;
+            color: var(--aluminum);
+        }
+
+        /* File Upload */
+        .file-upload {
+            border: 2px dashed var(--steel);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: var(--concrete-dark);
+        }
+
+        .file-upload:hover {
+            border-color: var(--safety-orange);
+            background: rgba(255, 107, 0, 0.05);
+        }
+
+        .file-upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .file-upload-text {
+            font-size: 0.875rem;
+            color: var(--aluminum);
+        }
+
+        .file-upload-text strong {
+            color: var(--safety-orange);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--concrete-dark);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 1rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--steel);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s;
+        }
+
+        .tab:hover {
+            color: var(--aluminum);
+        }
+
+        .tab.active {
+            color: var(--safety-orange);
+            background: var(--concrete-light);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--safety-orange);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.35rem 0.75rem;
+            border: 1px solid;
+        }
+
+        .status-badge.active {
+            border-color: var(--success-green);
+            color: var(--success-green);
+            background: rgba(22, 163, 74, 0.1);
+        }
+
+        .status-badge.pending {
+            border-color: var(--safety-yellow);
+            color: var(--safety-yellow);
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        .status-badge.completed {
+            border-color: var(--steel);
+            color: var(--steel);
+            background: rgba(82, 82, 82, 0.1);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: var(--concrete-mid);
+            border: 1px solid var(--concrete-light);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            animation: modalSlide 0.2s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--concrete-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(180deg, var(--concrete-light) 0%, var(--concrete-mid) 100%);
+        }
+
+        .modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--safety-orange);
+        }
+
+        .modal-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            color: var(--white);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .modal-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--safety-orange);
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            background: var(--concrete-dark);
+            border: 1px solid var(--steel);
+            color: var(--aluminum);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            transition: all 0.15s;
+        }
+
+        .modal-close:hover {
+            background: var(--danger-red);
+            border-color: var(--danger-red);
+            color: var(--white);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-height: calc(90vh - 140px);
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--concrete-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            background: var(--concrete-dark);
+        }
+
+        /* Caution Banner */
+        .caution-banner {
+            background: var(--caution-stripe);
+            height: 8px;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background: var(--concrete-dark);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--safety-orange);
+            transition: width 0.3s ease;
+        }
+
+        /* Tool Number Badge */
+        .tool-number {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: 700;
+            background: var(--concrete-dark);
+            color: var(--steel);
+            padding: 0.125rem 0.5rem;
+            border: 1px solid var(--steel);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-mark">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <span class="logo-text">VRL CONTROL CENTER</span>
+            </div>
+
+            <nav class="nav">
+                <button class="nav-item active">DASHBOARD</button>
+                <button class="nav-item">SEASONS</button>
+                <button class="nav-item">TEAMS</button>
+                <button class="nav-item">DRIVERS</button>
+                <button class="nav-item">REPORTS</button>
+            </nav>
+
+            <div class="user-badge">
+                <div class="user-avatar"></div>
+                <span class="user-name">CREW CHIEF</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="season-badge">
+                    📅 SEASON 2024
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">OPERATIONS</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item active">
+                        <span class="sidebar-icon">📊</span>
+                        OVERVIEW
+                    </li>
+                    <li class="sidebar-item">
+                        <span class="sidebar-icon">🏁</span>
+                        ROUNDS
+                    </li>
+                    <li class="sidebar-item">
+                        <span class="sidebar-icon">🏆</span>
+                        STANDINGS
+                    </li>
+                    <li class="sidebar-item">
+                        <span class="sidebar-icon">📈</span>
+                        ANALYTICS
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">MANAGEMENT</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <span class="sidebar-icon">🏎️</span>
+                        TEAMS
+                    </li>
+                    <li class="sidebar-item">
+                        <span class="sidebar-icon">👤</span>
+                        DRIVERS
+                    </li>
+                    <li class="sidebar-item">
+                        <span class="sidebar-icon">🛣️</span>
+                        CIRCUITS
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">SYSTEM</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <span class="sidebar-icon">⚙️</span>
+                        SETTINGS
+                    </li>
+                    <li class="sidebar-item">
+                        <span class="sidebar-icon">📋</span>
+                        LOGS
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">SEASON OVERVIEW</h1>
+                    <p class="page-subtitle">// F1 WORLD CHAMPIONSHIP 2024</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary">EXPORT DATA</button>
+                    <button class="btn btn-primary">+ ADD ROUND</button>
+                </div>
+            </div>
+
+            <!-- Alert -->
+            <div class="alert alert-warning">
+                <span class="alert-icon">⚠️</span>
+                <span><strong>ATTENTION:</strong> Round 15 results pending verification. Action required before publication.</span>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">#001</div>
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">TOTAL ROUNDS</div>
+                    <div class="stat-change up">+2 vs last season</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">#002</div>
+                    <div class="stat-value">20</div>
+                    <div class="stat-label">ACTIVE DRIVERS</div>
+                    <div class="stat-change">No change</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">#003</div>
+                    <div class="stat-value">10</div>
+                    <div class="stat-label">TEAMS</div>
+                    <div class="stat-change">No change</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">#004</div>
+                    <div class="stat-value">58%</div>
+                    <div class="stat-label">COMPLETION</div>
+                    <div class="progress-bar" style="margin-top: 0.5rem;">
+                        <div class="progress-fill" style="width: 58%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver Standings -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">DRIVER STANDINGS</h2>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary btn-icon">🔄</button>
+                        <button class="btn btn-secondary">VIEW ALL</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>POS</th>
+                            <th>DRIVER</th>
+                            <th>NAT</th>
+                            <th>WINS</th>
+                            <th>PODIUMS</th>
+                            <th>POINTS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="position-badge p1">1</div></td>
+                            <td>
+                                <div class="driver-cell">
+                                    <div class="driver-avatar"></div>
+                                    <div>
+                                        <div class="driver-name">Max Verstappen</div>
+                                        <div class="driver-team">Red Bull Racing</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>🇳🇱 NED</td>
+                            <td>7</td>
+                            <td>10</td>
+                            <td><span class="points-badge">314</span></td>
+                        </tr>
+                        <tr>
+                            <td><div class="position-badge p2">2</div></td>
+                            <td>
+                                <div class="driver-cell">
+                                    <div class="driver-avatar"></div>
+                                    <div>
+                                        <div class="driver-name">Lando Norris</div>
+                                        <div class="driver-team">McLaren</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>🇬🇧 GBR</td>
+                            <td>2</td>
+                            <td>8</td>
+                            <td><span class="points-badge">189</span></td>
+                        </tr>
+                        <tr>
+                            <td><div class="position-badge p3">3</div></td>
+                            <td>
+                                <div class="driver-cell">
+                                    <div class="driver-avatar"></div>
+                                    <div>
+                                        <div class="driver-name">Charles Leclerc</div>
+                                        <div class="driver-team">Ferrari</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>🇲🇨 MON</td>
+                            <td>2</td>
+                            <td>6</td>
+                            <td><span class="points-badge">176</span></td>
+                        </tr>
+                        <tr>
+                            <td><div class="position-badge other">4</div></td>
+                            <td>
+                                <div class="driver-cell">
+                                    <div class="driver-avatar"></div>
+                                    <div>
+                                        <div class="driver-name">Carlos Sainz</div>
+                                        <div class="driver-team">Ferrari</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>🇪🇸 ESP</td>
+                            <td>1</td>
+                            <td>5</td>
+                            <td><span class="points-badge">162</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Schedule -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">UPCOMING OPERATIONS</h2>
+                </div>
+                <div class="card-body">
+                    <div class="tabs">
+                        <button class="tab active">SCHEDULE</button>
+                        <button class="tab">COMPLETED</button>
+                        <button class="tab">CIRCUITS</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>RND</th>
+                                <th>EVENT</th>
+                                <th>LOCATION</th>
+                                <th>DATE</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="tool-number">R15</span></td>
+                                <td>Dutch Grand Prix</td>
+                                <td>Circuit Zandvoort</td>
+                                <td>Aug 25, 2024</td>
+                                <td><span class="status-badge pending">PENDING</span></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-secondary btn-icon" style="clip-path: none;">✏️</button>
+                                        <button class="btn btn-secondary btn-icon" style="clip-path: none;">👁️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="tool-number">R16</span></td>
+                                <td>Italian Grand Prix</td>
+                                <td>Autodromo Nazionale Monza</td>
+                                <td>Sep 1, 2024</td>
+                                <td><span class="status-badge active">ACTIVE</span></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-secondary btn-icon" style="clip-path: none;">✏️</button>
+                                        <button class="btn btn-secondary btn-icon" style="clip-path: none;">👁️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Example -->
+    <div class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="caution-banner"></div>
+            <div class="modal-header">
+                <h2 class="modal-title">ADD NEW DRIVER</h2>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">FIRST NAME</label>
+                        <input type="text" class="form-input" placeholder="Enter first name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">LAST NAME</label>
+                        <input type="text" class="form-input" placeholder="Enter last name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">NATIONALITY</label>
+                        <select class="form-select">
+                            <option>Select nationality</option>
+                            <option>🇬🇧 British</option>
+                            <option>🇳🇱 Dutch</option>
+                            <option>🇪🇸 Spanish</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">TEAM</label>
+                        <select class="form-select">
+                            <option>Select team</option>
+                            <option>Red Bull Racing</option>
+                            <option>Ferrari</option>
+                            <option>McLaren</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">RACING NUMBER</label>
+                        <input type="number" class="form-input" placeholder="e.g. 44">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DATE OF BIRTH</label>
+                        <input type="date" class="form-input">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">DRIVER PHOTO</label>
+                        <div class="file-upload">
+                            <div class="file-upload-icon">📷</div>
+                            <div class="file-upload-text">
+                                <strong>Click to upload</strong> or drag and drop<br>
+                                PNG, JPG up to 5MB
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <div class="form-checkbox-group">
+                            <input type="checkbox" class="form-checkbox" checked>
+                            <label class="form-checkbox-label">Active driver for current season</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary">CANCEL</button>
+                <button class="btn btn-primary">SAVE DRIVER</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle modal visibility for demo
+        document.querySelector('.btn-primary').addEventListener('click', () => {
+            document.querySelector('.modal-overlay').style.display = 'flex';
+        });
+
+        document.querySelector('.modal-close').addEventListener('click', () => {
+            document.querySelector('.modal-overlay').style.display = 'none';
+        });
+
+        document.querySelector('.modal-overlay').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

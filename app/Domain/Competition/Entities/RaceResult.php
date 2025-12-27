@@ -32,7 +32,7 @@ final class RaceResult
         private bool $hasPole,
         private bool $dnf,
         private RaceResultStatus $status,
-        private int $racePoints,
+        private float $racePoints,
         private ?int $positionsGained,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
@@ -107,7 +107,7 @@ final class RaceResult
         bool $hasPole,
         bool $dnf,
         RaceResultStatus $status,
-        int $racePoints,
+        float $racePoints,
         ?int $positionsGained,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
@@ -241,7 +241,7 @@ final class RaceResult
         return $this->status;
     }
 
-    public function racePoints(): int
+    public function racePoints(): float
     {
         return $this->racePoints;
     }
@@ -361,7 +361,7 @@ final class RaceResult
         }
     }
 
-    public function setRacePoints(int $points): void
+    public function setRacePoints(float $points): void
     {
         if ($points < 0) {
             throw new \InvalidArgumentException('Race points cannot be negative');

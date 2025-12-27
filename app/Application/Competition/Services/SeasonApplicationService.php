@@ -715,7 +715,9 @@ final class SeasonApplicationService
      *     drop_round_enabled: bool,
      *     total_drop_rounds: int,
      *     team_championship_enabled: bool,
-     *     team_championship_results: array<mixed>
+     *     team_championship_results: array<mixed>,
+     *     teams_drop_rounds_enabled: bool,
+     *     teams_total_drop_rounds: int
      * }
      */
     public function getSeasonStandings(int $seasonId): array
@@ -726,6 +728,8 @@ final class SeasonApplicationService
         $dropRoundEnabled = $season->hasDropRound();
         $totalDropRounds = $season->getTotalDropRounds();
         $teamChampionshipEnabled = $season->teamChampionshipEnabled();
+        $teamsDropRoundsEnabled = $season->hasTeamsDropRounds();
+        $teamsTotalDropRounds = $season->getTeamsTotalDropRounds() ?? 0;
 
         // Fetch all rounds with results (completed rounds only)
         $rounds = $this->roundRepository->findBySeasonId($seasonId);
@@ -742,33 +746,51 @@ final class SeasonApplicationService
                 'total_drop_rounds' => $totalDropRounds,
                 'team_championship_enabled' => $teamChampionshipEnabled,
                 'team_championship_results' => [],
+                'teams_drop_rounds_enabled' => $teamsDropRoundsEnabled,
+                'teams_total_drop_rounds' => $teamsTotalDropRounds,
             ];
         }
 
         // Aggregate team championship results if enabled
         $teamChampionshipResults = [];
         if ($teamChampionshipEnabled) {
-            $teamChampionshipResults = $this->aggregateTeamChampionshipStandings($completedRounds);
+            $teamChampionshipResults = $this->aggregateTeamChampionshipStandings(
+                $completedRounds,
+                $teamsDropRoundsEnabled,
+                $teamsTotalDropRounds
+            );
         }
 
         if ($hasDivisions) {
             return [
-                'standings' => $this->aggregateStandingsWithDivisions($completedRounds, $dropRoundEnabled, $totalDropRounds),
+                'standings' => $this->aggregateStandingsWithDivisions(
+                    $completedRounds,
+                    $dropRoundEnabled,
+                    $totalDropRounds
+                ),
                 'has_divisions' => true,
                 'drop_round_enabled' => $dropRoundEnabled,
                 'total_drop_rounds' => $totalDropRounds,
                 'team_championship_enabled' => $teamChampionshipEnabled,
                 'team_championship_results' => $teamChampionshipResults,
+                'teams_drop_rounds_enabled' => $teamsDropRoundsEnabled,
+                'teams_total_drop_rounds' => $teamsTotalDropRounds,
             ];
         }
 
         return [
-            'standings' => $this->aggregateStandingsWithoutDivisions($completedRounds, $dropRoundEnabled, $totalDropRounds),
+            'standings' => $this->aggregateStandingsWithoutDivisions(
+                $completedRounds,
+                $dropRoundEnabled,
+                $totalDropRounds
+            ),
             'has_divisions' => false,
             'drop_round_enabled' => $dropRoundEnabled,
             'total_drop_rounds' => $totalDropRounds,
             'team_championship_enabled' => $teamChampionshipEnabled,
             'team_championship_results' => $teamChampionshipResults,
+            'teams_drop_rounds_enabled' => $teamsDropRoundsEnabled,
+            'teams_total_drop_rounds' => $teamsTotalDropRounds,
         ];
     }
 
@@ -778,8 +800,11 @@ final class SeasonApplicationService
      * @param  array<\App\Domain\Competition\Entities\Round>  $rounds
      * @return array<mixed>
      */
-    private function aggregateStandingsWithoutDivisions(array $rounds, bool $dropRoundEnabled, int $totalDropRounds): array
-    {
+    private function aggregateStandingsWithoutDivisions(
+        array $rounds,
+        bool $dropRoundEnabled,
+        int $totalDropRounds
+    ): array {
         // Extract unique driver IDs for batch fetch
         $driverIds = [];
         foreach ($rounds as $round) {
@@ -853,20 +878,34 @@ final class SeasonApplicationService
 
         // Calculate drop totals if drop round is enabled
         if ($dropRoundEnabled && $totalDropRounds > 0) {
+            // Get total number of completed rounds
+            $totalCompletedRounds = count($rounds);
+
             foreach ($driverTotals as $driverId => $data) {
                 // Get all round points for this driver
                 $roundPoints = array_map(fn ($round) => $round['points'], $driverRoundData[$driverId]);
 
+                // Pad with 0s for missing rounds (per documentation: "Missing rounds count as 0 points")
+                $participatedRounds = count($roundPoints);
+                $missingRounds = $totalCompletedRounds - $participatedRounds;
+                for ($i = 0; $i < $missingRounds; $i++) {
+                    $roundPoints[] = 0.0;
+                }
+
                 // Sort points ascending to identify lowest scores
                 sort($roundPoints, SORT_NUMERIC);
 
-                // Calculate how many rounds to drop (can't drop more than they have)
-                $roundsToDrop = min($totalDropRounds, count($roundPoints));
+                // Calculate how many rounds to drop
+                // Can only drop if driver has more rounds than drop rounds configured
+                // This ensures at least one round always counts
+                $roundsToDrop = $totalCompletedRounds > $totalDropRounds
+                    ? min($totalDropRounds, $totalCompletedRounds)
+                    : 0;
 
                 // Sum the lowest N rounds to subtract
-                $droppedPoints = 0;
+                $droppedPoints = 0.0;
                 for ($i = 0; $i < $roundsToDrop; $i++) {
-                    $droppedPoints += (int) ($roundPoints[$i] ?? 0);
+                    $droppedPoints += (float) ($roundPoints[$i] ?? 0);
                 }
 
                 // Calculate drop total
@@ -880,12 +919,28 @@ final class SeasonApplicationService
             uasort($driverTotals, fn ($a, $b) => $b['total_points'] <=> $a['total_points']);
         }
 
-        // Build final standings with positions
+        // Build final standings with positions using standard competition ranking
+        // Standard competition ranking: drivers with same points share position,
+        // next position skips (e.g., two drivers at 5th, next driver is 7th)
         $standings = [];
         $position = 1;
+        $previousScore = null;
+        $driversAtCurrentPosition = 0;
+
         foreach ($driverTotals as $driverId => $data) {
+            // Determine which score to use for ranking
+            $currentScore = ($dropRoundEnabled && $totalDropRounds > 0 && isset($data['drop_total']))
+                ? $data['drop_total']
+                : $data['total_points'];
+
+            // If score changed from previous driver, update position
+            if ($previousScore !== null && $currentScore !== $previousScore) {
+                $position += $driversAtCurrentPosition;
+                $driversAtCurrentPosition = 0;
+            }
+
             $standing = [
-                'position' => $position++,
+                'position' => $position,
                 'driver_id' => $data['driver_id'],
                 'driver_name' => $data['driver_name'],
                 'total_points' => $data['total_points'],
@@ -900,6 +955,8 @@ final class SeasonApplicationService
             }
 
             $standings[] = $standing;
+            $previousScore = $currentScore;
+            $driversAtCurrentPosition++;
         }
 
         return $standings;
@@ -911,8 +968,11 @@ final class SeasonApplicationService
      * @param  array<\App\Domain\Competition\Entities\Round>  $rounds
      * @return array<mixed>
      */
-    private function aggregateStandingsWithDivisions(array $rounds, bool $dropRoundEnabled, int $totalDropRounds): array
-    {
+    private function aggregateStandingsWithDivisions(
+        array $rounds,
+        bool $dropRoundEnabled,
+        int $totalDropRounds
+    ): array {
         // Extract unique driver IDs and division IDs for batch fetch
         $driverIds = [];
         $divisionIds = [];
@@ -1021,42 +1081,92 @@ final class SeasonApplicationService
         foreach ($divisionDriverTotals as $divisionId => $divisionTotals) {
             // Calculate drop totals if drop round is enabled
             if ($dropRoundEnabled && $totalDropRounds > 0) {
+                // Get total number of completed rounds
+                $totalCompletedRounds = count($rounds);
+
                 foreach ($divisionTotals['drivers'] as $driverId => $data) {
                     // Get all round points for this driver
-                    $roundPoints = array_map(fn ($round) => $round['points'], $divisionDriverRoundData[$divisionId][$driverId]);
+                    $roundPoints = array_map(
+                        fn ($round) => $round['points'],
+                        $divisionDriverRoundData[$divisionId][$driverId]
+                    );
+
+                    // Pad with 0s for missing rounds (per documentation: "Missing rounds count as 0 points")
+                    $participatedRounds = count($roundPoints);
+                    $missingRounds = $totalCompletedRounds - $participatedRounds;
+                    for ($i = 0; $i < $missingRounds; $i++) {
+                        $roundPoints[] = 0.0;
+                    }
 
                     // Sort points ascending to identify lowest scores
                     sort($roundPoints, SORT_NUMERIC);
 
-                    // Calculate how many rounds to drop (can't drop more than they have)
-                    $roundsToDrop = min($totalDropRounds, count($roundPoints));
+                    // Calculate how many rounds to drop
+                    // Can only drop if driver has more rounds than drop rounds configured
+                    // This ensures at least one round always counts
+                    $roundsToDrop = $totalCompletedRounds > $totalDropRounds
+                        ? min($totalDropRounds, $totalCompletedRounds)
+                        : 0;
 
                     // Sum the lowest N rounds to subtract
-                    $droppedPoints = 0;
+                    $droppedPoints = 0.0;
                     for ($i = 0; $i < $roundsToDrop; $i++) {
-                        $droppedPoints += (int) ($roundPoints[$i] ?? 0);
+                        $droppedPoints += (float) ($roundPoints[$i] ?? 0);
                     }
 
                     // Calculate drop total
-                    $divisionDriverTotals[$divisionId]['drivers'][$driverId]['drop_total'] = $data['total_points'] - $droppedPoints;
+                    $divisionDriverTotals[$divisionId]['drivers'][$driverId]['drop_total'] =
+                        $data['total_points'] - $droppedPoints;
                 }
 
                 // Sort drivers by drop total descending
-                // PHPStan loses type information after uasort - the array structure is preserved but PHPStan can't infer it
-                uasort($divisionDriverTotals[$divisionId]['drivers'], fn ($a, $b) => ($b['drop_total'] ?? 0) <=> ($a['drop_total'] ?? 0));
+                // PHPStan loses type information after uasort
+                uasort(
+                    $divisionDriverTotals[$divisionId]['drivers'],
+                    fn ($a, $b) => ($b['drop_total'] ?? 0) <=> ($a['drop_total'] ?? 0)
+                );
             } else {
                 // Sort drivers by total points descending
-                uasort($divisionDriverTotals[$divisionId]['drivers'], fn ($a, $b) => $b['total_points'] <=> $a['total_points']);
+                uasort(
+                    $divisionDriverTotals[$divisionId]['drivers'],
+                    fn ($a, $b) => $b['total_points'] <=> $a['total_points']
+                );
             }
 
-            // Build driver standings with positions
+            // Build driver standings with positions using standard competition ranking
+            // Standard competition ranking: drivers with same points share position,
+            // next position skips (e.g., two drivers at 5th, next driver is 7th)
             $drivers = [];
             $position = 1;
+            $previousScore = null;
+            $driversAtCurrentPosition = 0;
+
             foreach ($divisionDriverTotals[$divisionId]['drivers'] as $driverId => $driverData) {
-                // PHPStan loses type information after uasort - the array structure is preserved but PHPStan can't infer it
-                /** @var array{driver_id: mixed, driver_name: string, total_points: float|int, podiums: int, poles: int, drop_total?: float|int} $driverData */
+                // PHPStan loses type information after uasort
+                /**
+                 * @var array{
+                 *     driver_id: mixed,
+                 *     driver_name: string,
+                 *     total_points: float|int,
+                 *     podiums: int,
+                 *     poles: int,
+                 *     drop_total?: float|int
+                 * } $driverData
+                 */
+
+                // Determine which score to use for ranking
+                $currentScore = ($dropRoundEnabled && $totalDropRounds > 0 && isset($driverData['drop_total']))
+                    ? $driverData['drop_total']
+                    : $driverData['total_points'];
+
+                // If score changed from previous driver, update position
+                if ($previousScore !== null && $currentScore !== $previousScore) {
+                    $position += $driversAtCurrentPosition;
+                    $driversAtCurrentPosition = 0;
+                }
+
                 $driver = [
-                    'position' => $position++,
+                    'position' => $position,
                     'driver_id' => $driverData['driver_id'],
                     'driver_name' => $driverData['driver_name'],
                     'total_points' => $driverData['total_points'],
@@ -1071,6 +1181,8 @@ final class SeasonApplicationService
                 }
 
                 $drivers[] = $driver;
+                $previousScore = $currentScore;
+                $driversAtCurrentPosition++;
             }
 
             $standings[] = [
@@ -1093,8 +1205,11 @@ final class SeasonApplicationService
      * @param  array<\App\Domain\Competition\Entities\Round>  $rounds
      * @return array<mixed>
      */
-    private function aggregateTeamChampionshipStandings(array $rounds): array
-    {
+    private function aggregateTeamChampionshipStandings(
+        array $rounds,
+        bool $teamsDropRoundsEnabled,
+        int $teamsTotalDropRounds
+    ): array {
         // Aggregate team points across all rounds
         $teamTotals = [];
         $teamRoundData = [];
@@ -1135,6 +1250,43 @@ final class SeasonApplicationService
             }
         }
 
+        // Calculate drop totals if team drop rounds are enabled
+        if ($teamsDropRoundsEnabled && $teamsTotalDropRounds > 0) {
+            // Get total number of completed rounds
+            $totalCompletedRounds = count($rounds);
+
+            foreach ($teamTotals as $teamId => $data) {
+                // Get all round points for this team
+                $roundPoints = array_map(fn ($round) => $round['points'], $teamRoundData[$teamId]);
+
+                // Pad with 0s for missing rounds (per documentation: "Missing rounds count as 0 points")
+                $participatedRounds = count($roundPoints);
+                $missingRounds = $totalCompletedRounds - $participatedRounds;
+                for ($i = 0; $i < $missingRounds; $i++) {
+                    $roundPoints[] = 0.0;
+                }
+
+                // Sort points ascending to identify lowest scores
+                sort($roundPoints, SORT_NUMERIC);
+
+                // Calculate how many rounds to drop
+                // Can only drop if team has more rounds than drop rounds configured
+                // This ensures at least one round always counts
+                $roundsToDrop = $totalCompletedRounds > $teamsTotalDropRounds
+                    ? min($teamsTotalDropRounds, $totalCompletedRounds)
+                    : 0;
+
+                // Sum the lowest N rounds to subtract
+                $droppedPoints = 0.0;
+                for ($i = 0; $i < $roundsToDrop; $i++) {
+                    $droppedPoints += (float) ($roundPoints[$i] ?? 0);
+                }
+
+                // Calculate drop total
+                $teamTotals[$teamId]['drop_total'] = $data['total_points'] - $droppedPoints;
+            }
+        }
+
         // Batch fetch team names
         $teamIds = array_keys($teamIds);
         $teams = \App\Infrastructure\Persistence\Eloquent\Models\Team::query()
@@ -1147,21 +1299,50 @@ final class SeasonApplicationService
         foreach ($teamTotals as $teamId => $data) {
             $team = $teams->get($teamId);
 
-            $standings[] = [
+            $standing = [
                 'team_id' => $data['team_id'],
                 'team_name' => $team !== null ? $team->name : 'Unknown Team',
                 'total_points' => $data['total_points'],
                 'rounds' => $teamRoundData[$teamId],
             ];
+
+            // Add drop_total if drop rounds are enabled
+            if ($teamsDropRoundsEnabled && $teamsTotalDropRounds > 0 && isset($data['drop_total'])) {
+                $standing['drop_total'] = $data['drop_total'];
+            }
+
+            $standings[] = $standing;
         }
 
-        // Sort by total points descending
-        usort($standings, fn ($a, $b) => $b['total_points'] <=> $a['total_points']);
+        // Sort by drop total if enabled, otherwise by total points
+        if ($teamsDropRoundsEnabled && $teamsTotalDropRounds > 0) {
+            usort($standings, fn ($a, $b) => ($b['drop_total'] ?? 0) <=> ($a['drop_total'] ?? 0));
+        } else {
+            usort($standings, fn ($a, $b) => $b['total_points'] <=> $a['total_points']);
+        }
 
-        // Assign positions
+        // Assign positions using standard competition ranking
+        // Standard competition ranking: teams with same points share position,
+        // next position skips (e.g., two teams at 5th, next team is 7th)
         $position = 1;
+        $previousScore = null;
+        $teamsAtCurrentPosition = 0;
+
         foreach ($standings as &$standing) {
-            $standing['position'] = $position++;
+            // Determine which score to use for ranking
+            $currentScore = ($teamsDropRoundsEnabled && $teamsTotalDropRounds > 0 && isset($standing['drop_total']))
+                ? $standing['drop_total']
+                : $standing['total_points'];
+
+            // If score changed from previous team, update position
+            if ($previousScore !== null && $currentScore !== $previousScore) {
+                $position += $teamsAtCurrentPosition;
+                $teamsAtCurrentPosition = 0;
+            }
+
+            $standing['position'] = $position;
+            $previousScore = $currentScore;
+            $teamsAtCurrentPosition++;
         }
 
         return $standings;

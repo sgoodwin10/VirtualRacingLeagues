@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $has_pole
  * @property bool $dnf
  * @property string $status
- * @property int $race_points
+ * @property float $race_points
  * @property int|null $positions_gained
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
@@ -61,7 +61,7 @@ class RaceResult extends Model
         'has_fastest_lap' => 'boolean',
         'has_pole' => 'boolean',
         'dnf' => 'boolean',
-        'race_points' => 'integer',
+        'race_points' => 'decimal:2',
         'position' => 'integer',
         'positions_gained' => 'integer',
     ];

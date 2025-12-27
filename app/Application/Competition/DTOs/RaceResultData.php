@@ -28,7 +28,7 @@ final class RaceResultData extends Data
         public bool $has_pole,
         public bool $dnf,
         public string $status,
-        public int $race_points,
+        public float $race_points,
         public ?int $positions_gained,
         public string $created_at,
         public string $updated_at,

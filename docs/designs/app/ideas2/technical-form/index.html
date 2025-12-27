@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Blueprint - Component Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Technical Blueprint - Engineering Aesthetic */
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #1c2128;
+            --bg-elevated: #21262d;
+            --bg-highlight: #272d36;
+
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --text-accent: #7ee787;
+
+            --cyan: #58a6ff;
+            --cyan-dim: rgba(88, 166, 255, 0.15);
+            --green: #7ee787;
+            --green-dim: rgba(126, 231, 135, 0.15);
+            --orange: #f0883e;
+            --orange-dim: rgba(240, 136, 62, 0.15);
+            --red: #f85149;
+            --red-dim: rgba(248, 81, 73, 0.15);
+            --purple: #bc8cff;
+            --purple-dim: rgba(188, 140, 255, 0.15);
+            --yellow: #d29922;
+
+            --border: #30363d;
+            --border-muted: #21262d;
+
+            --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+
+            --radius: 6px;
+            --grid-color: rgba(88, 166, 255, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Header */
+        .library-header {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 24px 32px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo svg {
+            width: 28px;
+            height: 28px;
+            color: var(--bg-dark);
+        }
+
+        .header-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--cyan);
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .version-badge {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 6px 12px;
+            background: var(--green-dim);
+            color: var(--green);
+            border-radius: var(--radius);
+        }
+
+        /* Navigation */
+        .library-nav {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+
+        .nav-list {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            overflow-x: auto;
+        }
+
+        .nav-list li a {
+            display: block;
+            padding: 14px 18px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .nav-list li a:hover {
+            color: var(--text-secondary);
+            background: var(--bg-elevated);
+        }
+
+        .nav-list li a.active {
+            color: var(--cyan);
+            border-bottom-color: var(--cyan);
+        }
+
+        /* Main Content */
+        .library-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 32px;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-bottom: 48px;
+        }
+
+        .hero-title {
+            font-family: var(--font-mono);
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .hero-title span {
+            color: var(--cyan);
+        }
+
+        .hero-description {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.7;
+        }
+
+        /* Section Grid */
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        /* Component Card */
+        .component-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: block;
+        }
+
+        .component-card:hover {
+            border-color: var(--cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .component-preview {
+            height: 120px;
+            background: var(--bg-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .component-preview::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 10px 10px;
+            opacity: 0.5;
+        }
+
+        .preview-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .preview-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .preview-icon.cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .preview-icon.green { background: var(--green-dim); color: var(--green); }
+        .preview-icon.orange { background: var(--orange-dim); color: var(--orange); }
+        .preview-icon.purple { background: var(--purple-dim); color: var(--purple); }
+        .preview-icon.red { background: var(--red-dim); color: var(--red); }
+
+        .component-info {
+            padding: 18px;
+        }
+
+        .component-name {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .component-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .component-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--cyan);
+        }
+
+        /* Design Principles */
+        .principles-section {
+            margin-top: 64px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--text-primary);
+        }
+
+        .principles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .principle-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            position: relative;
+        }
+
+        .principle-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--cyan);
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .principle-card.green::before { background: var(--green); }
+        .principle-card.orange::before { background: var(--orange); }
+        .principle-card.purple::before { background: var(--purple); }
+
+        .principle-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+        }
+
+        .principle-card.green .principle-title { color: var(--green); }
+        .principle-card.orange .principle-title { color: var(--orange); }
+        .principle-card.purple .principle-title { color: var(--purple); }
+
+        .principle-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Quick Reference */
+        .quick-ref {
+            margin-top: 64px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .quick-ref-header {
+            padding: 16px 20px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .quick-ref-title {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--text-primary);
+        }
+
+        .quick-ref-content {
+            padding: 20px;
+        }
+
+        .ref-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .ref-group h4 {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .ref-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+        }
+
+        .ref-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .ref-label {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .ref-value {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-panel);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-highlight);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="library-header">
+        <div class="header-content">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                    <polyline points="2 17 12 22 22 17"/>
+                    <polyline points="2 12 12 17 22 12"/>
+                </svg>
+            </div>
+            <div>
+                <div class="header-title">//TECHNICAL_BLUEPRINT</div>
+                <div class="header-subtitle">Component Library & Design System</div>
+            </div>
+            <div class="header-right">
+                <span class="version-badge">v1.0.0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="library-nav">
+        <div class="nav-content">
+            <ul class="nav-list">
+                <li><a href="index.html" class="active">Overview</a></li>
+                <li><a href="colors.html">Colors</a></li>
+                <li><a href="typography.html">Typography</a></li>
+                <li><a href="buttons.html">Buttons</a></li>
+                <li><a href="cards.html">Cards</a></li>
+                <li><a href="tables.html">Tables</a></li>
+                <li><a href="badges.html">Badges</a></li>
+                <li><a href="forms.html">Forms</a></li>
+                <li><a href="navigation.html">Navigation</a></li>
+                <li><a href="modals.html">Modals</a></li>
+                <li><a href="drawers.html">Drawers</a></li>
+                <li><a href="dialogs.html">Dialogs</a></li>
+                <li><a href="pagination.html">Pagination</a></li>
+                <li><a href="terminal.html">Terminal</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="library-content">
+        <!-- Hero -->
+        <section class="hero">
+            <h1 class="hero-title">//DESIGN_<span>SYSTEM</span></h1>
+            <p class="hero-description">
+                A technical, engineering-inspired component library built for data-driven applications.
+                Features monospace typography, grid backgrounds, and a dark theme optimized for extended use.
+            </p>
+        </section>
+
+        <!-- Components Grid -->
+        <div class="components-grid">
+            <a href="colors.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon cyan">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="13.5" cy="6.5" r="2.5"/>
+                            <circle cx="17.5" cy="10.5" r="2.5"/>
+                            <circle cx="8.5" cy="7.5" r="2.5"/>
+                            <circle cx="6.5" cy="12.5" r="2.5"/>
+                            <path d="M12 21.5c-5.523 0-10-4.477-10-10s4.477-10 10-10 10 4.477 10 10-4.477 10-10 10z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//COLORS</div>
+                    <div class="component-desc">Dark panel backgrounds, semantic colors, and accent palette</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        16 colors
+                    </div>
+                </div>
+            </a>
+
+            <a href="typography.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="4 7 4 4 20 4 20 7"/>
+                            <line x1="9" y1="20" x2="15" y2="20"/>
+                            <line x1="12" y1="4" x2="12" y2="20"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//TYPOGRAPHY</div>
+                    <div class="component-desc">IBM Plex Mono and Inter font system with technical styling</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        8 styles
+                    </div>
+                </div>
+            </a>
+
+            <a href="buttons.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon orange">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="8" width="18" height="8" rx="2"/>
+                            <line x1="7" y1="12" x2="17" y2="12"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//BUTTONS</div>
+                    <div class="component-desc">Primary, secondary, ghost, and danger button variants</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        12 variants
+                    </div>
+                </div>
+            </a>
+
+            <a href="cards.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon purple">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <line x1="3" y1="9" x2="21" y2="9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//CARDS</div>
+                    <div class="component-desc">Panel cards, metric cards, and content containers</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        6 variants
+                    </div>
+                </div>
+            </a>
+
+            <a href="tables.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon cyan">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <line x1="3" y1="9" x2="21" y2="9"/>
+                            <line x1="3" y1="15" x2="21" y2="15"/>
+                            <line x1="9" y1="3" x2="9" y2="21"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//TABLES</div>
+                    <div class="component-desc">Data tables with monospace styling and hover states</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        4 variants
+                    </div>
+                </div>
+            </a>
+
+            <a href="badges.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//BADGES</div>
+                    <div class="component-desc">Status indicators, tags, and count badges</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        10 variants
+                    </div>
+                </div>
+            </a>
+
+            <a href="forms.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon orange">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="5" width="18" height="14" rx="2"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//FORMS</div>
+                    <div class="component-desc">Inputs, selects, checkboxes, and form layouts</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        8 components
+                    </div>
+                </div>
+            </a>
+
+            <a href="navigation.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon purple">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//NAVIGATION</div>
+                    <div class="component-desc">Rail, sidebar, header, and breadcrumb navigation</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        5 components
+                    </div>
+                </div>
+            </a>
+
+            <a href="modals.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon cyan">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2"/>
+                            <line x1="2" y1="8" x2="22" y2="8"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//MODALS</div>
+                    <div class="component-desc">Overlay dialogs with form content and actions</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        3 sizes
+                    </div>
+                </div>
+            </a>
+
+            <a href="drawers.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <line x1="15" y1="3" x2="15" y2="21"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//DRAWERS</div>
+                    <div class="component-desc">Slide-out panels for forms and details</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        2 positions
+                    </div>
+                </div>
+            </a>
+
+            <a href="dialogs.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon red">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//DIALOGS</div>
+                    <div class="component-desc">Confirmation and alert dialogs with icons</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        4 types
+                    </div>
+                </div>
+            </a>
+
+            <a href="pagination.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon orange">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//PAGINATION</div>
+                    <div class="component-desc">Page navigation with numbers and controls</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        3 variants
+                    </div>
+                </div>
+            </a>
+
+            <a href="terminal.html" class="component-card">
+                <div class="component-preview">
+                    <div class="preview-icon purple">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="4 17 10 11 4 5"/>
+                            <line x1="12" y1="19" x2="20" y2="19"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="component-info">
+                    <div class="component-name">//TERMINAL</div>
+                    <div class="component-desc">Console output, code snippets, and log displays</div>
+                    <div class="component-count">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        4 components
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Design Principles -->
+        <section class="principles-section">
+            <div class="section-header">
+                <span class="section-title">//DESIGN_PRINCIPLES</span>
+            </div>
+            <div class="principles-grid">
+                <div class="principle-card">
+                    <div class="principle-title">Technical Precision</div>
+                    <p class="principle-text">
+                        Use monospace typography for data display and technical labels.
+                        Consistent spacing based on 8px grid. Sharp 6px border radius for modern feel.
+                    </p>
+                </div>
+                <div class="principle-card green">
+                    <div class="principle-title">Data-First Design</div>
+                    <p class="principle-text">
+                        Optimize for data readability with high contrast text on dark backgrounds.
+                        Use subtle grid patterns to create depth without distraction.
+                    </p>
+                </div>
+                <div class="principle-card orange">
+                    <div class="principle-title">Semantic Color</div>
+                    <p class="principle-text">
+                        Color conveys meaning: cyan for primary actions, green for success,
+                        orange for warnings, red for errors, purple for special states.
+                    </p>
+                </div>
+                <div class="principle-card purple">
+                    <div class="principle-title">Engineering Aesthetic</div>
+                    <p class="principle-text">
+                        Embrace the technical nature with //LABELS, terminal-style output,
+                        and system status indicators. Form follows function.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Reference -->
+        <section class="quick-ref">
+            <div class="quick-ref-header">
+                <span class="quick-ref-title">//QUICK_REFERENCE</span>
+            </div>
+            <div class="quick-ref-content">
+                <div class="ref-grid">
+                    <div class="ref-group">
+                        <h4>Primary Colors</h4>
+                        <div class="ref-item">
+                            <div class="ref-swatch" style="background: var(--cyan);"></div>
+                            <span class="ref-label">Cyan</span>
+                            <span class="ref-value">#58a6ff</span>
+                        </div>
+                        <div class="ref-item">
+                            <div class="ref-swatch" style="background: var(--green);"></div>
+                            <span class="ref-label">Green</span>
+                            <span class="ref-value">#7ee787</span>
+                        </div>
+                        <div class="ref-item">
+                            <div class="ref-swatch" style="background: var(--orange);"></div>
+                            <span class="ref-label">Orange</span>
+                            <span class="ref-value">#f0883e</span>
+                        </div>
+                        <div class="ref-item">
+                            <div class="ref-swatch" style="background: var(--red);"></div>
+                            <span class="ref-label">Red</span>
+                            <span class="ref-value">#f85149</span>
+                        </div>
+                    </div>
+                    <div class="ref-group">
+                        <h4>Backgrounds</h4>
+                        <div class="ref-item">
+                            <div class="ref-swatch" style="background: var(--bg-dark);"></div>
+                            <span class="ref-label">Dark</span>
+                            <span class="ref-value">#0d1117</span>
+                        </div>
+                        <div class="ref-item">
+                            <div class="ref-swatch" style="background: var(--bg-panel);"></div>
+                            <span class="ref-label">Panel</span>
+                            <span class="ref-value">#161b22</span>
+                        </div>
+                        <div class="ref-item">
+                            <div class="ref-swatch" style="background: var(--bg-card);"></div>
+                            <span class="ref-label">Card</span>
+                            <span class="ref-value">#1c2128</span>
+                        </div>
+                        <div class="ref-item">
+                            <div class="ref-swatch" style="background: var(--bg-elevated);"></div>
+                            <span class="ref-label">Elevated</span>
+                            <span class="ref-value">#21262d</span>
+                        </div>
+                    </div>
+                    <div class="ref-group">
+                        <h4>Typography</h4>
+                        <div class="ref-item">
+                            <span class="ref-label" style="font-family: var(--font-mono);">IBM Plex Mono</span>
+                            <span class="ref-value">Headers/Data</span>
+                        </div>
+                        <div class="ref-item">
+                            <span class="ref-label" style="font-family: var(--font-sans);">Inter</span>
+                            <span class="ref-value">Body Text</span>
+                        </div>
+                    </div>
+                    <div class="ref-group">
+                        <h4>Spacing</h4>
+                        <div class="ref-item">
+                            <span class="ref-label">Border Radius</span>
+                            <span class="ref-value">6px</span>
+                        </div>
+                        <div class="ref-item">
+                            <span class="ref-label">Grid Size</span>
+                            <span class="ref-value">20px</span>
+                        </div>
+                        <div class="ref-item">
+                            <span class="ref-label">Base Unit</span>
+                            <span class="ref-value">8px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

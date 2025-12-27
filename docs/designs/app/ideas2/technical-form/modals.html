@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modals - Technical Blueprint Component Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #1c2128;
+            --bg-elevated: #21262d;
+            --bg-highlight: #272d36;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --cyan: #58a6ff;
+            --cyan-dim: rgba(88, 166, 255, 0.15);
+            --green: #7ee787;
+            --green-dim: rgba(126, 231, 135, 0.15);
+            --orange: #f0883e;
+            --red: #f85149;
+            --border: #30363d;
+            --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+            --radius: 6px;
+            --grid-color: rgba(88, 166, 255, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .library-header { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 24px 32px; }
+        .header-content { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; gap: 20px; }
+        .logo { width: 48px; height: 48px; background: linear-gradient(135deg, var(--cyan), var(--green)); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .logo svg { width: 28px; height: 28px; color: var(--bg-dark); }
+        .header-title { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); }
+        .header-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
+
+        .library-nav { background: var(--bg-panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-content { max-width: 1400px; margin: 0 auto; padding: 0 32px; }
+        .nav-list { display: flex; gap: 0; list-style: none; overflow-x: auto; }
+        .nav-list li a { display: block; padding: 14px 18px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); text-decoration: none; border-bottom: 2px solid transparent; transition: all 0.15s ease; white-space: nowrap; }
+        .nav-list li a:hover { color: var(--text-secondary); background: var(--bg-elevated); }
+        .nav-list li a.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+        .library-content { max-width: 1400px; margin: 0 auto; padding: 40px 32px; }
+        .page-header { margin-bottom: 40px; }
+        .page-title { font-family: var(--font-mono); font-size: 28px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+        .page-title span { color: var(--cyan); }
+        .page-desc { font-size: 15px; color: var(--text-secondary); max-width: 600px; }
+
+        .section { margin-bottom: 48px; }
+        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .section-title { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+
+        /* Modal Preview Container */
+        .modal-preview {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: var(--radius);
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 520px;
+            overflow: hidden;
+        }
+
+        .modal.sm { max-width: 400px; }
+        .modal.lg { max-width: 640px; }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-elevated);
+        }
+
+        .modal-title {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: var(--radius);
+        }
+
+        .modal-close:hover { background: var(--bg-highlight); color: var(--text-primary); }
+
+        .modal-body { padding: 20px; }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-panel);
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary { background: var(--cyan); color: var(--bg-dark); border-color: var(--cyan); }
+        .btn-primary:hover { background: #79b8ff; }
+        .btn-ghost { background: transparent; color: var(--text-secondary); border-color: transparent; }
+        .btn-ghost:hover { background: var(--bg-elevated); color: var(--text-primary); }
+
+        /* Form Styles */
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 8px; }
+        .form-input { width: 100%; padding: 10px 12px; font-family: var(--font-sans); font-size: 13px; color: var(--text-primary); background: var(--bg-dark); border: 1px solid var(--border); border-radius: var(--radius); }
+        .form-input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px var(--cyan-dim); }
+        .form-input::placeholder { color: var(--text-muted); }
+        .form-select { width: 100%; padding: 10px 12px; font-family: var(--font-sans); font-size: 13px; color: var(--text-primary); background: var(--bg-dark); border: 1px solid var(--border); border-radius: var(--radius); appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e7681' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        .form-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .form-checkbox { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .form-checkbox input { width: 16px; height: 16px; accent-color: var(--cyan); }
+        .form-checkbox span { font-size: 13px; color: var(--text-secondary); }
+
+        /* Alert */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            margin-bottom: 18px;
+            font-size: 13px;
+            background: var(--cyan-dim);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            color: var(--cyan);
+        }
+
+        .alert-icon { flex-shrink: 0; width: 18px; height: 18px; }
+
+        .demo-info {
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .demo-label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .demo-desc { font-size: 13px; color: var(--text-muted); }
+
+        .note-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--cyan);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            padding: 16px 20px;
+            margin-top: 24px;
+        }
+
+        .note-box .note-title { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: var(--cyan); margin-bottom: 8px; }
+        .note-box .note-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-panel); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-highlight); border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <header class="library-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                    <polyline points="2 17 12 22 22 17"/>
+                    <polyline points="2 12 12 17 22 12"/>
+                </svg>
+            </a>
+            <div>
+                <div class="header-title">//TECHNICAL_BLUEPRINT</div>
+                <div class="header-subtitle">Component Library & Design System</div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="library-nav">
+        <div class="nav-content">
+            <ul class="nav-list">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="colors.html">Colors</a></li>
+                <li><a href="typography.html">Typography</a></li>
+                <li><a href="buttons.html">Buttons</a></li>
+                <li><a href="cards.html">Cards</a></li>
+                <li><a href="tables.html">Tables</a></li>
+                <li><a href="badges.html">Badges</a></li>
+                <li><a href="forms.html">Forms</a></li>
+                <li><a href="navigation.html">Navigation</a></li>
+                <li><a href="modals.html" class="active">Modals</a></li>
+                <li><a href="drawers.html">Drawers</a></li>
+                <li><a href="dialogs.html">Dialogs</a></li>
+                <li><a href="pagination.html">Pagination</a></li>
+                <li><a href="terminal.html">Terminal</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="library-content">
+        <div class="page-header">
+            <h1 class="page-title">//<span>MODALS</span></h1>
+            <p class="page-desc">
+                Overlay dialogs for forms, confirmations, and focused content.
+                Available in multiple sizes with consistent header, body, and footer structure.
+            </p>
+        </div>
+
+        <!-- Default Modal with Form -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-title">Modal with Form</span>
+            </div>
+
+            <div class="modal-preview">
+                <div class="modal">
+                    <div class="modal-header">
+                        <span class="modal-title">//NEW_DRIVER_ENTRY</span>
+                        <button class="modal-close">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert">
+                            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            <span>New entry will be added to current season roster.</span>
+                        </div>
+
+                        <form>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" class="form-input" placeholder="Enter first name">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" class="form-input" placeholder="Enter last name">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Driver Number</label>
+                                    <input type="number" class="form-input" placeholder="e.g., 44">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Team Assignment</label>
+                                    <select class="form-select">
+                                        <option>Select team...</option>
+                                        <option>Red Bull Racing</option>
+                                        <option>Ferrari</option>
+                                        <option>McLaren</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-checkbox">
+                                    <input type="checkbox" checked>
+                                    <span>Active for current season</span>
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-ghost">Cancel</button>
+                        <button class="btn btn-primary">Create Entry</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-info">
+                <div class="demo-label">Default Size (520px)</div>
+                <div class="demo-desc">Full modal with header, body with form content, and footer with action buttons</div>
+            </div>
+        </section>
+
+        <!-- Modal Sizes -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-title">Modal Sizes</span>
+            </div>
+
+            <div class="modal-preview">
+                <div class="modal sm">
+                    <div class="modal-header">
+                        <span class="modal-title">//SMALL_MODAL</span>
+                        <button class="modal-close">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="color: var(--text-secondary); font-size: 13px;">
+                            Small modal for simple confirmations or compact content. Max width: 400px.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-ghost">Cancel</button>
+                        <button class="btn btn-primary">Confirm</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-info" style="margin-bottom: 16px;">
+                <div class="demo-label">Small (400px)</div>
+                <div class="demo-desc">For simple confirmations or minimal content</div>
+            </div>
+
+            <div class="modal-preview">
+                <div class="modal lg">
+                    <div class="modal-header">
+                        <span class="modal-title">//LARGE_MODAL</span>
+                        <button class="modal-close">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="color: var(--text-secondary); font-size: 13px;">
+                            Large modal for complex forms, detailed content, or when more space is needed. Max width: 640px.
+                            This size works well for multi-column forms or when displaying data alongside form elements.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-ghost">Cancel</button>
+                        <button class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-info">
+                <div class="demo-label">Large (640px)</div>
+                <div class="demo-desc">For complex forms or detailed content</div>
+            </div>
+        </section>
+
+        <div class="note-box">
+            <div class="note-title">MODAL STRUCTURE</div>
+            <p class="note-text">
+                Modals have three sections: <strong>header</strong> with title and close button,
+                <strong>body</strong> for content, and <strong>footer</strong> for actions.
+                The overlay background uses 75% black opacity with 4px blur.
+                Sizes: Small (400px), Default (520px), Large (640px).
+            </p>
+        </div>
+    </main>
+</body>
+</html>

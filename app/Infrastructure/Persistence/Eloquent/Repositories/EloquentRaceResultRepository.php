@@ -286,7 +286,7 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
             hasPole: $model->has_pole,
             dnf: $model->dnf,
             status: RaceResultStatus::from($model->status),
-            racePoints: $model->race_points,
+            racePoints: (float) $model->race_points,
             positionsGained: $model->positions_gained,
             createdAt: new DateTimeImmutable($model->created_at->toDateTimeString()),
             updatedAt: new DateTimeImmutable($model->updated_at->toDateTimeString()),

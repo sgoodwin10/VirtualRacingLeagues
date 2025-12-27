@@ -33,7 +33,7 @@
             >
               <template #body="{ data }">
                 <div class="text-center text-gray-900">
-                  {{ data.race_points ?? '' }}
+                  {{ formatPoints(data.race_points) }}
                 </div>
               </template>
             </Column>
@@ -70,7 +70,7 @@
             <Column field="total_points" header="Final Points" class="w-32">
               <template #body="{ data }">
                 <div class="text-center font-bold text-gray-900">
-                  {{ data.total_points ?? '' }}
+                  {{ formatPoints(data.total_points) }}
                 </div>
               </template>
             </Column>
@@ -183,5 +183,18 @@ function getPositionsGainedClass(data: RoundStandingDriver): string {
     return 'text-green-600';
   }
   return 'text-red-600';
+}
+
+// Format points to show up to 2 decimal places (removes trailing zeros)
+function formatPoints(points: number | null | undefined): string {
+  if (points === null || points === undefined) {
+    return '';
+  }
+  // If it's a whole number, show it without decimals
+  if (Number.isInteger(points)) {
+    return points.toString();
+  }
+  // Otherwise, show up to 2 decimal places and remove trailing zeros
+  return parseFloat(points.toFixed(2)).toString();
 }
 </script>

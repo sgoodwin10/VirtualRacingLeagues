@@ -12,6 +12,7 @@ use Spatie\LaravelData\Attributes\Validation\IntegerType;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
+use Spatie\LaravelData\Attributes\Validation\Numeric;
 use Spatie\LaravelData\Attributes\Validation\StringType;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
@@ -69,21 +70,21 @@ final class CreateRaceData extends Data
         #[Nullable, StringType]
         public ?string $assists_restrictions,
         // Bonus Points
-        #[Nullable, IntegerType, Min(1)]
-        public ?int $fastest_lap,
+        #[Nullable, Numeric, Min(0)]
+        public int|float|null $fastest_lap,
         #[Nullable, BooleanType]
         public ?bool $fastest_lap_top_10,
-        #[Nullable, IntegerType, Min(1)]
-        public ?int $qualifying_pole,
+        #[Nullable, Numeric, Min(0)]
+        public int|float|null $qualifying_pole,
         #[Nullable, BooleanType]
         public ?bool $qualifying_pole_top_10,
         // Points - defaults to F1 standard points system
         #[Nullable, ArrayType]
         public ?array $points_system,
-        #[Nullable, IntegerType, Min(0)]
-        public ?int $dnf_points,
-        #[Nullable, IntegerType, Min(0)]
-        public ?int $dns_points,
+        #[Nullable, Numeric, Min(0)]
+        public int|float|null $dnf_points,
+        #[Nullable, Numeric, Min(0)]
+        public int|float|null $dns_points,
         #[Nullable, BooleanType]
         public ?bool $race_points,
         // Notes

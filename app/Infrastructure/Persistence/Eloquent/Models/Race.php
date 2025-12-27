@@ -34,13 +34,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $mandatory_pit_stop
  * @property int|null $minimum_pit_time
  * @property string|null $assists_restrictions
- * @property int|null $fastest_lap
+ * @property float|null $fastest_lap
  * @property bool $fastest_lap_top_10
- * @property int|null $qualifying_pole
+ * @property float|null $qualifying_pole
  * @property bool $qualifying_pole_top_10
- * @property array<int, int> $points_system
- * @property int $dnf_points
- * @property int $dns_points
+ * @property array<int, float> $points_system
+ * @property float $dnf_points
+ * @property float $dns_points
  * @property bool $race_points
  * @property string|null $race_notes
  * @property string $status
@@ -125,13 +125,13 @@ final class Race extends Model
         'collision_penalties' => 'boolean',
         'mandatory_pit_stop' => 'boolean',
         'minimum_pit_time' => 'integer',
-        'fastest_lap' => 'integer',
+        'fastest_lap' => 'decimal:2',
         'fastest_lap_top_10' => 'boolean',
-        'qualifying_pole' => 'integer',
+        'qualifying_pole' => 'decimal:2',
         'qualifying_pole_top_10' => 'boolean',
         'points_system' => 'array',
-        'dnf_points' => 'integer',
-        'dns_points' => 'integer',
+        'dnf_points' => 'decimal:2',
+        'dns_points' => 'decimal:2',
         'race_points' => 'boolean',
     ];
 

@@ -29,7 +29,7 @@ final class QualifierData extends Data
         public bool $collision_penalties,
         public ?string $assists_restrictions,
         // Bonus Points
-        public ?int $qualifying_pole,
+        public ?float $qualifying_pole,
         public bool $qualifying_pole_top_10,
         // Notes
         public ?string $race_notes,

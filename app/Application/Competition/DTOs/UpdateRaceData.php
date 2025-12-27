@@ -12,6 +12,7 @@ use Spatie\LaravelData\Attributes\Validation\IntegerType;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
+use Spatie\LaravelData\Attributes\Validation\Numeric;
 use Spatie\LaravelData\Attributes\Validation\StringType;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
@@ -67,21 +68,21 @@ final class UpdateRaceData extends Data
         #[Nullable, StringType]
         public string|Optional|null $assists_restrictions = new Optional(),
         // Bonus Points
-        #[Nullable, IntegerType, Min(1)]
-        public int|Optional|null $fastest_lap = new Optional(),
+        #[Nullable, Numeric, Min(0)]
+        public int|float|Optional|null $fastest_lap = new Optional(),
         #[Nullable, BooleanType]
         public bool|Optional|null $fastest_lap_top_10 = new Optional(),
-        #[Nullable, IntegerType, Min(1)]
-        public int|Optional|null $qualifying_pole = new Optional(),
+        #[Nullable, Numeric, Min(0)]
+        public int|float|Optional|null $qualifying_pole = new Optional(),
         #[Nullable, BooleanType]
         public bool|Optional|null $qualifying_pole_top_10 = new Optional(),
         // Points
         #[Nullable, ArrayType]
         public array|Optional|null $points_system = new Optional(),
-        #[Nullable, IntegerType, Min(0)]
-        public int|Optional|null $dnf_points = new Optional(),
-        #[Nullable, IntegerType, Min(0)]
-        public int|Optional|null $dns_points = new Optional(),
+        #[Nullable, Numeric, Min(0)]
+        public int|float|Optional|null $dnf_points = new Optional(),
+        #[Nullable, Numeric, Min(0)]
+        public int|float|Optional|null $dns_points = new Optional(),
         #[Nullable, BooleanType]
         public bool|Optional|null $race_points = new Optional(),
         // Notes
@@ -147,25 +148,25 @@ final class UpdateRaceData extends Data
             );
         }
 
-        // Validate: fastest_lap must be at least 1 when provided
+        // Validate: fastest_lap must be at least 0 when provided
         if (
             array_key_exists('fastest_lap', $payload)
             && $payload['fastest_lap'] !== null
-            && $payload['fastest_lap'] < 1
+            && $payload['fastest_lap'] < 0
         ) {
             throw new \InvalidArgumentException(
-                'fastest_lap must be at least 1 when provided'
+                'fastest_lap must be at least 0 when provided'
             );
         }
 
-        // Validate: qualifying_pole must be at least 1 when provided
+        // Validate: qualifying_pole must be at least 0 when provided
         if (
             array_key_exists('qualifying_pole', $payload)
             && $payload['qualifying_pole'] !== null
-            && $payload['qualifying_pole'] < 1
+            && $payload['qualifying_pole'] < 0
         ) {
             throw new \InvalidArgumentException(
-                'qualifying_pole must be at least 1 when provided'
+                'qualifying_pole must be at least 0 when provided'
             );
         }
 

@@ -43,6 +43,7 @@ export interface TeamChampionshipStanding {
   readonly team_id: number;
   readonly team_name: string;
   readonly total_points: number;
+  readonly drop_total?: number;
   readonly position: number;
   readonly rounds: readonly TeamRoundPoints[];
 }
@@ -68,6 +69,8 @@ export interface SeasonStandingsResponseFlat {
   readonly total_drop_rounds: number;
   readonly team_championship_enabled: boolean;
   readonly team_championship_results: readonly TeamChampionshipStanding[];
+  readonly teams_drop_rounds_enabled: boolean;
+  readonly teams_total_drop_rounds: number;
 }
 
 /**
@@ -80,6 +83,8 @@ export interface SeasonStandingsResponseDivisions {
   readonly total_drop_rounds: number;
   readonly team_championship_enabled: boolean;
   readonly team_championship_results: readonly TeamChampionshipStanding[];
+  readonly teams_drop_rounds_enabled: boolean;
+  readonly teams_total_drop_rounds: number;
 }
 
 /**
