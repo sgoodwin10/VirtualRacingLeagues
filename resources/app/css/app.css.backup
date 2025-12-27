@@ -1,0 +1,409 @@
+/* Google Fonts - Zalando Sans */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
+@import 'tailwindcss';
+@plugin 'tailwindcss-primeui';
+
+@theme {
+  /* Font size scale - Tailwind v4 @theme directive */
+  /* Note: --text-* variables generate corresponding text-* utility classes */
+  --text-base: 0.875rem; /* 14px */
+  --text-xs: 0.625rem; /* 10px */
+  --text-sm: 0.75rem; /* 12px */
+  --text-md: 0.8125rem; /* 13px */
+  --text-lg: 1rem; /* 16px */
+  --text-xl: 1.125rem; /* 18px */
+  --text-2xl: 1.5rem; /* 24px */
+}
+
+/* User Dashboard Specific Styles */
+:root {
+  /* ============================================
+     Custom Application Variables
+     ============================================ */
+
+  /* Brand Colors */
+  --user-primary: #3b82f6;
+  --user-secondary: #8b5cf6;
+  --user-accent: #ef4444;
+
+  /* Layout Dimensions */
+  --sidebar-width: 16rem; /* 64 * 0.25rem = 16rem */
+  --sidebar-collapsed-width: 5rem; /* 20 * 0.25rem = 5rem */
+  --topbar-height: 4rem; /* 16 * 0.25rem = 4rem */
+
+  /* Light grey/white color scheme */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --border-light: #e5e7eb;
+  --border-medium: #d1d5db;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --bg-white: #ffffff;
+
+  /* Font size scale (CSS custom properties for use with var()) */
+  /* Note: Prefer using Tailwind text-* utilities instead of these variables */
+  --font-size-base: 14px;
+  --font-size-xs: 10px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 24px;
+
+  /* Custom Shadows */
+  --shadow-reverse: 0 -2px 4px rgb(0 0 0 / 0.08);
+  --shadow-reverse-md: 0 -3px 6px rgb(0 0 0 / 0.1);
+  --shadow-reverse-lg: 0 -4px 8px rgb(0 0 0 / 0.12);
+  --shadow-reverse-xl: 0 -6px 12px rgb(0 0 0 / 0.15);
+
+  /* ============================================
+     PrimeVue Default CSS Variables (Aura Theme)
+     ============================================ */
+
+  /* Note: Most PrimeVue CSS variables are dynamically generated
+     from the Aura preset. These overrides customize specific
+     component behaviors while maintaining theme consistency. */
+
+  /* PrimeVue Component Customizations */
+  --p-drawer-header-padding: 1rem 1rem;
+  --p-card-border-radius: 0.5rem;
+  --p-card-body-gap: 0;
+
+  /* PrimeVue Primary Color Scale (optional overrides) */
+  /* Uncomment to override Aura theme defaults:*/
+  --p-primary-50: #eff6ff;
+  --p-primary-100: #dbeafe;
+  --p-primary-200: #bfdbfe;
+  --p-primary-300: #93c5fd;
+  --p-primary-400: #60a5fa;
+  --p-primary-500: #3b82f6;
+  --p-primary-600: #2563eb;
+  --p-primary-700: #1d4ed8;
+  --p-primary-800: #1e40af;
+  --p-primary-900: #1e3a8a;
+  --p-primary-950: #172554;
+  /**/
+
+  /* PrimeVue Surface Scale (optional overrides) */
+  /* Uncomment to override Aura theme defaults:*/
+  --p-surface-0: #ffffff;
+  --p-surface-50: #f9fafb;
+  --p-surface-100: #f3f4f6;
+  --p-surface-200: #e5e7eb;
+  --p-surface-300: #d1d5db;
+  --p-surface-400: #9ca3af;
+  --p-surface-500: #6b7280;
+  --p-surface-600: #4b5563;
+  --p-surface-700: #374151;
+  --p-surface-800: #1f2937;
+  --p-surface-900: #111827;
+  --p-surface-950: #030712;
+  /**/
+
+  /* PrimeVue Text Colors (optional overrides) */
+  /* Uncomment to override Aura theme defaults:*/
+  --p-text-color: #111827;
+  --p-text-hover-color: #1f2937;
+  --p-text-muted-color: #6b7280;
+  --p-text-hover-muted-color: #4b5563;
+
+  /* PrimeVue Content & Borders (optional overrides) */
+  /* Uncomment to override Aura theme defaults:
+  --p-content-border-color: #e5e7eb;
+  --p-content-border-radius: 0.375rem;
+  --p-content-hover-background: #f9fafb;
+  --p-content-hover-color: #111827;
+  */
+
+  /* PrimeVue Highlight Colors (optional overrides) */
+  /* Uncomment to override Aura theme defaults:
+  --p-highlight-background: #dbeafe;
+  --p-highlight-color: #1e40af;
+  --p-highlight-focus-background: #bfdbfe;
+  --p-highlight-focus-color: #1e3a8a;
+  */
+
+  --p-tag-font-size: 0.75rem;
+}
+
+body {
+  font-family:
+    'Zalando Sans',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: var(--font-size-base);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   PrimeVue Global Styles & Defaults
+   ============================================ */
+
+/* Ensure headings maintain proper color */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-primary);
+}
+
+/* Smooth transitions for interactive elements */
+button,
+a,
+input,
+select,
+textarea {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--user-primary);
+  outline-offset: 2px;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ============================================
+   Custom User Dashboard Styles
+   ============================================ */
+
+/* Reverse Shadow Utilities */
+@layer utilities {
+  .shadow-reverse {
+    box-shadow: var(--shadow-reverse);
+  }
+  .shadow-reverse-md {
+    box-shadow: var(--shadow-reverse-md);
+  }
+  .shadow-reverse-lg {
+    box-shadow: var(--shadow-reverse-lg);
+  }
+  .shadow-reverse-xl {
+    box-shadow: var(--shadow-reverse-xl);
+  }
+
+  .bg-tertiary {
+    background-color: var(--bg-tertiary);
+  }
+  .bg-secondary {
+    background-color: var(--bg-secondary);
+  }
+  .bg-primary {
+    background-color: var(--bg-primary);
+  }
+  .bg-white {
+    background-color: var(--bg-white);
+  }
+}
+
+/* PrimeVue Panel Styling */
+.p-panel-header {
+  padding: 0;
+}
+.p-panel-header-actions {
+  border-bottom: 1px solid var(--border-se);
+}
+.p-panel {
+  border: 0;
+}
+.p-panel-content {
+  padding: 0;
+}
+
+/* PrimeVue Card Styling */
+.p-card-body {
+  padding: 0;
+}
+
+/* PrimeVue DataTable Styling */
+.p-dataview-content {
+  background-color: inherit;
+}
+
+/* PrimeVue Drawer Styling */
+.p-drawer-header {
+  background-color: var(--bg-tertiary);
+  margin-bottom: 0;
+  box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border-medium);
+}
+.p-drawer-content {
+  padding: 16px 0 0;
+}
+
+/* PrimeVue Tabs Styling */
+.p-tab {
+  background-color: var(--bg-white);
+}
+.p-tabpanels {
+  padding: 0;
+  background-color: inherit !important;
+}
+.p-tablist {
+  background-color: inherit !important;
+}
+.p-tab.p-tab-active {
+  color: var(--user-primary);
+}
+.p-tablist-active-bar {
+  background-color: var(--user-primary);
+}
+.p-tablist-bar-list {
+  background-color: inherit !important;
+}
+
+/* PrimeVue Dialog Styling */
+.p-dialog-header {
+  background-color: var(--bg-tertiary);
+  border-radius: 1rem 1em 0 0;
+  margin-bottom: 0;
+  box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border-medium);
+}
+.p-dialog-content {
+  padding: 1rem;
+}
+
+.p-dialog-footer {
+  background-color: var(--bg-tertiary);
+  border-radius: 0 0 1rem 1em;
+  padding: 1rem;
+  box-shadow: var(--shadow-reverse-md);
+}
+
+.p-dialog-close-button {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-medium);
+}
+.p-dialog-close-button:hover {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  box-shadow: var(--shadow-md);
+}
+
+/* PrimeVue input Styling */
+.p-inputtext::placeholder,
+.p-inputnumber-input::placeholder,
+.p-textarea::placeholder {
+  color: var(--text-muted);
+}
+.p-inputtext:focus,
+.p-inputnumber-input:focus,
+.p-textarea:focus {
+  /* border-color: var(--user-primary); */
+}
+
+/* PrimeVue Password Component - Toggle Mask Icon Positioning */
+.p-password {
+  display: inline-flex;
+  position: relative;
+}
+.p-password-input {
+  padding-right: 2.5rem;
+}
+.p-password .p-icon-field {
+  width: 100%;
+}
+.p-password .p-icon-field-right > .p-inputtext {
+  padding-right: 2.5rem;
+}
+
+/* PrimeVue DataTable Styling */
+.p-datatable-tbody > tr > td {
+  padding: 0.5rem 1rem;
+}
+
+/* PrimeVue SpeedDial Styling */
+.p-speeddial-item .p-button {
+  box-shadow: var(--shadow-md);
+}
+.p-speeddial-button:hover {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  box-shadow: var(--shadow-md);
+}
+
+/* SpeedDial Action Color Coding */
+/* Competition SpeedDial Colors */
+.speeddial-competition .p-speeddial-list .p-speeddial-item:nth-child(1) .p-button {
+  background-color: rgb(219, 234, 254) !important; /* blue-100 */
+  color: rgb(29, 78, 216) !important; /* blue-700 */
+  border-color: rgb(191, 219, 254) !important;
+}
+.speeddial-competition .p-speeddial-list .p-speeddial-item:nth-child(1) .p-button:hover {
+  background-color: rgb(191, 219, 254) !important; /* blue-200 */
+  border-color: rgb(147, 197, 253) !important;
+}
+.speeddial-competition .p-speeddial-list .p-speeddial-item:nth-child(2) .p-button {
+  background-color: rgb(254, 226, 226) !important; /* red-100 */
+  color: rgb(185, 28, 28) !important; /* red-700 */
+  border-color: rgb(254, 202, 202) !important;
+}
+.speeddial-competition .p-speeddial-list .p-speeddial-item:nth-child(2) .p-button:hover {
+  background-color: rgb(254, 202, 202) !important; /* red-200 */
+  border-color: rgb(252, 165, 165) !important;
+}
+
+/* Season SpeedDial Colors */
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(1) .p-button {
+  background-color: rgb(219, 234, 254) !important; /* blue-100 */
+  color: rgb(29, 78, 216) !important; /* blue-700 */
+  border-color: rgb(191, 219, 254) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(1) .p-button:hover {
+  background-color: rgb(191, 219, 254) !important; /* blue-200 */
+  border-color: rgb(147, 197, 253) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(2) .p-button {
+  background-color: rgb(254, 237, 213) !important; /* orange-100 */
+  color: rgb(194, 65, 12) !important; /* orange-700 */
+  border-color: rgb(253, 221, 181) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(2) .p-button:hover {
+  background-color: rgb(253, 221, 181) !important; /* orange-200 */
+  border-color: rgb(251, 191, 136) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(3) .p-button {
+  background-color: rgb(254, 226, 226) !important; /* red-100 */
+  color: rgb(185, 28, 28) !important; /* red-700 */
+  border-color: rgb(254, 202, 202) !important;
+}
+.speeddial-season .p-speeddial-list .p-speeddial-item:nth-child(3) .p-button:hover {
+  background-color: rgb(254, 202, 202) !important; /* red-200 */
+  border-color: rgb(252, 165, 165) !important;
+}
+
+/* Tag Styling */
+.p-tag.p-component {
+  /* padding: 0rem; */
+  line-height: 12px;
+}
