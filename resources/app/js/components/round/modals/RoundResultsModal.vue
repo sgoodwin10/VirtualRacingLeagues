@@ -141,7 +141,7 @@
 
     <template #footer>
       <div class="flex justify-end">
-        <Button label="Close" severity="secondary" @click="handleClose" />
+        <Button label="Close" variant="secondary" @click="handleClose" />
       </div>
     </template>
   </BaseModal>
@@ -149,7 +149,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';

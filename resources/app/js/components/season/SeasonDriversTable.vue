@@ -14,11 +14,11 @@ import type { Team } from '@app/types/team';
 import type { Division } from '@app/types/division';
 import { usesPsnId, usesIracingId } from '@app/constants/platforms';
 
-import DataTable from 'primevue/datatable';
 import type { DataTablePageEvent, DataTableSortEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
 import Select from 'primevue/select';
-import Button from 'primevue/button';
+import { TechDataTable, DriverCell } from '@app/components/common/tables';
+import { Button } from '@app/components/common/buttons';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
@@ -26,6 +26,14 @@ import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
 import ViewButton from '@app/components/common/buttons/ViewButton.vue';
 import DeleteButton from '@app/components/common/buttons/DeleteButton.vue';
 import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
+import {
+  PhUsers,
+  PhArrowClockwise,
+  PhCaretDoubleLeft,
+  PhCaretLeft,
+  PhCaretRight,
+  PhCaretDoubleRight,
+} from '@phosphor-icons/vue';
 
 interface Props {
   seasonId: number;
@@ -313,6 +321,13 @@ interface TeamOption {
   logo_url?: string | null;
 }
 
+// Create team name to ID map to avoid repeated find operations
+const teamNameToIdMap = computed(() => {
+  const map = new Map<string, number>();
+  props.teams.forEach((t) => map.set(t.name, t.id));
+  return map;
+});
+
 const teamOptions = computed((): TeamOption[] => {
   const options: TeamOption[] = [
     {
@@ -333,9 +348,9 @@ const teamOptions = computed((): TeamOption[] => {
 });
 
 function getDriverTeamId(driver: SeasonDriver): number | null {
-  // Find the team by name (backend returns team_name string)
-  const team = props.teams.find((t) => t.name === driver.team_name);
-  return team?.id ?? null;
+  // Use map lookup instead of find operation
+  if (!driver.team_name) return null;
+  return teamNameToIdMap.value.get(driver.team_name) ?? null;
 }
 
 async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null): Promise<void> {
@@ -346,12 +361,9 @@ async function handleTeamChange(driver: SeasonDriver, newTeamId: number | null):
       team_id: newTeamId,
     });
 
-    // Update local state directly instead of refetching all drivers
-    const existingDriver = seasonDriverStore.seasonDrivers.find((d) => d.id === driver.id);
-    if (existingDriver) {
-      const teamName = newTeamId ? props.teams.find((t) => t.id === newTeamId)?.name || null : null;
-      existingDriver.team_name = teamName;
-    }
+    // Update local state using store action instead of direct mutation
+    const teamName = newTeamId ? props.teams.find((t) => t.id === newTeamId)?.name || null : null;
+    seasonDriverStore.updateLocalDriverProperty(driver.id, 'team_name', teamName);
 
     const displayTeamName = newTeamId
       ? props.teams.find((t) => t.id === newTeamId)?.name || 'team'
@@ -383,6 +395,13 @@ interface DivisionOption {
   logo_url?: string | null;
 }
 
+// Create division name to ID map to avoid repeated find operations
+const divisionNameToIdMap = computed(() => {
+  const map = new Map<string, number>();
+  props.divisions.forEach((d) => map.set(d.name, d.id));
+  return map;
+});
+
 const divisionOptions = computed((): DivisionOption[] => {
   const options: DivisionOption[] = [
     {
@@ -403,9 +422,9 @@ const divisionOptions = computed((): DivisionOption[] => {
 });
 
 function getDriverDivisionId(driver: SeasonDriver): number | null {
-  // Find the division by name (backend returns division_name string)
-  const division = props.divisions.find((d) => d.name === driver.division_name);
-  return division?.id ?? null;
+  // Use map lookup instead of find operation
+  if (!driver.division_name) return null;
+  return divisionNameToIdMap.value.get(driver.division_name) ?? null;
 }
 
 async function handleDivisionChange(
@@ -419,14 +438,11 @@ async function handleDivisionChange(
       division_id: newDivisionId,
     });
 
-    // Update local state directly instead of refetching all drivers
-    const existingDriver = seasonDriverStore.seasonDrivers.find((d) => d.id === driver.id);
-    if (existingDriver) {
-      const divisionName = newDivisionId
-        ? props.divisions.find((d) => d.id === newDivisionId)?.name || null
-        : null;
-      existingDriver.division_name = divisionName;
-    }
+    // Update local state using store action instead of direct mutation
+    const divisionName = newDivisionId
+      ? props.divisions.find((d) => d.id === newDivisionId)?.name || null
+      : null;
+    seasonDriverStore.updateLocalDriverProperty(driver.id, 'division_name', divisionName);
 
     const displayDivisionName = newDivisionId
       ? props.divisions.find((d) => d.id === newDivisionId)?.name || 'division'
@@ -561,7 +577,7 @@ async function handleRefresh(): Promise<void> {
         <Button
           v-if="showManageButton"
           label="Manage Drivers"
-          icon="pi pi-users"
+          :icon="PhUsers"
           size="medium"
           :disabled="manageButtonDisabled"
           @click="emit('manageDrivers')"
@@ -570,8 +586,8 @@ async function handleRefresh(): Promise<void> {
         <!-- Refresh Drivers Table Button -->
         <Button
           label="Refresh Drivers Table"
-          icon="pi pi-refresh"
-          severity="warn"
+          :icon="PhArrowClockwise"
+          variant="warning"
           size="medium"
           @click="handleRefresh"
         />
@@ -626,7 +642,7 @@ async function handleRefresh(): Promise<void> {
       </div>
     </div>
 
-    <DataTable
+    <TechDataTable
       :value="drivers"
       :loading="loading || loadingDriver"
       lazy
@@ -634,7 +650,6 @@ async function handleRefresh(): Promise<void> {
       :rows="perPage"
       :total-records="totalRecords"
       :first="(currentPage - 1) * perPage"
-      striped-rows
       responsive-layout="scroll"
       @page="onPage"
       @sort="onSort"
@@ -678,7 +693,7 @@ async function handleRefresh(): Promise<void> {
           <!-- Right: Navigation -->
           <div class="flex items-center gap-1">
             <Button
-              icon="pi pi-angle-double-left"
+              :icon="PhCaretDoubleLeft"
               text
               rounded
               :disabled="(page ?? 0) === 0"
@@ -693,7 +708,7 @@ async function handleRefresh(): Promise<void> {
               "
             />
             <Button
-              icon="pi pi-angle-left"
+              :icon="PhCaretLeft"
               text
               rounded
               :disabled="(page ?? 0) === 0"
@@ -704,7 +719,7 @@ async function handleRefresh(): Promise<void> {
               Page {{ (page ?? 0) + 1 }} of {{ pageCount ?? 0 }}
             </span>
             <Button
-              icon="pi pi-angle-right"
+              :icon="PhCaretRight"
               text
               rounded
               :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
@@ -712,7 +727,7 @@ async function handleRefresh(): Promise<void> {
               @click="nextPageCallback"
             />
             <Button
-              icon="pi pi-angle-double-right"
+              :icon="PhCaretDoubleRight"
               text
               rounded
               :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
@@ -743,31 +758,31 @@ async function handleRefresh(): Promise<void> {
 
       <Column field="driver_name" header="Driver" sortable>
         <template #body="{ data }">
-          <span class="font-semibold">{{ getDriverDisplayName(data) }}</span>
+          <DriverCell :name="getDriverDisplayName(data)" />
         </template>
       </Column>
 
       <Column field="discord_id" header="Discord" sortable>
         <template #body="{ data }">
-          <span class="text-sm text-gray-600">{{ data.discord_id || '-' }}</span>
+          <span class="text-md text-gray-500">{{ data.discord_id || '-' }}</span>
         </template>
       </Column>
 
       <Column v-if="showPsnColumn" field="psn_id" header="PSN ID" sortable>
         <template #body="{ data }">
-          <span class="text-sm text-gray-600">{{ data.psn_id || '-' }}</span>
+          <span class="text-md text-gray-500">{{ data.psn_id || '-' }}</span>
         </template>
       </Column>
 
       <Column v-if="showIracingColumn" field="iracing_id" header="iRacing ID" sortable>
         <template #body="{ data }">
-          <span class="text-sm text-gray-600">{{ data.iracing_id || '-' }}</span>
+          <span class="text-md text-gray-500">{{ data.iracing_id || '-' }}</span>
         </template>
       </Column>
 
       <Column v-if="showNumberColumn" field="driver_number" header="#" class="text-center" sortable>
         <template #body="{ data }">
-          <span class="text-sm text-gray-600">{{ data.driver_number || '-' }}</span>
+          <span class="text-md text-gray-500">{{ data.driver_number || '-' }}</span>
         </template>
       </Column>
 
@@ -867,7 +882,7 @@ async function handleRefresh(): Promise<void> {
           </div>
         </template>
       </Column>
-    </DataTable>
+    </TechDataTable>
   </div>
 </template>
 

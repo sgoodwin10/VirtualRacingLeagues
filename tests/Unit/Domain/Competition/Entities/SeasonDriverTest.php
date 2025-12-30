@@ -47,6 +47,7 @@ final class SeasonDriverTest extends TestCase
             id: 1,
             seasonId: 2,
             leagueDriverId: 20,
+            teamId: null,
             status: SeasonDriverStatus::RESERVE,
             notes: 'Backup driver',
             addedAt: $addedAt,

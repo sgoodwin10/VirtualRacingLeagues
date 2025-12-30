@@ -7,7 +7,7 @@ import type { SeasonDriver, SeasonDriverForm } from '@app/types/seasonDriver';
 
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import BaseModalHeader from '@app/components/common/modals/BaseModalHeader.vue';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 
@@ -189,7 +189,7 @@ async function handleSubmit(): Promise<void> {
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <Button label="Cancel" outlined :disabled="isSubmitting" @click="handleCancel" />
+        <Button label="Cancel" variant="outline" :disabled="isSubmitting" @click="handleCancel" />
         <Button
           label="Save Changes"
           :loading="isSubmitting"

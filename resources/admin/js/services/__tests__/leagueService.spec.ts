@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { leagueService } from '../leagueService';
 import { apiService } from '../api';
 import { createMockLeague } from '@admin/__tests__/helpers/mockFactories';
-import type { League, LeagueDetails, LeagueListParams } from '@admin/types/league';
+import type { LeagueDetails, LeagueListParams } from '@admin/types/league';
 
 vi.mock('../api');
 vi.mock('@admin/utils/errorHandler');

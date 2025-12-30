@@ -22,24 +22,24 @@ describe('FormOptionalText', () => {
     });
 
     const paragraph = wrapper.find('p');
-    expect(paragraph.classes()).toContain('text-xs');
-    expect(paragraph.classes()).toContain('text-gray-500');
+    expect(paragraph.classes()).toContain('text-sm');
+    expect(paragraph.classes()).toContain('text-[var(--text-muted)]');
   });
 
   it('applies custom classes when provided', () => {
     const wrapper = mount(FormOptionalText, {
       props: {
         text: 'Helper text',
-        class: 'text-sm text-blue-600 font-semibold',
+        class: 'text-lg text-blue-600 font-semibold',
       },
     });
 
     const paragraph = wrapper.find('p');
-    expect(paragraph.classes()).toContain('text-sm');
+    expect(paragraph.classes()).toContain('text-lg');
     expect(paragraph.classes()).toContain('text-blue-600');
     expect(paragraph.classes()).toContain('font-semibold');
-    expect(paragraph.classes()).not.toContain('text-xs');
-    expect(paragraph.classes()).not.toContain('text-gray-500');
+    expect(paragraph.classes()).not.toContain('text-sm');
+    expect(paragraph.classes()).not.toContain('text-[var(--text-muted)]');
   });
 
   it('shows "Optional:" prefix when showOptional is true (default)', () => {
@@ -53,6 +53,7 @@ describe('FormOptionalText', () => {
     expect(span.exists()).toBe(true);
     expect(span.text()).toBe('Optional:');
     expect(span.classes()).toContain('font-medium');
+    expect(span.classes()).toContain('text-[var(--text-secondary)]');
   });
 
   it('hides "Optional:" prefix when showOptional is false', () => {

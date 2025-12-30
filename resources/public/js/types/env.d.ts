@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_DOMAIN: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
@@ -13,7 +14,7 @@ interface ImportMeta {
 // Extend Window interface for Google Tag Manager dataLayer
 declare global {
   interface Window {
-    dataLayer: Record<string, unknown>[];
+    dataLayer?: Record<string, unknown>[];
   }
 }
 

@@ -5,7 +5,7 @@ import { useTeamStore } from '@app/stores/teamStore';
 import type { Team, TeamForm, TeamFormErrors } from '@app/types/team';
 
 // PrimeVue Components
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import InputText from 'primevue/inputtext';
 
 // Common Components
@@ -168,8 +168,6 @@ async function handleSubmit(): Promise<void> {
     localVisible.value = false;
     resetForm();
   } catch (error: unknown) {
-    console.error('Failed to save team:', error);
-
     // Clear file input on error to prevent stale file objects
     form.logo = null;
 
@@ -206,7 +204,7 @@ function clearNameError(): void {
         <InputText
           id="team-name"
           v-model="form.name"
-          size="small"
+          size="sm"
           placeholder="e.g., Red Bull Racing, Mercedes AMG"
           :class="{ 'p-invalid': errors.name }"
           :disabled="isSubmitting"
@@ -228,7 +226,7 @@ function clearNameError(): void {
           :max-file-size="2 * 1024 * 1024"
           :min-dimensions="{ width: 100, height: 100 }"
           :recommended-dimensions="{ width: 300, height: 300 }"
-          preview-size="small"
+          preview-size="sm"
           helper-text="A square logo. Recommended: 300x300px. Optional."
         />
         <FormError :error="errors.logo" />
@@ -237,13 +235,7 @@ function clearNameError(): void {
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <Button
-          label="Cancel"
-          severity="secondary"
-          outlined
-          :disabled="isSubmitting"
-          @click="handleCancel"
-        />
+        <Button label="Cancel" variant="secondary" :disabled="isSubmitting" @click="handleCancel" />
         <Button
           :label="mode === 'add' ? 'Create Team' : 'Save Changes'"
           :loading="isSubmitting"

@@ -22,7 +22,7 @@
               :min="1"
               :max="99"
               :invalid="!!validationErrors.round_number"
-              size="small"
+              size="sm"
               fluid
               class="w-full"
               @blur="validation.validateRoundNumber(form.round_number)"
@@ -40,7 +40,7 @@
             <InputText
               id="name"
               v-model="form.name"
-              size="small"
+              size="sm"
               placeholder="e.g., Season Opener, Championship Finale"
               :invalid="!!validationErrors.name"
               class="w-full"
@@ -74,7 +74,7 @@
                   placeholder="Search for a location..."
                   :invalid="!!validationErrors.platform_track_id"
                   force-selection
-                  size="small"
+                  size="sm"
                   fluid
                   class="w-full"
                   @complete="handleTrackSearch"
@@ -120,7 +120,7 @@
                   <InputText
                     id="track_conditions"
                     v-model="form.track_conditions"
-                    size="small"
+                    size="sm"
                     placeholder="e.g., Early Afternoon - Dry"
                     :invalid="!!validationErrors.track_conditions"
                     class="w-full"
@@ -138,7 +138,7 @@
                   <InputText
                     id="track_layout"
                     v-model="form.track_layout"
-                    size="small"
+                    size="sm"
                     placeholder="e.g., Reverse, Forward"
                     :invalid="!!validationErrors.track_layout"
                     class="w-full"
@@ -159,7 +159,7 @@
                     id="stream_url"
                     v-model="form.stream_url"
                     type="url"
-                    size="small"
+                    size="sm"
                     placeholder="https://..."
                     :invalid="!!validationErrors.stream_url"
                     class="w-full"
@@ -187,7 +187,7 @@
                   :step-minute="15"
                   :invalid="!!validationErrors.scheduled_at"
                   placeholder="Select date and time"
-                  size="small"
+                  size="sm"
                   fluid
                   class="w-full"
                   @blur="validation.validateScheduledAt(form.scheduled_at)"
@@ -258,7 +258,7 @@
                           :max-fraction-digits="2"
                           :min="0"
                           :max="999"
-                          size="small"
+                          size="sm"
                           fluid
                           class="w-full"
                         />
@@ -267,18 +267,16 @@
                     <div class="mt-3 flex gap-2">
                       <Button
                         label="Add Position"
-                        icon="pi pi-plus"
-                        size="small"
-                        severity="success"
-                        outlined
+                        :icon="PhPlus"
+                        size="sm"
+                        variant="success"
                         @click="addPointsPosition"
                       />
                       <Button
                         label="Remove Last"
-                        icon="pi pi-trash"
-                        size="small"
-                        severity="danger"
-                        outlined
+                        :icon="PhTrash"
+                        size="sm"
+                        variant="danger"
                         :disabled="Object.keys(form.points_system).length <= 1"
                         @click="removeLastPointsPosition"
                       />
@@ -286,10 +284,9 @@
                         v-if="canCopyFromRoundOne"
                         v-tooltip.left="'Copy Round 1 points configuration'"
                         label="Copy from Round 1"
-                        icon="pi pi-copy"
-                        size="small"
-                        severity="secondary"
-                        outlined
+                        :icon="PhCopy"
+                        size="sm"
+                        variant="secondary"
                         @click="copyFromRoundOne"
                       />
                     </div>
@@ -323,7 +320,7 @@
                         fluid
                         :invalid="!!validationErrors.fastest_lap"
                         placeholder="Pts"
-                        size="small"
+                        size="sm"
                         class="w-20"
                         @blur="validation.validateFastestLap(form.fastest_lap)"
                       />
@@ -373,7 +370,7 @@
                         fluid
                         :invalid="!!validationErrors.qualifying_pole"
                         placeholder="Pts"
-                        size="small"
+                        size="sm"
                         class="w-20"
                         @blur="validation.validateQualifyingPole(form.qualifying_pole)"
                       />
@@ -466,13 +463,7 @@
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <Button
-          label="Cancel"
-          severity="secondary"
-          outlined
-          :disabled="saving"
-          @click="handleClose"
-        />
+        <Button label="Cancel" variant="secondary" :disabled="saving" @click="handleClose" />
         <Button
           :label="mode === 'create' ? 'Save Round' : 'Update Round'"
           :loading="saving"
@@ -485,11 +476,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import { format } from 'date-fns';
 import { useToast } from 'primevue/usetoast';
 import Tooltip from 'primevue/tooltip';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import InputGroup from 'primevue/inputgroup';
@@ -510,7 +501,7 @@ import { useRoundValidation } from '@app/composables/useRoundValidation';
 import { useTrackSearch } from '@app/composables/useTrackSearch';
 import type { Round, RoundForm, CreateRoundRequest, UpdateRoundRequest } from '@app/types/round';
 import { F1_STANDARD_POINTS } from '@app/types/race';
-import { PhArrowRight } from '@phosphor-icons/vue';
+import { PhArrowRight, PhPlus, PhTrash, PhCopy } from '@phosphor-icons/vue';
 import type { Track } from '@app/types/track';
 
 interface Props {
@@ -541,8 +532,18 @@ const trackSearch = useTrackSearch();
 const saving = ref(false);
 const selectedTrack = ref<Track | null>(null);
 
+// AbortController for async operations
+let abortController: AbortController | null = null;
+
 // Computed property to unwrap the ref for TypeScript
 const trackSuggestions = computed(() => trackSearch.searchResults.value);
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (abortController) {
+    abortController.abort();
+  }
+});
 
 const form = ref<RoundForm>({
   round_number: 1,
@@ -686,7 +687,20 @@ watch(
   () => props.visible,
   async (visible) => {
     if (visible) {
+      // Cancel any previous requests
+      if (abortController) {
+        abortController.abort();
+      }
+      // Create new AbortController for this session
+      abortController = new AbortController();
+
       await initializeForm();
+    } else {
+      // Cancel requests when drawer closes
+      if (abortController) {
+        abortController.abort();
+        abortController = null;
+      }
     }
   },
 );

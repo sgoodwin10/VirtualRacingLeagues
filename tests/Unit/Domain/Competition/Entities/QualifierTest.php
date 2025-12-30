@@ -10,6 +10,7 @@ use App\Domain\Competition\Events\QualifierUpdated;
 use App\Domain\Competition\Exceptions\InvalidQualifierConfigurationException;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
 use App\Domain\Competition\ValueObjects\RaceName;
+use Illuminate\Support\Carbon;
 use PHPUnit\Framework\TestCase;
 
 final class QualifierTest extends TestCase
@@ -40,7 +41,7 @@ final class QualifierTest extends TestCase
         $this->assertNull($qualifier->type());
         $this->assertSame(QualifyingFormat::STANDARD, $qualifier->qualifyingFormat());
         $this->assertSame(20, $qualifier->qualifyingLength());
-        $this->assertSame(1, $qualifier->qualifyingPole());
+        $this->assertSame(1.0, $qualifier->qualifyingPole());
         $this->assertFalse($qualifier->qualifyingPoleTop10());
         $this->assertFalse($qualifier->mandatoryPitStop());
         $this->assertNull($qualifier->minimumPitTime());
@@ -137,8 +138,9 @@ final class QualifierTest extends TestCase
         );
 
         $qualifier->setId(1);
+        $originalUpdatedAt = $qualifier->updatedAt();
 
-        sleep(1);
+        Carbon::setTestNow(now()->addSecond());
 
         $qualifier->updateQualifierConfiguration(
             name: RaceName::from('Updated Qualifying'),
@@ -159,16 +161,19 @@ final class QualifierTest extends TestCase
         $this->assertSame(QualifyingFormat::TIME_TRIAL, $qualifier->qualifyingFormat());
         $this->assertSame(20, $qualifier->qualifyingLength());
         $this->assertSame('medium', $qualifier->qualifyingTire());
-        $this->assertSame(2, $qualifier->qualifyingPole());
+        $this->assertSame(2.0, $qualifier->qualifyingPole());
         $this->assertFalse($qualifier->qualifyingPoleTop10());
         // Verify penalty fields remain disabled even after update
         $this->assertFalse($qualifier->trackLimitsEnforced());
         $this->assertFalse($qualifier->falseStartDetection());
         $this->assertFalse($qualifier->collisionPenalties());
+        $this->assertGreaterThan($originalUpdatedAt, $qualifier->updatedAt());
 
         $events = $qualifier->events();
         $this->assertCount(2, $events);
         $this->assertInstanceOf(QualifierUpdated::class, $events[1]);
+
+        Carbon::setTestNow();
     }
 
     public function test_update_throws_exception_for_non_qualifier(): void

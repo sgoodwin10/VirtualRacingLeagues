@@ -60,6 +60,12 @@ describe('RaceListItem', () => {
           Button: {
             template: '<button @click="$emit(\'click\')"><slot /></button>',
           },
+          EditButton: {
+            template: '<button @click="$emit(\'click\', $event)" data-test-edit-button></button>',
+          },
+          DeleteButton: {
+            template: '<button @click="$emit(\'click\', $event)" data-test-delete-button></button>',
+          },
           Tag: {
             template: '<span><slot>{{ value }}</slot></span>',
             props: ['value', 'severity'],
@@ -190,20 +196,20 @@ describe('RaceListItem', () => {
   });
 
   it('emits edit event when edit button clicked', async () => {
-    const buttons = wrapper.findAll('button');
-    expect(buttons.length).toBeGreaterThanOrEqual(3);
+    const editButton = wrapper.find('[data-test-edit-button]');
+    expect(editButton.exists()).toBe(true);
 
-    await buttons[1]?.trigger('click');
+    await editButton.trigger('click');
 
     expect(wrapper.emitted('edit')).toBeTruthy();
     expect(wrapper.emitted('edit')?.[0]).toEqual([mockRace]);
   });
 
   it('emits delete event when delete button clicked', async () => {
-    const buttons = wrapper.findAll('button');
-    expect(buttons.length).toBeGreaterThanOrEqual(3);
+    const deleteButton = wrapper.find('[data-test-delete-button]');
+    expect(deleteButton.exists()).toBe(true);
 
-    await buttons[2]?.trigger('click');
+    await deleteButton.trigger('click');
 
     expect(wrapper.emitted('delete')).toBeTruthy();
     expect(wrapper.emitted('delete')?.[0]).toEqual([mockRace]);

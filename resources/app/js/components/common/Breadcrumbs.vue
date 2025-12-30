@@ -32,24 +32,9 @@ interface Props {
    * Supports 1-5 items
    */
   items: BreadcrumbItem[];
-
-  /**
-   * Optional separator character or icon
-   * @default "pi-chevron-right"
-   */
-  separator?: string;
-
-  /**
-   * Whether to use text separator instead of icon
-   * @default false
-   */
-  textSeparator?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  separator: 'pi-chevron-right',
-  textSeparator: false,
-});
+const props = defineProps<Props>();
 
 /**
  * Validate that items array is within acceptable range
@@ -74,62 +59,83 @@ const isClickable = (item: BreadcrumbItem, index: number): boolean => {
   const isLastItem = index === validatedItems.value.length - 1;
   return !isLastItem && !!item.to;
 };
-
-/**
- * Get separator display based on configuration
- */
-const separatorDisplay = computed(() => {
-  if (props.textSeparator) {
-    return props.separator;
-  }
-  return `pi ${props.separator}`;
-});
 </script>
 
 <template>
-  <nav aria-label="Breadcrumb" class="flex items-center gap-2 w-full">
-    <ol class="flex items-center gap-2 list-none m-0 p-0">
+  <nav aria-label="Breadcrumb" class="breadcrumb">
+    <ol class="breadcrumb-list">
       <li
         v-for="(item, index) in validatedItems"
         :key="`breadcrumb-${index}`"
-        class="flex items-center gap-2"
+        class="breadcrumb-item-wrapper"
       >
         <!-- Clickable Breadcrumb (router-link) -->
         <router-link
           v-if="isClickable(item, index)"
           :to="item.to!"
-          class="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors duration-200 no-underline"
+          class="breadcrumb-link"
           :aria-current="index === validatedItems.length - 1 ? 'page' : undefined"
         >
-          <i v-if="item.icon" :class="`pi ${item.icon}`" class="text-sm" aria-hidden="true"></i>
-          <span class="font-medium">{{ item.label }}</span>
+          {{ item.label }}
         </router-link>
 
         <!-- Non-clickable Breadcrumb (current page or no route) -->
         <span
           v-else
-          class="flex items-center gap-2 text-gray-700"
+          class="breadcrumb-current"
           :aria-current="index === validatedItems.length - 1 ? 'page' : undefined"
         >
-          <i v-if="item.icon" :class="`pi ${item.icon}`" class="text-sm" aria-hidden="true"></i>
-          <span class="font-semibold">{{ item.label }}</span>
+          {{ item.label }}
         </span>
 
         <!-- Separator (not shown after last item) -->
-        <i
-          v-if="index < validatedItems.length - 1 && !textSeparator"
-          :class="separatorDisplay"
-          class="text-gray-400 text-xs"
-          aria-hidden="true"
-        ></i>
-        <span
-          v-if="index < validatedItems.length - 1 && textSeparator"
-          class="text-gray-400"
-          aria-hidden="true"
-        >
-          {{ separator }}
+        <span v-if="index < validatedItems.length - 1" class="breadcrumb-sep" aria-hidden="true">
+          /
         </span>
       </li>
     </ol>
   </nav>
 </template>
+
+<style scoped>
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.breadcrumb-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.breadcrumb-item-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.breadcrumb-link:hover {
+  color: var(--text-secondary);
+}
+
+.breadcrumb-current {
+  color: var(--text-primary);
+}
+
+.breadcrumb-sep {
+  color: var(--text-muted);
+}
+</style>

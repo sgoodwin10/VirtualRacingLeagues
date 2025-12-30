@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import FileUpload, { type FileUploadSelectEvent } from 'primevue/fileupload';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
+import { PhX, PhUpload } from '@phosphor-icons/vue';
 import Image from 'primevue/image';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
 import FormError from '@app/components/common/forms/FormError.vue';
@@ -24,7 +25,6 @@ interface Props {
   error?: string;
   previewSize?: 'small' | 'medium' | 'large';
   helperText?: string;
-  labelText?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -37,7 +37,6 @@ const props = withDefaults(defineProps<Props>(), {
   error: '',
   previewSize: 'small',
   helperText: '',
-  labelText: '',
 });
 
 const emit = defineEmits<{
@@ -60,7 +59,7 @@ const previewClasses = computed(() => {
     medium: 'max-w-[300px] max-h-[200px]',
     large: 'max-w-[400px] max-h-[300px]',
   };
-  return `${sizeMap[props.previewSize]} rounded-lg shadow-md border border-gray-200`;
+  return `${sizeMap[props.previewSize]} rounded-lg shadow-md border border-[var(--border)]`;
 });
 
 // Watch for changes to modelValue to update preview
@@ -182,13 +181,23 @@ function removeExistingImage(): void {
   showExistingImage.value = false;
   emit('remove-existing');
 }
+
+/**
+ * Clean up object URLs on unmount to prevent memory leaks
+ */
+onUnmounted(() => {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value);
+    previewUrl.value = null;
+  }
+});
 </script>
 
 <template>
   <div class="space-y-2 flex flex-col items-center">
     <div v-if="label" class="flex items-baseline gap-1">
       <FormLabel :text="label" :required="required" />
-      <span v-if="!required" class="text-xs text-gray-500">(optional)</span>
+      <span v-if="!required" class="text-xs text-[var(--text-muted)]">(optional)</span>
     </div>
 
     <!-- Show existing image if present and no new file selected -->
@@ -197,12 +206,11 @@ function removeExistingImage(): void {
         <Image :src="existingImageUrl!" :alt="label" :class="previewClasses" preview />
 
         <Button
-          icon="pi pi-times"
-          severity="danger"
-          size="small"
-          rounded
+          :icon="PhX"
+          variant="danger"
+          size="sm"
           aria-label="Remove existing image"
-          class="absolute top-2 right-2 shadow-lg"
+          class="absolute top-2 right-2 shadow-lg rounded-full"
           @click="removeExistingImage"
         />
       </div>
@@ -210,9 +218,9 @@ function removeExistingImage(): void {
       <div class="flex items-center gap-2">
         <Button
           label="Change Image"
-          icon="pi pi-upload"
-          size="small"
-          outlined
+          :icon="PhUpload"
+          size="sm"
+          variant="outline"
           @click="removeExistingImage"
         />
       </div>
@@ -230,7 +238,7 @@ function removeExistingImage(): void {
         :class="{ 'p-invalid': !!displayError }"
         @select="onSelect"
       />
-      <p v-if="helperText" class="text-xs text-gray-500 mt-1">{{ helperText }}</p>
+      <p v-if="helperText" class="text-xs text-[var(--text-muted)] mt-1">{{ helperText }}</p>
       <FormHelper :text="`Maximum file size: ${(maxFileSize / 1000000).toFixed(1)}MB`" />
     </div>
 
@@ -240,12 +248,11 @@ function removeExistingImage(): void {
         <img v-if="previewUrl" :src="previewUrl" :alt="label" :class="previewClasses" />
 
         <Button
-          icon="pi pi-times"
-          severity="danger"
-          size="small"
-          rounded
+          :icon="PhX"
+          variant="danger"
+          size="sm"
           aria-label="Remove image"
-          class="absolute top-2 right-2 shadow-lg"
+          class="absolute top-2 right-2 shadow-lg rounded-full"
           @click="removeFile"
         />
       </div>

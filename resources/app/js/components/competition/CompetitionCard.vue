@@ -11,7 +11,7 @@ import HTag from '@app/components/common/HTag.vue';
 import Tag from 'primevue/tag';
 import Tooltip from 'primevue/tooltip';
 import SpeedDial from 'primevue/speeddial';
-import Button from 'primevue/button';
+import { Button, FooterAddButton } from '@app/components/common/buttons';
 import InfoItem from '@app/components/common/InfoItem.vue';
 import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
 import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
@@ -457,8 +457,9 @@ onUnmounted(() => {
         </div>
         <Button
           label="Create Season"
-          icon="pi pi-plus"
-          size="small"
+          :icon="PhPlus"
+          variant="primary"
+          size="sm"
           @click.stop="handleCreateSeason"
         />
       </div>
@@ -551,16 +552,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Create New Season Button (only shown when seasons exist) -->
-        <div class="mt-2">
-          <button
-            type="button"
-            class="flex items-center justify-center gap-2 w-full p-2 bg-white rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
-            @click.stop="handleCreateSeason"
-          >
-            <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
-            <span class="text-sm font-medium">Create New Season</span>
-          </button>
-        </div>
+        <FooterAddButton label="Create New Season" @click="handleCreateSeason" />
       </div>
     </div>
 

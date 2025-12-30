@@ -1,21 +1,24 @@
 <template>
-  <Accordion value="0" class="bg-white border border-slate-200 rounded">
-    <AccordionPanel value="0">
-      <AccordionHeader class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-        <div class="flex items-center gap-2">
-          <PhTrophy :size="20" class="text-amber-600" />
-          <h3 class="font-semibold text-gray-900">Round Standings</h3>
-        </div>
-      </AccordionHeader>
-      <AccordionContent>
+  <TechnicalAccordion :model-value="['standings']">
+    <TechnicalAccordionPanel value="standings">
+      <TechnicalAccordionHeader
+        title="Round Standings"
+        :subtitle="standingsSummary"
+        :icon="PhTrophy"
+        icon-variant="orange"
+      />
+      <TechnicalAccordionContent padding="none">
         <!-- Standings Table -->
         <div class="overflow-x-auto">
-          <DataTable :value="displayStandings" :rows="50" :row-class="getRowClass" class="">
+          <TechDataTable
+            :value="displayStandings"
+            :rows="50"
+            :podium-highlight="true"
+            position-field="position"
+          >
             <Column field="position" header="#" class="w-16">
               <template #body="{ data }">
-                <div class="text-center font-bold">
-                  {{ data.position }}
-                </div>
+                <PositionCell :position="data.position" />
               </template>
             </Column>
 
@@ -32,9 +35,7 @@
               class="w-32"
             >
               <template #body="{ data }">
-                <div class="text-center text-gray-900">
-                  {{ formatPoints(data.race_points) }}
-                </div>
+                <PointsCell :points="data.race_points" />
               </template>
             </Column>
 
@@ -69,32 +70,31 @@
 
             <Column field="total_points" header="Final Points" class="w-32">
               <template #body="{ data }">
-                <div class="text-center font-bold text-gray-900">
-                  {{ formatPoints(data.total_points) }}
-                </div>
+                <PointsCell :points="data.total_points" bold />
               </template>
             </Column>
 
             <template #empty>
               <div class="text-center py-6 text-gray-500">No standings data available</div>
             </template>
-          </DataTable>
+          </TechDataTable>
         </div>
-      </AccordionContent>
-    </AccordionPanel>
-  </Accordion>
+      </TechnicalAccordionContent>
+    </TechnicalAccordionPanel>
+  </TechnicalAccordion>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import AccordionHeader from 'primevue/accordionheader';
-import AccordionContent from 'primevue/accordioncontent';
-import DataTable from 'primevue/datatable';
+import {
+  TechnicalAccordion,
+  TechnicalAccordionPanel,
+  TechnicalAccordionHeader,
+  TechnicalAccordionContent,
+} from '@app/components/common/accordions';
 import Column from 'primevue/column';
 import { PhTrophy, PhLightning, PhMedal } from '@phosphor-icons/vue';
-import { getPodiumRowClass } from '@app/constants/podiumColors';
+import { TechDataTable, PositionCell, PointsCell } from '@app/components/common/tables';
 import type {
   RoundStandings,
   RoundStandingDriver,
@@ -135,6 +135,30 @@ const showTotalRacePoints = computed(() => {
   return props.hasRacePointsEnabled ?? false;
 });
 
+const standingsSummary = computed(() => {
+  if (!props.roundStandings?.standings || props.roundStandings.standings.length === 0) {
+    return 'No standings data';
+  }
+
+  const standings = props.roundStandings.standings;
+  let results: RoundStandingDriver[];
+
+  // Use type guard to determine structure
+  if (isDivisionStandings(standings)) {
+    // Divisions exist - filter by active division
+    const divisionStanding = standings.find((div) => div.division_id === props.divisionId);
+    results = divisionStanding?.results || [];
+  } else {
+    // No divisions - return all standings (already RoundStandingDriver[])
+    results = standings;
+  }
+
+  if (results.length === 0) return 'No standings data';
+
+  const leader = results[0];
+  return leader ? `Leader: ${leader.driver_name}` : 'No standings data';
+});
+
 const displayStandings = computed<RoundStandingDriver[]>(() => {
   if (!props.roundStandings?.standings || props.roundStandings.standings.length === 0) {
     return [];
@@ -158,11 +182,6 @@ const displayStandings = computed<RoundStandingDriver[]>(() => {
   return results;
 });
 
-// Row class for podium positions
-function getRowClass(data: RoundStandingDriver): string {
-  return getPodiumRowClass(data.position);
-}
-
 // Format positions gained/lost
 function formatPositionsGained(value: number): string {
   if (value === 0) {
@@ -183,18 +202,5 @@ function getPositionsGainedClass(data: RoundStandingDriver): string {
     return 'text-green-600';
   }
   return 'text-red-600';
-}
-
-// Format points to show up to 2 decimal places (removes trailing zeros)
-function formatPoints(points: number | null | undefined): string {
-  if (points === null || points === undefined) {
-    return '';
-  }
-  // If it's a whole number, show it without decimals
-  if (Number.isInteger(points)) {
-    return points.toString();
-  }
-  // Otherwise, show up to 2 decimal places and remove trailing zeros
-  return parseFloat(points.toFixed(2)).toString();
 }
 </script>

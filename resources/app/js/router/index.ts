@@ -1,11 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import { useUserStore } from '@app/stores/userStore';
+import { useNavigationStore } from '@app/stores/navigationStore';
+import { useToast } from 'primevue/usetoast';
 
 // Type-safe route meta fields
 declare module 'vue-router' {
   interface RouteMeta {
     title?: string;
+    requiresCompetitionContext?: boolean;
+    breadcrumb?: string | ((route: RouteLocationNormalized) => string);
+  }
+}
+
+// GTM DataLayer type declaration
+declare global {
+  interface Window {
+    dataLayer?: Array<Record<string, unknown>>;
   }
 }
 
@@ -20,11 +31,21 @@ const validateNumericParams = (paramNames: string[]) => {
     _from: RouteLocationNormalized,
     next: NavigationGuardNext,
   ) => {
+    const toast = useToast();
+
     for (const paramName of paramNames) {
       const paramValue = to.params[paramName];
       const valueToCheck = Array.isArray(paramValue) ? paramValue[0] : paramValue;
 
       if (valueToCheck && !/^\d+$/.test(valueToCheck)) {
+        // Show toast notification before redirecting
+        toast.add({
+          severity: 'error',
+          summary: 'Invalid URL',
+          detail: `Invalid parameter: ${paramName} must be a number`,
+          life: 5000,
+        });
+
         // Invalid param - redirect to home
         next({ name: 'home' });
         return;
@@ -55,13 +76,56 @@ const router = createRouter({
       },
     },
     {
+      path: '/leagues/:id/drivers',
+      name: 'league-drivers',
+      component: () => import('@app/views/LeagueDrivers.vue'),
+      beforeEnter: validateNumericParams(['id']),
+      meta: {
+        title: 'Driver Management',
+      },
+    },
+    {
       path: '/leagues/:leagueId/competitions/:competitionId/seasons/:seasonId',
       name: 'season-detail',
       component: () => import('@app/views/SeasonDetail.vue'),
       beforeEnter: validateNumericParams(['leagueId', 'competitionId', 'seasonId']),
       meta: {
         title: 'Season Details',
+        requiresCompetitionContext: true,
       },
+      redirect: { name: 'season-rounds' },
+      children: [
+        {
+          path: '',
+          name: 'season-rounds',
+          component: () => import('@app/views/season/RoundsView.vue'),
+          meta: { title: 'Rounds', requiresCompetitionContext: true },
+        },
+        {
+          path: 'standings',
+          name: 'season-standings',
+          component: () => import('@app/views/season/StandingsView.vue'),
+          meta: { title: 'Standings', requiresCompetitionContext: true },
+        },
+        {
+          path: 'drivers',
+          name: 'season-drivers',
+          component: () => import('@app/views/season/DriversView.vue'),
+          meta: { title: 'Drivers', requiresCompetitionContext: true },
+        },
+        {
+          path: 'divisions-teams',
+          name: 'season-divisions-teams',
+          component: () => import('@app/views/season/DivisionsTeamsView.vue'),
+          meta: { title: 'Divisions & Teams', requiresCompetitionContext: true },
+        },
+        {
+          path: 'settings',
+          name: 'season-settings',
+          component: () => import('@app/views/season/SettingsView.vue'),
+          meta: { title: 'Settings', requiresCompetitionContext: true },
+        },
+      ],
     },
   ],
 });
@@ -105,6 +169,14 @@ router.afterEach((to) => {
     page_path: to.fullPath,
     page_title: (to.meta.title as string) || document.title,
   });
+
+  // Sidebar visibility management
+  const navigationStore = useNavigationStore();
+  if (to.meta.requiresCompetitionContext) {
+    navigationStore.setShowSidebar(true);
+  } else {
+    navigationStore.setShowSidebar(false);
+  }
 });
 
 export default router;

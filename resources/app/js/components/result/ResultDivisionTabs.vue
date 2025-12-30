@@ -1,5 +1,5 @@
 <template>
-  <div class="border border-gray-200 rounded-lg overflow-hidden">
+  <div class="border border-[var(--color-bg-highlight)] rounded-lg overflow-hidden">
     <Tabs v-model:value="activeTab">
       <TabList>
         <div class="flex items-center justify-between w-full">
@@ -11,10 +11,9 @@
           <Button
             v-if="!readOnly"
             label="Reset All Results"
-            icon="pi pi-refresh"
-            severity="danger"
-            outlined
-            size="small"
+            :icon="PhArrowClockwise"
+            variant="danger"
+            size="sm"
             class="mr-4"
             @click="handleResetAllClick"
           />
@@ -45,11 +44,12 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import { useConfirm } from 'primevue/useconfirm';
 import ResultEntryTable from './ResultEntryTable.vue';
 import type { RaceResultFormData, DriverOption } from '@app/types/raceResult';
 import type { Division } from '@app/types/division';
+import { PhArrowClockwise } from '@phosphor-icons/vue';
 
 interface Props {
   results: RaceResultFormData[];

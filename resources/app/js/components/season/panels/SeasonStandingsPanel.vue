@@ -1,16 +1,5 @@
 <template>
-  <BasePanel>
-    <template #header>
-      <PanelHeader
-        :icon="PhTrophy"
-        :icon-size="20"
-        icon-class="text-amber-600"
-        title="Season Standings"
-        description="Championship points and driver rankings across all rounds"
-        gradient="from-amber-50 to-yellow-50"
-      />
-    </template>
-
+  <div>
     <!-- Loading State -->
     <div v-if="isLoading" class="p-8 flex items-center justify-center">
       <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
@@ -25,7 +14,7 @@
     </div>
 
     <!-- Standings Content -->
-    <div v-else class="p-4 overflow-x-auto">
+    <div v-else class="overflow-x-auto">
       <!-- Divisions or Teams: TabView -->
       <Tabs
         v-if="
@@ -95,14 +84,12 @@
         :drop-round-enabled="standingsData.drop_round_enabled"
       />
     </div>
-  </BasePanel>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, h, defineComponent } from 'vue';
-import { PhTrophy, PhCheck } from '@phosphor-icons/vue';
-import BasePanel from '@app/components/common/panels/BasePanel.vue';
-import PanelHeader from '@app/components/common/panels/PanelHeader.vue';
+import { ref, computed, onMounted, watch, h, defineComponent } from 'vue';
+import { PhCheck } from '@phosphor-icons/vue';
 import Message from 'primevue/message';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
@@ -269,6 +256,16 @@ onMounted(() => {
   fetchStandings();
 });
 
+// Watch for seasonId changes to reload data when navigating between seasons
+watch(
+  () => props.seasonId,
+  (newSeasonId, oldSeasonId) => {
+    if (newSeasonId && newSeasonId !== oldSeasonId) {
+      fetchStandings();
+    }
+  },
+);
+
 /**
  * TeamsStandingsTable - Internal component for rendering the teams standings table with round-by-round points
  */
@@ -301,109 +298,226 @@ const TeamsStandingsTable = defineComponent({
 
     return () =>
       h('div', { class: 'overflow-x-auto' }, [
-        h('table', { class: 'w-full text-sm border-collapse' }, [
-          // Header
-          h('thead', {}, [
-            h('tr', { class: 'bg-gray-50 border-b border-gray-300' }, [
-              h(
-                'th',
-                {
-                  class: 'px-3 py-2 text-center font-semibold text-gray-700 w-12',
-                },
-                '#',
-              ),
-              h(
-                'th',
-                {
-                  class: 'px-3 py-2 text-left font-semibold text-gray-700 min-w-[160px]',
-                },
-                'Team',
-              ),
-              ...tableProps.rounds.map((roundNum) =>
-                h(
-                  'th',
-                  {
-                    key: `round-${roundNum}`,
-                    class: 'px-2 py-2 text-center font-semibold text-gray-700 w-16',
-                  },
-                  `R${roundNum}`,
-                ),
-              ),
-              h(
-                'th',
-                {
-                  class: 'w-20 px-3 py-2 text-center font-bold text-gray-900 bg-gray-100',
-                },
-                'Total',
-              ),
-              ...(tableProps.teamsDropRoundEnabled
-                ? [
-                    h(
-                      'th',
-                      {
-                        class: 'w-20 px-3 py-2 text-center font-bold text-gray-900 bg-blue-50',
-                      },
-                      'Drop',
-                    ),
-                  ]
-                : []),
-            ]),
-          ]),
-          // Body
-          h(
-            'tbody',
-            {},
-            tableProps.teams.map((team) =>
+        h(
+          'table',
+          {
+            class: 'w-full border-collapse',
+            style: {
+              fontFamily: 'var(--font-mono)',
+            },
+          },
+          [
+            // Header
+            h('thead', {}, [
               h(
                 'tr',
                 {
-                  key: team.team_id,
-                  class: [getPodiumRowClass(team.position), 'border-b border-gray-100'],
+                  style: {
+                    backgroundColor: 'var(--bg-card)',
+                    borderBottom: '1px solid var(--border)',
+                  },
                 },
                 [
-                  // Position
-                  h('td', { class: 'px-3 py-2 text-center font-bold' }, team.position),
-                  // Team name
-                  h('td', { class: 'px-3 py-2 font-medium text-gray-900' }, team.team_name),
-                  // Round columns
-                  ...tableProps.rounds.map((roundNum) => {
-                    const roundData = getTeamRoundData(team, roundNum);
-                    return h(
-                      'td',
-                      {
-                        key: `${team.team_id}-${roundNum}`,
-                        class: 'px-2 py-2 text-center text-gray-700',
-                      },
-                      roundData?.points ?? 0,
-                    );
-                  }),
-                  // Total points
                   h(
-                    'td',
+                    'th',
                     {
-                      class:
-                        'w-20 px-3 py-2 text-center font-bold text-lg text-gray-900 bg-gray-50',
+                      class: 'w-12 text-center uppercase',
+                      style: {
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        letterSpacing: '1px',
+                        color: 'var(--text-muted)',
+                        padding: '12px 16px',
+                      },
                     },
-                    team.total_points,
+                    '#',
                   ),
-                  // Drop total (conditional)
+                  h(
+                    'th',
+                    {
+                      class: 'text-left uppercase min-w-[160px]',
+                      style: {
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        letterSpacing: '1px',
+                        color: 'var(--text-muted)',
+                        padding: '12px 16px',
+                      },
+                    },
+                    'Team',
+                  ),
+                  ...tableProps.rounds.map((roundNum) =>
+                    h(
+                      'th',
+                      {
+                        key: `round-${roundNum}`,
+                        class: 'w-16 text-center uppercase',
+                        style: {
+                          fontSize: '10px',
+                          fontWeight: '600',
+                          letterSpacing: '1px',
+                          color: 'var(--text-muted)',
+                          padding: '12px 16px',
+                        },
+                      },
+                      `R${roundNum}`,
+                    ),
+                  ),
+                  h(
+                    'th',
+                    {
+                      class: 'w-20 text-center uppercase',
+                      style: {
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        letterSpacing: '1px',
+                        color: 'var(--text-muted)',
+                        padding: '12px 16px',
+                        backgroundColor: 'var(--bg-elevated)',
+                      },
+                    },
+                    'Total',
+                  ),
                   ...(tableProps.teamsDropRoundEnabled
                     ? [
                         h(
-                          'td',
+                          'th',
                           {
-                            class:
-                              'w-20 px-3 py-2 text-center font-bold text-lg text-blue-900 bg-blue-50',
+                            class: 'w-20 text-center uppercase',
+                            style: {
+                              fontSize: '10px',
+                              fontWeight: '600',
+                              letterSpacing: '1px',
+                              color: 'var(--text-muted)',
+                              padding: '12px 16px',
+                              backgroundColor: 'var(--bg-elevated)',
+                            },
                           },
-                          team.drop_total,
+                          'Drop',
                         ),
                       ]
                     : []),
                 ],
               ),
+            ]),
+            // Body
+            h(
+              'tbody',
+              {},
+              tableProps.teams.map((team) => {
+                const podiumClass = getPodiumRowClass(team.position);
+                const podiumBg =
+                  team.position === 1
+                    ? 'rgba(210, 153, 34, 0.08)'
+                    : team.position === 2
+                      ? 'rgba(110, 118, 129, 0.08)'
+                      : team.position === 3
+                        ? 'rgba(240, 136, 62, 0.08)'
+                        : 'transparent';
+                const positionColor =
+                  team.position === 1
+                    ? '#d29922'
+                    : team.position === 2
+                      ? '#6e7681'
+                      : team.position === 3
+                        ? '#f0883e'
+                        : 'var(--text-primary)';
+
+                return h(
+                  'tr',
+                  {
+                    key: team.team_id,
+                    class: podiumClass,
+                    style: {
+                      backgroundColor: podiumBg,
+                      borderBottom: '1px solid var(--border-muted)',
+                    },
+                  },
+                  [
+                    // Position
+                    h(
+                      'td',
+                      {
+                        class: 'text-center',
+                        style: {
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: positionColor,
+                          padding: '14px 16px',
+                        },
+                      },
+                      team.position,
+                    ),
+                    // Team name
+                    h(
+                      'td',
+                      {
+                        style: {
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          color: 'var(--text-primary)',
+                          padding: '14px 16px',
+                        },
+                      },
+                      team.team_name,
+                    ),
+                    // Round columns
+                    ...tableProps.rounds.map((roundNum) => {
+                      const roundData = getTeamRoundData(team, roundNum);
+                      return h(
+                        'td',
+                        {
+                          key: `${team.team_id}-${roundNum}`,
+                          class: 'text-center',
+                          style: {
+                            fontSize: '13px',
+                            color: 'var(--text-secondary)',
+                            padding: '14px 16px',
+                          },
+                        },
+                        roundData?.points ?? 0,
+                      );
+                    }),
+                    // Total points
+                    h(
+                      'td',
+                      {
+                        class: 'text-center',
+                        style: {
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          color: 'var(--text-primary)',
+                          padding: '14px 16px',
+                          backgroundColor: 'var(--bg-elevated)',
+                        },
+                      },
+                      team.total_points,
+                    ),
+                    // Drop total (conditional)
+                    ...(tableProps.teamsDropRoundEnabled
+                      ? [
+                          h(
+                            'td',
+                            {
+                              class: 'text-center',
+                              style: {
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                color: 'var(--cyan)',
+                                padding: '14px 16px',
+                                backgroundColor: 'var(--bg-elevated)',
+                              },
+                            },
+                            team.drop_total,
+                          ),
+                        ]
+                      : []),
+                  ],
+                );
+              }),
             ),
-          ),
-        ]),
+          ],
+        ),
       ]);
   },
 });
@@ -437,200 +551,366 @@ const StandingsTable = defineComponent({
 
     return () =>
       h('div', { class: 'overflow-x-auto' }, [
-        h('table', { class: 'w-full text-sm border-collapse' }, [
-          // Header
-          h('thead', {}, [
-            // Main header row with round group headers
-            h('tr', { class: 'bg-gray-50 border-b border-gray-200' }, [
-              h(
-                'th',
-                {
-                  class: 'px-3 py-2 text-center font-semibold text-gray-700 w-12',
-                  rowspan: 2,
-                },
-                '#',
-              ),
-              h(
-                'th',
-                {
-                  class: 'px-3 py-2 text-left font-semibold text-gray-700 min-w-[160px]',
-                  rowspan: 2,
-                },
-                'Driver',
-              ),
-              h(
-                'th',
-                {
-                  class:
-                    'w-16 px-2 py-2 text-center font-semibold text-gray-700 border-r border-l border-gray-200',
-                  rowspan: 2,
-                  title: 'Podium finishes (1st, 2nd, or 3rd place)',
-                },
-                'Podiums',
-              ),
-              ...tableProps.rounds.map((roundNum) =>
-                h(
-                  'th',
-                  {
-                    class:
-                      'px-1 py-1 text-center font-semibold text-gray-700 border-r border-gray-200',
-                    colspan: 3,
-                  },
-                  `R${roundNum}`,
-                ),
-              ),
-              h(
-                'th',
-                {
-                  class: 'w-16 px-3 py-2 text-center font-bold text-gray-900 bg-gray-100',
-                  rowspan: 2,
-                },
-                'Total',
-              ),
-              ...(tableProps.dropRoundEnabled
-                ? [
-                    h(
-                      'th',
-                      {
-                        class: 'w-16 px-3 py-2 text-center font-bold text-gray-900 bg-blue-50',
-                        rowspan: 2,
-                      },
-                      'Drop',
-                    ),
-                  ]
-                : []),
-            ]),
-            // Sub-header row for P, FL, Pts
-            h('tr', { class: 'bg-gray-50 border-b border-gray-300' }, [
-              ...tableProps.rounds.flatMap((roundNum) => [
-                h(
-                  'th',
-                  {
-                    key: `${roundNum}-p`,
-                    class: 'px-1 py-1 text-center text-xs text-gray-500 w-8',
-                    title: 'Pole Position',
-                  },
-                  'P',
-                ),
-                h(
-                  'th',
-                  {
-                    key: `${roundNum}-fl`,
-                    class: 'px-1 py-1 text-center text-xs text-gray-500 w-8',
-                    title: 'Fastest Lap',
-                  },
-                  'FL',
-                ),
-                h(
-                  'th',
-                  {
-                    key: `${roundNum}-pts`,
-                    class:
-                      'px-1 py-1 text-center text-xs text-gray-500 w-10 border-r border-gray-200',
-                    title: 'Points',
-                  },
-                  'Pts',
-                ),
-              ]),
-            ]),
-          ]),
-          // Body
-          h(
-            'tbody',
-            {},
-            tableProps.drivers.map((driver) =>
+        h(
+          'table',
+          {
+            class: 'w-full border-collapse',
+            style: {
+              fontFamily: 'var(--font-mono)',
+            },
+          },
+          [
+            // Header
+            h('thead', {}, [
+              // Main header row with round group headers
               h(
                 'tr',
                 {
-                  key: driver.driver_id,
-                  class: [getPodiumRowClass(driver.position), 'border-b border-gray-100'],
+                  style: {
+                    backgroundColor: 'var(--bg-card)',
+                    borderBottom: '1px solid var(--border)',
+                  },
                 },
                 [
-                  // Position
-                  h('td', { class: 'px-3 py-2 text-center font-bold' }, driver.position),
-                  // Driver name
-                  h('td', { class: 'px-3 py-2 font-medium text-gray-900' }, driver.driver_name),
-                  // Podiums count
                   h(
-                    'td',
+                    'th',
                     {
-                      class:
-                        'w-16 px-2 py-2 text-center font-semibold border-r border-l border-gray-200',
+                      class: 'w-12 text-center uppercase',
+                      rowspan: 2,
+                      style: {
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        letterSpacing: '1px',
+                        color: 'var(--text-muted)',
+                        padding: '12px 16px',
+                      },
                     },
-                    driver.podiums,
+                    '#',
                   ),
-                  // Round columns (P, FL, Pts for each round)
-                  ...tableProps.rounds.flatMap((roundNum) => {
-                    const roundData = getRoundData(driver, roundNum);
-                    return [
-                      // Pole Position
-                      h(
-                        'td',
-                        {
-                          key: `${driver.driver_id}-${roundNum}-p`,
-                          class: 'px-1 py-2 text-center',
-                        },
-                        roundData?.has_pole
-                          ? h(PhCheck, {
-                              size: 14,
-                              weight: 'bold',
-                              class: 'inline text-purple-600',
-                            })
-                          : h('span', { class: 'text-gray-300' }, '-'),
-                      ),
-                      // Fastest Lap
-                      h(
-                        'td',
-                        {
-                          key: `${driver.driver_id}-${roundNum}-fl`,
-                          class: 'px-1 py-2 text-center',
-                        },
-                        roundData?.has_fastest_lap
-                          ? h(PhCheck, {
-                              size: 14,
-                              weight: 'bold',
-                              class: 'inline text-fuchsia-600',
-                            })
-                          : h('span', { class: 'text-gray-300' }, '-'),
-                      ),
-                      // Points
-                      h(
-                        'td',
-                        {
-                          key: `${driver.driver_id}-${roundNum}-pts`,
-                          class: 'px-1 py-2 text-center text-gray-700 border-r border-gray-200',
-                        },
-                        roundData?.points ?? 0,
-                      ),
-                    ];
-                  }),
-                  // Total points
                   h(
-                    'td',
+                    'th',
                     {
-                      class:
-                        'w-16 px-3 py-2 text-center font-bold text-lg text-gray-900 bg-gray-50',
+                      class: 'text-left uppercase min-w-[160px]',
+                      rowspan: 2,
+                      style: {
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        letterSpacing: '1px',
+                        color: 'var(--text-muted)',
+                        padding: '12px 16px',
+                      },
                     },
-                    driver.total_points,
+                    'Driver',
                   ),
-                  // Drop total (conditional)
+                  h(
+                    'th',
+                    {
+                      class: 'w-16 text-center uppercase',
+                      rowspan: 2,
+                      title: 'Podium finishes (1st, 2nd, or 3rd place)',
+                      style: {
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        letterSpacing: '1px',
+                        color: 'var(--text-muted)',
+                        padding: '12px 16px',
+                        borderLeft: '1px solid var(--border)',
+                        borderRight: '1px solid var(--border)',
+                      },
+                    },
+                    'Podiums',
+                  ),
+                  ...tableProps.rounds.map((roundNum) =>
+                    h(
+                      'th',
+                      {
+                        class: 'text-center uppercase',
+                        colspan: 3,
+                        style: {
+                          fontSize: '10px',
+                          fontWeight: '600',
+                          letterSpacing: '1px',
+                          color: 'var(--text-muted)',
+                          padding: '8px 4px',
+                          borderRight: '1px solid var(--border)',
+                        },
+                      },
+                      `R${roundNum}`,
+                    ),
+                  ),
+                  h(
+                    'th',
+                    {
+                      class: 'w-16 text-center uppercase',
+                      rowspan: 2,
+                      style: {
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        letterSpacing: '1px',
+                        color: 'var(--text-muted)',
+                        padding: '12px 16px',
+                        backgroundColor: 'var(--bg-elevated)',
+                      },
+                    },
+                    'Total',
+                  ),
                   ...(tableProps.dropRoundEnabled
                     ? [
                         h(
-                          'td',
+                          'th',
                           {
-                            class:
-                              'w-16 px-3 py-2 text-center font-bold text-lg text-blue-900 bg-blue-50',
+                            class: 'w-16 text-center uppercase',
+                            rowspan: 2,
+                            style: {
+                              fontSize: '10px',
+                              fontWeight: '600',
+                              letterSpacing: '1px',
+                              color: 'var(--text-muted)',
+                              padding: '12px 16px',
+                              backgroundColor: 'var(--bg-elevated)',
+                            },
                           },
-                          driver.drop_total,
+                          'Drop',
                         ),
                       ]
                     : []),
                 ],
               ),
+              // Sub-header row for P, FL, Pts
+              h(
+                'tr',
+                {
+                  style: {
+                    backgroundColor: 'var(--bg-card)',
+                    borderBottom: '1px solid var(--border)',
+                  },
+                },
+                [
+                  ...tableProps.rounds.flatMap((roundNum) => [
+                    h(
+                      'th',
+                      {
+                        key: `${roundNum}-p`,
+                        class: 'w-8 text-center uppercase',
+                        title: 'Pole Position',
+                        style: {
+                          fontSize: '10px',
+                          fontWeight: '500',
+                          color: 'var(--text-muted)',
+                          padding: '8px 4px',
+                        },
+                      },
+                      'P',
+                    ),
+                    h(
+                      'th',
+                      {
+                        key: `${roundNum}-fl`,
+                        class: 'w-8 text-center uppercase',
+                        title: 'Fastest Lap',
+                        style: {
+                          fontSize: '10px',
+                          fontWeight: '500',
+                          color: 'var(--text-muted)',
+                          padding: '8px 4px',
+                        },
+                      },
+                      'FL',
+                    ),
+                    h(
+                      'th',
+                      {
+                        key: `${roundNum}-pts`,
+                        class: 'w-10 text-center uppercase',
+                        title: 'Points',
+                        style: {
+                          fontSize: '10px',
+                          fontWeight: '500',
+                          color: 'var(--text-muted)',
+                          padding: '8px 4px',
+                          borderRight: '1px solid var(--border)',
+                        },
+                      },
+                      'Pts',
+                    ),
+                  ]),
+                ],
+              ),
+            ]),
+            // Body
+            h(
+              'tbody',
+              {},
+              tableProps.drivers.map((driver) => {
+                const podiumClass = getPodiumRowClass(driver.position);
+                const podiumBg =
+                  driver.position === 1
+                    ? 'rgba(210, 153, 34, 0.08)'
+                    : driver.position === 2
+                      ? 'rgba(110, 118, 129, 0.08)'
+                      : driver.position === 3
+                        ? 'rgba(240, 136, 62, 0.08)'
+                        : 'transparent';
+                const positionColor =
+                  driver.position === 1
+                    ? '#d29922'
+                    : driver.position === 2
+                      ? '#6e7681'
+                      : driver.position === 3
+                        ? '#f0883e'
+                        : 'var(--text-primary)';
+
+                return h(
+                  'tr',
+                  {
+                    key: driver.driver_id,
+                    class: podiumClass,
+                    style: {
+                      backgroundColor: podiumBg,
+                      borderBottom: '1px solid var(--border-muted)',
+                    },
+                  },
+                  [
+                    // Position
+                    h(
+                      'td',
+                      {
+                        class: 'text-center',
+                        style: {
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: positionColor,
+                          padding: '14px 16px',
+                        },
+                      },
+                      driver.position,
+                    ),
+                    // Driver name
+                    h(
+                      'td',
+                      {
+                        style: {
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          color: 'var(--text-primary)',
+                          padding: '14px 16px',
+                        },
+                      },
+                      driver.driver_name,
+                    ),
+                    // Podiums count
+                    h(
+                      'td',
+                      {
+                        class: 'text-center',
+                        style: {
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          color: 'var(--text-primary)',
+                          padding: '14px 16px',
+                          borderLeft: '1px solid var(--border)',
+                          borderRight: '1px solid var(--border)',
+                        },
+                      },
+                      driver.podiums,
+                    ),
+                    // Round columns (P, FL, Pts for each round)
+                    ...tableProps.rounds.flatMap((roundNum) => {
+                      const roundData = getRoundData(driver, roundNum);
+                      return [
+                        // Pole Position
+                        h(
+                          'td',
+                          {
+                            key: `${driver.driver_id}-${roundNum}-p`,
+                            class: 'text-center',
+                            style: {
+                              padding: '14px 4px',
+                            },
+                          },
+                          roundData?.has_pole
+                            ? h(PhCheck, {
+                                size: 14,
+                                weight: 'bold',
+                                style: { color: 'var(--purple)' },
+                              })
+                            : h('span', { style: { color: 'var(--text-muted)' } }, '-'),
+                        ),
+                        // Fastest Lap
+                        h(
+                          'td',
+                          {
+                            key: `${driver.driver_id}-${roundNum}-fl`,
+                            class: 'text-center',
+                            style: {
+                              padding: '14px 4px',
+                            },
+                          },
+                          roundData?.has_fastest_lap
+                            ? h(PhCheck, {
+                                size: 14,
+                                weight: 'bold',
+                                style: { color: 'var(--purple)' },
+                              })
+                            : h('span', { style: { color: 'var(--text-muted)' } }, '-'),
+                        ),
+                        // Points
+                        h(
+                          'td',
+                          {
+                            key: `${driver.driver_id}-${roundNum}-pts`,
+                            class: 'text-center',
+                            style: {
+                              fontSize: '13px',
+                              color: 'var(--text-secondary)',
+                              padding: '14px 4px',
+                              borderRight: '1px solid var(--border)',
+                            },
+                          },
+                          roundData?.points ?? 0,
+                        ),
+                      ];
+                    }),
+                    // Total points
+                    h(
+                      'td',
+                      {
+                        class: 'text-center',
+                        style: {
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          color: 'var(--text-primary)',
+                          padding: '14px 16px',
+                          backgroundColor: 'var(--bg-elevated)',
+                        },
+                      },
+                      driver.total_points,
+                    ),
+                    // Drop total (conditional)
+                    ...(tableProps.dropRoundEnabled
+                      ? [
+                          h(
+                            'td',
+                            {
+                              class: 'text-center',
+                              style: {
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                color: 'var(--cyan)',
+                                padding: '14px 16px',
+                                backgroundColor: 'var(--bg-elevated)',
+                              },
+                            },
+                            driver.drop_total,
+                          ),
+                        ]
+                      : []),
+                  ],
+                );
+              }),
             ),
-          ),
-        ]),
+          ],
+        ),
       ]);
   },
 });

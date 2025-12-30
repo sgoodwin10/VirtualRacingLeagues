@@ -15,6 +15,7 @@ use App\Domain\Competition\ValueObjects\RaceName;
 use App\Domain\Competition\ValueObjects\RaceStatus;
 use App\Domain\Competition\ValueObjects\RaceType;
 use DateTimeImmutable;
+use Illuminate\Support\Carbon;
 use PHPUnit\Framework\TestCase;
 
 final class RaceTest extends TestCase
@@ -69,11 +70,11 @@ final class RaceTest extends TestCase
         $this->assertSame(20, $race->lengthValue());
         $this->assertFalse($race->extraLapAfterTime());
         $this->assertTrue($race->trackLimitsEnforced());
-        $this->assertSame(1, $race->fastestLap());
+        $this->assertSame(1.0, $race->fastestLap());
         $this->assertFalse($race->fastestLapTop10());
         $this->assertNull($race->qualifyingPole());
-        $this->assertSame(0, $race->dnfPoints());
-        $this->assertSame(0, $race->dnsPoints());
+        $this->assertSame(0.0, $race->dnfPoints());
+        $this->assertSame(0.0, $race->dnsPoints());
         $this->assertSame('Test race', $race->raceNotes());
     }
 
@@ -221,8 +222,7 @@ final class RaceTest extends TestCase
         $race->setId(1);
         $originalUpdatedAt = $race->updatedAt();
 
-        // Small delay to ensure timestamp changes
-        sleep(1);
+        Carbon::setTestNow(now()->addSecond());
 
         $race->updateConfiguration(
             name: RaceName::from('Updated Name'),
@@ -267,8 +267,8 @@ final class RaceTest extends TestCase
         $this->assertFalse($race->trackLimitsEnforced());
         $this->assertTrue($race->mandatoryPitStop());
         $this->assertSame(120, $race->minimumPitTime());
-        $this->assertSame([1 => 10, 2 => 8, 3 => 6], $race->pointsSystem()->toArray());
-        $this->assertSame(2, $race->fastestLap());
+        $this->assertSame([1 => 10.0, 2 => 8.0, 3 => 6.0], $race->pointsSystem()->toArray());
+        $this->assertSame(2.0, $race->fastestLap());
         $this->assertFalse($race->fastestLapTop10());
         $this->assertNull($race->qualifyingPole());
         $this->assertGreaterThan($originalUpdatedAt, $race->updatedAt());
@@ -276,6 +276,8 @@ final class RaceTest extends TestCase
         $events = $race->events();
         $this->assertCount(2, $events); // RaceCreated + RaceUpdated
         $this->assertInstanceOf(RaceUpdated::class, $events[1]);
+
+        Carbon::setTestNow();
     }
 
     public function test_no_update_event_when_no_changes(): void

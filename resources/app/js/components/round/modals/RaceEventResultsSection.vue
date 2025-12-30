@@ -1,24 +1,24 @@
 <template>
-  <Accordion class="bg-white border border-slate-200 rounded">
-    <AccordionPanel value="0">
-      <AccordionHeader class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-        <div class="flex items-center gap-2 w-full">
-          <PhMedal v-if="raceEvent.is_qualifier" :size="20" weight="fill" class="text-purple-500" />
-          <PhFlagCheckered v-else :size="20" weight="fill" class="text-slate-600" />
-          <h3 class="font-semibold text-gray-900">
-            {{ raceEventTitle }}
-          </h3>
-        </div>
-      </AccordionHeader>
-      <AccordionContent>
+  <TechnicalAccordion :model-value="['results']">
+    <TechnicalAccordionPanel value="results">
+      <TechnicalAccordionHeader
+        :title="raceEventTitle"
+        :subtitle="getResultsSummary()"
+        :icon="raceEvent.is_qualifier ? PhMedal : PhFlagCheckered"
+        :icon-variant="raceEvent.is_qualifier ? 'purple' : 'cyan'"
+      />
+      <TechnicalAccordionContent padding="none">
         <!-- Results Table -->
         <div class="overflow-x-auto">
-          <DataTable :value="filteredResults" :rows="50" :row-class="getRowClass" class="">
+          <TechDataTable
+            :value="filteredResults"
+            :rows="50"
+            :podium-highlight="!raceEvent.is_qualifier"
+            position-field="position"
+          >
             <Column field="position" header="#" class="w-16">
               <template #body="{ data }">
-                <div class="text-center font-medium">
-                  {{ data.position }}
-                </div>
+                <PositionCell :position="data.position" :is-qualifying="raceEvent.is_qualifier" />
               </template>
             </Column>
 
@@ -161,9 +161,7 @@
 
             <Column v-if="raceEvent.race_points" field="race_points" header="Points" class="w-24">
               <template #body="{ data }">
-                <div class="text-center font-semibold text-gray-900">
-                  {{ formatPoints(data.race_points) }}
-                </div>
+                <PointsCell :points="data.race_points" bold />
               </template>
             </Column>
 
@@ -173,23 +171,25 @@
                 {{ raceEvent.is_qualifier ? 'qualifying session' : 'race' }}
               </div>
             </template>
-          </DataTable>
+          </TechDataTable>
         </div>
-      </AccordionContent>
-    </AccordionPanel>
-  </Accordion>
+      </TechnicalAccordionContent>
+    </TechnicalAccordionPanel>
+  </TechnicalAccordion>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import AccordionHeader from 'primevue/accordionheader';
-import AccordionContent from 'primevue/accordioncontent';
-import DataTable from 'primevue/datatable';
+import { useMemoize } from '@vueuse/core';
+import {
+  TechnicalAccordion,
+  TechnicalAccordionPanel,
+  TechnicalAccordionHeader,
+  TechnicalAccordionContent,
+} from '@app/components/common/accordions';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
-import { getPodiumRowClass } from '@app/constants/podiumColors';
+import { TechDataTable, PositionCell, PointsCell } from '@app/components/common/tables';
 import { useTimeFormat } from '@app/composables/useTimeFormat';
 import { useRaceTimeCalculation } from '@app/composables/useRaceTimeCalculation';
 import type { RaceEventResults, RaceResultWithDriver } from '@app/types/roundResult';
@@ -217,6 +217,14 @@ const props = withDefaults(defineProps<Props>(), {
 const { formatRaceTime } = useTimeFormat();
 const { parseTimeToMs, calculateEffectiveTime, formatMsToTime } = useRaceTimeCalculation();
 
+// Memoize time calculations per result to avoid recalculating on every change
+const memoizedCalculateEffectiveTime = useMemoize(
+  (raceTimeMs: number | null, penaltiesMs: number | null) =>
+    calculateEffectiveTime(raceTimeMs, penaltiesMs),
+);
+
+const memoizedFormatMsToTime = useMemoize((timeMs: number) => formatMsToTime(timeMs));
+
 // Computed
 const raceEventTitle = computed(() => {
   if (props.raceEvent.is_qualifier) {
@@ -224,6 +232,17 @@ const raceEventTitle = computed(() => {
   }
   return props.raceEvent.name || `Race ${props.raceEvent.race_number}`;
 });
+
+/**
+ * Get results summary for the accordion subtitle
+ */
+function getResultsSummary(): string {
+  const count = filteredResults.value?.length || 0;
+  if (props.raceEvent.is_qualifier) {
+    return `${count} drivers qualified`;
+  }
+  return `${count} finishers`;
+}
 
 /**
  * Filter results by division (if divisionId provided)
@@ -253,11 +272,11 @@ const filteredResults = computed<RaceResultWithCalculatedDiff[]>(() => {
 
     // Sort non-DNF results by effective time (original_race_time + penalties)
     const sortedNonDnf = [...nonDnfResults].sort((a, b) => {
-      const effectiveA = calculateEffectiveTime(
+      const effectiveA = memoizedCalculateEffectiveTime(
         parseTimeToMs(a.original_race_time),
         parseTimeToMs(a.penalties),
       );
-      const effectiveB = calculateEffectiveTime(
+      const effectiveB = memoizedCalculateEffectiveTime(
         parseTimeToMs(b.original_race_time),
         parseTimeToMs(b.penalties),
       );
@@ -271,10 +290,10 @@ const filteredResults = computed<RaceResultWithCalculatedDiff[]>(() => {
     const position1Driver = sortedNonDnf[0];
 
     if (position1Driver) {
-      // Calculate position 1's effective time
+      // Calculate position 1's effective time (use memoized function)
       const position1RaceTimeMs = parseTimeToMs(position1Driver.original_race_time);
       const position1PenaltiesMs = parseTimeToMs(position1Driver.penalties);
-      const position1EffectiveTimeMs = calculateEffectiveTime(
+      const position1EffectiveTimeMs = memoizedCalculateEffectiveTime(
         position1RaceTimeMs,
         position1PenaltiesMs,
       );
@@ -305,15 +324,18 @@ const filteredResults = computed<RaceResultWithCalculatedDiff[]>(() => {
           };
         }
 
-        // Calculate time difference for other drivers
+        // Calculate time difference for other drivers (use memoized functions)
         const driverRaceTimeMs = parseTimeToMs(result.original_race_time);
         const driverPenaltiesMs = parseTimeToMs(result.penalties);
-        const driverEffectiveTimeMs = calculateEffectiveTime(driverRaceTimeMs, driverPenaltiesMs);
+        const driverEffectiveTimeMs = memoizedCalculateEffectiveTime(
+          driverRaceTimeMs,
+          driverPenaltiesMs,
+        );
 
         let calculatedTimeDiff: string | null = null;
         if (position1EffectiveTimeMs !== null && driverEffectiveTimeMs !== null) {
           const timeDiffMs = driverEffectiveTimeMs - position1EffectiveTimeMs;
-          calculatedTimeDiff = formatMsToTime(timeDiffMs);
+          calculatedTimeDiff = memoizedFormatMsToTime(timeDiffMs);
         }
 
         return {
@@ -330,15 +352,6 @@ const filteredResults = computed<RaceResultWithCalculatedDiff[]>(() => {
     calculated_time_diff: null,
   }));
 });
-
-// Row class for podium positions (only for races, not qualifying)
-function getRowClass(data: RaceResultWithDriver): string {
-  if (props.raceEvent.is_qualifier) {
-    return '';
-  }
-
-  return getPodiumRowClass(data.position);
-}
 
 // Format positions gained/lost
 function formatPositionsGained(value: number | null): string {
@@ -363,15 +376,5 @@ function getPositionsGainedClass(data: RaceResultWithDriver): string {
     return 'text-green-600';
   }
   return 'text-red-600';
-}
-
-// Format points to show up to 2 decimal places (removes trailing zeros)
-function formatPoints(points: number): string {
-  // If it's a whole number, show it without decimals
-  if (Number.isInteger(points)) {
-    return points.toString();
-  }
-  // Otherwise, show up to 2 decimal places and remove trailing zeros
-  return parseFloat(points.toFixed(2)).toString();
 }
 </script>

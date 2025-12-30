@@ -1,0 +1,79 @@
+:root {
+  --accordion-bg: #1c2128;
+  --accordion-bg-elevated: #21262d;
+  --accordion-bg-highlight: #272d36;
+  --accordion-border: #30363d;
+  --accordion-border-active: #58a6ff;
+  --accordion-text-primary: #e6edf3;
+  --accordion-text-secondary: #8b949e;
+  --accordion-text-muted: #6e7681;
+  --accordion-accent-cyan: #58a6ff;
+  --accordion-accent-green: #7ee787;
+  --accordion-accent-orange: #f0883e;
+  --accordion-accent-red: #f85149;
+  --accordion-accent-purple: #bc8cff;
+  --accordion-font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+  --accordion-font-sans: 'Inter', -apple-system, sans-serif;
+  --accordion-radius: 6px;
+}
+
+/* Accordion panel transitions */
+.accordion-panel-enter-active,
+.accordion-panel-leave-active {
+  transition: all 0.2s ease;
+}
+
+.accordion-panel-enter-from,
+.accordion-panel-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Focus visible for accessibility */
+.accordion-header:focus-visible {
+  outline: 2px solid var(--accordion-accent-cyan);
+  outline-offset: 2px;
+  border-radius: var(--accordion-radius);
+}
+
+/* Round number badge */
+.round-number-badge {
+  height: 4rem;
+  width: 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--accordion-radius) 0 0 var(--accordion-radius);
+}
+
+.round-label {
+  font-family: var(--accordion-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.round-number {
+  font-family: var(--accordion-font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* Text color utilities */
+.text-primary { color: var(--accordion-text-primary); }
+.text-secondary { color: var(--accordion-text-secondary); }
+.text-muted { color: var(--accordion-text-muted); }
+.text-cyan { color: var(--accordion-accent-cyan); }
+.text-green { color: var(--accordion-accent-green); }
+.text-orange { color: var(--accordion-accent-orange); }
+
+/* Background utilities */
+.bg-card { background-color: var(--accordion-bg); }
+.bg-elevated { background-color: var(--accordion-bg-elevated); }
+
+/* Border utilities */
+.border-default { border-color: var(--accordion-border); }

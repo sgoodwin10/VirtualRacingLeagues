@@ -69,26 +69,8 @@ vi.mock('primevue/column', () => ({
   },
 }));
 
-// Mock BasePanel
-vi.mock('@app/components/common/panels/BasePanel.vue', () => ({
-  default: {
-    name: 'BasePanel',
-    template: `
-      <div class="base-panel">
-        <div class="base-panel-header"><slot name="header" /></div>
-        <div class="base-panel-content"><slot /></div>
-      </div>
-    `,
-  },
-}));
-
 // Mock Phosphor Icons
 vi.mock('@phosphor-icons/vue', () => ({
-  PhTrophy: {
-    name: 'PhTrophy',
-    template: '<i class="ph-trophy" />',
-    props: ['size', 'weight'],
-  },
   PhCheck: {
     name: 'PhCheck',
     template: '<i class="ph-check" />',
@@ -354,29 +336,6 @@ describe('SeasonStandingsPanel', () => {
       // "Pro Division" (order: 1, id: 1) comes before "Am Division" (order: 2, id: 2)
       const vm = wrapper.vm as any;
       expect(vm.activeTabId).toBe('division-1'); // First division by order is "Pro Division" with id=1
-    });
-  });
-
-  describe('Panel Header', () => {
-    beforeEach(async () => {
-      getSeasonStandingsSpy.mockResolvedValue(mockFlatStandings);
-
-      wrapper = mount(SeasonStandingsPanel, {
-        props: {
-          seasonId: 1,
-        },
-      });
-
-      await nextTick();
-      await nextTick();
-    });
-
-    it('should render trophy icon in header', () => {
-      expect(wrapper.find('.ph-trophy').exists()).toBe(true);
-    });
-
-    it('should render header title', () => {
-      expect(wrapper.text()).toContain('Season Standings');
     });
   });
 

@@ -3,7 +3,7 @@ import { PhUser, PhEnvelope } from '@phosphor-icons/vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
 
 interface Props {
-  organizerName: string;
+  organizerName: string | null;
   contactEmail: string | null;
 }
 
@@ -31,7 +31,7 @@ defineProps<Props>();
         <div class="flex-1 min-w-0">
           <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Manager</div>
           <div class="font-semibold text-gray-900 truncate mt-0.5">
-            {{ organizerName }}
+            {{ organizerName ?? 'Not provided' }}
           </div>
         </div>
       </div>

@@ -1,16 +1,7 @@
 <template>
-  <div id="app">
-    <Toast />
-    <ConfirmDialog />
-    <Header />
-    <main>
-      <router-view />
-    </main>
-  </div>
+  <AppLayout />
 </template>
 
 <script setup lang="ts">
-import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
-import Header from '@app/components/layout/Header.vue';
+import AppLayout from '@app/components/layout/AppLayout.vue';
 </script>

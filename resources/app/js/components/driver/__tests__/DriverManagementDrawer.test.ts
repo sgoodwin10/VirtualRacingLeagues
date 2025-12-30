@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref } from 'vue';
 import { setActivePinia } from 'pinia';
 import { mountWithStubs, createTestPinia } from '@app/__tests__/setup/testUtils';
 import DriverManagementDrawer from '../DriverManagementDrawer.vue';
@@ -34,7 +35,6 @@ const mockFetchLeagueDrivers = vi.fn().mockResolvedValue(undefined);
 const mockResetFilters = vi.fn();
 
 vi.mock('@app/stores/driverStore', () => {
-  const { ref, computed } = require('vue');
   return {
     useDriverStore: vi.fn(() => ({
       statusFilter: 'all',
@@ -54,30 +54,41 @@ vi.mock('@app/stores/driverStore', () => {
   };
 });
 
-// Mock league store - create shared refs outside the factory
-const { ref: vueRef } = require('vue');
-const mockPlatformColumns = vueRef([]);
-const mockPlatformCsvHeaders = vueRef([]);
-const mockPlatformFormFields = vueRef([]);
+// Mock league store - use getter pattern like DriverFormDialog.test.ts
+let mockPlatformColumnsValue: any[] = [];
+let mockPlatformCsvHeadersValue: any[] = [];
+let mockPlatformFormFieldsValue: any[] = [];
 
 vi.mock('@app/stores/leagueStore', () => {
   return {
     useLeagueStore: vi.fn(() => ({
-      platformColumns: mockPlatformColumns,
-      platformCsvHeaders: mockPlatformCsvHeaders,
-      platformFormFields: mockPlatformFormFields,
+      get platformColumns() {
+        return mockPlatformColumnsValue;
+      },
+      get platformCsvHeaders() {
+        return mockPlatformCsvHeadersValue;
+      },
+      get platformFormFields() {
+        return mockPlatformFormFieldsValue;
+      },
       fetchDriverColumnsForLeague: vi.fn().mockImplementation(async () => {
-        // Mock implementation that ensures the arrays stay as arrays
-        mockPlatformColumns.value = [];
+        mockPlatformColumnsValue = [];
       }),
       fetchDriverFormFieldsForLeague: vi.fn().mockImplementation(async () => {
-        // Mock implementation that ensures the arrays stay as arrays
-        mockPlatformFormFields.value = [];
+        mockPlatformFormFieldsValue = [];
       }),
       fetchDriverCsvHeadersForLeague: vi.fn().mockImplementation(async () => {
-        // Mock implementation that ensures the arrays stay as arrays
-        mockPlatformCsvHeaders.value = [];
+        mockPlatformCsvHeadersValue = [];
       }),
+    })),
+  };
+});
+
+// Mock usePlatformFormFields to prevent unhandled rejections from async operations
+vi.mock('@app/composables/usePlatformFormFields', () => {
+  return {
+    usePlatformFormFields: vi.fn(() => ({
+      fetchPlatformFormFields: vi.fn().mockResolvedValue(undefined),
     })),
   };
 });
@@ -88,6 +99,11 @@ describe('DriverManagementDrawer', () => {
   beforeEach(() => {
     setActivePinia(createTestPinia());
     vi.clearAllMocks();
+
+    // Reset mock arrays to empty before each test
+    mockPlatformColumnsValue = [];
+    mockPlatformCsvHeadersValue = [];
+    mockPlatformFormFieldsValue = [];
 
     mockDriver = {
       id: 1,

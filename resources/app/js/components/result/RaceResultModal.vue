@@ -34,7 +34,7 @@
         <!-- Missing Drivers Warning -->
         <Message
           v-if="missingDriverNames.length > 0"
-          severity="warn"
+          variant="warning"
           :closable="true"
           @close="missingDriverNames = []"
         >
@@ -82,20 +82,14 @@
       <div class="flex justify-end gap-3">
         <!-- Read-only mode: just show Close button -->
         <template v-if="isReadOnly">
-          <Button label="Close" severity="secondary" @click="handleClose" />
+          <Button label="Close" variant="secondary" @click="handleClose" />
         </template>
         <!-- Edit mode: show Cancel and Save buttons -->
         <template v-else>
-          <Button
-            label="Cancel"
-            severity="secondary"
-            outlined
-            :disabled="isSaving"
-            @click="handleClose"
-          />
+          <Button label="Cancel" variant="secondary" :disabled="isSaving" @click="handleClose" />
           <Button
             label="Save Results"
-            severity="success"
+            variant="success"
             :loading="isSaving"
             :disabled="!canSave"
             @click="handleSave"
@@ -108,7 +102,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
 import { PhTrophy } from '@phosphor-icons/vue';
@@ -255,6 +249,7 @@ function initializeForm(): void {
 function handleCsvParse(parsedRows: CsvResultRow[]): void {
   // Reset missing drivers list
   missingDriverNames.value = [];
+  // Create Set BEFORE the loop to track processed driver names
   const processedDriverNames = new Set<string>();
 
   // Match parsed CSV rows to drivers and populate form

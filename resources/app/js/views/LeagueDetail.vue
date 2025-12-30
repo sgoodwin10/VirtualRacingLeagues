@@ -1,55 +1,40 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
-import { PhUsers, PhFlagCheckered } from '@phosphor-icons/vue';
-import Button from 'primevue/button';
-import Card from 'primevue/card';
+import { PhPlus, PhArrowRight } from '@phosphor-icons/vue';
+import { Button } from '@app/components/common/buttons';
 import Skeleton from 'primevue/skeleton';
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
 import Toast from 'primevue/toast';
 import { getLeagueById } from '@app/services/leagueService';
-import { useLeagueDrivers } from '@app/composables/useLeagueDrivers';
 import { usePageTitle } from '@app/composables/usePageTitle';
-import DriverFormDialog from '@app/components/driver/modals/DriverFormDialog.vue';
-import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
-import CSVImportDialog from '@app/components/driver/modals/CSVImportDialog.vue';
+import { useCompetitionStore } from '@app/stores/competitionStore';
+import { useSeasonStore } from '@app/stores/seasonStore';
+import LeagueIdentityPanel from '@app/components/league/partials/LeagueIdentityPanel.vue';
 import LeagueWizardDrawer from '@app/components/league/modals/LeagueWizardDrawer.vue';
-import CompetitionList from '@app/components/competition/CompetitionList.vue';
-import LeagueHeader from '@app/components/league/partials/LeagueHeader.vue';
-import LeagueStatsBar from '@app/components/league/partials/LeagueStatsBar.vue';
-import LeagueAboutPanel from '@app/components/league/partials/LeagueAboutPanel.vue';
-import LeagueContactPanel from '@app/components/league/partials/LeagueContactPanel.vue';
-import LeagueSocialMediaPanel from '@app/components/league/partials/LeagueSocialMediaPanel.vue';
-import LeagueDriversTab from '@app/components/league/partials/LeagueDriversTab.vue';
+import CompetitionFormDrawer from '@app/components/competition/CompetitionFormDrawer.vue';
+import {
+  ListContainer,
+  ListRow,
+  ListSectionHeader,
+  ListRowStats,
+  ListRowStat,
+} from '@app/components/common/lists';
 import type { League } from '@app/types/league';
-import type { Competition } from '@app/types/competition';
-import type { LeagueDriver, CreateDriverRequest } from '@app/types/driver';
-import BasePanel from '@app/components/common/panels/BasePanel.vue';
-import Breadcrumbs, { type BreadcrumbItem } from '@app/components/common/Breadcrumbs.vue';
+import type { Season } from '@app/types/season';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
-const confirm = useConfirm();
+const competitionStore = useCompetitionStore();
+const seasonStore = useSeasonStore();
 
 const league = ref<League | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const activeTab = ref('competitions');
 const showEditModal = ref(false);
-
-// Driver dialog states
-const showDriverForm = ref(false);
-const showViewModal = ref(false);
-const showCSVImport = ref(false);
-const formMode = ref<'create' | 'edit'>('create');
-const selectedDriver = ref<LeagueDriver | null>(null);
+const showSettingsModal = ref(false);
+const showCompetitionDrawer = ref(false);
 
 // Get league ID from route params
 const leagueId = computed(() => route.params.id as string);
@@ -62,29 +47,35 @@ const leagueIdNumber = computed(() => {
   return parsed;
 });
 
-// Use the useLeagueDrivers composable for driver management
-const { loadDrivers, addDriver, updateDriver, removeDriver, importFromCSV } = useLeagueDrivers(
-  leagueIdNumber,
-  {
-    onSuccess: (msg) =>
-      toast.add({ severity: 'success', summary: 'Success', detail: msg, life: 3000 }),
-    onError: (msg) => toast.add({ severity: 'error', summary: 'Error', detail: msg, life: 5000 }),
-  },
-);
-
 // Set dynamic page title based on league name
 const pageTitle = computed(() => league.value?.name);
 usePageTitle(pageTitle);
 
-// Watch for active tab changes
-watch(activeTab, async (newTab) => {
-  if (newTab === 'drivers') {
-    await loadDrivers();
-  }
+// Computed data for the dashboard
+const competitions = computed(() => {
+  return competitionStore.competitions.filter((c) => c.league_id === leagueIdNumber.value);
+});
+
+const activeSeasons = computed(() => {
+  const leagueSeasons = seasonStore.seasons.filter((season) => {
+    return season.competition?.league?.id === leagueIdNumber.value;
+  });
+
+  // Filter to active and setup seasons only
+  return leagueSeasons.filter((s) => s.status === 'active' || s.status === 'setup');
+});
+
+const seasonsCount = computed(() => {
+  const leagueSeasons = seasonStore.seasons.filter((season) => {
+    return season.competition?.league?.id === leagueIdNumber.value;
+  });
+  return leagueSeasons.length;
 });
 
 onMounted(async () => {
   await loadLeague();
+  await loadCompetitions();
+  await loadSeasons();
 });
 
 async function loadLeague(): Promise<void> {
@@ -113,266 +104,353 @@ async function loadLeague(): Promise<void> {
   }
 }
 
-function handleCompetitionCreated(_competition: Competition): void {
-  // Competition created event handled by CompetitionList component
+async function loadCompetitions(): Promise<void> {
+  if (!leagueIdNumber.value) return;
+
+  try {
+    await competitionStore.fetchCompetitions(leagueIdNumber.value);
+  } catch (err: unknown) {
+    console.error('Failed to load competitions:', err);
+  }
 }
 
-function handleCompetitionUpdated(_competition: Competition): void {
-  // Competition updated event handled by CompetitionList component
-}
-
-function handleCompetitionDeleted(_competitionId: number): void {
-  // Competition deleted event handled by CompetitionList component
+async function loadSeasons(): Promise<void> {
+  try {
+    // Fetch seasons for all competitions in this league (in parallel)
+    const competitionIds = competitions.value.map((c) => c.id);
+    await Promise.all(competitionIds.map((id) => seasonStore.fetchSeasons(id)));
+  } catch (err: unknown) {
+    console.error('Failed to load seasons:', err);
+  }
 }
 
 function handleEditLeague(): void {
   showEditModal.value = true;
 }
 
+function handleSettings(): void {
+  showSettingsModal.value = true;
+}
+
 function handleLeagueSaved(): void {
   showEditModal.value = false;
+  showSettingsModal.value = false;
   loadLeague();
 }
 
-function handleAddDriver(): void {
-  formMode.value = 'create';
-  selectedDriver.value = null;
-  showDriverForm.value = true;
+function handleNewSeason(): void {
+  // TODO: Implement season creation
+  toast.add({
+    severity: 'info',
+    summary: 'Coming Soon',
+    detail: 'Season creation will be available soon',
+    life: 3000,
+  });
 }
 
-function handleViewDriver(driver: LeagueDriver): void {
-  selectedDriver.value = driver;
-  showViewModal.value = true;
+function handleAddCompetition(): void {
+  showCompetitionDrawer.value = true;
 }
 
-function handleEditDriver(driver: LeagueDriver): void {
-  formMode.value = 'edit';
-  selectedDriver.value = driver;
-  showDriverForm.value = true;
+function handleCompetitionSaved(): void {
+  showCompetitionDrawer.value = false;
+  loadCompetitions();
 }
 
-function handleEditFromView(): void {
-  showViewModal.value = false;
-  if (selectedDriver.value) {
-    handleEditDriver(selectedDriver.value);
-  }
-}
+function handleViewSeason(season: Season): void {
+  if (!season.competition) return;
 
-async function handleSaveDriver(data: CreateDriverRequest): Promise<void> {
-  try {
-    if (formMode.value === 'create') {
-      await addDriver(data);
-    } else if (selectedDriver.value) {
-      await updateDriver(selectedDriver.value.driver_id, data);
-    }
-    showDriverForm.value = false;
-  } catch (error) {
-    // Error already handled by composable callbacks
-    console.error('Failed to save driver:', error);
-  }
-}
-
-function handleRemoveDriver(driver: LeagueDriver): void {
-  confirm.require({
-    message: `Are you sure you want to remove ${getDriverName(driver)} from this league?`,
-    header: 'Confirm Removal',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Remove',
-    rejectLabel: 'Cancel',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
-      try {
-        await removeDriver(driver.driver_id);
-      } catch (error) {
-        // Error already handled by composable callbacks
-        console.error('Failed to remove driver:', error);
-      }
+  router.push({
+    name: 'season-detail',
+    params: {
+      leagueId: season.competition.league?.id || leagueIdNumber.value,
+      competitionId: season.competition_id,
+      seasonId: season.id,
     },
   });
 }
 
-function handleImportCSV(): void {
-  showCSVImport.value = true;
-}
-
-async function handleCSVImport(csvData: string) {
-  const result = await importFromCSV(csvData);
-
-  // Additional UI feedback for partial imports
-  if (result.errors.length > 0 && result.success_count > 0) {
-    const message = `Imported ${result.success_count} driver${result.success_count === 1 ? '' : 's'} with ${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`;
-    toast.add({
-      severity: 'warn',
-      summary: 'Partial Import',
-      detail: message,
-      life: 5000,
-    });
+function getSeasonIndicatorColor(season: Season): string {
+  // Use competition's colour if available
+  if (season.competition?.competition_colour) {
+    try {
+      const colorObj = JSON.parse(season.competition.competition_colour);
+      return `rgb(${colorObj.r}, ${colorObj.g}, ${colorObj.b})`;
+    } catch {
+      // Fallback if parsing fails
+    }
   }
 
-  return result;
+  // Default color based on status
+  return season.status === 'active' ? 'var(--green)' : 'var(--cyan)';
 }
 
-function getDriverName(leagueDriver: LeagueDriver): string {
-  return leagueDriver.driver?.display_name || 'Unknown';
+function getSeasonRoundsProgress(season: Season): string {
+  const total = season.stats?.total_races || 0;
+  const completed = season.stats?.completed_races || 0;
+  return `Round ${completed} of ${total}`;
 }
-
-const breadcrumbItems = computed((): BreadcrumbItem[] => [
-  {
-    label: 'Leagues',
-    to: { name: 'home' },
-    icon: 'pi-home',
-  },
-  {
-    label: league.value?.name || 'League Details',
-  },
-]);
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto p-6">
+  <div class="flex min-h-screen">
     <!-- Loading State -->
-    <div v-if="isLoading" class="space-y-6">
-      <Skeleton width="200px" height="2rem" class="mb-4" />
-      <Skeleton width="100%" height="300px" class="mb-4" />
-      <Skeleton width="100%" height="150px" />
+    <div v-if="isLoading" class="flex-1 p-6">
+      <Skeleton width="100%" height="100vh" />
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error || !league" class="text-center py-12">
-      <Card class="bg-red-50 border border-red-200">
-        <template #content>
-          <div class="flex flex-col items-center gap-4">
-            <i class="pi pi-exclamation-triangle text-6xl text-red-500"></i>
-            <h2 class="text-2xl font-bold text-red-900">League Not Found</h2>
-            <p class="text-red-700">
-              {{ error || 'The league you are looking for does not exist or has been removed.' }}
-            </p>
-            <Button
-              label="Back to Leagues"
-              icon="pi pi-arrow-left"
-              @click="router.push({ name: 'leagues' })"
-            />
-          </div>
-        </template>
-      </Card>
+    <div v-else-if="error || !league" class="flex-1 flex items-center justify-center p-6">
+      <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-8 max-w-md">
+        <div class="flex flex-col items-center gap-4">
+          <i class="pi pi-exclamation-triangle text-6xl text-[var(--red)]"></i>
+          <h2 class="font-mono text-2xl font-semibold text-[var(--red)]">League Not Found</h2>
+          <p class="text-[var(--text-secondary)] text-center">
+            {{ error || 'The league you are looking for does not exist or has been removed.' }}
+          </p>
+          <Button
+            label="Back to Leagues"
+            variant="primary"
+            @click="router.push({ name: 'home' })"
+          />
+        </div>
+      </div>
     </div>
 
-    <!-- League Content -->
-    <div v-else class="space-y-6">
-      <!-- Breadcrumbs -->
-      <Breadcrumbs :items="breadcrumbItems" />
+    <!-- Main Split-Panel Layout -->
+    <template v-else>
+      <!-- Left Panel - League Identity -->
+      <LeagueIdentityPanel
+        :league="league"
+        :seasons-count="seasonsCount"
+        @edit="handleEditLeague"
+        @settings="handleSettings"
+      />
 
-      <!-- Header Image and Logo -->
-      <Card class="overflow-hidden p-0">
-        <template #header>
-          <LeagueHeader :league="league" @edit="handleEditLeague" />
-        </template>
+      <!-- Right Panel - Dynamic Content -->
+      <main class="flex-1 min-w-0 flex flex-col">
+        <!-- Content Header -->
+        <header
+          class="flex items-center justify-between px-8 py-5 bg-[var(--bg-panel)] border-b border-[var(--border)]"
+        >
+          <h2
+            class="font-mono text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2"
+          >
+            <span class="text-[var(--cyan)]">//</span> DASHBOARD
+          </h2>
+          <div class="flex gap-2">
+            <Button
+              label="New Season"
+              :icon="PhPlus"
+              variant="primary"
+              size="sm"
+              @click="handleNewSeason"
+            />
+          </div>
+        </header>
 
-        <template #content>
-          <LeagueStatsBar :league="league" />
+        <!-- Content Body -->
+        <div class="flex-1 px-8 py-6 overflow-y-auto">
+          <!-- Active Seasons Section -->
+          <section v-if="activeSeasons.length > 0" class="mb-8">
+            <ListSectionHeader title="Active Seasons" class="mb-4" />
+            <ListContainer gap="12px">
+              <ListRow
+                v-for="season in activeSeasons"
+                :key="season.id"
+                clickable
+                @click="handleViewSeason(season)"
+              >
+                <template #indicator>
+                  <div
+                    class="w-1 h-10 rounded-sm"
+                    :style="{
+                      backgroundColor: getSeasonIndicatorColor(season),
+                      boxShadow:
+                        season.status === 'active'
+                          ? `0 0 8px ${getSeasonIndicatorColor(season)}`
+                          : 'none',
+                    }"
+                  ></div>
+                </template>
 
-          <div class="space-y-6">
-            <!-- Main Content: Two-Column Layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-              <!-- Left Column: Description (3/5 width) -->
-              <div class="lg:col-span-3 space-y-4">
-                <LeagueAboutPanel :league-name="league.name" :description="league.description" />
-                <LeagueContactPanel
-                  :organizer-name="league.organizer_name"
-                  :contact-email="league.contact_email"
-                />
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-mono text-[13px] font-semibold text-[var(--text-primary)] mb-1">
+                    {{ season.name }}
+                  </h3>
+                  <div class="flex gap-4 text-xs text-[var(--text-muted)]">
+                    <span class="flex items-center gap-1">
+                      <i class="pi pi-trophy" style="font-size: 10px"></i>
+                      {{ season.competition?.name || 'Unknown Competition' }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <i class="pi pi-calendar" style="font-size: 10px"></i>
+                      {{ getSeasonRoundsProgress(season) }}
+                    </span>
+                  </div>
+                </div>
+
+                <template #stats>
+                  <ListRowStats class="hidden md:flex">
+                    <ListRowStat :value="season.stats?.total_drivers || 0" label="Drivers" />
+                    <ListRowStat :value="season.stats?.completed_races || 0" label="Races" />
+                  </ListRowStats>
+                </template>
+
+                <template #action>
+                  <Button
+                    label="View"
+                    :icon="PhArrowRight"
+                    variant="ghost"
+                    size="sm"
+                    @click.stop="handleViewSeason(season)"
+                  />
+                </template>
+              </ListRow>
+            </ListContainer>
+          </section>
+
+          <!-- Empty state for seasons -->
+          <section v-else class="mb-8">
+            <ListSectionHeader title="Active Seasons" class="mb-4" />
+            <div
+              class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-8 text-center"
+            >
+              <i class="pi pi-calendar text-4xl text-[var(--text-muted)] opacity-30 mb-4"></i>
+              <p class="text-[var(--text-secondary)]">No active seasons yet</p>
+              <p class="text-[var(--text-muted)] text-sm mt-1">
+                Create your first season to get started
+              </p>
+            </div>
+          </section>
+
+          <!-- Competitions Section -->
+          <section class="mb-8">
+            <ListSectionHeader title="Competitions" class="mb-4" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <!-- Competition Tiles -->
+              <div
+                v-for="competition in competitions"
+                :key="competition.id"
+                class="flex flex-col items-center p-5 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] cursor-pointer transition-all duration-200 hover:border-[var(--cyan)] hover:bg-[var(--bg-elevated)] hover:-translate-y-0.5"
+                @click="
+                  toast.add({
+                    severity: 'info',
+                    summary: 'Coming Soon',
+                    detail: 'Competition details will be available soon',
+                    life: 3000,
+                  })
+                "
+              >
+                <!-- Competition Icon/Logo -->
+                <div
+                  class="w-12 h-12 rounded-[var(--radius)] flex items-center justify-center mb-3"
+                  :style="{
+                    backgroundColor: 'var(--cyan-dim)',
+                    color: 'var(--cyan)',
+                  }"
+                >
+                  <i class="pi pi-trophy" style="font-size: 24px"></i>
+                </div>
+                <!-- Competition Name -->
+                <span
+                  class="font-mono text-[11px] font-semibold text-[var(--text-primary)] text-center"
+                >
+                  {{ competition.name }}
+                </span>
               </div>
 
-              <!-- Right Column: Social Media (2/5 width) -->
-              <div class="lg:col-span-2 space-y-4">
-                <LeagueSocialMediaPanel :league="league" />
+              <!-- Add Competition Tile -->
+              <div
+                class="flex flex-col items-center p-5 bg-[var(--bg-card)] border border-[var(--border)] border-dashed rounded-[var(--radius)] cursor-pointer transition-all duration-200 hover:border-[var(--cyan)] hover:bg-[var(--bg-elevated)] hover:-translate-y-0.5"
+                @click="handleAddCompetition"
+              >
+                <div
+                  class="w-12 h-12 rounded-[var(--radius)] flex items-center justify-center mb-3 bg-[var(--green-dim)] text-[var(--green)]"
+                >
+                  <PhPlus :size="24" />
+                </div>
+                <span
+                  class="font-mono text-[11px] font-semibold text-[var(--text-primary)] text-center"
+                >
+                  Add Competition
+                </span>
               </div>
             </div>
-          </div>
-        </template>
-      </Card>
-    </div>
 
-    <!-- Tabs -->
-    <Tabs v-model:value="activeTab" class="mt-6">
-      <TabList :pt="{ tabList: { class: 'gap-2' } }">
-        <Tab value="competitions">
-          <div class="flex items-center gap-2">
-            <PhFlagCheckered :size="20" />
-            <span>Competitions</span>
-          </div>
-        </Tab>
-        <Tab value="drivers">
-          <div class="flex items-center gap-2">
-            <PhUsers :size="20" />
-            <span>Drivers</span>
-          </div>
-        </Tab>
-      </TabList>
+            <!-- Empty state for competitions -->
+            <div
+              v-if="competitions.length === 0"
+              class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-8 text-center"
+            >
+              <i class="pi pi-trophy text-4xl text-[var(--text-muted)] opacity-30 mb-4"></i>
+              <p class="text-[var(--text-secondary)]">No competitions yet</p>
+              <p class="text-[var(--text-muted)] text-sm mt-1 mb-4">
+                Create your first competition to start organizing races
+              </p>
+              <Button
+                label="Add Competition"
+                :icon="PhPlus"
+                variant="primary"
+                size="sm"
+                @click="handleAddCompetition"
+              />
+            </div>
+          </section>
 
-      <TabPanels>
-        <!-- Competitions Tab -->
-        <TabPanel value="competitions">
-          <BasePanel class="px-4 pb-4">
-            <CompetitionList
-              :league-id="leagueIdNumber"
-              @competition-created="handleCompetitionCreated"
-              @competition-updated="handleCompetitionUpdated"
-              @competition-deleted="handleCompetitionDeleted"
-            />
-          </BasePanel>
-        </TabPanel>
-
-        <!-- Drivers Tab -->
-        <TabPanel value="drivers">
-          <LeagueDriversTab
-            :league-id="leagueIdNumber"
-            @add-driver="handleAddDriver"
-            @import-csv="handleImportCSV"
-            @view-driver="handleViewDriver"
-            @edit-driver="handleEditDriver"
-            @remove-driver="handleRemoveDriver"
-          />
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+          <!-- Recent Activity Section (Placeholder) -->
+          <section class="mb-8">
+            <ListSectionHeader title="Recent Activity" class="mb-4" />
+            <div
+              class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-8 text-center"
+            >
+              <i class="pi pi-clock text-4xl text-[var(--text-muted)] opacity-30 mb-4"></i>
+              <p class="text-[var(--text-secondary)]">Coming in Version 3</p>
+              <p class="text-[var(--text-muted)] text-sm mt-1">
+                Activity feed will show recent updates, results, and changes
+              </p>
+            </div>
+          </section>
+        </div>
+      </main>
+    </template>
 
     <!-- Edit League Modal -->
     <LeagueWizardDrawer
+      v-if="league"
       v-model:visible="showEditModal"
       :is-edit-mode="true"
       :league-id="leagueIdNumber"
       @league-saved="handleLeagueSaved"
     />
 
-    <!-- View Driver Modal -->
-    <ViewDriverModal
-      v-model:visible="showViewModal"
-      :driver="selectedDriver"
-      @close="showViewModal = false"
-      @edit="handleEditFromView"
-    />
-
-    <!-- Driver Form Dialog -->
-    <DriverFormDialog
+    <!-- Settings Modal (same as Edit for now) -->
+    <LeagueWizardDrawer
       v-if="league"
-      v-model:visible="showDriverForm"
-      :mode="formMode"
-      :driver="selectedDriver"
+      v-model:visible="showSettingsModal"
+      :is-edit-mode="true"
       :league-id="leagueIdNumber"
-      @save="handleSaveDriver"
-      @cancel="showDriverForm = false"
+      @league-saved="handleLeagueSaved"
     />
 
-    <!-- CSV Import Dialog -->
-    <CSVImportDialog
-      v-model:visible="showCSVImport"
+    <!-- Competition Form Drawer -->
+    <CompetitionFormDrawer
+      v-if="league"
+      v-model:visible="showCompetitionDrawer"
       :league-id="leagueIdNumber"
-      :on-import="handleCSVImport"
-      @close="showCSVImport = false"
+      @competition-saved="handleCompetitionSaved"
     />
 
     <!-- Toast for notifications -->
     <Toast />
   </div>
 </template>
+
+<style scoped>
+/* Ensure responsive behavior */
+@media (max-width: 1024px) {
+  .flex.min-h-screen {
+    flex-direction: column;
+  }
+}
+</style>

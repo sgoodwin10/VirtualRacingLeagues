@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useDivisionStore } from '@app/stores/divisionStore';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import type { Division } from '@app/types/division';
 
-import DataTable from 'primevue/datatable';
 import type { DataTableRowReorderEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
-import Button from 'primevue/button';
+import { Button, FooterAddButton } from '@app/components/common/buttons';
 import Message from 'primevue/message';
-import { PhPlus } from '@phosphor-icons/vue';
+import { PhPencil, PhTrash, PhTrophy } from '@phosphor-icons/vue';
 
+import { TechDataTable } from '@app/components/common/tables';
 import DivisionFormModal from './DivisionFormModal.vue';
 import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
+import { CardHeader } from '@app/components/common/cards';
 
 interface Props {
   seasonId: number;
@@ -41,6 +42,16 @@ onMounted(async () => {
     await loadDivisions();
   }
 });
+
+// Watch for seasonId changes to reload data when navigating between seasons
+watch(
+  () => props.seasonId,
+  async (newSeasonId, oldSeasonId) => {
+    if (newSeasonId && newSeasonId !== oldSeasonId && props.raceDivisionsEnabled) {
+      await loadDivisions();
+    }
+  },
+);
 
 async function loadDivisions(): Promise<void> {
   try {
@@ -183,18 +194,17 @@ function truncateDescription(description: string | null, maxLength: number = 30)
     <!-- Enabled State -->
     <div v-else>
       <!-- Header Row -->
-      <div class="mb-3">
+      <div class="mb-3 hidden">
         <span class="text-sm text-gray-600">
           {{ divisions.length }} division{{ divisions.length !== 1 ? 's' : '' }}
         </span>
       </div>
 
       <!-- DataTable -->
-      <DataTable
+      <TechDataTable
         :value="divisions"
         :loading="loading || isReordering"
         :reorderable-rows="!isReordering"
-        striped-rows
         responsive-layout="scroll"
         class="text-sm"
         @row-reorder="handleRowReorder"
@@ -211,6 +221,10 @@ function truncateDescription(description: string | null, maxLength: number = 30)
 
         <template #loading>
           <div class="text-center py-6 text-gray-500">Loading divisions...</div>
+        </template>
+
+        <template #header>
+          <CardHeader title="Divisions" :icon="PhTrophy" icon-color="blue-300" />
         </template>
 
         <!-- Drag Handle Column -->
@@ -242,37 +256,30 @@ function truncateDescription(description: string | null, maxLength: number = 30)
           <template #body="{ data }">
             <div class="flex gap-1">
               <Button
-                icon="pi pi-pencil"
-                size="small"
-                outlined
-                severity="secondary"
+                :icon="PhPencil"
+                size="sm"
+                variant="outline"
                 :disabled="isReordering"
                 @click="handleEditDivision(data)"
               />
               <Button
-                icon="pi pi-trash"
-                size="small"
-                outlined
-                severity="danger"
+                :icon="PhTrash"
+                size="sm"
+                variant="danger"
                 :disabled="isReordering"
                 @click="handleDeleteDivision(data)"
               />
             </div>
           </template>
         </Column>
-      </DataTable>
+      </TechDataTable>
 
       <!-- Add Division Button (footer) -->
-      <div v-if="raceDivisionsEnabled" class="mt-2">
-        <button
-          type="button"
-          class="flex items-center justify-center gap-2 w-full p-2 bg-white rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
-          @click.stop="handleAddDivision"
-        >
-          <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
-          <span class="text-sm font-medium">Add Division</span>
-        </button>
-      </div>
+      <FooterAddButton
+        v-if="raceDivisionsEnabled"
+        label="Add Division"
+        @click="handleAddDivision"
+      />
     </div>
 
     <!-- Division Form Modal -->

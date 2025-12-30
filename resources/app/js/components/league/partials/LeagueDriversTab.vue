@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { toRef } from 'vue';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
@@ -10,6 +10,7 @@ import DriverTable from '@app/components/driver/DriverTable.vue';
 import { useLeagueDrivers } from '@app/composables/useLeagueDrivers';
 import { useDriverStore } from '@app/stores/driverStore';
 import type { LeagueDriver } from '@app/types/driver';
+import { PhUpload, PhPlus } from '@phosphor-icons/vue';
 
 interface Props {
   leagueId: number;
@@ -89,17 +90,16 @@ function handleRemoveDriver(driver: LeagueDriver): void {
         <div class="flex gap-2">
           <Button
             label="Import Drivers"
-            icon="pi pi-upload"
-            severity="secondary"
-            size="small"
-            outlined
+            :icon="PhUpload"
+            variant="secondary"
+            size="sm"
             @click="handleImportCSV"
           />
           <Button
             label="Add Driver"
-            outlined
-            icon="pi pi-plus"
-            size="small"
+            variant="outline"
+            :icon="PhPlus"
+            size="sm"
             @click="handleAddDriver"
           />
         </div>

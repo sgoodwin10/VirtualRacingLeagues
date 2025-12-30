@@ -14,20 +14,18 @@
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
             j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','{{ config('services.google_tag_manager.id') }}');</script>
+            })(window,document,'script','dataLayer',@json(config('services.google_tag_manager.id')));</script>
         <!-- End Google Tag Manager -->
         @endif
         @vite(['resources/app/css/app.css', 'resources/app/js/app.ts'])
     </head>
-    <body class="min-h-full min-w-full bg-slate-50">
+    <body class="min-h-full min-w-full">
         @if(config('services.google_tag_manager.id'))
         <!-- Google Tag Manager (noscript) -->
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ config('services.google_tag_manager.id') }}"
             height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <!-- End Google Tag Manager (noscript) -->
         @endif
-        <div id="user-app" class="">
-            <slot />
-        </div>
+        <div id="user-app"></div>
     </body>
 </html>

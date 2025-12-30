@@ -25,8 +25,8 @@ describe('User Dashboard - App Component', () => {
       },
     });
 
-    // App now displays site name from siteConfigStore
-    expect(wrapper.text()).toContain('Virtual Racing Leagues');
+    // App renders the LeagueList view with expected content
+    expect(wrapper.text()).toContain('Your Leagues');
   });
 
   it('renders the router-view component', async () => {
@@ -40,8 +40,8 @@ describe('User Dashboard - App Component', () => {
       },
     });
 
-    // App now displays site name from siteConfigStore
-    expect(wrapper.html()).toContain('Virtual Racing Leagues');
+    // App renders the router-view with LeagueList content
+    expect(wrapper.html()).toContain('Your Leagues');
   });
 
   it('mounts without errors when router is configured', async () => {

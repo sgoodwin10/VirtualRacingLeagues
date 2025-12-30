@@ -6,7 +6,7 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Editor from 'primevue/editor';
@@ -451,7 +451,7 @@ function resetForm(): void {
               <InputText
                 id="league-name"
                 v-model="form.name"
-                size="small"
+                size="sm"
                 placeholder="Enter your league name"
                 :class="{ 'p-invalid': !!errors.name }"
                 class="w-full"
@@ -496,7 +496,7 @@ function resetForm(): void {
               <InputText
                 id="tagline"
                 v-model="form.tagline"
-                size="small"
+                size="sm"
                 placeholder="A short, catchy phrase describing your league"
                 maxlength="150"
                 :class="{ 'p-invalid': !!errors.tagline }"
@@ -557,7 +557,7 @@ function resetForm(): void {
                 id="contact-email"
                 v-model="form.contact_email"
                 type="email"
-                size="small"
+                size="sm"
                 placeholder="league@example.com"
                 :class="{ 'p-invalid': !!errors.contact_email }"
                 class="w-full"
@@ -574,7 +574,7 @@ function resetForm(): void {
                 v-model="form.organizer_name"
                 placeholder="Your name or organisation"
                 maxlength="100"
-                size="small"
+                size="sm"
                 :class="{ 'p-invalid': !!errors.organizer_name }"
                 class="w-full"
               />
@@ -618,7 +618,7 @@ function resetForm(): void {
                 option-value="value"
                 placeholder="Select timezone"
                 :filter="true"
-                size="small"
+                size="sm"
                 :class="{ 'p-invalid': !!errors.timezone }"
                 class="w-full"
               />
@@ -650,7 +650,7 @@ function resetForm(): void {
                       label="League Logo"
                       :required="false"
                       :error="errors.logo"
-                      preview-size="small"
+                      preview-size="sm"
                       helper-text="Square logo (400x400px recommended)"
                       @remove-existing="form.logo_url = undefined"
                     />
@@ -664,7 +664,7 @@ function resetForm(): void {
                       label="League Banner"
                       :required="false"
                       :error="errors.banner"
-                      preview-size="large"
+                      preview-size="lg"
                       helper-text="Banner image (200-800px wide, 32-100px tall)"
                       @remove-existing="form.banner_url = undefined"
                     />
@@ -679,7 +679,7 @@ function resetForm(): void {
                     label="League Background Image"
                     :required="false"
                     :error="errors.header_image"
-                    preview-size="large"
+                    preview-size="lg"
                     helper-text="Banner image (1200x400px recommended)"
                     @remove-existing="form.header_image_url = undefined"
                   />
@@ -723,13 +723,7 @@ function resetForm(): void {
 
     <template #footer>
       <div class="flex justify-end gap-3">
-        <Button
-          label="Cancel"
-          severity="secondary"
-          outlined
-          :disabled="isSubmitting"
-          @click="closeModal"
-        />
+        <Button label="Cancel" variant="secondary" :disabled="isSubmitting" @click="closeModal" />
         <Button
           :label="submitButtonLabel"
           :loading="isSubmitting"

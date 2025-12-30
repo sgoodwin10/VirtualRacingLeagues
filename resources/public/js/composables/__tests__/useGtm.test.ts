@@ -9,7 +9,6 @@ describe('useGtm', () => {
 
   describe('pushToDataLayer', () => {
     it('should initialize dataLayer if it does not exist', () => {
-      // @ts-expect-error - Testing undefined state
       delete window.dataLayer;
 
       const { pushToDataLayer } = useGtm();
@@ -24,7 +23,7 @@ describe('useGtm', () => {
       pushToDataLayer({ event: 'custom_event', custom_param: 'value' });
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'custom_event',
         custom_param: 'value',
       });
@@ -37,7 +36,7 @@ describe('useGtm', () => {
       trackEvent('login');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({ event: 'login' });
+      expect(window.dataLayer?.[0]).toEqual({ event: 'login' });
     });
 
     it('should track event with additional parameters', () => {
@@ -45,7 +44,7 @@ describe('useGtm', () => {
       trackEvent('purchase', { value: 99.99, currency: 'USD' });
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'purchase',
         value: 99.99,
         currency: 'USD',
@@ -59,7 +58,7 @@ describe('useGtm', () => {
       trackClick('Navigation', 'click');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'Navigation',
         event_action: 'click',
@@ -71,7 +70,7 @@ describe('useGtm', () => {
       trackClick('CTA', 'click', 'signup_button');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'CTA',
         event_action: 'click',
@@ -84,7 +83,7 @@ describe('useGtm', () => {
       trackClick('Product', 'add_to_cart', 'SKU-123', 49.99);
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'Product',
         event_action: 'add_to_cart',
@@ -97,8 +96,8 @@ describe('useGtm', () => {
       const { trackClick } = useGtm();
       trackClick('Navigation', 'click', undefined, undefined);
 
-      expect(window.dataLayer[0]).not.toHaveProperty('event_label');
-      expect(window.dataLayer[0]).not.toHaveProperty('event_value');
+      expect(window.dataLayer?.[0]).not.toHaveProperty('event_label');
+      expect(window.dataLayer?.[0]).not.toHaveProperty('event_value');
     });
   });
 
@@ -108,7 +107,7 @@ describe('useGtm', () => {
       trackFormSubmit('contact_form');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'form_submit',
         form_name: 'contact_form',
         form_action: undefined,
@@ -120,7 +119,7 @@ describe('useGtm', () => {
       trackFormSubmit('newsletter', 'subscribe');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'form_submit',
         form_name: 'newsletter',
         form_action: 'subscribe',
@@ -132,7 +131,7 @@ describe('useGtm', () => {
       trackFormSubmit('newsletter', 'subscribe', { email_domain: 'gmail.com' });
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'form_submit',
         form_name: 'newsletter',
         form_action: 'subscribe',
@@ -148,14 +147,14 @@ describe('useGtm', () => {
 
       expect(window.dataLayer).toHaveLength(2);
       // First event is the click event
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'Outbound Link',
         event_action: 'click',
         event_label: 'https://example.com',
       });
       // Second event is the outbound_link event
-      expect(window.dataLayer[1]).toEqual({
+      expect(window.dataLayer?.[1]).toEqual({
         event: 'outbound_link',
         link_url: 'https://example.com',
         link_label: undefined,
@@ -167,13 +166,13 @@ describe('useGtm', () => {
       trackOutboundLink('https://partner.com', 'partner_site');
 
       expect(window.dataLayer).toHaveLength(2);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'Outbound Link',
         event_action: 'click',
         event_label: 'partner_site',
       });
-      expect(window.dataLayer[1]).toEqual({
+      expect(window.dataLayer?.[1]).toEqual({
         event: 'outbound_link',
         link_url: 'https://partner.com',
         link_label: 'partner_site',
@@ -187,7 +186,7 @@ describe('useGtm', () => {
       trackSocial('twitter', 'share');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'social_interaction',
         social_network: 'twitter',
         social_action: 'share',
@@ -200,7 +199,7 @@ describe('useGtm', () => {
       trackSocial('facebook', 'share', 'https://mysite.com/article');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'social_interaction',
         social_network: 'facebook',
         social_action: 'share',

@@ -19,7 +19,15 @@ vi.mock('@phosphor-icons/vue', () => ({
   PhDotsSixVertical: {
     name: 'PhDotsSixVertical',
     props: ['size'],
-    template: '<svg></svg>',
+    template: '<svg data-testid="drag-handle"></svg>',
+  },
+  PhTrash: {
+    name: 'PhTrash',
+    template: '<svg data-testid="trash-icon"></svg>',
+  },
+  PhPlus: {
+    name: 'PhPlus',
+    template: '<svg data-testid="plus-icon"></svg>',
   },
 }));
 
@@ -41,13 +49,14 @@ vi.mock('primevue/select', () => ({
   },
 }));
 
-vi.mock('primevue/button', () => ({
-  default: {
+// Mock custom Button component from @app/components/common/buttons
+vi.mock('@app/components/common/buttons', () => ({
+  Button: {
     name: 'Button',
-    props: ['label', 'icon', 'size', 'severity', 'outlined', 'text', 'disabled'],
+    props: ['label', 'icon', 'size', 'variant', 'outlined', 'text', 'disabled'],
     emits: ['click'],
     template:
-      '<button :icon="icon" :disabled="disabled" @click="$emit(\'click\')">{{ label }}<slot /></button>',
+      '<button :data-icon="icon?.name || \'unknown\'" :data-label="label" :disabled="disabled" @click="$emit(\'click\')">{{ label }}<component :is="icon" v-if="icon" /></button>',
   },
 }));
 
@@ -201,7 +210,7 @@ describe('ResultEntryTable', () => {
 
       const deleteButtons = wrapper
         .findAll('button')
-        .filter((btn) => btn.attributes('icon') === 'pi pi-trash');
+        .filter((btn) => btn.attributes('data-icon') === 'PhTrash');
       expect(deleteButtons.length).toBeGreaterThan(0);
     });
 
@@ -210,7 +219,7 @@ describe('ResultEntryTable', () => {
 
       const addButtons = wrapper
         .findAll('button')
-        .filter((btn) => btn.attributes('icon') === 'pi pi-plus');
+        .filter((btn) => btn.attributes('data-label') === 'Add Driver');
       expect(addButtons.length).toBeGreaterThan(0);
     });
   });
@@ -222,7 +231,7 @@ describe('ResultEntryTable', () => {
 
       // Find all delete buttons
       const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        return btn.attributes('icon') === 'pi pi-trash';
+        return btn.attributes('data-icon') === 'PhTrash';
       });
 
       // Click the first delete button
@@ -244,7 +253,7 @@ describe('ResultEntryTable', () => {
       const wrapper = createWrapper(results, mockDrivers, false, new Set([1, 2, 3]));
 
       const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        return btn.attributes('icon') === 'pi pi-trash';
+        return btn.attributes('data-icon') === 'PhTrash';
       });
 
       // Delete the middle row (index 1, driver_id 2)
@@ -263,7 +272,7 @@ describe('ResultEntryTable', () => {
 
       const addButton = wrapper
         .findAll('button')
-        .find((btn) => btn.attributes('icon') === 'pi pi-plus');
+        .find((btn) => btn.attributes('data-label') === 'Add Driver');
 
       await addButton?.trigger('click');
 
@@ -277,7 +286,7 @@ describe('ResultEntryTable', () => {
 
       const addButton = wrapper
         .findAll('button')
-        .find((btn) => btn.attributes('icon') === 'pi pi-plus');
+        .find((btn) => btn.attributes('data-label') === 'Add Driver');
 
       await addButton?.trigger('click');
 
@@ -291,7 +300,7 @@ describe('ResultEntryTable', () => {
 
       const addButton = wrapper
         .findAll('button')
-        .find((btn) => btn.attributes('icon') === 'pi pi-plus');
+        .find((btn) => btn.attributes('data-label') === 'Add Driver');
 
       await addButton?.trigger('click');
 
@@ -319,7 +328,7 @@ describe('ResultEntryTable', () => {
 
       const addButton = wrapper
         .findAll('button')
-        .find((btn) => btn.attributes('icon') === 'pi pi-plus');
+        .find((btn) => btn.attributes('data-label') === 'Add Driver');
 
       expect(addButton?.attributes('disabled')).toBeDefined();
     });
@@ -329,7 +338,7 @@ describe('ResultEntryTable', () => {
 
       const addButton = wrapper
         .findAll('button')
-        .find((btn) => btn.attributes('icon') === 'pi pi-plus');
+        .find((btn) => btn.attributes('data-label') === 'Add Driver');
 
       expect(addButton?.attributes('disabled')).toBeUndefined();
     });
@@ -345,7 +354,7 @@ describe('ResultEntryTable', () => {
 
       const addButton = wrapper
         .findAll('button')
-        .find((btn) => btn.attributes('icon') === 'pi pi-plus');
+        .find((btn) => btn.attributes('data-label') === 'Add Driver');
 
       await addButton?.trigger('click');
 
@@ -366,12 +375,12 @@ describe('ResultEntryTable', () => {
       // Verify Add Driver button is initially disabled
       let addButton = wrapper
         .findAll('button')
-        .find((btn) => btn.attributes('icon') === 'pi pi-plus');
+        .find((btn) => btn.attributes('data-label') === 'Add Driver');
       expect(addButton?.attributes('disabled')).toBeDefined();
 
       // Delete a row to free up a driver
       const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        return btn.attributes('icon') === 'pi pi-trash';
+        return btn.attributes('data-icon') === 'PhTrash';
       });
       await deleteButtons[0]!.trigger('click');
 
@@ -385,7 +394,9 @@ describe('ResultEntryTable', () => {
       });
 
       // Verify Add Driver button is now enabled
-      addButton = wrapper.findAll('button').find((btn) => btn.attributes('icon') === 'pi pi-plus');
+      addButton = wrapper
+        .findAll('button')
+        .find((btn) => btn.attributes('data-label') === 'Add Driver');
       expect(addButton?.attributes('disabled')).toBeUndefined();
     });
   });
@@ -466,7 +477,7 @@ describe('ResultEntryTable', () => {
 
       // Should not show delete buttons
       const deleteButtons = wrapper.findAll('button').filter((btn) => {
-        return btn.attributes('icon') === 'pi pi-trash';
+        return btn.attributes('data-icon') === 'PhTrash';
       });
       expect(deleteButtons).toHaveLength(0);
     });
@@ -476,7 +487,7 @@ describe('ResultEntryTable', () => {
 
       // Should not show Add Driver button
       const addButtons = wrapper.findAll('button').filter((btn) => {
-        return btn.attributes('icon') === 'pi pi-plus';
+        return btn.attributes('data-label') === 'Add Driver';
       });
       expect(addButtons).toHaveLength(0);
     });

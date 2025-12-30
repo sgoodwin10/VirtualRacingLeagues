@@ -15,7 +15,7 @@ import type {
 // PrimeVue Components
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 import Checkbox from 'primevue/checkbox';
@@ -888,17 +888,12 @@ function cancelNameChange(): void {
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <Button
-          label="Cancel"
-          severity="secondary"
-          outlined
-          :disabled="isSubmitting"
-          @click="handleCancel"
-        />
+        <Button label="Cancel" variant="outline" :disabled="isSubmitting" @click="handleCancel" />
         <Button
           :label="isEditMode ? 'Save Changes' : 'Create Season'"
           :loading="isSubmitting"
           :disabled="!canSubmit"
+          variant="primary"
           @click="handleSubmit"
         />
       </div>
@@ -942,8 +937,8 @@ function cancelNameChange(): void {
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <Button label="Cancel" outlined @click="cancelNameChange" />
-        <Button label="Continue" severity="warning" @click="confirmNameChange" />
+        <Button label="Cancel" variant="outline" @click="cancelNameChange" />
+        <Button label="Continue" variant="warning" @click="confirmNameChange" />
       </div>
     </template>
   </Dialog>

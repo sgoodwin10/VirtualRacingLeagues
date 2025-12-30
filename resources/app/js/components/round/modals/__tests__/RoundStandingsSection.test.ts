@@ -375,24 +375,24 @@ describe('RoundStandingsSection', () => {
       expect(table.exists()).toBe(true);
 
       const html = wrapper.html();
-      // Check that gold styling exists
-      expect(html).toContain('!bg-amber-100');
+      // Check that podium-1 class exists (gold styling via CSS)
+      expect(html).toContain('podium-1');
     });
 
     it('should apply silver background to 2nd position', () => {
       const wrapper = createWrapper();
 
       const html = wrapper.html();
-      // Check that silver styling exists
-      expect(html).toContain('!bg-gray-200');
+      // Check that podium-2 class exists (silver styling via CSS)
+      expect(html).toContain('podium-2');
     });
 
     it('should apply bronze background to 3rd position', () => {
       const wrapper = createWrapper();
 
       const html = wrapper.html();
-      // Check that bronze styling exists
-      expect(html).toContain('!bg-orange-100');
+      // Check that podium-3 class exists (bronze styling via CSS)
+      expect(html).toContain('podium-3');
     });
   });
 

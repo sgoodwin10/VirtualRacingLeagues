@@ -15,15 +15,19 @@ const errorMessage = computed(() => {
   if (!props.error) return null;
   return Array.isArray(props.error) ? props.error[0] : props.error;
 });
-
-const errorClasses = computed(() => {
-  const baseClasses = 'text-sm text-red-500 mt-1';
-  return props.class ? `${baseClasses} ${props.class}` : baseClasses;
-});
 </script>
 
 <template>
-  <small v-if="errorMessage" :class="errorClasses">
+  <small v-if="errorMessage" :class="['form-error', props.class]">
     {{ errorMessage }}
   </small>
 </template>
+
+<style scoped>
+.form-error {
+  font-size: 12px;
+  color: var(--red);
+  margin-top: 6px;
+  display: block;
+}
+</style>

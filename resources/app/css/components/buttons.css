@@ -1,0 +1,361 @@
+/* ============================================
+   Button Components
+   ============================================ */
+
+/* Base Button Styles */
+.app-button.p-button {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  border-radius: var(--p-content-border-radius, 6px);
+  transition: all 0.15s ease;
+  border: 1px solid var(--border);
+  gap: 8px;
+  padding: 8px 14px;
+  letter-spacing: normal;
+}
+
+/* ============================================
+   Variant Styles
+   ============================================ */
+
+/* Primary Variant */
+.app-button--primary.p-button {
+  background: var(--cyan);
+  color: var(--bg-dark);
+  border-color: var(--cyan);
+}
+
+.app-button--primary.p-button:hover:not(:disabled) {
+  background: #79b8ff;
+  border-color: #79b8ff;
+}
+
+.app-button--primary.p-button:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* Secondary Variant */
+.app-button--secondary.p-button {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.app-button--secondary.p-button:hover:not(:disabled) {
+  background: var(--bg-highlight);
+  border-color: var(--border);
+}
+
+/* Ghost Variant */
+.app-button--ghost.p-button {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+
+.app-button--ghost.p-button:hover:not(:disabled) {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: transparent;
+}
+
+/* Outline Variant */
+.app-button--outline.p-button {
+  background: transparent;
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.app-button--outline.p-button:hover:not(:disabled) {
+  background: var(--cyan-dim);
+  border-color: var(--cyan);
+}
+
+/* Danger Variant */
+.app-button--danger.p-button {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.app-button--danger.p-button:hover:not(:disabled) {
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
+}
+
+/* Success Variant */
+.app-button--success.p-button {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.app-button--success.p-button:hover:not(:disabled) {
+  background: var(--green);
+  color: var(--bg-dark);
+  border-color: var(--green);
+}
+
+/* Warning Variant */
+.app-button--warning.p-button {
+  background: var(--orange-dim);
+  color: var(--orange);
+  border-color: var(--orange);
+}
+
+.app-button--warning.p-button:hover:not(:disabled) {
+  background: var(--orange);
+  color: var(--bg-dark);
+  border-color: var(--orange);
+}
+
+/* ============================================
+   Size Variants
+   ============================================ */
+
+/* Small */
+.app-button--sm.p-button {
+  padding: 6px 10px;
+  font-size: 12px;
+  height: 28px;
+}
+
+/* Default (already set in base) */
+.app-button--default.p-button {
+  padding: 8px 14px;
+  font-size: 13px;
+  height: 36px;
+}
+
+/* Large */
+.app-button--lg.p-button {
+  padding: 12px 20px;
+  font-size: 14px;
+  height: 44px;
+}
+
+/* Extra Large */
+.app-button--xl.p-button {
+  padding: 14px 24px;
+  font-size: 15px;
+  height: 48px;
+}
+
+/* ============================================
+   Icon Button Styles
+   ============================================ */
+
+.app-icon-button.p-button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
+.app-icon-button.app-button--sm.p-button {
+  width: 28px;
+  height: 28px;
+}
+
+.app-icon-button.app-button--lg.p-button {
+  width: 44px;
+  height: 44px;
+}
+
+/* ============================================
+   Button Group Styles
+   ============================================ */
+
+.app-button-group {
+  display: flex;
+  gap: 0;
+}
+
+.app-button-group--horizontal {
+  flex-direction: row;
+}
+
+.app-button-group--vertical {
+  flex-direction: column;
+}
+
+/* Remove border radius from middle buttons */
+.app-button-group--horizontal > .app-button.p-button {
+  border-radius: 0;
+}
+
+.app-button-group--horizontal > .app-button.p-button:first-child {
+  border-radius: var(--p-content-border-radius, 6px) 0 0 var(--p-content-border-radius, 6px);
+}
+
+.app-button-group--horizontal > .app-button.p-button:last-child {
+  border-radius: 0 var(--p-content-border-radius, 6px) var(--p-content-border-radius, 6px) 0;
+}
+
+/* Remove duplicate borders between buttons */
+.app-button-group--horizontal > .app-button.p-button:not(:last-child) {
+  border-right: none;
+}
+
+.app-button-group--vertical > .app-button.p-button {
+  border-radius: 0;
+}
+
+.app-button-group--vertical > .app-button.p-button:first-child {
+  border-radius: var(--p-content-border-radius, 6px) var(--p-content-border-radius, 6px) 0 0;
+}
+
+.app-button-group--vertical > .app-button.p-button:last-child {
+  border-radius: 0 0 var(--p-content-border-radius, 6px) var(--p-content-border-radius, 6px);
+}
+
+.app-button-group--vertical > .app-button.p-button:not(:last-child) {
+  border-bottom: none;
+}
+
+/* ============================================
+   Disabled State
+   ============================================ */
+
+.app-button.p-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+
+.app-button.p-button .p-button-loading-icon {
+  color: currentColor;
+}
+
+/* ============================================
+   Focus States (Accessibility)
+   ============================================ */
+
+.app-button.p-button:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* ============================================
+   Icon Alignment
+   ============================================ */
+
+.app-button.p-button .p-button-icon {
+  margin: 0; /* Remove PrimeVue default margins */
+}
+
+.app-button.p-button .p-button-label {
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* ============================================
+   Icon Size Enforcement
+   ============================================ */
+
+/* Ensure SVG icons have proper size */
+.app-button.p-button svg {
+  flex-shrink: 0;
+}
+
+/* Icon-only button styles */
+.app-button--icon-only.p-button {
+  padding: 0;
+}
+
+.app-button--icon-only.app-button--sm.p-button {
+  width: 28px;
+}
+
+.app-button--icon-only.app-button--default.p-button {
+  width: 36px;
+}
+
+.app-button--icon-only.app-button--lg.p-button {
+  width: 44px;
+}
+
+.app-button--icon-only.app-button--xl.p-button {
+  width: 48px;
+}
+
+/* Icon wrapper for centered icons */
+.app-button__icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+
+.app-button--sm.p-button svg {
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px;
+  min-height: 14px;
+}
+
+.app-button--default.p-button svg {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px;
+  min-height: 16px;
+}
+
+.app-button--lg.p-button svg {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px;
+  min-height: 18px;
+}
+
+.app-button--xl.p-button svg {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+/* ============================================
+   Icon Color Inheritance
+   ============================================ */
+
+/* Ensure SVG icons inherit button text color */
+.app-button.p-button svg {
+  color: currentColor !important;
+}
+
+.app-button.p-button svg * {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* Ensure icons change color on hover */
+.app-button--outline.p-button:hover:not(:disabled) svg * {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+.app-button--danger.p-button:hover:not(:disabled) svg * {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+.app-button--success.p-button:hover:not(:disabled) svg * {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+.app-button--warning.p-button:hover:not(:disabled) svg * {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}

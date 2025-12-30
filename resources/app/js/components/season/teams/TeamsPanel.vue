@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useTeamStore } from '@app/stores/teamStore';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import type { Team } from '@app/types/team';
 
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Button from 'primevue/button';
+import { Button, FooterAddButton } from '@app/components/common/buttons';
 import Message from 'primevue/message';
-import { PhPlus } from '@phosphor-icons/vue';
+import { PhPencil, PhTrash, PhUsersThree } from '@phosphor-icons/vue';
 
+import { TechDataTable, TeamCell } from '@app/components/common/tables';
 import TeamFormModal from './TeamFormModal.vue';
-import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
+import { CardHeader } from '@app/components/common/cards';
 
 interface Props {
   seasonId: number;
@@ -39,6 +39,16 @@ onMounted(async () => {
     await loadTeams();
   }
 });
+
+// Watch for seasonId changes to reload data when navigating between seasons
+watch(
+  () => props.seasonId,
+  async (newSeasonId, oldSeasonId) => {
+    if (newSeasonId && newSeasonId !== oldSeasonId && props.teamChampionshipEnabled) {
+      await loadTeams();
+    }
+  },
+);
 
 async function loadTeams(): Promise<void> {
   try {
@@ -126,13 +136,7 @@ function handleTeamSaved(): void {
     <!-- Enabled State -->
     <div v-else>
       <!-- DataTable -->
-      <DataTable
-        :value="teams"
-        :loading="loading"
-        striped-rows
-        responsive-layout="scroll"
-        class="text-sm"
-      >
+      <TechDataTable :value="teams" :loading="loading" responsive-layout="scroll" class="text-sm">
         <template #empty>
           <div class="text-center py-6">
             <i class="pi pi-users text-3xl text-gray-400 mb-2"></i>
@@ -145,56 +149,33 @@ function handleTeamSaved(): void {
           <div class="text-center py-6 text-gray-500">Loading teams...</div>
         </template>
 
+        <template #header>
+          <CardHeader title="Teams" :icon="PhUsersThree" icon-color="purple-400" />
+        </template>
+
         <Column field="name" header="Team">
           <template #body="{ data }">
-            <div class="flex items-center gap-2">
-              <ResponsiveImage
-                v-if="data.logo || data.logo_url"
-                :media="data.logo"
-                :fallback-url="data.logo_url ?? undefined"
-                :alt="data.name"
-                sizes="32px"
-                conversion="thumb"
-                img-class="w-8 h-8 rounded object-cover"
-              />
-              <span class="font-semibold">{{ data.name }}</span>
-            </div>
+            <TeamCell
+              :name="data.name"
+              :logo="data.logo"
+              :logo-url="data.logo_url"
+              :color="data.color"
+            />
           </template>
         </Column>
 
         <Column header="Actions" :exportable="false" style="width: 8rem">
           <template #body="{ data }">
             <div class="flex gap-1">
-              <Button
-                icon="pi pi-pencil"
-                size="small"
-                outlined
-                severity="secondary"
-                @click="handleEditTeam(data)"
-              />
-              <Button
-                icon="pi pi-trash"
-                size="small"
-                outlined
-                severity="danger"
-                @click="handleDeleteTeam(data)"
-              />
+              <Button :icon="PhPencil" size="sm" variant="outline" @click="handleEditTeam(data)" />
+              <Button :icon="PhTrash" size="sm" variant="danger" @click="handleDeleteTeam(data)" />
             </div>
           </template>
         </Column>
-      </DataTable>
+      </TechDataTable>
 
       <!-- Add Team Button (footer) -->
-      <div v-if="teamChampionshipEnabled" class="mt-2">
-        <button
-          type="button"
-          class="flex items-center justify-center gap-2 w-full p-2 bg-white rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
-          @click.stop="handleAddTeam"
-        >
-          <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
-          <span class="text-sm font-medium">Add Team</span>
-        </button>
-      </div>
+      <FooterAddButton v-if="teamChampionshipEnabled" label="Add Team" @click="handleAddTeam" />
     </div>
 
     <!-- Team Form Modal -->

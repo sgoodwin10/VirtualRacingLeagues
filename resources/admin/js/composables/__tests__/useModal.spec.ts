@@ -4,7 +4,7 @@ import { useModal, useModalGroup } from '../useModal';
 // Mock PrimeVue's useConfirm
 vi.mock('primevue/useconfirm', () => ({
   useConfirm: vi.fn(() => ({
-    require: vi.fn(({ accept, reject }) => {
+    require: vi.fn(({ accept }) => {
       // Simulate user accepting by default
       if (accept) accept();
     }),

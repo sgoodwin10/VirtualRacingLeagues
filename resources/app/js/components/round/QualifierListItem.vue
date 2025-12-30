@@ -38,16 +38,16 @@
         </div>
 
         <div class="flex gap-2 ml-auto">
-          <Tag v-if="hasPoleBonus" value="Pole Bonus" severity="success" />
+          <Tag v-if="hasPoleBonus" value="Pole Bonus" variant="success" />
         </div>
       </div>
 
       <div class="flex-none flex items-center gap-2 mx-4">
         <Button
           :label="isCompleted ? 'View Results' : 'Enter Results'"
-          icon="pi pi-list-check"
+          :icon="PhListChecks"
           text
-          size="small"
+          size="sm"
           :severity="isCompleted ? 'success' : 'info'"
           @click="handleEnterResults"
         />
@@ -77,14 +77,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Tag from 'primevue/tag';
 import ToggleSwitch from 'primevue/toggleswitch';
 import { EditButton, DeleteButton } from '@app/components/common/buttons';
 import OrphanedResultsWarning from './OrphanedResultsWarning.vue';
 import type { Race } from '@app/types/race';
 import { QUALIFYING_FORMAT_OPTIONS } from '@app/types/race';
-import { PhTimer } from '@phosphor-icons/vue';
+import { PhTimer, PhListChecks } from '@phosphor-icons/vue';
 
 interface Props {
   race: Race;

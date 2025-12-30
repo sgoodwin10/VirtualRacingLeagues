@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
+import { PhPencil } from '@phosphor-icons/vue';
 import HTag from '@app/components/common/HTag.vue';
 import LeagueVisibilityTag from '@app/components/league/partials/LeagueVisibilityTag.vue';
 import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
@@ -75,11 +76,9 @@ function handleEdit(): void {
     <div class="flex gap-3">
       <Button
         label="Edit League"
-        icon="pi pi-pencil"
-        severity="secondary"
-        class="bg-white"
-        outlined
-        size="small"
+        :icon="PhPencil"
+        variant="outline"
+        size="sm"
         @click="handleEdit"
       />
     </div>

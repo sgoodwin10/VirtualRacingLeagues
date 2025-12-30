@@ -3,7 +3,6 @@ import { driverService } from '../driverService';
 import { apiService } from '../api';
 import { createMockDriver } from '@admin/__tests__/helpers/mockFactories';
 import type {
-  Driver,
   DriverDetails,
   CreateDriverDTO,
   UpdateDriverDTO,

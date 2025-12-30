@@ -15,130 +15,110 @@
       >
         <i class="pi pi-calendar text-4xl text-gray-400 mb-4"></i>
         <p class="text-gray-600 mb-4">No rounds scheduled yet</p>
-        <Button label="Create First Round" icon="pi pi-plus" outlined @click="handleCreateRound" />
+        <Button
+          label="Create First Round"
+          :icon="PhPlus"
+          variant="outline"
+          @click="handleCreateRound"
+        />
       </div>
 
       <!-- Rounds List -->
-      <Accordion v-else v-model:active-index="activeIndexes" :multiple="true">
-        <AccordionPanel
+      <TechnicalAccordion v-else v-model="activeIndexes" :multiple="true" gap="md">
+        <TechnicalAccordionPanel
           v-for="(round, index) in rounds"
           :key="round.id"
-          :value="round.id"
-          class="mb-1"
-          :pt="{
-            root: ({ context }: { context: { active: boolean } }) => ({
-              class: context.active
-                ? 'border border-slate-300 rounded-md bg-slate-50'
-                : 'border-1 border-gray-200 rounded-md',
-            }),
-          }"
+          :value="String(round.id)"
         >
-          <AccordionHeader
-            class="pl-0 py-0"
-            :pt="{
-              root: ({ context }: { context: { active: boolean } }) => ({
-                class: context.active
-                  ? 'bg-slate-100 hover:bg-blue-50 shadow-md border-b-1 border-slate-300 rounded-l-md'
-                  : 'hover:bg-blue-50 border-b-1 border-gray-200 rounded-l-md',
-              }),
-            }"
+          <TechnicalAccordionHeader
+            :title="round.name || `Round ${round.round_number}`"
+            :subtitle="getTrackAndLocation(round.platform_track_id)"
+            :status="getRoundStatus(round)"
+            padding="none"
           >
-            <div class="flex items-center flex-row gap-2 w-full pr-4">
+            <!-- Round number badge in prefix slot -->
+            <template #prefix>
               <div
-                class="h-16 w-16 flex flex-col items-center justify-center rounded-l-md"
+                class="round-number-badge"
                 :style="{ backgroundColor: getRoundBackgroundColor(index) }"
               >
-                <span class="text-xs uppercase text-white">Round</span>
-                <span class="text-2xl font-bold text-shadow-sm text-white">{{
-                  round.round_number
-                }}</span>
+                <span class="round-label">Round</span>
+                <span class="round-number">{{ round.round_number }}</span>
               </div>
+            </template>
 
-              <div v-if="round.name" class="flex flex-none items-center mr-4 gap-2">
-                <span v-if="round.name" class="font-medium text-lg text-gray-700">{{
-                  round.name || 'Untitled Round'
-                }}</span>
-              </div>
-              <div class="flex flex-grow flex-row pr-4 space-y-0">
-                <div class="flex-none flex-col">
-                  <div>
-                    <span class="text-sm text-gray-400 font-medium">Track</span>
-                  </div>
-                  <span class="text-md text-gray-700 font-normal">
-                    {{ getTrackAndLocation(round.platform_track_id) }}
-                  </span>
-                </div>
-              </div>
-
+            <!-- Date display in suffix slot -->
+            <template #suffix>
               <div v-if="round.scheduled_at" class="w-36 flex flex-col">
                 <div>
-                  <span class="text-sm text-gray-400 font-medium">Date</span>
+                  <span class="text-sm text-secondary font-medium">Date</span>
                 </div>
-                <span class="text-md text-gray-700 font-normal">
+                <span class="text-md text-primary font-normal">
                   {{ formatScheduledDate(round.scheduled_at) }}
                 </span>
               </div>
-              <div class="flex items-center gap-2">
-                <Tag
-                  v-if="round.round_points"
-                  v-tooltip.top="{
-                    value: formatRoundPointsTooltip(round),
-                    escape: false,
-                    pt: {
-                      text: 'max-w-md whitespace-pre-wrap font-mono text-xs leading-relaxed',
-                    },
-                  }"
-                  icon="pi pi-calculator"
-                  severity="info"
-                  value="Round Points"
-                />
-                <Button
-                  v-if="round.status === 'completed'"
-                  label="Results"
-                  icon="pi pi-trophy"
-                  size="small"
-                  severity="success"
-                  outlined
-                  @click.stop="handleViewRoundResults(round)"
-                />
-                <div class="flex items-center gap-2" @click.stop>
-                  <ToggleSwitch
-                    :model-value="round.status === 'completed'"
-                    :disabled="completingRoundId === round.id"
-                    @update:model-value="handleToggleCompletion(round)"
-                  >
-                    <template #handle="{ checked }">
-                      <i :class="['!text-xs pi', { 'pi-check': checked, 'pi-times': !checked }]" />
-                    </template>
-                  </ToggleSwitch>
-                  <span
-                    :class="[
-                      'text-sm font-medium',
-                      round.status === 'completed' ? 'text-green-600' : 'text-slate-400',
-                    ]"
-                  >
-                    Completed
-                  </span>
-                </div>
-                <EditButton v-if="round.status !== 'completed'" @click="handleEditRound(round)" />
-                <DeleteButton
-                  v-if="round.status !== 'completed'"
-                  @click="handleDeleteRound(round)"
-                />
-              </div>
-            </div>
-          </AccordionHeader>
+            </template>
 
-          <AccordionContent>
+            <!-- Action buttons in actions slot -->
+            <template #actions>
+              <AccordionBadge
+                v-if="round.round_points"
+                v-tooltip.top="{
+                  value: formatRoundPointsTooltip(round),
+                  escape: false,
+                  pt: {
+                    text: 'max-w-md whitespace-pre-wrap font-mono text-xs leading-relaxed',
+                  },
+                }"
+                text="Round Points"
+                severity="info"
+              >
+                <template #icon>
+                  <PhCalculator :size="14" weight="regular" />
+                </template>
+              </AccordionBadge>
+              <Button
+                v-if="round.status === 'completed'"
+                label="Results"
+                :icon="PhTrophy"
+                size="sm"
+                variant="success"
+                @click.stop="handleViewRoundResults(round)"
+              />
+              <div class="flex items-center gap-2" @click.stop>
+                <ToggleSwitch
+                  :model-value="round.status === 'completed'"
+                  :disabled="completingRoundId === round.id"
+                  @update:model-value="handleToggleCompletion(round)"
+                >
+                  <template #handle="{ checked }">
+                    <i :class="['!text-xs pi', { 'pi-check': checked, 'pi-times': !checked }]" />
+                  </template>
+                </ToggleSwitch>
+                <span
+                  :class="[
+                    'text-sm font-medium',
+                    round.status === 'completed' ? 'text-green' : 'text-muted',
+                  ]"
+                >
+                  Completed
+                </span>
+              </div>
+              <EditButton v-if="round.status !== 'completed'" @click="handleEditRound(round)" />
+              <DeleteButton v-if="round.status !== 'completed'" @click="handleDeleteRound(round)" />
+            </template>
+          </TechnicalAccordionHeader>
+
+          <TechnicalAccordionContent padding="md">
             <div class="space-y-2">
               <!-- Round Details -->
               <div
                 v-if="round.technical_notes || round.stream_url || round.internal_notes"
-                class="grid grid-cols-3 gap-4 border-b border-slate-300 pb-4"
+                class="grid grid-cols-3 gap-4 border-b border-default pb-4"
               >
                 <BasePanel
                   v-if="round.technical_notes"
-                  content-class="p-4 border border-slate-300 rounded-md bg-surface-50"
+                  content-class="p-4 border border-default rounded-md bg-elevated"
                 >
                   <template #header>
                     <div class="flex items-center gap-2 py-2 mx-2 w-full">
@@ -150,7 +130,7 @@
 
                 <BasePanel
                   v-if="round.stream_url"
-                  content-class="p-4 border border-slate-300 rounded-md bg-surface-50"
+                  content-class="p-4 border border-default rounded-md bg-elevated"
                 >
                   <template #header>
                     <div class="flex items-center gap-2 py-2 mx-2 w-full">
@@ -164,7 +144,7 @@
 
                 <BasePanel
                   v-if="round.internal_notes"
-                  content-class="p-4 border border-slate-300 rounded-md bg-surface-50"
+                  content-class="p-4 border border-default rounded-md bg-elevated"
                 >
                   <template #header>
                     <div class="flex items-center gap-2 py-2 mx-2 w-full">
@@ -181,9 +161,9 @@
                   <div v-if="round.status !== 'completed'" class="flex items-center gap-2">
                     <Button
                       label="Add Event"
-                      icon="pi pi-plus"
-                      size="small"
-                      outlined
+                      :icon="PhPlus"
+                      size="sm"
+                      variant="outline"
                       @click="handleCreateRace(round.id)"
                     />
                   </div>
@@ -227,21 +207,17 @@
                 </div>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
+          </TechnicalAccordionContent>
+        </TechnicalAccordionPanel>
+      </TechnicalAccordion>
 
       <!-- Add Round Button (shown when rounds exist) -->
-      <div v-if="!roundStore.isLoading && rounds.length > 0" class="mt-2">
-        <button
-          type="button"
-          class="flex items-center justify-center gap-2 w-full p-2 bg-slate-50 rounded border-2 border-dashed border-slate-300 hover:border-primary-400 hover:bg-primary-50/20 transition-all cursor-pointer group text-slate-500 hover:text-primary-600"
-          @click.stop="handleCreateRound"
-        >
-          <PhPlus :size="16" weight="bold" class="text-slate-400 group-hover:text-primary-500" />
-          <span class="text-sm font-medium">Add Round</span>
-        </button>
-      </div>
+      <FooterAddButton
+        v-if="!roundStore.isLoading && rounds.length > 0"
+        label="Add Round"
+        variant="elevated"
+        @click="handleCreateRound"
+      />
     </template>
   </BasePanel>
 
@@ -291,28 +267,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { format, parseISO } from 'date-fns';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import { PhPlus } from '@phosphor-icons/vue';
+import { PhPlus, PhCalculator, PhTrophy } from '@phosphor-icons/vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
-import { EditButton, DeleteButton } from '@app/components/common/buttons';
+import { Button, EditButton, DeleteButton, FooterAddButton } from '@app/components/common/buttons';
 import RoundFormDrawer from '@app/components/round/modals/RoundFormDrawer.vue';
 import RaceFormDrawer from '@app/components/round/modals/RaceFormDrawer.vue';
 import RaceListItem from '@app/components/round/RaceListItem.vue';
 import QualifierListItem from '@app/components/round/QualifierListItem.vue';
 import RaceResultModal from '@app/components/result/RaceResultModal.vue';
 import RoundResultsModal from '@app/components/round/modals/RoundResultsModal.vue';
-import Button from 'primevue/button';
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import AccordionHeader from 'primevue/accordionheader';
-import AccordionContent from 'primevue/accordioncontent';
+import {
+  TechnicalAccordion,
+  TechnicalAccordionPanel,
+  TechnicalAccordionHeader,
+  TechnicalAccordionContent,
+  AccordionBadge,
+} from '@app/components/common/accordions';
+import type { AccordionStatus } from '@app/components/common/accordions';
 import Skeleton from 'primevue/skeleton';
 import ConfirmDialog from 'primevue/confirmdialog';
 import ToggleSwitch from 'primevue/toggleswitch';
-import Tag from 'primevue/tag';
 import { useRoundStore } from '@app/stores/roundStore';
 import { useRaceStore } from '@app/stores/raceStore';
 import { useTrackStore } from '@app/stores/trackStore';
@@ -379,7 +357,7 @@ const { getColor } = useColorRange(competitionColor, { steps: DEFAULT_COLOR_RANG
 const showFormDrawer = ref(false);
 const selectedRound = ref<Round | null>(null);
 const formMode = ref<'create' | 'edit'>('create');
-const activeIndexes = ref<number[]>([]);
+const activeIndexes = ref<string[]>([]);
 const initialLoadComplete = ref(false);
 
 const showRaceFormDrawer = ref(false);
@@ -389,6 +367,7 @@ const raceFormMode = ref<'create' | 'edit'>('create');
 const raceFormType = ref<'race' | 'qualifier'>('race');
 const loadingRaces = ref(false);
 const completingRoundId = ref<number | null>(null);
+const loadAbortController = ref<AbortController | null>(null);
 
 const showResultsModal = ref(false);
 const selectedRaceForResults = ref<Race | null>(null);
@@ -403,6 +382,27 @@ const rounds = computed(() => {
     .roundsBySeasonId(props.seasonId)
     .sort((a, b) => a.round_number - b.round_number);
 });
+
+/**
+ * Determine the status of a round for the accordion status indicator
+ */
+function getRoundStatus(round: Round): AccordionStatus {
+  if (round.status === 'completed') return 'completed';
+  if (round.status === 'in_progress') return 'active';
+
+  // Check if scheduled in next 7 days
+  if (round.scheduled_at) {
+    const scheduledDate = new Date(round.scheduled_at);
+    const now = new Date();
+    const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    if (scheduledDate >= now && scheduledDate <= weekFromNow) {
+      return 'upcoming';
+    }
+  }
+
+  if (round.status === 'scheduled') return 'pending';
+  return 'inactive';
+}
 
 // Unified list of all race events (qualifiers + races) sorted by created_at
 const allRaceEventsByRound = computed(() => {
@@ -419,7 +419,10 @@ const allRaceEventsByRound = computed(() => {
   return raceMap;
 });
 
-onMounted(async () => {
+/**
+ * Load all rounds and races for the current season
+ */
+async function loadRoundsAndRaces(): Promise<void> {
   try {
     // First, fetch rounds
     await roundStore.fetchRounds(props.seasonId);
@@ -467,7 +470,34 @@ onMounted(async () => {
       life: 5000,
     });
   }
+}
+
+onMounted(async () => {
+  await loadRoundsAndRaces();
 });
+
+// Watch for seasonId changes to reload data when navigating between seasons
+watch(
+  () => props.seasonId,
+  async (newSeasonId, oldSeasonId) => {
+    if (newSeasonId && newSeasonId !== oldSeasonId) {
+      // Cancel any pending load operation
+      if (loadAbortController.value) {
+        loadAbortController.value.abort();
+      }
+
+      // Create new AbortController for this load operation
+      loadAbortController.value = new AbortController();
+
+      // Reset state
+      initialLoadComplete.value = false;
+      activeIndexes.value = [];
+
+      // Reload all data
+      await loadRoundsAndRaces();
+    }
+  },
+);
 
 function formatScheduledDate(dateString: string | null): string {
   if (!dateString) {

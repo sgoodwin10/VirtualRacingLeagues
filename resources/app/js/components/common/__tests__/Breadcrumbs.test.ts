@@ -52,8 +52,8 @@ describe('Breadcrumbs', () => {
       expect(wrapper.find('a').exists()).toBe(false);
     });
 
-    it('renders a single breadcrumb with icon', () => {
-      const items: BreadcrumbItem[] = [{ label: 'Back', icon: 'pi-arrow-left' }];
+    it('renders without icons (Technical Blueprint uses text-only)', () => {
+      const items: BreadcrumbItem[] = [{ label: 'Back' }];
 
       wrapper = mountWithStubs(Breadcrumbs, {
         props: { items },
@@ -62,15 +62,13 @@ describe('Breadcrumbs', () => {
         },
       });
 
-      const icon = wrapper.find('i.pi-arrow-left');
-      expect(icon.exists()).toBe(true);
-      expect(icon.attributes('aria-hidden')).toBe('true');
+      // Technical Blueprint breadcrumbs don't use icons
+      expect(wrapper.find('.breadcrumb-current').exists()).toBe(true);
+      expect(wrapper.find('.breadcrumb-current').text()).toBe('Back');
     });
 
-    it('renders a single breadcrumb with router link (should still be clickable)', () => {
-      const items: BreadcrumbItem[] = [
-        { label: 'Back to Home', to: { name: 'home' }, icon: 'pi-arrow-left' },
-      ];
+    it('renders a single breadcrumb with router link (should still be non-clickable)', () => {
+      const items: BreadcrumbItem[] = [{ label: 'Back to Home', to: { name: 'home' } }];
 
       wrapper = mountWithStubs(Breadcrumbs, {
         props: { items },
@@ -83,7 +81,7 @@ describe('Breadcrumbs', () => {
       // it should be clickable. However, since it IS the last item (index 0 === length-1),
       // it should NOT be clickable
       expect(wrapper.find('a').exists()).toBe(false);
-      expect(wrapper.find('span.font-semibold').text()).toBe('Back to Home');
+      expect(wrapper.find('.breadcrumb-current').text()).toBe('Back to Home');
     });
   });
 
@@ -115,6 +113,7 @@ describe('Breadcrumbs', () => {
       const lastItem = listItems[2];
       expect(lastItem).toBeDefined();
       expect(lastItem!.find('a').exists()).toBe(false);
+      expect(lastItem!.find('.breadcrumb-current').exists()).toBe(true);
       expect(lastItem!.text()).toContain('My League');
     });
 
@@ -133,7 +132,7 @@ describe('Breadcrumbs', () => {
       });
 
       // Should have 2 separators (between 3 items)
-      const separators = wrapper.findAll('i.pi-chevron-right');
+      const separators = wrapper.findAll('.breadcrumb-sep');
       expect(separators).toHaveLength(2);
 
       // Separators should be hidden from screen readers
@@ -142,7 +141,7 @@ describe('Breadcrumbs', () => {
       });
     });
 
-    it('renders custom icon separator', () => {
+    it('renders slash as separator (Technical Blueprint style)', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', to: { name: 'home' } },
         { label: 'Current' },
@@ -151,18 +150,18 @@ describe('Breadcrumbs', () => {
       wrapper = mountWithStubs(Breadcrumbs, {
         props: {
           items,
-          separator: 'pi-angle-right',
         },
         global: {
           plugins: [mockRouter],
         },
       });
 
-      const separator = wrapper.find('i.pi-angle-right');
+      const separator = wrapper.find('.breadcrumb-sep');
       expect(separator.exists()).toBe(true);
+      expect(separator.text()).toBe('/');
     });
 
-    it('renders text separator when textSeparator is true', () => {
+    it('uses slash separator by default (Technical Blueprint)', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', to: { name: 'home' } },
         { label: 'Current' },
@@ -171,25 +170,23 @@ describe('Breadcrumbs', () => {
       wrapper = mountWithStubs(Breadcrumbs, {
         props: {
           items,
-          separator: '/',
-          textSeparator: true,
         },
         global: {
           plugins: [mockRouter],
         },
       });
 
-      const separator = wrapper.find('span.text-gray-400');
+      const separator = wrapper.find('.breadcrumb-sep');
       expect(separator.exists()).toBe(true);
       expect(separator.text()).toBe('/');
       expect(separator.attributes('aria-hidden')).toBe('true');
     });
 
-    it('renders breadcrumbs with mixed icons', () => {
+    it('renders breadcrumbs as text-only (Technical Blueprint)', () => {
       const items: BreadcrumbItem[] = [
-        { label: 'Home', to: { name: 'home' }, icon: 'pi-home' },
+        { label: 'Home', to: { name: 'home' } },
         { label: 'Leagues', to: { name: 'leagues' } },
-        { label: 'My League', icon: 'pi-flag' },
+        { label: 'My League' },
       ];
 
       wrapper = mountWithStubs(Breadcrumbs, {
@@ -199,8 +196,9 @@ describe('Breadcrumbs', () => {
         },
       });
 
-      expect(wrapper.find('i.pi-home').exists()).toBe(true);
-      expect(wrapper.find('i.pi-flag').exists()).toBe(true);
+      // Technical Blueprint breadcrumbs use text only
+      expect(wrapper.find('.breadcrumb-link').exists()).toBe(true);
+      expect(wrapper.find('.breadcrumb-current').exists()).toBe(true);
     });
   });
 
@@ -293,11 +291,11 @@ describe('Breadcrumbs', () => {
       // Last item should be a span
       const lastItem = wrapper.findAll('li')[1];
       expect(lastItem).toBeDefined();
-      expect(lastItem!.find('span.font-semibold').exists()).toBe(true);
+      expect(lastItem!.find('.breadcrumb-current').exists()).toBe(true);
       expect(lastItem!.find('a').exists()).toBe(false);
     });
 
-    it('applies font-semibold to last item', () => {
+    it('applies breadcrumb-current class to last item', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', to: { name: 'home' } },
         { label: 'Current' },
@@ -312,12 +310,12 @@ describe('Breadcrumbs', () => {
 
       const lastItem = wrapper.findAll('li')[1];
       expect(lastItem).toBeDefined();
-      const lastItemSpan = lastItem!.find('span.font-semibold');
+      const lastItemSpan = lastItem!.find('.breadcrumb-current');
       expect(lastItemSpan.exists()).toBe(true);
       expect(lastItemSpan.text()).toBe('Current');
     });
 
-    it('applies font-medium to clickable items', () => {
+    it('applies breadcrumb-link class to clickable items', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', to: { name: 'home' } },
         { label: 'Current' },
@@ -330,15 +328,14 @@ describe('Breadcrumbs', () => {
         },
       });
 
-      const link = wrapper.find('a');
-      const linkSpan = link.find('span.font-medium');
-      expect(linkSpan.exists()).toBe(true);
-      expect(linkSpan.text()).toBe('Home');
+      const link = wrapper.find('a.breadcrumb-link');
+      expect(link.exists()).toBe(true);
+      expect(link.text()).toBe('Home');
     });
   });
 
   describe('Styling and Classes', () => {
-    it('applies correct hover styles to clickable breadcrumbs', () => {
+    it('applies breadcrumb-link class to clickable breadcrumbs', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', to: { name: 'home' } },
         { label: 'Current' },
@@ -352,12 +349,10 @@ describe('Breadcrumbs', () => {
       });
 
       const link = wrapper.find('a');
-      expect(link.classes()).toContain('hover:text-gray-900');
-      expect(link.classes()).toContain('text-gray-500');
-      expect(link.classes()).toContain('transition-colors');
+      expect(link.classes()).toContain('breadcrumb-link');
     });
 
-    it('applies correct text color to non-clickable items', () => {
+    it('applies breadcrumb-current class to non-clickable items', () => {
       const items: BreadcrumbItem[] = [{ label: 'Current' }];
 
       wrapper = mountWithStubs(Breadcrumbs, {
@@ -367,7 +362,7 @@ describe('Breadcrumbs', () => {
         },
       });
 
-      const span = wrapper.find('span.text-gray-700');
+      const span = wrapper.find('.breadcrumb-current');
       expect(span.exists()).toBe(true);
     });
   });
@@ -415,10 +410,10 @@ describe('Breadcrumbs', () => {
       expect(lastItemContent.exists()).toBe(true);
     });
 
-    it('hides icons from screen readers with aria-hidden', () => {
+    it('hides separators from screen readers with aria-hidden', () => {
       const items: BreadcrumbItem[] = [
-        { label: 'Home', to: { name: 'home' }, icon: 'pi-home' },
-        { label: 'Current', icon: 'pi-flag' },
+        { label: 'Home', to: { name: 'home' } },
+        { label: 'Current' },
       ];
 
       wrapper = mountWithStubs(Breadcrumbs, {
@@ -428,12 +423,11 @@ describe('Breadcrumbs', () => {
         },
       });
 
-      const icons = wrapper.findAll('i[aria-hidden="true"]');
-      // Should have 2 breadcrumb icons + 1 separator icon = 3 total
-      expect(icons.length).toBeGreaterThanOrEqual(2);
+      const separators = wrapper.findAll('.breadcrumb-sep[aria-hidden="true"]');
+      expect(separators.length).toBeGreaterThanOrEqual(1);
 
-      icons.forEach((icon) => {
-        expect(icon.attributes('aria-hidden')).toBe('true');
+      separators.forEach((separator) => {
+        expect(separator.attributes('aria-hidden')).toBe('true');
       });
     });
   });
@@ -499,16 +493,17 @@ describe('Breadcrumbs', () => {
 
       const listItems = wrapper.findAll('li');
       expect(listItems).toHaveLength(3);
-      // Component should still render but with empty text
+      // Component should still render but with empty text for label
+      // The separator "/" will still be present
       expect(listItems[1]).toBeDefined();
-      expect(listItems[1]!.text().trim()).toBe('');
+      const secondItemText = listItems[1]!.text();
+      // The text will include the separator "/" but the label itself is empty
+      // So we just check that the item exists and renders
+      expect(secondItemText).toContain('/'); // Contains separator
     });
 
-    it('handles breadcrumbs with only icons', () => {
-      const items: BreadcrumbItem[] = [
-        { label: '', to: { name: 'home' }, icon: 'pi-home' },
-        { label: '', icon: 'pi-flag' },
-      ];
+    it('handles breadcrumbs with empty labels', () => {
+      const items: BreadcrumbItem[] = [{ label: '', to: { name: 'home' } }, { label: '' }];
 
       wrapper = mountWithStubs(Breadcrumbs, {
         props: { items },
@@ -517,15 +512,15 @@ describe('Breadcrumbs', () => {
         },
       });
 
-      expect(wrapper.find('i.pi-home').exists()).toBe(true);
-      expect(wrapper.find('i.pi-flag').exists()).toBe(true);
+      // Should render structure even with empty labels
+      expect(wrapper.findAll('li')).toHaveLength(2);
     });
   });
 
   describe('5 Items Maximum', () => {
     it('renders exactly 5 items correctly', () => {
       const items: BreadcrumbItem[] = [
-        { label: 'Home', to: { name: 'home' }, icon: 'pi-home' },
+        { label: 'Home', to: { name: 'home' } },
         { label: 'Leagues', to: { name: 'leagues' } },
         { label: 'League 1', to: { name: 'league-detail', params: { id: '1' } } },
         { label: 'Competitions', to: { name: 'home' } },
@@ -541,7 +536,7 @@ describe('Breadcrumbs', () => {
 
       expect(wrapper.findAll('li')).toHaveLength(5);
       expect(wrapper.findAll('a')).toHaveLength(4); // All except last
-      expect(wrapper.findAll('i.pi-chevron-right')).toHaveLength(4); // 4 separators
+      expect(wrapper.findAll('.breadcrumb-sep')).toHaveLength(4); // 4 separators
     });
   });
 });

@@ -11,18 +11,27 @@ import { useSeasonStore } from '@app/stores/seasonStore';
 import type { Season } from '@app/types/season';
 
 // Mock child components
-vi.mock('@app/components/common/panels/BasePanel.vue', () => ({
+vi.mock('@app/components/common/cards/Card.vue', () => ({
   default: {
-    name: 'BasePanel',
-    template: '<div class="base-panel"><slot name="header" /><slot /></div>',
+    name: 'Card',
+    template: '<div class="card"><slot name="header" /><slot /></div>',
+    props: ['class', 'title', 'showHeader'],
   },
 }));
 
-vi.mock('@app/components/common/panels/PanelHeader.vue', () => ({
+vi.mock('@app/components/common/cards/CardHeader.vue', () => ({
   default: {
-    name: 'PanelHeader',
-    template: '<div class="panel-header">{{ title }}</div>',
-    props: ['icon', 'iconSize', 'iconClass', 'title', 'description', 'gradient'],
+    name: 'CardHeader',
+    template: '<div class="card-header">{{ title }}</div>',
+    props: ['icon', 'iconColor', 'title', 'description', 'gradientFrom', 'gradientTo', 'class'],
+  },
+}));
+
+vi.mock('@app/components/common/cards/InfoBox.vue', () => ({
+  default: {
+    name: 'InfoBox',
+    template: '<div class="info-box">{{ title }}: {{ message }}</div>',
+    props: ['variant', 'title', 'message'],
   },
 }));
 
@@ -119,7 +128,7 @@ describe('SeasonSettings', () => {
       wrapper = createWrapper(season);
 
       expect(wrapper.find('.season-settings').exists()).toBe(true);
-      expect(wrapper.text()).toContain('Current Status');
+      expect(wrapper.text()).toContain('Season Status');
       expect(wrapper.text()).toContain('Activate Season');
       expect(wrapper.text()).toContain('Complete Season');
       expect(wrapper.text()).toContain('Archive Season');
@@ -131,7 +140,7 @@ describe('SeasonSettings', () => {
       wrapper = createWrapper(season);
 
       expect(wrapper.find('.season-settings').exists()).toBe(true);
-      expect(wrapper.text()).toContain('Current Status');
+      expect(wrapper.text()).toContain('Season Status');
     });
 
     it('renders correctly with completed status', () => {
@@ -139,7 +148,7 @@ describe('SeasonSettings', () => {
       wrapper = createWrapper(season);
 
       expect(wrapper.find('.season-settings').exists()).toBe(true);
-      expect(wrapper.text()).toContain('Current Status');
+      expect(wrapper.text()).toContain('Season Status');
     });
 
     it('renders archived panel when season is archived', () => {
@@ -147,35 +156,35 @@ describe('SeasonSettings', () => {
       wrapper = createWrapper(season);
 
       expect(wrapper.text()).toContain('Archived Season');
-      expect(wrapper.text()).toContain('This season is archived and read-only');
+      expect(wrapper.text()).toContain('Read-Only Mode');
       expect(wrapper.text()).not.toContain('Activate Season');
     });
 
-    it('displays current status tag correctly for setup', () => {
+    it('displays season status card correctly for setup', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
-      const statusTag = wrapper.find('[class*="p-tag"]');
-      expect(statusTag.exists()).toBe(true);
-      expect(wrapper.text()).toContain('Current Status');
+      const card = wrapper.findComponent({ name: 'Card' });
+      expect(card.exists()).toBe(true);
+      expect(wrapper.text()).toContain('Season Status');
     });
 
-    it('displays current status tag correctly for active', () => {
+    it('displays season status card correctly for active', () => {
       const season = createMockSeason({ status: 'active' });
       wrapper = createWrapper(season);
 
-      const statusTag = wrapper.find('[class*="p-tag"]');
-      expect(statusTag.exists()).toBe(true);
-      expect(wrapper.text()).toContain('Current Status');
+      const card = wrapper.findComponent({ name: 'Card' });
+      expect(card.exists()).toBe(true);
+      expect(wrapper.text()).toContain('Season Status');
     });
 
-    it('displays current status tag correctly for completed', () => {
+    it('displays season status card correctly for completed', () => {
       const season = createMockSeason({ status: 'completed' });
       wrapper = createWrapper(season);
 
-      const statusTag = wrapper.find('[class*="p-tag"]');
-      expect(statusTag.exists()).toBe(true);
-      expect(wrapper.text()).toContain('Current Status');
+      const card = wrapper.findComponent({ name: 'Card' });
+      expect(card.exists()).toBe(true);
+      expect(wrapper.text()).toContain('Season Status');
     });
 
     it('renders all three action items in Season Status panel', () => {
@@ -199,28 +208,33 @@ describe('SeasonSettings', () => {
       expect(wrapper.text()).toContain('Permanently remove all race results and historical data');
     });
 
-    it('uses Phosphor icons in panel headers', () => {
+    it('uses Phosphor icons in card headers', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
-      const panelHeaders = wrapper.findAllComponents({ name: 'PanelHeader' });
-      // Only Danger Zone has a PanelHeader; Season Status uses direct content
-      expect(panelHeaders.length).toBeGreaterThan(0);
+      const cardHeaders = wrapper.findAllComponents({ name: 'CardHeader' });
+      // Season Status card has a CardHeader
+      expect(cardHeaders.length).toBeGreaterThan(0);
 
-      // Check that PanelHeader components receive icon props
-      const dangerPanel = panelHeaders.find((ph) => ph.props('title') === 'Danger Zone');
-      expect(dangerPanel).toBeDefined();
-      expect(dangerPanel?.props('icon')).toBeDefined();
+      // Check that CardHeader components receive icon props
+      const statusCard = cardHeaders.find((ch) => ch.props('title') === 'Season Status');
+      expect(statusCard).toBeDefined();
+      expect(statusCard?.props('icon')).toBeDefined();
     });
 
-    it('displays gradient backgrounds on panel headers', () => {
+    it('displays cards with correct styling', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
-      const panelHeaders = wrapper.findAllComponents({ name: 'PanelHeader' });
-      // Only Danger Zone has a PanelHeader with gradient
-      const dangerPanel = panelHeaders.find((ph) => ph.props('title') === 'Danger Zone');
-      expect(dangerPanel?.props('gradient')).toBe('from-red-100 to-rose-100');
+      const cards = wrapper.findAllComponents({ name: 'Card' });
+      // Should have at least 2 cards (Season Status and Danger Zone)
+      expect(cards.length).toBeGreaterThan(1);
+
+      // Danger Zone card should have special styling class
+      const dangerCard = cards.find((card) =>
+        card.props('class')?.includes('border-[var(--red)]')
+      );
+      expect(dangerCard).toBeDefined();
     });
   });
 
@@ -408,15 +422,14 @@ describe('SeasonSettings', () => {
       expect(wrapper.emitted('deleted')?.[0]).toEqual([]);
     });
 
-    it('renders delete button with outlined danger severity', () => {
+    it('renders delete button with danger variant', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
       const deleteButton = wrapper
         .findAllComponents({ name: 'Button' })
         .find((btn) => btn.props('label') === 'Delete Season');
-      expect(deleteButton?.props('severity')).toBe('danger');
-      expect(deleteButton?.props('outlined')).toBe(true);
+      expect(deleteButton?.props('variant')).toBe('danger');
     });
   });
 
@@ -430,37 +443,15 @@ describe('SeasonSettings', () => {
   });
 
   describe('visual design', () => {
-    it('uses small button size for all action buttons', () => {
+    it('renders all action buttons with correct labels', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
-      const actionButtons = wrapper
-        .findAllComponents({ name: 'Button' })
-        .filter((btn) => ['Activate', 'Complete', 'Archive'].includes(btn.text()));
-
-      actionButtons.forEach((button) => {
-        expect(button.props('size')).toBe('small');
-      });
-    });
-
-    it('applies correct severity to status action buttons', () => {
-      const season = createMockSeason({ status: 'setup' });
-      wrapper = createWrapper(season);
-
-      const activateButton = wrapper
-        .findAllComponents({ name: 'Button' })
-        .find((btn) => btn.text() === 'Activate');
-      expect(activateButton?.props('severity')).toBe('success');
-
-      const completeButton = wrapper
-        .findAllComponents({ name: 'Button' })
-        .find((btn) => btn.text() === 'Complete');
-      expect(completeButton?.props('severity')).toBe('info');
-
-      const archiveButton = wrapper
-        .findAllComponents({ name: 'Button' })
-        .find((btn) => btn.text() === 'Archive');
-      expect(archiveButton?.props('severity')).toBe('secondary');
+      // Verify all three action buttons are rendered
+      expect(wrapper.text()).toContain('Activate');
+      expect(wrapper.text()).toContain('Complete');
+      expect(wrapper.text()).toContain('Archive');
+      expect(wrapper.text()).toContain('Delete Season');
     });
 
     it('uses consistent spacing with space-y-4 on root container', () => {

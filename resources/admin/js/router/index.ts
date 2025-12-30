@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { useAdminStore } from '@admin/stores/adminStore';
 import AdminLayout from '@admin/components/layout/AdminLayout.vue';
 import DashboardView from '@admin/views/DashboardView.vue';
@@ -13,24 +13,23 @@ import { UNAUTHORIZED_EVENT } from '@admin/services/api';
  */
 declare global {
   interface Window {
-    dataLayer: Record<string, unknown>[];
+    dataLayer?: Record<string, unknown>[];
   }
 }
 
 /**
  * Extend route meta with authentication fields
+ * Note: breadcrumb type is inherited from app router
  */
 declare module 'vue-router' {
   interface RouteMeta {
-    title?: string;
-    breadcrumb?: Array<{ label: string }>;
     requiresAuth?: boolean;
     requiredRole?: AdminRole;
     isPublic?: boolean;
   }
 }
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   // Public login route
   {
     path: '/login',
@@ -56,6 +55,7 @@ const routes = [
         component: DashboardView,
         meta: {
           title: 'Dashboard',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
           breadcrumb: [{ label: 'Dashboard' }],
           requiresAuth: true,
         },
@@ -66,6 +66,7 @@ const routes = [
         component: () => import('@admin/views/UsersView.vue'),
         meta: {
           title: 'Users',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
           breadcrumb: [{ label: 'Users' }],
           requiresAuth: true,
         },
@@ -76,6 +77,7 @@ const routes = [
         component: () => import('@admin/views/LeaguesView.vue'),
         meta: {
           title: 'Leagues',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
           breadcrumb: [{ label: 'Leagues' }],
           requiresAuth: true,
         },
@@ -86,6 +88,7 @@ const routes = [
         component: () => import('@admin/views/DriversView.vue'),
         meta: {
           title: 'Drivers',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
           breadcrumb: [{ label: 'Drivers' }],
           requiresAuth: true,
         },
@@ -96,6 +99,7 @@ const routes = [
         component: () => import('@admin/views/AdminUsersView.vue'),
         meta: {
           title: 'Admin Users',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
           breadcrumb: [{ label: 'Settings' }, { label: 'Admin Users' }],
           requiresAuth: true,
           requiredRole: 'admin' as AdminRole, // Only admins and super admins
@@ -107,6 +111,7 @@ const routes = [
         component: () => import('@admin/views/SettingsView.vue'),
         meta: {
           title: 'Settings',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
           breadcrumb: [{ label: 'Settings' }],
           requiresAuth: true,
           requiredRole: 'admin' as AdminRole, // Only admins and super admins
@@ -118,6 +123,7 @@ const routes = [
         component: () => import('@admin/views/SiteConfigView.vue'),
         meta: {
           title: 'Site Configuration',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
           breadcrumb: [{ label: 'Settings' }, { label: 'Site Configuration' }],
           requiresAuth: true,
           requiredRole: 'super_admin' as AdminRole, // Only super admins
@@ -129,6 +135,7 @@ const routes = [
         component: () => import('@admin/views/ActivityLogView.vue'),
         meta: {
           title: 'Activity Logs',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
           breadcrumb: [{ label: 'System' }, { label: 'Activity Logs' }],
           requiresAuth: true,
           requiredRole: 'admin' as AdminRole, // Only admins and super admins

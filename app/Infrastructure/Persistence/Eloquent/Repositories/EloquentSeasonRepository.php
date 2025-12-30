@@ -421,8 +421,6 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
 
         $ruleReferences = [];
         foreach ($pivotRules as $pivotRule) {
-            // PHPStan doesn't recognize dynamic pivot properties
-            /** @phpstan-ignore property.notFound */
             $order = $pivotRule->pivot->order ?? 0;
             $ruleReferences[] = new TiebreakerRuleReference(
                 id: $pivotRule->id,

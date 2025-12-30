@@ -5,7 +5,7 @@ import { useCompetitionStore } from '@app/stores/competitionStore';
 import type { Competition } from '@app/types/competition';
 import { PhPlus } from '@phosphor-icons/vue';
 
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Card from 'primevue/card';
 import Skeleton from 'primevue/skeleton';
 
@@ -54,16 +54,26 @@ function handleDeleteClick(competition: Competition): void {
   showDeleteDialog.value = true;
 }
 
-function handleArchiveClick(competition: Competition): void {
-  // Archive functionality
-  competitionStore.archiveExistingCompetition(competition.id);
+async function handleArchiveClick(competition: Competition): Promise<void> {
+  try {
+    // Archive functionality
+    await competitionStore.archiveExistingCompetition(competition.id);
 
-  toast.add({
-    severity: 'success',
-    summary: 'Competition Archived',
-    detail: 'Competition has been archived successfully',
-    life: 3000,
-  });
+    toast.add({
+      severity: 'success',
+      summary: 'Competition Archived',
+      detail: 'Competition has been archived successfully',
+      life: 3000,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to archive competition';
+    toast.add({
+      severity: 'error',
+      summary: 'Archive Failed',
+      detail: errorMessage,
+      life: 5000,
+    });
+  }
 }
 
 function handleCompetitionCreated(competition: Competition): void {
@@ -101,11 +111,7 @@ function handleCompetitionDeleted(competitionId: number): void {
           <i class="pi pi-flag text-6xl text-gray-400 mb-4"></i>
           <h3 class="text-xl font-semibold mb-2">No Competitions Yet</h3>
           <p class="text-gray-600 mb-4">Create your first competition to start organizing races.</p>
-          <Button
-            label="Create Your First Competition"
-            icon="pi pi-plus"
-            @click="handleCreateClick"
-          />
+          <Button label="Create Your First Competition" :icon="PhPlus" @click="handleCreateClick" />
         </div>
       </template>
     </Card>

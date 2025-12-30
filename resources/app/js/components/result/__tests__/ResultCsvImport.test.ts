@@ -1,7 +1,80 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import ResultCsvImport from '../ResultCsvImport.vue';
 import type { CsvResultRow } from '@app/types/raceResult';
+
+// Mock the useRaceTimeCalculation composable
+vi.mock('@app/composables/useRaceTimeCalculation', () => ({
+  useRaceTimeCalculation: () => ({
+    parseTimeToMs: (value: string | null | undefined): number | null => {
+      if (!value || value.trim() === '') return null;
+
+      const TIME_PATTERN = /^[+]?(\d{1,2}):(\d{2}):(\d{2})\.(\d{1,3})$/;
+      const match = value.match(TIME_PATTERN);
+      if (!match) return null;
+
+      const hours = parseInt(match[1] ?? '0', 10);
+      const minutes = parseInt(match[2] ?? '0', 10);
+      const seconds = parseInt(match[3] ?? '0', 10);
+      const msStr = (match[4] ?? '0').padEnd(3, '0');
+      const milliseconds = parseInt(msStr, 10);
+
+      return hours * 3600000 + minutes * 60000 + seconds * 1000 + milliseconds;
+    },
+    formatMsToTime: (ms: number): string => {
+      const hours = Math.floor(ms / 3600000);
+      let remaining = ms - hours * 3600000;
+
+      const minutes = Math.floor(remaining / 60000);
+      remaining -= minutes * 60000;
+
+      const seconds = Math.floor(remaining / 1000);
+      const milliseconds = remaining - seconds * 1000;
+
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
+    },
+    normalizeTimeInput: (value: string | null | undefined): string => {
+      if (!value || value.trim() === '') return '';
+
+      const trimmed = value.trim().replace(/\s+/g, '');
+
+      const FLEXIBLE_PATTERNS = {
+        full: /^([+]?)(\d{1,2}):(\d{2}):(\d{2})\.(\d{1,3})$/,
+        minutes: /^([+]?)(\d{1,2}):(\d{2})\.(\d{1,3})$/,
+        seconds: /^([+]?)(\d{1,2})\.(\d{1,3})$/,
+      };
+
+      const fullMatch = trimmed.match(FLEXIBLE_PATTERNS.full);
+      if (fullMatch) {
+        const prefix = fullMatch[1] ?? '';
+        const hours = (fullMatch[2] ?? '0').padStart(2, '0');
+        const minutes = fullMatch[3] ?? '00';
+        const seconds = fullMatch[4] ?? '00';
+        const ms = (fullMatch[5] ?? '0').padEnd(3, '0');
+        return `${prefix}${hours}:${minutes}:${seconds}.${ms}`;
+      }
+
+      const minutesMatch = trimmed.match(FLEXIBLE_PATTERNS.minutes);
+      if (minutesMatch) {
+        const prefix = minutesMatch[1] ?? '';
+        const minutes = (minutesMatch[2] ?? '0').padStart(2, '0');
+        const seconds = minutesMatch[3] ?? '00';
+        const ms = (minutesMatch[4] ?? '0').padEnd(3, '0');
+        return `${prefix}00:${minutes}:${seconds}.${ms}`;
+      }
+
+      const secondsMatch = trimmed.match(FLEXIBLE_PATTERNS.seconds);
+      if (secondsMatch) {
+        const prefix = secondsMatch[1] ?? '';
+        const seconds = (secondsMatch[2] ?? '0').padStart(2, '0');
+        const ms = (secondsMatch[3] ?? '0').padEnd(3, '0');
+        return `${prefix}00:00:${seconds}.${ms}`;
+      }
+
+      return trimmed;
+    },
+  }),
+}));
 
 // Mock PrimeVue components
 vi.mock('primevue/textarea', () => ({
@@ -16,10 +89,20 @@ vi.mock('primevue/textarea', () => ({
 
 vi.mock('primevue/button', () => ({
   default: {
-    name: 'Button',
-    props: ['label', 'icon', 'size', 'severity', 'disabled'],
+    name: 'PrimeButton',
+    props: ['label', 'icon', 'size', 'severity', 'disabled', 'type', 'loading', 'text', 'outlined', 'class', 'pt', 'aria-label'],
     emits: ['click'],
-    template: '<button :disabled="disabled" @click="$emit(\'click\')">{{ label }}</button>',
+    template: '<button :disabled="disabled" @click="$emit(\'click\', $event)"><slot name="icon" /><slot />{{ label }}</button>',
+  },
+}));
+
+// Mock custom Button component
+vi.mock('@app/components/common/buttons', () => ({
+  Button: {
+    name: 'Button',
+    props: ['label', 'icon', 'size', 'variant', 'disabled', 'loading', 'type', 'iconPos', 'ariaLabel', 'pt'],
+    emits: ['click'],
+    template: '<button :disabled="disabled" @click="$emit(\'click\', $event)">{{ label }}</button>',
   },
 }));
 
@@ -27,6 +110,16 @@ vi.mock('primevue/button', () => ({
 vi.mock('@phosphor-icons/vue', () => ({
   PhFileCsv: {
     name: 'PhFileCsv',
+    props: ['size'],
+    template: '<svg></svg>',
+  },
+  PhUpload: {
+    name: 'PhUpload',
+    props: ['size'],
+    template: '<svg></svg>',
+  },
+  PhCheck: {
+    name: 'PhCheck',
     props: ['size'],
     template: '<svg></svg>',
   },
@@ -418,7 +511,7 @@ Jane Doe,01:33.123`;
 
       expect(vm.placeholderText).toContain('driver,fastest_lap_time');
       expect(vm.placeholderText).not.toContain('race_time');
-      expect(vm.expectedColumnsText).toBe('Expected columns: driver, fastest_lap_time');
+      expect(vm.expectedColumnsText).toBe('Required Column Headers: driver, fastest_lap_time');
     });
 
     it('shows correct placeholder for races with times required', () => {
@@ -429,7 +522,7 @@ Jane Doe,01:33.123`;
         'driver,race_time,original_race_time_difference,fastest_lap_time',
       );
       expect(vm.expectedColumnsText).toBe(
-        'Expected columns: driver, race_time, original_race_time_difference, fastest_lap_time',
+        'Required Column Headers: driver, race_time, original_race_time_difference, fastest_lap_time <br /> Data can be blank if not applicable',
       );
     });
 
@@ -439,7 +532,7 @@ Jane Doe,01:33.123`;
 
       expect(vm.placeholderText).toContain('driver');
       expect(vm.placeholderText).not.toContain('race_time');
-      expect(vm.expectedColumnsText).toBe('Expected columns: driver (times optional)');
+      expect(vm.expectedColumnsText).toBe('Required Column Headers: driver (`fastest_lap_time` optional)');
     });
   });
 });

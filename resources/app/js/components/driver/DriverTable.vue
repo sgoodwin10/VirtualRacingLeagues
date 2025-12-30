@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { useLeagueStore } from '@app/stores/leagueStore';
+import { TechDataTable, DriverCell } from '@app/components/common/tables';
 import ViewButton from '@app/components/common/buttons/ViewButton.vue';
 import EditButton from '@app/components/common/buttons/EditButton.vue';
 import DeleteButton from '@app/components/common/buttons/DeleteButton.vue';
@@ -149,11 +149,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <DataTable
+  <TechDataTable
     :value="drivers"
     :loading="loading"
     lazy
-    striped-rows
     paginator
     :rows="DEFAULT_ROWS_PER_PAGE"
     :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
@@ -174,12 +173,7 @@ onMounted(async () => {
 
     <Column field="name" header="Name">
       <template #body="{ data }">
-        <div>
-          <div class="font-semibold">{{ getDriverName(data) }}</div>
-          <div v-if="getDriverNickname(data)" class="text-sm text-gray-600">
-            "{{ getDriverNickname(data) }}"
-          </div>
-        </div>
+        <DriverCell :name="getDriverName(data)" :nickname="getDriverNickname(data)" />
       </template>
     </Column>
 
@@ -222,7 +216,7 @@ onMounted(async () => {
         </div>
       </template>
     </Column>
-  </DataTable>
+  </TechDataTable>
 </template>
 
 <style scoped>

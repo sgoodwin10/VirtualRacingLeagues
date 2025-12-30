@@ -3,7 +3,8 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import DataView from 'primevue/dataview';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
+import { PhPlus } from '@phosphor-icons/vue';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import LeagueWizardDrawer from '@app/components/league/modals/LeagueWizardDrawer.vue';
 import LeagueCard from '@app/components/league/LeagueCard.vue';
@@ -124,7 +125,7 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
 
       <Button
         label="Create League"
-        icon="pi pi-plus"
+        :icon="PhPlus"
         :severity="canCreateLeague ? 'primary' : 'secondary'"
         :disabled="!canCreateLeague"
         :title="createButtonTooltip"
@@ -141,7 +142,7 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
           <p class="text-gray-600 mb-6">Get started by creating your first racing league</p>
           <Button
             label="Create Your First League"
-            icon="pi pi-plus"
+            :icon="PhPlus"
             :disabled="!canCreateLeague"
             @click="openCreateDrawer"
           />

@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import Card from 'primevue/card';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import ButtonGroup from 'primevue/buttongroup';
 import SpeedDial from 'primevue/speeddial';
 import type { MenuItem } from 'primevue/menuitem';
@@ -14,7 +14,15 @@ import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import { useUserStore } from '@app/stores/userStore';
 import type { League } from '@app/types/league';
-import { PhGameController, PhMapPinArea, PhSteeringWheel, PhTrophy } from '@phosphor-icons/vue';
+import {
+  PhGameController,
+  PhMapPinArea,
+  PhSteeringWheel,
+  PhTrophy,
+  PhEye,
+  PhTrash,
+  PhPencil,
+} from '@phosphor-icons/vue';
 import HTag from '@app/components/common/HTag.vue';
 
 interface Props {
@@ -196,29 +204,20 @@ async function deleteLeague(): Promise<void> {
         <ButtonGroup class="w-1/2 hidden">
           <Button
             v-if="isOwner"
-            icon="pi pi-trash"
-            severity="danger"
+            :icon="PhTrash"
+            variant="danger"
             class="w-1/2 hidden"
-            variant="outlined"
             @click="confirmDelete"
           />
           <Button
             v-if="isOwner"
-            icon="pi pi-pencil"
-            severity="warn"
+            :icon="PhPencil"
+            variant="warning"
             class="w-1/2 hidden"
-            variant="outlined"
             @click="handleEdit"
           />
         </ButtonGroup>
-        <Button
-          label="View"
-          severity="primary"
-          icon="pi pi-eye"
-          class="w-full"
-          variant=""
-          @click="handleView"
-        />
+        <Button label="View" variant="primary" :icon="PhEye" class="w-full" @click="handleView" />
       </div>
     </template>
   </Card>

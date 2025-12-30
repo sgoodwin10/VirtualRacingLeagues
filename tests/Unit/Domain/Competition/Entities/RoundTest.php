@@ -93,6 +93,8 @@ final class RoundTest extends TestCase
             qualifyingResults: null,
             raceTimeResults: null,
             fastestLapResults: null,
+            teamChampionshipResults: null,
+            tiebreakerInformation: null,
             createdByUserId: 1,
             createdAt: new DateTimeImmutable('2025-01-01 00:00:00'),
             updatedAt: new DateTimeImmutable('2025-01-02 00:00:00'),

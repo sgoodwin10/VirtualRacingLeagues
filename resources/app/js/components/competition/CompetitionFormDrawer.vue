@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onUnmounted } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
 import { useCompetitionStore } from '@app/stores/competitionStore';
@@ -18,7 +18,7 @@ import type {
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 import ColorPicker from 'primevue/colorpicker';
@@ -78,6 +78,7 @@ const showNameChangeDialog = ref(false);
 const slugPreview = ref('');
 const slugStatus = ref<'checking' | 'available' | 'taken' | 'error' | null>(null);
 const slugSuggestion = ref<string | null>(null);
+const slugCheckAbortController = ref<AbortController | null>(null);
 
 // Validation
 const { errors, validateAll, clearError } = useCompetitionValidation(form);
@@ -107,13 +108,22 @@ const canSubmit = computed(() => {
   );
 });
 
-// Slug checking (debounced)
+// Slug checking (debounced with request cancellation)
 const checkSlug = useDebounceFn(async () => {
   if (!form.name || form.name.trim().length < 3) {
     slugPreview.value = '';
     slugStatus.value = null;
     return;
   }
+
+  // Cancel previous request if it exists
+  if (slugCheckAbortController.value) {
+    slugCheckAbortController.value.abort();
+  }
+
+  // Create new AbortController for this request
+  slugCheckAbortController.value = new AbortController();
+  const currentController = slugCheckAbortController.value;
 
   slugStatus.value = 'checking';
 
@@ -124,12 +134,18 @@ const checkSlug = useDebounceFn(async () => {
       props.competition?.id,
     );
 
-    slugPreview.value = result.slug;
-    slugStatus.value = result.available ? 'available' : 'taken';
-    slugSuggestion.value = result.suggestion;
+    // Only update state if this request wasn't aborted
+    if (!currentController.signal.aborted) {
+      slugPreview.value = result.slug;
+      slugStatus.value = result.available ? 'available' : 'taken';
+      slugSuggestion.value = result.suggestion;
+    }
   } catch (error) {
-    console.error('Slug check failed:', error);
-    slugStatus.value = 'error';
+    // Only update error state if this request wasn't aborted
+    if (!currentController.signal.aborted) {
+      console.error('Slug check failed:', error);
+      slugStatus.value = 'error';
+    }
   }
 }, 500);
 
@@ -315,6 +331,17 @@ function confirmNameChange(): void {
 function cancelNameChange(): void {
   showNameChangeDialog.value = false;
 }
+
+/**
+ * Clean up on unmount to prevent memory leaks
+ */
+onUnmounted(() => {
+  // Abort any in-flight slug check requests
+  if (slugCheckAbortController.value) {
+    slugCheckAbortController.value.abort();
+    slugCheckAbortController.value = null;
+  }
+});
 </script>
 
 <template>
@@ -336,7 +363,7 @@ function cancelNameChange(): void {
           <InputText
             id="name"
             v-model="form.name"
-            size="small"
+            size="sm"
             placeholder="e.g., Sunday Night Racing, GT3 Championship"
             :class="{ 'p-invalid': errors.name }"
             :disabled="isSubmitting"
@@ -377,7 +404,7 @@ function cancelNameChange(): void {
             option-label="name"
             option-value="id"
             placeholder="Select a platform"
-            size="small"
+            size="sm"
             :class="{ 'p-invalid': errors.platform_id }"
             :disabled="isEditMode || isSubmitting"
             class="w-full"
@@ -396,7 +423,6 @@ function cancelNameChange(): void {
             v-model="form.competition_colour"
             format="rgb"
             :disabled="isSubmitting"
-            class="w-full"
           />
           <FormOptionalText text="Competition theme colour" />
           <FormError :error="errors.competition_colour" />
@@ -433,7 +459,7 @@ function cancelNameChange(): void {
               :max-file-size="2 * 1024 * 1024"
               :min-dimensions="{ width: 100, height: 100 }"
               :recommended-dimensions="{ width: 500, height: 500 }"
-              preview-size="small"
+              preview-size="sm"
               helper-text="Square logo, 500x500px recommended. League logo used if not provided."
             />
           </div>
@@ -444,13 +470,7 @@ function cancelNameChange(): void {
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <Button
-          label="Cancel"
-          severity="secondary"
-          outlined
-          :disabled="isSubmitting"
-          @click="handleCancel"
-        />
+        <Button label="Cancel" variant="secondary" :disabled="isSubmitting" @click="handleCancel" />
         <Button
           :label="isEditMode ? 'Save Changes' : 'Create Competition'"
           :loading="isSubmitting"
@@ -493,15 +513,15 @@ function cancelNameChange(): void {
         </div>
       </div>
 
-      <Message severity="warn" :closable="false">
+      <Message variant="warning" :closable="false">
         Existing bookmarks and shared links will break.
       </Message>
     </div>
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <Button label="Cancel" outlined @click="cancelNameChange" />
-        <Button label="Continue" severity="warning" @click="confirmNameChange" />
+        <Button label="Cancel" variant="outline" @click="cancelNameChange" />
+        <Button label="Continue" variant="warning" @click="confirmNameChange" />
       </div>
     </template>
   </Dialog>

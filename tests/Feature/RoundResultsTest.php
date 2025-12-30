@@ -213,7 +213,7 @@ final class RoundResultsTest extends TestCase
         $data = $response->json('data');
         $this->assertEquals($round->id, $data['round']['id']);
         $this->assertEquals(1, $data['round']['round_number']);
-        $this->assertEquals('Round 1', $data['round']['name']);
+        $this->assertEquals($round->name, $data['round']['name']);
         $this->assertEquals('completed', $data['round']['status']);
 
         // Check divisions

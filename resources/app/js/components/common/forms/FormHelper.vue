@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-
 interface Props {
   text?: string;
   class?: string;
@@ -10,15 +8,18 @@ const props = withDefaults(defineProps<Props>(), {
   text: undefined,
   class: '',
 });
-
-const helperClasses = computed(() => {
-  const baseClasses = 'text-xs text-gray-500';
-  return props.class ? `${baseClasses} ${props.class}` : baseClasses;
-});
 </script>
 
 <template>
-  <small v-if="props.text" :class="helperClasses">
+  <small v-if="props.text" :class="['form-help', props.class]">
     {{ props.text }}
   </small>
 </template>
+
+<style scoped>
+.form-help {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+</style>

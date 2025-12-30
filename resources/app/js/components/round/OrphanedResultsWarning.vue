@@ -5,12 +5,15 @@
       value: tooltipMessage,
       escape: false,
     }"
-    icon="pi pi-exclamation-triangle"
-    severity="warn"
+    variant="warning"
     value="Orphaned Results"
     class="cursor-pointer"
     @click="handleClick"
-  />
+  >
+    <template #icon>
+      <PhWarning :size="14" weight="regular" />
+    </template>
+  </Tag>
 
   <Dialog v-model:visible="dialogVisible" :modal="true" :style="{ width: '40rem' }">
     <template #header>
@@ -67,10 +70,10 @@
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <Button label="Close" outlined :disabled="isDeleting" @click="handleClose" />
+        <Button label="Close" variant="outline" :disabled="isDeleting" @click="handleClose" />
         <Button
           label="Remove Orphans"
-          severity="warn"
+          variant="warning"
           :loading="isDeleting"
           @click="handleRemoveOrphans"
         />
@@ -80,12 +83,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import { useToast } from 'primevue/usetoast';
 import { deleteOrphanedResults, getOrphanedResults } from '@app/services/raceService';
+import { PhWarning } from '@phosphor-icons/vue';
 
 interface Props {
   hasOrphanedResults?: boolean;
@@ -112,13 +116,31 @@ const isLoadingDrivers = ref(false);
 const loadError = ref<string | null>(null);
 const orphanedDrivers = ref<Array<{ id: number; name: string }>>([]);
 
+// AbortController for request cancellation
+let abortController: AbortController | null = null;
+
 const showWarning = computed(() => {
   return props.isCompleted && props.hasOrphanedResults;
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (abortController) {
+    abortController.abort();
+  }
 });
 
 // Fetch orphaned drivers when dialog is opened
 watch(dialogVisible, async (isVisible) => {
   if (isVisible) {
+    // Cancel any previous request
+    if (abortController) {
+      abortController.abort();
+    }
+
+    // Create new AbortController for this request
+    abortController = new AbortController();
+
     isLoadingDrivers.value = true;
     loadError.value = null;
 
@@ -129,6 +151,11 @@ watch(dialogVisible, async (isVisible) => {
         orphanedDrivers.value = result.drivers;
       }
     } catch (error) {
+      // Don't show error if request was aborted
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+
       if (dialogVisible.value) {
         loadError.value =
           error instanceof Error ? error.message : 'Failed to load orphaned drivers';
@@ -139,7 +166,11 @@ watch(dialogVisible, async (isVisible) => {
       }
     }
   } else {
-    // Reset state when dialog is closed
+    // Cancel request and reset state when dialog is closed
+    if (abortController) {
+      abortController.abort();
+      abortController = null;
+    }
     orphanedDrivers.value = [];
     loadError.value = null;
   }

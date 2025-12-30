@@ -2,9 +2,9 @@
 import { computed } from 'vue';
 import type { Competition } from '@app/types/competition';
 
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Chip from 'primevue/chip';
-import { PhImage } from '@phosphor-icons/vue';
+import { PhImage, PhGear, PhGameController } from '@phosphor-icons/vue';
 import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 
 interface Props {
@@ -66,21 +66,20 @@ const competitionBackgroundColor = computed(() => {
         <div class="flex justify-between items-start mb-2">
           <h1 class="text-3xl font-bold">{{ competition.name }}</h1>
           <Button
-            icon="pi pi-cog"
+            :icon="PhGear"
             label="Edit"
-            outlined
+            variant="outline"
             :disabled="competition.is_archived"
             @click="emit('edit')"
           />
         </div>
 
         <!-- Platform Badge -->
-        <Chip
-          v-if="competition.platform"
-          :label="competition.platform.name"
-          icon="pi pi-gamepad"
-          class="mb-2"
-        />
+        <Chip v-if="competition.platform" :label="competition.platform.name" class="mb-2">
+          <template #icon>
+            <PhGameController :size="14" weight="regular" />
+          </template>
+        </Chip>
 
         <!-- Description -->
         <p v-if="competition.description" class="text-gray-600 mb-4">

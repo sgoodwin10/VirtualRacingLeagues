@@ -4,6 +4,11 @@
 @import 'tailwindcss';
 @plugin 'tailwindcss-primeui';
 
+/* Component-specific styles */
+@import './components/buttons.css';
+@import './components/forms.css';
+@import './components/accordion.css';
+
 @theme {
   /* Font Family - Technical Blueprint */
   --font-mono: 'IBM Plex Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
@@ -43,6 +48,7 @@
   /* Border Colors */
   --color-border-default: #30363d;
   --color-border-muted: #21262d;
+  --color-border-highlight: #aaa;
 
   /* Semantic Colors */
   --color-cyan: #58a6ff;
@@ -205,6 +211,11 @@
   --sidebar-collapsed-width: 5rem;
   --topbar-height: 4rem;
 
+  /* Navigation Layout Dimensions */
+  --rail-width: 64px;
+  --navigation-sidebar-width: 240px;
+  --radius: 6px;
+
   /* Font size scale (CSS custom properties for use with var()) */
   --font-size-base: 14px;
   --font-size-xs: 10px;
@@ -366,8 +377,8 @@ textarea {
   transition: all 0.2s ease-in-out;
 }
 
-/* Focus visible for accessibility */
-:focus-visible {
+/* Focus visible for accessibility - exclude form inputs as they have custom focus styling */
+:focus-visible:not(input):not(textarea):not(select):not(.p-inputtext):not(.p-inputnumber-input):not(.p-textarea):not(.p-select):not(.p-dropdown) {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
 }
@@ -537,6 +548,22 @@ textarea {
     border-radius: 3px;
     color: var(--text-secondary);
   }
+
+  /* ============================================
+     Layout Utilities - Three-Column Navigation
+     ============================================ */
+  .layout-rail {
+    width: var(--rail-width);
+  }
+
+  .layout-sidebar {
+    width: var(--navigation-sidebar-width);
+  }
+
+  .layout-main {
+    flex: 1;
+    min-width: 0; /* Prevent flex item overflow */
+  }
 }
 
 /* PrimeVue Panel Styling */
@@ -562,16 +589,25 @@ textarea {
 .p-dataview-content {
   background-color: inherit;
 }
+.p-datatable-header {
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+}
 
 /* PrimeVue Drawer Styling */
 .p-drawer-header {
-  background-color: var(--bg-panel);
+  background-color: var(--bg-elevated);
   margin-bottom: 0;
   box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.2);
   border-bottom: 1px solid var(--border);
 }
 .p-drawer-content {
   padding: 16px 0 0;
+}
+
+/* Drawer Mask - Darker background overlay */
+.p-drawer-mask {
+  background-color: rgba(0, 0, 0, 0.75) !important;
 }
 
 /* PrimeVue Tabs Styling */
@@ -629,13 +665,20 @@ textarea {
   box-shadow: var(--shadow-md);
 }
 
+/* Dialog Mask - Darker background overlay */
+.p-dialog-mask {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
 /* PrimeVue input Styling */
 .p-inputtext,
 .p-inputnumber-input,
 .p-textarea {
-  background-color: var(--bg-elevated);
+  background-color: var(--bg-dark);
   border-color: var(--border);
   color: var(--text-primary);
+  padding: 10px 12px;
+  font-size: 13px;
 }
 
 .p-inputtext::placeholder,
@@ -647,8 +690,156 @@ textarea {
 .p-inputtext:focus,
 .p-inputnumber-input:focus,
 .p-textarea:focus {
+  outline: none;
   border-color: var(--cyan);
-  box-shadow: 0 0 0 0.2rem var(--cyan-dim);
+  box-shadow: 0 0 0 3px var(--cyan-dim);
+}
+
+.p-inputtext:disabled,
+.p-inputnumber-input:disabled,
+.p-textarea:disabled {
+  background-color: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* PrimeVue Select/Dropdown Styling */
+.p-select,
+.p-dropdown {
+  background-color: var(--bg-dark);
+  border-color: var(--border);
+}
+
+.p-select:focus,
+.p-dropdown:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px var(--cyan-dim);
+}
+
+.p-select-overlay,
+.p-dropdown-overlay,
+.p-select-list,
+.p-dropdown-list {
+  background-color: var(--bg-elevated);
+  border-color: var(--border);
+}
+
+.p-select-option:hover,
+.p-dropdown-option:hover {
+  background-color: var(--bg-highlight);
+  color: var(--text-primary);
+}
+
+/* PrimeVue Checkbox Styling */
+.p-checkbox {
+  width: 16px;
+  height: 16px;
+}
+
+.p-checkbox .p-checkbox-box {
+  background-color: var(--bg-dark);
+  border-color: var(--border);
+  width: 16px;
+  height: 16px;
+}
+
+.p-checkbox .p-checkbox-box:hover {
+  border-color: var(--cyan);
+}
+
+.p-checkbox.p-checked .p-checkbox-box {
+  background-color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.p-checkbox-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* PrimeVue InputSwitch (Toggle) Styling */
+.p-inputswitch {
+  width: 44px;
+  height: 24px;
+}
+
+.p-inputswitch .p-inputswitch-slider {
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+}
+
+.p-inputswitch:hover .p-inputswitch-slider {
+  border-color: var(--cyan);
+}
+
+.p-inputswitch.p-checked .p-inputswitch-slider {
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.p-inputswitch .p-inputswitch-slider:before {
+  background: var(--text-muted);
+  width: 16px;
+  height: 16px;
+}
+
+.p-inputswitch.p-checked .p-inputswitch-slider:before {
+  background: var(--bg-dark);
+  transform: translateX(20px);
+}
+
+/* PrimeVue Invalid/Error State Styling */
+.p-inputtext.p-invalid,
+.p-inputnumber-input.p-invalid,
+.p-textarea.p-invalid,
+.p-select.p-invalid,
+.p-dropdown.p-invalid {
+  border-color: var(--red);
+}
+
+.p-inputtext.p-invalid:focus,
+.p-inputnumber-input.p-invalid:focus,
+.p-textarea.p-invalid:focus,
+.p-select.p-invalid:focus,
+.p-dropdown.p-invalid:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--red-dim);
+}
+
+/* Success state (custom class for PrimeVue components) */
+.p-inputtext.p-valid,
+.p-inputnumber-input.p-valid,
+.p-textarea.p-valid {
+  border-color: var(--green);
+}
+
+.p-inputtext.p-valid:focus,
+.p-inputnumber-input.p-valid:focus,
+.p-textarea.p-valid:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--green-dim);
+}
+
+/* PrimeVue Form Field Error Messages */
+.p-error {
+  font-size: 12px;
+  color: var(--red);
+  margin-top: 6px;
+  display: block;
+}
+
+/* Small helper text under inputs */
+.p-component + small,
+.p-inputtext + small,
+.p-inputnumber + small,
+.p-textarea + small {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  display: block;
 }
 
 /* PrimeVue Password Component - Toggle Mask Icon Positioning */
@@ -756,20 +947,293 @@ textarea {
   font-weight: 500;
 }
 
-/* PrimeVue DataTable Headers - Use monospace font */
+/* ============================================
+   PrimeVue DataTable - Technical Blueprint
+   ============================================ */
+
+/* Table Headers - Technical Blueprint Style */
 .p-datatable-thead > tr > th {
   font-family: var(--font-mono);
-  font-size: 0.6875rem; /* 11px */
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 16px;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border);
 }
 
-/* PrimeVue DataTable Body - Use monospace font for data */
+.p-datatable-thead > tr > th:hover {
+  background-color: var(--bg-elevated);
+}
+
+.p-datatable-thead > tr > th.p-sorted-column {
+  background-color: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+/* Table Cells - Technical Blueprint Style */
 .p-datatable-tbody > tr > td {
+  font-size: 13px;
+  padding: 14px 16px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-muted);
+  background-color: transparent;
+  vertical-align: middle;
+}
+
+.p-datatable-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+.p-datatable-tbody > tr:hover > td {
+  background-color: var(--bg-elevated);
+}
+
+/* Remove striped rows styling */
+.p-datatable-striped .p-datatable-tbody > tr:nth-child(odd) {
+  background-color: transparent !important;
+}
+.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+  background-color: transparent !important;
+}
+
+/* Table Container */
+.p-datatable {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.p-datatable-wrapper {
+  background-color: var(--bg-card);
+}
+
+/* Position Column - Podium Colors */
+.p-datatable-tbody > tr > td.pos,
+.p-datatable-tbody > tr > td .pos {
   font-family: var(--font-mono);
-  font-size: 0.875rem; /* 14px */
+  font-size: 14px;
   font-weight: 600;
+  width: 40px;
+  text-align: center;
+}
+
+.p-datatable-tbody > tr > td.pos.p1,
+.p-datatable-tbody > tr > td .pos.p1,
+.p-datatable-tbody > tr.podium-1 > td:first-child {
+  color: var(--yellow);
+}
+
+.p-datatable-tbody > tr > td.pos.p2,
+.p-datatable-tbody > tr > td .pos.p2,
+.p-datatable-tbody > tr.podium-2 > td:first-child {
+  color: var(--text-muted);
+}
+
+.p-datatable-tbody > tr > td.pos.p3,
+.p-datatable-tbody > tr > td .pos.p3,
+.p-datatable-tbody > tr.podium-3 > td:first-child {
+  color: var(--orange);
+}
+
+/* Podium Row Highlighting */
+.p-datatable-tbody > tr.podium-1 {
+  background-color: rgba(210, 153, 34, 0.08);
+}
+
+.p-datatable-tbody > tr.podium-2 {
+  background-color: rgba(110, 118, 129, 0.08);
+}
+
+.p-datatable-tbody > tr.podium-3 {
+  background-color: rgba(240, 136, 62, 0.08);
+}
+
+.p-datatable-tbody > tr.podium-1:hover > td,
+.p-datatable-tbody > tr.podium-2:hover > td,
+.p-datatable-tbody > tr.podium-3:hover > td {
+  background-color: var(--bg-elevated);
+}
+
+/* Driver Cell Pattern */
+.driver-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.driver-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  background-color: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.driver-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.driver-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font-sans);
+}
+
+.driver-team,
+.driver-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+}
+
+/* Team Indicator Pattern */
+.team-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background-color: var(--bg-elevated);
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.team-indicator .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Points/Numerical Data */
+.points-cell,
+.data-cell {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.gap-cell {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.gap-cell.negative {
+  color: var(--red);
+}
+
+.gap-cell.positive {
+  color: var(--green);
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.status-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.status-badge.active {
+  background-color: var(--green-dim);
+  color: var(--green);
+}
+
+.status-badge.pending {
+  background-color: var(--orange-dim);
+  color: var(--orange);
+}
+
+.status-badge.inactive,
+.status-badge.scheduled {
+  background-color: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+.status-badge.error,
+.status-badge.failed {
+  background-color: var(--red-dim);
+  color: var(--red);
+}
+
+/* DataTable Pagination */
+.p-datatable-paginator {
+  background-color: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.p-datatable-paginator .p-paginator-page,
+.p-datatable-paginator .p-paginator-next,
+.p-datatable-paginator .p-paginator-prev,
+.p-datatable-paginator .p-paginator-first,
+.p-datatable-paginator .p-paginator-last {
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  min-width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+}
+
+.p-datatable-paginator .p-paginator-page:hover,
+.p-datatable-paginator .p-paginator-next:hover,
+.p-datatable-paginator .p-paginator-prev:hover,
+.p-datatable-paginator .p-paginator-first:hover,
+.p-datatable-paginator .p-paginator-last:hover {
+  background-color: var(--bg-highlight);
+  border-color: var(--border);
+}
+
+.p-datatable-paginator .p-paginator-page.p-highlight {
+  background-color: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--bg-dark);
+}
+
+/* DataTable Empty State */
+.p-datatable-emptymessage {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.p-datatable-emptymessage .pi {
+  font-size: 48px;
+  color: var(--text-muted);
+  opacity: 0.3;
+  margin-bottom: 16px;
 }
 
 /* PrimeVue Dialog Title - Use monospace font */

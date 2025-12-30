@@ -361,7 +361,7 @@ describe('driverStore', () => {
         status: 'active',
       });
 
-      const mockResponse: PaginatedDriversResponse = {
+      const _mockResponse: PaginatedDriversResponse = {
         data: [mockDriver],
         meta: {
           current_page: 1,

@@ -1,18 +1,6 @@
-<template>
-  <Button
-    icon="pi pi-pencil"
-    text
-    size="small"
-    severity="secondary"
-    :disabled="disabled"
-    :aria-label="ariaLabel"
-    :title="ariaLabel"
-    @click="handleClick"
-  />
-</template>
-
 <script setup lang="ts">
-import Button from 'primevue/button';
+import IconButton from './IconButton.vue';
+import { PhPencil } from '@phosphor-icons/vue';
 
 interface Props {
   disabled?: boolean;
@@ -28,8 +16,20 @@ const emit = defineEmits<{
   click: [event: MouseEvent];
 }>();
 
-const handleClick = (event?: MouseEvent): void => {
-  event?.stopPropagation();
-  emit('click', event as MouseEvent);
+const handleClick = (event: MouseEvent): void => {
+  event.stopPropagation();
+  emit('click', event);
 };
 </script>
+
+<template>
+  <IconButton
+    :icon="PhPencil"
+    variant="ghost"
+    size="sm"
+    :disabled="disabled"
+    :tooltip="ariaLabel"
+    :aria-label="ariaLabel"
+    @click="handleClick"
+  />
+</template>

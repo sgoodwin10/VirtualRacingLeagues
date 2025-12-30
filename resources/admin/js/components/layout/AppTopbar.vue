@@ -216,9 +216,8 @@ const breadcrumbItems = computed<Array<{ label: string; icon?: string; to?: stri
     { label: 'Overview', icon: 'pi pi-home', to: '/admin' },
   ];
 
-  if (route.meta.breadcrumb) {
-    const breadcrumb = route.meta.breadcrumb as Array<{ label: string; to?: string }>;
-    items.push(...breadcrumb);
+  if (route.meta.breadcrumb && Array.isArray(route.meta.breadcrumb)) {
+    items.push(...(route.meta.breadcrumb as Array<{ label: string; to?: string }>));
   } else if (route.meta.title && route.path !== '/admin') {
     items.push({ label: route.meta.title as string });
   }

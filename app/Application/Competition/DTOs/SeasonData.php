@@ -106,13 +106,16 @@ class SeasonData extends Data
             total_drop_rounds: $season->getTotalDropRounds(),
             round_totals_tiebreaker_rules_enabled: $season->hasTiebreakerRulesEnabled(),
             tiebreaker_rules: array_map(
-                fn($rule) => new SeasonTiebreakerRuleData(
-                    id: $rule->id(),
-                    name: $eloquentModel?->tiebreakerRules->firstWhere('id', $rule->id())?->name ?? '',
-                    slug: $rule->slug()->value(),
-                    description: $eloquentModel?->tiebreakerRules->firstWhere('id', $rule->id())?->description,
-                    order: $rule->order(),
-                ),
+                function ($rule) use ($eloquentModel) {
+                    $eloquentRule = $eloquentModel?->tiebreakerRules->firstWhere('id', $rule->id());
+                    return new SeasonTiebreakerRuleData(
+                        id: $rule->id(),
+                        name: $eloquentRule->name ?? '',
+                        slug: $rule->slug()->value(),
+                        description: $eloquentRule?->description,
+                        order: $rule->order(),
+                    );
+                },
                 $season->getTiebreakerRules()->rules()
             ),
             status: $season->status()->value,

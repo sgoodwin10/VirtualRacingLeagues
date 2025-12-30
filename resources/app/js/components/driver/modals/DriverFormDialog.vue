@@ -6,11 +6,15 @@ import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
-import Button from 'primevue/button';
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import AccordionHeader from 'primevue/accordionheader';
-import AccordionContent from 'primevue/accordioncontent';
+import { Button } from '@app/components/common/buttons';
+import {
+  TechnicalAccordion,
+  TechnicalAccordionPanel,
+  TechnicalAccordionHeader,
+  TechnicalAccordionContent,
+  AccordionBadge,
+} from '@app/components/common/accordions';
+import { PhUserCircle } from '@phosphor-icons/vue';
 import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
 import FormError from '@app/components/common/forms/FormError.vue';
@@ -37,18 +41,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const leagueStore = useLeagueStore();
-
-// Fetch platform form fields on mount if league is provided
-if (props.leagueId) {
-  usePlatformFormFields({
-    leagueId: props.leagueId,
-    onSuccess: () => {
-      if (props.mode === 'create') {
-        resetForm();
-      }
-    },
-  });
-}
 
 // Form data - platform fields stored dynamically
 const formData = ref<DriverFormData>({
@@ -77,6 +69,19 @@ const statusOptions = [
 const dialogTitle = computed(() => {
   return props.mode === 'create' ? 'Add Driver' : 'Edit Driver';
 });
+
+// Fetch platform form fields if league is provided
+// Call composable inside setup context, not at module level
+if (props.leagueId) {
+  usePlatformFormFields({
+    leagueId: props.leagueId,
+    onSuccess: () => {
+      if (props.mode === 'create') {
+        resetForm();
+      }
+    },
+  });
+}
 
 // Get platform form fields from store
 const platformFormFields = computed(() => leagueStore.platformFormFields);
@@ -152,7 +157,9 @@ const validateForm = (): boolean => {
 
   // Email validation
   if (formData.value.email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // More comprehensive email regex that catches common invalid cases
+    const emailRegex =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     if (!emailRegex.test(formData.value.email)) {
       errors.value.email = 'Please enter a valid email address';
     }
@@ -317,15 +324,20 @@ const resetForm = (): void => {
       </div>
 
       <!-- Secondary Fields Section (Expandable) -->
-      <Accordion :multiple="false" class="mt-2">
-        <AccordionPanel value="0">
-          <AccordionHeader>
-            <span class="text-sm font-medium text-gray-700">
-              Additional Information (Optional)
-            </span>
-          </AccordionHeader>
-          <AccordionContent>
-            <div class="space-y-3 pt-2">
+      <TechnicalAccordion class="mt-4">
+        <TechnicalAccordionPanel value="additional">
+          <TechnicalAccordionHeader
+            title="Additional Information"
+            subtitle="Name, contact details, and notes"
+            :icon="PhUserCircle"
+            icon-variant="cyan"
+          >
+            <template #suffix>
+              <AccordionBadge text="OPTIONAL" severity="muted" />
+            </template>
+          </TechnicalAccordionHeader>
+          <TechnicalAccordionContent padding="md">
+            <div class="space-y-3">
               <!-- Name Fields -->
               <div class="grid grid-cols-2 gap-3">
                 <FormInputGroup>
@@ -404,14 +416,14 @@ const resetForm = (): void => {
                 </div>
               </FormInputGroup>
             </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
+          </TechnicalAccordionContent>
+        </TechnicalAccordionPanel>
+      </TechnicalAccordion>
     </form>
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button label="Cancel" severity="secondary" @click="handleCancel" />
+        <Button label="Cancel" variant="secondary" @click="handleCancel" />
         <Button :label="mode === 'create' ? 'Add Driver' : 'Save Changes'" @click="handleSubmit" />
       </div>
     </template>

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Competition\Services;
 
+use App\Domain\Competition\Entities\Race;
+use App\Domain\Competition\Entities\RaceResult;
 use App\Domain\Competition\ValueObjects\TiebreakerRuleConfiguration;
 use App\Domain\Competition\ValueObjects\TiebreakerRuleSlug;
 use App\Domain\Competition\ValueObjects\TiebreakerResolution;
@@ -28,7 +30,7 @@ final class RoundTiebreakerDomainService
      *
      * @param array<mixed> $standings Current standings with tied drivers
      * @param TiebreakerRuleConfiguration $ruleConfig Ordered tiebreaker rules
-     * @param array<array{race: object, result: object}> $allRaceResults All race results for context
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults All race results for context
      * @return array{standings: array<mixed>, tiebreakerInfo: TiebreakerInformation}
      */
     public function resolveTies(
@@ -59,17 +61,15 @@ final class RoundTiebreakerDomainService
             // Try to resolve this tie using rules in order
             $resolution = $this->resolveSingleTie($group, $ruleConfig, $allRaceResults);
 
-            if ($resolution !== null) {
-                $resolutions[] = $resolution;
+            $resolutions[] = $resolution;
 
-                $ruleSlug = $resolution->ruleSlug();
-                if (!in_array($ruleSlug, $appliedRules, true)) {
-                    $appliedRules[] = $ruleSlug;
-                }
+            $ruleSlug = $resolution->ruleSlug();
+            if (!in_array($ruleSlug, $appliedRules, true)) {
+                $appliedRules[] = $ruleSlug;
+            }
 
-                if (!$resolution->wasResolved()) {
-                    $hadUnresolvedTies = true;
-                }
+            if (!$resolution->wasResolved()) {
+                $hadUnresolvedTies = true;
             }
         }
 
@@ -114,14 +114,14 @@ final class RoundTiebreakerDomainService
      *
      * @param array<mixed> $tiedDrivers
      * @param TiebreakerRuleConfiguration $ruleConfig
-     * @param array<array{race: object, result: object}> $allRaceResults
-     * @return TiebreakerResolution|null
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
+     * @return TiebreakerResolution
      */
     private function resolveSingleTie(
         array $tiedDrivers,
         TiebreakerRuleConfiguration $ruleConfig,
         array $allRaceResults
-    ): ?TiebreakerResolution {
+    ): TiebreakerResolution {
         $driverIds = array_column($tiedDrivers, 'driver_id');
 
         // Try each rule in order
@@ -170,7 +170,7 @@ final class RoundTiebreakerDomainService
      * Driver with the best (lowest) qualifying position wins.
      *
      * @param array<int> $driverIds
-     * @param array<array{race: object, result: object}> $allRaceResults
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
      * @return array{winner: int|null, explanation: string}
      */
     private function applyHighestQualifyingRule(array $driverIds, array $allRaceResults): array
@@ -228,7 +228,7 @@ final class RoundTiebreakerDomainService
      * Driver with the best finish in Race 1 wins.
      *
      * @param array<int> $driverIds
-     * @param array<array{race: object, result: object}> $allRaceResults
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
      * @return array{winner: int|null, explanation: string}
      */
     private function applyRace1BestResultRule(array $driverIds, array $allRaceResults): array
@@ -285,7 +285,7 @@ final class RoundTiebreakerDomainService
      * IMPORTANT: Qualifying races are EXCLUDED from this rule.
      *
      * @param array<int> $driverIds
-     * @param array<array{race: object, result: object}> $allRaceResults
+     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
      * @return array{winner: int|null, explanation: string}
      */
     private function applyBestResultAllRacesRule(array $driverIds, array $allRaceResults): array

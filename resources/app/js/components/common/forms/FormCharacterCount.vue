@@ -5,27 +5,45 @@ interface Props {
   current: number;
   max: number;
   class?: string;
+  warningThreshold?: number;
+  errorThreshold?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   class: '',
+  warningThreshold: 0.9,
+  errorThreshold: 1.0,
 });
 
-const countClasses = computed(() => {
-  const baseClasses = 'text-sm text-gray-500';
-  return props.class ? `${baseClasses} ${props.class}` : baseClasses;
-});
+const isNearLimit = computed(() => props.current >= props.max * props.warningThreshold);
+const isOverLimit = computed(() => props.current >= props.max * props.errorThreshold);
 
-const isNearLimit = computed(() => props.current > props.max * 0.9);
-const isOverLimit = computed(() => props.current > props.max);
-
-const displayClasses = computed(() => {
-  if (isOverLimit.value) return `${countClasses.value} text-red-600 font-medium`;
-  if (isNearLimit.value) return `${countClasses.value} text-orange-600`;
-  return countClasses.value;
+const stateClass = computed(() => {
+  if (isOverLimit.value) return 'character-count--error';
+  if (isNearLimit.value) return 'character-count--warning';
+  return '';
 });
 </script>
 
 <template>
-  <small :class="displayClasses"> {{ props.current }}/{{ props.max }} characters </small>
+  <small :class="['character-count', stateClass, props.class]">
+    {{ props.current }}/{{ props.max }} characters
+  </small>
 </template>
+
+<style scoped>
+.character-count {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--text-muted);
+}
+
+.character-count--warning {
+  color: var(--orange);
+}
+
+.character-count--error {
+  color: var(--red);
+  font-weight: 500;
+}
+</style>

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
+import { computed } from 'vue';
 import DriverTable from '../DriverTable.vue';
 import type { LeagueDriver } from '@app/types/driver';
 import type { PlatformColumn } from '@app/types/league';
@@ -31,7 +32,6 @@ const mockDriverState = {
 };
 
 vi.mock('@app/stores/driverStore', () => {
-  const { ref, computed } = require('vue');
   return {
     useDriverStore: vi.fn(() => {
       // Create refs that reference the shared state
@@ -58,7 +58,7 @@ vi.mock('primevue/datatable', () => ({
   default: {
     name: 'DataTable',
     template: `
-      <div class="driver-table">
+      <div class="p-datatable">
         <slot name="empty" v-if="!value || value.length === 0"></slot>
         <slot v-for="(item, index) in value" :key="index" :data="item"></slot>
       </div>
@@ -75,6 +75,10 @@ vi.mock('primevue/datatable', () => ({
       'first',
       'data-key',
       'responsive-layout',
+      'row-hover',
+      'row-class',
+      'class',
+      'reorderable-rows',
     ],
   },
 }));
@@ -87,12 +91,37 @@ vi.mock('primevue/column', () => ({
   },
 }));
 
-vi.mock('primevue/button', () => ({
+// Mock TechDataTable wrapper component
+vi.mock('@app/components/common/tables/TechDataTable.vue', () => ({
   default: {
-    name: 'Button',
-    template:
-      '<button :aria-label="ariaLabel" :title="title" @click="$emit(\'click\', $event)"><i v-if="icon" :class="icon"></i></button>',
-    props: ['label', 'icon', 'size', 'text', 'severity', 'disabled', 'ariaLabel', 'title'],
+    name: 'TechDataTable',
+    template: `
+      <div class="driver-table tech-datatable">
+        <slot name="empty" v-if="!value || value.length === 0"></slot>
+        <slot v-for="(item, index) in value" :key="index" :data="item"></slot>
+      </div>
+    `,
+    props: [
+      'value',
+      'loading',
+      'lazy',
+      'paginator',
+      'rows',
+      'rows-per-page-options',
+      'total-records',
+      'first',
+      'data-key',
+      'responsive-layout',
+    ],
+  },
+}));
+
+// Mock DriverCell component
+vi.mock('@app/components/common/tables/cells/DriverCell.vue', () => ({
+  default: {
+    name: 'DriverCell',
+    template: '<div class="driver-cell"><span class="driver-name">{{ name }}</span><span v-if="nickname" class="driver-nickname">{{ nickname }}</span></div>',
+    props: ['name', 'nickname'],
   },
 }));
 
@@ -101,16 +130,16 @@ vi.mock('@app/components/common/buttons/ViewButton.vue', () => ({
   default: {
     name: 'ViewButton',
     template:
-      '<button aria-label="View driver details" @click="$emit(\'click\', $event)">View</button>',
-    props: ['disabled', 'ariaLabel', 'title'],
+      '<button class="view-button" :aria-label="ariaLabel" @click="$emit(\'click\', $event)">View</button>',
+    props: ['disabled', 'ariaLabel'],
   },
 }));
 
 vi.mock('@app/components/common/buttons/EditButton.vue', () => ({
   default: {
     name: 'EditButton',
-    template: '<button aria-label="Edit driver" @click="$emit(\'click\', $event)">Edit</button>',
-    props: ['disabled', 'ariaLabel', 'title'],
+    template: '<button class="edit-button" :aria-label="ariaLabel" @click="$emit(\'click\', $event)">Edit</button>',
+    props: ['disabled', 'ariaLabel'],
   },
 }));
 
@@ -118,8 +147,8 @@ vi.mock('@app/components/common/buttons/DeleteButton.vue', () => ({
   default: {
     name: 'DeleteButton',
     template:
-      '<button aria-label="Remove driver" @click="$emit(\'click\', $event)">Delete</button>',
-    props: ['disabled', 'ariaLabel', 'title'],
+      '<button class="delete-button" :aria-label="ariaLabel" @click="$emit(\'click\', $event)">Delete</button>',
+    props: ['disabled', 'ariaLabel'],
   },
 }));
 
@@ -319,7 +348,7 @@ describe('DriverTable', () => {
   it('should show loading state', () => {
     mockDriverState.loading = true;
     mockDriverState.drivers = [];
-    const wrapper = mount(DriverTable, {
+    const _wrapper = mount(DriverTable, {
       props: {
         leagueId: 1,
       },
@@ -331,7 +360,7 @@ describe('DriverTable', () => {
 
   it('should handle empty drivers array', () => {
     mockDriverState.drivers = [];
-    const wrapper = mount(DriverTable, {
+    const _wrapper = mount(DriverTable, {
       props: {
         leagueId: 1,
       },

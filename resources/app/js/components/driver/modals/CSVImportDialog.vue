@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { useMemoize } from '@vueuse/core';
+import Papa from 'papaparse';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import Textarea from 'primevue/textarea';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
+import { PhDownload } from '@phosphor-icons/vue';
 import Message from 'primevue/message';
 import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
@@ -124,54 +126,52 @@ watch(
 /**
  * Process CSV data to handle missing nicknames
  * If nickname is empty, use Discord ID as fallback
+ * Uses papaparse to properly handle quoted values with commas
  */
 const processCSVData = (csvData: string): string => {
-  const lines = csvData.trim().split('\n');
-  if (lines.length === 0) {
+  // Parse CSV using papaparse
+  const parseResult = Papa.parse(csvData, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: (header: string) => header.trim(),
+  });
+
+  if (parseResult.errors.length > 0) {
+    // If there are parsing errors, return original data
+    console.warn('CSV parsing errors:', parseResult.errors);
     return csvData;
   }
 
-  // Get header row
-  const headerRow = lines[0];
-  if (!headerRow) {
-    return csvData;
-  }
+  const rows = parseResult.data as Record<string, string>[];
 
-  const headers = headerRow.split(',').map((h) => h.trim());
-
-  // Find nickname and Discord ID column indices
-  const nicknameIndex = headers.findIndex(
+  // Find nickname and Discord ID column names (case-insensitive)
+  const headers = parseResult.meta.fields || [];
+  const nicknameField = headers.find(
     (h) => h.toLowerCase() === 'nickname' || h.toLowerCase() === 'name',
   );
-  const discordIdIndex = headers.findIndex(
+  const discordIdField = headers.find(
     (h) => h.toLowerCase() === 'discordid' || h.toLowerCase() === 'discord_id',
   );
 
   // If we can't find either column, return original data
-  if (nicknameIndex === -1 || discordIdIndex === -1) {
+  if (!nicknameField || !discordIdField) {
     return csvData;
   }
 
-  // Process data rows
-  const processedLines = [headerRow]; // Keep header as-is
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line || !line.trim()) continue; // Skip empty lines
-
-    const columns = line.split(',').map((col) => col.trim());
-
-    // If nickname is empty but Discord ID is present, use Discord ID as nickname
-    const nicknameValue = columns[nicknameIndex];
-    const discordIdValue = columns[discordIdIndex];
+  // Process rows: if nickname is empty but Discord ID is present, use Discord ID as nickname
+  rows.forEach((row) => {
+    const nicknameValue = row[nicknameField];
+    const discordIdValue = row[discordIdField];
 
     if (!nicknameValue && discordIdValue) {
-      columns[nicknameIndex] = discordIdValue;
+      row[nicknameField] = discordIdValue;
     }
+  });
 
-    processedLines.push(columns.join(','));
-  }
-
-  return processedLines.join('\n');
+  // Convert back to CSV format
+  return Papa.unparse(rows, {
+    header: true,
+  });
 };
 
 /**
@@ -271,6 +271,13 @@ onMounted(async () => {
     }
   }
 });
+
+/**
+ * Clear memoization cache on unmount to prevent memory leaks
+ */
+onUnmounted(() => {
+  generateCsvExample.clear();
+});
 </script>
 
 <template>
@@ -298,13 +305,13 @@ onMounted(async () => {
           <p class="text-sm font-medium text-blue-900 hidden">CSV Template:</p>
           <Button
             label="Download Template"
-            size="small"
+            size="sm"
             severity="info"
-            icon="pi pi-download"
+            :icon="PhDownload"
             class="hidden"
             @click="downloadTemplate"
           />
-          <Button label="Use Example" size="small" severity="info" @click="useExample" />
+          <Button label="Use Example" size="sm" severity="info" @click="useExample" />
         </div>
         <div v-if="leagueStore.platformCsvHeaders.length > 0">
           <p class="text-xs text-blue-800 mb-1">Expected headers for this league:</p>
@@ -337,7 +344,7 @@ onMounted(async () => {
       <!-- Import Result -->
       <div v-if="importResult" class="space-y-2">
         <!-- Success Message -->
-        <Message v-if="importResult.success_count > 0" severity="success" :closable="false">
+        <Message v-if="importResult.success_count > 0" variant="success" :closable="false">
           Successfully imported {{ importResult.success_count }} driver{{
             importResult.success_count === 1 ? '' : 's'
           }}
@@ -345,7 +352,7 @@ onMounted(async () => {
 
         <!-- Errors List -->
         <div v-if="importResult.errors.length > 0" class="space-y-2">
-          <Message severity="warn" :closable="false">
+          <Message variant="warning" :closable="false">
             {{ importResult.errors.length }} error{{ importResult.errors.length === 1 ? '' : 's' }}
             occurred during import:
           </Message>
@@ -362,7 +369,7 @@ onMounted(async () => {
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button label="Cancel" severity="secondary" :disabled="importing" @click="handleClose" />
+        <Button label="Cancel" variant="secondary" :disabled="importing" @click="handleClose" />
         <Button
           label="Import"
           :loading="importing"

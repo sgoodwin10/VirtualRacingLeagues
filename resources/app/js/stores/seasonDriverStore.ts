@@ -291,6 +291,23 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
     }
   }
 
+  /**
+   * Update local driver properties (team_name, division_name)
+   * Use this after external updates (team assignment, division assignment)
+   * to keep local state in sync without a full refetch
+   */
+  function updateLocalDriverProperty(
+    driverId: number,
+    property: keyof SeasonDriver,
+    value: unknown,
+  ): void {
+    const driver = seasonDrivers.value.find((d) => d.id === driverId);
+    if (driver) {
+      // @ts-expect-error - Dynamic property assignment
+      driver[property] = value;
+    }
+  }
+
   // Filters and pagination
   function setSearchQuery(query: string): void {
     searchQuery.value = query;
@@ -451,6 +468,7 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
     addDriver,
     updateDriver,
     removeDriver,
+    updateLocalDriverProperty,
 
     // Filters
     setSearchQuery,

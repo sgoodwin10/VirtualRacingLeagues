@@ -44,16 +44,16 @@
 
         <div class="flex gap-2 ml-auto text-xs">
           <Tag v-if="hasRacePoints" value="Race Points" severity="info" />
-          <Tag v-if="hasFastestLapBonus" value="FL Bonus" severity="success" />
+          <Tag v-if="hasFastestLapBonus" value="FL Bonus" variant="success" />
         </div>
       </div>
 
       <div class="flex-none flex items-center gap-2 mx-4">
         <Button
           :label="isCompleted ? 'View Results' : 'Enter Results'"
-          icon="pi pi-list-check"
+          :icon="PhListChecks"
           text
-          size="small"
+          size="sm"
           :severity="isCompleted ? 'success' : 'info'"
           @click="handleEnterResults"
         />
@@ -83,14 +83,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Tag from 'primevue/tag';
 import ToggleSwitch from 'primevue/toggleswitch';
 import { EditButton, DeleteButton } from '@app/components/common/buttons';
 import OrphanedResultsWarning from './OrphanedResultsWarning.vue';
 import type { Race, GridSource } from '@app/types/race';
 import { RACE_TYPE_OPTIONS, GRID_SOURCE_OPTIONS } from '@app/types/race';
-import { PhFlag } from '@phosphor-icons/vue';
+import { PhFlag, PhListChecks } from '@phosphor-icons/vue';
 
 interface Props {
   race: Race;

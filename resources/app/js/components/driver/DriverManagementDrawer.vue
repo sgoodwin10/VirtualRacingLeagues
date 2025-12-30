@@ -3,7 +3,8 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import Drawer from 'primevue/drawer';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
+import { PhUpload, PhPlus } from '@phosphor-icons/vue';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
@@ -278,7 +279,7 @@ onMounted(() => {
     <Drawer
       :visible="visible"
       position="bottom"
-      class="!h-[50vh] bg-gray-50"
+      class="!h-[50vh]"
       @update:visible="$emit('update:visible', $event)"
     >
       <template #header>
@@ -308,11 +309,11 @@ onMounted(() => {
           <div class="flex gap-2">
             <Button
               label="Import CSV"
-              icon="pi pi-upload"
-              severity="secondary"
+              :icon="PhUpload"
+              variant="secondary"
               @click="handleImportCSV"
             />
-            <Button label="Add Driver" icon="pi pi-plus" @click="handleAddDriver" />
+            <Button label="Add Driver" :icon="PhPlus" @click="handleAddDriver" />
           </div>
         </div>
 

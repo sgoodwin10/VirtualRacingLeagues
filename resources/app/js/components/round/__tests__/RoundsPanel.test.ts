@@ -160,11 +160,11 @@ describe('RoundsPanel', () => {
         stubs: {
           BasePanel: true,
           Button: true,
-          Accordion: true,
-          AccordionPanel: true,
-          AccordionHeader: true,
-          AccordionContent: true,
-          Tag: true,
+          TechnicalAccordion: true,
+          TechnicalAccordionPanel: true,
+          TechnicalAccordionHeader: true,
+          TechnicalAccordionContent: true,
+          AccordionBadge: true,
           Skeleton: true,
           Divider: true,
           ConfirmDialog: true,
@@ -360,11 +360,11 @@ describe('RoundsPanel', () => {
         stubs: {
           BasePanel: true,
           Button: true,
-          Accordion: true,
-          AccordionPanel: true,
-          AccordionHeader: true,
-          AccordionContent: true,
-          Tag: true,
+          TechnicalAccordion: true,
+          TechnicalAccordionPanel: true,
+          TechnicalAccordionHeader: true,
+          TechnicalAccordionContent: true,
+          AccordionBadge: true,
           Skeleton: true,
           ConfirmDialog: true,
           ToggleSwitch: true,
@@ -496,11 +496,11 @@ describe('RoundsPanel', () => {
         stubs: {
           BasePanel: true,
           Button: true,
-          Accordion: true,
-          AccordionPanel: true,
-          AccordionHeader: true,
-          AccordionContent: true,
-          Tag: true,
+          TechnicalAccordion: true,
+          TechnicalAccordionPanel: true,
+          TechnicalAccordionHeader: true,
+          TechnicalAccordionContent: true,
+          AccordionBadge: true,
           Skeleton: true,
           ConfirmDialog: true,
           ToggleSwitch: true,
@@ -618,11 +618,11 @@ describe('RoundsPanel', () => {
         stubs: {
           BasePanel: true,
           Button: true,
-          Accordion: true,
-          AccordionPanel: true,
-          AccordionHeader: true,
-          AccordionContent: true,
-          Tag: true,
+          TechnicalAccordion: true,
+          TechnicalAccordionPanel: true,
+          TechnicalAccordionHeader: true,
+          TechnicalAccordionContent: true,
+          AccordionBadge: true,
           Skeleton: true,
           ConfirmDialog: true,
           ToggleSwitch: true,
@@ -701,11 +701,11 @@ describe('RoundsPanel', () => {
         stubs: {
           BasePanel: true,
           Button: true,
-          Accordion: true,
-          AccordionPanel: true,
-          AccordionHeader: true,
-          AccordionContent: true,
-          Tag: true,
+          TechnicalAccordion: true,
+          TechnicalAccordionPanel: true,
+          TechnicalAccordionHeader: true,
+          TechnicalAccordionContent: true,
+          AccordionBadge: true,
           Skeleton: true,
           ConfirmDialog: true,
           ToggleSwitch: true,
@@ -870,11 +870,11 @@ describe('RoundsPanel', () => {
         stubs: {
           BasePanel: true,
           Button: true,
-          Accordion: true,
-          AccordionPanel: true,
-          AccordionHeader: true,
-          AccordionContent: true,
-          Tag: true,
+          TechnicalAccordion: true,
+          TechnicalAccordionPanel: true,
+          TechnicalAccordionHeader: true,
+          TechnicalAccordionContent: true,
+          AccordionBadge: true,
           Skeleton: true,
           ConfirmDialog: true,
           ToggleSwitch: true,
@@ -956,11 +956,11 @@ describe('RoundsPanel', () => {
         stubs: {
           BasePanel: true,
           Button: true,
-          Accordion: true,
-          AccordionPanel: true,
-          AccordionHeader: true,
-          AccordionContent: true,
-          Tag: true,
+          TechnicalAccordion: true,
+          TechnicalAccordionPanel: true,
+          TechnicalAccordionHeader: true,
+          TechnicalAccordionContent: true,
+          AccordionBadge: true,
           Skeleton: true,
           ConfirmDialog: true,
           ToggleSwitch: true,
@@ -1198,19 +1198,19 @@ describe('RoundsPanel', () => {
 
     // Access the component's activeIndexes ref
     const vm = wrapper.vm as unknown as {
-      activeIndexes: number[];
+      activeIndexes: string[];
       handleToggleCompletion: (round: Round) => Promise<void>;
     };
 
     // Initially no panels are open
     expect(vm.activeIndexes).toEqual([]);
 
-    // Simulate opening the first round's accordion panel
-    vm.activeIndexes.push(1);
+    // Simulate opening the first round's accordion panel (use string ID)
+    vm.activeIndexes.push('1');
     await wrapper.vm.$nextTick();
 
     // Verify first round is now in activeIndexes
-    expect(vm.activeIndexes).toContain(1);
+    expect(vm.activeIndexes).toContain('1');
     expect(vm.activeIndexes).toHaveLength(1);
 
     // Toggle completion status of the second round (not the one that's open)
@@ -1220,7 +1220,7 @@ describe('RoundsPanel', () => {
     await flushPromises();
 
     // The activeIndexes should still contain round 1 (the open accordion should stay open)
-    expect(vm.activeIndexes).toContain(1);
+    expect(vm.activeIndexes).toContain('1');
     expect(vm.activeIndexes).toHaveLength(1);
 
     // Verify the second round's status was actually updated

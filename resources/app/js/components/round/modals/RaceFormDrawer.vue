@@ -63,15 +63,20 @@
       </div>
 
       <!-- Section: Qualifying Configuration (Only for qualifying type) -->
-      <Accordion v-if="isQualifying" :value="['0']" :multiple="true">
-        <AccordionPanel value="0">
-          <AccordionHeader>Qualifying Configuration</AccordionHeader>
-          <AccordionContent
-            :pt="{
-              root: { class: 'bg-inherit' },
-              content: { class: 'p-4 bg-inherit border border-slate-200 rounded-b bg-surface-50' },
-            }"
-          >
+      <TechnicalAccordion
+        v-if="isQualifying"
+        :model-value="['qualifying']"
+        :multiple="true"
+        gap="md"
+      >
+        <TechnicalAccordionPanel value="qualifying">
+          <TechnicalAccordionHeader
+            title="Qualifying Configuration"
+            subtitle="Set up qualifying session parameters"
+            :icon="PhGear"
+            icon-variant="purple"
+          />
+          <TechnicalAccordionContent elevated padding="md">
             <div class="flex flex-row gap-4">
               <div class="flex-grow">
                 <FormLabel for="qualifying_format" text="Format" required />
@@ -151,15 +156,20 @@
                 </div>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
+          </TechnicalAccordionContent>
+        </TechnicalAccordionPanel>
+      </TechnicalAccordion>
 
       <!-- Section: Race Details (Only for race types) -->
-      <Accordion v-if="!isQualifying" :value="['0']" :multiple="true">
-        <AccordionPanel value="0">
-          <AccordionHeader>Race Details</AccordionHeader>
-          <AccordionContent>
+      <TechnicalAccordion v-if="!isQualifying" :model-value="['details']" :multiple="true" gap="md">
+        <TechnicalAccordionPanel value="details">
+          <TechnicalAccordionHeader
+            title="Race Details"
+            subtitle="Configure grid, length, and race rules"
+            :icon="PhFlagCheckered"
+            icon-variant="cyan"
+          />
+          <TechnicalAccordionContent padding="md">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
               <!-- Left Column (66% - 2 cols) -->
               <div class="lg:col-span-2 space-y-3">
@@ -311,15 +321,20 @@
                 </div>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
+          </TechnicalAccordionContent>
+        </TechnicalAccordionPanel>
+      </TechnicalAccordion>
 
       <!-- Section: Points (Only for race types) -->
-      <Accordion v-if="!isQualifying" :value="['0']" :multiple="true">
-        <AccordionPanel value="0">
-          <AccordionHeader>Points</AccordionHeader>
-          <AccordionContent>
+      <TechnicalAccordion v-if="!isQualifying" :model-value="['points']" :multiple="true" gap="md">
+        <TechnicalAccordionPanel value="points">
+          <TechnicalAccordionHeader
+            title="Points Configuration"
+            subtitle="Define race points, bonuses, and penalties"
+            :icon="PhTrophy"
+            icon-variant="green"
+          />
+          <TechnicalAccordionContent padding="md">
             <div class="space-y-3">
               <!-- Race Points Toggle -->
               <FormInputGroup>
@@ -374,18 +389,16 @@
                         <div class="mt-3 flex gap-2">
                           <Button
                             label="Add Position"
-                            icon="pi pi-plus"
-                            size="small"
-                            severity="success"
-                            outlined
+                            :icon="PhPlus"
+                            size="sm"
+                            variant="success"
                             @click="addPointsPosition"
                           />
                           <Button
                             label="Remove Last"
-                            icon="pi pi-trash"
-                            size="small"
-                            severity="danger"
-                            outlined
+                            :icon="PhTrash"
+                            size="sm"
+                            variant="danger"
                             :disabled="Object.keys(form.points_system).length <= 1"
                             @click="removeLastPointsPosition"
                           />
@@ -393,10 +406,9 @@
                           <Button
                             v-if="isFirstRace"
                             label="Copy Round Points"
-                            icon="pi pi-copy"
-                            size="small"
-                            severity="secondary"
-                            outlined
+                            :icon="PhCopy"
+                            size="sm"
+                            variant="outline"
                             :disabled="!canCopyRoundPoints"
                             @click="copyRoundPoints"
                           />
@@ -404,10 +416,9 @@
                           <Button
                             v-if="!isFirstRace && !isQualifying"
                             label="Copy Race 1 Points"
-                            icon="pi pi-copy"
-                            size="small"
-                            severity="secondary"
-                            outlined
+                            :icon="PhCopy"
+                            size="sm"
+                            variant="outline"
                             :disabled="!canCopyRace1Points"
                             @click="copyRace1Points"
                           />
@@ -548,15 +559,20 @@
                 </div>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
+          </TechnicalAccordionContent>
+        </TechnicalAccordionPanel>
+      </TechnicalAccordion>
 
       <!-- Section: Notes (Only for race types) -->
-      <Accordion v-if="!isQualifying" :value="['0']" :multiple="true">
-        <AccordionPanel value="0">
-          <AccordionHeader>Notes</AccordionHeader>
-          <AccordionContent>
+      <TechnicalAccordion v-if="!isQualifying" :model-value="['notes']" :multiple="true" gap="md">
+        <TechnicalAccordionPanel value="notes">
+          <TechnicalAccordionHeader
+            title="Race Notes"
+            subtitle="Add optional notes and comments"
+            :icon="PhNote"
+            icon-variant="orange"
+          />
+          <TechnicalAccordionContent padding="md">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
               <!-- Left Column (66% - 2 cols) -->
               <div class="lg:col-span-2">
@@ -578,20 +594,14 @@
                 <!-- Empty -->
               </div>
             </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
+          </TechnicalAccordionContent>
+        </TechnicalAccordionPanel>
+      </TechnicalAccordion>
     </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button
-          label="Cancel"
-          severity="secondary"
-          outlined
-          :disabled="saving"
-          @click="handleCancel"
-        />
+        <Button label="Cancel" variant="outline" :disabled="saving" @click="handleCancel" />
         <Button
           :label="
             mode === 'edit'
@@ -603,6 +613,7 @@
                 : 'Create Race'
           "
           :loading="saving"
+          variant="primary"
           @click="handleSave"
         />
       </div>
@@ -618,7 +629,16 @@ import { useRoundStore } from '@app/stores/roundStore';
 import { useRaceSettingsStore } from '@app/stores/raceSettingsStore';
 import { useRaceValidation } from '@app/composables/useRaceValidation';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
+import {
+  PhPlus,
+  PhTrash,
+  PhCopy,
+  PhGear,
+  PhFlagCheckered,
+  PhTrophy,
+  PhNote,
+} from '@phosphor-icons/vue';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
@@ -628,10 +648,12 @@ import RadioButton from 'primevue/radiobutton';
 import ToggleSwitch from 'primevue/toggleswitch';
 import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import AccordionHeader from 'primevue/accordionheader';
-import AccordionContent from 'primevue/accordioncontent';
+import {
+  TechnicalAccordion,
+  TechnicalAccordionPanel,
+  TechnicalAccordionHeader,
+  TechnicalAccordionContent,
+} from '@app/components/common/accordions';
 import Message from 'primevue/message';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
 import FormError from '@app/components/common/forms/FormError.vue';
@@ -727,31 +749,34 @@ const { errors, validateAll, clearErrors } = useRaceValidation(form, isQualifyin
 watch(
   () => form.race_type,
   (newType, oldType) => {
-    // Only apply defaults when type changes (not on initial load)
-    if (oldType !== null && newType !== oldType) {
-      if (newType === 'qualifying') {
-        // Switching to qualifying - apply qualifying defaults
-        form.qualifying_format = 'standard';
-        form.qualifying_length = 15;
-        form.grid_source = 'qualifying';
-        form.grid_source_race_id = null;
-        form.length_type = 'time';
-        form.length_value = form.qualifying_length;
-        form.extra_lap_after_time = false;
-        form.mandatory_pit_stop = false;
-        form.minimum_pit_time = 0;
-        // Clear race-specific errors
-        clearErrors();
-      } else if (oldType === 'qualifying') {
-        // Switching from qualifying to race - apply race defaults
-        form.grid_source = 'qualifying';
-        form.grid_source_race_id = null;
-        form.length_type = 'laps';
-        form.length_value = 20;
-        form.extra_lap_after_time = false;
-        // Clear qualifying-specific errors
-        clearErrors();
-      }
+    // Guard: Only apply defaults when type actually changes (not on initial load or same value)
+    // This prevents infinite loops when modifying form fields
+    if (oldType === undefined || oldType === null || newType === oldType) {
+      return;
+    }
+
+    if (newType === 'qualifying') {
+      // Switching to qualifying - apply qualifying defaults
+      form.qualifying_format = 'standard';
+      form.qualifying_length = 15;
+      form.grid_source = 'qualifying';
+      form.grid_source_race_id = null;
+      form.length_type = 'time';
+      form.length_value = form.qualifying_length;
+      form.extra_lap_after_time = false;
+      form.mandatory_pit_stop = false;
+      form.minimum_pit_time = 0;
+      // Clear race-specific errors
+      clearErrors();
+    } else if (oldType === 'qualifying') {
+      // Switching from qualifying to race - apply race defaults
+      form.grid_source = 'qualifying';
+      form.grid_source_race_id = null;
+      form.length_type = 'laps';
+      form.length_value = 20;
+      form.extra_lap_after_time = false;
+      // Clear qualifying-specific errors
+      clearErrors();
     }
   },
 );

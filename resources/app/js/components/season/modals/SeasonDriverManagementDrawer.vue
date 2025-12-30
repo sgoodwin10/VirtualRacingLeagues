@@ -7,7 +7,7 @@ import type { AvailableDriver } from '@app/types/seasonDriver';
 
 import Drawer from 'primevue/drawer';
 import InputText from 'primevue/inputtext';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 
 import DrawerHeader from '@app/components/common/modals/DrawerHeader.vue';
 import SeasonDriversTable from '@app/components/season/SeasonDriversTable.vue';
@@ -82,8 +82,8 @@ async function loadData(): Promise<void> {
   // Load season drivers (critical)
   try {
     await seasonDriverStore.fetchSeasonDrivers(props.seasonId);
-  } catch (error) {
-    console.error('Failed to load season drivers:', error);
+  } catch {
+    // Error handled silently - component will show loading state
   }
 
   // Note: Available drivers are now loaded by AvailableDriversTable component itself
@@ -91,8 +91,8 @@ async function loadData(): Promise<void> {
   // Load stats (nice-to-have, don't block on failure)
   try {
     await seasonDriverStore.fetchStats(props.seasonId);
-  } catch (error) {
-    console.error('Failed to load driver stats:', error);
+  } catch {
+    // Error handled silently - stats are optional
   }
 }
 
@@ -116,8 +116,6 @@ async function handleAddDriver(driver: AvailableDriver): Promise<void> {
     // Refresh data after successful add
     await refreshData();
   } catch (error: unknown) {
-    console.error('Failed to add driver:', error);
-
     const errorMessage = error instanceof Error ? error.message : 'Failed to add driver to season';
 
     toast.add({
@@ -135,15 +133,15 @@ async function refreshData(): Promise<void> {
   // Re-fetch season drivers
   try {
     await seasonDriverStore.fetchSeasonDrivers(props.seasonId);
-  } catch (error) {
-    console.error('Failed to reload season drivers:', error);
+  } catch {
+    // Error handled silently
   }
 
   // Re-fetch available drivers
   try {
     await seasonDriverStore.fetchAvailableDrivers(props.seasonId, props.leagueId);
-  } catch (error) {
-    console.error('Failed to reload available drivers:', error);
+  } catch {
+    // Error handled silently
   }
 
   // Stats are already updated by the store mutations during addDriver
@@ -155,8 +153,6 @@ async function handleSearchAvailable(): Promise<void> {
   try {
     await seasonDriverStore.fetchAvailableDrivers(props.seasonId, props.leagueId);
   } catch (error) {
-    console.error('Failed to search available drivers:', error);
-
     const errorMessage =
       error instanceof Error ? error.message : 'Failed to search available drivers';
 
@@ -175,8 +171,6 @@ async function handleSearchSeason(): Promise<void> {
   try {
     await seasonDriverStore.fetchSeasonDrivers(props.seasonId);
   } catch (error) {
-    console.error('Failed to search season drivers:', error);
-
     const errorMessage = error instanceof Error ? error.message : 'Failed to search season drivers';
 
     toast.add({
@@ -217,7 +211,7 @@ function handleViewDriver(_driver: AvailableDriver): void {
 </script>
 
 <template>
-  <Drawer v-model:visible="localVisible" position="bottom" class="!h-[75vh] w-full bg-gray-50">
+  <Drawer v-model:visible="localVisible" position="bottom" class="!h-[75vh] w-full">
     <template #header>
       <DrawerHeader
         title="Manage Season Drivers"
@@ -229,10 +223,10 @@ function handleViewDriver(_driver: AvailableDriver): void {
       <!-- Two-column layout -->
       <div class="grid grid-cols-2 gap-6 flex-1 overflow-hidden">
         <!-- Left: Available Drivers -->
-        <div class="flex flex-col bg-white rounded-lg shadow-sm p-4 overflow-hidden">
+        <div class="flex flex-col rounded-lg shadow-sm p-4 overflow-hidden">
           <div class="mb-4">
             <h3 class="text-lg font-semibold mb-2">Available Drivers</h3>
-            <InputText v-model="availableSearch" placeholder="Search drivers..." size="small" />
+            <InputText v-model="availableSearch" placeholder="Search drivers..." size="sm" />
           </div>
           <div class="flex-1 overflow-auto">
             <AvailableDriversTable
@@ -246,10 +240,10 @@ function handleViewDriver(_driver: AvailableDriver): void {
         </div>
 
         <!-- Right: Season Drivers -->
-        <div class="flex flex-col bg-white rounded-lg shadow-sm p-4 overflow-hidden">
+        <div class="flex flex-col rounded-lg shadow-sm p-4 overflow-hidden">
           <div class="mb-4">
             <h3 class="text-lg font-semibold mb-2">Season Drivers</h3>
-            <InputText v-model="seasonSearch" placeholder="Search drivers..." size="small" />
+            <InputText v-model="seasonSearch" placeholder="Search drivers..." size="sm" />
           </div>
           <div class="flex-1 overflow-auto">
             <SeasonDriversTable
@@ -265,7 +259,7 @@ function handleViewDriver(_driver: AvailableDriver): void {
     </div>
 
     <!-- Footer -->
-    <div class="bg-tertiary mt-4 shadow-reverse border-t border-gray-200">
+    <div class="bg-[var(--bg-elevated)] mt-4 shadow-reverse border-t border-gray-200">
       <div class="container mx-auto flex flex-col max-w-7xl">
         <div class="flex justify-end p-4">
           <Button label="Close" @click="localVisible = false" />

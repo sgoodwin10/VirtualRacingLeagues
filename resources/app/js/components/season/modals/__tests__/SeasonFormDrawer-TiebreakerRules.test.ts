@@ -72,9 +72,8 @@ vi.mock('@app/components/common/forms/ImageUpload.vue', () => ({
 vi.mock('@app/components/common/panels/BasePanel.vue', () => ({
   default: {
     name: 'BasePanel',
-    template: '<div class="base-panel" :class="$attrs.class"><slot /></div>',
-    props: ['class'],
-    inheritAttrs: false,
+    template: '<div class="base-panel" v-bind="$attrs"><slot /></div>',
+    inheritAttrs: true,
   },
 }));
 
@@ -252,7 +251,7 @@ describe('SeasonFormDrawer - Tiebreaker Rules', () => {
     });
 
     it('should not show tiebreaker panel when toggle is disabled', () => {
-      const panel = wrapper.find('.bg-amber-50\\/50');
+      const panel = wrapper.find('.base-panel.bg-amber-50\\/50');
       expect(panel.exists()).toBe(false);
     });
 
@@ -261,7 +260,7 @@ describe('SeasonFormDrawer - Tiebreaker Rules', () => {
       await checkbox.setValue(true);
       await wrapper.vm.$nextTick();
 
-      const panel = wrapper.find('.bg-amber-50\\/50');
+      const panel = wrapper.find('.base-panel.bg-amber-50\\/50');
       expect(panel.exists()).toBe(true);
     });
 
@@ -304,10 +303,21 @@ describe('SeasonFormDrawer - Tiebreaker Rules', () => {
     beforeEach(async () => {
       await wrapper.unmount();
 
+      const pinia = createPinia();
+      setActivePinia(pinia);
+
+      // Initialize the store with available rules
+      const editModeStore = useSeasonStore();
+      editModeStore.availableTiebreakerRules = mockAvailableRules;
+      editModeStore.fetchTiebreakerRules = vi.fn().mockResolvedValue(undefined);
+      editModeStore.updateTiebreakerRulesOrder = vi.fn().mockResolvedValue(undefined);
+      editModeStore.createNewSeason = vi.fn().mockResolvedValue(mockSeason);
+      editModeStore.updateExistingSeason = vi.fn().mockResolvedValue(mockSeason);
+
       wrapper = mount(SeasonFormDrawer, {
         global: {
           plugins: [
-            createPinia(),
+            pinia,
             [
               PrimeVue,
               {
@@ -346,12 +356,18 @@ describe('SeasonFormDrawer - Tiebreaker Rules', () => {
 
   describe('Form Submission', () => {
     it('should include tiebreaker enabled flag when creating season', async () => {
+      // Fill in required name field
+      const nameInput = wrapper.find('input#name');
+      await nameInput.setValue('Test Season Name');
+      await wrapper.vm.$nextTick();
+
       const checkbox = wrapper.find('input[type="checkbox"][id="tiebreaker_rules"]');
       await checkbox.setValue(true);
       await wrapper.vm.$nextTick();
 
       // Find and click the submit button
       const submitButton = wrapper.findAll('button').find((btn) => btn.text().includes('Create'));
+      expect(submitButton).toBeDefined();
       await submitButton?.trigger('click');
       await wrapper.vm.$nextTick();
 
@@ -364,12 +380,18 @@ describe('SeasonFormDrawer - Tiebreaker Rules', () => {
     });
 
     it('should call updateTiebreakerRulesOrder after creating season with rules enabled', async () => {
+      // Fill in required name field
+      const nameInput = wrapper.find('input#name');
+      await nameInput.setValue('Test Season Name');
+      await wrapper.vm.$nextTick();
+
       const checkbox = wrapper.find('input[type="checkbox"][id="tiebreaker_rules"]');
       await checkbox.setValue(true);
       await wrapper.vm.$nextTick();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const submitButton = wrapper.findAll('button').find((btn) => btn.text().includes('Create'));
+      expect(submitButton).toBeDefined();
       await submitButton?.trigger('click');
       await wrapper.vm.$nextTick();
 
@@ -377,7 +399,7 @@ describe('SeasonFormDrawer - Tiebreaker Rules', () => {
         mockSeason.id,
         expect.arrayContaining([
           expect.objectContaining({
-            rule_id: expect.any(Number),
+            id: expect.any(Number),
             order: expect.any(Number),
           }),
         ]),
@@ -385,6 +407,11 @@ describe('SeasonFormDrawer - Tiebreaker Rules', () => {
     });
 
     it('should not call updateTiebreakerRulesOrder when rules are disabled', async () => {
+      // Fill in required name field
+      const nameInput = wrapper.find('input#name');
+      await nameInput.setValue('Test Season Name');
+      await wrapper.vm.$nextTick();
+
       const submitButton = wrapper.findAll('button').find((btn) => btn.text().includes('Create'));
       await submitButton?.trigger('click');
       await wrapper.vm.$nextTick();

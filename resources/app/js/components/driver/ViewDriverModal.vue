@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
+import { PhPencil } from '@phosphor-icons/vue';
 import Chip from 'primevue/chip';
 import DriverStatusBadge from './DriverStatusBadge.vue';
 import { useDateFormatter } from '@app/composables/useDateFormatter';
@@ -179,8 +180,8 @@ const handleEdit = (): void => {
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button label="Close" severity="secondary" @click="handleClose" />
-        <Button label="Edit Driver" icon="pi pi-pencil" @click="handleEdit" />
+        <Button label="Close" variant="secondary" @click="handleClose" />
+        <Button label="Edit Driver" :icon="PhPencil" @click="handleEdit" />
       </div>
     </template>
   </Dialog>

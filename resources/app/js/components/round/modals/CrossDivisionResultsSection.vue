@@ -12,12 +12,10 @@
 
     <!-- Results Table -->
     <div v-if="results && results.length > 0" class="overflow-x-auto">
-      <DataTable :value="enrichedResults" :rows="50" :row-hover="true">
+      <TechDataTable :value="enrichedResults" :rows="50">
         <Column field="position" header="#" class="w-16" :pt="{ header: { class: 'text-center' } }">
           <template #body="{ data }">
-            <div class="text-center font-medium">
-              {{ data.position }}
-            </div>
+            <PositionCell :position="data.position" />
           </template>
         </Column>
 
@@ -47,7 +45,7 @@
         <template #empty>
           <div class="text-center py-6 text-gray-500">No data available</div>
         </template>
-      </DataTable>
+      </TechDataTable>
     </div>
 
     <!-- Empty State -->
@@ -60,10 +58,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import { PhTimer, PhClipboardText } from '@phosphor-icons/vue';
+import { TechDataTable, PositionCell } from '@app/components/common/tables';
 import { getDivisionTagClass } from '@app/constants/divisionColors';
 import type { CrossDivisionResult, RaceEventResults } from '@app/types/roundResult';
 
@@ -112,10 +110,10 @@ const enrichedResults = computed<EnrichedResult[]>(() => {
   }
 
   // Get first place time for calculating differences
-  // Explicit check: if first place time is 0 or undefined, we can't calculate differences
-  // This can occur when results haven't been properly calculated yet
-  const firstPlaceTimeMs = props.results[0]?.time_ms ?? 0;
-  const canCalculateDifferences = firstPlaceTimeMs > 0;
+  // Explicit check: if first place time is null/undefined, we can't calculate differences
+  // Note: 0ms is a valid (though unlikely) time and should not be treated as invalid
+  const firstPlaceTimeMs = props.results[0]?.time_ms;
+  const canCalculateDifferences = firstPlaceTimeMs != null && firstPlaceTimeMs >= 0;
 
   return props.results.map((result) => {
     // Find the race result using the Map lookup
@@ -157,7 +155,8 @@ const enrichedResults = computed<EnrichedResult[]>(() => {
 
 // Methods
 function formatTime(timeMs: number): string {
-  if (timeMs === 0) {
+  // Only return '-' for null/undefined, not for 0 (which is a valid time)
+  if (timeMs == null) {
     return '-';
   }
 
@@ -175,7 +174,8 @@ function formatTime(timeMs: number): string {
 }
 
 function formatTimeDifference(differenceMs: number): string {
-  if (differenceMs === 0) {
+  // Only return '-' for null/undefined, 0 is a valid difference (same time as leader)
+  if (differenceMs == null) {
     return '-';
   }
 

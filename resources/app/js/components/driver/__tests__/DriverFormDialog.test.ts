@@ -20,26 +20,34 @@ vi.mock('@app/stores/leagueStore', () => ({
 }));
 
 // Stub components that are not yet in centralized stubs
-const AccordionStub = defineComponent({
-  name: 'Accordion',
-  props: ['multiple'],
-  template: '<div class="mock-accordion"><slot></slot></div>',
+const TechnicalAccordionStub = defineComponent({
+  name: 'TechnicalAccordion',
+  template: '<div class="mock-technical-accordion"><slot></slot></div>',
 });
 
-const AccordionPanelStub = defineComponent({
-  name: 'AccordionPanel',
+const TechnicalAccordionPanelStub = defineComponent({
+  name: 'TechnicalAccordionPanel',
   props: ['value'],
-  template: '<div class="mock-accordion-panel"><slot></slot></div>',
+  template: '<div class="mock-technical-accordion-panel"><slot></slot></div>',
 });
 
-const AccordionHeaderStub = defineComponent({
-  name: 'AccordionHeader',
-  template: '<div class="mock-accordion-header"><slot></slot></div>',
+const TechnicalAccordionHeaderStub = defineComponent({
+  name: 'TechnicalAccordionHeader',
+  props: ['title', 'subtitle', 'icon', 'iconVariant'],
+  template:
+    '<div class="mock-technical-accordion-header"><slot></slot><slot name="suffix"></slot></div>',
 });
 
-const AccordionContentStub = defineComponent({
-  name: 'AccordionContent',
-  template: '<div class="mock-accordion-content"><slot></slot></div>',
+const TechnicalAccordionContentStub = defineComponent({
+  name: 'TechnicalAccordionContent',
+  props: ['padding'],
+  template: '<div class="mock-technical-accordion-content"><slot></slot></div>',
+});
+
+const AccordionBadgeStub = defineComponent({
+  name: 'AccordionBadge',
+  props: ['text', 'severity'],
+  template: '<span class="mock-accordion-badge">{{ text }}</span>',
 });
 
 const InputNumberStub = defineComponent({
@@ -66,8 +74,9 @@ describe('DriverFormDialog', () => {
     // Set up Pinia
     setActivePinia(createPinia());
 
-    // Reset mocks
+    // Reset mocks to ensure test independence
     mockFetchDriverFormFieldsForLeague.mockClear();
+    mockFetchDriverFormFieldsForLeague.mockReset();
     mockPlatformFormFieldsValue = []; // Reset to empty by default
 
     mockDriver = {
@@ -111,10 +120,11 @@ describe('DriverFormDialog', () => {
       },
       global: {
         stubs: {
-          Accordion: AccordionStub,
-          AccordionPanel: AccordionPanelStub,
-          AccordionHeader: AccordionHeaderStub,
-          AccordionContent: AccordionContentStub,
+          TechnicalAccordion: TechnicalAccordionStub,
+          TechnicalAccordionPanel: TechnicalAccordionPanelStub,
+          TechnicalAccordionHeader: TechnicalAccordionHeaderStub,
+          TechnicalAccordionContent: TechnicalAccordionContentStub,
+          AccordionBadge: AccordionBadgeStub,
           InputNumber: InputNumberStub,
           Textarea: TextareaStub,
         },
@@ -129,10 +139,11 @@ describe('DriverFormDialog', () => {
   const getStubOptions = () => ({
     global: {
       stubs: {
-        Accordion: AccordionStub,
-        AccordionPanel: AccordionPanelStub,
-        AccordionHeader: AccordionHeaderStub,
-        AccordionContent: AccordionContentStub,
+        TechnicalAccordion: TechnicalAccordionStub,
+        TechnicalAccordionPanel: TechnicalAccordionPanelStub,
+        TechnicalAccordionHeader: TechnicalAccordionHeaderStub,
+        TechnicalAccordionContent: TechnicalAccordionContentStub,
+        AccordionBadge: AccordionBadgeStub,
         InputNumber: InputNumberStub,
         Textarea: TextareaStub,
       },

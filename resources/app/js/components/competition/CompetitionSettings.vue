@@ -5,7 +5,7 @@ import { useToast } from 'primevue/usetoast';
 import type { Competition } from '@app/types/competition';
 
 import Card from 'primevue/card';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Message from 'primevue/message';
 
 import CompetitionDeleteDialog from './CompetitionDeleteDialog.vue';
@@ -85,7 +85,7 @@ function handleCompetitionDeleted(): void {
 
         <Button
           label="Archive Competition"
-          severity="secondary"
+          variant="secondary"
           :loading="isArchiving"
           @click="handleArchive"
         />
@@ -107,7 +107,7 @@ function handleCompetitionDeleted(): void {
           historical data. This action cannot be undone.
         </p>
 
-        <Button label="Delete Competition" severity="danger" @click="handleDelete" />
+        <Button label="Delete Competition" variant="danger" @click="handleDelete" />
       </template>
     </Card>
 

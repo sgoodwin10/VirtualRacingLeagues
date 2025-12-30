@@ -1,7 +1,7 @@
 <template>
   <div class="overflow-x-auto">
     <table class="w-full">
-      <thead class="bg-gray-100">
+      <thead>
         <tr>
           <!-- Drag handle column (shown in edit mode, hidden in read-only) -->
           <th v-if="!readOnly" class="px-1 py-1 text-center font-medium text-gray-700 w-8"></th>
@@ -23,7 +23,7 @@
           <!-- Fastest Lap column: Show for qualifying OR for races with times -->
           <th
             v-if="isQualifying || raceTimesRequired"
-            class="px-1 py-1 text-right font-medium text-gray-700 w-42"
+            class="px-1 py-1 text-left font-medium text-[var(--text-secondary)] w-42"
             :class="{ 'pr-6': isQualifying }"
           >
             {{ isQualifying ? 'Lap Time' : 'Fastest Lap' }}
@@ -65,8 +65,8 @@
         <template #item="{ element: row, index }">
           <tr
             :class="[
-              'border-b border-gray-100',
-              row.dnf || row.penalties ? 'bg-red-50' : 'hover:bg-gray-50',
+              'border-b border-[var(--color-border-muted)]',
+              row.dnf || row.penalties ? 'bg-red-50' : 'hover:bg-[var(--bg-highlight)]',
               index === 0 && sortedFinishers.length > 0 && (row.dnf || row.penalties)
                 ? 'border-t-2 border-red-200'
                 : '',
@@ -77,6 +77,10 @@
               <PhDotsSixVertical
                 :size="20"
                 class="drag-handle cursor-move text-gray-400 hover:text-gray-600"
+                tabindex="0"
+                role="button"
+                aria-label="Reorder row. Use Alt+Up or Alt+Down arrow keys to move this row"
+                @keydown="(event) => handleKeyDown(event, index)"
               />
             </td>
             <td class="px-1 py-1 text-gray-500 text-center">{{ index + 1 }}</td>
@@ -167,9 +171,9 @@
             <!-- Delete button -->
             <td class="px-1 py-1 text-center">
               <Button
-                icon="pi pi-trash"
-                size="small"
-                severity="danger"
+                :icon="PhTrash"
+                size="sm"
+                variant="danger"
                 text
                 @click="handleRemoveRow(index)"
               />
@@ -267,9 +271,9 @@
     <div v-if="!readOnly" class="mt-4 flex justify-center">
       <Button
         label="Add Driver"
-        icon="pi pi-plus"
-        size="small"
-        outlined
+        :icon="PhPlus"
+        size="sm"
+        variant="outline"
         :disabled="isAddDriverDisabled"
         @click="handleAddDriver"
       />
@@ -278,11 +282,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch } from 'vue';
 import draggable from 'vuedraggable';
-import { PhDotsSixVertical } from '@phosphor-icons/vue';
+import { PhDotsSixVertical, PhTrash, PhPlus } from '@phosphor-icons/vue';
 import Select from 'primevue/select';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Tag from 'primevue/tag';
 import Checkbox from 'primevue/checkbox';
 import ResultTimeInput from '@app/components/result/ResultTimeInput.vue';
@@ -318,15 +322,18 @@ const { formatRaceTime } = useTimeFormat();
 // Local results for both drag-and-drop and times-required modes
 const localResults = ref<RaceResultFormData[]>([...props.results]);
 
-// Flag to prevent watch from overwriting during internal updates
-// Using ref for proper reactivity and to avoid race conditions
-const isInternalUpdate = ref(false);
+// Timestamp to track internal updates and prevent race conditions
+// Using timestamp instead of boolean flag to handle rapid updates correctly
+const lastInternalUpdate = ref(0);
 
 // Watch for changes to props.results and update localResults
 watch(
   () => props.results,
   (newResults) => {
-    if (!isInternalUpdate.value) {
+    const now = Date.now();
+    // Only update if this change came from parent (not from our internal update)
+    // Allow 100ms window for internal updates to complete
+    if (now - lastInternalUpdate.value > 100) {
       localResults.value = [...newResults];
     }
   },
@@ -365,14 +372,11 @@ function sortDnfToBottom(): void {
 }
 
 /**
- * Emit updated results with internal update flag to prevent watch race conditions
+ * Emit updated results with timestamp tracking to prevent watch race conditions
  */
 function emitUpdate(): void {
-  isInternalUpdate.value = true;
+  lastInternalUpdate.value = Date.now();
   emit('update:results', [...localResults.value]);
-  nextTick(() => {
-    isInternalUpdate.value = false;
-  });
 }
 
 /**
@@ -541,6 +545,13 @@ const availableDrivers = computed(() => {
     .sort((a, b) => a.name.localeCompare(b.name));
 });
 
+// Create a driver lookup map to avoid O(n) find operations in getDriverName
+const driverMap = computed(() => {
+  const map = new Map<number, string>();
+  props.drivers.forEach((d) => map.set(d.id, d.name));
+  return map;
+});
+
 function getAvailableDrivers(currentDriverId: number | null): DriverOption[] {
   return props.drivers.map((driver) => ({
     ...driver,
@@ -550,8 +561,7 @@ function getAvailableDrivers(currentDriverId: number | null): DriverOption[] {
 
 function getDriverName(driverId: number | null): string {
   if (driverId === null) return '-';
-  const driver = props.drivers.find((d) => d.id === driverId);
-  return driver?.name ?? '-';
+  return driverMap.value.get(driverId) ?? '-';
 }
 
 /**
@@ -633,5 +643,41 @@ function handlePenaltyChange(row: RaceResultFormData): void {
   const currentPenalty = row.penalties ?? '';
   row._penaltyChanged = originalPenalty !== currentPenalty;
   emit('penalty-change', row);
+}
+
+/**
+ * Handle keyboard reordering (Alt+Up/Down arrows)
+ * @param event - Keyboard event
+ * @param index - Index of the row
+ */
+function handleKeyDown(event: Event, index: number): void {
+  const keyboardEvent = event as unknown as {
+    altKey: boolean;
+    key: string;
+    preventDefault: () => void;
+  };
+  if (!keyboardEvent.altKey) return;
+
+  if (keyboardEvent.key === 'ArrowUp' && index > 0) {
+    keyboardEvent.preventDefault();
+    // Move item up (swap with previous item)
+    const item = localResults.value[index];
+    const prevItem = localResults.value[index - 1];
+    if (item && prevItem) {
+      localResults.value[index - 1] = item;
+      localResults.value[index] = prevItem;
+      emitUpdate();
+    }
+  } else if (keyboardEvent.key === 'ArrowDown' && index < localResults.value.length - 1) {
+    keyboardEvent.preventDefault();
+    // Move item down (swap with next item)
+    const item = localResults.value[index];
+    const nextItem = localResults.value[index + 1];
+    if (item && nextItem) {
+      localResults.value[index + 1] = item;
+      localResults.value[index] = nextItem;
+      emitUpdate();
+    }
+  }
 }
 </script>

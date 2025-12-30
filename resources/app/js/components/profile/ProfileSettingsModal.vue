@@ -6,7 +6,8 @@ import { PhUser, PhLockKey, PhWarning } from '@phosphor-icons/vue';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
+import { PhCheck } from '@phosphor-icons/vue';
 import Message from 'primevue/message';
 import Divider from 'primevue/divider';
 
@@ -48,6 +49,8 @@ watch(
 );
 
 const handleClose = (): void => {
+  // Reset form to initial state when closing
+  initializeForm();
   emit('update:visible', false);
 };
 
@@ -303,15 +306,14 @@ const handleSubmit = async (): Promise<void> => {
           <Button
             type="button"
             label="Cancel"
-            severity="secondary"
-            outlined
+            variant="secondary"
             :disabled="isSubmitting"
             @click="handleClose"
           />
           <Button
             type="submit"
             label="Save Changes"
-            icon="pi pi-check"
+            :icon="PhCheck"
             :loading="isSubmitting"
             :disabled="isSubmitting"
           />

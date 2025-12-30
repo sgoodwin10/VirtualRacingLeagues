@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
-interface Notification {
+export interface Notification {
   id: string;
   title: string;
   message: string;

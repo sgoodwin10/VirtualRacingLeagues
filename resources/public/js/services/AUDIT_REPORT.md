@@ -170,14 +170,17 @@ apiClient/apiService (HTTP abstraction)
 #### Error Handling Classes:
 
 **ApiError:**
+
 - Base error class for all API errors
 - Properties: `message`, `statusCode`, `originalError`
 
 **NotFoundError (extends ApiError):**
+
 - Thrown for 404 HTTP responses
 - Automatically sets `statusCode: 404`
 
 **NetworkError (extends ApiError):**
+
 - Thrown when no response received from server (network failures)
 - Automatically sets `statusCode: 0`
 - Default message: "Network error occurred. Please check your connection."
@@ -185,38 +188,46 @@ apiClient/apiService (HTTP abstraction)
 #### Usage Analysis:
 
 **publicApi.fetchLeagues()**
+
 - `/var/www/resources/public/js/composables/usePublicLeagues.ts` - Fetches paginated league list
 - `/var/www/resources/public/js/views/leagues/LeaguesView.vue` - Main leagues listing page
 
 **publicApi.fetchPlatforms()**
+
 - `/var/www/resources/public/js/composables/usePublicLeagues.ts` - Fetches platform filters
 - `/var/www/resources/public/js/views/leagues/LeaguesView.vue` - Platform filter dropdown
 
 **publicApi.fetchLeague()**
+
 - `/var/www/resources/public/js/composables/usePublicLeagueDetail.ts` - Fetches league detail by slug
 - `/var/www/resources/public/js/views/leagues/LeagueDetailView.vue` - League detail page
 
 **publicApi.fetchSeasonDetail()**
+
 - `/var/www/resources/public/js/composables/usePublicSeasonDetail.ts` - Fetches season detail
 - `/var/www/resources/public/js/views/leagues/SeasonView.vue` - Season detail page
 
 **Error Classes Usage:**
+
 - All error classes are used internally by the service's centralized `handleError()` method
 - Components can catch and handle specific error types (NotFoundError for 404 pages, NetworkError for offline states)
 
 #### Recent Improvements (2025-12-10):
 
 ✅ **Centralized Error Handling**
+
 - Replaced duplicate error handling blocks with a single `handleError()` method
 - All API methods now use consistent error handling
 - Error context messages are specific to each operation
 
 ✅ **Custom Error Types**
+
 - Added `ApiError`, `NotFoundError`, and `NetworkError` classes
 - Enables proper error type checking and handling in consuming code
 - Distinguishes between different failure scenarios (404 vs network vs server errors)
 
 ✅ **Full Test Coverage**
+
 - Comprehensive Vitest tests for all error scenarios
 - Tests verify correct error types are thrown
 - Tests validate error messages and status codes
@@ -282,6 +293,7 @@ All code in the services directory is actively used and necessary.
 ### 📝 Recent Changes
 
 **2025-12-10:**
+
 - ✅ Refactored `publicApi.ts` error handling
 - ✅ Added custom error classes for better type safety
 - ✅ Implemented centralized error handler method

@@ -25,9 +25,9 @@ vi.mock('primevue/tag', () => ({
 
 vi.mock('primevue/button', () => ({
   default: {
-    name: 'Button',
+    name: 'PrimeButton',
     template: '<button @click="$emit(\'click\')"><slot>{{ label }}</slot></button>',
-    props: ['label', 'icon', 'severity', 'text', 'variant', 'class'],
+    props: ['label', 'icon', 'severity', 'text', 'variant', 'class', 'outlined', 'disabled', 'loading', 'type', 'size', 'pt', 'ariaLabel'],
   },
 }));
 
@@ -35,6 +35,14 @@ vi.mock('primevue/buttongroup', () => ({
   default: {
     name: 'ButtonGroup',
     template: '<div class="button-group"><slot></slot></div>',
+  },
+}));
+
+vi.mock('primevue/speeddial', () => ({
+  default: {
+    name: 'SpeedDial',
+    template: '<div class="speed-dial"><button v-for="item in model" :key="item.label" @click="item.command">{{ item.label }}</button></div>',
+    props: ['model', 'direction', 'buttonProps', 'showIcon', 'hideIcon', 'style', 'class'],
   },
 }));
 
@@ -141,75 +149,57 @@ describe('LeagueCard', () => {
     expect(wrapper.text()).toContain('42 Drivers');
   });
 
-  it('should show edit button for league owner', () => {
+  it('should show SpeedDial actions for league owner', () => {
     wrapper = mountComponent(mockLeague, 1); // User ID matches owner_user_id
 
-    const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const editButton = buttons.find((btn) => btn.props('icon') === 'pi pi-pencil');
+    const speedDial = wrapper.findComponent({ name: 'SpeedDial' });
+    expect(speedDial.exists()).toBe(true);
 
-    expect(editButton).toBeDefined();
-    expect(editButton?.exists()).toBe(true);
+    // Verify SpeedDial has edit and delete actions
+    const model = speedDial.props('model');
+    expect(model).toHaveLength(2);
+    expect(model[0].label).toBe('Edit');
+    expect(model[1].label).toBe('Delete');
   });
 
-  it('should hide edit button for non-owner', () => {
+  it('should hide SpeedDial for non-owner', () => {
     wrapper = mountComponent(mockLeague, 2); // User ID does not match owner_user_id
 
-    const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const editButton = buttons.find((btn) => btn.props('icon') === 'pi pi-pencil');
-
-    expect(editButton).toBeUndefined();
+    const speedDial = wrapper.findComponent({ name: 'SpeedDial' });
+    expect(speedDial.exists()).toBe(false);
   });
 
-  it('should hide edit button when user is not logged in', () => {
+  it('should hide SpeedDial when user is not logged in', () => {
     wrapper = mountComponent(mockLeague, null);
 
-    const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const editButton = buttons.find((btn) => btn.props('icon') === 'pi pi-pencil');
-
-    expect(editButton).toBeUndefined();
+    const speedDial = wrapper.findComponent({ name: 'SpeedDial' });
+    expect(speedDial.exists()).toBe(false);
   });
 
-  it('should emit edit event when edit button is clicked', async () => {
+  it('should emit edit event when edit action is triggered', async () => {
     wrapper = mountComponent(mockLeague, 1);
 
-    const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const editButton = buttons.find((btn) => btn.props('icon') === 'pi pi-pencil');
+    const speedDial = wrapper.findComponent({ name: 'SpeedDial' });
+    expect(speedDial.exists()).toBe(true);
 
-    expect(editButton).toBeDefined();
+    // Get the edit action from the model
+    const model = speedDial.props('model');
+    const editAction = model[0];
 
-    if (editButton) {
-      await editButton.trigger('click');
+    // Trigger the edit command
+    await editAction.command();
 
-      // Verify the edit event was emitted with the correct league ID
-      expect(wrapper.emitted('edit')).toBeTruthy();
-      expect(wrapper.emitted('edit')?.[0]).toEqual([1]);
-    }
-  });
-
-  it('should show delete button for league owner', () => {
-    wrapper = mountComponent(mockLeague, 1);
-
-    const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const deleteButton = buttons.find((btn) => btn.props('icon') === 'pi pi-trash');
-
-    expect(deleteButton).toBeDefined();
-    expect(deleteButton?.exists()).toBe(true);
-  });
-
-  it('should hide delete button for non-owner', () => {
-    wrapper = mountComponent(mockLeague, 2);
-
-    const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const deleteButton = buttons.find((btn) => btn.props('icon') === 'pi pi-trash');
-
-    expect(deleteButton).toBeUndefined();
+    // Verify the edit event was emitted with the correct league ID
+    expect(wrapper.emitted('edit')).toBeTruthy();
+    expect(wrapper.emitted('edit')?.[0]).toEqual([1]);
   });
 
   it('should always show view button', () => {
     wrapper = mountComponent(mockLeague, 2);
 
-    const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const viewButton = buttons.find((btn) => btn.props('label') === 'View');
+    // The view button is rendered as a PrimeButton (wrapped by custom Button component)
+    const primeButtons = wrapper.findAllComponents({ name: 'PrimeButton' });
+    const viewButton = primeButtons.find((btn) => btn.props('label') === 'View');
 
     expect(viewButton).toBeDefined();
     expect(viewButton?.exists()).toBe(true);
@@ -218,8 +208,9 @@ describe('LeagueCard', () => {
   it('should emit view event when view button is clicked', async () => {
     wrapper = mountComponent(mockLeague, 2);
 
-    const buttons = wrapper.findAllComponents({ name: 'Button' });
-    const viewButton = buttons.find((btn) => btn.props('label') === 'View');
+    // Find the PrimeButton with label "View"
+    const primeButtons = wrapper.findAllComponents({ name: 'PrimeButton' });
+    const viewButton = primeButtons.find((btn) => btn.props('label') === 'View');
 
     expect(viewButton).toBeDefined();
 

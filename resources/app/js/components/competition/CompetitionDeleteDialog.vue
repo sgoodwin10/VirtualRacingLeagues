@@ -5,7 +5,7 @@ import { useToast } from 'primevue/usetoast';
 import type { Competition } from '@app/types/competition';
 
 import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
+import { Button } from '@app/components/common/buttons';
 import Message from 'primevue/message';
 import InputText from 'primevue/inputtext';
 import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
@@ -185,7 +185,7 @@ function handleCancel(): void {
         <li>All historical data</li>
       </ul>
 
-      <Message severity="warn" :closable="false" class="mb-4">
+      <Message variant="warning" :closable="false" class="mb-4">
         This action CANNOT be undone!
       </Message>
 
@@ -202,19 +202,19 @@ function handleCancel(): void {
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <Button label="Cancel" outlined :disabled="isDeleting" @click="handleCancel" />
+        <Button label="Cancel" variant="outline" :disabled="isDeleting" @click="handleCancel" />
 
         <!-- Step 1 buttons -->
         <template v-if="step === 'suggest-archive'">
-          <Button label="Archive Instead" severity="secondary" @click="handleArchive" />
-          <Button label="Continue to Delete" severity="danger" outlined @click="continueToDelete" />
+          <Button label="Archive Instead" variant="secondary" @click="handleArchive" />
+          <Button label="Continue to Delete" variant="danger" @click="continueToDelete" />
         </template>
 
         <!-- Step 2 button -->
         <Button
           v-else
           label="Delete Competition"
-          severity="danger"
+          variant="danger"
           :loading="isDeleting"
           :disabled="!canDelete"
           @click="handleConfirmDelete"

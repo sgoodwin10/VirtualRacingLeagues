@@ -4,10 +4,10 @@ import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import type { AvailableDriver } from '@app/types/seasonDriver';
 import { usesPsnId, usesIracingId } from '@app/constants/platforms';
 
-import DataTable from 'primevue/datatable';
 import type { DataTablePageEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
 import { ViewButton, AddButton } from '@app/components/common/buttons';
+import { TechDataTable, DriverCell } from '@app/components/common/tables';
 import { createLogger } from '@app/utils/logger';
 import { DEFAULT_ROWS_PER_PAGE, ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
 
@@ -86,7 +86,7 @@ onMounted(async () => {
 
 <template>
   <div class="available-drivers-table">
-    <DataTable
+    <TechDataTable
       :value="availableDrivers"
       :loading="loading"
       lazy
@@ -95,7 +95,6 @@ onMounted(async () => {
       :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
       :total-records="totalRecords"
       :first="first"
-      striped-rows
       responsive-layout="scroll"
       @page="handlePageChange"
     >
@@ -112,7 +111,7 @@ onMounted(async () => {
 
       <Column field="driver_name" header="Driver">
         <template #body="{ data }">
-          <span class="font-semibold">{{ getDriverDisplayName(data) }}</span>
+          <DriverCell :name="getDriverDisplayName(data)" :show-avatar="false" />
         </template>
       </Column>
 
@@ -142,6 +141,6 @@ onMounted(async () => {
           </div>
         </template>
       </Column>
-    </DataTable>
+    </TechDataTable>
   </div>
 </template>
