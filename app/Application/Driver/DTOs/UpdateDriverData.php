@@ -23,9 +23,9 @@ final class UpdateDriverData extends Data
         public readonly ?string $iracing_id,
         public readonly ?int $iracing_customer_id,
         public readonly ?string $discord_id,
-        // League-specific fields
+        // League-specific fields (optional - only update if provided)
         public readonly ?int $driver_number,
-        public readonly string $status,
+        public readonly ?string $status,
         public readonly ?string $league_notes
     ) {
     }
@@ -50,7 +50,7 @@ final class UpdateDriverData extends Data
             'discord_id' => ['nullable', 'string', 'max:255'],
             // League-specific fields
             'driver_number' => ['nullable', 'integer', 'min:1', 'max:999'],
-            'status' => ['required', 'in:active,inactive,banned'],
+            'status' => ['nullable', 'in:active,inactive,banned'],
             'league_notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
@@ -74,7 +74,6 @@ final class UpdateDriverData extends Data
             'iracing_customer_id.min' => 'iRacing Customer ID must be a positive number',
             'driver_number.min' => 'Driver number must be between 1 and 999',
             'driver_number.max' => 'Driver number must be between 1 and 999',
-            'status.required' => 'Status is required',
             'status.in' => 'Status must be one of: active, inactive, banned',
             'league_notes.max' => 'League notes must not exceed 1000 characters',
         ];

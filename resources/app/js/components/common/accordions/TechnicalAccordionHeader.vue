@@ -21,7 +21,7 @@ interface Props {
   badge?: string;
   badgeSeverity?: AccordionBadgeSeverity;
   hideChevron?: boolean;
-  padding?: AccordionPadding;
+  padding?: AccordionPadding | string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -35,11 +35,27 @@ const props = withDefaults(defineProps<Props>(), {
   padding: 'md',
 });
 
-const paddingValue = computed(() => PADDING_MAP[props.padding]);
+const paddingValue = computed(() => {
+  // If it's a predefined padding key, use the map
+  if (props.padding in PADDING_MAP) {
+    return PADDING_MAP[props.padding as AccordionPadding];
+  }
+  // Otherwise, treat it as a custom padding value
+  return props.padding;
+});
+
+const isZeroPadding = computed(() => {
+  return props.padding === 'none' || props.padding === '0' || props.padding === '0px';
+});
+
+const actionsPaddingRight = computed(() => {
+  return isZeroPadding.value ? '0' : '8px';
+});
 
 const passthroughOptions = computed(() => ({
   root: {
     class: 'technical-accordion-header',
+    style: isZeroPadding.value ? { padding: '0 16px 0 0' } : undefined,
   },
 }));
 </script>
@@ -73,7 +89,7 @@ const passthroughOptions = computed(() => ({
         <slot name="suffix" />
       </div>
 
-      <div class="header-actions">
+      <div class="header-actions" :style="{ paddingRight: actionsPaddingRight }">
         <slot name="actions" />
       </div>
     </div>
@@ -119,16 +135,16 @@ const passthroughOptions = computed(() => ({
 
 .header-title {
   font-family: var(--accordion-font-mono);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--accordion-text-primary);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.2;
 }
 
 .header-subtitle {
   font-family: var(--accordion-font-sans);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--accordion-text-muted);
   margin: 0;
   line-height: 1.5;
@@ -139,16 +155,11 @@ const passthroughOptions = computed(() => ({
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-  padding-right: 8px;
 }
 
 .header-chevron {
   color: var(--accordion-text-secondary);
   transition: all 0.2s ease;
-}
-
-.technical-accordion-header:hover .header-chevron {
-  /* color: var(--accordion-accent-cyan); */
 }
 
 :deep(.p-accordionpanel-active) .header-chevron {

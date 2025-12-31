@@ -1,19 +1,14 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-lg">
-    <!-- Section Header -->
-    <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-      <div class="flex items-center gap-2">
-        <PhTimer :size="20" class="text-blue-600" />
-        <h3 class="font-semibold text-gray-900">
-          {{ title }}
-        </h3>
-      </div>
-    </div>
-
+  <div>
     <!-- Results Table -->
-    <div v-if="results && results.length > 0" class="overflow-x-auto">
-      <TechDataTable :value="enrichedResults" :rows="50">
-        <Column field="position" header="#" class="w-16" :pt="{ header: { class: 'text-center' } }">
+    <div v-if="results && results.length > 0" class="overflow-x-auto mt-4">
+      <TechDataTable
+        :value="enrichedResults"
+        :rows="50"
+        :podium-highlight="true"
+        position-field="position"
+      >
+        <Column field="position" header="#" class="w-16">
           <template #body="{ data }">
             <PositionCell :position="data.position" />
           </template>
@@ -21,24 +16,26 @@
 
         <Column field="driverName" header="Driver" class="min-w-[200px]">
           <template #body="{ data }">
-            <span class="font-medium text-gray-900">{{ data.driverName }}</span>
+            <span class="font-medium text-primary">{{ data.driverName }}</span>
           </template>
         </Column>
 
         <Column field="divisionName" header="Division" class="w-32">
           <template #body="{ data }">
-            <Tag
+            <BaseBadge
               v-if="data.divisionName"
-              :value="data.divisionName"
-              :class="getDivisionTagClass(data.divisionId)"
-            />
+              size="sm"
+              :variant="getDivisionVariant(data.divisionId)"
+            >
+              {{ data.divisionName }}
+            </BaseBadge>
             <span v-else class="text-gray-400">-</span>
           </template>
         </Column>
 
         <Column field="formattedTime" header="Time" class="w-42">
           <template #body="{ data }">
-            <span class="font-mono text-gray-900">{{ data.formattedTime }}</span>
+            <span class="font-mono text-secondary">{{ data.formattedTime }}</span>
           </template>
         </Column>
 
@@ -58,11 +55,16 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import {
+  TechnicalAccordion,
+  TechnicalAccordionPanel,
+  TechnicalAccordionHeader,
+  TechnicalAccordionContent,
+} from '@app/components/common/accordions';
 import Column from 'primevue/column';
-import Tag from 'primevue/tag';
+import { BaseBadge } from '@app/components/common/indicators';
 import { PhTimer, PhClipboardText } from '@phosphor-icons/vue';
 import { TechDataTable, PositionCell } from '@app/components/common/tables';
-import { getDivisionTagClass } from '@app/constants/divisionColors';
 import type { CrossDivisionResult, RaceEventResults } from '@app/types/roundResult';
 
 // Constants for time formatting
@@ -103,6 +105,38 @@ const divisionsMap = computed(() => {
   props.divisions.forEach((division) => map.set(division.id, division.name));
   return map;
 });
+
+type BadgeVariant = 'cyan' | 'green' | 'purple' | 'orange' | 'red' | 'default';
+
+const DIVISION_BADGE_VARIANTS: BadgeVariant[] = [
+  'cyan',
+  'green',
+  'purple',
+  'orange',
+  'red',
+  'cyan',
+];
+
+function getDivisionVariant(divisionId: number | null): BadgeVariant {
+  if (!divisionId || divisionId < 1) {
+    return 'default';
+  }
+  // Division IDs are 1-indexed, array is 0-indexed
+  // Cycle through variants for divisions beyond the array length
+  const variantIndex = (divisionId - 1) % DIVISION_BADGE_VARIANTS.length;
+  return DIVISION_BADGE_VARIANTS[variantIndex] ?? 'default';
+}
+
+/**
+ * Get results summary for the accordion subtitle
+ */
+function getResultsSummary(): string {
+  const count = props.results?.length || 0;
+  if (count === 0) {
+    return 'No results available';
+  }
+  return `${count} drivers`;
+}
 
 const enrichedResults = computed<EnrichedResult[]>(() => {
   if (!props.results || props.results.length === 0) {

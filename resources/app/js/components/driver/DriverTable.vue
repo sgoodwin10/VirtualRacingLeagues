@@ -4,14 +4,13 @@ import { storeToRefs } from 'pinia';
 import Column from 'primevue/column';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import { TechDataTable, DriverCell } from '@app/components/common/tables';
-import ViewButton from '@app/components/common/buttons/ViewButton.vue';
-import EditButton from '@app/components/common/buttons/EditButton.vue';
-import DeleteButton from '@app/components/common/buttons/DeleteButton.vue';
+import { Button } from '@app/components/common/buttons';
 import { useDriverStore } from '@app/stores/driverStore';
 import type { LeagueDriver, Driver } from '@app/types/driver';
 import type { DataTablePageEvent } from 'primevue/datatable';
 import { createLogger } from '@app/utils/logger';
 import { DEFAULT_ROWS_PER_PAGE, ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
+import { PhEye, PhPencil, PhTrash } from '@phosphor-icons/vue';
 
 interface Props {
   leagueId?: number;
@@ -179,7 +178,7 @@ onMounted(async () => {
 
     <Column field="discord_id" header="Discord ID">
       <template #body="{ data }">
-        <span class="text-sm">{{ getDriverDiscordId(data) }}</span>
+        {{ getDriverDiscordId(data) }}
       </template>
     </Column>
 
@@ -191,24 +190,33 @@ onMounted(async () => {
       :header="column.label"
     >
       <template #body="{ data }">
-        <span class="text-sm">{{ getPlatformValue(data, column.field) }}</span>
+        {{ getPlatformValue(data, column.field) }}
       </template>
     </Column>
 
     <Column header="Actions" style="width: 200px">
       <template #body="{ data }">
         <div class="flex gap-2">
-          <ViewButton
-            aria-label="View driver details"
+          <Button
+            :icon="PhEye"
+            size="sm"
+            variant="outline"
             :title="`View ${getDriverName(data)}`"
+            aria-label="View driver details"
             @click="handleView(data)"
           />
-          <EditButton
+          <Button
+            :icon="PhPencil"
+            size="sm"
+            variant="warning"
             aria-label="Edit driver"
             :title="`Edit ${getDriverName(data)}`"
             @click="handleEdit(data)"
           />
-          <DeleteButton
+          <Button
+            :icon="PhTrash"
+            size="sm"
+            variant="danger"
             aria-label="Remove driver"
             :title="`Remove ${getDriverName(data)} from league`"
             @click="handleRemove(data)"

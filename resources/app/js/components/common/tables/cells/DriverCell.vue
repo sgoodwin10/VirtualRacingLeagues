@@ -3,7 +3,7 @@ interface Props {
   /** Driver name */
   name: string;
   /** Driver subtitle (e.g., "#1 | NED" or team name) */
-  subtitle?: string;
+  nickname?: string;
   /** Avatar URL or initials */
   avatar?: string;
   /** Team color for avatar border */
@@ -13,7 +13,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  subtitle: undefined,
+  nickname: undefined,
   avatar: undefined,
   teamColor: undefined,
   showAvatar: true,
@@ -40,11 +40,10 @@ function getInitials(name: string): string {
       <img v-if="avatar && avatar.startsWith('http')" :src="avatar" :alt="name" />
       <span v-else>{{ avatar || getInitials(name) }}</span>
     </div>
-
     <!-- Info -->
     <div class="driver-info">
       <span class="driver-name">{{ name }}</span>
-      <span v-if="subtitle" class="driver-subtitle">{{ subtitle }}</span>
+      <span v-if="nickname" class="driver-subtitle">{{ nickname }}</span>
     </div>
   </div>
 </template>

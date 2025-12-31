@@ -110,10 +110,40 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         /** @var int $driversCount */
         $driversCount = $eloquentLeague->drivers_count ?? 0;
 
+        // Calculate active seasons count and total races count
+        $competitionIds = CompetitionModel::where('league_id', $id)->pluck('id')->toArray();
+
+        $activeSeasonsCount = 0;
+        $totalRacesCount = 0;
+
+        if (!empty($competitionIds)) {
+            // Active seasons count
+            $activeSeasonsCount = SeasonEloquent::whereIn('competition_id', $competitionIds)
+                ->where('status', 'active')
+                ->count();
+
+            // Total races count
+            $seasonIds = SeasonEloquent::whereIn('competition_id', $competitionIds)
+                ->pluck('id')
+                ->toArray();
+
+            if (!empty($seasonIds)) {
+                $roundIds = Round::whereIn('season_id', $seasonIds)
+                    ->pluck('id')
+                    ->toArray();
+
+                if (!empty($roundIds)) {
+                    $totalRacesCount = Race::whereIn('round_id', $roundIds)->count();
+                }
+            }
+        }
+
         return [
             'league' => $this->toDomainEntity($eloquentLeague),
             'competitions_count' => $competitionsCount,
             'drivers_count' => $driversCount,
+            'active_seasons_count' => $activeSeasonsCount,
+            'total_races_count' => $totalRacesCount,
         ];
     }
 
@@ -128,16 +158,28 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return $eloquentLeagues->map(function (LeagueEloquent $eloquentLeague) {
+        // Get all league IDs to batch calculate seasons and races counts
+        $leagueIds = $eloquentLeagues->pluck('id')->toArray();
+
+        // Batch calculate active seasons and total races for all leagues
+        $seasonsAndRacesCounts = $this->calculateSeasonsAndRacesCounts($leagueIds);
+
+        return $eloquentLeagues->map(function (LeagueEloquent $eloquentLeague) use ($seasonsAndRacesCounts) {
             /** @var int $competitionsCount */
             $competitionsCount = $eloquentLeague->competitions_count ?? 0;
             /** @var int $driversCount */
             $driversCount = $eloquentLeague->drivers_count ?? 0;
 
+            $leagueId = $eloquentLeague->id;
+            $activeSeasonsCount = $seasonsAndRacesCounts[$leagueId]['active_seasons_count'] ?? 0;
+            $totalRacesCount = $seasonsAndRacesCounts[$leagueId]['total_races_count'] ?? 0;
+
             return [
                 'league' => $this->toDomainEntity($eloquentLeague),
                 'competitions_count' => $competitionsCount,
                 'drivers_count' => $driversCount,
+                'active_seasons_count' => $activeSeasonsCount,
+                'total_races_count' => $totalRacesCount,
             ];
         })->all();
     }
@@ -468,6 +510,12 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         /** @var \Illuminate\Database\Eloquent\Collection<int, LeagueEloquent> $eloquentLeagues */
         $eloquentLeagues = $query->skip($offset)->take($perPage)->get();
 
+        // Get league IDs for batch calculation
+        $leagueIds = $eloquentLeagues->pluck('id')->toArray();
+
+        // Batch calculate active seasons and total races for all leagues
+        $seasonsAndRacesCounts = $this->calculateSeasonsAndRacesCounts($leagueIds);
+
         // Map to domain entities with counts
         $leagues = [];
         foreach ($eloquentLeagues as $eloquentLeague) {
@@ -476,10 +524,16 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             /** @var int $driversCount */
             $driversCount = $eloquentLeague->drivers_count ?? 0;
 
+            $leagueId = $eloquentLeague->id;
+            $activeSeasonsCount = $seasonsAndRacesCounts[$leagueId]['active_seasons_count'] ?? 0;
+            $totalRacesCount = $seasonsAndRacesCounts[$leagueId]['total_races_count'] ?? 0;
+
             $leagues[] = [
                 'league' => $this->toDomainEntity($eloquentLeague),
                 'competitions_count' => $competitionsCount,
                 'drivers_count' => $driversCount,
+                'active_seasons_count' => $activeSeasonsCount,
+                'total_races_count' => $totalRacesCount,
             ];
         }
 
@@ -637,6 +691,12 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         /** @var \Illuminate\Database\Eloquent\Collection<int, LeagueEloquent> $eloquentLeagues */
         $eloquentLeagues = $query->skip($offset)->take($perPage)->get();
 
+        // Get league IDs for batch calculation
+        $leagueIds = $eloquentLeagues->pluck('id')->toArray();
+
+        // Batch calculate active seasons and total races for all leagues
+        $seasonsAndRacesCounts = $this->calculateSeasonsAndRacesCounts($leagueIds);
+
         // Map to domain entities with counts
         $leagues = [];
         foreach ($eloquentLeagues as $eloquentLeague) {
@@ -645,10 +705,16 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             /** @var int $driversCount */
             $driversCount = $eloquentLeague->drivers_count ?? 0;
 
+            $leagueId = $eloquentLeague->id;
+            $activeSeasonsCount = $seasonsAndRacesCounts[$leagueId]['active_seasons_count'] ?? 0;
+            $totalRacesCount = $seasonsAndRacesCounts[$leagueId]['total_races_count'] ?? 0;
+
             $leagues[] = [
                 'league' => $this->toDomainEntity($eloquentLeague),
                 'competitions_count' => $competitionsCount,
                 'drivers_count' => $driversCount,
+                'active_seasons_count' => $activeSeasonsCount,
+                'total_races_count' => $totalRacesCount,
             ];
         }
 
@@ -659,5 +725,125 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             'current_page' => $page,
             'last_page' => $lastPage,
         ];
+    }
+
+    /**
+     * Batch calculate active seasons count and total races count for multiple leagues.
+     * Returns associative array keyed by league_id with active_seasons_count and total_races_count.
+     *
+     * @param array<int> $leagueIds
+     * @return array<int, array{active_seasons_count: int, total_races_count: int}>
+     */
+    private function calculateSeasonsAndRacesCounts(array $leagueIds): array
+    {
+        if (empty($leagueIds)) {
+            return [];
+        }
+
+        // Get all competition IDs for these leagues
+        $competitionsData = CompetitionModel::whereIn('league_id', $leagueIds)
+            ->select('id', 'league_id')
+            ->get();
+
+        $competitionIdsByLeague = [];
+        foreach ($competitionsData as $competition) {
+            $competitionIdsByLeague[$competition->league_id][] = $competition->id;
+        }
+
+        $allCompetitionIds = $competitionsData->pluck('id')->toArray();
+
+        if (empty($allCompetitionIds)) {
+            // No competitions, return zeros for all leagues
+            $result = [];
+            foreach ($leagueIds as $leagueId) {
+                $result[$leagueId] = [
+                    'active_seasons_count' => 0,
+                    'total_races_count' => 0,
+                ];
+            }
+            return $result;
+        }
+
+        // Get active seasons count grouped by competition_id
+        /** @var \Illuminate\Support\Collection<int, int> $activeSeasonsData */
+        $activeSeasonsData = SeasonEloquent::whereIn('competition_id', $allCompetitionIds)
+            ->where('status', 'active')
+            ->select('competition_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as count'))
+            ->groupBy('competition_id')
+            ->get()
+            ->mapWithKeys(function ($item): array {
+                /** @phpstan-ignore-next-line */
+                return [(int) $item->competition_id => (int) $item->count];
+            });
+
+        // Get all season IDs for race counting
+        $seasonsData = SeasonEloquent::whereIn('competition_id', $allCompetitionIds)
+            ->select('id', 'competition_id')
+            ->get();
+
+        $seasonIdsByCompetition = [];
+        foreach ($seasonsData as $season) {
+            $seasonIdsByCompetition[$season->competition_id][] = $season->id;
+        }
+
+        $allSeasonIds = $seasonsData->pluck('id')->toArray();
+
+        // Get races count grouped by season_id
+        $racesData = [];
+        if (!empty($allSeasonIds)) {
+            $roundsData = Round::whereIn('season_id', $allSeasonIds)
+                ->select('id', 'season_id')
+                ->get();
+
+            $roundIdsBySeason = [];
+            foreach ($roundsData as $round) {
+                $roundIdsBySeason[$round->season_id][] = $round->id;
+            }
+
+            $allRoundIds = $roundsData->pluck('id')->toArray();
+
+            if (!empty($allRoundIds)) {
+                /** @var \Illuminate\Support\Collection<int, int> $racesCounts */
+                $racesCounts = Race::whereIn('round_id', $allRoundIds)
+                    ->join('rounds', 'races.round_id', '=', 'rounds.id')
+                    ->select('rounds.season_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as count'))
+                    ->groupBy('rounds.season_id')
+                    ->get()
+                    ->mapWithKeys(function ($item): array {
+                        /** @phpstan-ignore-next-line */
+                        return [(int) $item->season_id => (int) $item->count];
+                    });
+
+                $racesData = $racesCounts->toArray();
+            }
+        }
+
+        // Aggregate by league
+        $result = [];
+        foreach ($leagueIds as $leagueId) {
+            $competitionIds = $competitionIdsByLeague[$leagueId] ?? [];
+            $activeSeasonsCount = 0;
+            $totalRacesCount = 0;
+
+            foreach ($competitionIds as $competitionId) {
+                // Add active seasons
+                if (isset($activeSeasonsData[$competitionId])) {
+                    $activeSeasonsCount += $activeSeasonsData[$competitionId];
+                }
+
+                // Add races from all seasons in this competition
+                $seasonIds = $seasonIdsByCompetition[$competitionId] ?? [];
+                foreach ($seasonIds as $seasonId) {
+                    $totalRacesCount += $racesData[$seasonId] ?? 0;
+                }
+            }
+
+            $result[$leagueId] = [
+                'active_seasons_count' => $activeSeasonsCount,
+                'total_races_count' => $totalRacesCount,
+            ];
+        }
+
+        return $result;
     }
 }

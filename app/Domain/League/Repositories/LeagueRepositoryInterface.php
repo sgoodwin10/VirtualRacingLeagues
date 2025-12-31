@@ -28,7 +28,7 @@ interface LeagueRepositoryInterface
     /**
      * Get a league by ID with counts.
      *
-     * @return array{league: League, competitions_count: int, drivers_count: int}
+     * @return array{league: League, competitions_count: int, drivers_count: int, active_seasons_count: int, total_races_count: int}
      * @throws LeagueNotFoundException
      */
     public function findByIdWithCounts(int $id): array;
@@ -63,7 +63,7 @@ interface LeagueRepositoryInterface
     /**
      * Get all leagues for a specific user with counts.
      *
-     * @return array<int, array{league: League, competitions_count: int, drivers_count: int}>
+     * @return array<int, array{league: League, competitions_count: int, drivers_count: int, active_seasons_count: int, total_races_count: int}>
      */
     public function findByUserIdWithCounts(int $userId): array;
 
@@ -120,7 +120,7 @@ interface LeagueRepositoryInterface
      * @param int $page
      * @param int $perPage
      * @param array<string, mixed> $filters
-     * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
+     * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int, active_seasons_count: int, total_races_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
      * @throws LeagueNotFoundException
      */
     public function getPaginatedForAdmin(int $page, int $perPage, array $filters = []): array;
@@ -166,7 +166,7 @@ interface LeagueRepositoryInterface
      * @param int $page Current page number
      * @param int $perPage Number of items per page
      * @param array<string, mixed> $filters Search and filter criteria
-     * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
+     * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int, active_seasons_count: int, total_races_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
      */
     public function getPaginatedPublic(int $page, int $perPage = 12, array $filters = []): array;
 }

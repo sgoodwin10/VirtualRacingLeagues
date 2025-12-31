@@ -596,10 +596,16 @@ textarea {
 
 /* PrimeVue Drawer Styling */
 .p-drawer-header {
-  background-color: var(--bg-elevated);
+  background-color: var(--bg-panel);
   margin-bottom: 0;
   box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.2);
   border-bottom: 1px solid var(--border);
+}
+
+.p-drawer-footer {
+  padding: 8px 16px;
+  background-color: var(--bg-panel);
+  border-top: 1px solid var(--border);
 }
 .p-drawer-content {
   padding: 16px 0 0;
@@ -1054,6 +1060,37 @@ textarea {
 .p-datatable-tbody > tr.podium-1:hover > td,
 .p-datatable-tbody > tr.podium-2:hover > td,
 .p-datatable-tbody > tr.podium-3:hover > td {
+  background-color: var(--bg-elevated);
+}
+
+/* Podium Row Highlighting for regular tables (non-PrimeVue) */
+tbody > tr.podium-1 {
+  background-color: rgba(210, 153, 34, 0.08);
+}
+
+tbody > tr.podium-2 {
+  background-color: rgba(110, 118, 129, 0.08);
+}
+
+tbody > tr.podium-3 {
+  background-color: rgba(240, 136, 62, 0.08);
+}
+
+tbody > tr.podium-1 > td:first-child {
+  color: var(--yellow);
+}
+
+tbody > tr.podium-2 > td:first-child {
+  color: var(--text-muted);
+}
+
+tbody > tr.podium-3 > td:first-child {
+  color: var(--orange);
+}
+
+tbody > tr.podium-1:hover,
+tbody > tr.podium-2:hover,
+tbody > tr.podium-3:hover {
   background-color: var(--bg-elevated);
 }
 

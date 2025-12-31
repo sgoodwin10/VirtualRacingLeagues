@@ -52,6 +52,8 @@ final class LeagueData extends Data
         public readonly bool $is_archived,
         public readonly int $competitions_count,
         public readonly int $drivers_count,
+        public readonly int $active_seasons_count,
+        public readonly int $total_races_count,
     ) {
     }
 
@@ -63,6 +65,8 @@ final class LeagueData extends Data
      * @param array{id: int, first_name: string, last_name: string, email: string}|null $owner Owner data
      * @param int $competitionsCount Competitions count
      * @param int $driversCount Drivers count
+     * @param int $activeSeasonsCount Active seasons count
+     * @param int $totalRacesCount Total races count
      * @param string|null $logoUrl Optional pre-computed logo URL (infrastructure concern - DEPRECATED)
      * @param string|null $headerImageUrl Optional pre-computed header image URL (infrastructure concern - DEPRECATED)
      * @param string|null $bannerUrl Optional pre-computed banner URL (infrastructure concern - DEPRECATED)
@@ -74,6 +78,8 @@ final class LeagueData extends Data
         ?array $owner = null,
         int $competitionsCount = 0,
         int $driversCount = 0,
+        int $activeSeasonsCount = 0,
+        int $totalRacesCount = 0,
         ?string $logoUrl = null,
         ?string $headerImageUrl = null,
         ?string $bannerUrl = null,
@@ -123,6 +129,8 @@ final class LeagueData extends Data
             is_archived: $league->isArchived(),
             competitions_count: $competitionsCount,
             drivers_count: $driversCount,
+            active_seasons_count: $activeSeasonsCount,
+            total_races_count: $totalRacesCount,
         );
     }
 }

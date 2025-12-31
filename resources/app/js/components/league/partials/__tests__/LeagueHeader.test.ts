@@ -24,6 +24,8 @@ const mockLeague: League = {
   updated_at: '2024-01-01T00:00:00Z',
   competitions_count: 5,
   drivers_count: 10,
+  active_seasons_count: 2,
+  total_races_count: 15,
   discord_url: null,
   website_url: null,
   twitter_handle: null,

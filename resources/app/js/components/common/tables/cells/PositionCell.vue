@@ -53,6 +53,7 @@ const positionClass = computed(() => {
   font-size: 14px;
   font-weight: 600;
   text-align: center;
+  color: var(--text-secondary);
 }
 
 .pos.p1 {

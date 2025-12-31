@@ -6,10 +6,11 @@ import { usesPsnId, usesIracingId } from '@app/constants/platforms';
 
 import type { DataTablePageEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
-import { ViewButton, AddButton } from '@app/components/common/buttons';
+import { Button } from '@app/components/common/buttons';
 import { TechDataTable, DriverCell } from '@app/components/common/tables';
 import { createLogger } from '@app/utils/logger';
 import { DEFAULT_ROWS_PER_PAGE, ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
+import { PhEye, PhPlus } from '@phosphor-icons/vue';
 
 interface Props {
   seasonId: number;
@@ -136,8 +137,20 @@ onMounted(async () => {
       <Column header="Actions" :exportable="false">
         <template #body="{ data }">
           <div class="flex gap-2">
-            <ViewButton @click="handleView(data)" />
-            <AddButton @click="handleAdd(data)" />
+            <Button
+              :icon="PhEye"
+              size="sm"
+              variant="outline"
+              aria-label="View driver"
+              @click="handleView(data)"
+            />
+            <Button
+              :icon="PhPlus"
+              size="sm"
+              variant="success"
+              aria-label="Add driver"
+              @click="handleAdd(data)"
+            />
           </div>
         </template>
       </Column>

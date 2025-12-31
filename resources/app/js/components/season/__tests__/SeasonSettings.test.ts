@@ -231,9 +231,7 @@ describe('SeasonSettings', () => {
       expect(cards.length).toBeGreaterThan(1);
 
       // Danger Zone card should have special styling class
-      const dangerCard = cards.find((card) =>
-        card.props('class')?.includes('border-[var(--red)]')
-      );
+      const dangerCard = cards.find((card) => card.props('class')?.includes('border-[var(--red)]'));
       expect(dangerCard).toBeDefined();
     });
   });

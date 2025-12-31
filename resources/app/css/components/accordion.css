@@ -29,19 +29,13 @@
   transform: translateY(-10px);
 }
 
-/* Focus visible for accessibility */
-.accordion-header:focus-visible {
-  outline: 2px solid var(--accordion-accent-cyan);
-  outline-offset: 2px;
-  border-radius: var(--accordion-radius);
-}
-
 /* Round number badge */
 .round-number-badge {
-  height: 4rem;
-  width: 4rem;
+  height: 3.5rem;
+  width: 3.5rem;
   display: flex;
   flex-direction: column;
+  line-height: 1;
   align-items: center;
   justify-content: center;
   border-radius: var(--accordion-radius) 0 0 var(--accordion-radius);

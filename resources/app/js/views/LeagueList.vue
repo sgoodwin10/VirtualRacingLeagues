@@ -8,8 +8,6 @@ import { PhPlus } from '@phosphor-icons/vue';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import LeagueWizardDrawer from '@app/components/league/modals/LeagueWizardDrawer.vue';
 import LeagueCard from '@app/components/league/LeagueCard.vue';
-import PageHeader from '@app/components/common/PageHeader.vue';
-// import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@app/components/common/Breadcrumbs.vue';
 
 const router = useRouter();
@@ -89,10 +87,6 @@ function handleLeagueView(leagueId: number): void {
   router.push({ name: 'league-detail', params: { id: leagueId.toString() } });
 }
 
-function handleLeagueDelete(_leagueId: number): void {
-  // Delete action handled by LeagueCard component
-}
-
 const breadcrumbItems = computed((): BreadcrumbItem[] => [
   {
     label: 'Leagues',
@@ -114,13 +108,11 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
     <Breadcrumbs :items="breadcrumbItems" />
 
     <div
-      class="mt-3 flex justify-between items-center mb-6 bg-white p-4 rounded-lg border border-blue-100"
+      class="mt-3 flex justify-between items-center mb-6 bg-elevated p-4 rounded-lg border border-[var(--border)]"
     >
-      <div class="w-1/2">
-        <PageHeader
-          title="Your Leagues"
-          description="Manage your racing leagues and competitions"
-        />
+      <div class="w-1/2 text-2xl font-mono">
+        <span class="text-cyan">//</span>
+        <span class="text-primary pl-2 font-medium">YOUR LEAGUES</span>
       </div>
 
       <Button
@@ -157,7 +149,6 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
             :league="league"
             @view="handleLeagueView"
             @edit="handleLeagueEdit"
-            @delete="handleLeagueDelete"
           />
         </div>
       </template>

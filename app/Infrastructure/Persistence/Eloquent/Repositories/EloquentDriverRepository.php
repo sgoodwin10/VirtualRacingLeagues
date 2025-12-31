@@ -56,6 +56,17 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         return $this->mapToEntity($eloquent);
     }
 
+    /**
+     * Find driver by platform ID (PSN, iRacing, or Discord).
+     *
+     * Uses OR logic to match ANY of the provided platform IDs.
+     * This is correct behavior because a driver is considered the same person
+     * if ANY of their platform IDs match (e.g., same PSN_ID = same driver).
+     *
+     * Example: If a driver exists with PSN_ID="abc123", searching with
+     * PSN_ID="abc123" and Discord_ID="different#999" will find the existing driver,
+     * because the PSN_ID matches (identifying them as the same person).
+     */
     public function findByPlatformId(
         ?string $psnId,
         ?string $iracingId,
@@ -64,7 +75,8 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
     ): ?DriverEntity {
         $query = DriverEloquent::query();
 
-        // Build OR conditions for platform IDs
+        // Build OR conditions for platform IDs - matches if ANY platform ID matches
+        // This is intentional: a driver is the same person if ANY ID matches
         $query->where(function ($q) use ($psnId, $iracingId, $iracingCustomerId, $discordId) {
             if ($psnId !== null) {
                 $q->orWhere('psn_id', $psnId);
@@ -121,6 +133,17 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         $eloquent?->delete();
     }
 
+    /**
+     * Check if driver exists by platform IDs in a specific league.
+     *
+     * Uses OR logic to check if ANY of the provided platform IDs exist in the league.
+     * This is correct behavior because it prevents duplicate driver entries for the same person.
+     * If ANY platform ID matches an existing league driver, they are already in the league.
+     *
+     * Example: If league has a driver with PSN_ID="abc123", attempting to add another
+     * driver with PSN_ID="abc123" but different Discord_ID should be blocked,
+     * because it's the same person (identified by matching PSN_ID).
+     */
     public function existsInLeagueByPlatformId(
         int $leagueId,
         ?string $psnId,
@@ -133,6 +156,8 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
                 $q->where('leagues.id', $leagueId);
             });
 
+        // Build OR conditions for platform IDs - returns true if ANY platform ID matches
+        // This is intentional: prevents duplicate entries for the same person in a league
         $query->where(function ($q) use ($psnId, $iracingId, $iracingCustomerId, $discordId) {
             if ($psnId !== null) {
                 $q->orWhere('psn_id', $psnId);
@@ -165,14 +190,15 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
 
         // Apply search filter
         if ($search !== null && trim($search) !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('drivers.first_name', 'LIKE', "%{$search}%")
-                    ->orWhere('drivers.last_name', 'LIKE', "%{$search}%")
-                    ->orWhere('drivers.nickname', 'LIKE', "%{$search}%")
-                    ->orWhere('drivers.slug', 'LIKE', "%{$search}%")
-                    ->orWhere('drivers.psn_id', 'LIKE', "%{$search}%")
-                    ->orWhere('drivers.iracing_id', 'LIKE', "%{$search}%")
-                    ->orWhere('drivers.discord_id', 'LIKE', "%{$search}%");
+            $escapedSearch = $this->escapeLikeWildcards($search);
+            $query->where(function ($q) use ($escapedSearch) {
+                $q->where('drivers.first_name', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('drivers.last_name', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('drivers.nickname', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('drivers.slug', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('drivers.psn_id', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('drivers.iracing_id', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('drivers.discord_id', 'LIKE', "%{$escapedSearch}%");
             });
         }
 
@@ -249,7 +275,7 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             'total' => $total,
             'per_page' => $perPage,
             'current_page' => $page,
-            'last_page' => (int) ceil($total / $perPage),
+            'last_page' => $total > 0 ? (int) ceil($total / $perPage) : 1,
         ];
     }
 
@@ -402,15 +428,16 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
 
         // Apply search filter
         if ($search !== null && trim($search) !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'LIKE', "%{$search}%")
-                    ->orWhere('last_name', 'LIKE', "%{$search}%")
-                    ->orWhere('nickname', 'LIKE', "%{$search}%")
-                    ->orWhere('slug', 'LIKE', "%{$search}%")
-                    ->orWhere('email', 'LIKE', "%{$search}%")
-                    ->orWhere('psn_id', 'LIKE', "%{$search}%")
-                    ->orWhere('iracing_id', 'LIKE', "%{$search}%")
-                    ->orWhere('discord_id', 'LIKE', "%{$search}%");
+            $escapedSearch = $this->escapeLikeWildcards($search);
+            $query->where(function ($q) use ($escapedSearch) {
+                $q->where('first_name', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('last_name', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('nickname', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('slug', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('email', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('psn_id', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('iracing_id', 'LIKE', "%{$escapedSearch}%")
+                    ->orWhere('discord_id', 'LIKE', "%{$escapedSearch}%");
             });
         }
 
@@ -446,7 +473,7 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             'total' => $total,
             'per_page' => $perPage,
             'current_page' => $page,
-            'last_page' => (int) ceil($total / $perPage),
+            'last_page' => $total > 0 ? (int) ceil($total / $perPage) : 1,
         ];
     }
 
@@ -587,6 +614,76 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         // Driver-User linking not yet implemented
         // When implemented, drivers table will have user_id column
         return null;
+    }
+
+    /**
+     * Get all seasons a league driver is participating in.
+     *
+     * Returns seasons sorted by:
+     * 1. Active seasons first (status = 'active')
+     * 2. Then by added_at descending (most recent first)
+     * 3. Completed/archived seasons at the bottom
+     *
+     * @return array<int, array{
+     *     season_id: int,
+     *     season_name: string,
+     *     season_slug: string,
+     *     season_status: string,
+     *     competition_id: int,
+     *     competition_name: string,
+     *     competition_slug: string,
+     *     division_name: string|null,
+     *     team_name: string|null,
+     *     added_at: string
+     * }>
+     */
+    public function getSeasonsForLeagueDriver(int $leagueDriverId): array
+    {
+        $seasons = DB::table('season_drivers')
+            ->join('seasons', 'season_drivers.season_id', '=', 'seasons.id')
+            ->join('competitions', 'seasons.competition_id', '=', 'competitions.id')
+            ->leftJoin('divisions', 'season_drivers.division_id', '=', 'divisions.id')
+            ->leftJoin('teams', 'season_drivers.team_id', '=', 'teams.id')
+            ->where('season_drivers.league_driver_id', $leagueDriverId)
+            ->select([
+                'seasons.id as season_id',
+                'seasons.name as season_name',
+                'seasons.slug as season_slug',
+                'seasons.status as season_status',
+                'competitions.id as competition_id',
+                'competitions.name as competition_name',
+                'competitions.slug as competition_slug',
+                'divisions.name as division_name',
+                'teams.name as team_name',
+                'season_drivers.added_at',
+            ])
+            ->orderByRaw("CASE WHEN seasons.status = 'active' THEN 0 ELSE 1 END")
+            ->orderBy('season_drivers.added_at', 'desc')
+            ->get();
+
+        return $seasons->map(fn ($season) => [
+            'season_id' => (int) $season->season_id,
+            'season_name' => $season->season_name,
+            'season_slug' => $season->season_slug,
+            'season_status' => $season->season_status,
+            'competition_id' => (int) $season->competition_id,
+            'competition_name' => $season->competition_name,
+            'competition_slug' => $season->competition_slug,
+            'division_name' => $season->division_name,
+            'team_name' => $season->team_name,
+            'added_at' => $season->added_at,
+        ])->toArray();
+    }
+
+    /**
+     * Escape LIKE wildcard characters to prevent SQL injection.
+     *
+     * Escapes backslash, percent, and underscore characters that have special
+     * meaning in LIKE clauses to prevent users from using them as wildcards.
+     */
+    private function escapeLikeWildcards(string $value): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
     }
 
     /**

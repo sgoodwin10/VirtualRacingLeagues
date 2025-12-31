@@ -720,8 +720,12 @@ final class RoundApplicationService
      * @param Season $season
      * @return array<mixed>
      */
-    private function calculateRoundResults(Round $round, array $allRaceResults, bool $hasDivisions, Season $season): array
-    {
+    private function calculateRoundResults(
+        Round $round,
+        array $allRaceResults,
+        bool $hasDivisions,
+        Season $season
+    ): array {
         if ($hasDivisions) {
             return $this->calculateRoundResultsWithDivisions($round, $allRaceResults, $season);
         }
@@ -841,7 +845,15 @@ final class RoundApplicationService
      *
      * @param array<array{race: Race, result: RaceResult}> $allRaceResults
      * @param array<int, string> $driverNames
-     * @return array{driverPoints: array<int, float>, driverData: array<int, array<string, mixed>>, raceResultsByDriver: array<int, array<mixed>>, driverPositionsGained: array<int, int>, driverBestTimes: array<int, array<string, int|null>>, driverHasDnfOrDns: array<int, bool>, driverTotalPenalties: array<int, int>}
+     * @return array{
+     *     driverPoints: array<int, float>,
+     *     driverData: array<int, array<string, mixed>>,
+     *     raceResultsByDriver: array<int, array<mixed>>,
+     *     driverPositionsGained: array<int, int>,
+     *     driverBestTimes: array<int, array<string, int|null>>,
+     *     driverHasDnfOrDns: array<int, bool>,
+     *     driverTotalPenalties: array<int, int>
+     * }
      */
     private function aggregateDriverPoints(array $allRaceResults, array $driverNames): array
     {
@@ -966,10 +978,12 @@ final class RoundApplicationService
      * Sort drivers by points with tie-breaking logic.
      *
      * BUSINESS RULES:
-     * - When tiebreaker DISABLED (Mode 1): Tied drivers share SAME position and SAME points, next driver skips positions
+     * - When tiebreaker DISABLED (Mode 1): Tied drivers share SAME position and SAME points,
+     *   next driver skips positions
      * - When tiebreaker ENABLED (Mode 2): Apply configured tiebreaker rules to resolve ties
      * - Drivers with only DNF/DNS results (no valid finishes) are placed at the bottom
-     * - When all drivers have 0 points (no round_points configured), sort by time-based ordering
+     * - When all drivers have 0 points (no round_points configured),
+     *   sort by time-based ordering
      *
      * @param array<int, float> $driverPoints
      * @param array<int, array<mixed>> $raceResultsByDriver
@@ -977,7 +991,10 @@ final class RoundApplicationService
      * @param array<int, bool> $driverHasDnfOrDns
      * @param Season $season
      * @param array<array{race: Race, result: RaceResult}> $allRaceResults
-     * @return array{sortedDriverPoints: array<int, float>, tiebreakerInfo: \App\Domain\Competition\ValueObjects\TiebreakerInformation|null}
+     * @return array{
+     *     sortedDriverPoints: array<int, float>,
+     *     tiebreakerInfo: \App\Domain\Competition\ValueObjects\TiebreakerInformation|null
+     * }
      */
     private function sortDriversWithTieBreaking(
         array $driverPoints,
@@ -1063,59 +1080,69 @@ final class RoundApplicationService
         } else {
             // MODE 1: Tiebreaker DISABLED - Drivers with same points share position
             // Sort using traditional tie-breaking (best race result, then time)
-            uasort($sortableDrivers, function ($driverA, $driverB) use ($raceResultsByDriver, $driverBestTimes, $allZeroPoints) {
+            uasort(
+                $sortableDrivers,
+                function (
+                    $driverA,
+                    $driverB
+                ) use (
+                    $raceResultsByDriver,
+                    $driverBestTimes,
+                    $allZeroPoints
+                ) {
                 // First: Drivers with only DNF/DNS go to the bottom
-                $aOnlyDnfDns = $driverA['has_only_dnf_or_dns'];
-                $bOnlyDnfDns = $driverB['has_only_dnf_or_dns'];
+                    $aOnlyDnfDns = $driverA['has_only_dnf_or_dns'];
+                    $bOnlyDnfDns = $driverB['has_only_dnf_or_dns'];
 
-                if ($aOnlyDnfDns !== $bOnlyDnfDns) {
-                    return $aOnlyDnfDns ? 1 : -1;
-                }
+                    if ($aOnlyDnfDns !== $bOnlyDnfDns) {
+                        return $aOnlyDnfDns ? 1 : -1;
+                    }
 
-                if ($aOnlyDnfDns && $bOnlyDnfDns) {
-                    return 0;
-                }
+                    if ($aOnlyDnfDns && $bOnlyDnfDns) {
+                        return 0;
+                    }
 
                 // Primary sort: by points (descending)
-                if ($driverA['points'] !== $driverB['points']) {
-                    return $driverB['points'] <=> $driverA['points'];
-                }
+                    if ($driverA['points'] !== $driverB['points']) {
+                        return $driverB['points'] <=> $driverA['points'];
+                    }
 
                 // IMPORTANT: When tiebreaker is DISABLED, tied drivers should share position
                 // We return 0 to indicate they are equal (will be handled in position assignment)
                 // However, we still need a stable sort order for display purposes
 
                 // When all drivers have 0 points, sort by time for stable ordering
-                if ($allZeroPoints && !empty($driverBestTimes)) {
-                    return $this->compareDriversByTime(
-                        $driverA['driver_id'],
-                        $driverB['driver_id'],
-                        $driverBestTimes
-                    );
-                }
+                    if ($allZeroPoints && !empty($driverBestTimes)) {
+                        return $this->compareDriversByTime(
+                            $driverA['driver_id'],
+                            $driverB['driver_id'],
+                            $driverBestTimes
+                        );
+                    }
 
                 // For non-zero points ties, use best race result for stable ordering (but they'll share position)
-                $racePointsA = array_column($raceResultsByDriver[$driverA['driver_id']], 'race_points');
-                $racePointsB = array_column($raceResultsByDriver[$driverB['driver_id']], 'race_points');
+                    $racePointsA = array_column($raceResultsByDriver[$driverA['driver_id']], 'race_points');
+                    $racePointsB = array_column($raceResultsByDriver[$driverB['driver_id']], 'race_points');
 
-                $bestA = !empty($racePointsA) ? max($racePointsA) : 0;
-                $bestB = !empty($racePointsB) ? max($racePointsB) : 0;
+                    $bestA = !empty($racePointsA) ? max($racePointsA) : 0;
+                    $bestB = !empty($racePointsB) ? max($racePointsB) : 0;
 
-                if ($bestA !== $bestB) {
-                    return $bestB <=> $bestA;
-                }
+                    if ($bestA !== $bestB) {
+                        return $bestB <=> $bestA;
+                    }
 
                 // Final stable sort: compare by time if available
-                if (!empty($driverBestTimes)) {
-                    return $this->compareDriversByTime(
-                        $driverA['driver_id'],
-                        $driverB['driver_id'],
-                        $driverBestTimes
-                    );
-                }
+                    if (!empty($driverBestTimes)) {
+                        return $this->compareDriversByTime(
+                            $driverA['driver_id'],
+                            $driverB['driver_id'],
+                            $driverBestTimes
+                        );
+                    }
 
-                return 0;
-            });
+                    return 0;
+                }
+            );
         }
 
         // Extract sorted driver points
@@ -1145,8 +1172,16 @@ final class RoundApplicationService
      */
     private function compareDriversByTime(int $driverAId, int $driverBId, array $driverBestTimes): int
     {
-        $timesA = $driverBestTimes[$driverAId] ?? ['race_time_ms' => null, 'qualifier_time_ms' => null, 'fastest_lap_ms' => null];
-        $timesB = $driverBestTimes[$driverBId] ?? ['race_time_ms' => null, 'qualifier_time_ms' => null, 'fastest_lap_ms' => null];
+        $timesA = $driverBestTimes[$driverAId] ?? [
+            'race_time_ms' => null,
+            'qualifier_time_ms' => null,
+            'fastest_lap_ms' => null,
+        ];
+        $timesB = $driverBestTimes[$driverBId] ?? [
+            'race_time_ms' => null,
+            'qualifier_time_ms' => null,
+            'fastest_lap_ms' => null,
+        ];
 
         // 1. Compare by race time (ascending - lower is better)
         $raceTimeA = $timesA['race_time_ms'];
@@ -1491,7 +1526,8 @@ final class RoundApplicationService
                 $standings[] = [
                     'position' => $position++,
                     'driver_id' => $driverId,
-                    'driver_name' => $driverData[$driverId]['driver_name'] ?? 'Unknown Driver',
+                    'driver_name' => $driverData[$driverId]['driver_name']
+                        ?? 'Unknown Driver',
                     'race_points' => 0, // Will be populated by applyRoundPoints
                     'fastest_lap_points' => 0,
                     'pole_position_points' => 0,
@@ -1517,8 +1553,12 @@ final class RoundApplicationService
      * @param bool $roundPointsEnabled
      * @return array<mixed>
      */
-    private function applyBonusPoints(Round $round, array $allRaceResults, array $standings, bool $roundPointsEnabled): array
-    {
+    private function applyBonusPoints(
+        Round $round,
+        array $allRaceResults,
+        array $standings,
+        bool $roundPointsEnabled
+    ): array {
         if ($roundPointsEnabled) {
             // Round points mode: apply round-level bonuses
             $standings = $this->applyFastestLapBonus($round, $allRaceResults, $standings, true);

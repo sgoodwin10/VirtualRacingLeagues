@@ -3,50 +3,59 @@ import { mount } from '@vue/test-utils';
 import DriverStatusBadge from '../DriverStatusBadge.vue';
 import type { DriverStatus } from '@app/types/driver';
 
-// Mock PrimeVue Chip component
-vi.mock('primevue/chip', () => ({
-  default: {
-    name: 'Chip',
-    template: '<span :class="$attrs.class">{{ label }}</span>',
-    props: ['label'],
+// Mock StatusIndicator component
+vi.mock('@app/components/common/indicators', () => ({
+  StatusIndicator: {
+    name: 'StatusIndicator',
+    template: '<span class="status-indicator" :data-status="status">{{ label }}</span>',
+    props: ['status', 'label', 'showDot', 'size'],
   },
 }));
 
 describe('DriverStatusBadge', () => {
-  it('should render active status with correct styling', () => {
+  it('should render active status with correct config', () => {
     const wrapper = mount(DriverStatusBadge, {
       props: {
         status: 'active' as DriverStatus,
       },
     });
 
-    expect(wrapper.text()).toBe('Active');
-    expect(wrapper.html()).toContain('bg-green-100');
-    expect(wrapper.html()).toContain('text-green-800');
+    const statusIndicator = wrapper.findComponent({ name: 'StatusIndicator' });
+    expect(statusIndicator.exists()).toBe(true);
+    expect(statusIndicator.props('status')).toBe('active');
+    expect(statusIndicator.props('label')).toBe('Active');
+    expect(statusIndicator.props('showDot')).toBe(true);
+    expect(statusIndicator.props('size')).toBe('md');
   });
 
-  it('should render inactive status with correct styling', () => {
+  it('should render inactive status with correct config', () => {
     const wrapper = mount(DriverStatusBadge, {
       props: {
         status: 'inactive' as DriverStatus,
       },
     });
 
-    expect(wrapper.text()).toBe('Inactive');
-    expect(wrapper.html()).toContain('bg-gray-100');
-    expect(wrapper.html()).toContain('text-gray-800');
+    const statusIndicator = wrapper.findComponent({ name: 'StatusIndicator' });
+    expect(statusIndicator.exists()).toBe(true);
+    expect(statusIndicator.props('status')).toBe('inactive');
+    expect(statusIndicator.props('label')).toBe('Inactive');
+    expect(statusIndicator.props('showDot')).toBe(true);
+    expect(statusIndicator.props('size')).toBe('md');
   });
 
-  it('should render banned status with correct styling', () => {
+  it('should render banned status with correct config (maps to error)', () => {
     const wrapper = mount(DriverStatusBadge, {
       props: {
         status: 'banned' as DriverStatus,
       },
     });
 
-    expect(wrapper.text()).toBe('Banned');
-    expect(wrapper.html()).toContain('bg-red-100');
-    expect(wrapper.html()).toContain('text-red-800');
+    const statusIndicator = wrapper.findComponent({ name: 'StatusIndicator' });
+    expect(statusIndicator.exists()).toBe(true);
+    expect(statusIndicator.props('status')).toBe('error');
+    expect(statusIndicator.props('label')).toBe('Banned');
+    expect(statusIndicator.props('showDot')).toBe(true);
+    expect(statusIndicator.props('size')).toBe('md');
   });
 
   it('should handle status prop changes', async () => {
@@ -56,10 +65,40 @@ describe('DriverStatusBadge', () => {
       },
     });
 
-    expect(wrapper.text()).toBe('Active');
+    let statusIndicator = wrapper.findComponent({ name: 'StatusIndicator' });
+    expect(statusIndicator.props('status')).toBe('active');
+    expect(statusIndicator.props('label')).toBe('Active');
 
     await wrapper.setProps({ status: 'banned' as DriverStatus });
-    expect(wrapper.text()).toBe('Banned');
-    expect(wrapper.html()).toContain('bg-red-100');
+    statusIndicator = wrapper.findComponent({ name: 'StatusIndicator' });
+    expect(statusIndicator.props('status')).toBe('error');
+    expect(statusIndicator.props('label')).toBe('Banned');
+
+    await wrapper.setProps({ status: 'inactive' as DriverStatus });
+    statusIndicator = wrapper.findComponent({ name: 'StatusIndicator' });
+    expect(statusIndicator.props('status')).toBe('inactive');
+    expect(statusIndicator.props('label')).toBe('Inactive');
+  });
+
+  it('should correctly map all DriverStatus values to StatusIndicator types', () => {
+    // Test active
+    const activeWrapper = mount(DriverStatusBadge, {
+      props: { status: 'active' as DriverStatus },
+    });
+    expect(activeWrapper.findComponent({ name: 'StatusIndicator' }).props('status')).toBe('active');
+
+    // Test banned (should map to error for red color)
+    const bannedWrapper = mount(DriverStatusBadge, {
+      props: { status: 'banned' as DriverStatus },
+    });
+    expect(bannedWrapper.findComponent({ name: 'StatusIndicator' }).props('status')).toBe('error');
+
+    // Test inactive
+    const inactiveWrapper = mount(DriverStatusBadge, {
+      props: { status: 'inactive' as DriverStatus },
+    });
+    expect(inactiveWrapper.findComponent({ name: 'StatusIndicator' }).props('status')).toBe(
+      'inactive',
+    );
   });
 });

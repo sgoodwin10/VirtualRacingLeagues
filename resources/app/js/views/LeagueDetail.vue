@@ -175,9 +175,15 @@ function getSeasonIndicatorColor(season: Season): string {
   if (season.competition?.competition_colour) {
     try {
       const colorObj = JSON.parse(season.competition.competition_colour);
-      return `rgb(${colorObj.r}, ${colorObj.g}, ${colorObj.b})`;
-    } catch {
-      // Fallback if parsing fails
+      if (
+        typeof colorObj.r === 'number' &&
+        typeof colorObj.g === 'number' &&
+        typeof colorObj.b === 'number'
+      ) {
+        return `rgb(${colorObj.r}, ${colorObj.g}, ${colorObj.b})`;
+      }
+    } catch (error) {
+      console.warn('Failed to parse competition colour:', error);
     }
   }
 
@@ -193,7 +199,7 @@ function getSeasonRoundsProgress(season: Season): string {
 </script>
 
 <template>
-  <div class="flex min-h-screen">
+  <div class="flex">
     <!-- Loading State -->
     <div v-if="isLoading" class="flex-1 p-6">
       <Skeleton width="100%" height="100vh" />
@@ -449,7 +455,7 @@ function getSeasonRoundsProgress(season: Season): string {
 <style scoped>
 /* Ensure responsive behavior */
 @media (max-width: 1024px) {
-  .flex.min-h-screen {
+  .flex {
     flex-direction: column;
   }
 }

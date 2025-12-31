@@ -1,41 +1,48 @@
 <template>
   <div class="overflow-x-auto">
-    <table class="w-full">
+    <table class="w-full mt-2">
       <thead>
         <tr>
           <!-- Drag handle column (shown in edit mode, hidden in read-only) -->
           <th v-if="!readOnly" class="px-1 py-1 text-center font-medium text-gray-700 w-8"></th>
-          <th class="px-1 py-1 text-center font-medium text-gray-700 w-6">#</th>
-          <th class="px-1 py-1 text-left font-medium text-gray-700 min-w-[180px]">Driver</th>
+          <th class="px-1 py-1 text-center font-medium text-[var(--text-secondary)] w-6">#</th>
+          <th
+            class="px-1 py-1 pl-3 font-medium text-left text-[var(--text-secondary)] min-w-[180px]"
+          >
+            Driver
+          </th>
           <!-- Time columns (hidden in no-times mode) -->
           <th
             v-if="!isQualifying && raceTimesRequired"
-            class="px-1 py-1 text-right font-medium text-gray-700 w-42"
+            class="px-1 py-1 font-medium text-[var(--text-secondary)] w-42"
+            :class="{ 'text-right pr-4': readOnly }"
           >
             {{ readOnly ? 'Race Time' : 'Original Time' }}
           </th>
           <th
             v-if="!isQualifying && raceTimesRequired"
-            class="px-1 py-1 text-right font-medium text-gray-700 w-42"
+            class="px-1 py-1 font-medium text-[var(--text-secondary)] w-42"
+            :class="{ 'text-right pr-4': readOnly }"
           >
             Time Diff
           </th>
           <!-- Fastest Lap column: Show for qualifying OR for races with times -->
           <th
             v-if="isQualifying || raceTimesRequired"
-            class="px-1 py-1 text-left font-medium text-[var(--text-secondary)] w-42"
-            :class="{ 'pr-6': isQualifying }"
+            class="px-1 py-1 font-medium text-[var(--text-secondary)] w-42"
+            :class="{ 'pr-6': isQualifying, 'text-right pr-4': readOnly }"
           >
             {{ isQualifying ? 'Lap Time' : 'Fastest Lap' }}
           </th>
           <th
             v-if="!isQualifying && raceTimesRequired"
-            class="px-1 py-1 text-right font-medium text-gray-700 w-42"
+            class="px-1 py-1 font-medium text-[var(--text-secondary)] w-42"
+            :class="{ 'text-right pr-4': readOnly }"
           >
             Penalties
           </th>
           <!-- DNF/FL column -->
-          <th v-if="!isQualifying" class="px-1 py-1 text-right font-medium text-gray-700 w-20">
+          <th v-if="!isQualifying" class="px-1 py-1 font-medium text-[var(--text-secondary)] w-20">
             <template v-if="raceTimesRequired">DNF</template>
             <template v-else>
               <div class="flex justify-center gap-4">
@@ -46,11 +53,15 @@
           </th>
           <th
             v-if="isQualifying && !raceTimesRequired"
-            class="px-1 py-1 text-center font-medium text-gray-700 w-20"
+            class="px-1 py-1 font-medium text-[var(--text-secondary)] w-20"
+            :class="{ 'text-right pr-4': readOnly }"
           >
             Pole
           </th>
-          <th v-if="!readOnly" class="px-1 py-1 text-center font-medium text-gray-700 w-4"></th>
+          <th
+            v-if="!readOnly"
+            class="px-1 py-1 text-center font-medium text-[var(--text-secondary)] w-4"
+          ></th>
         </tr>
       </thead>
       <!-- Draggable tbody for edit mode (both times-required and no-times modes) -->
@@ -80,7 +91,7 @@
                 tabindex="0"
                 role="button"
                 aria-label="Reorder row. Use Alt+Up or Alt+Down arrow keys to move this row"
-                @keydown="(event) => handleKeyDown(event, index)"
+                @keydown="(event: Event) => handleKeyDown(event, index)"
               />
             </td>
             <td class="px-1 py-1 text-gray-500 text-center">{{ index + 1 }}</td>
@@ -186,25 +197,27 @@
         <tr
           v-for="(row, index) in displayResults"
           :key="row.driver_id ?? `empty-${index}`"
-          :class="['border-b border-gray-100', getRowClass(index) || 'hover:bg-gray-50']"
+          :class="getRowClass(index)"
         >
-          <td class="px-2 py-2 text-gray-500 text-center">{{ index + 1 }}</td>
-          <td class="px-2 py-2">
-            <span class="text-gray-900">{{ getDriverName(row.driver_id) }}</span>
+          <td class="px-4 py-3.5 text-center text-[var(--text-secondary)]">{{ index + 1 }}</td>
+          <td class="px-4 py-3.5">
+            <span class="font-medium text-[var(--text-primary)]">{{
+              getDriverName(row.driver_id)
+            }}</span>
           </td>
-          <td v-if="!isQualifying && raceTimesRequired" class="px-2 py-2 text-end">
+          <td v-if="!isQualifying && raceTimesRequired" class="px-4 py-3.5 text-end">
             <div class="flex flex-col items-end">
               <span
-                class="text-gray-900 font-mono"
+                class="text-[var(--text-primary)] font-mono"
                 :class="{
-                  'text-red-600 font-semibold': row.penalties && row.penalties !== '',
+                  'text-[var(--red)] font-semibold': row.penalties && row.penalties !== '',
                 }"
               >
                 {{ formatRaceTime(row.final_race_time || row.original_race_time) }}
               </span>
             </div>
           </td>
-          <td v-if="!isQualifying && raceTimesRequired" class="px-2 py-2 text-end">
+          <td v-if="!isQualifying && raceTimesRequired" class="px-4 py-3.5 text-end">
             <span
               v-if="
                 (row.calculated_time_diff ??
@@ -214,10 +227,10 @@
                   row.final_race_time_difference ??
                   row.original_race_time_difference) !== ''
               "
-              class="text-gray-900 font-mono"
+              class="text-[var(--text-primary)] font-mono"
               :class="{
-                'text-red-600 font-semibold': row.penalties && row.penalties !== '',
-                'text-gray-900': !row.penalties || row.penalties === '',
+                'text-[var(--red)] font-semibold': row.penalties && row.penalties !== '',
+                'text-[var(--text-primary)]': !row.penalties || row.penalties === '',
               }"
               >+{{
                 formatRaceTime(
@@ -230,38 +243,38 @@
           </td>
           <td
             v-if="isQualifying || raceTimesRequired"
-            class="px-2 py-2 text-end"
+            class="px-4 py-3.5 text-end"
             :class="{ 'pr-6': isQualifying }"
           >
             <Tag
               v-if="row.has_fastest_lap && !isQualifying"
               value="FL"
-              class="text-xs bg-purple-500 text-white mr-1"
-              :pt="{ root: { class: 'bg-purple-500 text-white border-purple-600' } }"
+              class="text-xs bg-[var(--purple)] text-white mr-1"
+              :pt="{ root: { class: 'bg-[var(--purple)] text-white border-purple-600' } }"
             />
             <span
               class="font-mono"
               :class="{
-                'text-purple-600': row.has_pole || row.has_fastest_lap,
-                'text-gray-900': !row.has_fastest_lap,
+                'text-[var(--purple)]': row.has_pole || row.has_fastest_lap,
+                'text-[var(--text-primary)]': !row.has_fastest_lap,
               }"
               >{{ formatRaceTime(row.fastest_lap) }}</span
             >
           </td>
-          <td v-if="!isQualifying && raceTimesRequired" class="px-2 py-2 text-end">
+          <td v-if="!isQualifying && raceTimesRequired" class="px-4 py-3.5 text-end">
             <span
               class="font-mono"
               :class="{
-                'text-red-600 font-semibold': row.penalties && row.penalties !== '',
-                'text-gray-900': !row.penalties || row.penalties === '',
+                'text-[var(--red)] font-semibold': row.penalties && row.penalties !== '',
+                'text-[var(--text-primary)]': !row.penalties || row.penalties === '',
               }"
             >
               {{ formatRaceTime(row.penalties) }}
             </span>
           </td>
-          <td v-if="!isQualifying" class="px-2 py-2 text-center">
-            <span v-if="row.dnf" class="text-red-600 font-medium">DNF</span>
-            <span v-else class="text-gray-400">-</span>
+          <td v-if="!isQualifying" class="px-4 py-3.5 text-center">
+            <span v-if="row.dnf" class="text-[var(--red)] font-medium">DNF</span>
+            <span v-else class="text-[var(--text-muted)]">-</span>
           </td>
         </tr>
       </tbody>
@@ -332,8 +345,8 @@ watch(
   (newResults) => {
     const now = Date.now();
     // Only update if this change came from parent (not from our internal update)
-    // Allow 100ms window for internal updates to complete
-    if (now - lastInternalUpdate.value > 100) {
+    // Allow 250ms window for internal updates to complete (better reliability on slower devices)
+    if (now - lastInternalUpdate.value > 250) {
       localResults.value = [...newResults];
     }
   },
@@ -410,24 +423,24 @@ function handleDnfChangeNoTimes(row: RaceResultFormData): void {
   } else {
     // When DNF is toggled OFF, move to end of finishers (just above DNFs)
     const index = localResults.value.findIndex((r) => r.driver_id === row.driver_id);
-    if (index !== -1) {
-      // Remove the driver from current position
-      const removed = localResults.value.splice(index, 1);
-      const driver = removed[0];
+    if (index === -1 || index >= localResults.value.length) return;
 
-      // Guard against undefined (should never happen since we checked index !== -1)
-      if (!driver) return;
+    // Remove the driver from current position
+    const removed = localResults.value.splice(index, 1);
+    const driver = removed[0];
 
-      // Find the first DNF driver's position
-      const firstDnfIndex = localResults.value.findIndex((r) => r.dnf);
+    // Guard against undefined (should never happen since we checked index !== -1)
+    if (!driver) return;
 
-      if (firstDnfIndex === -1) {
-        // No DNF drivers, add to end
-        localResults.value.push(driver);
-      } else {
-        // Insert just before the first DNF driver
-        localResults.value.splice(firstDnfIndex, 0, driver);
-      }
+    // Find the first DNF driver's position
+    const firstDnfIndex = localResults.value.findIndex((r) => r.dnf);
+
+    if (firstDnfIndex === -1) {
+      // No DNF drivers, add to end
+      localResults.value.push(driver);
+    } else {
+      // Insert just before the first DNF driver
+      localResults.value.splice(firstDnfIndex, 0, driver);
     }
   }
   emitUpdate();
@@ -570,7 +583,10 @@ function getDriverName(driverId: number | null): string {
  */
 function getRowClass(index: number): string {
   if (!props.readOnly) return '';
-  return getPodiumRowClass(index + 1);
+  const podiumClass = getPodiumRowClass(index + 1);
+  // Base classes that match PrimeVue DataTable styling
+  const baseClasses = 'border-b border-[var(--color-border-muted)] hover:bg-[var(--bg-elevated)]';
+  return podiumClass ? `${podiumClass} ${baseClasses}` : baseClasses;
 }
 
 function handleDriverChange(): void {
@@ -658,7 +674,8 @@ function handleKeyDown(event: Event, index: number): void {
   };
   if (!keyboardEvent.altKey) return;
 
-  if (keyboardEvent.key === 'ArrowUp' && index > 0) {
+  if (keyboardEvent.key === 'ArrowUp') {
+    if (index <= 0 || index >= localResults.value.length) return;
     keyboardEvent.preventDefault();
     // Move item up (swap with previous item)
     const item = localResults.value[index];
@@ -668,7 +685,8 @@ function handleKeyDown(event: Event, index: number): void {
       localResults.value[index] = prevItem;
       emitUpdate();
     }
-  } else if (keyboardEvent.key === 'ArrowDown' && index < localResults.value.length - 1) {
+  } else if (keyboardEvent.key === 'ArrowDown') {
+    if (index < 0 || index >= localResults.value.length - 1) return;
     keyboardEvent.preventDefault();
     // Move item down (swap with next item)
     const item = localResults.value[index];

@@ -18,7 +18,16 @@ interface DriverRepositoryInterface
 
     /**
      * Find driver by platform ID (PSN, iRacing, or Discord).
-     * Returns null if not found.
+     *
+     * Uses OR logic to match ANY of the provided platform IDs.
+     * This is correct behavior because a driver is considered the same person
+     * if ANY of their platform IDs match (e.g., same PSN_ID = same driver).
+     *
+     * @param string|null $psnId PlayStation Network ID to search for
+     * @param string|null $iracingId iRacing username to search for
+     * @param int|null $iracingCustomerId iRacing customer ID to search for
+     * @param string|null $discordId Discord ID to search for
+     * @return Driver|null Returns the driver if ANY platform ID matches, null if none match
      */
     public function findByPlatformId(
         ?string $psnId,
@@ -39,6 +48,17 @@ interface DriverRepositoryInterface
 
     /**
      * Check if driver exists by platform IDs in a specific league.
+     *
+     * Uses OR logic to check if ANY of the provided platform IDs exist in the league.
+     * This is correct behavior because it prevents duplicate driver entries for the same person.
+     * If ANY platform ID matches an existing league driver, they are already in the league.
+     *
+     * @param int $leagueId The league ID to check within
+     * @param string|null $psnId PlayStation Network ID to check
+     * @param string|null $iracingId iRacing username to check
+     * @param int|null $iracingCustomerId iRacing customer ID to check
+     * @param string|null $discordId Discord ID to check
+     * @return bool True if a driver with ANY of these platform IDs exists in the league
      */
     public function existsInLeagueByPlatformId(
         int $leagueId,
@@ -51,7 +71,14 @@ interface DriverRepositoryInterface
     /**
      * Get all drivers in a league with pagination and filtering.
      *
-     * @return array{data: array<LeagueDriver>, driver_data: array<int, Driver>, total: int, per_page: int, current_page: int, last_page: int}
+     * @return array{
+     *     data: array<LeagueDriver>,
+     *     driver_data: array<int, Driver>,
+     *     total: int,
+     *     per_page: int,
+     *     current_page: int,
+     *     last_page: int
+     * }
      */
     public function getLeagueDrivers(
         int $leagueId,
@@ -126,7 +153,15 @@ interface DriverRepositoryInterface
     /**
      * Get race statistics for a driver.
      *
-     * @return array{races: int, wins: int, podiums: int, poles: int, fastest_laps: int, dnfs: int, best_finish: int|null}
+     * @return array{
+     *     races: int,
+     *     wins: int,
+     *     podiums: int,
+     *     poles: int,
+     *     fastest_laps: int,
+     *     dnfs: int,
+     *     best_finish: int|null
+     * }
      */
     public function getDriverRaceStats(int $driverId): array;
 
@@ -136,4 +171,22 @@ interface DriverRepositoryInterface
      * @return array{id: int, name: string, email: string}|null
      */
     public function getLinkedUser(int $driverId): ?array;
+
+    /**
+     * Get all seasons a league driver is participating in.
+     *
+     * @return array<int, array{
+     *     season_id: int,
+     *     season_name: string,
+     *     season_slug: string,
+     *     season_status: string,
+     *     competition_id: int,
+     *     competition_name: string,
+     *     competition_slug: string,
+     *     division_name: string|null,
+     *     team_name: string|null,
+     *     added_at: string
+     * }>
+     */
+    public function getSeasonsForLeagueDriver(int $leagueDriverId): array;
 }

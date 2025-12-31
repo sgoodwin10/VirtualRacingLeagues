@@ -262,6 +262,8 @@ describe('leagueService', () => {
       contact_email: 'original@example.com',
       competitions_count: 0,
       drivers_count: 0,
+      active_seasons_count: 0,
+      total_races_count: 0,
       organizer_name: 'Original Organizer',
       status: 'active',
       created_at: '2024-01-01',

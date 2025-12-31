@@ -174,3 +174,20 @@ export interface DriverStats {
 export type DriverFormData = CreateDriverRequest & {
   [key: string]: string | number | undefined;
 };
+
+/**
+ * League driver season data
+ * Represents a driver's participation in a specific season
+ */
+export interface LeagueDriverSeasonData {
+  season_id: number;
+  season_name: string;
+  season_slug: string;
+  season_status: 'setup' | 'active' | 'completed' | 'archived';
+  competition_id: number;
+  competition_name: string;
+  competition_slug: string;
+  division_name: string | null;
+  team_name: string | null;
+  added_at: string;
+}

@@ -211,7 +211,11 @@ function handleViewDriver(_driver: AvailableDriver): void {
 </script>
 
 <template>
-  <Drawer v-model:visible="localVisible" position="bottom" class="!h-[75vh] w-full">
+  <Drawer
+    v-model:visible="localVisible"
+    position="bottom"
+    class="!h-[70vh] w-full bg-[var(--bg-elevated)]"
+  >
     <template #header>
       <DrawerHeader
         title="Manage Season Drivers"
@@ -219,7 +223,7 @@ function handleViewDriver(_driver: AvailableDriver): void {
       />
     </template>
 
-    <div class="container mx-auto flex flex-col max-w-7xl px-4 h-full">
+    <div class="container mx-auto flex flex-col max-w-7xl px-4 flex-grow h-full">
       <!-- Two-column layout -->
       <div class="grid grid-cols-2 gap-6 flex-1 overflow-hidden">
         <!-- Left: Available Drivers -->
@@ -258,13 +262,12 @@ function handleViewDriver(_driver: AvailableDriver): void {
       </div>
     </div>
 
-    <!-- Footer -->
-    <div class="bg-[var(--bg-elevated)] mt-4 shadow-reverse border-t border-gray-200">
+    <template #footer>
       <div class="container mx-auto flex flex-col max-w-7xl">
         <div class="flex justify-end p-4">
           <Button label="Close" @click="localVisible = false" />
         </div>
       </div>
-    </div>
+    </template>
   </Drawer>
 </template>

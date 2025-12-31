@@ -34,7 +34,7 @@
             :title="round.name || `Round ${round.round_number}`"
             :subtitle="getTrackAndLocation(round.platform_track_id)"
             :status="getRoundStatus(round)"
-            padding="none"
+            padding="0px"
           >
             <!-- Round number badge in prefix slot -->
             <template #prefix>
@@ -61,7 +61,7 @@
 
             <!-- Action buttons in actions slot -->
             <template #actions>
-              <AccordionBadge
+              <BaseBadge
                 v-if="round.round_points"
                 v-tooltip.top="{
                   value: formatRoundPointsTooltip(round),
@@ -70,23 +70,16 @@
                     text: 'max-w-md whitespace-pre-wrap font-mono text-xs leading-relaxed',
                   },
                 }"
-                text="Round Points"
-                severity="info"
+                variant="purple"
+                size="lg"
               >
                 <template #icon>
-                  <PhCalculator :size="14" weight="regular" />
+                  <PhCalculator :size="14" weight="regular" /> Round Points
                 </template>
-              </AccordionBadge>
-              <Button
-                v-if="round.status === 'completed'"
-                label="Results"
-                :icon="PhTrophy"
-                size="sm"
-                variant="success"
-                @click.stop="handleViewRoundResults(round)"
-              />
+              </BaseBadge>
+
               <div class="flex items-center gap-2" @click.stop>
-                <ToggleSwitch
+                <BaseToggleSwitch
                   :model-value="round.status === 'completed'"
                   :disabled="completingRoundId === round.id"
                   @update:model-value="handleToggleCompletion(round)"
@@ -94,7 +87,7 @@
                   <template #handle="{ checked }">
                     <i :class="['!text-xs pi', { 'pi-check': checked, 'pi-times': !checked }]" />
                   </template>
-                </ToggleSwitch>
+                </BaseToggleSwitch>
                 <span
                   :class="[
                     'text-sm font-medium',
@@ -104,12 +97,39 @@
                   Completed
                 </span>
               </div>
-              <EditButton v-if="round.status !== 'completed'" @click="handleEditRound(round)" />
-              <DeleteButton v-if="round.status !== 'completed'" @click="handleDeleteRound(round)" />
+              <div class="w-24 flex align-center space-x-2">
+                <Button
+                  v-if="round.status !== 'completed'"
+                  :icon="PhPencil"
+                  size="sm"
+                  variant="warning"
+                  aria-label="Edit round"
+                  :title="`Edit round ${round.name || `Round ${round.round_number}`}`"
+                  @click="handleEditRound(round)"
+                />
+
+                <Button
+                  v-if="round.status !== 'completed'"
+                  :icon="PhTrash"
+                  size="sm"
+                  variant="danger"
+                  aria-label="Delete round"
+                  :title="`Delete round ${round.name || `Round ${round.round_number}`}`"
+                  @click="handleDeleteRound(round)"
+                />
+                <Button
+                  v-if="round.status === 'completed'"
+                  label="Results"
+                  :icon="PhTrophy"
+                  size="sm"
+                  variant="outline"
+                  @click.stop="handleViewRoundResults(round)"
+                />
+              </div>
             </template>
           </TechnicalAccordionHeader>
 
-          <TechnicalAccordionContent padding="md">
+          <TechnicalAccordionContent padding="none">
             <div class="space-y-2">
               <!-- Round Details -->
               <div
@@ -156,19 +176,7 @@
               </div>
 
               <!-- Race Events Section (Qualifying + Races) -->
-              <div>
-                <div class="flex items-center justify-between my-3">
-                  <div v-if="round.status !== 'completed'" class="flex items-center gap-2">
-                    <Button
-                      label="Add Event"
-                      :icon="PhPlus"
-                      size="sm"
-                      variant="outline"
-                      @click="handleCreateRace(round.id)"
-                    />
-                  </div>
-                </div>
-
+              <div class="pt-4">
                 <div v-if="loadingRaces" class="space-y-2">
                   <Skeleton height="4rem" />
                   <Skeleton height="4rem" />
@@ -205,6 +213,14 @@
                     />
                   </template>
                 </div>
+
+                <!-- Add Event Button -->
+                <FooterAddButton
+                  v-if="round.status !== 'completed'"
+                  label="Add Event"
+                  variant="elevated"
+                  @click="handleCreateRace(round.id)"
+                />
               </div>
             </div>
           </TechnicalAccordionContent>
@@ -271,9 +287,9 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { format, parseISO } from 'date-fns';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import { PhPlus, PhCalculator, PhTrophy } from '@phosphor-icons/vue';
+import { PhPlus, PhCalculator, PhTrophy, PhPencil, PhTrash } from '@phosphor-icons/vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
-import { Button, EditButton, DeleteButton, FooterAddButton } from '@app/components/common/buttons';
+import { Button, FooterAddButton } from '@app/components/common/buttons';
 import RoundFormDrawer from '@app/components/round/modals/RoundFormDrawer.vue';
 import RaceFormDrawer from '@app/components/round/modals/RaceFormDrawer.vue';
 import RaceListItem from '@app/components/round/RaceListItem.vue';
@@ -285,12 +301,11 @@ import {
   TechnicalAccordionPanel,
   TechnicalAccordionHeader,
   TechnicalAccordionContent,
-  AccordionBadge,
 } from '@app/components/common/accordions';
 import type { AccordionStatus } from '@app/components/common/accordions';
 import Skeleton from 'primevue/skeleton';
 import ConfirmDialog from 'primevue/confirmdialog';
-import ToggleSwitch from 'primevue/toggleswitch';
+import { BaseToggleSwitch } from '@app/components/common/inputs';
 import { useRoundStore } from '@app/stores/roundStore';
 import { useRaceStore } from '@app/stores/raceStore';
 import { useTrackStore } from '@app/stores/trackStore';
@@ -302,6 +317,7 @@ import { useColorRange } from '@app/composables/useColorRange';
 import { useOrphanedResults } from '@app/composables/useOrphanedResults';
 import { createLogger } from '@app/utils/logger';
 import { DEFAULT_COLOR_RANGE_STEPS } from '@app/constants/pagination';
+import BaseBadge from '@app/components/common/indicators/BaseBadge.vue';
 
 interface Props {
   seasonId: number;
@@ -367,7 +383,6 @@ const raceFormMode = ref<'create' | 'edit'>('create');
 const raceFormType = ref<'race' | 'qualifier'>('race');
 const loadingRaces = ref(false);
 const completingRoundId = ref<number | null>(null);
-const loadAbortController = ref<AbortController | null>(null);
 
 const showResultsModal = ref(false);
 const selectedRaceForResults = ref<Race | null>(null);
@@ -481,14 +496,6 @@ watch(
   () => props.seasonId,
   async (newSeasonId, oldSeasonId) => {
     if (newSeasonId && newSeasonId !== oldSeasonId) {
-      // Cancel any pending load operation
-      if (loadAbortController.value) {
-        loadAbortController.value.abort();
-      }
-
-      // Create new AbortController for this load operation
-      loadAbortController.value = new AbortController();
-
       // Reset state
       initialLoadComplete.value = false;
       activeIndexes.value = [];
@@ -537,7 +544,9 @@ function formatRoundPointsTooltip(round: Round): string {
       const pointsSystem = JSON.parse(round.points_system) as Record<string, number>;
       const positions = Object.entries(pointsSystem)
         .sort(([a], [b]) => parseInt(a) - parseInt(b))
-        .map(([pos, pts]) => `<span class="w-6">P${pos}:</span> ${pts}`);
+        .map(
+          ([pos, pts]) => `<span class="w-6">P${pos}:</span> <span class="font-bold">${pts}</span>`,
+        );
 
       lines.push('<strong>Position Points:</strong>');
 

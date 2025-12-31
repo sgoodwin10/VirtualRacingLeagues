@@ -6,17 +6,20 @@ interface Props {
   color?: string;
   /** Team logo URL */
   logo?: string;
+  /** Team logo URL */
+  logoUrl?: string;
 }
 
 withDefaults(defineProps<Props>(), {
   color: undefined,
   logo: undefined,
+  logoUrl: undefined,
 });
 </script>
 
 <template>
   <span class="team-indicator">
-    <img v-if="logo" :src="logo" :alt="name" class="team-logo" />
+    <img v-if="logo || logoUrl" :src="logo || logoUrl" :alt="name" class="team-logo" />
     <span v-else-if="color" class="dot" :style="{ backgroundColor: color }"></span>
     <span>{{ name }}</span>
   </span>
@@ -28,10 +31,7 @@ withDefaults(defineProps<Props>(), {
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  background-color: var(--bg-elevated);
-  border-radius: 3px;
-  font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .dot {
@@ -42,10 +42,11 @@ withDefaults(defineProps<Props>(), {
 }
 
 .team-logo {
-  width: 16px;
-  height: 16px;
+  width: 48px;
+  height: 24px;
   border-radius: 2px;
-  object-fit: cover;
+  object-fit: contain;
   flex-shrink: 0;
+  margin-right: 4px;
 }
 </style>

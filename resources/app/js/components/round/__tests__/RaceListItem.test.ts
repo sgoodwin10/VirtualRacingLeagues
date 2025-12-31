@@ -58,17 +58,12 @@ describe('RaceListItem', () => {
         },
         stubs: {
           Button: {
-            template: '<button @click="$emit(\'click\')"><slot /></button>',
+            template: '<button @click="$emit(\'click\')" :data-variant="variant"><slot /></button>',
+            props: ['variant', 'size', 'icon', 'label', 'title'],
           },
-          EditButton: {
-            template: '<button @click="$emit(\'click\', $event)" data-test-edit-button></button>',
-          },
-          DeleteButton: {
-            template: '<button @click="$emit(\'click\', $event)" data-test-delete-button></button>',
-          },
-          Tag: {
-            template: '<span><slot>{{ value }}</slot></span>',
-            props: ['value', 'severity'],
+          BaseBadge: {
+            template: '<span><slot /></span>',
+            props: ['variant', 'size'],
           },
           OrphanedResultsWarning: {
             template: '<div data-test-orphaned-warning @click="$emit(\'orphans-removed\')"></div>',
@@ -150,37 +145,55 @@ describe('RaceListItem', () => {
     expect(wrapper.text()).not.toContain('Pit Stop:');
   });
 
-  it('shows fastest lap bonus tag when fastest_lap is set', () => {
+  it('shows fastest lap bonus badge when fastest_lap is set', () => {
     expect(wrapper.text()).toContain('FL Bonus');
   });
 
-  it('hides fastest lap bonus tag when fastest_lap is null', async () => {
+  it('hides fastest lap bonus badge when fastest_lap is null', async () => {
     await wrapper.setProps({
       race: { ...mockRace, fastest_lap: null },
     });
     expect(wrapper.text()).not.toContain('FL Bonus');
   });
 
-  it('shows race points tag when race_points is true', async () => {
+  it('shows race points badge when race_points is true', async () => {
     await wrapper.setProps({
       race: { ...mockRace, race_points: true },
     });
     expect(wrapper.text()).toContain('Race Points');
   });
 
-  it('hides race points tag when race_points is false', () => {
+  it('hides race points badge when race_points is false', () => {
     expect(wrapper.text()).not.toContain('Race Points');
   });
 
-  it('applies amber theme styling to container', () => {
-    const container = wrapper.find('.border-amber-200');
-    expect(container.exists()).toBe(true);
-    expect(container.classes()).toContain('rounded-lg');
-    expect(container.classes()).toContain('hover:border-amber-400');
+  it('race points badge displays when race_points is true with points system', async () => {
+    await wrapper.setProps({
+      race: {
+        ...mockRace,
+        race_points: true,
+        points_system: { 1: 25, 2: 18, 3: 15 },
+        fastest_lap: 1,
+        fastest_lap_top_10: true,
+        dnf_points: -5,
+        dns_points: -10,
+      },
+    });
+
+    // Check that the race points badge is displayed
+    expect(wrapper.text()).toContain('Race Points');
+    // Also check that the FL bonus badge is displayed
+    expect(wrapper.text()).toContain('FL Bonus');
   });
 
-  it('has flag icon with amber color', () => {
-    const icon = wrapper.findComponent({ name: 'PhFlag' });
+  it('applies theme styling to container', () => {
+    const container = wrapper.find('[class*="border-[var(--color-border-muted)]"]');
+    expect(container.exists()).toBe(true);
+    expect(container.classes()).toContain('rounded-lg');
+  });
+
+  it('has flag icon', () => {
+    const icon = wrapper.findComponent({ name: 'PhFlagCheckered' });
     expect(icon.exists()).toBe(true);
     expect(icon.props('size')).toBe('24');
   });
@@ -196,7 +209,8 @@ describe('RaceListItem', () => {
   });
 
   it('emits edit event when edit button clicked', async () => {
-    const editButton = wrapper.find('[data-test-edit-button]');
+    // Find edit button by the warning variant data attribute
+    const editButton = wrapper.find('[data-variant="warning"]');
     expect(editButton.exists()).toBe(true);
 
     await editButton.trigger('click');
@@ -206,7 +220,8 @@ describe('RaceListItem', () => {
   });
 
   it('emits delete event when delete button clicked', async () => {
-    const deleteButton = wrapper.find('[data-test-delete-button]');
+    // Find delete button by the danger variant data attribute
+    const deleteButton = wrapper.find('[data-variant="danger"]');
     expect(deleteButton.exists()).toBe(true);
 
     await deleteButton.trigger('click');

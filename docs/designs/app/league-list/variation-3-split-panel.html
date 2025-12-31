@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>League List - Split Panel Variation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       Technical Blueprint Design System
+       Variation 3: Split Panel Layout
+       ============================================ */
+
+    :root {
+      /* Background Colors */
+      --bg-dark: #0d1117;
+      --bg-panel: #161b22;
+      --bg-card: #1c2128;
+      --bg-elevated: #21262d;
+      --bg-highlight: #272d36;
+
+      /* Text Colors */
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+
+      /* Border Colors */
+      --border: #30363d;
+      --border-muted: #21262d;
+
+      /* Accent Colors */
+      --cyan: #58a6ff;
+      --green: #7ee787;
+      --orange: #f0883e;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --yellow: #d29922;
+
+      /* Dim Variants (15% opacity) */
+      --cyan-dim: rgba(88, 166, 255, 0.15);
+      --green-dim: rgba(126, 231, 135, 0.15);
+      --orange-dim: rgba(240, 136, 62, 0.15);
+      --purple-dim: rgba(188, 140, 255, 0.15);
+
+      /* Grid Pattern */
+      --grid-color: rgba(88, 166, 255, 0.06);
+
+      /* Typography */
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-sans: 'Inter', sans-serif;
+
+      /* Layout */
+      --radius: 6px;
+      --radius-lg: 8px;
+      --sidebar-width: 320px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+
+      /* Grid Pattern Overlay */
+      background-image:
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* ============================================
+       Split Layout Structure
+       ============================================ */
+
+    .split-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ============================================
+       Left Sidebar Panel
+       ============================================ */
+
+    .sidebar-panel {
+      width: var(--sidebar-width);
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    /* Sidebar Header */
+    .sidebar-header {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .sidebar-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 4px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Create Button */
+    .create-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 16px;
+      margin: 20px 0;
+      background: var(--cyan);
+      color: var(--bg-dark);
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .create-btn:hover {
+      background: #79b8ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(88, 166, 255, 0.4);
+    }
+
+    /* Sidebar Sections */
+    .sidebar-section {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-muted);
+    }
+
+    .sidebar-section:last-child {
+      border-bottom: none;
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::before {
+      content: '';
+      width: 2px;
+      height: 10px;
+      background: var(--cyan);
+      border-radius: 1px;
+    }
+
+    /* Quick Stats */
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .quick-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .quick-stat:hover {
+      border-color: var(--border);
+      background: var(--bg-elevated);
+    }
+
+    .quick-stat-value {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .quick-stat-value.cyan { color: var(--cyan); }
+    .quick-stat-value.green { color: var(--green); }
+    .quick-stat-value.orange { color: var(--orange); }
+    .quick-stat-value.purple { color: var(--purple); }
+
+    .quick-stat-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* Filter Options */
+    .filter-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-option:hover {
+      background: var(--bg-card);
+      border-color: var(--border-muted);
+    }
+
+    .filter-option.active {
+      background: var(--cyan-dim);
+      border-color: rgba(88, 166, 255, 0.3);
+    }
+
+    .filter-option-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .filter-icon {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .filter-icon.all { background: var(--text-secondary); }
+    .filter-icon.public { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .filter-icon.private { background: var(--orange); }
+    .filter-icon.active { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+
+    .filter-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .filter-option.active .filter-label {
+      color: var(--cyan);
+    }
+
+    .filter-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      padding: 2px 8px;
+      background: var(--bg-elevated);
+      border-radius: 10px;
+    }
+
+    /* Platform Filter */
+    .platform-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .platform-filter {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      padding: 6px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-muted);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .platform-filter:hover {
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+
+    .platform-filter.active {
+      background: var(--cyan-dim);
+      border-color: rgba(88, 166, 255, 0.3);
+      color: var(--cyan);
+    }
+
+    /* Search Box */
+    .search-box {
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px var(--cyan-dim);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ============================================
+       Main Content Panel
+       ============================================ */
+
+    .main-panel {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Main Header */
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 32px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-title {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .main-title::before {
+      content: '//';
+      color: var(--cyan);
+      font-weight: 400;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      padding: 4px;
+    }
+
+    .view-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .view-btn:hover {
+      color: var(--text-secondary);
+    }
+
+    .view-btn.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 24px 32px;
+      overflow-y: auto;
+    }
+
+    /* League Cards in Grid */
+    .leagues-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    /* Compact League Card */
+    .league-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .league-card:hover {
+      border-color: var(--cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid var(--border-muted);
+    }
+
+    .card-indicator {
+      width: 4px;
+      flex-shrink: 0;
+    }
+
+    .card-indicator.active {
+      background: var(--green);
+    }
+
+    .card-indicator.idle {
+      background: var(--cyan);
+    }
+
+    .card-indicator.new {
+      background: var(--purple);
+    }
+
+    .card-header {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .card-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cyan);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .card-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-name {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .visibility-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .visibility-dot.public {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .visibility-dot.private {
+      background: var(--orange);
+    }
+
+    .card-timezone {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Card Body */
+    .card-body {
+      padding: 14px 16px;
+    }
+
+    .card-tagline {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-stats {
+      display: flex;
+      gap: 16px;
+    }
+
+    .card-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .card-stat-value {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .card-stat-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* Card Footer */
+    .card-footer {
+      display: flex;
+      gap: 6px;
+      padding: 12px 16px;
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border-muted);
+    }
+
+    .platform-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 500;
+      padding: 4px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-muted);
+      border-radius: 3px;
+      color: var(--text-muted);
+    }
+
+    .card-action {
+      margin-left: auto;
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(88, 166, 255, 0.3);
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .card-action:hover {
+      background: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    /* ============================================
+       Empty State
+       ============================================ */
+
+    .empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 40px;
+      text-align: center;
+    }
+
+    .empty-state.visible {
+      display: flex;
+    }
+
+    .empty-illustration {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 24px;
+      background: var(--bg-card);
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-illustration svg {
+      width: 48px;
+      height: 48px;
+      color: var(--text-muted);
+      opacity: 0.4;
+    }
+
+    .empty-title {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .empty-description {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      max-width: 280px;
+      line-height: 1.5;
+    }
+
+    .empty-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--cyan);
+      color: var(--bg-dark);
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .empty-btn:hover {
+      background: #79b8ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+    }
+
+    /* ============================================
+       Loading Skeleton
+       ============================================ */
+
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        var(--bg-elevated) 25%,
+        var(--bg-highlight) 50%,
+        var(--bg-elevated) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .skeleton-header {
+      display: flex;
+      gap: 14px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border-muted);
+    }
+
+    .skeleton-logo {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+    }
+
+    .skeleton-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .skeleton-title {
+      height: 14px;
+      width: 140px;
+    }
+
+    .skeleton-meta {
+      height: 10px;
+      width: 100px;
+    }
+
+    .skeleton-body {
+      padding: 14px 16px;
+    }
+
+    .skeleton-text {
+      height: 12px;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .skeleton-stats {
+      height: 36px;
+      width: 60%;
+    }
+
+    .skeleton-footer {
+      height: 48px;
+      background: var(--bg-elevated);
+    }
+
+    /* ============================================
+       Responsive Design
+       ============================================ */
+
+    @media (max-width: 1024px) {
+      .sidebar-panel {
+        position: fixed;
+        left: -100%;
+        z-index: 100;
+        transition: left 0.3s ease;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+      }
+
+      .sidebar-panel.open {
+        left: 0;
+      }
+
+      .main-panel {
+        width: 100%;
+      }
+
+      .leagues-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .main-header {
+        padding: 16px 20px;
+      }
+
+      .main-content {
+        padding: 20px;
+      }
+
+      .card-stats {
+        flex-wrap: wrap;
+      }
+    }
+
+    /* ============================================
+       Animations
+       ============================================ */
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .league-card {
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .league-card:nth-child(1) { animation-delay: 0.05s; }
+    .league-card:nth-child(2) { animation-delay: 0.1s; }
+    .league-card:nth-child(3) { animation-delay: 0.15s; }
+    .league-card:nth-child(4) { animation-delay: 0.2s; }
+  </style>
+</head>
+<body>
+  <div class="split-layout">
+    <!-- Left Sidebar Panel -->
+    <aside class="sidebar-panel">
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <span class="logo-text">VRL Manager</span>
+        </div>
+        <div class="sidebar-title">League Hub</div>
+        <div class="sidebar-subtitle">Manage your racing empire</div>
+        <button class="create-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Create New League
+        </button>
+      </div>
+
+      <!-- Search Section -->
+      <div class="sidebar-section">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" class="search-input" placeholder="Search leagues...">
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="sidebar-section">
+        <div class="section-label">Overview</div>
+        <div class="quick-stats">
+          <div class="quick-stat">
+            <div class="quick-stat-value cyan">4</div>
+            <div class="quick-stat-label">Leagues</div>
+          </div>
+          <div class="quick-stat">
+            <div class="quick-stat-value green">11</div>
+            <div class="quick-stat-label">Seasons</div>
+          </div>
+          <div class="quick-stat">
+            <div class="quick-stat-value orange">490</div>
+            <div class="quick-stat-label">Drivers</div>
+          </div>
+          <div class="quick-stat">
+            <div class="quick-stat-value purple">876</div>
+            <div class="quick-stat-label">Races</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter by Status -->
+      <div class="sidebar-section">
+        <div class="section-label">Filter by Status</div>
+        <div class="filter-options">
+          <div class="filter-option active">
+            <div class="filter-option-left">
+              <span class="filter-icon all"></span>
+              <span class="filter-label">All Leagues</span>
+            </div>
+            <span class="filter-count">4</span>
+          </div>
+          <div class="filter-option">
+            <div class="filter-option-left">
+              <span class="filter-icon active"></span>
+              <span class="filter-label">Active</span>
+            </div>
+            <span class="filter-count">3</span>
+          </div>
+          <div class="filter-option">
+            <div class="filter-option-left">
+              <span class="filter-icon public"></span>
+              <span class="filter-label">Public</span>
+            </div>
+            <span class="filter-count">3</span>
+          </div>
+          <div class="filter-option">
+            <div class="filter-option-left">
+              <span class="filter-icon private"></span>
+              <span class="filter-label">Private</span>
+            </div>
+            <span class="filter-count">1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter by Platform -->
+      <div class="sidebar-section">
+        <div class="section-label">Platforms</div>
+        <div class="platform-filters">
+          <button class="platform-filter active">All</button>
+          <button class="platform-filter">iRacing</button>
+          <button class="platform-filter">ACC</button>
+          <button class="platform-filter">F1 24</button>
+          <button class="platform-filter">rFactor 2</button>
+          <button class="platform-filter">GT7</button>
+          <button class="platform-filter">LMU</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-panel">
+      <!-- Main Header -->
+      <header class="main-header">
+        <h1 class="main-title">All Leagues</h1>
+        <div class="view-toggle">
+          <button class="view-btn active" title="Grid View">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+          </button>
+          <button class="view-btn" title="List View">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"/>
+              <line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <div class="leagues-grid">
+          <!-- League Card 1 -->
+          <article class="league-card">
+            <div class="card-top">
+              <div class="card-indicator active"></div>
+              <div class="card-header">
+                <div class="card-logo">TRL</div>
+                <div class="card-info">
+                  <h3 class="card-name">Thunder Racing League</h3>
+                  <div class="card-meta">
+                    <span class="visibility-dot public"></span>
+                    <span class="card-timezone">UTC+0 (GMT)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="card-tagline">Where champions are made. Competitive sim racing at its finest.</p>
+              <div class="card-stats">
+                <div class="card-stat">
+                  <span class="card-stat-value">5</span>
+                  <span class="card-stat-label">Comps</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">128</span>
+                  <span class="card-stat-label">Drivers</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">3</span>
+                  <span class="card-stat-label">Active</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">247</span>
+                  <span class="card-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="platform-tag">iRacing</span>
+              <span class="platform-tag">ACC</span>
+              <span class="platform-tag">F1 24</span>
+              <button class="card-action">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </button>
+            </div>
+          </article>
+
+          <!-- League Card 2 -->
+          <article class="league-card">
+            <div class="card-top">
+              <div class="card-indicator idle"></div>
+              <div class="card-header">
+                <div class="card-logo">
+                  <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100&h=100&fit=crop" alt="">
+                </div>
+                <div class="card-info">
+                  <h3 class="card-name">Apex Motorsport</h3>
+                  <div class="card-meta">
+                    <span class="visibility-dot private"></span>
+                    <span class="card-timezone">UTC-5 (EST)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="card-tagline">Elite endurance racing community. Multi-class racing specialists.</p>
+              <div class="card-stats">
+                <div class="card-stat">
+                  <span class="card-stat-value">3</span>
+                  <span class="card-stat-label">Comps</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">64</span>
+                  <span class="card-stat-label">Drivers</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">2</span>
+                  <span class="card-stat-label">Active</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">89</span>
+                  <span class="card-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="platform-tag">ACC</span>
+              <span class="platform-tag">LMU</span>
+              <button class="card-action">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </button>
+            </div>
+          </article>
+
+          <!-- League Card 3 -->
+          <article class="league-card">
+            <div class="card-top">
+              <div class="card-indicator active"></div>
+              <div class="card-header">
+                <div class="card-logo">VES</div>
+                <div class="card-info">
+                  <h3 class="card-name">Velocity eSports</h3>
+                  <div class="card-meta">
+                    <span class="visibility-dot public"></span>
+                    <span class="card-timezone">UTC+1 (CET)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="card-tagline">Fast. Fair. Fierce. The ultimate test of virtual racing skill.</p>
+              <div class="card-stats">
+                <div class="card-stat">
+                  <span class="card-stat-value">8</span>
+                  <span class="card-stat-label">Comps</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">256</span>
+                  <span class="card-stat-label">Drivers</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">5</span>
+                  <span class="card-stat-label">Active</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">512</span>
+                  <span class="card-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="platform-tag">iRacing</span>
+              <span class="platform-tag">F1 24</span>
+              <span class="platform-tag">rF2</span>
+              <button class="card-action">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </button>
+            </div>
+          </article>
+
+          <!-- League Card 4 -->
+          <article class="league-card">
+            <div class="card-top">
+              <div class="card-indicator new"></div>
+              <div class="card-header">
+                <div class="card-logo">GM</div>
+                <div class="card-info">
+                  <h3 class="card-name">Grid Masters</h3>
+                  <div class="card-meta">
+                    <span class="visibility-dot public"></span>
+                    <span class="card-timezone">UTC+9 (JST)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="card-tagline">Community-focused racing for all skill levels. Everyone welcome!</p>
+              <div class="card-stats">
+                <div class="card-stat">
+                  <span class="card-stat-value">2</span>
+                  <span class="card-stat-label">Comps</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">42</span>
+                  <span class="card-stat-label">Drivers</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">1</span>
+                  <span class="card-stat-label">Active</span>
+                </div>
+                <div class="card-stat">
+                  <span class="card-stat-value">28</span>
+                  <span class="card-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="platform-tag">GT7</span>
+              <button class="card-action">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <!-- Empty State (hidden by default) -->
+        <div class="empty-state">
+          <div class="empty-illustration">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <h3 class="empty-title">No leagues found</h3>
+          <p class="empty-description">Create your first league to start organizing competitions and managing drivers.</p>
+          <button class="empty-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Create Your First League
+          </button>
+        </div>
+
+        <!-- Loading Skeletons (hidden) -->
+        <div class="leagues-grid" style="display: none;">
+          <div class="skeleton-card">
+            <div class="skeleton-header">
+              <div class="skeleton skeleton-logo"></div>
+              <div class="skeleton-info">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-meta"></div>
+              </div>
+            </div>
+            <div class="skeleton-body">
+              <div class="skeleton skeleton-text"></div>
+              <div class="skeleton skeleton-stats"></div>
+            </div>
+            <div class="skeleton skeleton-footer"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-header">
+              <div class="skeleton skeleton-logo"></div>
+              <div class="skeleton-info">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-meta"></div>
+              </div>
+            </div>
+            <div class="skeleton-body">
+              <div class="skeleton skeleton-text"></div>
+              <div class="skeleton skeleton-stats"></div>
+            </div>
+            <div class="skeleton skeleton-footer"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

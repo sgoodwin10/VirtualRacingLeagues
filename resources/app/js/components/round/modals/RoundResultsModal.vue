@@ -1,5 +1,11 @@
 <template>
-  <BaseModal v-model:visible="isVisible" width="4xl" :closable="!isLoading" @hide="handleClose">
+  <BaseModal
+    v-model:visible="isVisible"
+    width="4xl"
+    :closable="!isLoading"
+    :pt="{ content: { class: '!pt-2' } }"
+    @hide="handleClose"
+  >
     <template #header>
       <div class="flex items-center gap-3">
         <PhTrophy :size="24" class="text-amber-600" />
@@ -27,7 +33,7 @@
       <!-- Results Content -->
       <template v-else>
         <!-- Main Content Tabs (Round Results vs Cross-Division Results) -->
-        <div class="rounded-lg overflow-hidden">
+        <div class="overflow-hidden">
           <Tabs v-model:value="activeMainTab">
             <TabList>
               <Tab value="round-results">Round Results</Tab>
@@ -39,7 +45,7 @@
               <!-- Round Results Tab -->
               <TabPanel value="round-results">
                 <!-- Division Tabs (if divisions exist) -->
-                <div v-if="hasDivisions" class="p-0">
+                <div v-if="hasDivisions">
                   <Tabs v-model:value="activeDivisionId">
                     <TabList>
                       <Tab v-for="division in divisions" :key="division.id" :value="division.id">
@@ -52,10 +58,11 @@
                         :key="division.id"
                         :value="division.id"
                       >
-                        <div class="space-y-2 pt-2">
+                        <div class="space-y-2 mt-4">
                           <!-- Round Standings Section -->
                           <RoundStandingsSection
                             v-if="roundData?.round_results"
+                            :key="`standings-${division.id}`"
                             :round-standings="roundData.round_results"
                             :division-id="division.id"
                             :has-race-points-enabled="hasRacePointsEnabled"
@@ -76,16 +83,13 @@
                 </div>
 
                 <!-- No Divisions: Show All Results -->
-                <div v-else class="space-y-6 p-4">
+                <div v-else class="space-y-2">
                   <!-- Round Standings Section -->
                   <RoundStandingsSection
                     v-if="roundData?.round_results"
                     :round-standings="roundData.round_results"
                     :has-race-points-enabled="hasRacePointsEnabled"
                   />
-
-                  <!-- Divider -->
-                  <div v-if="roundData?.round_results" class="border-t border-gray-200" />
 
                   <!-- Race Events Results -->
                   <RaceEventResultsSection
@@ -100,38 +104,32 @@
 
               <!-- Qualifying Times Tab (only shown if race times are required) -->
               <TabPanel v-if="raceTimesRequired" value="qualifying-times">
-                <div class="p-4">
-                  <CrossDivisionResultsSection
-                    title="Qualifying Times - All Divisions"
-                    :results="roundData?.qualifying_results ?? null"
-                    :race-events="raceEvents"
-                    :divisions="divisions"
-                  />
-                </div>
+                <CrossDivisionResultsSection
+                  title="Qualifying Times - All Divisions"
+                  :results="roundData?.qualifying_results ?? null"
+                  :race-events="raceEvents"
+                  :divisions="divisions"
+                />
               </TabPanel>
 
               <!-- Race Times Tab (only shown if race times are required) -->
               <TabPanel v-if="raceTimesRequired" value="race-times">
-                <div class="p-4">
-                  <CrossDivisionResultsSection
-                    title="Race Times - All Divisions"
-                    :results="roundData?.race_time_results ?? null"
-                    :race-events="raceEvents"
-                    :divisions="divisions"
-                  />
-                </div>
+                <CrossDivisionResultsSection
+                  title="Race Times - All Divisions"
+                  :results="roundData?.race_time_results ?? null"
+                  :race-events="raceEvents"
+                  :divisions="divisions"
+                />
               </TabPanel>
 
               <!-- Fastest Laps Tab (only shown if race times are required) -->
               <TabPanel v-if="raceTimesRequired" value="fastest-laps">
-                <div class="p-4">
-                  <CrossDivisionResultsSection
-                    title="Fastest Laps - All Divisions"
-                    :results="roundData?.fastest_lap_results ?? null"
-                    :race-events="raceEvents"
-                    :divisions="divisions"
-                  />
-                </div>
+                <CrossDivisionResultsSection
+                  title="Fastest Laps - All Divisions"
+                  :results="roundData?.fastest_lap_results ?? null"
+                  :race-events="raceEvents"
+                  :divisions="divisions"
+                />
               </TabPanel>
             </TabPanels>
           </Tabs>

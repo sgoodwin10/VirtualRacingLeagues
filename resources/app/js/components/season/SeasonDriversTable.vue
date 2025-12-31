@@ -23,12 +23,13 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
-import ViewButton from '@app/components/common/buttons/ViewButton.vue';
-import DeleteButton from '@app/components/common/buttons/DeleteButton.vue';
+import { PhArrowClockwise } from '@phosphor-icons/vue';
+
 import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
 import {
   PhUsers,
-  PhArrowClockwise,
+  PhEye,
+  PhTrash,
   PhCaretDoubleLeft,
   PhCaretLeft,
   PhCaretRight,
@@ -570,34 +571,10 @@ async function handleRefresh(): Promise<void> {
       @edit="handleEditDriver"
     />
 
-    <!-- Actions Bar - Always visible -->
-    <div class="flex flex-row gap-3 mb-6 border border-slate-200 bg-slate-50 p-2 rounded-md">
-      <div class="flex items-center gap-3 flex-1 justify-end">
-        <!-- Manage Drivers Button -->
-        <Button
-          v-if="showManageButton"
-          label="Manage Drivers"
-          :icon="PhUsers"
-          size="medium"
-          :disabled="manageButtonDisabled"
-          @click="emit('manageDrivers')"
-        />
-
-        <!-- Refresh Drivers Table Button -->
-        <Button
-          label="Refresh Drivers Table"
-          :icon="PhArrowClockwise"
-          variant="warning"
-          size="medium"
-          @click="handleRefresh"
-        />
-      </div>
-    </div>
-
     <!-- Search and Filters Bar - Only when divisions or teams are enabled -->
     <div
       v-if="raceDivisionsEnabled || teamChampionshipEnabled"
-      class="flex flex-row gap-4 mb-6 border border-slate-200 bg-slate-50 p-2 rounded-md"
+      class="flex flex-row gap-4 mb-6 border border-[var(--border)] bg-[var(--bg-elevated)] p-2 rounded-md"
     >
       <div class="flex items-end gap-3 flex-wrap">
         <div class="flex-1 max-w-md">
@@ -639,6 +616,24 @@ async function handleRefresh(): Promise<void> {
             @change="onFilterChange"
           />
         </div>
+      </div>
+      <div class="flex items-end gap-3 flex-1 justify-end">
+        <!-- Manage Drivers Button -->
+        <Button
+          v-if="showManageButton"
+          label="Manage Drivers"
+          :icon="PhUsers"
+          :disabled="manageButtonDisabled"
+          @click="emit('manageDrivers')"
+        />
+
+        <!-- Refresh Drivers Table Button -->
+        <Button
+          label="Refresh Drivers Table"
+          :icon="PhArrowClockwise"
+          variant="warning"
+          @click="handleRefresh"
+        />
       </div>
     </div>
 
@@ -764,25 +759,25 @@ async function handleRefresh(): Promise<void> {
 
       <Column field="discord_id" header="Discord" sortable>
         <template #body="{ data }">
-          <span class="text-md text-gray-500">{{ data.discord_id || '-' }}</span>
+          <span class="text-[var(--text-secondary)]">{{ data.discord_id || '-' }}</span>
         </template>
       </Column>
 
       <Column v-if="showPsnColumn" field="psn_id" header="PSN ID" sortable>
         <template #body="{ data }">
-          <span class="text-md text-gray-500">{{ data.psn_id || '-' }}</span>
+          <span class="text-[var(--text-secondary)]">{{ data.psn_id || '-' }}</span>
         </template>
       </Column>
 
       <Column v-if="showIracingColumn" field="iracing_id" header="iRacing ID" sortable>
         <template #body="{ data }">
-          <span class="text-md text-gray-500">{{ data.iracing_id || '-' }}</span>
+          <span class="text-[var(--text-secondary)]">{{ data.iracing_id || '-' }}</span>
         </template>
       </Column>
 
       <Column v-if="showNumberColumn" field="driver_number" header="#" class="text-center" sortable>
         <template #body="{ data }">
-          <span class="text-md text-gray-500">{{ data.driver_number || '-' }}</span>
+          <span class="text-[var(--text-secondary)]">{{ data.driver_number || '-' }}</span>
         </template>
       </Column>
 
@@ -877,8 +872,20 @@ async function handleRefresh(): Promise<void> {
       <Column header="Actions" :exportable="false">
         <template #body="{ data }">
           <div class="flex gap-2">
-            <ViewButton aria-label="View driver" @click="handleView(data)" />
-            <DeleteButton aria-label="Remove driver" @click="handleRemove(data)" />
+            <Button
+              :icon="PhEye"
+              size="sm"
+              variant="outline"
+              aria-label="View driver"
+              @click="handleView(data)"
+            />
+            <Button
+              :icon="PhTrash"
+              size="sm"
+              variant="danger"
+              aria-label="Remove driver"
+              @click="handleRemove(data)"
+            />
           </div>
         </template>
       </Column>

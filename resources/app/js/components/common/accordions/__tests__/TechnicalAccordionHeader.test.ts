@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { PhCheckCircle } from '@phosphor-icons/vue';
-import AccordionHeader from 'primevue/accordionheader';
 import TechnicalAccordionHeader from '../TechnicalAccordionHeader.vue';
 import AccordionStatusIndicator from '../AccordionStatusIndicator.vue';
 import AccordionIcon from '../AccordionIcon.vue';
@@ -234,6 +233,58 @@ describe('TechnicalAccordionHeader', () => {
 
     const content = wrapper.find('.header-content');
     expect(content.attributes('style')).toContain('padding: 0');
+  });
+
+  it('applies custom padding value when provided as string', () => {
+    const wrapper = mount(TechnicalAccordionHeader, {
+      global: globalConfig,
+      props: {
+        title: 'Test Title',
+        padding: '16px 24px',
+      },
+    });
+
+    const content = wrapper.find('.header-content');
+    expect(content.attributes('style')).toContain('padding: 16px 24px');
+  });
+
+  it('removes actions padding-right when padding is none', () => {
+    const wrapper = mount(TechnicalAccordionHeader, {
+      global: globalConfig,
+      props: {
+        title: 'Test Title',
+        padding: 'none',
+      },
+    });
+
+    const actions = wrapper.find('.header-actions');
+    expect(actions.attributes('style')).toContain('padding-right: 0');
+  });
+
+  it('removes actions padding-right when padding is 0', () => {
+    const wrapper = mount(TechnicalAccordionHeader, {
+      global: globalConfig,
+      props: {
+        title: 'Test Title',
+        padding: '0',
+      },
+    });
+
+    const actions = wrapper.find('.header-actions');
+    expect(actions.attributes('style')).toContain('padding-right: 0');
+  });
+
+  it('keeps default actions padding-right when padding is not none', () => {
+    const wrapper = mount(TechnicalAccordionHeader, {
+      global: globalConfig,
+      props: {
+        title: 'Test Title',
+        padding: 'md',
+      },
+    });
+
+    const actions = wrapper.find('.header-actions');
+    expect(actions.attributes('style')).toContain('padding-right: 8px');
   });
 
   it('renders prefix slot content', () => {

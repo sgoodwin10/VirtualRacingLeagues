@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import Chip from 'primevue/chip';
 import type { DriverStatus } from '@app/types/driver';
+import { StatusIndicator } from '@app/components/common/indicators';
 
 interface Props {
   status: DriverStatus;
@@ -9,33 +9,28 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const chipClass = computed(() => {
-  switch (props.status) {
-    case 'active':
-      return 'bg-green-100 text-green-800';
-    case 'inactive':
-      return 'bg-gray-100 text-gray-800';
-    case 'banned':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
+/**
+ * Map driver status to StatusIndicator status type
+ * - active: green 'active' status
+ * - banned: red 'error' status (displayed as 'Banned')
+ * - inactive: gray 'inactive' status
+ */
+const statusConfig = computed<{ status: 'active' | 'inactive' | 'error'; label: string }>(() => {
+  if (props.status === 'active') {
+    return { status: 'active', label: 'Active' };
   }
-});
-
-const statusLabel = computed(() => {
-  switch (props.status) {
-    case 'active':
-      return 'Active';
-    case 'inactive':
-      return 'Inactive';
-    case 'banned':
-      return 'Banned';
-    default:
-      return props.status;
+  if (props.status === 'banned') {
+    return { status: 'error', label: 'Banned' };
   }
+  return { status: 'inactive', label: 'Inactive' };
 });
 </script>
 
 <template>
-  <Chip :label="statusLabel" :class="chipClass" class="text-sm font-medium" />
+  <StatusIndicator
+    :status="statusConfig.status"
+    :label="statusConfig.label"
+    :show-dot="true"
+    size="md"
+  />
 </template>

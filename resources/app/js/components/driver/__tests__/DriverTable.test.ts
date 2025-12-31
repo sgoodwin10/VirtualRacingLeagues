@@ -120,7 +120,8 @@ vi.mock('@app/components/common/tables/TechDataTable.vue', () => ({
 vi.mock('@app/components/common/tables/cells/DriverCell.vue', () => ({
   default: {
     name: 'DriverCell',
-    template: '<div class="driver-cell"><span class="driver-name">{{ name }}</span><span v-if="nickname" class="driver-nickname">{{ nickname }}</span></div>',
+    template:
+      '<div class="driver-cell"><span class="driver-name">{{ name }}</span><span v-if="nickname" class="driver-nickname">{{ nickname }}</span></div>',
     props: ['name', 'nickname'],
   },
 }));
@@ -138,7 +139,8 @@ vi.mock('@app/components/common/buttons/ViewButton.vue', () => ({
 vi.mock('@app/components/common/buttons/EditButton.vue', () => ({
   default: {
     name: 'EditButton',
-    template: '<button class="edit-button" :aria-label="ariaLabel" @click="$emit(\'click\', $event)">Edit</button>',
+    template:
+      '<button class="edit-button" :aria-label="ariaLabel" @click="$emit(\'click\', $event)">Edit</button>',
     props: ['disabled', 'ariaLabel'],
   },
 }));

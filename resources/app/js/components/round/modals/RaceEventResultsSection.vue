@@ -6,6 +6,7 @@
         :subtitle="getResultsSummary()"
         :icon="raceEvent.is_qualifier ? PhMedal : PhFlagCheckered"
         :icon-variant="raceEvent.is_qualifier ? 'purple' : 'cyan'"
+        padding="xs"
       />
       <TechnicalAccordionContent padding="none">
         <!-- Results Table -->
@@ -16,40 +17,61 @@
             :podium-highlight="!raceEvent.is_qualifier"
             position-field="position"
           >
+            <!-- Position Column -->
             <Column field="position" header="#" class="w-16">
               <template #body="{ data }">
-                <PositionCell :position="data.position" :is-qualifying="raceEvent.is_qualifier" />
+                <PositionCell :position="data.position" />
               </template>
             </Column>
 
+            <!-- Driver Column -->
             <Column field="driver.name" header="Driver" class="min-w-[170px]">
               <template #body="{ data }">
                 <div class="flex items-center gap-2">
-                  <span class="font-medium text-gray-900">{{
-                    data.driver?.name || 'Unknown'
-                  }}</span>
+                  <span class="font-medium text-primary">{{ data.driver?.name || 'Unknown' }}</span>
                   <Tag
                     v-if="data.has_pole && raceEvent.is_qualifier"
                     value="P"
-                    class="text-xs bg-purple-200 text-purple-800"
-                    :pt="{ root: { class: 'bg-purple-200 text-purple-800 border-purple-300' } }"
+                    class="text-xs"
+                    :pt="{
+                      root: {
+                        style: {
+                          backgroundColor: 'var(--purple-dim)',
+                          color: 'var(--purple)',
+                          border: '1px solid var(--purple)',
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                        },
+                      },
+                    }"
                   />
                   <Tag
                     v-if="data.has_fastest_lap && !raceEvent.is_qualifier && !raceTimesRequired"
                     value="FL"
-                    class="text-xs bg-purple-500 text-white"
-                    :pt="{ root: { class: 'bg-purple-500 text-white border-purple-600' } }"
+                    class="text-xs"
+                    :pt="{
+                      root: {
+                        style: {
+                          backgroundColor: 'var(--purple)',
+                          color: 'var(--bg-dark)',
+                          border: '1px solid var(--purple)',
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                        },
+                      },
+                    }"
                   />
                   <Tag
                     v-if="data.dnf && !raceTimesRequired"
-                    severity="danger"
                     value="DNF"
+                    severity="danger"
                     class="text-xs"
                   />
                 </div>
               </template>
             </Column>
 
+            <!-- Time Column -->
             <Column
               v-if="!raceEvent.is_qualifier && raceTimesRequired"
               field="final_race_time"
@@ -57,18 +79,20 @@
               class="w-42"
             >
               <template #body="{ data }">
-                <Tag v-if="data.dnf" severity="danger" value="DNF" class="text-xs" />
-                <span
-                  v-else
-                  class="font-mono text-gray-900"
+                <div
+                  class="text-center"
                   :class="{
                     'text-red-600 font-semibold': data.penalties && data.penalties !== '',
+                    'text-secondary': !data.penalties || data.penalties === '',
                   }"
-                  >{{ formatRaceTime(data.final_race_time) }}</span
                 >
+                  <Tag v-if="data.dnf" value="DNF" severity="danger" class="text-xs" />
+                  <span v-else>{{ formatRaceTime(data.final_race_time) }}</span>
+                </div>
               </template>
             </Column>
 
+            <!-- Gap Column -->
             <Column
               v-if="!raceEvent.is_qualifier && raceTimesRequired"
               field="calculated_time_diff"
@@ -76,57 +100,70 @@
               class="w-42"
             >
               <template #body="{ data }">
-                <span
-                  v-if="
-                    (data.calculated_time_diff ??
-                      data.final_race_time_difference ??
-                      data.original_race_time_difference) !== null &&
-                    (data.calculated_time_diff ??
-                      data.final_race_time_difference ??
-                      data.original_race_time_difference) !== ''
-                  "
-                  class="font-mono text-gray-900"
+                <div
+                  class="text-center"
                   :class="{
                     'text-red-600 font-semibold': data.penalties && data.penalties !== '',
+                    'text-secondary': !data.penalties || data.penalties === '',
                   }"
-                  >+{{
-                    formatRaceTime(
-                      data.calculated_time_diff ??
-                        data.final_race_time_difference ??
-                        data.original_race_time_difference,
-                    )
-                  }}</span
                 >
+                  <span
+                    v-if="
+                      (data.calculated_time_diff ??
+                        data.final_race_time_difference ??
+                        data.original_race_time_difference) !== null &&
+                      (data.calculated_time_diff ??
+                        data.final_race_time_difference ??
+                        data.original_race_time_difference) !== ''
+                    "
+                  >
+                    +{{
+                      formatRaceTime(
+                        data.calculated_time_diff ??
+                          data.final_race_time_difference ??
+                          data.original_race_time_difference,
+                      )
+                    }}
+                  </span>
+                </div>
               </template>
             </Column>
 
-            <Column
-              v-if="raceTimesRequired"
-              field="fastest_lap"
-              :header="raceEvent.is_qualifier ? 'Lap Time' : 'Fastest Lap'"
-              class="w-42"
-            >
+            <!-- Fastest Lap / Lap Time Column -->
+            <Column v-if="raceTimesRequired" field="fastest_lap" class="w-42">
+              <template #header>
+                <span>{{ raceEvent.is_qualifier ? 'Lap Time' : 'Fastest Lap' }}</span>
+              </template>
               <template #body="{ data }">
-                <div class="flex items-center gap-2">
-                  <span
-                    class="font-mono"
-                    :class="{
-                      'text-purple-600': data.has_pole || data.has_fastest_lap,
-                      'text-gray-900': !data.has_fastest_lap || raceEvent.is_qualifier,
-                    }"
-                  >
-                    {{ formatRaceTime(data.fastest_lap) }}
-                  </span>
+                <div
+                  class="flex items-center justify-center gap-2"
+                  :class="{
+                    'text-purple-500': data.has_pole || data.has_fastest_lap,
+                    'text-secondary': !data.has_pole && !data.has_fastest_lap,
+                  }"
+                >
+                  <span>{{ formatRaceTime(data.fastest_lap) }}</span>
                   <Tag
                     v-if="data.has_fastest_lap && !raceEvent.is_qualifier"
                     value="FL"
-                    class="text-xs bg-purple-500 text-white"
-                    :pt="{ root: { class: 'bg-purple-500 text-white border-purple-600' } }"
+                    class="text-xs"
+                    :pt="{
+                      root: {
+                        style: {
+                          backgroundColor: 'var(--purple)',
+                          color: 'var(--bg-dark)',
+                          border: '1px solid var(--purple)',
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                        },
+                      },
+                    }"
                   />
                 </div>
               </template>
             </Column>
 
+            <!-- Penalties Column -->
             <Column
               v-if="!raceEvent.is_qualifier && raceTimesRequired"
               field="penalties"
@@ -134,18 +171,19 @@
               class="w-42"
             >
               <template #body="{ data }">
-                <div class="flex items-center gap-2">
-                  <span
-                    class="font-mono text-gray-900"
-                    :class="{
-                      'text-red-600 font-semibold': data.penalties && data.penalties !== '',
-                    }"
-                    >{{ formatRaceTime(data.penalties) }}</span
-                  >
+                <div
+                  class="text-center"
+                  :class="{
+                    'text-red-600 font-semibold': data.penalties && data.penalties !== '',
+                    'text-secondary': !data.penalties || data.penalties === '',
+                  }"
+                >
+                  {{ formatRaceTime(data.penalties) }}
                 </div>
               </template>
             </Column>
 
+            <!-- Positions Gained Column -->
             <Column
               v-if="!raceEvent.is_qualifier"
               field="positions_gained"
@@ -153,15 +191,23 @@
               class="w-24"
             >
               <template #body="{ data }">
-                <div class="text-center font-semibold" :class="getPositionsGainedClass(data)">
+                <div
+                  class="text-center font-semibold"
+                  :class="{
+                    'text-green-600': data.positions_gained > 0,
+                    'text-red-600': data.positions_gained < 0,
+                    'text-secondary': data.positions_gained === 0 || data.positions_gained === null,
+                  }"
+                >
                   {{ formatPositionsGained(data.positions_gained) }}
                 </div>
               </template>
             </Column>
 
+            <!-- Points Column -->
             <Column v-if="raceEvent.race_points" field="race_points" header="Points" class="w-24">
               <template #body="{ data }">
-                <PointsCell :points="data.race_points" bold />
+                <PointsCell :points="data.race_points ?? 0" bold />
               </template>
             </Column>
 
@@ -187,9 +233,9 @@ import {
   TechnicalAccordionHeader,
   TechnicalAccordionContent,
 } from '@app/components/common/accordions';
+import { TechDataTable, PositionCell, PointsCell } from '@app/components/common/tables';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
-import { TechDataTable, PositionCell, PointsCell } from '@app/components/common/tables';
 import { useTimeFormat } from '@app/composables/useTimeFormat';
 import { useRaceTimeCalculation } from '@app/composables/useRaceTimeCalculation';
 import type { RaceEventResults, RaceResultWithDriver } from '@app/types/roundResult';
@@ -365,16 +411,5 @@ function formatPositionsGained(value: number | null): string {
     return `+${value}`;
   }
   return value.toString();
-}
-
-// Get CSS class for positions gained/lost
-function getPositionsGainedClass(data: RaceResultWithDriver): string {
-  if (data.positions_gained === null || data.positions_gained === 0) {
-    return 'text-gray-600';
-  }
-  if (data.positions_gained > 0) {
-    return 'text-green-600';
-  }
-  return 'text-red-600';
 }
 </script>

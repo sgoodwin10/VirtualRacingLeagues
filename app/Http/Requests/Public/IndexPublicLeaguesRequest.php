@@ -44,7 +44,8 @@ final class IndexPublicLeaguesRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'search.regex' => 'The search field contains invalid characters. Only letters, numbers, spaces, and common punctuation are allowed.',
+            'search.regex' => 'The search field contains invalid characters. '
+                . 'Only letters, numbers, spaces, and common punctuation are allowed.',
             'search.max' => 'The search field must not exceed 255 characters.',
             'platform_id.integer' => 'The platform ID must be a valid number.',
             'platform_id.exists' => 'The selected platform does not exist.',

@@ -20,7 +20,7 @@
     </div>
 
     <div class="mt-3 flex items-center justify-between">
-      <span class="text-sm text-gray-500" v-html="expectedColumnsText"> </span>
+      <span class="text-sm text-gray-500">{{ expectedColumnsText }}</span>
       <div class="flex gap-2">
         <input
           ref="fileInputRef"
@@ -115,7 +115,7 @@ const expectedColumnsText = computed(() => {
   } else if (props.isQualifying) {
     return 'Required Column Headers: driver, fastest_lap_time';
   } else {
-    return 'Required Column Headers: driver, race_time, original_race_time_difference, fastest_lap_time <br /> Data can be blank if not applicable';
+    return 'Required Column Headers: driver, race_time, original_race_time_difference, fastest_lap_time. Data can be blank if not applicable';
   }
 });
 
@@ -137,7 +137,7 @@ function handleParse(): void {
 function parseLapFormat(value: string): number | null {
   const lapPattern = /^(\d+)\s*laps?$/i;
   const match = value.trim().match(lapPattern);
-  return match ? parseInt(match[1] || '0', 10) : null;
+  return match && match[1] ? parseInt(match[1], 10) : null;
 }
 
 /**
@@ -216,6 +216,7 @@ function parseCsv(text: string, isQualifying: boolean, raceTimesRequired: boolea
 
   // Parse data rows
   const results: CsvResultRow[] = [];
+  const errors: string[] = [];
   const dnfIndicators = ['dnf', 'did not finish', 'retired', 'ret', 'dns', 'dsq'];
 
   rows.forEach((csvRow, index) => {
@@ -260,9 +261,10 @@ function parseCsv(text: string, isQualifying: boolean, raceTimesRequired: boolea
               const calculatedTime = calculateRaceTimeFromLaps(row.fastest_lap_time, lapsDown);
               row.original_race_time_difference = calculatedTime;
             } catch (error) {
-              throw new Error(
+              errors.push(
                 `Row ${index + 2} (${driver}): ${error instanceof Error ? error.message : 'Failed to calculate time from laps'}`,
               );
+              return; // Skip this row and continue with the next one
             }
           } else {
             // Store the time difference
@@ -274,6 +276,11 @@ function parseCsv(text: string, isQualifying: boolean, raceTimesRequired: boolea
 
     results.push(row);
   });
+
+  // If there were errors during parsing, throw with all collected errors
+  if (errors.length > 0) {
+    throw new Error(`CSV parsing errors:\n${errors.join('\n')}`);
+  }
 
   if (results.length === 0) {
     throw new Error('No valid data rows found in CSV');

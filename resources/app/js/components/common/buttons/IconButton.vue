@@ -7,16 +7,18 @@ interface Props {
   variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger' | 'success' | 'warning';
   size?: 'sm' | 'default' | 'lg';
   disabled?: boolean;
-  tooltip?: string | undefined;
+  tooltip?: string;
   tooltipPosition?: 'top' | 'bottom' | 'left' | 'right';
-  ariaLabel?: string | undefined;
+  ariaLabel?: string;
 }
 
 withDefaults(defineProps<Props>(), {
   variant: 'secondary',
   size: 'default',
   disabled: false,
+  tooltip: undefined,
   tooltipPosition: 'top',
+  ariaLabel: undefined,
 });
 
 interface Emits {
@@ -33,7 +35,7 @@ const emit = defineEmits<Emits>();
     :variant="variant"
     :size="size"
     :disabled="disabled"
-    :aria-label="ariaLabel || tooltip"
+    :aria-label="ariaLabel || tooltip || 'Button'"
     class="app-icon-button"
     @click="emit('click', $event)"
   />

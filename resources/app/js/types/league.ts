@@ -64,6 +64,8 @@ export interface League {
   status: LeagueStatus;
   competitions_count: number;
   drivers_count: number;
+  active_seasons_count: number;
+  total_races_count: number;
   created_at: string;
   updated_at: string;
 }

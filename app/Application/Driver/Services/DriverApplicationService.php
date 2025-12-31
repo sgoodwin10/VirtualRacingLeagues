@@ -11,6 +11,7 @@ use App\Application\Driver\DTOs\DriverData;
 use App\Application\Driver\DTOs\ImportDriversData;
 use App\Application\Driver\DTOs\ImportResultData;
 use App\Application\Driver\DTOs\LeagueDriverData;
+use App\Application\Driver\DTOs\LeagueDriverSeasonData;
 use App\Application\Driver\DTOs\PaginatedLeagueDriversData;
 use App\Application\Driver\DTOs\UpdateDriverData;
 use App\Application\Driver\DTOs\UpdateLeagueDriverData;
@@ -330,7 +331,7 @@ final class DriverApplicationService
             // Use existing values if not provided in the request
             $leagueDriver->updateLeagueSettings(
                 driverNumber: $data->driver_number ?? $leagueDriver->driverNumber(),
-                status: DriverStatus::from($data->status),
+                status: $data->status !== null ? DriverStatus::from($data->status) : $leagueDriver->status(),
                 leagueNotes: $data->league_notes ?? $leagueDriver->leagueNotes()
             );
 
@@ -556,8 +557,9 @@ final class DriverApplicationService
     }
 
     /**
-     * Sanitize CSV value to prevent formula injection attacks.
+     * Sanitize CSV value to prevent formula injection attacks and SQL wildcard injection.
      * Removes leading characters that could trigger formula execution: =, +, -, @, \t, \r
+     * Escapes LIKE wildcards (% and _) to prevent SQL wildcard abuse.
      *
      * @param string|null $value The CSV value to sanitize
      * @return string|null The sanitized value
@@ -575,7 +577,47 @@ final class DriverApplicationService
             $value = substr($value, 1);
         }
 
+        // Escape LIKE wildcards to prevent SQL wildcard abuse
+        $value = str_replace(['%', '_'], ['\\%', '\\_'], $value);
+
         return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Get all seasons a league driver is participating in.
+     *
+     * @throws UnauthorizedException If the user does not own the league
+     * @throws \App\Domain\Driver\Exceptions\DriverNotFoundException If the driver is not found in the league
+     * @return array<LeagueDriverSeasonData>
+     */
+    public function getLeagueDriverSeasons(int $leagueId, int $driverId, int $userId): array
+    {
+        // Authorization check
+        $this->authorizeLeagueAccess($leagueId, $userId);
+
+        // Get the league driver (this also validates the driver exists in the league)
+        $result = $this->driverRepository->getLeagueDriver($leagueId, $driverId);
+        $leagueDriverId = $result['league_driver']->id();
+
+        assert($leagueDriverId !== null, 'League driver ID should not be null after retrieval');
+
+        $seasons = $this->driverRepository->getSeasonsForLeagueDriver($leagueDriverId);
+
+        return array_map(
+            fn (array $season) => new LeagueDriverSeasonData(
+                season_id: $season['season_id'],
+                season_name: $season['season_name'],
+                season_slug: $season['season_slug'],
+                season_status: $season['season_status'],
+                competition_id: $season['competition_id'],
+                competition_name: $season['competition_name'],
+                competition_slug: $season['competition_slug'],
+                division_name: $season['division_name'],
+                team_name: $season['team_name'],
+                added_at: $season['added_at']
+            ),
+            $seasons
+        );
     }
 
     // ===================================================================

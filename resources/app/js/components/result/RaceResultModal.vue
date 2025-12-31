@@ -7,8 +7,8 @@
   >
     <template #header>
       <div class="flex items-center gap-3">
-        <PhTrophy :size="24" class="text-amber-600" />
-        <h2 class="text-xl font-semibold text-gray-900">
+        <PhTrophy :size="24" class="text-amber-500" />
+        <h2 class="text-xl font-semibold text-primary">
           {{ isQualifying ? 'Qualifying' : 'Race' }} Results
           <span v-if="!isQualifying">- {{ raceName }}</span>
         </h2>
@@ -18,8 +18,8 @@
     <div class="space-y-6">
       <!-- Loading State -->
       <div v-if="isLoadingDrivers" class="flex items-center justify-center py-12">
-        <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
-        <span class="ml-3 text-gray-500">Loading drivers...</span>
+        <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+        <span class="ml-3 text-secondary">Loading drivers...</span>
       </div>
 
       <template v-else>
@@ -49,9 +49,47 @@
           </div>
         </Message>
 
+        <!-- Empty State (no results yet, edit mode) -->
+        <div
+          v-if="!isReadOnly && formResults.length === 0 && allDrivers.length > 0"
+          class="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-surface-300 rounded-lg bg-surface-50"
+        >
+          <PhTrophy :size="48" class="text-surface-400 mb-4" />
+          <h3 class="text-lg font-semibold text-surface-700 mb-2">No Results Entered Yet</h3>
+          <p class="text-surface-600 text-center mb-6 max-w-md">
+            Get started by importing results from a CSV file above, or manually add drivers to enter
+            their results one by one.
+          </p>
+        </div>
+
+        <!-- Empty State (no results saved, read-only mode) -->
+        <div
+          v-if="isReadOnly && formResults.length === 0 && allDrivers.length > 0"
+          class="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-surface-300 rounded-lg bg-surface-50"
+        >
+          <PhTrophy :size="48" class="text-surface-400 mb-4" />
+          <h3 class="text-lg font-semibold text-surface-700 mb-2">No Results Recorded</h3>
+          <p class="text-surface-600 text-center max-w-md">
+            No results were recorded for this {{ isQualifying ? 'qualifying session' : 'race' }}.
+          </p>
+        </div>
+
+        <!-- No Drivers Warning -->
+        <div
+          v-if="allDrivers.length === 0"
+          class="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-amber-500/50 rounded-lg bg-amber-500/10"
+        >
+          <i class="pi pi-exclamation-triangle text-4xl text-amber-500 mb-4"></i>
+          <h3 class="text-lg font-semibold text-primary mb-2">No Drivers in Season</h3>
+          <p class="text-secondary text-center max-w-md">
+            No drivers have been added to this season yet. Please add drivers to the season before
+            entering results.
+          </p>
+        </div>
+
         <!-- Results Entry Section -->
         <ResultDivisionTabs
-          v-if="hasDivisions"
+          v-if="hasDivisions && allDrivers.length > 0"
           v-model:results="formResults"
           :divisions="divisions"
           :drivers-by-division="driversByDivision"
@@ -65,7 +103,7 @@
         />
 
         <ResultEntryTable
-          v-else
+          v-else-if="!hasDivisions && allDrivers.length > 0"
           v-model:results="formResults"
           :drivers="allDrivers"
           :is-qualifying="isQualifying"
@@ -635,6 +673,11 @@ async function loadData(): Promise<void> {
   isLoadingDrivers.value = true;
 
   try {
+    // Fetch divisions if the season has divisions enabled
+    if (hasDivisions.value) {
+      await divisionStore.fetchDivisions(props.seasonId);
+    }
+
     // Fetch ALL season drivers with pagination
     // Reset filters to ensure we get all drivers
     seasonDriverStore.resetFilters();
@@ -642,10 +685,26 @@ async function loadData(): Promise<void> {
     const perPage = 100; // Max allowed by backend validation
     let currentPage = 1;
     let hasMorePages = true;
-    const allDrivers: SeasonDriver[] = [];
+    const allDriversArray: SeasonDriver[] = [];
 
     // Fetch all pages of drivers
+    // Note: Sequential fetching could be optimized with parallel requests in the future
     while (hasMorePages) {
+      // Safety check to prevent infinite loops (before fetching)
+      if (
+        currentPage > 100 ||
+        (seasonDriverStore.lastPage && currentPage > seasonDriverStore.lastPage)
+      ) {
+        console.warn('Reached maximum page limit (100) while fetching season drivers');
+        toast.add({
+          severity: 'warn',
+          summary: 'Driver Fetch Limit',
+          detail: 'Could not fetch all drivers. Maximum pagination limit reached (10,000 drivers).',
+          life: 5000,
+        });
+        break;
+      }
+
       await seasonDriverStore.fetchSeasonDrivers(props.seasonId, {
         per_page: perPage,
         page: currentPage,
@@ -656,29 +715,17 @@ async function loadData(): Promise<void> {
       const returnedCount = currentPageDrivers.length;
 
       // Add drivers from current page to our local array
-      allDrivers.push(...currentPageDrivers);
+      allDriversArray.push(...currentPageDrivers);
 
       // Check if there are more pages based on:
       // 1. Number of drivers returned (if less than perPage, we've reached the end)
       // 2. Store pagination metadata (more reliable)
       hasMorePages = returnedCount === perPage && currentPage < seasonDriverStore.lastPage;
       currentPage++;
-
-      // Safety check to prevent infinite loops
-      if (currentPage > 100) {
-        console.warn('Reached maximum page limit (100) while fetching season drivers');
-        toast.add({
-          severity: 'warn',
-          summary: 'Driver Fetch Limit',
-          detail: 'Could not fetch all drivers. Maximum pagination limit reached (10,000 drivers).',
-          life: 5000,
-        });
-        break;
-      }
     }
 
     // Copy drivers to local state to ensure reactivity
-    localDrivers.value = allDrivers;
+    localDrivers.value = allDriversArray;
 
     // Wait for the next tick to ensure computed properties are updated
     await nextTick();

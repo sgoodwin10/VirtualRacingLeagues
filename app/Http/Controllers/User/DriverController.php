@@ -194,4 +194,20 @@ final class DriverController extends Controller
             return ApiResponse::error($e->getMessage(), null, 403);
         }
     }
+
+    /**
+     * Get all seasons a league driver is participating in.
+     */
+    public function seasons(int $league, int $driver): JsonResponse
+    {
+        try {
+            $seasons = $this->driverService->getLeagueDriverSeasons($league, $driver, $this->getAuthenticatedUserId());
+
+            return ApiResponse::success(array_map(fn ($season) => $season->toArray(), $seasons));
+        } catch (DriverNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        }
+    }
 }

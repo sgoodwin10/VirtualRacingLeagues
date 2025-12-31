@@ -27,40 +27,63 @@ const TechnicalAccordionStub = defineComponent({
 
 const TechnicalAccordionPanelStub = defineComponent({
   name: 'TechnicalAccordionPanel',
-  props: ['value'],
+  props: {
+    value: { type: String, default: '' },
+  },
   template: '<div class="mock-technical-accordion-panel"><slot></slot></div>',
 });
 
 const TechnicalAccordionHeaderStub = defineComponent({
   name: 'TechnicalAccordionHeader',
-  props: ['title', 'subtitle', 'icon', 'iconVariant'],
+  props: {
+    title: { type: String, default: '' },
+    subtitle: { type: String, default: '' },
+    icon: { type: String, default: '' },
+    iconVariant: { type: String, default: '' },
+  },
   template:
     '<div class="mock-technical-accordion-header"><slot></slot><slot name="suffix"></slot></div>',
 });
 
 const TechnicalAccordionContentStub = defineComponent({
   name: 'TechnicalAccordionContent',
-  props: ['padding'],
+  props: {
+    padding: { type: String, default: '' },
+  },
   template: '<div class="mock-technical-accordion-content"><slot></slot></div>',
 });
 
 const AccordionBadgeStub = defineComponent({
   name: 'AccordionBadge',
-  props: ['text', 'severity'],
+  props: {
+    text: { type: String, default: '' },
+    severity: { type: String, default: '' },
+  },
   template: '<span class="mock-accordion-badge">{{ text }}</span>',
 });
 
 const InputNumberStub = defineComponent({
   name: 'InputNumber',
-  props: ['modelValue', 'min', 'max', 'useGrouping', 'placeholder'],
+  props: {
+    modelValue: { type: Number, default: 0 },
+    min: { type: Number, default: 0 },
+    max: { type: Number, default: 100 },
+    useGrouping: { type: Boolean, default: false },
+    placeholder: { type: String, default: '' },
+  },
   emits: ['update:modelValue'],
   template:
     '<input type="number" :value="modelValue" @input="$emit(\'update:modelValue\', parseInt($event.target.value))" />',
 });
 
 const TextareaStub = defineComponent({
-  name: 'Textarea',
-  props: ['modelValue', 'rows', 'placeholder', 'maxlength'],
+  name: 'PrimeTextarea',
+  props: {
+    modelValue: { type: String, default: '' },
+    rows: { type: Number, default: 3 },
+    placeholder: { type: String, default: '' },
+    maxlength: { type: Number, default: undefined },
+  },
   emits: ['update:modelValue'],
   template:
     '<textarea :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)"></textarea>',

@@ -138,6 +138,7 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::get('/leagues/{league}/drivers/{driver}', [DriverController::class, 'show'])->name('leagues.drivers.show');
             Route::put('/leagues/{league}/drivers/{driver}', [DriverController::class, 'update'])->name('leagues.drivers.update');
             Route::delete('/leagues/{league}/drivers/{driver}', [DriverController::class, 'destroy'])->name('leagues.drivers.destroy');
+            Route::get('/leagues/{league}/drivers/{driver}/seasons', [DriverController::class, 'seasons'])->name('leagues.drivers.seasons');
             Route::post('/leagues/{league}/drivers/import-csv', [DriverController::class, 'importCsv'])
                 ->middleware('throttle:5,1')
                 ->name('leagues.drivers.import-csv');

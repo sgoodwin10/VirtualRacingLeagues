@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
 /**
  * Default classes for the header
  */
-const defaultClasses = 'text-lg font-semibold text-gray-900';
+const defaultClasses = 'text-lg font-bold text-primary';
 
 /**
  * Computed classes based on override setting

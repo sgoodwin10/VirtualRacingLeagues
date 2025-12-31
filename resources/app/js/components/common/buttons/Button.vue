@@ -6,23 +6,27 @@ import type { Component } from 'vue';
 interface Props {
   variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger' | 'success' | 'warning';
   size?: 'sm' | 'default' | 'lg' | 'xl';
-  label?: string | undefined;
-  icon?: Component | undefined;
+  label?: string;
+  icon?: Component;
   iconPos?: 'left' | 'right';
   disabled?: boolean;
   loading?: boolean;
   type?: 'button' | 'submit' | 'reset';
-  ariaLabel?: string | undefined;
-  pt?: Record<string, unknown> | undefined;
+  ariaLabel?: string;
+  pt?: Record<string, unknown>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'secondary',
   size: 'default',
+  label: undefined,
+  icon: undefined,
   iconPos: 'left',
   disabled: false,
   loading: false,
   type: 'button',
+  ariaLabel: undefined,
+  pt: undefined,
 });
 
 interface Emits {

@@ -134,17 +134,12 @@ function handleEditFromView(): void {
 }
 
 async function handleSaveDriver(data: CreateDriverRequest): Promise<void> {
-  try {
-    if (formMode.value === 'create') {
-      await addDriver(data);
-    } else if (selectedDriver.value) {
-      await updateDriver(selectedDriver.value.driver_id, data);
-    }
-    showDriverForm.value = false;
-  } catch (error) {
-    // Error already handled by composable callbacks
-    console.error('Failed to save driver:', error);
+  if (formMode.value === 'create') {
+    await addDriver(data);
+  } else if (selectedDriver.value) {
+    await updateDriver(selectedDriver.value.driver_id, data);
   }
+  showDriverForm.value = false;
 }
 
 function handleRemoveDriver(driver: LeagueDriver): void {
@@ -156,12 +151,7 @@ function handleRemoveDriver(driver: LeagueDriver): void {
     rejectLabel: 'Cancel',
     acceptClass: 'p-button-danger',
     accept: async () => {
-      try {
-        await removeDriver(driver.driver_id);
-      } catch (error) {
-        // Error already handled by composable callbacks
-        console.error('Failed to remove driver:', error);
-      }
+      await removeDriver(driver.driver_id);
     },
   });
 }
@@ -193,7 +183,7 @@ function getDriverName(leagueDriver: LeagueDriver): string {
 </script>
 
 <template>
-  <div class="flex min-h-screen">
+  <div class="flex">
     <!-- Loading State -->
     <div v-if="isLoading" class="flex-1 p-6">
       <Skeleton width="100%" height="100vh" />
@@ -231,7 +221,7 @@ function getDriverName(leagueDriver: LeagueDriver): string {
           <h2
             class="font-mono text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2"
           >
-            <span class="text-[var(--cyan)]">//</span> DRIVERS
+            <span class="text-[var(--cyan)]">//</span> DRIVER MANAGEMENT
           </h2>
         </header>
 
@@ -303,7 +293,7 @@ function getDriverName(leagueDriver: LeagueDriver): string {
 <style scoped>
 /* Ensure responsive behavior */
 @media (max-width: 1024px) {
-  .flex.min-h-screen {
+  .flex {
     flex-direction: column;
   }
 }

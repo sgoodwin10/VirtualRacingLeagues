@@ -286,5 +286,4 @@ describe('Sidebar.vue', () => {
     expect(linkTexts).toContain('Divisions & Teams');
     expect(linkTexts).toContain('Settings');
   });
-
 });

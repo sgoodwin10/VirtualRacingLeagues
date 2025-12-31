@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import ResultCsvImport from '../ResultCsvImport.vue';
 import type { CsvResultRow } from '@app/types/raceResult';
@@ -90,9 +90,23 @@ vi.mock('primevue/textarea', () => ({
 vi.mock('primevue/button', () => ({
   default: {
     name: 'PrimeButton',
-    props: ['label', 'icon', 'size', 'severity', 'disabled', 'type', 'loading', 'text', 'outlined', 'class', 'pt', 'aria-label'],
+    props: [
+      'label',
+      'icon',
+      'size',
+      'severity',
+      'disabled',
+      'type',
+      'loading',
+      'text',
+      'outlined',
+      'class',
+      'pt',
+      'aria-label',
+    ],
     emits: ['click'],
-    template: '<button :disabled="disabled" @click="$emit(\'click\', $event)"><slot name="icon" /><slot />{{ label }}</button>',
+    template:
+      '<button :disabled="disabled" @click="$emit(\'click\', $event)"><slot name="icon" /><slot />{{ label }}</button>',
   },
 }));
 
@@ -100,7 +114,18 @@ vi.mock('primevue/button', () => ({
 vi.mock('@app/components/common/buttons', () => ({
   Button: {
     name: 'Button',
-    props: ['label', 'icon', 'size', 'variant', 'disabled', 'loading', 'type', 'iconPos', 'ariaLabel', 'pt'],
+    props: [
+      'label',
+      'icon',
+      'size',
+      'variant',
+      'disabled',
+      'loading',
+      'type',
+      'iconPos',
+      'ariaLabel',
+      'pt',
+    ],
     emits: ['click'],
     template: '<button :disabled="disabled" @click="$emit(\'click\', $event)">{{ label }}</button>',
   },
@@ -532,7 +557,9 @@ Jane Doe,01:33.123`;
 
       expect(vm.placeholderText).toContain('driver');
       expect(vm.placeholderText).not.toContain('race_time');
-      expect(vm.expectedColumnsText).toBe('Required Column Headers: driver (`fastest_lap_time` optional)');
+      expect(vm.expectedColumnsText).toBe(
+        'Required Column Headers: driver (`fastest_lap_time` optional)',
+      );
     });
   });
 });

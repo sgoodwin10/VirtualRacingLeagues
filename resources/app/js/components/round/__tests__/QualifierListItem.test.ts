@@ -66,9 +66,9 @@ describe('QualifierListItem', () => {
           DeleteButton: {
             template: '<button @click="$emit(\'click\', $event)" data-test-delete-button></button>',
           },
-          Tag: {
-            template: '<span><slot>{{ value }}</slot></span>',
-            props: ['value', 'severity'],
+          BaseBadge: {
+            template: '<span><slot /></span>',
+            props: ['variant', 'size'],
           },
           OrphanedResultsWarning: {
             template: '<div data-test-orphaned-warning @click="$emit(\'orphans-removed\')"></div>',
@@ -132,40 +132,34 @@ describe('QualifierListItem', () => {
     expect(wrapper.text()).not.toContain('Weather:');
   });
 
-  it('shows pole bonus tag when qualifying_pole is set', () => {
-    expect(wrapper.text()).toContain('Pole Bonus');
+  it('shows pole bonus badge when qualifying_pole is set', () => {
+    expect(wrapper.text()).toContain('Pole Bonus: 1pts');
   });
 
-  it('hides pole bonus tag when qualifying_pole is null', async () => {
+  it('hides pole bonus badge when qualifying_pole is null', async () => {
     await wrapper.setProps({
       race: { ...mockQualifier, qualifying_pole: null },
     });
     expect(wrapper.text()).not.toContain('Pole Bonus');
   });
 
-  it('hides pole bonus tag when qualifying_pole is 0', async () => {
+  it('hides pole bonus badge when qualifying_pole is 0', async () => {
     await wrapper.setProps({
       race: { ...mockQualifier, qualifying_pole: 0 },
     });
     expect(wrapper.text()).not.toContain('Pole Bonus');
   });
 
-  it('displays qualifying tag with info severity', () => {
-    expect(wrapper.text()).toContain('Qualifying');
-    // Tag component is stubbed, so we just check the text is present
-  });
-
-  it('applies blue theme styling to container', () => {
-    const container = wrapper.find('.border-blue-200');
+  it('applies theme styling to container', () => {
+    const container = wrapper.find('[class*="border-[var(--color-border-muted)]"]');
     expect(container.exists()).toBe(true);
     expect(container.classes()).toContain('rounded-lg');
-    expect(container.classes()).toContain('hover:border-blue-400');
   });
 
-  it('has stopwatch icon with blue color', () => {
+  it('has stopwatch icon', () => {
     const icon = wrapper.findComponent({ name: 'PhTimer' });
     expect(icon.exists()).toBe(true);
-    expect(icon.props('size')).toBe('24'); // PrimeVue converts number to string
+    expect(icon.props('size')).toBe('24');
   });
 
   it('emits enterResults event when enter results button clicked', async () => {
@@ -232,8 +226,7 @@ describe('QualifierListItem', () => {
   });
 
   it('has hover effect class', () => {
-    const container = wrapper.find('.border-blue-200');
-    expect(container.classes()).toContain('hover:border-blue-400');
+    const container = wrapper.find('[class*="border-[var(--color-border-muted)]"]');
     expect(container.classes()).toContain('transition-colors');
   });
 

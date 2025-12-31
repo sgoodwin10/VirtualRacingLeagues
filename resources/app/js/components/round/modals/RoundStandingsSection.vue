@@ -1,11 +1,12 @@
 <template>
-  <TechnicalAccordion :model-value="['standings']">
+  <TechnicalAccordion model-value="standings">
     <TechnicalAccordionPanel value="standings">
       <TechnicalAccordionHeader
         title="Round Standings"
         :subtitle="standingsSummary"
         :icon="PhTrophy"
         icon-variant="orange"
+        padding="xs"
       />
       <TechnicalAccordionContent padding="none">
         <!-- Standings Table -->
@@ -24,7 +25,7 @@
 
             <Column field="driver_name" header="Driver" class="min-w-[170px]">
               <template #body="{ data }">
-                <span class="font-medium text-gray-900">{{ data.driver_name }}</span>
+                <span class="font-medium text-primary">{{ data.driver_name }}</span>
               </template>
             </Column>
 
@@ -43,7 +44,7 @@
               <template #body="{ data }">
                 <div v-if="data.fastest_lap_points" class="flex items-center justify-center gap-2">
                   <PhLightning :size="16" weight="fill" class="text-purple-500" />
-                  <span class="text-gray-900">{{ data.fastest_lap_points }}</span>
+                  <span class="text-primary">{{ data.fastest_lap_points }}</span>
                 </div>
               </template>
             </Column>
@@ -55,7 +56,7 @@
                   class="flex items-center justify-center gap-2 text-purple-500 font-bold"
                 >
                   <PhMedal :size="16" weight="fill" class="text-purple-500" />
-                  <span class="text-gray-900">{{ data.pole_position_points }}</span>
+                  <span class="text-primary">{{ data.pole_position_points }}</span>
                 </div>
               </template>
             </Column>
@@ -156,7 +157,7 @@ const standingsSummary = computed(() => {
   if (results.length === 0) return 'No standings data';
 
   const leader = results[0];
-  return leader ? `Leader: ${leader.driver_name}` : 'No standings data';
+  return leader ? `Winner: ${leader.driver_name}` : 'No standings data';
 });
 
 const displayStandings = computed<RoundStandingDriver[]>(() => {
@@ -196,7 +197,7 @@ function formatPositionsGained(value: number): string {
 // Get CSS class for positions gained/lost
 function getPositionsGainedClass(data: RoundStandingDriver): string {
   if (data.total_positions_gained === 0) {
-    return 'text-gray-600';
+    return 'text-gray-400';
   }
   if (data.total_positions_gained > 0) {
     return 'text-green-600';

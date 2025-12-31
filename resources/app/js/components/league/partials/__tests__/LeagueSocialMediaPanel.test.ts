@@ -24,6 +24,8 @@ const mockLeagueWithDates: League = {
   updated_at: '2024-01-15T00:00:00Z',
   competitions_count: 0,
   drivers_count: 0,
+  active_seasons_count: 0,
+  total_races_count: 0,
   discord_url: 'https://discord.gg/test',
   website_url: 'https://example.com',
   twitter_handle: '@testleague',

@@ -1,54 +1,55 @@
 <template>
   <div
-    class="flex flex-row rounded-lg border border-blue-200 hover:border-blue-400 transition-colors"
+    class="flex flex-row rounded-lg border border-[var(--color-border-muted)] hover:border-[var(--color-border-default)] transition-colors bg-elevated"
   >
-    <div class="flex items-center p-4 border-r rounded-l-lg border-blue-200 bg-blue-50">
+    <div
+      class="flex items-center p-4 border-r rounded-l-lg border-[var(--color-border-default)] bg-cyan-950"
+    >
       <PhTimer size="24" class="text-blue-600" />
     </div>
 
     <div class="flex flex-grow items-center">
       <div class="flex-grow flex flex-row items-center">
         <div class="flex items-center px-2 min-w-[200px]">
-          <span class="font-medium text-blue-900">{{ race.name || 'Qualifying Session' }}</span>
+          <span class="font-medium text-primary">{{ race.name || 'Qualifying Session' }}</span>
         </div>
 
         <div class="flex flex-row gap-6 text-sm text-gray-600 mr-4">
           <div class="flex flex-col min-w-18">
             <div class="font-medium text-gray-500">Format</div>
-            <div class="text-gray-600 text-md">{{ formatQualifying(race) }}</div>
+            <div class="text-secondary">{{ formatQualifying(race) }}</div>
           </div>
           <div v-if="race.qualifying_length">
             <div class="flex flex-col min-w-18">
               <div class="font-medium text-gray-500">Duration</div>
-              <div class="text-gray-600 text-md">{{ race.qualifying_length }} minutes</div>
+              <div class="text-secondary">{{ race.qualifying_length }} minutes</div>
             </div>
           </div>
           <div v-if="race.qualifying_tire">
             <div class="flex flex-col min-w-18">
               <div class="font-medium text-gray-500">Tyre</div>
-              <div class="text-gray-600 text-md">{{ race.qualifying_tire }}</div>
+              <div class="text-secondary">{{ race.qualifying_tire }}</div>
             </div>
           </div>
           <div v-if="race.weather">
             <div class="flex flex-col">
               <div class="font-medium text-gray-500">Weather</div>
-              <div class="text-gray-600 text-md">{{ race.weather }}</div>
+              <div class="text-secondary">{{ race.weather }}</div>
             </div>
           </div>
         </div>
 
         <div class="flex gap-2 ml-auto">
-          <Tag v-if="hasPoleBonus" value="Pole Bonus" variant="success" />
+          <BaseBadge v-if="hasPoleBonus" variant="cyan"> Pole Bonus </BaseBadge>
         </div>
       </div>
 
       <div class="flex-none flex items-center gap-2 mx-4">
         <Button
-          :label="isCompleted ? 'View Results' : 'Enter Results'"
-          :icon="PhListChecks"
-          text
+          :label="isCompleted ? 'Results' : 'Enter Results'"
+          :icon="isCompleted ? PhTrophy : PhListChecks"
           size="sm"
-          :severity="isCompleted ? 'success' : 'info'"
+          :variant="isCompleted ? 'outline' : 'primary'"
           @click="handleEnterResults"
         />
         <div v-if="!isRoundCompleted" class="flex items-center gap-2">
@@ -68,8 +69,25 @@
             Completed
           </span>
         </div>
-        <EditButton v-if="!isRoundCompleted && !isCompleted" @click="handleEdit" />
-        <DeleteButton v-if="!isRoundCompleted && !isCompleted" @click="handleDelete" />
+        <Button
+          v-if="!isRoundCompleted && !isCompleted"
+          :icon="PhPencil"
+          size="sm"
+          variant="warning"
+          aria-label="Edit race"
+          :title="`Edit race`"
+          @click="handleEdit"
+        />
+
+        <Button
+          v-if="!isRoundCompleted && !isCompleted"
+          :icon="PhTrash"
+          size="sm"
+          variant="danger"
+          aria-label="Delete round"
+          :title="`Delete race`"
+          @click="handleDelete"
+        />
       </div>
     </div>
   </div>
@@ -78,13 +96,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Button } from '@app/components/common/buttons';
-import Tag from 'primevue/tag';
 import ToggleSwitch from 'primevue/toggleswitch';
-import { EditButton, DeleteButton } from '@app/components/common/buttons';
+import { BaseBadge } from '@app/components/common/indicators';
 import OrphanedResultsWarning from './OrphanedResultsWarning.vue';
 import type { Race } from '@app/types/race';
 import { QUALIFYING_FORMAT_OPTIONS } from '@app/types/race';
-import { PhTimer, PhListChecks } from '@phosphor-icons/vue';
+import { PhTimer, PhListChecks, PhPencil, PhTrash, PhTrophy } from '@phosphor-icons/vue';
 
 interface Props {
   race: Race;

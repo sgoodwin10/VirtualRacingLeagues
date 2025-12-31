@@ -1,12 +1,22 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import Dialog from 'primevue/dialog';
+import { computed, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import {
+  PhGameController,
+  PhHash,
+  PhCalendar,
+  PhNotePencil,
+  PhPencil,
+  PhTrophy,
+} from '@phosphor-icons/vue';
+import BaseModal from '@app/components/common/modals/BaseModal.vue';
+import BaseModalHeader from '@app/components/common/modals/BaseModalHeader.vue';
 import { Button } from '@app/components/common/buttons';
-import { PhPencil } from '@phosphor-icons/vue';
-import Chip from 'primevue/chip';
+import { TagIndicator, BaseBadge } from '@app/components/common/indicators';
 import DriverStatusBadge from './DriverStatusBadge.vue';
 import { useDateFormatter } from '@app/composables/useDateFormatter';
-import type { LeagueDriver } from '@app/types/driver';
+import { getLeagueDriverSeasons } from '@app/services/driverSeasonService';
+import type { LeagueDriver, LeagueDriverSeasonData } from '@app/types/driver';
 
 interface Props {
   visible: boolean;
@@ -21,8 +31,14 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+const router = useRouter();
 
 const { formatDate } = useDateFormatter();
+
+// State for seasons
+const driverSeasons = ref<LeagueDriverSeasonData[]>([]);
+const loadingSeasons = ref(false);
+const seasonsError = ref<string | null>(null);
 
 /**
  * Get driver's full name
@@ -33,26 +49,60 @@ const driverName = computed(() => {
 });
 
 /**
- * Get driver's contact info
+ * Get driver's initials for avatar
  */
-const contactInfo = computed(() => {
-  if (!props.driver?.driver) return [];
+const driverInitials = computed(() => {
+  if (!props.driver?.driver) return '?';
+  const name = props.driver.driver.display_name;
+  const parts = name.split(' ').filter((p) => p.length > 0);
 
-  const info = [];
-  const driver = props.driver.driver;
+  // Handle empty array (name is empty or only spaces)
+  if (parts.length === 0) return '?';
 
-  if (driver.email) {
-    info.push({ label: 'Email', value: driver.email, type: 'email' });
-  }
-  if (driver.phone) {
-    info.push({ label: 'Phone', value: driver.phone, type: 'text' });
-  }
+  // Handle single name (return first 2 characters)
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
 
-  return info;
+  // Handle multiple names (first and last initials)
+  const first = parts[0]?.[0] ?? '';
+  const last = parts[parts.length - 1]?.[0] ?? '';
+  return `${first}${last}`.toUpperCase();
 });
 
 /**
- * Get driver's platform IDs
+ * Fetch driver seasons when modal becomes visible and driver is set
+ */
+watch(
+  () => [props.visible, props.driver],
+  async ([visible, driver]) => {
+    if (visible && driver) {
+      await fetchDriverSeasons();
+    }
+  },
+  { immediate: true },
+);
+
+/**
+ * Fetch driver seasons from API
+ */
+async function fetchDriverSeasons(): Promise<void> {
+  if (!props.driver?.league_id || !props.driver?.id) return;
+
+  loadingSeasons.value = true;
+  seasonsError.value = null;
+
+  try {
+    driverSeasons.value = await getLeagueDriverSeasons(props.driver.league_id, props.driver.id);
+  } catch (error) {
+    console.error('Failed to fetch driver seasons:', error);
+    seasonsError.value = 'Failed to load seasons';
+    driverSeasons.value = [];
+  } finally {
+    loadingSeasons.value = false;
+  }
+}
+
+/**
+ * Get driver's platform IDs with icons
  */
 const platformIds = computed(() => {
   if (!props.driver?.driver) return [];
@@ -61,17 +111,59 @@ const platformIds = computed(() => {
   const driver = props.driver.driver;
 
   if (driver.psn_id) {
-    platforms.push({ label: 'PSN ID', value: driver.psn_id });
+    platforms.push({
+      label: 'PSN ID',
+      value: driver.psn_id,
+      icon: PhGameController,
+      iconColor: 'text-cyan-600',
+      bgColor: 'bg-cyan-100',
+      isPrimary: driver.primary_platform_id === 'psn',
+    });
   }
   if (driver.iracing_id) {
-    platforms.push({ label: 'iRacing ID', value: driver.iracing_id });
+    platforms.push({
+      label: 'iRacing ID',
+      value: driver.iracing_id,
+      icon: PhGameController,
+      iconColor: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+      isPrimary: driver.primary_platform_id === 'iracing',
+    });
   }
   if (driver.iracing_customer_id) {
-    platforms.push({ label: 'iRacing Customer ID', value: driver.iracing_customer_id.toString() });
+    platforms.push({
+      label: 'iRacing Customer ID',
+      value: driver.iracing_customer_id.toString(),
+      icon: PhHash,
+      iconColor: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+      isPrimary: false,
+    });
   }
 
   return platforms;
 });
+
+/**
+ * Check if driver has any platform IDs
+ */
+const hasPlatformIds = computed(() => platformIds.value.length > 0);
+
+/**
+ * Navigate to season page
+ */
+async function navigateToSeason(season: LeagueDriverSeasonData): Promise<void> {
+  if (!props.driver?.league_id) return;
+
+  handleClose();
+  try {
+    await router.push(
+      `/leagues/${props.driver.league_id}/competitions/${season.competition_id}/seasons/${season.season_id}`,
+    );
+  } catch (error) {
+    console.error('Navigation failed:', error);
+  }
+}
 
 /**
  * Handle close button
@@ -90,99 +182,227 @@ const handleEdit = (): void => {
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    :header="`Driver Details - ${driverName}`"
-    :modal="true"
-    :closable="true"
-    :draggable="false"
-    class="w-full max-w-3xl"
-    @update:visible="$emit('update:visible', $event)"
-  >
-    <div v-if="driver" class="space-y-6">
-      <!-- Personal Information -->
-      <section>
-        <h3 class="font-semibold mb-4 pb-2 border-b">Personal Information</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="font-medium text-gray-600">Full Name</label>
-            <p class="mt-1">{{ driver.driver.display_name }}</p>
-          </div>
-          <div v-if="driver.driver.nickname">
-            <label class="font-medium text-gray-600">Nickname</label>
-            <p class="mt-1">"{{ driver.driver.nickname }}"</p>
-          </div>
-        </div>
+  <BaseModal :visible="visible" width="3xl" @update:visible="$emit('update:visible', $event)">
+    <template #header>
+      <BaseModalHeader :title="`Driver Details - ${driverName}`" />
+    </template>
 
-        <!-- Contact Information -->
-        <div v-if="contactInfo.length > 0" class="grid grid-cols-2 gap-4 mt-4">
-          <div v-for="info in contactInfo" :key="info.label">
-            <label class="font-medium text-gray-600">{{ info.label }}</label>
-            <p v-if="info.type === 'email'" class="mt-1">
-              <a :href="`mailto:${info.value}`" class="text-blue-600 hover:underline">
-                {{ info.value }}
-              </a>
-            </p>
-            <p v-else class="mt-1">{{ info.value }}</p>
+    <div v-if="driver" class="space-y-4">
+      <!-- Driver Header Card -->
+      <div
+        class="bg-gradient-to-br from-surface-100 to-surface-200 rounded-lg p-6 border border-[var(--border)]"
+      >
+        <div class="flex items-start gap-6">
+          <!-- Avatar -->
+          <div
+            class="flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center border-2 border-cyan-400 shadow-lg"
+          >
+            <span class="font-mono font-bold text-2xl text-white">{{ driverInitials }}</span>
           </div>
-        </div>
-        <p v-else class="text-gray-500 mt-4">No contact information available</p>
-      </section>
 
-      <!-- Platform IDs -->
-      <section>
-        <h3 class="font-semibold mb-4 pb-2 border-b">Platform Identifiers</h3>
-        <div v-if="platformIds.length > 0" class="grid grid-cols-2 gap-4">
-          <div v-for="platform in platformIds" :key="platform.label">
-            <label class="font-medium text-gray-600">{{ platform.label }}</label>
-            <p class="mt-1 font-mono">{{ platform.value }}</p>
-          </div>
-        </div>
-        <p v-else class="text-gray-500">No platform IDs available</p>
-
-        <div v-if="driver.driver.primary_platform_id" class="mt-4">
-          <label class="font-medium text-gray-600">Primary Platform</label>
-          <div class="mt-1">
-            <Chip :label="driver.driver.primary_platform_id" class="bg-blue-100 text-blue-800" />
-          </div>
-        </div>
-      </section>
-
-      <!-- League-Specific Information -->
-      <section>
-        <h3 class="font-semibold mb-4 pb-2 border-b">League Information</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="font-medium text-gray-600">Driver Number</label>
-            <p class="mt-1 font-semibold">{{ driver.driver_number ?? 'Not assigned' }}</p>
-          </div>
-          <div>
-            <label class="font-medium text-gray-600">Status</label>
-            <div class="mt-1">
+          <!-- Driver Info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <h2 class="text-card-title text-xl mb-1">
+                  {{ driver.driver.display_name }}
+                </h2>
+                <p v-if="driver.driver.nickname" class="text-body-small text-[var(--text-muted)]">
+                  "{{ driver.driver.nickname }}"
+                </p>
+              </div>
               <DriverStatusBadge :status="driver.status" />
             </div>
+
+            <!-- Driver Number and Date -->
+            <div class="flex gap-6 mt-4">
+              <div class="flex items-center gap-2">
+                <PhHash :size="16" class="text-[var(--text-muted)]" />
+                <span class="text-form-label text-[var(--text-muted)]">Number</span>
+                <span class="font-mono font-semibold text-[var(--text-primary)]">
+                  {{ driver.driver_number ?? 'N/A' }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <PhCalendar :size="16" class="text-[var(--text-muted)]" />
+                <span class="text-form-label text-[var(--text-muted)]">Added</span>
+                <span class="text-body-small text-[var(--text-secondary)]">
+                  {{ formatDate(driver.added_to_league_at) }}
+                </span>
+              </div>
+            </div>
           </div>
-          <div>
-            <label class="font-medium text-gray-600">Added to League</label>
-            <p class="mt-1">{{ formatDate(driver.added_to_league_at) }}</p>
+        </div>
+      </div>
+
+      <!-- Platform Identifiers Panel -->
+      <div class="bg-surface-100 rounded-lg border border-[var(--border)] overflow-hidden">
+        <div
+          class="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-surface-200"
+        >
+          <PhGameController :size="20" weight="fill" class="text-purple-600" />
+          <h3 class="text-card-title-small">Platform Identifiers</h3>
+        </div>
+
+        <div v-if="hasPlatformIds" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- Platform Items -->
+          <div
+            v-for="platform in platformIds"
+            :key="platform.label"
+            :class="[
+              'flex items-center gap-3 p-3 rounded-lg border transition-all',
+              platform.isPrimary
+                ? 'bg-cyan-dim border-cyan-500'
+                : 'bg-surface-200 border-transparent',
+            ]"
+          >
+            <div
+              :class="[
+                'flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg',
+                platform.bgColor,
+              ]"
+            >
+              <component :is="platform.icon" :size="20" :class="platform.iconColor" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-form-label text-[var(--text-muted)] uppercase">
+                  {{ platform.label }}
+                </span>
+                <TagIndicator v-if="platform.isPrimary" variant="cyan" size="xs">
+                  PRIMARY
+                </TagIndicator>
+              </div>
+              <div class="font-mono font-semibold text-[var(--text-primary)] mt-0.5">
+                {{ platform.value }}
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- League Notes -->
-        <div v-if="driver.league_notes" class="mt-4">
-          <label class="font-medium text-gray-600">League Notes</label>
-          <div class="mt-1 p-3 bg-gray-50 rounded border">
-            <p class="whitespace-pre-wrap">{{ driver.league_notes }}</p>
-          </div>
+        <!-- Empty State -->
+        <div v-else class="p-8 text-center">
+          <PhGameController :size="48" class="text-[var(--text-muted)] opacity-30 mx-auto mb-3" />
+          <p class="text-body-small text-[var(--text-muted)]">No platform identifiers available</p>
         </div>
-      </section>
+      </div>
+
+      <!-- Competitions & Seasons Panel -->
+      <div class="bg-surface-100 rounded-lg border border-[var(--border)] overflow-hidden">
+        <div
+          class="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-surface-200"
+        >
+          <PhTrophy :size="20" weight="fill" class="text-orange-600" />
+          <h3 class="text-card-title-small">Competitions & Seasons</h3>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="loadingSeasons" class="p-8 text-center">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500" />
+          <p class="mt-3 text-body-small text-[var(--text-muted)]">Loading seasons...</p>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="seasonsError" class="p-8 text-center">
+          <PhTrophy :size="48" class="text-red-500 opacity-30 mx-auto mb-3" />
+          <p class="text-body-small text-red-600">{{ seasonsError }}</p>
+        </div>
+
+        <!-- Season List -->
+        <div v-else-if="driverSeasons.length > 0" class="p-4 space-y-2">
+          <button
+            v-for="season in driverSeasons"
+            :key="season.season_id"
+            type="button"
+            class="w-full flex items-center gap-4 p-4 rounded-lg bg-surface-200 border border-transparent hover:border-cyan-500 hover:bg-cyan-dim transition-all group"
+            @click="navigateToSeason(season)"
+          >
+            <!-- Active Indicator -->
+            <div
+              v-if="season.season_status === 'active'"
+              class="flex-shrink-0 w-2 h-2 rounded-full bg-green-500"
+            />
+            <div v-else class="flex-shrink-0 w-2 h-2" />
+
+            <!-- Season Info -->
+            <div class="flex-1 flex flex-row text-left min-w-0">
+              <div class="flex flex-grow">
+                <div class="self-center">
+                  {{ season.season_name }}
+                </div>
+                <div class="text-sm text-[var(--text-secondary)] self-center pl-2">
+                  {{ season.competition_name }}
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 mt-0.5 h-full">
+                <BaseBadge v-if="season.season_status === 'active'" variant="green" size="md">
+                  ACTIVE
+                </BaseBadge>
+                <BaseBadge v-if="season.division_name" variant="purple" size="md">
+                  {{ season.division_name }}
+                </BaseBadge>
+                <BaseBadge v-if="season.team_name" variant="cyan" size="md">
+                  {{ season.team_name }}
+                </BaseBadge>
+              </div>
+            </div>
+
+            <!-- Arrow Icon -->
+            <div
+              class="flex-shrink-0 text-[var(--text-muted)] group-hover:text-cyan-500 transition-colors"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else class="p-8 text-center">
+          <PhTrophy :size="48" class="text-[var(--text-muted)] opacity-30 mx-auto mb-3" />
+          <p class="text-body-small text-[var(--text-muted)]">
+            Not participating in any seasons yet
+          </p>
+        </div>
+      </div>
+
+      <!-- League Notes Panel -->
+      <div
+        v-if="driver.league_notes"
+        class="bg-surface-100 rounded-lg border border-[var(--border)] overflow-hidden"
+      >
+        <div
+          class="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-surface-200"
+        >
+          <PhNotePencil :size="20" weight="fill" class="text-orange-600" />
+          <h3 class="text-card-title-small">League Notes</h3>
+        </div>
+        <div class="p-4">
+          <p class="text-body text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
+            {{ driver.league_notes }}
+          </p>
+        </div>
+      </div>
     </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button label="Close" variant="secondary" @click="handleClose" />
+        <Button label="Close" variant="outline" @click="handleClose" />
         <Button label="Edit Driver" :icon="PhPencil" @click="handleEdit" />
       </div>
     </template>
-  </Dialog>
+  </BaseModal>
 </template>

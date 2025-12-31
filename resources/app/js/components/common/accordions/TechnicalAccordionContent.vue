@@ -6,7 +6,7 @@ import { PADDING_MAP } from './types';
 
 interface Props {
   elevated?: boolean;
-  padding?: AccordionPadding;
+  padding?: AccordionPadding | string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -14,7 +14,14 @@ const props = withDefaults(defineProps<Props>(), {
   padding: 'md',
 });
 
-const paddingValue = computed(() => PADDING_MAP[props.padding]);
+const paddingValue = computed(() => {
+  // If it's a predefined padding key, use the map
+  if (props.padding in PADDING_MAP) {
+    return PADDING_MAP[props.padding as AccordionPadding];
+  }
+  // Otherwise, treat it as a custom padding value
+  return props.padding;
+});
 
 const passthroughOptions = computed(() => ({
   root: {
