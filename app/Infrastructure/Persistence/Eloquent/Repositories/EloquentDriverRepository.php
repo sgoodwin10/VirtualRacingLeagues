@@ -385,30 +385,31 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
 
     public function getLeagueDriverCounts(int $leagueId): array
     {
-        $total = DB::table('league_drivers')
+        $counts = DB::table('league_drivers')
             ->where('league_id', $leagueId)
-            ->count();
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as inactive,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as banned
+            ', ['active', 'inactive', 'banned'])
+            ->first();
 
-        $active = DB::table('league_drivers')
-            ->where('league_id', $leagueId)
-            ->where('status', 'active')
-            ->count();
-
-        $inactive = DB::table('league_drivers')
-            ->where('league_id', $leagueId)
-            ->where('status', 'inactive')
-            ->count();
-
-        $banned = DB::table('league_drivers')
-            ->where('league_id', $leagueId)
-            ->where('status', 'banned')
-            ->count();
+        // Handle edge case where query returns null (should never happen with COUNT, but PHPStan requires null check)
+        if ($counts === null) {
+            return [
+                'total' => 0,
+                'active' => 0,
+                'inactive' => 0,
+                'banned' => 0,
+            ];
+        }
 
         return [
-            'total' => $total,
-            'active' => $active,
-            'inactive' => $inactive,
-            'banned' => $banned,
+            'total' => (int) $counts->total,
+            'active' => (int) $counts->active,
+            'inactive' => (int) $counts->inactive,
+            'banned' => (int) $counts->banned,
         ];
     }
 
@@ -549,55 +550,40 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
      */
     public function getDriverRaceStats(int $driverId): array
     {
-        // Get total races count
-        $races = DB::table('race_results')
+        $stats = DB::table('race_results')
             ->where('driver_id', $driverId)
-            ->count();
+            ->selectRaw('
+                COUNT(*) as races,
+                SUM(CASE WHEN position = 1 THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN position BETWEEN 1 AND 3 THEN 1 ELSE 0 END) as podiums,
+                SUM(CASE WHEN has_pole = 1 THEN 1 ELSE 0 END) as poles,
+                SUM(CASE WHEN has_fastest_lap = 1 THEN 1 ELSE 0 END) as fastest_laps,
+                SUM(CASE WHEN dnf = 1 THEN 1 ELSE 0 END) as dnfs,
+                MIN(CASE WHEN position > 0 THEN position ELSE NULL END) as best_finish
+            ')
+            ->first();
 
-        // Get wins (position = 1)
-        $wins = DB::table('race_results')
-            ->where('driver_id', $driverId)
-            ->where('position', 1)
-            ->count();
-
-        // Get podiums (position <= 3)
-        $podiums = DB::table('race_results')
-            ->where('driver_id', $driverId)
-            ->whereBetween('position', [1, 3])
-            ->count();
-
-        // Get pole positions
-        $poles = DB::table('race_results')
-            ->where('driver_id', $driverId)
-            ->where('has_pole', true)
-            ->count();
-
-        // Get fastest laps
-        $fastestLaps = DB::table('race_results')
-            ->where('driver_id', $driverId)
-            ->where('has_fastest_lap', true)
-            ->count();
-
-        // Get DNFs
-        $dnfs = DB::table('race_results')
-            ->where('driver_id', $driverId)
-            ->where('dnf', true)
-            ->count();
-
-        // Get best finish
-        $bestFinish = DB::table('race_results')
-            ->where('driver_id', $driverId)
-            ->where('position', '>', 0)
-            ->min('position');
+        // Handle edge case where query returns null (should never happen with COUNT, but PHPStan requires null check)
+        if ($stats === null) {
+            return [
+                'races' => 0,
+                'wins' => 0,
+                'podiums' => 0,
+                'poles' => 0,
+                'fastest_laps' => 0,
+                'dnfs' => 0,
+                'best_finish' => null,
+            ];
+        }
 
         return [
-            'races' => $races,
-            'wins' => $wins,
-            'podiums' => $podiums,
-            'poles' => $poles,
-            'fastest_laps' => $fastestLaps,
-            'dnfs' => $dnfs,
-            'best_finish' => $bestFinish !== null ? (int) $bestFinish : null,
+            'races' => (int) $stats->races,
+            'wins' => (int) $stats->wins,
+            'podiums' => (int) $stats->podiums,
+            'poles' => (int) $stats->poles,
+            'fastest_laps' => (int) $stats->fastest_laps,
+            'dnfs' => (int) $stats->dnfs,
+            'best_finish' => $stats->best_finish !== null ? (int) $stats->best_finish : null,
         ];
     }
 

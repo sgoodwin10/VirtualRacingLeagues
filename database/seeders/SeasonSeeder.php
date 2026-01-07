@@ -27,8 +27,8 @@ class SeasonSeeder extends Seeder
             ['id' => 4],
             [
                 'competition_id' => 1,
-                'name' => 'Season 1',
-                'slug' => 'season-1',
+                'name' => 'Season 15',
+                'slug' => 'season-15',
                 'car_class' => null,
                 'description' => null,
                 'technical_specs' => null,

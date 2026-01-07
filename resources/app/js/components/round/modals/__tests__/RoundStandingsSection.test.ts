@@ -572,7 +572,7 @@ describe('RoundStandingsSection', () => {
 
       const html = wrapper.html();
       // Check that gray text class exists for Max Verstappen's 0
-      expect(html).toContain('text-gray-600');
+      expect(html).toContain('text-gray-400');
     });
 
     it('should display total positions gained with divisions', () => {

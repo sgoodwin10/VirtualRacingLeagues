@@ -17,7 +17,7 @@ describe('DriverCell', () => {
     const wrapper = mount(DriverCell, {
       props: {
         name: 'John Doe',
-        subtitle: '#1 | NED',
+        nickname: '#1 | NED',
       },
     });
 
@@ -123,7 +123,7 @@ describe('DriverCell', () => {
     const wrapper = mount(DriverCell, {
       props: {
         name: 'John Doe',
-        subtitle: 'Team Example',
+        nickname: 'Team Example',
       },
     });
 

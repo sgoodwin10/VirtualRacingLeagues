@@ -96,9 +96,9 @@
               <!-- Qualifying Length -->
               <div>
                 <FormLabel for="qualifying_length" text="Length (min)" />
-                <InputNumber
-                  id="qualifying_length"
+                <StyledInputNumber
                   v-model="form.qualifying_length"
+                  input-id="qualifying_length"
                   :min="1"
                   :max="999"
                   :invalid="!!errors.qualifying_length"
@@ -129,7 +129,7 @@
                   <div class="flex items-center gap-2 pt-1">
                     <Checkbox id="bonus_pole" v-model="hasQualifyingPole" :binary="true" />
                     <label for="bonus_pole" class="text-sm">Enable pole bonus</label>
-                    <InputNumber
+                    <StyledInputNumber
                       v-if="hasQualifyingPole"
                       v-model="form.qualifying_pole"
                       :max-fraction-digits="2"
@@ -259,9 +259,9 @@
                           "
                           required
                         />
-                        <InputNumber
-                          id="length_value"
+                        <StyledInputNumber
                           v-model="form.length_value"
+                          input-id="length_value"
                           :min="1"
                           :max="form.length_type === 'laps' ? 999 : 9999"
                           :invalid="!!errors.length_value"
@@ -374,9 +374,9 @@
                             :key="position"
                           >
                             <InputGroupAddon class="bg-slate-100">P{{ position }}</InputGroupAddon>
-                            <InputNumber
-                              :id="`position_${position}`"
+                            <StyledInputNumber
                               v-model="form.points_system[position]"
+                              :input-id="`position_${position}`"
                               :max-fraction-digits="2"
                               :min="0"
                               :max="999"
@@ -443,7 +443,7 @@
                           <label for="bonus_fastest_lap" class="text-sm"
                             >Enable fastest lap bonus</label
                           >
-                          <InputNumber
+                          <StyledInputNumber
                             v-if="hasFastestLapBonus"
                             v-model="form.fastest_lap"
                             :max-fraction-digits="2"
@@ -480,9 +480,9 @@
                     <!-- DNF Points -->
                     <FormInputGroup>
                       <FormLabel for="dnf_points" text="DNF Points" />
-                      <InputNumber
-                        id="dnf_points"
+                      <StyledInputNumber
                         v-model="form.dnf_points"
+                        input-id="dnf_points"
                         :max-fraction-digits="2"
                         :min="0"
                         :max="99"
@@ -512,7 +512,7 @@
                         :binary="true"
                       />
                       <label for="bonus_fastest_lap_disabled" class="text-sm">Fastest lap</label>
-                      <InputNumber
+                      <StyledInputNumber
                         v-if="hasFastestLapBonus"
                         v-model="form.fastest_lap"
                         :max-fraction-digits="2"
@@ -544,9 +544,9 @@
                   <div class="grid grid-cols-2 gap-2">
                     <FormInputGroup>
                       <FormLabel for="dnf_points_disabled" text="DNF" />
-                      <InputNumber
-                        id="dnf_points_disabled"
+                      <StyledInputNumber
                         v-model="form.dnf_points"
+                        input-id="dnf_points_disabled"
                         :max-fraction-digits="2"
                         :min="0"
                         :max="99"
@@ -640,7 +640,7 @@ import {
   PhNote,
 } from '@phosphor-icons/vue';
 import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
+import StyledInputNumber from '@app/components/common/forms/StyledInputNumber.vue';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import Checkbox from 'primevue/checkbox';

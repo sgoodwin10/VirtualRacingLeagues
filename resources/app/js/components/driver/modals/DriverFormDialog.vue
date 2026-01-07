@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import BaseModalHeader from '@app/components/common/modals/BaseModalHeader.vue';
 import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
+import StyledInputNumber from '@app/components/common/forms/StyledInputNumber.vue';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import { Button } from '@app/components/common/buttons';
@@ -70,18 +70,16 @@ const dialogTitle = computed(() => {
   return props.mode === 'create' ? 'Add Driver' : 'Edit Driver';
 });
 
-// Fetch platform form fields if league is provided
-// Call composable inside setup context, not at module level
-if (props.leagueId) {
-  usePlatformFormFields({
-    leagueId: props.leagueId,
-    onSuccess: () => {
-      if (props.mode === 'create') {
-        resetForm();
-      }
-    },
-  });
-}
+// Fetch platform form fields - composable MUST be called unconditionally
+// at the top level, not inside an if block
+usePlatformFormFields({
+  leagueId: computed(() => props.leagueId),
+  onSuccess: () => {
+    if (props.mode === 'create') {
+      resetForm();
+    }
+  },
+});
 
 // Get platform form fields from store
 const platformFormFields = computed(() => leagueStore.platformFormFields);
@@ -305,9 +303,9 @@ const resetForm = (): void => {
               class="w-full"
               @update:model-value="formData[field.field] = $event"
             />
-            <InputNumber
+            <StyledInputNumber
               v-else-if="field.type === 'number'"
-              :id="field.field"
+              :input-id="field.field"
               :model-value="(formData[field.field] as number) || undefined"
               :use-grouping="false"
               :placeholder="field.placeholder || ''"
@@ -385,9 +383,9 @@ const resetForm = (): void => {
                 <!-- Driver Number -->
                 <FormInputGroup>
                   <FormLabel for="driver_number" text="Driver Number" />
-                  <InputNumber
-                    id="driver_number"
+                  <StyledInputNumber
                     v-model="formData.driver_number"
+                    input-id="driver_number"
                     :min="1"
                     :max="999"
                     :use-grouping="false"

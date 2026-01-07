@@ -14,6 +14,7 @@ import SpeedDial from 'primevue/speeddial';
 import { Button, FooterAddButton } from '@app/components/common/buttons';
 import InfoItem from '@app/components/common/InfoItem.vue';
 import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
+import SeasonFormSplitModal from '@app/components/season/modals/SeasonFormSplitModal.vue';
 import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 import { useCompetitionStore } from '@app/stores/competitionStore';
 import { useSeasonStore } from '@app/stores/seasonStore';
@@ -57,6 +58,9 @@ const TOAST_ERROR_DURATION = 5000;
 const showSeasonDrawer = ref(false);
 const editingSeasonId = ref<number | null>(null);
 const seasonOperations = ref<Record<number, boolean>>({});
+
+// Toggle between drawer and split modal design (set to true to use new split modal)
+const useSplitModal = ref(true);
 
 const cardClasses = computed(() => ({
   'opacity-60': props.competition.is_archived,
@@ -266,7 +270,7 @@ async function archiveSeason(seasonId: number): Promise<void> {
 
 function confirmUnarchiveSeason(season: CompetitionSeason): void {
   showConfirmation({
-    message: `Are you sure you want to unarchive "${season.name}"? All associated rounds and races will also be restored.`,
+    message: `Are you sure you want to unarchive "${season.name}"?`,
     header: 'Unarchive Season',
     icon: 'pi pi-inbox',
     acceptClass: 'p-button-success',
@@ -556,8 +560,18 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Season Form Drawer -->
+    <!-- Season Form Modal (toggle between drawer and split modal) -->
+    <SeasonFormSplitModal
+      v-if="useSplitModal"
+      v-model:visible="showSeasonDrawer"
+      :competition-id="competition.id"
+      :season="editingSeasonData"
+      :is-edit-mode="!!editingSeasonId"
+      @season-saved="handleSeasonSaved"
+      @hide="handleDrawerHide"
+    />
     <SeasonFormDrawer
+      v-else
       v-model:visible="showSeasonDrawer"
       :competition-id="competition.id"
       :season="editingSeasonData"

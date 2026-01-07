@@ -9,10 +9,10 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Teams Backup Seeder
+ * TeamsBackupSeeder
  *
  * This seeder restores the teams table data from a backup.
- * Generated: 2025-12-22
+ * Generated: 2026-01-07
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
  * Dependencies: SeasonsBackupSeeder must run first
@@ -62,16 +62,16 @@ class TeamsBackupSeeder extends Seeder
             ],
         ];
 
-        foreach ($teams as $teamData) {
+        foreach ($teams as $teamsData) {
             Team::updateOrCreate(
-                ['id' => $teamData['id']],
-                $teamData
+                ['id' => $teamsData['id']],
+                $teamsData
             );
         }
 
         // Re-enable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $this->command->info('Teams backup seeded successfully. Total records: ' . count($teams));
+        $this->command->info('TeamsBackupSeeder seeded successfully. Total records: ' . count($teams));
     }
 }

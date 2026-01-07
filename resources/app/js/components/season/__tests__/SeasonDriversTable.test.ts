@@ -63,11 +63,11 @@ vi.mock('primevue/column', () => ({
     template: '<div><slot name="body" /></div>',
   },
 }));
-
-vi.mock('primevue/button', () => ({
-  default: {
+// Mock Button component with proper template
+vi.mock('@app/components/common/buttons', () => ({
+  Button: {
     name: 'Button',
-    props: ['label', 'icon', 'size', 'severity', 'disabled'],
+    props: ['label', 'icon', 'size', 'severity', 'variant', 'disabled'],
     emits: ['click'],
     template: '<button :disabled="disabled" @click="$emit(\'click\')">{{ label }}<slot /></button>',
   },
@@ -83,7 +83,9 @@ vi.mock('primevue/chip', () => ({
 vi.mock('primevue/select', () => ({
   default: {
     name: 'Select',
-    template: '<select><slot /></select>',
+    props: ['modelValue', 'options', 'optionLabel', 'optionValue', 'placeholder', 'disabled', 'showClear'],
+    emits: ['update:modelValue'],
+    template: '<select :disabled="disabled" @change="$emit(\'update:modelValue\', $event.target.value)"><option v-for="opt in options" :key="opt[optionValue] || opt.value" :value="opt[optionValue] || opt.value">{{ opt[optionLabel] || opt.label }}</option></select>',
   },
 }));
 
@@ -738,23 +740,24 @@ describe('SeasonDriversTable', () => {
     wrapper.unmount();
   });
 
-  it('renders "Manage Drivers" button by default', () => {
+  it('renders "Manage Drivers" button by default when divisions are enabled', () => {
     wrapper = mount(SeasonDriversTable, {
       props: {
         seasonId: 1,
         loading: false,
+        raceDivisionsEnabled: true,
       },
       global: {
         plugins: [createPinia()],
       },
     });
 
-    const manageButton = wrapper.find('button');
-    expect(manageButton.exists()).toBe(true);
-    expect(manageButton.text()).toContain('Manage Drivers');
+    const buttons = wrapper.findAll('button');
+    const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
+    expect(manageButton).toBeDefined();
   });
 
-  it('renders "Manage Drivers" button when neither divisions nor teams are enabled', () => {
+  it('does not render filter bar when neither divisions nor teams are enabled', () => {
     wrapper = mount(SeasonDriversTable, {
       props: {
         seasonId: 1,
@@ -767,9 +770,10 @@ describe('SeasonDriversTable', () => {
       },
     });
 
-    const manageButton = wrapper.find('button');
-    expect(manageButton.exists()).toBe(true);
-    expect(manageButton.text()).toContain('Manage Drivers');
+    const buttons = wrapper.findAll('button');
+    const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
+    // Button should NOT exist when neither flag is enabled
+    expect(manageButton).toBeUndefined();
   });
 
   it('renders "Manage Drivers" button when only divisions are enabled', () => {
@@ -813,6 +817,7 @@ describe('SeasonDriversTable', () => {
       props: {
         seasonId: 1,
         loading: false,
+        raceDivisionsEnabled: true,
       },
       global: {
         plugins: [createPinia()],
@@ -834,6 +839,7 @@ describe('SeasonDriversTable', () => {
         seasonId: 1,
         loading: false,
         manageButtonDisabled: true,
+        raceDivisionsEnabled: true,
       },
       global: {
         plugins: [createPinia()],

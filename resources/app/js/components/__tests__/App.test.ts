@@ -26,7 +26,7 @@ describe('User Dashboard - App Component', () => {
     });
 
     // App renders the LeagueList view with expected content
-    expect(wrapper.text()).toContain('Your Leagues');
+    expect(wrapper.text()).toContain('YOUR LEAGUES');
   });
 
   it('renders the router-view component', async () => {
@@ -41,7 +41,7 @@ describe('User Dashboard - App Component', () => {
     });
 
     // App renders the router-view with LeagueList content
-    expect(wrapper.html()).toContain('Your Leagues');
+    expect(wrapper.html()).toContain('YOUR LEAGUES');
   });
 
   it('mounts without errors when router is configured', async () => {

@@ -59,4 +59,10 @@ interface RoundRepositoryInterface
      * Check if a round exists.
      */
     public function exists(int $id): bool;
+
+    /**
+     * Check if a user owns the league that contains this round.
+     * Used for authorization in form requests.
+     */
+    public function isOwnedByUser(int $roundId, int $userId): bool;
 }

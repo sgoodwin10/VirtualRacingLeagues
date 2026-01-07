@@ -10,6 +10,7 @@ use App\Domain\User\Exceptions\UserNotFoundException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
+use App\Models\Admin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,12 +31,12 @@ final class UserImpersonationController extends Controller
      * Consume an impersonation token via GET and redirect to user dashboard.
      * This is the recommended approach - opens in new tab with server-side redirect.
      *
-     * GET /login-as?token={uuid}
+     * GET /login-as?token={hex-string}
      */
     public function impersonateViaGet(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'token' => ['required', 'string', 'uuid'],
+            'token' => ['required', 'string', 'size:64', 'regex:/^[a-f0-9]+$/i'],
         ]);
 
         try {
@@ -55,6 +56,29 @@ final class UserImpersonationController extends Controller
 
             // Regenerate session for security
             $request->session()->regenerate();
+
+            // Log impersonation activity
+            try {
+                $admin = isset($result['admin_id']) ? Admin::find($result['admin_id']) : null;
+
+                activity()
+                    ->causedBy($admin)
+                    ->performedOn($eloquentUser)
+                    ->withProperties([
+                        'admin_id' => $result['admin_id'] ?? null,
+                        'admin_email' => $result['admin_email'] ?? null,
+                        'user_email' => $eloquentUser->email,
+                        'ip_address' => $request->ip(),
+                    ])
+                    ->log('Admin impersonated user');
+            } catch (\Exception $e) {
+                // Log the error but don't break the impersonation flow
+                logger()->error('Failed to log impersonation activity', [
+                    'error' => $e->getMessage(),
+                    'admin_id' => $result['admin_id'] ?? null,
+                    'user_id' => $eloquentUser->id,
+                ]);
+            }
 
             // Always redirect to app subdomain root
             $appUrl = str_replace('//', '//app.', config('app.url'));
@@ -83,12 +107,12 @@ final class UserImpersonationController extends Controller
      * DEPRECATED: Use GET /login-as instead for better UX with automatic redirect.
      *
      * POST /api/impersonate
-     * Request body: { "token": "uuid-string" }
+     * Request body: { "token": "hex-string" }
      */
     public function impersonate(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'token' => ['required', 'string', 'uuid'],
+            'token' => ['required', 'string', 'size:64', 'regex:/^[a-f0-9]+$/i'],
         ]);
 
         try {
@@ -108,6 +132,29 @@ final class UserImpersonationController extends Controller
 
             // Regenerate session for security
             $request->session()->regenerate();
+
+            // Log impersonation activity
+            try {
+                $admin = isset($result['admin_id']) ? Admin::find($result['admin_id']) : null;
+
+                activity()
+                    ->causedBy($admin)
+                    ->performedOn($eloquentUser)
+                    ->withProperties([
+                        'admin_id' => $result['admin_id'] ?? null,
+                        'admin_email' => $result['admin_email'] ?? null,
+                        'user_email' => $eloquentUser->email,
+                        'ip_address' => $request->ip(),
+                    ])
+                    ->log('Admin impersonated user');
+            } catch (\Exception $e) {
+                // Log the error but don't break the impersonation flow
+                logger()->error('Failed to log impersonation activity', [
+                    'error' => $e->getMessage(),
+                    'admin_id' => $result['admin_id'] ?? null,
+                    'user_id' => $eloquentUser->id,
+                ]);
+            }
 
             // Return user data
             return ApiResponse::success(

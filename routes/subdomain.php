@@ -14,6 +14,7 @@ use App\Http\Controllers\Public\PublicPlatformController;
 use App\Http\Controllers\User\CompetitionController;
 use App\Http\Controllers\User\DivisionController;
 use App\Http\Controllers\User\DriverController;
+use App\Http\Controllers\User\LeagueActivityLogController;
 use App\Http\Controllers\User\LeagueController;
 use App\Http\Controllers\User\PlatformController;
 use App\Http\Controllers\User\PlatformSettingsController;
@@ -142,6 +143,10 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::post('/leagues/{league}/drivers/import-csv', [DriverController::class, 'importCsv'])
                 ->middleware('throttle:5,1')
                 ->name('leagues.drivers.import-csv');
+
+            // League Activity Logs
+            Route::get('/leagues/{league}/activities', [LeagueActivityLogController::class, 'index'])->name('leagues.activities.index');
+            Route::get('/leagues/{league}/activities/{activityId}', [LeagueActivityLogController::class, 'show'])->name('leagues.activities.show');
 
             // League Competitions
             Route::get('/leagues/{leagueId}/competitions', [CompetitionController::class, 'index'])->name('leagues.competitions.index');

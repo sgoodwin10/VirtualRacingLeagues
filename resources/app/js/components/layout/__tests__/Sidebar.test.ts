@@ -39,6 +39,7 @@ describe('Sidebar.vue', () => {
         plugins: [router],
         stubs: {
           SidebarLink: true,
+          SeasonFormSplitModal: true,
         },
       },
     });
@@ -55,6 +56,7 @@ describe('Sidebar.vue', () => {
         plugins: [router],
         stubs: {
           SidebarLink: true,
+          SeasonFormSplitModal: true,
         },
       },
     });
@@ -122,6 +124,7 @@ describe('Sidebar.vue', () => {
         plugins: [router],
         stubs: {
           SidebarLink: true,
+          SeasonFormSplitModal: true,
         },
       },
     });
@@ -191,6 +194,7 @@ describe('Sidebar.vue', () => {
         plugins: [router],
         stubs: {
           SidebarLink: true,
+          SeasonFormSplitModal: true,
         },
       },
     });
@@ -263,6 +267,7 @@ describe('Sidebar.vue', () => {
             template: '<a>{{ label }}</a>',
             props: ['to', 'label', 'icon', 'tag'],
           },
+          SeasonFormSplitModal: true,
         },
       },
     });
@@ -284,6 +289,6 @@ describe('Sidebar.vue', () => {
     expect(linkTexts).toContain('Standings');
     expect(linkTexts).toContain('Drivers');
     expect(linkTexts).toContain('Divisions & Teams');
-    expect(linkTexts).toContain('Settings');
+    expect(linkTexts).toContain('Season Status');
   });
 });

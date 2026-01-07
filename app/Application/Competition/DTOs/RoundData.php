@@ -49,7 +49,6 @@ final class RoundData extends Data
         public readonly int $created_by_user_id,
         public readonly string $created_at,
         public readonly string $updated_at,
-        public readonly ?string $deleted_at,
     ) {
     }
 
@@ -88,7 +87,6 @@ final class RoundData extends Data
             created_by_user_id: $round->createdByUserId(),
             created_at: $round->createdAt()->format('Y-m-d H:i:s'),
             updated_at: $round->updatedAt()->format('Y-m-d H:i:s'),
-            deleted_at: $round->deletedAt()?->format('Y-m-d H:i:s'),
         );
     }
 }

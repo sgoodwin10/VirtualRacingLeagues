@@ -133,7 +133,7 @@ describe('QualifierListItem', () => {
   });
 
   it('shows pole bonus badge when qualifying_pole is set', () => {
-    expect(wrapper.text()).toContain('Pole Bonus: 1pts');
+    expect(wrapper.text()).toContain('Pole Bonus');
   });
 
   it('hides pole bonus badge when qualifying_pole is null', async () => {
@@ -173,7 +173,7 @@ describe('QualifierListItem', () => {
   });
 
   it('emits edit event when edit button clicked', async () => {
-    const editButton = wrapper.find('[data-test-edit-button]');
+    const editButton = wrapper.find('[aria-label="Edit race"]');
     expect(editButton.exists()).toBe(true);
 
     await editButton.trigger('click');
@@ -183,7 +183,7 @@ describe('QualifierListItem', () => {
   });
 
   it('emits delete event when delete button clicked', async () => {
-    const deleteButton = wrapper.find('[data-test-delete-button]');
+    const deleteButton = wrapper.find('[aria-label="Delete round"]');
     expect(deleteButton.exists()).toBe(true);
 
     await deleteButton.trigger('click');

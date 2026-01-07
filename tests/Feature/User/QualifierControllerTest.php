@@ -23,7 +23,23 @@ final class QualifierControllerTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
-        $this->round = \Database\Factories\RoundFactory::new()->create();
+
+        // Create proper ownership chain: User -> League -> Competition -> Season -> Round
+        $league = \App\Infrastructure\Persistence\Eloquent\Models\League::factory()->create([
+            'owner_user_id' => $this->user->id,
+        ]);
+        $competition = \App\Infrastructure\Persistence\Eloquent\Models\Competition::factory()->create([
+            'league_id' => $league->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+        $season = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::factory()->create([
+            'competition_id' => $competition->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+        $this->round = \Database\Factories\RoundFactory::new()->create([
+            'season_id' => $season->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
     }
 
     public function test_creates_qualifier(): void

@@ -13,7 +13,7 @@ import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
 import CSVImportDialog from '@app/components/driver/modals/CSVImportDialog.vue';
 import LeagueDriversTab from '@app/components/league/partials/LeagueDriversTab.vue';
 import LeagueIdentityPanel from '@app/components/league/partials/LeagueIdentityPanel.vue';
-import LeagueWizardDrawer from '@app/components/league/modals/LeagueWizardDrawer.vue';
+import EditLeagueModal from '@app/components/league/modals/EditLeagueModal.vue';
 import type { League } from '@app/types/league';
 import type { LeagueDriver, CreateDriverRequest } from '@app/types/driver';
 
@@ -268,7 +268,7 @@ function getDriverName(leagueDriver: LeagueDriver): string {
     />
 
     <!-- Edit League Modal -->
-    <LeagueWizardDrawer
+    <EditLeagueModal
       v-if="league"
       v-model:visible="showEditModal"
       :is-edit-mode="true"
@@ -277,7 +277,7 @@ function getDriverName(leagueDriver: LeagueDriver): string {
     />
 
     <!-- Settings Modal (same as Edit for now) -->
-    <LeagueWizardDrawer
+    <EditLeagueModal
       v-if="league"
       v-model:visible="showSettingsModal"
       :is-edit-mode="true"

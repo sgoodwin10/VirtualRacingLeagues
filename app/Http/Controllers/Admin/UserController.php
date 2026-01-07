@@ -19,9 +19,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
 use App\Http\Requests\Admin\CreateUserRequest;
 use App\Http\Requests\Admin\IndexUsersRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
-use App\Models\User as UserModel;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**

@@ -7,7 +7,6 @@ namespace App\Application\Admin\Services;
 use App\Domain\Admin\Entities\Admin;
 use App\Domain\Admin\Events\UserImpersonationStarted;
 use App\Domain\Admin\Repositories\AdminRepositoryInterface;
-use App\Domain\Admin\ValueObjects\AdminRole;
 use App\Domain\User\Entities\User;
 use App\Domain\User\Events\UserImpersonated;
 use App\Domain\User\Exceptions\UserNotFoundException;

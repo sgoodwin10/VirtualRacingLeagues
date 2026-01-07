@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ref, nextTick } from 'vue';
-import { usePageTitle } from './usePageTitle';
+import { usePageTitle } from '../usePageTitle';
 
 describe('usePageTitle', () => {
   const originalTitle = document.title;

@@ -77,7 +77,11 @@ describe('leagueService', () => {
 
       const result = await checkSlugAvailability('Test League');
 
-      expect(apiClient.post).toHaveBeenCalledWith('/leagues/check-slug', { name: 'Test League' });
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/leagues/check-slug',
+        { name: 'Test League', league_id: undefined },
+        { signal: undefined },
+      );
       expect(result).toEqual(mockResponse);
     });
   });

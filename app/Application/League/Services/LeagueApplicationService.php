@@ -19,7 +19,7 @@ use App\Application\League\DTOs\PublicSeasonDetailData;
 use App\Application\League\DTOs\PublicSeasonSummaryData;
 use App\Application\League\DTOs\UpdateLeagueData;
 use App\Application\Driver\DTOs\PublicDriverProfileData;
-use App\Application\Shared\DTOs\MediaData;
+use App\Application\Activity\Services\LeagueActivityLogService;
 use App\Application\Shared\Factories\MediaDataFactory;
 use App\Application\Competition\Services\SeasonApplicationService;
 use App\Application\Shared\Services\MediaServiceInterface;
@@ -51,8 +51,10 @@ use App\Infrastructure\Persistence\Eloquent\Models\RaceResult;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -71,6 +73,7 @@ final class LeagueApplicationService
         private readonly RaceResultsCacheService $raceResultsCache,
         private readonly MediaServiceInterface $mediaService,
         private readonly MediaDataFactory $mediaDataFactory,
+        private readonly LeagueActivityLogService $activityLogService,
     ) {
     }
 
@@ -513,6 +516,93 @@ final class LeagueApplicationService
                 $eloquentLeague
             );
         });
+    }
+
+    /**
+     * Create a new league with activity logging.
+     *
+     * @param CreateLeagueData $data
+     * @param int $userId
+     * @param UserEloquent $user
+     * @param bool $isFreeTier
+     * @return LeagueData
+     */
+    public function createLeagueWithActivityLog(
+        CreateLeagueData $data,
+        int $userId,
+        UserEloquent $user,
+        bool $isFreeTier = true
+    ): LeagueData {
+        $leagueData = $this->createLeague($data, $userId, $isFreeTier);
+
+        // Log activity
+        try {
+            $eloquentLeague = EloquentLeague::findOrFail($leagueData->id);
+            $this->activityLogService->logLeagueCreated($user, $eloquentLeague);
+        } catch (\Exception $e) {
+            Log::error('Failed to log league creation activity', [
+                'error' => $e->getMessage(),
+                'league_id' => $leagueData->id,
+            ]);
+        }
+
+        return $leagueData;
+    }
+
+    /**
+     * Update a league with activity logging and change tracking.
+     *
+     * @param int $leagueId
+     * @param UpdateLeagueData $data
+     * @param int $userId
+     * @param UserEloquent $user
+     * @return LeagueData
+     */
+    public function updateLeagueWithActivityLog(
+        int $leagueId,
+        UpdateLeagueData $data,
+        int $userId,
+        UserEloquent $user
+    ): LeagueData {
+        // Capture original data for change tracking
+        $eloquentLeague = EloquentLeague::findOrFail($leagueId);
+        $originalData = $eloquentLeague->only([
+            'name',
+            'visibility',
+            'timezone',
+            'contact_email',
+            'organizer_name',
+            'tagline',
+            'description',
+        ]);
+
+        $leagueData = $this->updateLeague($leagueId, $data, $userId);
+
+        // Log activity with changes
+        try {
+            $eloquentLeague->refresh();
+            $newData = $eloquentLeague->only([
+                'name',
+                'visibility',
+                'timezone',
+                'contact_email',
+                'organizer_name',
+                'tagline',
+                'description',
+            ]);
+
+            $this->activityLogService->logLeagueUpdated($user, $eloquentLeague, [
+                'old' => $originalData,
+                'new' => $newData,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log league update activity', [
+                'error' => $e->getMessage(),
+                'league_id' => $leagueId,
+            ]);
+        }
+
+        return $leagueData;
     }
 
     /**

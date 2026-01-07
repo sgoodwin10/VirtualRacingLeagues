@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useNavigationStore } from '@app/stores/navigationStore';
 import { useUserStore } from '@app/stores/userStore';
@@ -33,9 +33,6 @@ const homeItem = computed<NavItem>(() => ({
 
 const leagues = computed(() => navigationStore.leagues);
 const leaguesLoading = computed(() => navigationStore.leaguesLoading);
-
-// AbortController for request cancellation
-let abortController: AbortController | null = null;
 
 const bottomItems = computed<NavItem[]>(() => [
   {
@@ -89,17 +86,9 @@ function getLogoUrl(league: League): string | null {
 
 // Fetch leagues on mount
 onMounted(async () => {
-  // Create AbortController for this request
-  abortController = new AbortController();
-
   try {
     await navigationStore.fetchLeagues();
   } catch (error: unknown) {
-    // Don't show error if request was aborted
-    if (error instanceof Error && error.name === 'AbortError') {
-      return;
-    }
-
     const errorMessage = error instanceof Error ? error.message : 'Failed to load leagues';
     toast.add({
       severity: 'error',
@@ -107,13 +96,6 @@ onMounted(async () => {
       detail: errorMessage,
       life: 5000,
     });
-  }
-});
-
-// Cleanup on unmount
-onUnmounted(() => {
-  if (abortController) {
-    abortController.abort();
   }
 });
 </script>
@@ -162,10 +144,7 @@ onUnmounted(() => {
       >
         <div class="empty-icon">?</div>
       </div>
-    </nav>
 
-    <!-- Bottom Navigation Items -->
-    <div class="rail-nav-bottom">
       <div class="rail-divider-small" />
 
       <RailItem
@@ -175,7 +154,10 @@ onUnmounted(() => {
         :tooltip="item.label"
         @click="handleClick(item)"
       />
-    </div>
+    </nav>
+
+    <!-- Bottom Navigation Items -->
+    <div class="rail-nav-bottom"></div>
   </aside>
 </template>
 

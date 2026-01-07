@@ -74,7 +74,7 @@
     </Column>
 
     <!-- Actions Column -->
-    <Column header="Actions" :exportable="false" style="min-width: 150px">
+    <Column header="Actions" :exportable="false" style="min-width: 200px">
       <template #body="{ data }">
         <div class="flex gap-2">
           <Button
@@ -84,7 +84,20 @@
             rounded
             severity="secondary"
             size="small"
+            aria-label="View user details"
             @click="handleView(data)"
+          />
+          <Button
+            v-if="!data.deleted_at"
+            v-tooltip.top="'Login As User'"
+            icon="pi pi-sign-in"
+            text
+            rounded
+            severity="warning"
+            size="small"
+            aria-label="Login as this user"
+            :loading="loggingInAsUser.get(data.id) || false"
+            @click="handleLoginAsUser(data)"
           />
           <Button
             v-tooltip.top="'Edit'"
@@ -93,6 +106,7 @@
             rounded
             severity="info"
             size="small"
+            aria-label="Edit user"
             @click="handleEdit(data)"
           />
           <Button
@@ -103,6 +117,7 @@
             rounded
             severity="danger"
             size="small"
+            aria-label="Deactivate user"
             @click="handleDeactivate(data)"
           />
           <Button
@@ -113,6 +128,7 @@
             rounded
             severity="success"
             size="small"
+            aria-label="Reactivate user"
             @click="handleReactivate(data)"
           />
         </div>
@@ -122,15 +138,19 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onBeforeUnmount } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import { useToast } from 'primevue/usetoast';
 import Badge from '@admin/components/common/Badge.vue';
 import EmptyState from '@admin/components/common/EmptyState.vue';
 import LoadingState from '@admin/components/common/LoadingState.vue';
 import { useDateFormatter } from '@admin/composables/useDateFormatter';
 import { useStatusHelpers } from '@admin/composables/useStatusHelpers';
 import { useNameHelpers } from '@admin/composables/useNameHelpers';
+import userService from '@admin/services/userService';
+import { logger } from '@admin/utils/logger';
 import type { User } from '@admin/types/user';
 
 /**
@@ -183,9 +203,19 @@ withDefaults(defineProps<UsersTableProps>(), {
 const emit = defineEmits<UsersTableEmits>();
 
 // Composables
+const toast = useToast();
 const { formatDate } = useDateFormatter();
 const { getStatusLabel, getStatusVariant, getStatusIcon } = useStatusHelpers();
 const { getFullName } = useNameHelpers();
+
+// State
+const loggingInAsUser = ref<Map<string, boolean>>(new Map());
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  // Clear all loading states
+  loggingInAsUser.value.clear();
+});
 
 /**
  * Handle view click
@@ -213,6 +243,53 @@ const handleDeactivate = (user: User): void => {
  */
 const handleReactivate = (user: User): void => {
   emit('reactivate', user);
+};
+
+/**
+ * Handle login as user click
+ */
+const handleLoginAsUser = async (user: User): Promise<void> => {
+  loggingInAsUser.value.set(user.id, true);
+  try {
+    // Validate environment variable
+    const appDomain = import.meta.env.VITE_APP_DOMAIN;
+    if (!appDomain) {
+      logger.error('VITE_APP_DOMAIN is not configured');
+      toast.add({
+        severity: 'error',
+        summary: 'Configuration Error',
+        detail: 'Application domain is not configured',
+        life: 5000,
+      });
+      return;
+    }
+
+    const { token } = await userService.loginAsUser(user.id);
+
+    // Get app domain from environment
+    const protocol = window.location.protocol;
+    const loginUrl = `${protocol}//${appDomain}/login-as?token=${token}`;
+
+    // Open in new tab
+    window.open(loginUrl, '_blank');
+
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: `Opening user dashboard for ${getFullName(user)}`,
+      life: 3000,
+    });
+  } catch (error) {
+    logger.error('Failed to login as user', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to login as user',
+      life: 5000,
+    });
+  } finally {
+    loggingInAsUser.value.set(user.id, false);
+  }
 };
 </script>
 

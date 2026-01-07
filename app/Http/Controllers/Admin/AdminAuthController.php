@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
-use App\Application\Admin\DTOs\UpdateAdminData;
 use App\Application\Admin\Services\AdminApplicationService;
 use App\Application\Admin\Services\AdminAuthApplicationService;
 use App\Domain\Admin\Exceptions\AdminNotFoundException;
@@ -15,7 +14,6 @@ use App\Models\Admin;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AdminAuthController extends Controller

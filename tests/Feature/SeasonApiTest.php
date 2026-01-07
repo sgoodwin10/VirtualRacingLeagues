@@ -214,9 +214,6 @@ class SeasonApiTest extends TestCase
             'created_by_user_id' => $user->id,
         ]);
 
-        // Soft delete round2 to test that soft-deleted rounds are also permanently deleted
-        $round2->delete();
-
         // 5. Create races for round 1
         $race1 = Race::factory()->create([
             'round_id' => $round1->id,
@@ -262,7 +259,7 @@ class SeasonApiTest extends TestCase
         $this->assertDatabaseHas('season_drivers', ['id' => $seasonDriver->id]);
         $this->assertDatabaseHas('divisions', ['id' => $division->id]);
         $this->assertDatabaseHas('rounds', ['id' => $round1->id]);
-        $this->assertEquals(1, Round::withTrashed()->where('id', $round2->id)->count());
+        $this->assertDatabaseHas('rounds', ['id' => $round2->id]);
         $this->assertDatabaseHas('races', ['id' => $race1->id]);
         $this->assertDatabaseHas('races', ['id' => $race2->id]);
         $this->assertDatabaseHas('race_results', ['id' => $raceResult1->id]);
@@ -285,8 +282,8 @@ class SeasonApiTest extends TestCase
 
         // 12. Verify all related data is permanently deleted
         $this->assertDatabaseMissing('season_drivers', ['id' => $seasonDriver->id]);
-        $this->assertEquals(0, Round::withTrashed()->where('id', $round1->id)->count());
-        $this->assertEquals(0, Round::withTrashed()->where('id', $round2->id)->count());
+        $this->assertDatabaseMissing('rounds', ['id' => $round1->id]);
+        $this->assertDatabaseMissing('rounds', ['id' => $round2->id]);
         $this->assertDatabaseMissing('races', ['id' => $race1->id]);
         $this->assertDatabaseMissing('races', ['id' => $race2->id]);
         $this->assertDatabaseMissing('race_results', ['id' => $raceResult1->id]);

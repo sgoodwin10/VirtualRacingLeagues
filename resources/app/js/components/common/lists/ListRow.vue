@@ -39,7 +39,7 @@ const containerClasses = computed(() => {
   ];
 
   if (!props.noHover) {
-    classes.push('hover:border-[var(--cyan)]', 'hover:translate-x-1');
+    classes.push('hover:border-[var(--cyan)]'); //, 'hover:translate-x-1');
   }
 
   if (props.clickable) {

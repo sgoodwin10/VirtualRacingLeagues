@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\User;
 
-use App\Application\Competition\DTOs\CreateRoundData;
-use App\Application\Competition\DTOs\UpdateRoundData;
-use App\Application\Competition\DTOs\CompleteRoundData;
+use App\Application\Activity\Services\LeagueActivityLogService;
 use App\Application\Competition\Services\RoundApplicationService;
 use App\Domain\Competition\Exceptions\RoundNotFoundException;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\CreateRoundRequest;
+use App\Http\Requests\User\UpdateRoundRequest;
+use App\Http\Requests\User\CompleteRoundRequest;
+use App\Infrastructure\Persistence\Eloquent\Models\Round;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Round Controller.
@@ -23,6 +27,7 @@ final class RoundController extends Controller
 {
     public function __construct(
         private readonly RoundApplicationService $roundService,
+        private readonly LeagueActivityLogService $activityLogService
     ) {
     }
 
@@ -38,13 +43,17 @@ final class RoundController extends Controller
     /**
      * Create a new round.
      */
-    public function store(CreateRoundData $data, int $seasonId): JsonResponse
+    public function store(CreateRoundRequest $request, int $seasonId): JsonResponse
     {
-        /** @var int $userId */
-        $userId = auth('web')->id() ?? 0;
+        $roundData = $this->roundService->createRound(
+            $request->toDTO(),
+            $seasonId,
+            $this->getUserId()
+        );
 
-        $round = $this->roundService->createRound($data, $seasonId, $userId);
-        return ApiResponse::created($round->toArray(), 'Round created successfully');
+        $this->logRoundCreated($roundData->id);
+
+        return ApiResponse::created($roundData->toArray(), 'Round created successfully');
     }
 
     /**
@@ -59,13 +68,20 @@ final class RoundController extends Controller
     /**
      * Update a round.
      */
-    public function update(Request $request, UpdateRoundData $data, int $roundId): JsonResponse
+    public function update(UpdateRoundRequest $request, int $roundId): JsonResponse
     {
-        /** @var int $userId */
-        $userId = auth('web')->id() ?? 0;
+        $originalData = $this->captureOriginalRoundData($roundId);
 
-        $round = $this->roundService->updateRound($roundId, $data, $userId, $request->all());
-        return ApiResponse::success($round->toArray(), 'Round updated successfully');
+        $roundData = $this->roundService->updateRound(
+            $roundId,
+            $request->toDTO(),
+            $this->getUserId(),
+            $request->validated()
+        );
+
+        $this->logRoundUpdated($roundId, $originalData);
+
+        return ApiResponse::success($roundData->toArray(), 'Round updated successfully');
     }
 
     /**
@@ -74,10 +90,10 @@ final class RoundController extends Controller
     public function destroy(int $roundId): JsonResponse
     {
         try {
-            /** @var int $userId */
-            $userId = auth('web')->id() ?? 0;
+            $round = Round::findOrFail($roundId);
+            $this->roundService->deleteRound($roundId, $this->getUserId());
+            $this->logRoundDeleted($round);
 
-            $this->roundService->deleteRound($roundId, $userId);
             return ApiResponse::success(null, 'Round deleted successfully');
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -97,23 +113,19 @@ final class RoundController extends Controller
 
     /**
      * Mark round as completed.
-     * Optionally accepts cross-division results data from frontend.
      */
-    public function complete(Request $request, int $roundId): JsonResponse
+    public function complete(CompleteRoundRequest $request, int $roundId): JsonResponse
     {
         try {
-            /** @var int $userId */
-            $userId = auth('web')->id() ?? 0;
+            $roundData = $this->roundService->completeRound(
+                $roundId,
+                $this->getUserId(),
+                $request->toDTO()
+            );
 
-            // Validate and create DTO if data is provided
-            $data = null;
-            if ($request->hasAny(['qualifying_results', 'race_time_results', 'fastest_lap_results'])) {
-                $validated = $request->validate(CompleteRoundData::rules());
-                $data = CompleteRoundData::from($validated);
-            }
+            $this->logRoundCompleted($roundId);
 
-            $round = $this->roundService->completeRound($roundId, $userId, $data);
-            return ApiResponse::success($round->toArray(), 'Round marked as completed');
+            return ApiResponse::success($roundData->toArray(), 'Round marked as completed');
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
         }
@@ -125,10 +137,7 @@ final class RoundController extends Controller
     public function uncomplete(int $roundId): JsonResponse
     {
         try {
-            /** @var int $userId */
-            $userId = auth('web')->id() ?? 0;
-
-            $round = $this->roundService->uncompleteRound($roundId, $userId);
+            $round = $this->roundService->uncompleteRound($roundId, $this->getUserId());
             return ApiResponse::success($round->toArray(), 'Round marked as not completed');
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -137,7 +146,6 @@ final class RoundController extends Controller
 
     /**
      * Get all race results for a round.
-     * NOTE: This is a read-only operation, so authorization is not required.
      */
     public function results(int $roundId): JsonResponse
     {
@@ -146,6 +154,114 @@ final class RoundController extends Controller
             return ApiResponse::success($results->toArray());
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
+        }
+    }
+
+    /**
+     * Get authenticated user ID.
+     */
+    private function getUserId(): int
+    {
+        /** @var int|null $userId */
+        $userId = auth('web')->id();
+
+        if ($userId === null) {
+            throw new UnauthorizedException('User must be authenticated');
+        }
+
+        return $userId;
+    }
+
+    /**
+     * Capture original round data for change tracking.
+     *
+     * @return array<string, mixed>
+     */
+    private function captureOriginalRoundData(int $roundId): array
+    {
+        $round = Round::findOrFail($roundId);
+        return $round->only(['name', 'circuit_id', 'start_date', 'end_date']);
+    }
+
+    /**
+     * Log round created activity.
+     */
+    private function logRoundCreated(int $roundId): void
+    {
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $round = Round::findOrFail($roundId);
+                $this->activityLogService->logRoundCreated($user, $round);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log round creation activity', [
+                'error' => $e->getMessage(),
+                'round_id' => $roundId,
+            ]);
+        }
+    }
+
+    /**
+     * Log round updated activity.
+     *
+     * @param array<string, mixed> $originalData
+     */
+    private function logRoundUpdated(int $roundId, array $originalData): void
+    {
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $round = Round::findOrFail($roundId);
+                $newData = $round->only(['name', 'circuit_id', 'start_date', 'end_date']);
+
+                $this->activityLogService->logRoundUpdated($user, $round, [
+                    'old' => $originalData,
+                    'new' => $newData,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log round update activity', [
+                'error' => $e->getMessage(),
+                'round_id' => $roundId,
+            ]);
+        }
+    }
+
+    /**
+     * Log round deleted activity.
+     */
+    private function logRoundDeleted(Round $round): void
+    {
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $this->activityLogService->logRoundDeleted($user, $round);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log round deletion activity', [
+                'error' => $e->getMessage(),
+                'round_id' => $round->id,
+            ]);
+        }
+    }
+
+    /**
+     * Log round completed activity.
+     */
+    private function logRoundCompleted(int $roundId): void
+    {
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $round = Round::findOrFail($roundId);
+                $this->activityLogService->logRoundCompleted($user, $round);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log round completion activity', [
+                'error' => $e->getMessage(),
+                'round_id' => $roundId,
+            ]);
         }
     }
 }

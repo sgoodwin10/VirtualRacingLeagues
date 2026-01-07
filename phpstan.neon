@@ -145,3 +145,7 @@ parameters:
         -
             message: '#Call to an undefined method Spatie\\MediaLibrary\\HasMedia::(getFirstMedia|addMedia|clearMediaCollection)\(\)#'
             path: app/Infrastructure/Media/*
+        # FormRequest user() and toDTO() methods (Laravel magic)
+        -
+            message: '#Call to an undefined method .+Request::(user|toDTO)\(\)#'
+            path: app/Http/Controllers/*

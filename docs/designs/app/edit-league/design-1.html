@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League Form - Design 1: Split Panel Navigation</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #1c2128;
+            --bg-elevated: #21262d;
+            --bg-highlight: #272d36;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --cyan: #58a6ff;
+            --cyan-dim: rgba(88, 166, 255, 0.15);
+            --green: #7ee787;
+            --green-dim: rgba(126, 231, 135, 0.15);
+            --orange: #f0883e;
+            --orange-dim: rgba(240, 136, 62, 0.15);
+            --red: #f85149;
+            --purple: #bc8cff;
+            --purple-dim: rgba(188, 140, 255, 0.15);
+            --border: #30363d;
+            --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+            --radius: 6px;
+            --grid-color: rgba(88, 166, 255, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* Modal Container */
+        .modal-container {
+            width: 100%;
+            max-width: 960px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header */
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            border-radius: var(--radius);
+        }
+
+        .header-icon svg {
+            color: var(--bg-dark);
+        }
+
+        .modal-title {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all 0.15s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-highlight);
+            color: var(--text-primary);
+        }
+
+        /* Split Layout */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            min-height: 520px;
+            max-height: 72vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-section {
+            padding: 16px;
+            flex: 1;
+        }
+
+        .nav-title {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: var(--cyan-dim);
+            color: var(--cyan);
+        }
+
+        .nav-link svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            font-family: var(--font-mono);
+            font-size: 9px;
+            padding: 2px 6px;
+            background: var(--bg-highlight);
+            border-radius: 3px;
+            color: var(--text-muted);
+        }
+
+        .nav-badge.complete {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .nav-badge.required {
+            background: var(--orange-dim);
+            color: var(--orange);
+        }
+
+        /* Status Summary */
+        .status-summary {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-dark);
+        }
+
+        .summary-title {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 11px;
+        }
+
+        .summary-label {
+            color: var(--text-muted);
+        }
+
+        .summary-value {
+            font-family: var(--font-mono);
+            font-size: 10px;
+        }
+
+        .summary-value.complete {
+            color: var(--green);
+        }
+
+        .summary-value.incomplete {
+            color: var(--text-muted);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 3px;
+            background: var(--bg-elevated);
+            border-radius: 2px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--green));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Main Content */
+        .main-content {
+            overflow-y: auto;
+            background: var(--bg-dark);
+        }
+
+        .content-section {
+            display: none;
+            padding: 24px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(8px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .section-header {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 6px;
+        }
+
+        .section-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Form Styles */
+        .form-grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--red);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            transition: all 0.15s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            resize: vertical;
+            min-height: 80px;
+            transition: all 0.15s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e7681' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .form-help {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* Slug Preview */
+        .slug-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .slug-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        .slug-indicator.checking {
+            background: var(--orange);
+        }
+
+        .slug-indicator.unavailable {
+            background: var(--red);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .slug-text {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .slug-text span {
+            color: var(--green);
+        }
+
+        /* Platform Chips */
+        .platform-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .platform-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .platform-chip:hover {
+            border-color: var(--cyan);
+            color: var(--text-primary);
+        }
+
+        .platform-chip.selected {
+            background: var(--cyan-dim);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .platform-chip svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Visibility Toggle - Segmented Control */
+        .visibility-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .visibility-toggle {
+            display: inline-flex;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .visibility-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+        }
+
+        .visibility-option:hover {
+            color: var(--text-primary);
+            background: var(--bg-elevated);
+        }
+
+        .visibility-option.active {
+            background: var(--cyan);
+            color: var(--bg-dark);
+        }
+
+        .visibility-option.active.unlisted {
+            background: var(--orange);
+        }
+
+        .visibility-option svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .visibility-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .visibility-status.public {
+            border-color: rgba(126, 231, 135, 0.3);
+            background: var(--green-dim);
+        }
+
+        .visibility-status.unlisted {
+            border-color: rgba(240, 136, 62, 0.3);
+            background: var(--orange-dim);
+        }
+
+        .visibility-status-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .visibility-status.public .visibility-status-icon {
+            background: var(--green);
+            color: var(--bg-dark);
+        }
+
+        .visibility-status.unlisted .visibility-status-icon {
+            background: var(--orange);
+            color: var(--bg-dark);
+        }
+
+        .visibility-status-content {
+            flex: 1;
+        }
+
+        .visibility-status-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .visibility-status.public .visibility-status-title {
+            color: var(--green);
+        }
+
+        .visibility-status.unlisted .visibility-status-title {
+            color: var(--orange);
+        }
+
+        .visibility-status-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Upload Area */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 16px;
+        }
+
+        .upload-grid-3 {
+            display: grid;
+            grid-template-columns: 120px 1fr 1fr;
+            gap: 16px;
+        }
+
+        .upload-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 16px;
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            min-height: 100px;
+        }
+
+        .upload-box:hover {
+            border-color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .upload-box.square {
+            aspect-ratio: 1;
+        }
+
+        .upload-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-elevated);
+            border-radius: 50%;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .upload-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+            text-align: center;
+        }
+
+        .upload-hint {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Social Links */
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .social-input-group {
+            display: flex;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.15s ease;
+        }
+
+        .social-input-group:focus-within {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .social-prefix {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .social-input {
+            flex: 1;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: transparent;
+            border: none;
+        }
+
+        .social-input:focus {
+            outline: none;
+        }
+
+        .social-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Collapsible Section */
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-bottom: 16px;
+        }
+
+        .collapsible-header:hover {
+            border-color: var(--cyan);
+        }
+
+        .collapsible-header.expanded {
+            border-radius: var(--radius) var(--radius) 0 0;
+            margin-bottom: 0;
+            border-bottom-color: transparent;
+        }
+
+        .collapsible-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .collapsible-title svg {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+        }
+
+        .collapsible-chevron {
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .collapsible-header.expanded .collapsible-chevron {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            display: none;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 var(--radius) var(--radius);
+            margin-bottom: 16px;
+        }
+
+        .collapsible-content.expanded {
+            display: block;
+        }
+
+        /* Footer */
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background: var(--cyan);
+            color: var(--bg-dark);
+            border-color: var(--cyan);
+        }
+
+        .btn-primary:hover {
+            background: #79b8ff;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border-color: transparent;
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-highlight);
+            color: var(--text-primary);
+        }
+
+        /* Info Banner */
+        .info-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            background: var(--cyan-dim);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+        }
+
+        .info-banner svg {
+            flex-shrink: 0;
+            color: var(--cyan);
+        }
+
+        .info-banner p {
+            font-size: 12px;
+            color: var(--cyan);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-panel); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-highlight); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="modal-container">
+        <!-- Header -->
+        <div class="modal-header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                        <line x1="4" y1="22" x2="4" y2="15"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="modal-title">//LEAGUE_CONFIGURATION</div>
+                    <div class="modal-subtitle" id="modal-subtitle">Create new racing league</div>
+                </div>
+            </div>
+            <button class="modal-close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Split Layout -->
+        <div class="split-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <nav class="nav-section">
+                    <div class="nav-title">//Sections</div>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <div class="nav-link active" onclick="showSection('basic')" data-section="basic">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
+                                Basic Info
+                                <span class="nav-badge required">REQ</span>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <div class="nav-link" onclick="showSection('contact')" data-section="contact">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                Contact
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <div class="nav-link" onclick="showSection('media')" data-section="media">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                                Media
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <div class="nav-link" onclick="showSection('social')" data-section="social">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                </svg>
+                                Social Links
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Status Summary -->
+                <div class="status-summary">
+                    <div class="summary-title">//Completion</div>
+                    <div class="summary-item">
+                        <span class="summary-label">Name</span>
+                        <span class="summary-value incomplete" id="sum-name">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Platforms</span>
+                        <span class="summary-value incomplete" id="sum-platforms">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Visibility</span>
+                        <span class="summary-value complete" id="sum-visibility">PUBLIC</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Media</span>
+                        <span class="summary-value incomplete" id="sum-media">0/3</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 10%;"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Basic Info Section -->
+                <div class="content-section active" id="section-basic">
+                    <div class="section-header">
+                        <div class="section-title">//Basic Information</div>
+                        <div class="section-desc">Core league details and identity</div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label required">League Name</label>
+                            <input type="text" class="form-input" placeholder="e.g., Velocity Racing League" id="leagueName" oninput="updateSlug(); updateSummary();">
+                            <div class="slug-inline">
+                                <div class="slug-indicator" id="slugIndicator"></div>
+                                <span class="slug-text">/leagues/<span id="slugPreview">your-league-name</span></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tagline</label>
+                            <input type="text" class="form-input" placeholder="A short, catchy phrase describing your league" maxlength="150" id="tagline">
+                            <div class="form-help">Max 150 characters. Displayed prominently on your league page.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required">Platforms</label>
+                            <div class="platform-chips">
+                                <div class="platform-chip" data-platform="pc" onclick="togglePlatform(this)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                        <line x1="8" y1="21" x2="16" y2="21"/>
+                                        <line x1="12" y1="17" x2="12" y2="21"/>
+                                    </svg>
+                                    PC
+                                </div>
+                                <div class="platform-chip" data-platform="ps" onclick="togglePlatform(this)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="6" width="20" height="12" rx="2"/>
+                                        <circle cx="8" cy="12" r="2"/>
+                                        <circle cx="16" cy="12" r="2"/>
+                                    </svg>
+                                    PlayStation
+                                </div>
+                                <div class="platform-chip" data-platform="xbox" onclick="togglePlatform(this)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 2a10 10 0 0 1 0 20"/>
+                                    </svg>
+                                    Xbox
+                                </div>
+                            </div>
+                            <div class="form-help">Select all platforms your league supports</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" placeholder="Tell potential members what your league is about, your racing philosophy, rules overview..." style="min-height: 100px;"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Visibility</label>
+                            <div class="visibility-wrapper">
+                                <div class="visibility-toggle">
+                                    <button type="button" class="visibility-option active" data-visibility="public" onclick="setVisibility(this)">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="2" y1="12" x2="22" y2="12"/>
+                                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                        </svg>
+                                        Public
+                                    </button>
+                                    <button type="button" class="visibility-option" data-visibility="unlisted" onclick="setVisibility(this)">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                            <line x1="1" y1="1" x2="23" y2="23"/>
+                                        </svg>
+                                        Unlisted
+                                    </button>
+                                </div>
+                                <div class="visibility-status public" id="visibility-status">
+                                    <div class="visibility-status-icon">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="2" y1="12" x2="22" y2="12"/>
+                                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="visibility-status-content">
+                                        <div class="visibility-status-title" id="visibility-status-title">Discoverable in Search</div>
+                                        <div class="visibility-status-desc" id="visibility-status-desc">Your league will appear in search results and can be found by anyone looking to join a racing community.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Timezone</label>
+                            <select class="form-select" id="timezone">
+                                <option value="">Select timezone...</option>
+                                <option value="UTC">UTC</option>
+                                <option value="America/New_York">Eastern Time (ET)</option>
+                                <option value="America/Chicago">Central Time (CT)</option>
+                                <option value="America/Denver">Mountain Time (MT)</option>
+                                <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                                <option value="Europe/London">London (GMT)</option>
+                                <option value="Europe/Paris">Central European (CET)</option>
+                                <option value="Europe/Berlin">Berlin (CET)</option>
+                                <option value="Asia/Tokyo">Tokyo (JST)</option>
+                                <option value="Australia/Sydney">Sydney (AEST)</option>
+                            </select>
+                            <div class="form-help">Used for scheduling events and race times</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Section -->
+                <div class="content-section" id="section-contact">
+                    <div class="section-header">
+                        <div class="section-title">//Contact Details</div>
+                        <div class="section-desc">How members can reach you</div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Contact Email</label>
+                                <input type="email" class="form-input" placeholder="league@example.com" id="contactEmail">
+                                <div class="form-help">Visible to league members for inquiries</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contact Name</label>
+                                <input type="text" class="form-input" placeholder="Your name or organization" maxlength="100" id="organizerName">
+                                <div class="form-help">Displayed as the league organizer</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media Section -->
+                <div class="content-section" id="section-media">
+                    <div class="section-header">
+                        <div class="section-title">//Media Assets</div>
+                        <div class="section-desc">Visual branding for your league</div>
+                    </div>
+
+                    <div class="info-banner">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        <p>All media assets are optional. Default placeholders will be used if not provided.</p>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="upload-grid-3">
+                            <div class="upload-box square" onclick="uploadMedia('logo')">
+                                <div class="upload-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                </div>
+                                <div class="upload-label">Logo</div>
+                                <div class="upload-hint">400x400px</div>
+                            </div>
+                            <div class="upload-box" onclick="uploadMedia('banner')">
+                                <div class="upload-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                </div>
+                                <div class="upload-label">Banner</div>
+                                <div class="upload-hint">200-800px wide</div>
+                            </div>
+                            <div class="upload-box" onclick="uploadMedia('header')">
+                                <div class="upload-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                </div>
+                                <div class="upload-label">Header Image</div>
+                                <div class="upload-hint">1200x400px</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Links Section -->
+                <div class="content-section" id="section-social">
+                    <div class="section-header">
+                        <div class="section-title">//Social Links</div>
+                        <div class="section-desc">Connect your community channels</div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="social-grid">
+                            <div class="social-input-group">
+                                <div class="social-prefix">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                                    </svg>
+                                </div>
+                                <input type="url" class="social-input" placeholder="Discord invite URL">
+                            </div>
+                            <div class="social-input-group">
+                                <div class="social-prefix">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="2" y1="12" x2="22" y2="12"/>
+                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                    </svg>
+                                </div>
+                                <input type="url" class="social-input" placeholder="Website URL">
+                            </div>
+                            <div class="social-input-group">
+                                <div class="social-prefix">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                                    </svg>
+                                </div>
+                                <input type="text" class="social-input" placeholder="@username">
+                            </div>
+                            <div class="social-input-group">
+                                <div class="social-prefix">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                                    </svg>
+                                </div>
+                                <input type="text" class="social-input" placeholder="@username">
+                            </div>
+                            <div class="social-input-group">
+                                <div class="social-prefix">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+                                        <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+                                    </svg>
+                                </div>
+                                <input type="url" class="social-input" placeholder="YouTube channel URL">
+                            </div>
+                            <div class="social-input-group">
+                                <div class="social-prefix">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                                    </svg>
+                                </div>
+                                <input type="url" class="social-input" placeholder="Twitch channel URL">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+            <button class="btn btn-ghost">Cancel</button>
+            <button class="btn btn-primary" id="submitBtn" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Create League
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let selectedPlatforms = [];
+        let currentVisibility = 'public';
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.section === sectionId) {
+                    link.classList.add('active');
+                }
+            });
+
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('section-' + sectionId).classList.add('active');
+        }
+
+        function updateSlug() {
+            const name = document.getElementById('leagueName').value;
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            document.getElementById('slugPreview').textContent = slug || 'your-league-name';
+
+            // Simulate slug check
+            const indicator = document.getElementById('slugIndicator');
+            if (name.length > 0) {
+                indicator.classList.add('checking');
+                setTimeout(() => {
+                    indicator.classList.remove('checking');
+                }, 500);
+            }
+        }
+
+        function togglePlatform(chip) {
+            const platform = chip.dataset.platform;
+            chip.classList.toggle('selected');
+
+            if (chip.classList.contains('selected')) {
+                selectedPlatforms.push(platform);
+            } else {
+                selectedPlatforms = selectedPlatforms.filter(p => p !== platform);
+            }
+
+            updateSummary();
+        }
+
+        function setVisibility(btn) {
+            // Update toggle buttons
+            document.querySelectorAll('.visibility-option').forEach(b => {
+                b.classList.remove('active', 'unlisted');
+            });
+            btn.classList.add('active');
+
+            currentVisibility = btn.dataset.visibility;
+
+            if (currentVisibility === 'unlisted') {
+                btn.classList.add('unlisted');
+            }
+
+            // Update status panel
+            const statusEl = document.getElementById('visibility-status');
+            const titleEl = document.getElementById('visibility-status-title');
+            const descEl = document.getElementById('visibility-status-desc');
+
+            statusEl.classList.remove('public', 'unlisted');
+            statusEl.classList.add(currentVisibility);
+
+            if (currentVisibility === 'public') {
+                statusEl.querySelector('.visibility-status-icon').innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>`;
+                titleEl.textContent = 'Discoverable in Search';
+                descEl.textContent = 'Your league will appear in search results and can be found by anyone looking to join a racing community.';
+            } else {
+                statusEl.querySelector('.visibility-status-icon').innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>`;
+                titleEl.textContent = 'Link Access Only';
+                descEl.textContent = 'Your league is hidden from search. Only people with a direct link can find and join your league.';
+            }
+
+            document.getElementById('sum-visibility').textContent = currentVisibility.toUpperCase();
+        }
+
+        function updateSummary() {
+            const name = document.getElementById('leagueName').value;
+            const nameEl = document.getElementById('sum-name');
+            const platformsEl = document.getElementById('sum-platforms');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Update name summary
+            if (name.length > 0) {
+                nameEl.textContent = name.length > 12 ? name.substring(0, 12) + '...' : name;
+                nameEl.classList.add('complete');
+                nameEl.classList.remove('incomplete');
+            } else {
+                nameEl.textContent = '--';
+                nameEl.classList.remove('complete');
+                nameEl.classList.add('incomplete');
+            }
+
+            // Update platforms summary
+            platformsEl.textContent = selectedPlatforms.length;
+            if (selectedPlatforms.length > 0) {
+                platformsEl.classList.add('complete');
+                platformsEl.classList.remove('incomplete');
+            } else {
+                platformsEl.classList.remove('complete');
+                platformsEl.classList.add('incomplete');
+            }
+
+            // Update progress
+            let progress = 10;
+            if (name.length > 0) progress += 40;
+            if (selectedPlatforms.length > 0) progress += 40;
+            document.getElementById('progress-fill').style.width = progress + '%';
+
+            // Enable/disable submit
+            submitBtn.disabled = !(name.length > 0 && selectedPlatforms.length > 0);
+        }
+
+        function uploadMedia(type) {
+            console.log('Upload ' + type);
+            // Would trigger file input
+        }
+    </script>
+</body>
+</html>

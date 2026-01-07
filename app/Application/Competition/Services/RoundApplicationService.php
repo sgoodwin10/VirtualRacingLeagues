@@ -2075,8 +2075,17 @@ final class RoundApplicationService
             return;
         }
 
+        // Validate season ID is present
+        $seasonId = $season->id();
+        if ($seasonId === null) {
+            Log::warning('Team championship calculation skipped: season ID is null', [
+                'round_id' => $round->id(),
+            ]);
+            return;
+        }
+
         // Get all season drivers with team assignments
-        $seasonDrivers = $this->seasonDriverRepository->findBySeason($season->id() ?? 0);
+        $seasonDrivers = $this->seasonDriverRepository->findBySeason($seasonId);
 
         // Map season_driver_id to team_id
         // Note: round_results uses season_driver_id (stored as driver_id in race_results)
@@ -2090,7 +2099,7 @@ final class RoundApplicationService
         }
 
         // Get all teams for this season
-        $teams = $this->teamRepository->findBySeasonId($season->id() ?? 0);
+        $teams = $this->teamRepository->findBySeasonId($seasonId);
         if (empty($teams)) {
             return;
         }

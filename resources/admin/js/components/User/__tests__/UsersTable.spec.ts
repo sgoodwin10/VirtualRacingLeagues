@@ -5,6 +5,7 @@ import { mount } from '@vue/test-utils';
 import { createMockUser } from '@admin/__tests__/helpers/mockFactories';
 import type { User } from '@admin/types/user';
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
 import Tooltip from 'primevue/tooltip';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -27,7 +28,7 @@ describe('UsersTable', () => {
     return mount(UsersTable, {
       props,
       global: {
-        plugins: [pinia, PrimeVue],
+        plugins: [pinia, PrimeVue, ToastService],
         components: {
           DataTable,
           Column,

@@ -14,6 +14,11 @@ use App\Domain\Admin\Events\AdminProfileUpdated;
 use App\Domain\Admin\Events\AdminRestored;
 use App\Domain\Admin\Events\AdminRoleChanged;
 use App\Domain\Admin\Events\UserImpersonationStarted;
+use App\Domain\Competition\Events\SeasonArchived;
+use App\Domain\Competition\Events\SeasonCreated;
+use App\Domain\Competition\Events\SeasonDeleted;
+use App\Domain\Competition\Events\SeasonStatusChanged;
+use App\Domain\Competition\Events\SeasonUpdated;
 use App\Domain\SiteConfig\Events\SiteConfigApplicationSettingsUpdated;
 use App\Domain\SiteConfig\Events\SiteConfigIdentityUpdated;
 use App\Domain\SiteConfig\Events\SiteConfigTrackingUpdated;
@@ -25,15 +30,14 @@ use App\Domain\User\Events\UserActivated;
 use App\Domain\User\Events\UserCreated;
 use App\Domain\User\Events\UserDeactivated;
 use App\Domain\User\Events\UserDeleted;
-use App\Domain\User\Events\UserImpersonated;
 use App\Domain\User\Events\UserLoggedIn;
 use App\Domain\User\Events\UserLoggedOut;
 use App\Domain\User\Events\UserRestored;
 use App\Domain\User\Events\UserUpdated;
 use App\Infrastructure\Listeners\LogAdminActivity;
+use App\Infrastructure\Listeners\LogLeagueSeasonActivity;
 use App\Infrastructure\Listeners\LogSiteConfigActivity;
 use App\Infrastructure\Listeners\LogUserActivity;
-use App\Infrastructure\Listeners\LogUserImpersonated;
 use App\Infrastructure\Listeners\LogUserImpersonationStarted;
 use App\Infrastructure\Listeners\SendEmailVerification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -121,9 +125,11 @@ final class EventServiceProvider extends ServiceProvider
         ],
 
         // User Impersonation Events
-        UserImpersonated::class => [
-            LogUserImpersonated::class,
-        ],
+        // NOTE: UserImpersonated activity logging is handled in UserImpersonationController
+        // to include request-specific data (IP address) that's not available in domain events
+        // UserImpersonated::class => [
+        //     LogUserImpersonated::class,
+        // ],
 
         // SiteConfig Domain Events
         SiteConfigIdentityUpdated::class => [
@@ -134,6 +140,23 @@ final class EventServiceProvider extends ServiceProvider
         ],
         SiteConfigApplicationSettingsUpdated::class => [
             LogSiteConfigActivity::class,
+        ],
+
+        // Competition/Season Domain Events
+        SeasonCreated::class => [
+            LogLeagueSeasonActivity::class,
+        ],
+        SeasonUpdated::class => [
+            LogLeagueSeasonActivity::class,
+        ],
+        SeasonArchived::class => [
+            LogLeagueSeasonActivity::class,
+        ],
+        SeasonDeleted::class => [
+            LogLeagueSeasonActivity::class,
+        ],
+        SeasonStatusChanged::class => [
+            LogLeagueSeasonActivity::class,
         ],
     ];
 

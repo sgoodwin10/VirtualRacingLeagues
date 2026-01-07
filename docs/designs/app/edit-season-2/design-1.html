@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Season Form - Design 1: Accordion Stepper</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #1c2128;
+            --bg-elevated: #21262d;
+            --bg-highlight: #272d36;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --cyan: #58a6ff;
+            --cyan-dim: rgba(88, 166, 255, 0.15);
+            --green: #7ee787;
+            --green-dim: rgba(126, 231, 135, 0.15);
+            --orange: #f0883e;
+            --orange-dim: rgba(240, 136, 62, 0.15);
+            --red: #f85149;
+            --purple: #bc8cff;
+            --purple-dim: rgba(188, 140, 255, 0.15);
+            --border: #30363d;
+            --border-focus: #58a6ff;
+            --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+            --radius: 6px;
+            --grid-color: rgba(88, 166, 255, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* Modal Container */
+        .modal-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Modal Header */
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-title::before {
+            content: '//';
+            color: var(--cyan);
+        }
+
+        .mode-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .mode-badge.create { background: var(--green-dim); color: var(--green); }
+        .mode-badge.edit { background: var(--orange-dim); color: var(--orange); }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all 0.15s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-highlight);
+            color: var(--text-primary);
+        }
+
+        /* Modal Body */
+        .modal-body {
+            padding: 0;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Progress Indicator */
+        .progress-bar {
+            display: flex;
+            padding: 16px 24px;
+            gap: 8px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .progress-step {
+            flex: 1;
+            height: 4px;
+            background: var(--bg-elevated);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-step.completed {
+            background: var(--green);
+        }
+
+        .progress-step.active {
+            background: var(--cyan);
+        }
+
+        /* Accordion Sections */
+        .accordion {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .accordion:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            user-select: none;
+        }
+
+        .accordion-header:hover {
+            background: var(--bg-elevated);
+        }
+
+        .accordion.active .accordion-header {
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .accordion-number {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-highlight);
+            border-radius: 50%;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-right: 14px;
+            transition: all 0.15s ease;
+        }
+
+        .accordion.active .accordion-number,
+        .accordion.completed .accordion-number {
+            background: var(--cyan);
+            color: var(--bg-dark);
+        }
+
+        .accordion.completed .accordion-number {
+            background: var(--green);
+        }
+
+        .accordion-title {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            flex: 1;
+        }
+
+        .accordion.active .accordion-title {
+            color: var(--text-primary);
+        }
+
+        .accordion-status {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-right: 12px;
+        }
+
+        .accordion-chevron {
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .accordion.active .accordion-chevron {
+            transform: rotate(180deg);
+            color: var(--cyan);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 20px 24px;
+            background: var(--bg-panel);
+        }
+
+        .accordion.active .accordion-content {
+            display: block;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--red);
+            margin-left: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            transition: all 0.15s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            resize: vertical;
+            min-height: 80px;
+            transition: all 0.15s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e7681' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .form-help {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* Slug Preview */
+        .slug-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .slug-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        .slug-status.checking {
+            background: var(--orange);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .slug-url {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .slug-url span {
+            color: var(--green);
+        }
+
+        /* Toggle Row */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .toggle-row:hover {
+            border-color: var(--cyan);
+        }
+
+        .toggle-row.active {
+            border-color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .toggle-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .toggle-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-elevated);
+            border-radius: var(--radius);
+            color: var(--text-muted);
+        }
+
+        .toggle-row.active .toggle-icon {
+            background: var(--cyan);
+            color: var(--bg-dark);
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .toggle-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch .toggle-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-row.active .toggle-switch {
+            background: var(--cyan);
+            border-color: var(--cyan);
+        }
+
+        .toggle-row.active .toggle-switch .toggle-knob {
+            transform: translateX(20px);
+            background: var(--bg-dark);
+        }
+
+        /* Nested Settings */
+        .nested-settings {
+            display: none;
+            margin-top: 12px;
+            padding: 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            animation: slideDown 0.2s ease;
+        }
+
+        .nested-settings.visible {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nested-settings .form-group {
+            margin-bottom: 14px;
+        }
+
+        .nested-settings .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Number Input */
+        .number-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .number-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .number-btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .number-value {
+            width: 60px;
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 6px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+        }
+
+        /* Tiebreaker Rules */
+        .rules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: grab;
+            transition: all 0.15s ease;
+        }
+
+        .rule-item:hover {
+            border-color: var(--cyan);
+        }
+
+        .rule-item:active {
+            cursor: grabbing;
+        }
+
+        .rule-order {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--orange);
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--bg-dark);
+            margin-right: 12px;
+        }
+
+        .rule-name {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .rule-drag {
+            color: var(--text-muted);
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--bg-dark);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .upload-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-elevated);
+            border-radius: 50%;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .upload-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .upload-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Branding Grid */
+        .branding-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 16px;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background: var(--cyan);
+            color: var(--bg-dark);
+            border-color: var(--cyan);
+        }
+
+        .btn-primary:hover {
+            background: #79b8ff;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border-color: transparent;
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-highlight);
+            color: var(--text-primary);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border-color: var(--cyan);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-panel); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-highlight); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="modal-container">
+        <!-- Header -->
+        <div class="modal-header">
+            <div class="modal-title">
+                SEASON_CONFIG
+                <span class="mode-badge create">CREATE</span>
+            </div>
+            <button class="modal-close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-step active"></div>
+            <div class="progress-step"></div>
+            <div class="progress-step"></div>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+            <!-- Section 1: Basic Info -->
+            <div class="accordion active" data-section="1">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <div class="accordion-number">1</div>
+                    <div class="accordion-title">Basic Information</div>
+                    <div class="accordion-status">Required fields</div>
+                    <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-group">
+                        <label class="form-label required">Season Name</label>
+                        <input type="text" class="form-input" placeholder="e.g., Season 1, 2024 Winter Championship" id="seasonName" oninput="updateSlug()">
+                        <div class="slug-preview">
+                            <div class="slug-status"></div>
+                            <div class="slug-url">/seasons/<span id="slugPreview">-</span></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Car Class</label>
+                        <input type="text" class="form-input" placeholder="e.g., GT3, Formula 1, LMP1">
+                        <div class="form-help">Specify the car class used in this season</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" placeholder="Describe this season, race format, rules..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Technical Specifications</label>
+                        <textarea class="form-textarea" placeholder="Car setup rules, performance restrictions, BoP..."></textarea>
+                        <div class="form-help">Technical rules and car setup information</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Championship Settings -->
+            <div class="accordion" data-section="2">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <div class="accordion-number">2</div>
+                    <div class="accordion-title">Championship Settings</div>
+                    <div class="accordion-status">5 options available</div>
+                    <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                </div>
+                <div class="accordion-content">
+                    <!-- Race Divisions -->
+                    <div class="toggle-row" onclick="toggleSetting(this)">
+                        <div class="toggle-info">
+                            <div class="toggle-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="7" height="7"/>
+                                    <rect x="14" y="3" width="7" height="7"/>
+                                    <rect x="14" y="14" width="7" height="7"/>
+                                    <rect x="3" y="14" width="7" height="7"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="toggle-label">Race Divisions</div>
+                                <div class="toggle-desc">Organize drivers into competitive divisions</div>
+                            </div>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+
+                    <!-- Team Championship -->
+                    <div class="toggle-row" onclick="toggleSetting(this)" data-has-nested="true">
+                        <div class="toggle-info">
+                            <div class="toggle-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="toggle-label">Team Championship</div>
+                                <div class="toggle-desc">Track team standings alongside individual drivers</div>
+                            </div>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+                    <div class="nested-settings" id="teamSettings">
+                        <div class="form-group">
+                            <label class="form-label">Drivers for Team Calculation</label>
+                            <select class="form-select">
+                                <option>All drivers</option>
+                                <option>Top 1</option>
+                                <option>Top 2</option>
+                                <option>Top 3</option>
+                                <option>Top 4</option>
+                            </select>
+                            <div class="form-help">How many drivers' points count towards team totals</div>
+                        </div>
+                        <div class="toggle-row" onclick="toggleNestedSetting(this)" style="margin-bottom: 0;">
+                            <div class="toggle-info">
+                                <div>
+                                    <div class="toggle-label">Team Drop Rounds</div>
+                                    <div class="toggle-desc">Exclude lowest team scores</div>
+                                </div>
+                            </div>
+                            <div class="toggle-switch">
+                                <div class="toggle-knob"></div>
+                            </div>
+                        </div>
+                        <div class="nested-settings" id="teamDropSettings" style="margin-top: 12px; background: var(--bg-dark);">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Total Teams Drop Rounds</label>
+                                <div class="number-input">
+                                    <button class="number-btn">-</button>
+                                    <input type="text" class="number-value" value="1">
+                                    <button class="number-btn">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Race Times Required -->
+                    <div class="toggle-row active" onclick="toggleSetting(this)">
+                        <div class="toggle-info">
+                            <div class="toggle-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="toggle-label">Require Race Times</div>
+                                <div class="toggle-desc">Require lap times to be recorded for results</div>
+                            </div>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+
+                    <!-- Drop Rounds -->
+                    <div class="toggle-row" onclick="toggleSetting(this)" data-has-nested="true">
+                        <div class="toggle-info">
+                            <div class="toggle-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18"/>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="toggle-label">Drop Rounds</div>
+                                <div class="toggle-desc">Exclude lowest scoring rounds from championship</div>
+                            </div>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+                    <div class="nested-settings" id="dropRoundSettings">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Total Drop Rounds</label>
+                            <div class="number-input">
+                                <button class="number-btn">-</button>
+                                <input type="text" class="number-value" value="1">
+                                <button class="number-btn">+</button>
+                            </div>
+                            <div class="form-help">Number of lowest scoring rounds to exclude</div>
+                        </div>
+                    </div>
+
+                    <!-- Tiebreaker Rules -->
+                    <div class="toggle-row" onclick="toggleSetting(this)" data-has-nested="true">
+                        <div class="toggle-info">
+                            <div class="toggle-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="4" y1="9" x2="20" y2="9"/>
+                                    <line x1="4" y1="15" x2="20" y2="15"/>
+                                    <line x1="10" y1="3" x2="8" y2="21"/>
+                                    <line x1="16" y1="3" x2="14" y2="21"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="toggle-label">Tiebreaker Rules</div>
+                                <div class="toggle-desc">Apply tiebreaker rules when drivers have equal points</div>
+                            </div>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+                    <div class="nested-settings" id="tiebreakerSettings">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Drag to reorder priority</label>
+                            <div class="rules-list">
+                                <div class="rule-item">
+                                    <div class="rule-order">1</div>
+                                    <div class="rule-name">Most Wins</div>
+                                    <svg class="rule-drag" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="3" y1="6" x2="21" y2="6"/>
+                                        <line x1="3" y1="12" x2="21" y2="12"/>
+                                        <line x1="3" y1="18" x2="21" y2="18"/>
+                                    </svg>
+                                </div>
+                                <div class="rule-item">
+                                    <div class="rule-order">2</div>
+                                    <div class="rule-name">Most Podiums</div>
+                                    <svg class="rule-drag" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="3" y1="6" x2="21" y2="6"/>
+                                        <line x1="3" y1="12" x2="21" y2="12"/>
+                                        <line x1="3" y1="18" x2="21" y2="18"/>
+                                    </svg>
+                                </div>
+                                <div class="rule-item">
+                                    <div class="rule-order">3</div>
+                                    <div class="rule-name">Best Race Finish</div>
+                                    <svg class="rule-drag" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="3" y1="6" x2="21" y2="6"/>
+                                        <line x1="3" y1="12" x2="21" y2="12"/>
+                                        <line x1="3" y1="18" x2="21" y2="18"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Branding -->
+            <div class="accordion" data-section="3">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <div class="accordion-number">3</div>
+                    <div class="accordion-title">Branding</div>
+                    <div class="accordion-status">Optional</div>
+                    <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-help" style="margin-bottom: 16px;">
+                        Upload custom branding for this season. If not provided, the competition logo will be used.
+                    </div>
+                    <div class="branding-grid">
+                        <div class="form-group">
+                            <label class="form-label">Season Logo</label>
+                            <div class="upload-zone">
+                                <div class="upload-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                </div>
+                                <div class="upload-text">Drop logo here</div>
+                                <div class="upload-hint">500x500px recommended</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Season Banner</label>
+                            <div class="upload-zone">
+                                <div class="upload-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                </div>
+                                <div class="upload-text">Drop banner here</div>
+                                <div class="upload-hint">1920x400px recommended</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+            <div class="footer-nav">
+                <button class="btn btn-outline" onclick="prevSection()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    Previous
+                </button>
+                <button class="btn btn-outline" onclick="nextSection()">
+                    Next
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="footer-actions">
+                <button class="btn btn-ghost">Cancel</button>
+                <button class="btn btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Create Season
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAccordion(header) {
+            const accordion = header.parentElement;
+            const allAccordions = document.querySelectorAll('.accordion');
+
+            allAccordions.forEach(acc => {
+                if (acc !== accordion) {
+                    acc.classList.remove('active');
+                }
+            });
+
+            accordion.classList.toggle('active');
+            updateProgress();
+        }
+
+        function toggleSetting(row) {
+            row.classList.toggle('active');
+
+            // Handle nested settings
+            if (row.dataset.hasNested) {
+                const nextNested = row.nextElementSibling;
+                if (nextNested && nextNested.classList.contains('nested-settings')) {
+                    nextNested.classList.toggle('visible', row.classList.contains('active'));
+                }
+            }
+        }
+
+        function toggleNestedSetting(row) {
+            row.classList.toggle('active');
+            const nextNested = row.nextElementSibling;
+            if (nextNested && nextNested.classList.contains('nested-settings')) {
+                nextNested.classList.toggle('visible', row.classList.contains('active'));
+            }
+            event.stopPropagation();
+        }
+
+        function updateSlug() {
+            const name = document.getElementById('seasonName').value;
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            document.getElementById('slugPreview').textContent = slug || '-';
+        }
+
+        function updateProgress() {
+            const steps = document.querySelectorAll('.progress-step');
+            const accordions = document.querySelectorAll('.accordion');
+
+            accordions.forEach((acc, index) => {
+                if (acc.classList.contains('active')) {
+                    steps.forEach((step, i) => {
+                        step.classList.remove('active', 'completed');
+                        if (i < index) step.classList.add('completed');
+                        if (i === index) step.classList.add('active');
+                    });
+                }
+            });
+        }
+
+        function nextSection() {
+            const active = document.querySelector('.accordion.active');
+            const next = active?.nextElementSibling;
+            if (next && next.classList.contains('accordion')) {
+                active.classList.remove('active');
+                active.classList.add('completed');
+                next.classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function prevSection() {
+            const active = document.querySelector('.accordion.active');
+            const prev = active?.previousElementSibling;
+            if (prev && prev.classList.contains('accordion')) {
+                active.classList.remove('active');
+                prev.classList.remove('completed');
+                prev.classList.add('active');
+                updateProgress();
+            }
+        }
+    </script>
+</body>
+</html>

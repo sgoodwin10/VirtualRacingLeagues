@@ -9,6 +9,9 @@ use App\Application\Competition\DTOs\UpdateCompetitionData;
 use App\Application\Competition\Services\CompetitionApplicationService;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\CreateCompetitionRequest;
+use App\Http\Requests\User\UpdateCompetitionRequest;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +28,18 @@ final class CompetitionController extends Controller
     }
 
     /**
+     * Get the authenticated user.
+     */
+    private function authenticatedUser(): UserEloquent
+    {
+        /** @var UserEloquent $user */
+        $user = Auth::guard('web')->user();
+        assert($user instanceof UserEloquent);
+
+        return $user;
+    }
+
+    /**
      * List all competitions for a league.
      */
     public function index(int $leagueId): JsonResponse
@@ -36,14 +51,12 @@ final class CompetitionController extends Controller
     /**
      * Create a new competition.
      */
-    public function store(Request $request, int $leagueId): JsonResponse
+    public function store(CreateCompetitionRequest $request, int $leagueId): JsonResponse
     {
-        $validated = $request->validate(CreateCompetitionData::rules());
-        $validated['league_id'] = $leagueId;
-
+        $user = $this->authenticatedUser();
+        $validated = array_merge($request->validated(), ['league_id' => $leagueId]);
         $data = CreateCompetitionData::from($validated);
-        $competition = $this->competitionService->createCompetition($data, (int) (Auth::id() ?? 0));
-
+        $competition = $this->competitionService->createCompetition($data, $user->id);
         return ApiResponse::created($competition->toArray(), 'Competition created successfully');
     }
 
@@ -59,13 +72,11 @@ final class CompetitionController extends Controller
     /**
      * Update a competition.
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateCompetitionRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate(UpdateCompetitionData::rules());
-
-        $data = UpdateCompetitionData::from($validated);
-        $competition = $this->competitionService->updateCompetition($id, $data, (int) (Auth::id() ?? 0));
-
+        $user = $this->authenticatedUser();
+        $data = UpdateCompetitionData::from($request->validated());
+        $competition = $this->competitionService->updateCompetition($id, $data, $user->id);
         return ApiResponse::success($competition->toArray(), 'Competition updated successfully');
     }
 
@@ -74,7 +85,8 @@ final class CompetitionController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $this->competitionService->deleteCompetition($id, (int) (Auth::id() ?? 0));
+        $user = $this->authenticatedUser();
+        $this->competitionService->deleteCompetition($id, $user->id);
         return response()->json(null, 204);
     }
 
@@ -83,7 +95,8 @@ final class CompetitionController extends Controller
      */
     public function archive(int $id): JsonResponse
     {
-        $this->competitionService->archiveCompetition($id, (int) (Auth::id() ?? 0));
+        $user = $this->authenticatedUser();
+        $this->competitionService->archiveCompetition($id, $user->id);
         return ApiResponse::success(null, 'Competition archived successfully');
     }
 

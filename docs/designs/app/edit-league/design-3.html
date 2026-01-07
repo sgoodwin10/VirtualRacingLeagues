@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League Form - Design 3: Wizard Stepper</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #1c2128;
+            --bg-elevated: #21262d;
+            --bg-highlight: #272d36;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --cyan: #58a6ff;
+            --cyan-dim: rgba(88, 166, 255, 0.15);
+            --green: #7ee787;
+            --green-dim: rgba(126, 231, 135, 0.15);
+            --orange: #f0883e;
+            --orange-dim: rgba(240, 136, 62, 0.15);
+            --red: #f85149;
+            --purple: #bc8cff;
+            --purple-dim: rgba(188, 140, 255, 0.15);
+            --border: #30363d;
+            --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+            --radius: 6px;
+            --grid-color: rgba(88, 166, 255, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* Modal Container */
+        .modal-container {
+            width: 100%;
+            max-width: 680px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header */
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            border-radius: var(--radius);
+        }
+
+        .header-icon svg {
+            color: var(--bg-dark);
+        }
+
+        .modal-title {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all 0.15s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-highlight);
+            color: var(--text-primary);
+        }
+
+        /* Stepper Header */
+        .stepper-header {
+            padding: 20px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stepper-track {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .stepper-track::before {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 32px;
+            right: 32px;
+            height: 2px;
+            background: var(--border);
+        }
+
+        .stepper-progress {
+            position: absolute;
+            top: 16px;
+            left: 32px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--cyan), var(--green));
+            transition: width 0.3s ease;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .step.active .step-circle {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .step.complete .step-circle {
+            border-color: var(--green);
+            background: var(--green);
+            color: var(--bg-dark);
+        }
+
+        .step-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .step.active .step-label {
+            color: var(--cyan);
+        }
+
+        .step.complete .step-label {
+            color: var(--green);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 24px;
+            background: var(--bg-dark);
+            min-height: 340px;
+        }
+
+        .step-content {
+            display: none;
+            animation: fadeSlide 0.25s ease;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateX(16px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .step-header {
+            margin-bottom: 24px;
+        }
+
+        .step-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 6px;
+        }
+
+        .step-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Form Styles */
+        .form-grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--red);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            transition: all 0.15s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            resize: vertical;
+            min-height: 80px;
+            transition: all 0.15s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e7681' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .form-help {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* Slug Preview */
+        .slug-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .slug-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        .slug-text {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .slug-text span {
+            color: var(--green);
+        }
+
+        /* Platform Chips */
+        .platform-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .platform-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .platform-chip:hover {
+            border-color: var(--cyan);
+            color: var(--text-primary);
+        }
+
+        .platform-chip.selected {
+            background: var(--cyan-dim);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .platform-chip svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Visibility Cards */
+        .visibility-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .visibility-card {
+            padding: 16px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .visibility-card:hover {
+            border-color: var(--cyan);
+        }
+
+        .visibility-card.active {
+            border-color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .visibility-card.active.public {
+            border-color: var(--green);
+            background: var(--green-dim);
+        }
+
+        .visibility-card.active.unlisted {
+            border-color: var(--orange);
+            background: var(--orange-dim);
+        }
+
+        .visibility-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-elevated);
+            border-radius: var(--radius);
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .visibility-card.active .visibility-icon {
+            background: var(--cyan);
+            color: var(--bg-dark);
+        }
+
+        .visibility-card.active.public .visibility-icon {
+            background: var(--green);
+        }
+
+        .visibility-card.active.unlisted .visibility-icon {
+            background: var(--orange);
+        }
+
+        .visibility-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .visibility-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .visibility-hint {
+            margin-top: 12px;
+            padding: 10px;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            font-size: 11px;
+            display: none;
+        }
+
+        .visibility-card.active .visibility-hint {
+            display: block;
+        }
+
+        .visibility-card.active.public .visibility-hint {
+            color: var(--green);
+        }
+
+        .visibility-card.active.unlisted .visibility-hint {
+            color: var(--orange);
+        }
+
+        /* Upload Area */
+        .upload-flex {
+            display: flex;
+            gap: 14px;
+        }
+
+        .upload-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            min-height: 100px;
+        }
+
+        .upload-box:hover {
+            border-color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .upload-box.square {
+            flex: 0 0 100px;
+        }
+
+        .upload-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-elevated);
+            border-radius: 50%;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .upload-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .upload-hint {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Social Grid */
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .social-input-group {
+            display: flex;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.15s ease;
+        }
+
+        .social-input-group:focus-within {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-dim);
+        }
+
+        .social-prefix {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .social-input {
+            flex: 1;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            color: var(--text-primary);
+            background: transparent;
+            border: none;
+        }
+
+        .social-input:focus {
+            outline: none;
+        }
+
+        .social-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Review Section */
+        .review-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .review-section {
+            padding: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .review-section-title {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .review-section-title svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .review-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .review-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .review-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .review-value {
+            font-size: 12px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .review-value.set {
+            color: var(--green);
+        }
+
+        .review-value.unset {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .review-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .review-badge {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 3px 8px;
+            background: var(--cyan-dim);
+            border-radius: 3px;
+            color: var(--cyan);
+        }
+
+        /* Footer */
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background: var(--cyan);
+            color: var(--bg-dark);
+            border-color: var(--cyan);
+        }
+
+        .btn-primary:hover {
+            background: #79b8ff;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-highlight);
+            color: var(--text-primary);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border-color: transparent;
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-highlight);
+            color: var(--text-primary);
+        }
+
+        .btn-success {
+            background: var(--green);
+            color: var(--bg-dark);
+            border-color: var(--green);
+        }
+
+        .btn-success:hover {
+            background: #9eefae;
+        }
+
+        /* Skip Link */
+        .skip-link {
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+
+        .skip-link:hover {
+            color: var(--cyan);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-panel); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-highlight); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="modal-container">
+        <!-- Header -->
+        <div class="modal-header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                        <line x1="4" y1="22" x2="4" y2="15"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="modal-title">//LEAGUE_CONFIGURATION</div>
+                    <div class="modal-subtitle">Create new racing league</div>
+                </div>
+            </div>
+            <button class="modal-close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Stepper Header -->
+        <div class="stepper-header">
+            <div class="stepper-track">
+                <div class="stepper-progress" id="stepper-progress" style="width: 0%;"></div>
+                <div class="step active" id="step-1">
+                    <div class="step-circle">1</div>
+                    <span class="step-label">Basic</span>
+                </div>
+                <div class="step" id="step-2">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">Contact</span>
+                </div>
+                <div class="step" id="step-3">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">Media</span>
+                </div>
+                <div class="step" id="step-4">
+                    <div class="step-circle">4</div>
+                    <span class="step-label">Social</span>
+                </div>
+                <div class="step" id="step-5">
+                    <div class="step-circle">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+                    <span class="step-label">Review</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Step 1: Basic Info -->
+            <div class="step-content active" id="content-1">
+                <div class="step-header">
+                    <div class="step-title">//Step 1: Basic Information</div>
+                    <div class="step-desc">Set up your league identity</div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label required">League Name</label>
+                        <input type="text" class="form-input" placeholder="e.g., Velocity Racing League" id="leagueName" oninput="updateSlug(); validateStep1();">
+                        <div class="slug-inline">
+                            <div class="slug-indicator"></div>
+                            <span class="slug-text">/leagues/<span id="slugPreview">your-league-name</span></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Platforms</label>
+                        <div class="platform-chips">
+                            <div class="platform-chip" data-platform="pc" onclick="togglePlatform(this)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                    <line x1="8" y1="21" x2="16" y2="21"/>
+                                    <line x1="12" y1="17" x2="12" y2="21"/>
+                                </svg>
+                                PC
+                            </div>
+                            <div class="platform-chip" data-platform="ps" onclick="togglePlatform(this)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="6" width="20" height="12" rx="2"/>
+                                    <circle cx="8" cy="12" r="2"/>
+                                    <circle cx="16" cy="12" r="2"/>
+                                </svg>
+                                PlayStation
+                            </div>
+                            <div class="platform-chip" data-platform="xbox" onclick="togglePlatform(this)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 2a10 10 0 0 1 0 20"/>
+                                </svg>
+                                Xbox
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Visibility</label>
+                        <div class="visibility-cards">
+                            <div class="visibility-card public active" data-visibility="public" onclick="setVisibility(this)">
+                                <div class="visibility-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="2" y1="12" x2="22" y2="12"/>
+                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                    </svg>
+                                </div>
+                                <div class="visibility-title">Public</div>
+                                <div class="visibility-desc">Discoverable in search</div>
+                                <div class="visibility-hint">Anyone can find and join your league through search.</div>
+                            </div>
+                            <div class="visibility-card unlisted" data-visibility="unlisted" onclick="setVisibility(this)">
+                                <div class="visibility-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                                        <line x1="1" y1="1" x2="23" y2="23"/>
+                                    </svg>
+                                </div>
+                                <div class="visibility-title">Unlisted</div>
+                                <div class="visibility-desc">Hidden from search</div>
+                                <div class="visibility-hint">Only accessible via direct link. Perfect for private leagues.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Contact -->
+            <div class="step-content" id="content-2">
+                <div class="step-header">
+                    <div class="step-title">//Step 2: Contact Details</div>
+                    <div class="step-desc">How members can reach you (optional)</div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Contact Email</label>
+                            <input type="email" class="form-input" placeholder="league@example.com" id="contactEmail">
+                            <div class="form-help">Visible to league members</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contact Name</label>
+                            <input type="text" class="form-input" placeholder="Your name or organization" id="organizerName">
+                            <div class="form-help">Displayed as organizer</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tagline</label>
+                        <input type="text" class="form-input" placeholder="A short, catchy phrase describing your league" maxlength="150" id="tagline">
+                        <div class="form-help">Max 150 characters. Displayed on your league page.</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Timezone</label>
+                            <select class="form-select" id="timezone">
+                                <option value="">Select timezone...</option>
+                                <option value="UTC">UTC</option>
+                                <option value="America/New_York">Eastern Time (ET)</option>
+                                <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                                <option value="Europe/London">London (GMT)</option>
+                                <option value="Europe/Paris">Central European (CET)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" placeholder="Tell members about your league..." id="description" style="min-height: 60px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Media -->
+            <div class="step-content" id="content-3">
+                <div class="step-header">
+                    <div class="step-title">//Step 3: Media Assets</div>
+                    <div class="step-desc">Visual branding for your league (optional)</div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="upload-flex">
+                        <div class="upload-box square">
+                            <div class="upload-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                            </div>
+                            <div class="upload-label">Logo</div>
+                            <div class="upload-hint">400x400px</div>
+                        </div>
+                        <div class="upload-box">
+                            <div class="upload-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                            </div>
+                            <div class="upload-label">Banner</div>
+                            <div class="upload-hint">Wide format (200-800px)</div>
+                        </div>
+                    </div>
+
+                    <div class="upload-flex">
+                        <div class="upload-box" style="width: 100%;">
+                            <div class="upload-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                            </div>
+                            <div class="upload-label">Header / Background Image</div>
+                            <div class="upload-hint">1200x400px recommended</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Social -->
+            <div class="step-content" id="content-4">
+                <div class="step-header">
+                    <div class="step-title">//Step 4: Social Links</div>
+                    <div class="step-desc">Connect your community channels (optional)</div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="social-grid">
+                        <div class="social-input-group">
+                            <div class="social-prefix">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                                </svg>
+                            </div>
+                            <input type="url" class="social-input" placeholder="Discord invite URL" id="discordUrl">
+                        </div>
+                        <div class="social-input-group">
+                            <div class="social-prefix">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="2" y1="12" x2="22" y2="12"/>
+                                </svg>
+                            </div>
+                            <input type="url" class="social-input" placeholder="Website URL" id="websiteUrl">
+                        </div>
+                        <div class="social-input-group">
+                            <div class="social-prefix">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5"/>
+                                </svg>
+                            </div>
+                            <input type="text" class="social-input" placeholder="@twitter" id="twitterHandle">
+                        </div>
+                        <div class="social-input-group">
+                            <div class="social-prefix">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="2" width="20" height="20" rx="5"/>
+                                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                                </svg>
+                            </div>
+                            <input type="text" class="social-input" placeholder="@instagram" id="instagramHandle">
+                        </div>
+                        <div class="social-input-group">
+                            <div class="social-prefix">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2"/>
+                                    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48"/>
+                                </svg>
+                            </div>
+                            <input type="url" class="social-input" placeholder="YouTube channel URL" id="youtubeUrl">
+                        </div>
+                        <div class="social-input-group">
+                            <div class="social-prefix">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777"/>
+                                </svg>
+                            </div>
+                            <input type="url" class="social-input" placeholder="Twitch channel URL" id="twitchUrl">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Review -->
+            <div class="step-content" id="content-5">
+                <div class="step-header">
+                    <div class="step-title">//Review & Create</div>
+                    <div class="step-desc">Confirm your league details before creating</div>
+                </div>
+
+                <div class="review-grid">
+                    <div class="review-section">
+                        <div class="review-section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            </svg>
+                            Basic Information
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Name</span>
+                            <span class="review-value set" id="review-name">--</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Platforms</span>
+                            <div class="review-badges" id="review-platforms">
+                                <span class="review-value unset">None selected</span>
+                            </div>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Visibility</span>
+                            <span class="review-value" id="review-visibility">Public</span>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <div class="review-section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            Contact & Details
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Contact</span>
+                            <span class="review-value unset" id="review-contact">Not provided</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Tagline</span>
+                            <span class="review-value unset" id="review-tagline">Not provided</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Timezone</span>
+                            <span class="review-value unset" id="review-timezone">Not set</span>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <div class="review-section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                            </svg>
+                            Media & Social
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Media</span>
+                            <span class="review-value unset" id="review-media">No uploads</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Social Links</span>
+                            <span class="review-value unset" id="review-social">None added</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+            <div class="footer-left">
+                <span class="skip-link" id="skipLink" onclick="skipStep()">Skip this step</span>
+            </div>
+            <div class="footer-right">
+                <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
+                <button class="btn btn-secondary" id="prevBtn" onclick="prevStep()" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    Previous
+                </button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextStep()" disabled>
+                    Next
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </button>
+                <button class="btn btn-success" id="submitBtn" onclick="submitForm()" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Create League
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        let selectedPlatforms = [];
+        let currentVisibility = 'public';
+
+        function updateSlug() {
+            const name = document.getElementById('leagueName').value;
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            document.getElementById('slugPreview').textContent = slug || 'your-league-name';
+        }
+
+        function togglePlatform(chip) {
+            const platform = chip.dataset.platform;
+            chip.classList.toggle('selected');
+
+            if (chip.classList.contains('selected')) {
+                selectedPlatforms.push(platform);
+            } else {
+                selectedPlatforms = selectedPlatforms.filter(p => p !== platform);
+            }
+
+            validateStep1();
+        }
+
+        function setVisibility(card) {
+            document.querySelectorAll('.visibility-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            currentVisibility = card.dataset.visibility;
+        }
+
+        function validateStep1() {
+            const name = document.getElementById('leagueName').value;
+            const isValid = name.length > 0 && selectedPlatforms.length > 0;
+            document.getElementById('nextBtn').disabled = !isValid;
+            return isValid;
+        }
+
+        function goToStep(step) {
+            // Update step indicators
+            for (let i = 1; i <= totalSteps; i++) {
+                const stepEl = document.getElementById('step-' + i);
+                const contentEl = document.getElementById('content-' + i);
+
+                stepEl.classList.remove('active', 'complete');
+                contentEl.classList.remove('active');
+
+                if (i < step) {
+                    stepEl.classList.add('complete');
+                } else if (i === step) {
+                    stepEl.classList.add('active');
+                    contentEl.classList.add('active');
+                }
+            }
+
+            // Update progress bar
+            const progress = ((step - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('stepper-progress').style.width = progress + '%';
+
+            // Update buttons
+            document.getElementById('prevBtn').style.display = step > 1 ? 'inline-flex' : 'none';
+            document.getElementById('nextBtn').style.display = step < totalSteps ? 'inline-flex' : 'none';
+            document.getElementById('submitBtn').style.display = step === totalSteps ? 'inline-flex' : 'none';
+            document.getElementById('skipLink').style.display = (step > 1 && step < totalSteps) ? 'inline' : 'none';
+
+            // Validate current step
+            if (step === 1) {
+                validateStep1();
+            } else if (step < totalSteps) {
+                document.getElementById('nextBtn').disabled = false;
+            }
+
+            // Update review if on last step
+            if (step === totalSteps) {
+                updateReview();
+            }
+
+            currentStep = step;
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                goToStep(currentStep + 1);
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                goToStep(currentStep - 1);
+            }
+        }
+
+        function skipStep() {
+            nextStep();
+        }
+
+        function updateReview() {
+            // Name
+            const name = document.getElementById('leagueName').value;
+            const nameEl = document.getElementById('review-name');
+            nameEl.textContent = name || '--';
+            nameEl.classList.toggle('set', name.length > 0);
+            nameEl.classList.toggle('unset', name.length === 0);
+
+            // Platforms
+            const platformsEl = document.getElementById('review-platforms');
+            if (selectedPlatforms.length > 0) {
+                platformsEl.innerHTML = selectedPlatforms.map(p =>
+                    `<span class="review-badge">${p.toUpperCase()}</span>`
+                ).join('');
+            } else {
+                platformsEl.innerHTML = '<span class="review-value unset">None selected</span>';
+            }
+
+            // Visibility
+            document.getElementById('review-visibility').textContent =
+                currentVisibility.charAt(0).toUpperCase() + currentVisibility.slice(1);
+
+            // Contact
+            const email = document.getElementById('contactEmail').value;
+            const contactEl = document.getElementById('review-contact');
+            contactEl.textContent = email || 'Not provided';
+            contactEl.classList.toggle('set', email.length > 0);
+            contactEl.classList.toggle('unset', email.length === 0);
+
+            // Tagline
+            const tagline = document.getElementById('tagline').value;
+            const taglineEl = document.getElementById('review-tagline');
+            taglineEl.textContent = tagline || 'Not provided';
+            taglineEl.classList.toggle('set', tagline.length > 0);
+            taglineEl.classList.toggle('unset', tagline.length === 0);
+
+            // Timezone
+            const timezone = document.getElementById('timezone').value;
+            const timezoneEl = document.getElementById('review-timezone');
+            timezoneEl.textContent = timezone || 'Not set';
+            timezoneEl.classList.toggle('set', timezone.length > 0);
+            timezoneEl.classList.toggle('unset', timezone.length === 0);
+
+            // Social (check if any are filled)
+            const socialFields = ['discordUrl', 'websiteUrl', 'twitterHandle', 'instagramHandle', 'youtubeUrl', 'twitchUrl'];
+            const filledSocial = socialFields.filter(id => document.getElementById(id).value.length > 0);
+            const socialEl = document.getElementById('review-social');
+            if (filledSocial.length > 0) {
+                socialEl.textContent = filledSocial.length + ' link(s) added';
+                socialEl.classList.add('set');
+                socialEl.classList.remove('unset');
+            } else {
+                socialEl.textContent = 'None added';
+                socialEl.classList.remove('set');
+                socialEl.classList.add('unset');
+            }
+        }
+
+        function submitForm() {
+            alert('League created successfully!');
+        }
+
+        // Initialize
+        goToStep(1);
+    </script>
+</body>
+</html>

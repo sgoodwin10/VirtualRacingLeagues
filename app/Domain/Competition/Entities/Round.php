@@ -64,7 +64,6 @@ final class Round
         private int $createdByUserId,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
-        private ?DateTimeImmutable $deletedAt = null,
     ) {
     }
 
@@ -122,7 +121,6 @@ final class Round
             createdByUserId: $createdByUserId,
             createdAt: new DateTimeImmutable(),
             updatedAt: new DateTimeImmutable(),
-            deletedAt: null,
         );
     }
 
@@ -165,7 +163,6 @@ final class Round
         int $createdByUserId,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
-        ?DateTimeImmutable $deletedAt = null,
     ): self {
         return new self(
             id: $id,
@@ -197,7 +194,6 @@ final class Round
             createdByUserId: $createdByUserId,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
-            deletedAt: $deletedAt,
         );
     }
 
@@ -365,10 +361,10 @@ final class Round
     /**
      * Mark round for deletion and record domain event.
      * Note: The actual deletion (hard delete with cascade) is performed by the repository.
+     * Rounds are ALWAYS hard deleted - soft deletes are not used.
      */
     public function delete(): void
     {
-        $this->deletedAt = new DateTimeImmutable();
         $this->recordDeletedEvent();
     }
 
@@ -411,7 +407,7 @@ final class Round
         $this->recordEvent(new RoundDeleted(
             roundId: $this->id ?? 0,
             seasonId: $this->seasonId,
-            occurredAt: $this->deletedAt?->format('Y-m-d H:i:s') ?? (new DateTimeImmutable())->format('Y-m-d H:i:s'),
+            occurredAt: (new DateTimeImmutable())->format('Y-m-d H:i:s'),
         ));
     }
 
@@ -578,11 +574,6 @@ final class Round
     public function updatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
-    }
-
-    public function deletedAt(): ?DateTimeImmutable
-    {
-        return $this->deletedAt;
     }
 
     /**

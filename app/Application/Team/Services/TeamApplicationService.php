@@ -8,7 +8,11 @@ use App\Application\Team\DTOs\AssignDriverTeamData;
 use App\Application\Team\DTOs\CreateTeamData;
 use App\Application\Team\DTOs\TeamData;
 use App\Application\Team\DTOs\UpdateTeamData;
+use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
+use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
+use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Team\Entities\Team;
 use App\Domain\Team\Exceptions\TeamNotFoundException;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
@@ -27,15 +31,22 @@ final class TeamApplicationService
     public function __construct(
         private readonly TeamRepositoryInterface $teamRepository,
         private readonly SeasonDriverRepositoryInterface $seasonDriverRepository,
+        private readonly SeasonRepositoryInterface $seasonRepository,
+        private readonly CompetitionRepositoryInterface $competitionRepository,
+        private readonly LeagueRepositoryInterface $leagueRepository,
     ) {
     }
 
     /**
      * Create a new team.
+     *
+     * @throws UnauthorizedException
      */
-    public function createTeam(CreateTeamData $data, int $seasonId): TeamData
+    public function createTeam(CreateTeamData $data, int $seasonId, int $userId): TeamData
     {
-        return DB::transaction(function () use ($data, $seasonId) {
+        return DB::transaction(function () use ($data, $seasonId, $userId) {
+            // Authorize user owns the league
+            $this->authorizeSeasonOwner($seasonId, $userId);
             // Store logo if provided
             $logoPath = null;
             if ($data->logo) {
@@ -67,11 +78,16 @@ final class TeamApplicationService
 
     /**
      * Update an existing team.
+     *
+     * @throws UnauthorizedException
      */
-    public function updateTeam(int $teamId, UpdateTeamData $data): TeamData
+    public function updateTeam(int $teamId, UpdateTeamData $data, int $userId): TeamData
     {
-        return DB::transaction(function () use ($teamId, $data) {
+        return DB::transaction(function () use ($teamId, $data, $userId) {
             $team = $this->teamRepository->findById($teamId);
+
+            // Authorize user owns the league
+            $this->authorizeSeasonOwner($team->seasonId(), $userId);
 
             // Store new logo if provided
             $logoPath = null;
@@ -108,11 +124,16 @@ final class TeamApplicationService
     /**
      * Delete a team.
      * This will cascade to set all season_drivers.team_id to NULL.
+     *
+     * @throws UnauthorizedException
      */
-    public function deleteTeam(int $teamId): void
+    public function deleteTeam(int $teamId, int $userId): void
     {
-        DB::transaction(function () use ($teamId) {
+        DB::transaction(function () use ($teamId, $userId) {
             $team = $this->teamRepository->findById($teamId);
+
+            // Authorize user owns the league
+            $this->authorizeSeasonOwner($team->seasonId(), $userId);
 
             // Delete logo if exists
             if ($team->logoUrl()) {
@@ -182,10 +203,17 @@ final class TeamApplicationService
      *     added_at: string,
      *     updated_at: string
      * }
+     * @throws UnauthorizedException
      */
-    public function assignDriverToTeam(int $seasonDriverId, AssignDriverTeamData $data): array
+    public function assignDriverToTeam(int $seasonDriverId, AssignDriverTeamData $data, int $userId): array
     {
-        return DB::transaction(function () use ($seasonDriverId, $data) {
+        return DB::transaction(function () use ($seasonDriverId, $data, $userId) {
+            // Fetch the season driver to get the season ID for authorization
+            $seasonDriverModel = $this->seasonDriverRepository->findByIdWithRelations($seasonDriverId);
+
+            // Authorize user owns the league
+            $this->authorizeSeasonOwner($seasonDriverModel->season_id, $userId);
+
             // If team_id is provided, verify it exists
             if ($data->team_id !== null) {
                 $this->teamRepository->findById($data->team_id);
@@ -267,6 +295,23 @@ final class TeamApplicationService
     {
         foreach ($team->releaseEvents() as $event) {
             Event::dispatch($event);
+        }
+    }
+
+    /**
+     * Authorize that user owns the league for the given season.
+     *
+     * @throws UnauthorizedException
+     */
+    private function authorizeSeasonOwner(int $seasonId, int $userId): void
+    {
+        // Get season -> competition -> league chain
+        $season = $this->seasonRepository->findById($seasonId);
+        $competition = $this->competitionRepository->findById($season->competitionId());
+        $league = $this->leagueRepository->findById($competition->leagueId());
+
+        if ($league->ownerUserId() !== $userId) {
+            throw new UnauthorizedException('Only league owner can manage teams');
         }
     }
 }

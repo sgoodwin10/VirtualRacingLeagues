@@ -30,12 +30,13 @@ final class QualifierApplicationService
         private readonly RaceResultRepositoryInterface $raceResultRepository,
         private readonly RoundRepositoryInterface $roundRepository,
         private readonly SeasonRepositoryInterface $seasonRepository,
+        private readonly \App\Application\Activity\Services\LeagueActivityLogService $activityLogService,
     ) {
     }
 
-    public function createQualifier(CreateQualifierData $data, int $roundId): RaceData
+    public function createQualifier(CreateQualifierData $data, int $roundId, int $userId): RaceData
     {
-        return DB::transaction(function () use ($data, $roundId) {
+        return DB::transaction(function () use ($data, $roundId, $userId) {
             // Business rule: Only one qualifier per round
             if ($this->raceRepository->qualifierExistsForRound($roundId)) {
                 throw QualifierAlreadyExistsException::forRound($roundId);
@@ -60,14 +61,23 @@ final class QualifierApplicationService
             $this->raceRepository->save($qualifier);
             $this->dispatchEvents($qualifier);
 
+            // Log activity
+            $this->logQualifierCreated($qualifier->id() ?? 0, $userId);
+
             return RaceData::fromEntity($qualifier);
         });
     }
 
-    public function updateQualifier(int $qualifierId, UpdateQualifierData $data): RaceData
+    public function updateQualifier(int $qualifierId, UpdateQualifierData $data, int $userId): RaceData
     {
-        return DB::transaction(function () use ($qualifierId, $data) {
+        return DB::transaction(function () use ($qualifierId, $data, $userId) {
             $qualifier = $this->raceRepository->findQualifierById($qualifierId);
+
+            // Capture original data for change tracking
+            $originalData = [
+                'name' => $qualifier->name()?->value(),
+                'qualifying_length' => $qualifier->qualifyingLength(),
+            ];
 
             // Track status changes for updating race results
             $statusChanged = false;
@@ -164,6 +174,13 @@ final class QualifierApplicationService
             if ($statusChanged && $newStatus !== null) {
                 $this->updateRaceResultStatuses($qualifierId, $newStatus);
             }
+
+            // Log activity with changes
+            $newData = [
+                'name' => $qualifier->name()?->value(),
+                'qualifying_length' => $qualifier->qualifyingLength(),
+            ];
+            $this->logQualifierUpdated($qualifierId, $userId, $originalData, $newData);
 
             return RaceData::fromEntity($qualifier);
         });
@@ -460,6 +477,58 @@ final class QualifierApplicationService
 
             $this->raceResultRepository->save($result);
             $position++;
+        }
+    }
+
+    /**
+     * Log qualifier creation activity.
+     */
+    private function logQualifierCreated(int $qualifierId, int $userId): void
+    {
+        try {
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
+            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            if ($user === null) {
+                return;
+            }
+
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $qualifier */
+            $qualifier = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($qualifierId);
+            $this->activityLogService->logRaceCreated($user, $qualifier);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to log qualifier creation activity', [
+                'error' => $e->getMessage(),
+                'qualifier_id' => $qualifierId,
+            ]);
+        }
+    }
+
+    /**
+     * Log qualifier update activity.
+     *
+     * @param array<string, mixed> $originalData
+     * @param array<string, mixed> $newData
+     */
+    private function logQualifierUpdated(int $qualifierId, int $userId, array $originalData, array $newData): void
+    {
+        try {
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
+            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            if ($user === null) {
+                return;
+            }
+
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $qualifier */
+            $qualifier = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($qualifierId);
+            $this->activityLogService->logRaceUpdated($user, $qualifier, [
+                'old' => $originalData,
+                'new' => $newData,
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to log qualifier update activity', [
+                'error' => $e->getMessage(),
+                'qualifier_id' => $qualifierId,
+            ]);
         }
     }
 }

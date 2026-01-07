@@ -1,6 +1,138 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:ip\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:userAgent\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Call to function method_exists\(\) with Illuminate\\Database\\Eloquent\\Model and ''getAttribute'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$competition on App\\Infrastructure\\Persistence\\Eloquent\\Models\\SeasonEloquent\|null\.$#'
+			identifier: property.nonObject
+			count: 9
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Infrastructure\\Persistence\\Eloquent\\Models\\Competition\|null\.$#'
+			identifier: property.nonObject
+			count: 26
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Infrastructure\\Persistence\\Eloquent\\Models\\Round\|null\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Infrastructure\\Persistence\\Eloquent\\Models\\SeasonEloquent\|null\.$#'
+			identifier: property.nonObject
+			count: 9
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$league on App\\Infrastructure\\Persistence\\Eloquent\\Models\\Competition\|null\.$#'
+			identifier: property.nonObject
+			count: 26
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$league_id on App\\Infrastructure\\Persistence\\Eloquent\\Models\\Competition\|null\.$#'
+			identifier: property.nonObject
+			count: 26
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$name on App\\Infrastructure\\Persistence\\Eloquent\\Models\\Competition\|null\.$#'
+			identifier: property.nonObject
+			count: 54
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$name on App\\Infrastructure\\Persistence\\Eloquent\\Models\\Round\|null\.$#'
+			identifier: property.nonObject
+			count: 12
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$name on App\\Infrastructure\\Persistence\\Eloquent\\Models\\SeasonEloquent\|null\.$#'
+			identifier: property.nonObject
+			count: 20
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot access property \$season on App\\Infrastructure\\Persistence\\Eloquent\\Models\\Round\|null\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Cannot call method toISOString\(\) on Carbon\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Parameter \$created_at of class App\\Application\\Activity\\DTOs\\LeagueActivityData constructor expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Parameter \$log_name of class App\\Application\\Activity\\DTOs\\LeagueActivityData constructor expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between Illuminate\\Http\\Request and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between App\\Infrastructure\\Persistence\\Eloquent\\Models\\League and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Application/Activity/Services/LeagueActivityLogService.php
+
+		-
 			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:session\(\)\.$#'
 			identifier: method.notFound
 			count: 3
@@ -31,45 +163,51 @@ parameters:
 			path: app/Http/Controllers/Auth/PasswordResetController.php
 
 		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:ip\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/Auth/UserImpersonationController.php
+
+		-
 			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:session\(\)\.$#'
 			identifier: method.notFound
 			count: 2
 			path: app/Http/Controllers/Auth/UserImpersonationController.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:all\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/User/RoundController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:hasAny\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/User/RoundController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:except\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/User/SeasonDriverController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:input\(\)\.$#'
-			identifier: method.notFound
+			message: '#^Offset ''admin_email'' on array\{user\: App\\Domain\\User\\Entities\\User, admin_id\: int, admin_email\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
 			count: 2
-			path: app/Http/Controllers/User/SeasonDriverController.php
+			path: app/Http/Controllers/Auth/UserImpersonationController.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:url\(\)\.$#'
+			message: '#^Offset ''admin_id'' on array\{user\: App\\Domain\\User\\Entities\\User, admin_id\: int, admin_email\: string\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 2
+			path: app/Http/Controllers/Auth/UserImpersonationController.php
+
+		-
+			message: '#^Offset ''admin_id'' on array\{user\: App\\Domain\\User\\Entities\\User, admin_id\: int, admin_email\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 4
+			path: app/Http/Controllers/Auth/UserImpersonationController.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Infrastructure\\Persistence\\Eloquent\\Models\\UserEloquent\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Controllers/User/RaceController.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\AvailableDriversRequest\:\:input\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Http/Controllers/User/SeasonDriverController.php
 
 		-
-			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 2
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\ListSeasonDriversRequest\:\:input\(\)\.$#'
+			identifier: method.notFound
+			count: 1
 			path: app/Http/Controllers/User/SeasonDriverController.php
 
 		-
@@ -217,6 +355,72 @@ parameters:
 			path: app/Http/Requests/User/BulkRaceResultsRequest.php
 
 		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CompleteRoundRequest\:\:hasAny\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/CompleteRoundRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateQualifierRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/CreateQualifierRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateRaceRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/CreateRaceRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateSeasonRequest\:\:merge\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/CreateSeasonRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateSeasonRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/CreateSeasonRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateTeamRequest\:\:merge\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/CreateTeamRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateTeamRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/CreateTeamRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\ListActivityLogsRequest\:\:input\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: app/Http/Requests/User/ListActivityLogsRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\ListActivityLogsRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/ListActivityLogsRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateDivisionRequest\:\:all\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateDivisionRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateDivisionRequest\:\:replace\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateDivisionRequest.php
+
+		-
 			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateLeagueRequest\:\:all\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -227,6 +431,60 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: app/Http/Requests/User/UpdateLeagueRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateQualifierRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateQualifierRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateRaceRequest\:\:route\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateRaceRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateRoundRequest\:\:all\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateRoundRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateRoundRequest\:\:replace\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateRoundRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateSeasonRequest\:\:all\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateSeasonRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateSeasonRequest\:\:replace\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/User/UpdateSeasonRequest.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:ip\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: app/Infrastructure/Listeners/LogLeagueSeasonActivity.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:userAgent\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: app/Infrastructure/Listeners/LogLeagueSeasonActivity.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between App\\Infrastructure\\Persistence\\Eloquent\\Models\\League and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 5
+			path: app/Infrastructure/Listeners/LogLeagueSeasonActivity.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:ip\(\)\.$#'
@@ -251,3 +509,27 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Infrastructure/Listeners/LogUserImpersonationStarted.php
+
+		-
+			message: '#^Method App\\Infrastructure\\Persistence\\Eloquent\\Casts\\DoubleEncodedJson\:\:set\(\) should return string\|null but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Infrastructure/Persistence/Eloquent/Casts/DoubleEncodedJson.php
+
+		-
+			message: '#^Call to function is_string\(\) with Illuminate\\Support\\Carbon will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 2
+			path: app/Infrastructure/Persistence/Eloquent/Repositories/EloquentRoundRepository.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Rules/DivisionExists.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Rules/TeamExists.php

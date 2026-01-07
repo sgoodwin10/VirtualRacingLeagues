@@ -147,10 +147,12 @@ export async function checkSeasonSlugAvailability(
   competitionId: number,
   name: string,
   excludeSeasonId?: number,
+  signal?: AbortSignal,
 ): Promise<SlugCheckResponse> {
   const response: AxiosResponse<ApiResponse<SlugCheckResponse>> = await apiClient.post(
     API_ENDPOINTS.competitions.checkSeasonSlug(competitionId),
     { name, exclude_id: excludeSeasonId },
+    { signal },
   );
   return response.data.data;
 }

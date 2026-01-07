@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useNavigationStore } from '@app/stores/navigationStore';
-import { PhCalendar, PhTrophy, PhUsers, PhUsersThree, PhGear } from '@phosphor-icons/vue';
+import {
+  PhCalendar,
+  PhTrophy,
+  PhUsers,
+  PhUsersThree,
+  PhGear,
+  PhChartLineUp,
+} from '@phosphor-icons/vue';
 import SidebarLink from './SidebarLink.vue';
+import SidebarButton from './SidebarButton.vue';
+import SeasonFormSplitModal from '@app/components/season/modals/SeasonFormSplitModal.vue';
 
 const navigationStore = useNavigationStore();
+const showEditSeasonModal = ref(false);
 
 const showSidebar = computed(() => navigationStore.showSidebar);
 const competitionName = computed(() => navigationStore.currentCompetition?.name || 'COMPETITION');
@@ -25,8 +35,9 @@ const navigationLinks = computed(() => {
       icon: PhCalendar,
       label: 'Rounds',
       tag:
-        navigationStore.currentSeason?.stats?.total_rounds ||
-        navigationStore.currentSeason?.stats?.total_races,
+        navigationStore.currentSeason?.stats?.total_rounds ??
+        navigationStore.currentSeason?.stats?.total_races ??
+        undefined,
     },
     {
       id: 'standings',
@@ -48,13 +59,22 @@ const navigationLinks = computed(() => {
       label: 'Divisions & Teams',
     },
     {
-      id: 'settings',
-      to: `${basePath}/settings`,
-      icon: PhGear,
-      label: 'Settings',
+      id: 'season-status',
+      to: `${basePath}/season-status`,
+      icon: PhChartLineUp,
+      label: 'Season Status',
     },
   ];
 });
+
+function openEditSeasonModal(): void {
+  showEditSeasonModal.value = true;
+}
+
+function handleSeasonSaved(): void {
+  // Modal will close automatically, we can refresh data here if needed
+  showEditSeasonModal.value = false;
+}
 </script>
 
 <template>
@@ -83,7 +103,23 @@ const navigationLinks = computed(() => {
           />
         </nav>
       </div>
+
+      <!-- Settings Section -->
+      <div class="sidebar-section">
+        <nav class="sidebar-nav">
+          <SidebarButton :icon="PhGear" label="Edit Settings" @click="openEditSeasonModal" />
+        </nav>
+      </div>
     </div>
+
+    <!-- Edit Season Modal -->
+    <SeasonFormSplitModal
+      v-model:visible="showEditSeasonModal"
+      :is-edit-mode="true"
+      :competition-id="navigationStore.competitionId ?? 0"
+      :season="navigationStore.currentSeason"
+      @season-saved="handleSeasonSaved"
+    />
   </aside>
 </template>
 

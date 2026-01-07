@@ -2,6 +2,7 @@
 import { ref, reactive, computed, watch, onUnmounted } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
+import { PhTrophy } from '@phosphor-icons/vue';
 import { useCompetitionStore } from '@app/stores/competitionStore';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import { useLeaguePlatforms } from '@app/composables/useLeaguePlatforms';
@@ -19,7 +20,6 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import { Button } from '@app/components/common/buttons';
-import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 import ColorPicker from 'primevue/colorpicker';
 
@@ -30,7 +30,6 @@ import FormError from '@app/components/common/forms/FormError.vue';
 import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
 import FormOptionalText from '@app/components/common/forms/FormOptionalText.vue';
 import ImageUpload from '@app/components/common/forms/ImageUpload.vue';
-import BasePanel from '@app/components/common/panels/BasePanel.vue';
 
 // Props
 interface Props {
@@ -132,6 +131,7 @@ const checkSlug = useDebounceFn(async () => {
       props.leagueId,
       form.name,
       props.competition?.id,
+      currentController.signal,
     );
 
     // Only update state if this request wasn't aborted
@@ -348,128 +348,173 @@ onUnmounted(() => {
   <BaseModal
     v-model:visible="localVisible"
     :header="modalTitle"
-    width="3xl"
+    width="4xl"
     :closable="!isSubmitting"
     :dismissable-mask="false"
     :loading="isLoadingData"
-    content-class="bg-slate-50"
+    :show-header="true"
+    content-class="!p-0"
   >
-    <div class="space-y-4">
-      <!-- Name, Platform, and Colour Fields - Side by Side on Desktop -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <!-- Name Field (6/12 width on desktop) -->
-        <FormInputGroup class="md:col-span-6">
-          <FormLabel for="name" text="Competition Name" required />
-          <InputText
-            id="name"
-            v-model="form.name"
-            size="sm"
-            placeholder="e.g., Sunday Night Racing, GT3 Championship"
-            :class="{ 'p-invalid': errors.name }"
-            :disabled="isSubmitting"
-            maxlength="100"
-            class="w-full"
-          />
-          <FormError :error="errors.name" />
-
-          <!-- Slug Preview - More Compact -->
-          <div v-if="slugPreview" class="mt-1.5 flex items-center gap-1.5">
-            <template v-if="slugStatus === 'checking'">
-              <i class="pi pi-spinner pi-spin text-xs text-blue-500"></i>
-              <small class="text-gray-600">Checking...</small>
-            </template>
-            <template v-else-if="slugStatus === 'available'">
-              <i class="pi pi-check-circle text-xs text-green-500"></i>
-              <small class="text-gray-600">
-                URL: <span class="font-mono text-green-600">{{ slugPreview }}</span>
-              </small>
-            </template>
-            <template v-else-if="slugStatus === 'taken'">
-              <i class="pi pi-info-circle text-xs text-amber-500"></i>
-              <small class="text-gray-600">
-                Will use: <span class="font-mono text-amber-700">{{ slugSuggestion }}</span>
-              </small>
-            </template>
-          </div>
-        </FormInputGroup>
-
-        <!-- Platform Selection (4/12 width on desktop) -->
-        <FormInputGroup class="md:col-span-4">
-          <FormLabel for="platform_id" text="Platform" required class="mb-0" />
-
-          <Select
-            id="platform_id"
-            v-model="form.platform_id"
-            :options="platformOptions"
-            option-label="name"
-            option-value="id"
-            placeholder="Select a platform"
-            size="sm"
-            :class="{ 'p-invalid': errors.platform_id }"
-            :disabled="isEditMode || isSubmitting"
-            class="w-full"
-          />
-          <small v-if="isEditMode" class="text-gray-500 italic"
-            >Cannot be changed after creation</small
-          >
-          <FormError :error="errors.platform_id" />
-        </FormInputGroup>
-
-        <!-- Competition Colour (2/12 width on desktop) -->
-        <FormInputGroup class="md:col-span-2">
-          <FormLabel for="competition_colour" text="Colour" />
-          <ColorPicker
-            id="competition_colour"
-            v-model="form.competition_colour"
-            format="rgb"
-            :disabled="isSubmitting"
-          />
-          <FormOptionalText text="Competition theme colour" />
-          <FormError :error="errors.competition_colour" />
-        </FormInputGroup>
+    <template #header>
+      <div
+        class="w-9 h-9 flex items-center justify-center bg-[var(--cyan-dim)] rounded-lg border border-[var(--border)]"
+      >
+        <PhTrophy :size="18" weight="duotone" class="text-[var(--cyan)]" />
       </div>
+      <div class="flex-auto pl-4">
+        <div class="font-mono font-semibold tracking-wide text-[var(--text-primary)]">
+          {{ modalTitle }}
+        </div>
+        <div class="text-[var(--text-secondary)]">
+          {{ isEditMode ? 'Update competition settings' : 'Create a new competition' }}
+        </div>
+      </div>
+    </template>
 
-      <!-- Description -->
-      <FormInputGroup>
-        <FormLabel for="description" text="Description" />
-        <Textarea
-          id="description"
-          v-model="form.description"
-          rows="3"
-          placeholder="Describe this competition, typical race format, skill level..."
-          :class="{ 'p-invalid': errors.description }"
-          :disabled="isSubmitting"
-          maxlength="1000"
-          class="w-full"
-        />
-        <FormOptionalText text="Tell participants what this competition is all about" />
-        <FormError :error="errors.description" />
-      </FormInputGroup>
+    <!-- Main Content -->
+    <main class="overflow-y-auto bg-[var(--bg-dark)] p-6 min-h-[520px] max-h-[72vh]">
+      <div class="space-y-6">
+        <!-- Basic Info Section -->
+        <div>
+          <div class="mb-4">
+            <h3 class="text-section-label mb-1">Basic Information</h3>
+            <p class="text-[var(--text-secondary)] m-0">Core details about your competition</p>
+          </div>
 
-      <!-- Logo Upload Section -->
-      <FormInputGroup>
-        <FormLabel text="Competition Logo" />
-        <BasePanel>
-          <div class="rounded-md border border-gray-200 content-center p-2">
+          <div class="space-y-4">
+            <!-- Name Field -->
+            <FormInputGroup>
+              <FormLabel for="name" text="Competition Name" required />
+              <InputText
+                id="name"
+                v-model="form.name"
+                placeholder="e.g., Sunday Night Racing, GT3 Championship"
+                :class="{ 'p-invalid': errors.name }"
+                :disabled="isSubmitting"
+                maxlength="100"
+                class="w-full"
+              />
+              <FormError :error="errors.name" />
+
+              <!-- Slug Preview -->
+              <div v-if="slugPreview" class="mt-2 flex items-center gap-2">
+                <template v-if="slugStatus === 'checking'">
+                  <i class="pi pi-spinner pi-spin text-[var(--cyan)]"></i>
+                  <small class="text-[var(--text-secondary)]">Checking availability...</small>
+                </template>
+                <template v-else-if="slugStatus === 'available'">
+                  <i class="pi pi-check-circle text-[var(--green)]"></i>
+                  <small class="text-[var(--text-secondary)]">
+                    URL: <span class="font-mono text-[var(--green)]">{{ slugPreview }}</span>
+                  </small>
+                </template>
+                <template v-else-if="slugStatus === 'taken'">
+                  <i class="pi pi-info-circle text-[var(--amber)]"></i>
+                  <small class="text-[var(--text-secondary)]">
+                    Will use:
+                    <span class="font-mono text-[var(--amber)]">{{ slugSuggestion }}</span>
+                  </small>
+                </template>
+              </div>
+            </FormInputGroup>
+
+            <!-- Platform and Colour Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Platform Selection -->
+              <FormInputGroup class="md:col-span-2">
+                <FormLabel for="platform_id" text="Platform" required />
+                <Select
+                  id="platform_id"
+                  v-model="form.platform_id"
+                  :options="platformOptions"
+                  option-label="name"
+                  option-value="id"
+                  placeholder="Select a platform"
+                  :class="{ 'p-invalid': errors.platform_id }"
+                  :disabled="isEditMode || isSubmitting"
+                  class="w-full"
+                />
+                <small v-if="isEditMode" class="text-[var(--text-tertiary)] italic">
+                  Platform cannot be changed after creation
+                </small>
+                <FormError :error="errors.platform_id" />
+              </FormInputGroup>
+
+              <!-- Competition Colour -->
+              <FormInputGroup>
+                <FormLabel for="competition_colour" text="Colour" />
+                <ColorPicker
+                  id="competition_colour"
+                  v-model="form.competition_colour"
+                  format="rgb"
+                  :disabled="isSubmitting"
+                  class="w-full"
+                />
+                <FormOptionalText text="Theme colour for this competition" />
+                <FormError :error="errors.competition_colour" />
+              </FormInputGroup>
+            </div>
+
+            <!-- Description -->
+            <FormInputGroup>
+              <FormLabel for="description" text="Description" />
+              <Textarea
+                id="description"
+                v-model="form.description"
+                rows="4"
+                placeholder="Describe this competition, typical race format, skill level..."
+                :class="{ 'p-invalid': errors.description }"
+                :disabled="isSubmitting"
+                maxlength="1000"
+                class="w-full"
+              />
+              <FormOptionalText text="Tell participants what this competition is all about" />
+              <FormError :error="errors.description" />
+            </FormInputGroup>
+          </div>
+        </div>
+
+        <!-- Media Section -->
+        <div>
+          <div class="mb-4">
+            <h3 class="text-section-label mb-1">Media Assets</h3>
+            <p class="text-[var(--text-secondary)] m-0">Visual branding for your competition</p>
+          </div>
+
+          <!-- Info Banner -->
+          <div
+            class="flex items-start gap-3 p-3 bg-[var(--cyan-dim)] border border-[var(--cyan)] rounded-lg mb-4"
+          >
+            <i class="pi pi-info-circle text-[var(--cyan)] pt-0.5"></i>
+            <p class="text-[var(--text-primary)] m-0">
+              Competition logo is optional. If not provided, the league logo will be used as a
+              fallback.
+            </p>
+          </div>
+
+          <!-- Logo Upload -->
+          <div
+            class="rounded-md border border-[var(--border)] content-center p-4 bg-[var(--bg-card)]"
+          >
             <ImageUpload
-              v-model="form.logo"
+              :model-value="form.logo"
+              :existing-image-url="form.logo_url ?? null"
               label="Competition Logo"
-              :existing-image-url="form.logo_url"
-              accept="image/png,image/jpeg,image/jpg"
-              :max-file-size="2 * 1024 * 1024"
-              :min-dimensions="{ width: 100, height: 100 }"
-              :recommended-dimensions="{ width: 500, height: 500 }"
-              preview-size="sm"
-              helper-text="Square logo, 500x500px recommended. League logo used if not provided."
+              :required="false"
+              :error="errors.logo"
+              preview-size="small"
+              helper-text="Square logo (400x400px recommended)"
+              @update:model-value="form.logo = $event"
+              @remove-existing="form.logo_url = null"
             />
           </div>
-        </BasePanel>
-        <FormError :error="errors.logo" />
-      </FormInputGroup>
-    </div>
+        </div>
+      </div>
+    </main>
 
+    <!-- Footer -->
     <template #footer>
-      <div class="flex gap-2 justify-end">
+      <div class="flex justify-end gap-3">
         <Button label="Cancel" variant="secondary" :disabled="isSubmitting" @click="handleCancel" />
         <Button
           :label="isEditMode ? 'Save Changes' : 'Create Competition'"
@@ -490,38 +535,45 @@ onUnmounted(() => {
   >
     <template #header>
       <div class="flex items-center gap-2">
-        <i class="pi pi-exclamation-triangle text-orange-500 text-2xl"></i>
-        <span class="text-xl font-semibold">Update Competition Name?</span>
+        <i class="pi pi-exclamation-triangle text-[var(--amber)]"></i>
+        <span class="font-mono font-semibold tracking-wide text-[var(--text-primary)]">
+          Update Competition Name?
+        </span>
       </div>
     </template>
 
     <div class="py-4">
-      <p class="mb-4">Changing the name will update the public URL:</p>
+      <p class="mb-4 text-[var(--text-primary)]">Changing the name will update the public URL:</p>
 
-      <div class="bg-gray-50 p-3 rounded mb-4 space-y-2">
+      <div class="bg-[var(--bg-card)] border border-[var(--border)] p-3 rounded-lg mb-4 space-y-2">
         <div>
-          <span class="text-sm font-semibold text-gray-600">Old:</span>
-          <code class="block text-xs mt-1 text-gray-700">
+          <span class="font-semibold text-[var(--text-secondary)]">Old:</span>
+          <code class="block font-mono mt-1 text-[var(--text-primary)]">
             /leagues/.../competitions/{{ competition?.slug || 'old-slug' }}
           </code>
         </div>
         <div>
-          <span class="text-sm font-semibold text-gray-600">New:</span>
-          <code class="block text-xs mt-1 text-blue-700">
+          <span class="font-semibold text-[var(--text-secondary)]">New:</span>
+          <code class="block font-mono mt-1 text-[var(--cyan)]">
             /leagues/.../competitions/{{ slugPreview }}
           </code>
         </div>
       </div>
 
-      <Message variant="warning" :closable="false">
-        Existing bookmarks and shared links will break.
-      </Message>
+      <div
+        class="flex items-start gap-3 p-3 bg-[var(--amber-dim)] border border-[var(--amber)] rounded-lg"
+      >
+        <i class="pi pi-exclamation-triangle text-[var(--amber)] pt-0.5"></i>
+        <p class="text-[var(--text-primary)] m-0">
+          Existing bookmarks and shared links will break.
+        </p>
+      </div>
     </div>
 
     <template #footer>
-      <div class="flex gap-2 justify-end">
-        <Button label="Cancel" variant="outline" @click="cancelNameChange" />
-        <Button label="Continue" variant="warning" @click="confirmNameChange" />
+      <div class="flex gap-3 justify-end">
+        <Button label="Cancel" variant="secondary" @click="cancelNameChange" />
+        <Button label="Continue" @click="confirmNameChange" />
       </div>
     </template>
   </Dialog>

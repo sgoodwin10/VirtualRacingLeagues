@@ -43,14 +43,17 @@ export async function getTimezones(): Promise<Timezone[]> {
  * Check if a league slug is available
  * @param name - The league name to check
  * @param leagueId - Optional league ID to exclude from the check (for edit mode)
+ * @param signal - Optional AbortSignal to cancel the request
  */
 export async function checkSlugAvailability(
   name: string,
   leagueId?: number,
+  signal?: AbortSignal,
 ): Promise<SlugCheckResponse> {
   const response: AxiosResponse<ApiResponse<SlugCheckResponse>> = await apiClient.post(
     API_ENDPOINTS.leagues.checkSlug(),
     { name, league_id: leagueId },
+    { signal },
   );
   return response.data.data;
 }

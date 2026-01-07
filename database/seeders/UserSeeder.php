@@ -17,14 +17,14 @@ class UserSeeder extends Seeder
     {
         // Create a test user who will own the league
         User::firstOrCreate(
-            ['email' => 'user@example.com'],
+            ['email' => 'user@raceonoz.com'],
             [
-                'first_name' => 'Test',
-                'last_name' => 'User',
+                'first_name' => 'Race on Oz',
+                'last_name' => 'Test User',
                 'password' => Hash::make('password'),
                 'status' => 'active',
                 'email_verified_at' => now(),
-                'alias' => 'testuser',
+                'alias' => 'raceonoz-user',
             ]
         );
 

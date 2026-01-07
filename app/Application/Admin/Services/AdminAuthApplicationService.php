@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\Admin\Services;
 
 use App\Application\Admin\DTOs\AdminData;
-use App\Application\Admin\DTOs\UpdateAdminData;
 use App\Domain\Admin\Entities\Admin;
 use App\Domain\Admin\Events\AdminAuthenticated;
 use App\Domain\Admin\Exceptions\AdminNotFoundException;

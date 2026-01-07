@@ -55,15 +55,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import {
-  TechnicalAccordion,
-  TechnicalAccordionPanel,
-  TechnicalAccordionHeader,
-  TechnicalAccordionContent,
-} from '@app/components/common/accordions';
 import Column from 'primevue/column';
 import { BaseBadge } from '@app/components/common/indicators';
-import { PhTimer, PhClipboardText } from '@phosphor-icons/vue';
+import { PhClipboardText } from '@phosphor-icons/vue';
 import { TechDataTable, PositionCell } from '@app/components/common/tables';
 import type { CrossDivisionResult, RaceEventResults } from '@app/types/roundResult';
 
@@ -125,17 +119,6 @@ function getDivisionVariant(divisionId: number | null): BadgeVariant {
   // Cycle through variants for divisions beyond the array length
   const variantIndex = (divisionId - 1) % DIVISION_BADGE_VARIANTS.length;
   return DIVISION_BADGE_VARIANTS[variantIndex] ?? 'default';
-}
-
-/**
- * Get results summary for the accordion subtitle
- */
-function getResultsSummary(): string {
-  const count = props.results?.length || 0;
-  if (count === 0) {
-    return 'No results available';
-  }
-  return `${count} drivers`;
 }
 
 const enrichedResults = computed<EnrichedResult[]>(() => {

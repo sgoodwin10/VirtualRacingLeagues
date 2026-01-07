@@ -2,20 +2,20 @@
 
 This directory contains Laravel seeders that serve as a backup mechanism for critical racing data tables.
 
-**Generated:** 2025-12-22
+**Generated:** 2026-01-07
 
 ## Overview
 
 These seeders were created to backup and restore data from the following tables:
-- `seasons` (1 record)
+- `seasons` (6 records)
 - `teams` (3 records)
 - `divisions` (4 records)
 - `season_drivers` (62 records)
-- `rounds` (7 records)
-- `races` (17 records)
-- `race_results` (90 records)
+- `rounds` (12 records)
+- `races` (19 records)
+- `race_results` (697 records)
 
-**Total Records:** 184
+**Total Records:** 803
 
 ## Usage
 
@@ -107,26 +107,89 @@ Before running the backup seeders, ensure the following tables have the required
 
 ## Regenerating Backup Seeders
 
-If you need to regenerate these seeders with updated data:
+### Automation Script
 
-1. Export the current data from the database (using the original export scripts)
-2. Regenerate the seeder files using the generation scripts
-3. Test the seeders in a development environment
-4. Update this README with new record counts and generation date
+A PHP script is provided to automatically regenerate all backup seeders from the current database state.
+
+**Location:** `/var/www/generate_backup_seeders.php`
+
+### Usage
+
+```bash
+php generate_backup_seeders.php
+```
+
+### What the Script Does
+
+1. **Connects to the database** via Laravel's database connection
+2. **Queries each table** (seasons, teams, divisions, season_drivers, rounds, races, race_results)
+3. **Generates PHP seeder files** with properly formatted data arrays
+4. **Updates this README** with new record counts and generation date
+
+### Features
+
+- **Automatic value formatting** - Handles nulls, booleans, strings, and numbers correctly
+- **JSON field support** - Properly encodes complex JSON fields (points_system, round_results, etc.)
+- **Boolean detection** - Identifies boolean columns and formats them as `true`/`false`
+- **String escaping** - Safely escapes single quotes in string values
+- **Dependency comments** - Adds documentation about table dependencies to each seeder
+
+### Tables Processed
+
+| Table | Eloquent Model | Key Columns |
+|-------|----------------|-------------|
+| seasons | SeasonEloquent | id, competition_id, name, status, etc. |
+| teams | Team | id, season_id, name, logo_url |
+| divisions | Division | id, season_id, order, name |
+| season_drivers | SeasonDriverEloquent | id, season_id, league_driver_id, team_id |
+| rounds | Round | id, season_id, round_number, points_system |
+| races | Race | id, round_id, race_type, points_system |
+| race_results | RaceResult | id, race_id, driver_id, position, race_points |
+
+### When to Run
+
+Run the automation script when:
+- New data has been added to the database that needs to be backed up
+- Existing records have been modified
+- Before major database migrations or changes
+- Setting up a fresh development environment
+
+### Output Example
+
+```
+DATABASE BACKUP SEEDER GENERATION
+Generated: 2026-01-07 12:00:00
+================================================================================
+
+Generating seasons seeder...
+  ✓ Generated database/seeders/Backup/SeasonsBackupSeeder.php (6 records)
+Generating teams seeder...
+  ✓ Generated database/seeders/Backup/TeamsBackupSeeder.php (3 records)
+...
+================================================================================
+✓ All backup seeders generated successfully!
+
+Now updating README.md...
+✓ README.md updated successfully!
+
+✓ All done!
+```
 
 ## File Structure
 
 ```
-database/seeders/Backup/
-├── README.md                        # This file
-├── DatabaseBackupSeeder.php         # Master seeder (runs all in order)
-├── SeasonsBackupSeeder.php          # Seasons table backup
-├── TeamsBackupSeeder.php            # Teams table backup
-├── DivisionsBackupSeeder.php        # Divisions table backup
-├── SeasonDriversBackupSeeder.php    # Season drivers table backup
-├── RoundsBackupSeeder.php           # Rounds table backup
-├── RacesBackupSeeder.php            # Races table backup
-└── RaceResultsBackupSeeder.php      # Race results table backup
+/var/www/
+├── generate_backup_seeders.php      # Automation script to regenerate all seeders
+└── database/seeders/Backup/
+    ├── README.md                        # This file
+    ├── DatabaseBackupSeeder.php         # Master seeder (runs all in order)
+    ├── SeasonsBackupSeeder.php          # Seasons table backup
+    ├── TeamsBackupSeeder.php            # Teams table backup
+    ├── DivisionsBackupSeeder.php        # Divisions table backup
+    ├── SeasonDriversBackupSeeder.php    # Season drivers table backup
+    ├── RoundsBackupSeeder.php           # Rounds table backup
+    ├── RacesBackupSeeder.php            # Races table backup
+    └── RaceResultsBackupSeeder.php      # Race results table backup
 ```
 
 ## Troubleshooting

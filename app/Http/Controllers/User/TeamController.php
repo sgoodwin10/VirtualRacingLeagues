@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\User;
 
-use App\Application\Team\DTOs\AssignDriverTeamData;
-use App\Application\Team\DTOs\CreateTeamData;
-use App\Application\Team\DTOs\UpdateTeamData;
 use App\Application\Team\Services\TeamApplicationService;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Team\Exceptions\TeamNotFoundException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\AssignDriverTeamRequest;
+use App\Http\Requests\User\CreateTeamRequest;
+use App\Http\Requests\User\UpdateTeamRequest;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -36,22 +37,30 @@ final class TeamController extends Controller
     /**
      * Create a new team.
      */
-    public function store(CreateTeamData $data, int $seasonId): JsonResponse
+    public function store(CreateTeamRequest $request, int $seasonId): JsonResponse
     {
-        $team = $this->teamService->createTeam($data, $seasonId);
-        return ApiResponse::created($team->toArray(), 'Team created successfully');
+        try {
+            $data = $request->toDTO();
+            $teamData = $this->teamService->createTeam($data, $seasonId, $request->user()->id);
+            return ApiResponse::created($teamData->toArray(), 'Team created successfully');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        }
     }
 
     /**
      * Update a team.
      */
-    public function update(UpdateTeamData $data, int $seasonId, int $teamId): JsonResponse
+    public function update(UpdateTeamRequest $request, int $seasonId, int $teamId): JsonResponse
     {
         try {
-            $team = $this->teamService->updateTeam($teamId, $data);
-            return ApiResponse::success($team->toArray(), 'Team updated successfully');
+            $data = $request->toDTO();
+            $teamData = $this->teamService->updateTeam($teamId, $data, $request->user()->id);
+            return ApiResponse::success($teamData->toArray(), 'Team updated successfully');
         } catch (TeamNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
         }
     }
 
@@ -61,19 +70,34 @@ final class TeamController extends Controller
     public function destroy(int $seasonId, int $teamId): JsonResponse
     {
         try {
-            $this->teamService->deleteTeam($teamId);
+            $userId = (int) auth()->id();
+            $this->teamService->deleteTeam($teamId, $userId);
             return ApiResponse::success(null, 'Team deleted successfully');
         } catch (TeamNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
         }
     }
 
     /**
      * Assign a driver to a team.
      */
-    public function assignDriver(AssignDriverTeamData $data, int $seasonId, int $seasonDriverId): JsonResponse
-    {
-        $updatedDriver = $this->teamService->assignDriverToTeam($seasonDriverId, $data);
-        return ApiResponse::success($updatedDriver, 'Driver assigned to team successfully');
+    public function assignDriver(
+        AssignDriverTeamRequest $request,
+        int $seasonId,
+        int $seasonDriverId
+    ): JsonResponse {
+        try {
+            $data = $request->toDTO();
+            $updatedDriver = $this->teamService->assignDriverToTeam(
+                $seasonDriverId,
+                $data,
+                $request->user()->id
+            );
+            return ApiResponse::success($updatedDriver, 'Driver assigned to team successfully');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        }
     }
 }

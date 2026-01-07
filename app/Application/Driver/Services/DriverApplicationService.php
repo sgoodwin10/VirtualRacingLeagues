@@ -26,18 +26,26 @@ use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\Driver\Services\PlatformMappingService;
 use App\Domain\Driver\ValueObjects\DriverName;
 use App\Domain\Driver\ValueObjects\DriverStatus;
+use App\Application\Activity\Services\LeagueActivityLogService;
 use App\Domain\Driver\ValueObjects\PlatformIdentifiers;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
+use App\Infrastructure\Persistence\Eloquent\Models\Driver as DriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\League;
+use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 final class DriverApplicationService
 {
     public function __construct(
         private readonly DriverRepositoryInterface $driverRepository,
-        private readonly LeagueRepositoryInterface $leagueRepository
+        private readonly LeagueRepositoryInterface $leagueRepository,
+        private readonly LeagueActivityLogService $activityLogService
     ) {
     }
 
@@ -114,76 +122,7 @@ final class DriverApplicationService
         }
 
         return DB::transaction(function () use ($data, $leagueId, $effectiveNickname) {
-            // Create domain entities with effective nickname (auto-generated from Discord ID if needed)
-            $driverName = DriverName::from($data->first_name, $data->last_name, $effectiveNickname);
-            $platformIds = PlatformIdentifiers::from(
-                $data->psn_id,
-                $data->iracing_id,
-                $data->iracing_customer_id,
-                $data->discord_id
-            );
-
-            // Check if driver already exists globally (by platform IDs)
-            $existingDriver = $this->driverRepository->findByPlatformId(
-                $data->psn_id,
-                $data->iracing_id,
-                $data->iracing_customer_id,
-                $data->discord_id
-            );
-
-            if ($existingDriver !== null) {
-                // Driver exists globally, just add to league
-                $driver = $existingDriver;
-            } else {
-                // Create new driver
-                $driver = Driver::create(
-                    name: $driverName,
-                    platformIds: $platformIds,
-                    email: $data->email,
-                    phone: $data->phone
-                );
-
-                $this->driverRepository->save($driver);
-
-                // Verify driver was persisted successfully
-                if ($driver->id() === null) {
-                    throw new \RuntimeException('Failed to persist driver - ID is null after save');
-                }
-
-                // Dispatch driver created event
-                Event::dispatch(new DriverCreated(
-                    driverId: $driver->id(),
-                    displayName: $driver->name()->displayName(),
-                    primaryPlatformId: $driver->platformIds()->primaryIdentifier()
-                ));
-            }
-
-            // Verify driver ID is available (whether new or existing)
-            if ($driver->id() === null) {
-                throw new \RuntimeException('Driver ID is null - cannot add to league');
-            }
-
-            // Add driver to league
-            $leagueDriver = LeagueDriver::create(
-                leagueId: $leagueId,
-                driverId: $driver->id(),
-                driverNumber: $data->driver_number,
-                status: DriverStatus::from($data->status),
-                leagueNotes: $data->league_notes
-            );
-
-            $this->driverRepository->addToLeague($leagueDriver);
-
-            // Dispatch event
-            Event::dispatch(new DriverAddedToLeague(
-                leagueId: $leagueId,
-                driverId: $driver->id(),
-                displayName: $driver->name()->displayName(),
-                driverNumber: $data->driver_number,
-                status: $data->status
-            ));
-
-            return LeagueDriverData::fromEntities($leagueDriver, $driver);
+            return $this->createDriverForLeagueCore($data, $leagueId, $effectiveNickname);
         });
     }
 
@@ -301,12 +240,40 @@ final class DriverApplicationService
                 || $data->iracing_id !== null || $data->iracing_customer_id !== null
                 || $data->discord_id !== null;
             if ($hasPlatformUpdate) {
+                // Build the new platform IDs (combining existing with updates)
+                $newPsnId = $data->psn_id ?? $driver->platformIds()->psnId();
+                $newIracingId = $data->iracing_id ?? $driver->platformIds()->iracingId();
+                $newIracingCustomerId = $data->iracing_customer_id ?? $driver->platformIds()->iracingCustomerId();
+                $newDiscordId = $data->discord_id ?? $driver->platformIds()->discordId();
+
+                // Ensure driver has been persisted with an ID
+                $driverId = $driver->id();
+                assert($driverId !== null, 'Driver must have an ID');
+
+                // Validate no conflict with another driver
+                $this->validatePlatformIdConflict(
+                    $driverId,
+                    $newPsnId,
+                    $newIracingId,
+                    $newIracingCustomerId,
+                    $newDiscordId
+                );
+
+                // Validate that new platform IDs match league's platforms
+                $this->validateLeaguePlatformMatch(
+                    $leagueId,
+                    $newPsnId,
+                    $newIracingId,
+                    $newIracingCustomerId,
+                    $newDiscordId
+                );
+
                 $driver->updatePlatformIds(
                     PlatformIdentifiers::from(
-                        $data->psn_id ?? $driver->platformIds()->psnId(),
-                        $data->iracing_id ?? $driver->platformIds()->iracingId(),
-                        $data->iracing_customer_id ?? $driver->platformIds()->iracingCustomerId(),
-                        $data->discord_id ?? $driver->platformIds()->discordId()
+                        $newPsnId,
+                        $newIracingId,
+                        $newIracingCustomerId,
+                        $newDiscordId
                     )
                 );
                 $driverUpdated = true;
@@ -369,6 +336,8 @@ final class DriverApplicationService
 
     /**
      * Import drivers from CSV data.
+     * The entire import is wrapped in a single transaction - if any error occurs,
+     * all changes are rolled back to prevent partial imports.
      *
      * @throws UnauthorizedException If the user does not own the league
      */
@@ -376,9 +345,6 @@ final class DriverApplicationService
     {
         // Authorization check
         $this->authorizeLeagueAccess($leagueId, $userId);
-
-        $successCount = 0;
-        $errors = [];
 
         // Parse CSV
         $lines = explode("\n", trim($data->csv_data));
@@ -390,153 +356,160 @@ final class DriverApplicationService
         $header = str_getcsv(array_shift($lines));
         $header = array_map(fn ($value) => trim((string) $value), $header);
 
-        // Process each row
-        foreach ($lines as $lineNumber => $line) {
-            $rowNumber = $lineNumber + 2; // +2 because we removed header and arrays are 0-indexed
+        // Wrap entire import in a single transaction for atomicity
+        return DB::transaction(function () use ($lines, $header, $leagueId) {
+            $successCount = 0;
+            $errors = [];
 
-            if (trim($line) === '') {
-                continue; // Skip empty lines
+            // Process each row
+            foreach ($lines as $lineNumber => $line) {
+                $rowNumber = $lineNumber + 2; // +2 because we removed header and arrays are 0-indexed
+
+                if (trim($line) === '') {
+                    continue; // Skip empty lines
+                }
+
+                try {
+                    $row = str_getcsv($line);
+                    $row = array_map(fn ($value) => trim((string) $value), $row);
+
+                    // Create associative array
+                    $rowData = [];
+                    foreach ($header as $index => $columnName) {
+                        $rowData[$columnName] = $row[$index] ?? null;
+                    }
+
+                    // Extract data (case-insensitive column matching) and sanitize for CSV injection
+                    $firstName = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['FirstName', 'first_name', 'firstname']
+                    ));
+                    $lastName = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['LastName', 'last_name', 'lastname']
+                    ));
+                    $nickname = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['Nickname', 'nickname']
+                    ));
+                    $psnId = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['PSN_ID', 'psn_id', 'psnid']
+                    ));
+                    $iracingId = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['iRacing_ID', 'iracing_id', 'iracinid']
+                    ));
+                    $discordId = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['Discord_ID', 'discord_id', 'discordid']
+                    ));
+                    $email = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['Email', 'email']
+                    ));
+                    $phone = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['Phone', 'phone']
+                    ));
+                    $driverNumber = $this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['DriverNumber', 'driver_number', 'drivernumber']
+                    );
+                    $driverNumber = $driverNumber !== null ? (int) $driverNumber : null;
+
+                    // Resolve effective nickname (auto-generated from Discord ID if needed)
+                    $effectiveNickname = $this->resolveNickname($nickname, $firstName, $lastName, $discordId);
+
+                    // Validate: at least one name field (including effective nickname)
+                    $hasName = ($firstName !== null && $firstName !== '')
+                        || ($lastName !== null && $lastName !== '')
+                        || ($effectiveNickname !== null && $effectiveNickname !== '');
+
+                    if (! $hasName) {
+                        $errors[] = [
+                            'row' => $rowNumber,
+                            'message' => "Row {$rowNumber}: At least one name field is required",
+                        ];
+
+                        continue;
+                    }
+
+                    // Validate: at least one platform ID
+                    $hasPlatformId = ($psnId !== null && $psnId !== '')
+                        || ($iracingId !== null && $iracingId !== '')
+                        || ($discordId !== null && $discordId !== '');
+
+                    if (! $hasPlatformId) {
+                        $errors[] = [
+                            'row' => $rowNumber,
+                            'message' => "Row {$rowNumber}: At least one platform ID is required",
+                        ];
+
+                        continue;
+                    }
+
+                    // Check if already in league
+                    if (
+                        $this->driverRepository->existsInLeagueByPlatformId(
+                            $leagueId,
+                            $psnId,
+                            $iracingId,
+                            null,
+                            $discordId
+                        )
+                    ) {
+                        $platformStr = $this->getPrimaryPlatformId($psnId, $iracingId, null, $discordId);
+                        $message = "Row {$rowNumber}: Driver with platform ID '{$platformStr}' ";
+                        $message .= 'already exists in this league';
+                        $errors[] = [
+                            'row' => $rowNumber,
+                            'message' => $message,
+                        ];
+
+                        continue;
+                    }
+
+                    // Create driver data (use effective nickname if auto-generated from Discord ID)
+                    $createData = new CreateDriverData(
+                        first_name: $firstName,
+                        last_name: $lastName,
+                        nickname: $effectiveNickname,
+                        email: $email,
+                        phone: $phone,
+                        psn_id: $psnId,
+                        iracing_id: $iracingId,
+                        iracing_customer_id: null,
+                        discord_id: $discordId,
+                        driver_number: $driverNumber,
+                        status: 'active',
+                        league_notes: null
+                    );
+
+                    // Create driver and add to league
+                    // Note: We call the core method directly since we're already in a transaction
+                    $this->createDriverForLeagueCore($createData, $leagueId, $effectiveNickname);
+                    $successCount++;
+                } catch (InvalidArgumentException $e) {
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'message' => "Row {$rowNumber}: " . $e->getMessage(),
+                    ];
+                } catch (DriverAlreadyInLeagueException $e) {
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'message' => "Row {$rowNumber}: " . $e->getMessage(),
+                    ];
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'message' => "Row {$rowNumber}: Unexpected error - " . $e->getMessage(),
+                    ];
+                }
             }
 
-            try {
-                $row = str_getcsv($line);
-                $row = array_map(fn ($value) => trim((string) $value), $row);
-
-                // Create associative array
-                $rowData = [];
-                foreach ($header as $index => $columnName) {
-                    $rowData[$columnName] = $row[$index] ?? null;
-                }
-
-                // Extract data (case-insensitive column matching) and sanitize for CSV injection
-                $firstName = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
-                    $rowData,
-                    ['FirstName', 'first_name', 'firstname']
-                ));
-                $lastName = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
-                    $rowData,
-                    ['LastName', 'last_name', 'lastname']
-                ));
-                $nickname = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
-                    $rowData,
-                    ['Nickname', 'nickname']
-                ));
-                $psnId = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
-                    $rowData,
-                    ['PSN_ID', 'psn_id', 'psnid']
-                ));
-                $iracingId = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
-                    $rowData,
-                    ['iRacing_ID', 'iracing_id', 'iracinid']
-                ));
-                $discordId = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
-                    $rowData,
-                    ['Discord_ID', 'discord_id', 'discordid']
-                ));
-                $email = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
-                    $rowData,
-                    ['Email', 'email']
-                ));
-                $phone = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
-                    $rowData,
-                    ['Phone', 'phone']
-                ));
-                $driverNumber = $this->getCaseInsensitiveValue(
-                    $rowData,
-                    ['DriverNumber', 'driver_number', 'drivernumber']
-                );
-                $driverNumber = $driverNumber !== null ? (int) $driverNumber : null;
-
-                // Resolve effective nickname (auto-generated from Discord ID if needed)
-                $effectiveNickname = $this->resolveNickname($nickname, $firstName, $lastName, $discordId);
-
-                // Validate: at least one name field (including effective nickname)
-                $hasName = ($firstName !== null && $firstName !== '')
-                    || ($lastName !== null && $lastName !== '')
-                    || ($effectiveNickname !== null && $effectiveNickname !== '');
-
-                if (! $hasName) {
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'message' => "Row {$rowNumber}: At least one name field is required",
-                    ];
-
-                    continue;
-                }
-
-                // Validate: at least one platform ID
-                $hasPlatformId = ($psnId !== null && $psnId !== '')
-                    || ($iracingId !== null && $iracingId !== '')
-                    || ($discordId !== null && $discordId !== '');
-
-                if (! $hasPlatformId) {
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'message' => "Row {$rowNumber}: At least one platform ID is required",
-                    ];
-
-                    continue;
-                }
-
-                // Check if already in league
-                if (
-                    $this->driverRepository->existsInLeagueByPlatformId(
-                        $leagueId,
-                        $psnId,
-                        $iracingId,
-                        null,
-                        $discordId
-                    )
-                ) {
-                    $platformStr = $this->getPrimaryPlatformId($psnId, $iracingId, null, $discordId);
-                    $message = "Row {$rowNumber}: Driver with platform ID '{$platformStr}' ";
-                    $message .= 'already exists in this league';
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'message' => $message,
-                    ];
-
-                    continue;
-                }
-
-                // Create driver data (use effective nickname if auto-generated from Discord ID)
-                $createData = new CreateDriverData(
-                    first_name: $firstName,
-                    last_name: $lastName,
-                    nickname: $effectiveNickname,
-                    email: $email,
-                    phone: $phone,
-                    psn_id: $psnId,
-                    iracing_id: $iracingId,
-                    iracing_customer_id: null,
-                    discord_id: $discordId,
-                    driver_number: $driverNumber,
-                    status: 'active',
-                    league_notes: null
-                );
-
-                // Create driver and add to league
-                $this->createDriverForLeague($createData, $leagueId, $userId);
-                $successCount++;
-            } catch (InvalidArgumentException $e) {
-                $errors[] = [
-                    'row' => $rowNumber,
-                    'message' => "Row {$rowNumber}: " . $e->getMessage(),
-                ];
-            } catch (DriverAlreadyInLeagueException $e) {
-                $errors[] = [
-                    'row' => $rowNumber,
-                    'message' => "Row {$rowNumber}: " . $e->getMessage(),
-                ];
-            } catch (\Exception $e) {
-                $errors[] = [
-                    'row' => $rowNumber,
-                    'message' => "Row {$rowNumber}: Unexpected error - " . $e->getMessage(),
-                ];
-            }
-        }
-
-        return new ImportResultData($successCount, $errors);
+            return new ImportResultData($successCount, $errors);
+        });
     }
 
     /**
@@ -557,9 +530,12 @@ final class DriverApplicationService
     }
 
     /**
-     * Sanitize CSV value to prevent formula injection attacks and SQL wildcard injection.
+     * Sanitize CSV value to prevent formula injection attacks.
      * Removes leading characters that could trigger formula execution: =, +, -, @, \t, \r
-     * Escapes LIKE wildcards (% and _) to prevent SQL wildcard abuse.
+     *
+     * Note: LIKE wildcard escaping (%,_) is NOT done here as these values are used in
+     * exact match queries (=). LIKE wildcards are escaped separately in repository
+     * search methods where LIKE queries are used.
      *
      * @param string|null $value The CSV value to sanitize
      * @return string|null The sanitized value
@@ -576,9 +552,6 @@ final class DriverApplicationService
         while (!empty($value) && in_array($value[0], $dangerousChars, true)) {
             $value = substr($value, 1);
         }
-
-        // Escape LIKE wildcards to prevent SQL wildcard abuse
-        $value = str_replace(['%', '_'], ['\\%', '\\_'], $value);
 
         return $value !== '' ? $value : null;
     }
@@ -618,6 +591,147 @@ final class DriverApplicationService
             ),
             $seasons
         );
+    }
+
+    // ===================================================================
+    // User Context Methods with Activity Logging
+    // Wrapper methods that add activity logging to user context operations
+    // ===================================================================
+
+    /**
+     * Create a driver and add them to a league with activity logging.
+     *
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    public function createDriverForLeagueWithActivityLog(CreateDriverData $data, int $leagueId, int $userId): LeagueDriverData
+    {
+        $leagueDriverData = $this->createDriverForLeague($data, $leagueId, $userId);
+
+        // Log activity
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $leagueDriver = LeagueDriverEloquent::findOrFail($leagueDriverData->id);
+                $this->activityLogService->logDriverAdded($user, $leagueId, $leagueDriver);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log driver creation activity', [
+                'error' => $e->getMessage(),
+                'league_id' => $leagueId,
+                'driver_id' => $leagueDriverData->id,
+            ]);
+        }
+
+        return $leagueDriverData;
+    }
+
+    /**
+     * Update driver and league settings with activity logging and change tracking.
+     *
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    public function updateDriverAndLeagueSettingsWithActivityLog(
+        UpdateDriverData $data,
+        int $leagueId,
+        int $driverId,
+        int $userId
+    ): LeagueDriverData {
+        // Capture original data for change tracking
+        $leagueDriver = LeagueDriverEloquent::with('driver')->findOrFail($driverId);
+        $originalData = [
+            'driver_name' => $leagueDriver->driver->name,
+            'status' => $leagueDriver->status,
+        ];
+
+        $leagueDriverData = $this->updateDriverAndLeagueSettings($data, $leagueId, $driverId, $userId);
+
+        // Log activity with changes
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $leagueDriver->refresh();
+                $leagueDriver->load('driver');
+                $newData = [
+                    'driver_name' => $leagueDriver->driver->name,
+                    'status' => $leagueDriver->status,
+                ];
+
+                $this->activityLogService->logDriverUpdated($user, $leagueId, $leagueDriver, [
+                    'old' => $originalData,
+                    'new' => $newData,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log driver update activity', [
+                'error' => $e->getMessage(),
+                'league_id' => $leagueId,
+                'driver_id' => $driverId,
+            ]);
+        }
+
+        return $leagueDriverData;
+    }
+
+    /**
+     * Remove a driver from a league with activity logging.
+     *
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    public function removeDriverFromLeagueWithActivityLog(int $leagueId, int $driverId, int $userId): void
+    {
+        // Capture driver data before deletion for logging
+        $leagueDriver = LeagueDriverEloquent::with('driver', 'league')->findOrFail($driverId);
+        /** @var DriverEloquent $driverModel */
+        $driverModel = $leagueDriver->driver;
+        $leagueName = $leagueDriver->league->name;
+
+        $this->removeDriverFromLeague($leagueId, $driverId, $userId);
+
+        // Log activity
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $this->activityLogService->logDriverRemoved($user, $leagueId, $leagueName, $driverModel);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log driver removal activity', [
+                'error' => $e->getMessage(),
+                'league_id' => $leagueId,
+                'driver_id' => $driverId,
+            ]);
+        }
+    }
+
+    /**
+     * Import drivers from CSV with activity logging.
+     *
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    public function importDriversFromCSVWithActivityLog(ImportDriversData $data, int $leagueId, int $userId): ImportResultData
+    {
+        $result = $this->importDriversFromCSV($data, $leagueId, $userId);
+
+        // Log activity
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $leagueModel = League::findOrFail($leagueId);
+                $this->activityLogService->logDriversImported(
+                    $user,
+                    $leagueId,
+                    $leagueModel->name,
+                    $result->success_count
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log driver import activity', [
+                'error' => $e->getMessage(),
+                'league_id' => $leagueId,
+                'count' => $result->success_count,
+            ]);
+        }
+
+        return $result;
     }
 
     // ===================================================================
@@ -814,23 +928,18 @@ final class DriverApplicationService
                 $newIracingCustomerId = $data->iracing_customer_id ?? $driver->platformIds()->iracingCustomerId();
                 $newDiscordId = $data->discord_id ?? $driver->platformIds()->discordId();
 
-                // Check if any of the new platform IDs conflict with another driver
-                $existingDriver = $this->driverRepository->findByPlatformId(
+                // Ensure driver has been persisted with an ID
+                $driverId = $driver->id();
+                assert($driverId !== null, 'Driver must have an ID');
+
+                // Validate no conflict with another driver
+                $this->validatePlatformIdConflict(
+                    $driverId,
                     $newPsnId,
                     $newIracingId,
                     $newIracingCustomerId,
                     $newDiscordId
                 );
-
-                // If found and it's a DIFFERENT driver, we have a conflict
-                if ($existingDriver !== null && $existingDriver->id() !== $driver->id()) {
-                    throw InvalidDriverDataException::duplicatePlatformId(
-                        $newPsnId,
-                        $newIracingId,
-                        $newIracingCustomerId,
-                        $newDiscordId
-                    );
-                }
 
                 $driver->updatePlatformIds(
                     PlatformIdentifiers::from(
@@ -879,6 +988,95 @@ final class DriverApplicationService
     // ===================================================================
 
     /**
+     * Core logic for creating a driver and adding them to a league.
+     * This method does NOT wrap itself in a transaction - the caller is responsible
+     * for transaction management. This allows it to be used both in:
+     * - createDriverForLeague (which wraps in its own transaction)
+     * - importDriversFromCSV (which has a single outer transaction for all rows)
+     *
+     * @param CreateDriverData $data The driver creation data
+     * @param int $leagueId The league ID
+     * @param string|null $effectiveNickname The resolved nickname (may be auto-generated from Discord ID)
+     * @return LeagueDriverData
+     */
+    private function createDriverForLeagueCore(
+        CreateDriverData $data,
+        int $leagueId,
+        ?string $effectiveNickname
+    ): LeagueDriverData {
+        // Create domain entities with effective nickname (auto-generated from Discord ID if needed)
+        $driverName = DriverName::from($data->first_name, $data->last_name, $effectiveNickname);
+        $platformIds = PlatformIdentifiers::from(
+            $data->psn_id,
+            $data->iracing_id,
+            $data->iracing_customer_id,
+            $data->discord_id
+        );
+
+        // Check if driver already exists globally (by platform IDs)
+        $existingDriver = $this->driverRepository->findByPlatformId(
+            $data->psn_id,
+            $data->iracing_id,
+            $data->iracing_customer_id,
+            $data->discord_id
+        );
+
+        if ($existingDriver !== null) {
+            // Driver exists globally, just add to league
+            $driver = $existingDriver;
+        } else {
+            // Create new driver
+            $driver = Driver::create(
+                name: $driverName,
+                platformIds: $platformIds,
+                email: $data->email,
+                phone: $data->phone
+            );
+
+            $this->driverRepository->save($driver);
+
+            // Verify driver was persisted successfully
+            if ($driver->id() === null) {
+                throw new \RuntimeException('Failed to persist driver - ID is null after save');
+            }
+
+            // Dispatch driver created event
+            Event::dispatch(new DriverCreated(
+                driverId: $driver->id(),
+                displayName: $driver->name()->displayName(),
+                primaryPlatformId: $driver->platformIds()->primaryIdentifier()
+            ));
+        }
+
+        // Verify driver ID is available (whether new or existing)
+        if ($driver->id() === null) {
+            throw new \RuntimeException('Driver ID is null - cannot add to league');
+        }
+
+        // Add driver to league
+        $leagueDriver = LeagueDriver::create(
+            leagueId: $leagueId,
+            driverId: $driver->id(),
+            driverNumber: $data->driver_number,
+            status: DriverStatus::from($data->status),
+            leagueNotes: $data->league_notes
+        );
+
+        $this->driverRepository->addToLeague($leagueDriver);
+
+        // Dispatch event
+        Event::dispatch(new DriverAddedToLeague(
+            leagueId: $leagueId,
+            driverId: $driver->id(),
+            displayName: $driver->name()->displayName(),
+            driverNumber: $data->driver_number,
+            status: $data->status
+        ));
+
+        return LeagueDriverData::fromEntities($leagueDriver, $driver);
+    }
+
+    /**
      * Verify that a league belongs to the specified user.
      *
      * @param int $leagueId The league ID to check
@@ -890,6 +1088,76 @@ final class DriverApplicationService
         $league = $this->leagueRepository->findById($leagueId);
         if ($league->ownerUserId() !== $userId) {
             throw UnauthorizedException::forResource('league');
+        }
+    }
+
+    /**
+     * Validate that platform IDs don't conflict with another driver.
+     * Checks if any of the provided platform IDs already exist for a different driver.
+     *
+     * @param int $currentDriverId The driver being updated (to exclude from conflict check)
+     * @param string|null $psnId
+     * @param string|null $iracingId
+     * @param int|null $iracingCustomerId
+     * @param string|null $discordId
+     * @throws InvalidDriverDataException If platform IDs conflict with another driver
+     */
+    private function validatePlatformIdConflict(
+        int $currentDriverId,
+        ?string $psnId,
+        ?string $iracingId,
+        ?int $iracingCustomerId,
+        ?string $discordId
+    ): void {
+        // Check if any of the platform IDs conflict with another driver
+        $existingDriver = $this->driverRepository->findByPlatformId(
+            $psnId,
+            $iracingId,
+            $iracingCustomerId,
+            $discordId
+        );
+
+        // If found and it's a DIFFERENT driver, we have a conflict
+        if ($existingDriver !== null && $existingDriver->id() !== $currentDriverId) {
+            throw InvalidDriverDataException::duplicatePlatformId(
+                $psnId,
+                $iracingId,
+                $iracingCustomerId,
+                $discordId
+            );
+        }
+    }
+
+    /**
+     * Validate that driver's platform IDs match league's supported platforms.
+     * At least one of the driver's platform IDs must belong to the league's platforms.
+     *
+     * @param int $leagueId The league ID
+     * @param string|null $psnId
+     * @param string|null $iracingId
+     * @param int|null $iracingCustomerId
+     * @param string|null $discordId
+     * @throws InvalidDriverDataException If no platform ID matches league's platforms
+     */
+    private function validateLeaguePlatformMatch(
+        int $leagueId,
+        ?string $psnId,
+        ?string $iracingId,
+        ?int $iracingCustomerId,
+        ?string $discordId
+    ): void {
+        $league = $this->leagueRepository->findById($leagueId);
+        $leaguePlatformIds = $league->platformIds();
+
+        $driverData = [
+            'psn_id' => $psnId,
+            'iracing_id' => $iracingId,
+            'iracing_customer_id' => $iracingCustomerId,
+            'discord_id' => $discordId,
+        ];
+
+        if (! PlatformMappingService::hasValidPlatformForLeague($leaguePlatformIds, $driverData)) {
+            throw InvalidDriverDataException::platformNotInLeague($leaguePlatformIds);
         }
     }
 

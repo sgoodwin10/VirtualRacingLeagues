@@ -7,7 +7,6 @@ namespace App\Domain\Competition\Services;
 use App\Domain\Competition\Entities\Race;
 use App\Domain\Competition\Entities\RaceResult;
 use App\Domain\Competition\ValueObjects\TiebreakerRuleConfiguration;
-use App\Domain\Competition\ValueObjects\TiebreakerRuleSlug;
 use App\Domain\Competition\ValueObjects\TiebreakerResolution;
 use App\Domain\Competition\ValueObjects\TiebreakerInformation;
 

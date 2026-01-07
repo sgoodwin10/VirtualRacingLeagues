@@ -8,7 +8,6 @@ use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent as AdminModel;
 use App\Models\Admin;
 use App\Policies\AdminPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {

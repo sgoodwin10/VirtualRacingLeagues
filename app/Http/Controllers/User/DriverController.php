@@ -93,20 +93,15 @@ final class DriverController extends Controller
      */
     public function store(Request $request, int $league): JsonResponse
     {
-        $validated = $request->validate(CreateDriverData::rules());
-
         try {
-            $data = CreateDriverData::from($validated);
-            $leagueDriver = $this->driverService->createDriverForLeague(
+            $data = CreateDriverData::from($request->validate(CreateDriverData::rules()));
+            $leagueDriverData = $this->driverService->createDriverForLeagueWithActivityLog(
                 $data,
                 $league,
                 $this->getAuthenticatedUserId()
             );
-
-            return ApiResponse::created($leagueDriver->toArray(), 'Driver added to league successfully');
-        } catch (InvalidDriverDataException $e) {
-            return ApiResponse::error($e->getMessage(), null, 422);
-        } catch (DriverAlreadyInLeagueException $e) {
+            return ApiResponse::created($leagueDriverData->toArray(), 'Driver added to league successfully');
+        } catch (InvalidDriverDataException | DriverAlreadyInLeagueException $e) {
             return ApiResponse::error($e->getMessage(), null, 422);
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
@@ -134,18 +129,15 @@ final class DriverController extends Controller
      */
     public function update(Request $request, int $league, int $driver): JsonResponse
     {
-        $validated = $request->validate(UpdateDriverData::rules());
-
         try {
-            $data = UpdateDriverData::from($validated);
-            $leagueDriver = $this->driverService->updateDriverAndLeagueSettings(
+            $data = UpdateDriverData::from($request->validate(UpdateDriverData::rules()));
+            $leagueDriverData = $this->driverService->updateDriverAndLeagueSettingsWithActivityLog(
                 $data,
                 $league,
                 $driver,
                 $this->getAuthenticatedUserId()
             );
-
-            return ApiResponse::success($leagueDriver->toArray(), 'Driver updated successfully');
+            return ApiResponse::success($leagueDriverData->toArray(), 'Driver updated successfully');
         } catch (DriverNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
         } catch (InvalidDriverDataException $e) {
@@ -161,8 +153,11 @@ final class DriverController extends Controller
     public function destroy(int $league, int $driver): JsonResponse
     {
         try {
-            $this->driverService->removeDriverFromLeague($league, $driver, $this->getAuthenticatedUserId());
-
+            $this->driverService->removeDriverFromLeagueWithActivityLog(
+                $league,
+                $driver,
+                $this->getAuthenticatedUserId()
+            );
             return ApiResponse::success(null, 'Driver removed from league successfully');
         } catch (DriverNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -176,17 +171,17 @@ final class DriverController extends Controller
      */
     public function importCsv(Request $request, int $league): JsonResponse
     {
-        $validated = $request->validate(ImportDriversData::rules());
-
         try {
-            $data = ImportDriversData::from($validated);
-            $result = $this->driverService->importDriversFromCSV($data, $league, $this->getAuthenticatedUserId());
+            $data = ImportDriversData::from($request->validate(ImportDriversData::rules()));
+            $result = $this->driverService->importDriversFromCSVWithActivityLog(
+                $data,
+                $league,
+                $this->getAuthenticatedUserId()
+            );
 
             if ($result->hasErrors()) {
-                return ApiResponse::success(
-                    $result->toArray(),
-                    "Imported {$result->success_count} drivers with {$result->errorCount()} errors"
-                );
+                $message = "Imported {$result->success_count} drivers with {$result->errorCount()} errors";
+                return ApiResponse::success($result->toArray(), $message);
             }
 
             return ApiResponse::created($result->toArray(), "Successfully imported {$result->success_count} drivers");

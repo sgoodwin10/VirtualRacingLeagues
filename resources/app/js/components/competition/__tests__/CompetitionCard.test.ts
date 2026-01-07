@@ -29,9 +29,15 @@ function createMountOptions(props: { competition: Competition }) {
       stubs: {
         SeasonFormDrawer: {
           name: 'SeasonFormDrawer',
-          template: '<div class="season-form-drawer-stub"></div>',
+          template: '<div class="season-form-drawer-stub" data-testid="season-form-drawer"></div>',
           props: ['visible', 'competitionId', 'isEditMode', 'season'],
-          emits: ['update:visible', 'season-saved'],
+          emits: ['update:visible', 'season-saved', 'hide'],
+        },
+        SeasonFormSplitModal: {
+          name: 'SeasonFormSplitModal',
+          template: '<div class="season-form-split-modal-stub" data-testid="season-form-split-modal"></div>',
+          props: ['visible', 'competitionId', 'isEditMode', 'season'],
+          emits: ['update:visible', 'season-saved', 'hide'],
         },
       },
     },
@@ -315,7 +321,7 @@ describe('CompetitionCard', () => {
       await wrapper.vm.$nextTick();
 
       // Verify the season form drawer component exists (drawer visibility is internal state)
-      const drawer = wrapper.findComponent({ name: 'SeasonFormDrawer' });
+      const drawer = wrapper.findComponent({ name: 'SeasonFormSplitModal' });
       expect(drawer.exists()).toBe(true);
     });
   });
@@ -400,8 +406,8 @@ describe('CompetitionCard', () => {
       const competition = createMockCompetition();
       const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
 
-      // Initially drawer should not be visible
-      const drawer = wrapper.findComponent({ name: 'SeasonFormDrawer' });
+      // Initially drawer should exist (using split modal by default)
+      const drawer = wrapper.findComponent({ name: 'SeasonFormSplitModal' });
       expect(drawer.exists()).toBe(true);
 
       // Click create button
@@ -420,7 +426,7 @@ describe('CompetitionCard', () => {
       const competition = createMockCompetition();
       const wrapper = mount(CompetitionCard, createMountOptions({ competition }));
 
-      const drawer = wrapper.findComponent({ name: 'SeasonFormDrawer' });
+      const drawer = wrapper.findComponent({ name: 'SeasonFormSplitModal' });
       expect(drawer.props('competitionId')).toBe(competition.id);
       expect(drawer.props('isEditMode')).toBe(false);
     });
@@ -436,7 +442,7 @@ describe('CompetitionCard', () => {
       await wrapper.vm.$nextTick();
 
       // Get drawer and emit season-saved event
-      const drawer = wrapper.findComponent({ name: 'SeasonFormDrawer' });
+      const drawer = wrapper.findComponent({ name: 'SeasonFormSplitModal' });
       expect(drawer.exists()).toBe(true);
 
       await drawer.vm.$emit('season-saved');
@@ -921,7 +927,7 @@ describe('CompetitionCard', () => {
       await vm.handleEditSeason(1);
       await wrapper.vm.$nextTick();
 
-      const drawer = wrapper.findComponent({ name: 'SeasonFormDrawer' });
+      const drawer = wrapper.findComponent({ name: 'SeasonFormSplitModal' });
       expect(drawer.props('competitionId')).toBe(competition.id);
       expect(drawer.props('isEditMode')).toBe(true);
     });
@@ -939,7 +945,7 @@ describe('CompetitionCard', () => {
       await wrapper.vm.$nextTick();
 
       // Verify the drawer props show it's not in edit mode anymore
-      const drawer = wrapper.findComponent({ name: 'SeasonFormDrawer' });
+      const drawer = wrapper.findComponent({ name: 'SeasonFormSplitModal' });
       expect(drawer.props('isEditMode')).toBe(false);
     });
   });

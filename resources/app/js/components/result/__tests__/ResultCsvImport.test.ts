@@ -547,7 +547,7 @@ Jane Doe,01:33.123`;
         'driver,race_time,original_race_time_difference,fastest_lap_time',
       );
       expect(vm.expectedColumnsText).toBe(
-        'Required Column Headers: driver, race_time, original_race_time_difference, fastest_lap_time <br /> Data can be blank if not applicable',
+        'Required Column Headers: driver, race_time, original_race_time_difference, fastest_lap_time. Data can be blank if not applicable',
       );
     });
 

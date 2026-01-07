@@ -16,13 +16,13 @@
         <div class="md:col-span-1 hidden">
           <FormInputGroup class="w-full">
             <FormLabel for="round_number" text="Round Number" required />
-            <InputNumber
-              id="round_number"
+            <StyledInputNumber
               v-model="form.round_number"
+              input-id="round_number"
               :min="1"
               :max="99"
               :invalid="!!validationErrors.round_number"
-              size="sm"
+              size="small"
               fluid
               class="w-full"
               @blur="validation.validateRoundNumber(form.round_number)"
@@ -252,13 +252,13 @@
                         :key="position"
                       >
                         <InputGroupAddon class="bg-slate-100">P{{ position }}</InputGroupAddon>
-                        <InputNumber
-                          :id="`position_${position}`"
+                        <StyledInputNumber
                           v-model="form.points_system[position]"
+                          :input-id="`position_${position}`"
                           :max-fraction-digits="2"
                           :min="0"
                           :max="999"
-                          size="sm"
+                          size="small"
                           fluid
                           class="w-full"
                         />
@@ -312,7 +312,7 @@
                       <label for="bonus_fastest_lap" class="text-sm"
                         >Enable fastest lap bonus</label
                       >
-                      <InputNumber
+                      <StyledInputNumber
                         v-if="hasFastestLapBonus"
                         v-model="form.fastest_lap"
                         :min="1"
@@ -320,7 +320,7 @@
                         fluid
                         :invalid="!!validationErrors.fastest_lap"
                         placeholder="Pts"
-                        size="sm"
+                        size="small"
                         class="w-20"
                         @blur="validation.validateFastestLap(form.fastest_lap)"
                       />
@@ -362,7 +362,7 @@
                       <label for="bonus_qualifying_pole" class="text-sm"
                         >Enable qualifying pole bonus</label
                       >
-                      <InputNumber
+                      <StyledInputNumber
                         v-if="hasQualifyingPoleBonus"
                         v-model="form.qualifying_pole"
                         :min="1"
@@ -370,7 +370,7 @@
                         fluid
                         :invalid="!!validationErrors.qualifying_pole"
                         placeholder="Pts"
-                        size="sm"
+                        size="small"
                         class="w-20"
                         @blur="validation.validateQualifyingPole(form.qualifying_pole)"
                       />
@@ -482,7 +482,7 @@ import { useToast } from 'primevue/usetoast';
 import Tooltip from 'primevue/tooltip';
 import { Button } from '@app/components/common/buttons';
 import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
+import StyledInputNumber from '@app/components/common/forms/StyledInputNumber.vue';
 import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import Checkbox from 'primevue/checkbox';
@@ -637,7 +637,8 @@ function copyFromRoundOne(): void {
 
 // Add a new points position
 function addPointsPosition(): void {
-  const maxPosition = Math.max(...Object.keys(form.value.points_system).map(Number));
+  const keys = Object.keys(form.value.points_system);
+  const maxPosition = keys.length > 0 ? Math.max(...keys.map(Number)) : 0;
   form.value.points_system[maxPosition + 1] = 0;
 }
 

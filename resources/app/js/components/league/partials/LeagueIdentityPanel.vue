@@ -149,7 +149,7 @@ function handleViewCompetitions(): void {
 
 <template>
   <aside
-    class="w-[380px] flex-shrink-0 bg-[var(--bg-panel)] border-r border-[var(--border)] flex flex-col sticky top-0 h-[calc(100vh-var(--topbar-height))] overflow-y-auto"
+    class="w-[380px] flex-shrink-0 bg-[var(--bg-panel)] border-r border-[var(--border)] flex flex-col sticky top-0 h-full overflow-y-auto"
   >
     <!-- Header Image Area -->
     <div class="relative h-[180px] flex-shrink-0">

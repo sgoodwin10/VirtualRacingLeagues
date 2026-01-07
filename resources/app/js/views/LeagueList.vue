@@ -6,7 +6,7 @@ import DataView from 'primevue/dataview';
 import { Button } from '@app/components/common/buttons';
 import { PhPlus } from '@phosphor-icons/vue';
 import { useLeagueStore } from '@app/stores/leagueStore';
-import LeagueWizardDrawer from '@app/components/league/modals/LeagueWizardDrawer.vue';
+import EditLeagueModal from '@app/components/league/modals/EditLeagueModal.vue';
 import LeagueCard from '@app/components/league/LeagueCard.vue';
 import Breadcrumbs, { type BreadcrumbItem } from '@app/components/common/Breadcrumbs.vue';
 
@@ -97,7 +97,7 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => [
 
 <template>
   <div class="max-w-7xl mx-auto p-6">
-    <LeagueWizardDrawer
+    <EditLeagueModal
       v-model:visible="showWizardDrawer"
       :is-edit-mode="isEditMode"
       :league-id="editingLeagueId"

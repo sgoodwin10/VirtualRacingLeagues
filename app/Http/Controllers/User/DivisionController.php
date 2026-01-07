@@ -13,6 +13,9 @@ use App\Domain\Division\Exceptions\DivisionNotFoundException;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\CreateDivisionRequest;
+use App\Http\Requests\User\ReorderDivisionsRequest;
+use App\Http\Requests\User\UpdateDivisionRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -47,8 +50,7 @@ final class DivisionController extends Controller
     public function index(int $seasonId): JsonResponse
     {
         try {
-            $userId = $this->getAuthenticatedUserId();
-            $divisions = $this->divisionService->getDivisionsBySeasonId($seasonId, $userId);
+            $divisions = $this->divisionService->getDivisionsBySeasonId($seasonId, $this->getAuthenticatedUserId());
             return ApiResponse::success($divisions);
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
@@ -58,12 +60,12 @@ final class DivisionController extends Controller
     /**
      * Create a new division.
      */
-    public function store(CreateDivisionData $data, int $seasonId): JsonResponse
+    public function store(CreateDivisionRequest $request, int $seasonId): JsonResponse
     {
         try {
-            $userId = $this->getAuthenticatedUserId();
-            $division = $this->divisionService->createDivision($data, $seasonId, $userId);
-            return ApiResponse::created($division->toArray(), 'Division created successfully');
+            $data = CreateDivisionData::from($request->validated());
+            $divisionData = $this->divisionService->createDivision($data, $seasonId, $this->getAuthenticatedUserId());
+            return ApiResponse::created($divisionData->toArray(), 'Division created successfully');
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
         }
@@ -72,12 +74,12 @@ final class DivisionController extends Controller
     /**
      * Update a division.
      */
-    public function update(UpdateDivisionData $data, int $seasonId, int $divisionId): JsonResponse
+    public function update(UpdateDivisionRequest $request, int $seasonId, int $divisionId): JsonResponse
     {
         try {
-            $userId = $this->getAuthenticatedUserId();
-            $division = $this->divisionService->updateDivision($divisionId, $data, $userId);
-            return ApiResponse::success($division->toArray(), 'Division updated successfully');
+            $data = UpdateDivisionData::from($request->validated());
+            $divisionData = $this->divisionService->updateDivision($divisionId, $data, $this->getAuthenticatedUserId());
+            return ApiResponse::success($divisionData->toArray(), 'Division updated successfully');
         } catch (DivisionNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
         } catch (UnauthorizedException $e) {
@@ -91,8 +93,7 @@ final class DivisionController extends Controller
     public function destroy(int $seasonId, int $divisionId): JsonResponse
     {
         try {
-            $userId = $this->getAuthenticatedUserId();
-            $this->divisionService->deleteDivision($divisionId, $userId);
+            $this->divisionService->deleteDivision($divisionId, $this->getAuthenticatedUserId());
             return ApiResponse::success(null, 'Division deleted successfully');
         } catch (DivisionNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -107,8 +108,7 @@ final class DivisionController extends Controller
     public function driverCount(int $seasonId, int $divisionId): JsonResponse
     {
         try {
-            $userId = $this->getAuthenticatedUserId();
-            $count = $this->divisionService->getDriverCount($divisionId, $userId);
+            $count = $this->divisionService->getDriverCount($divisionId, $this->getAuthenticatedUserId());
             return ApiResponse::success(['count' => $count]);
         } catch (DivisionNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -137,9 +137,10 @@ final class DivisionController extends Controller
     /**
      * Reorder divisions for a season.
      */
-    public function reorder(ReorderDivisionsData $data, int $seasonId): JsonResponse
+    public function reorder(ReorderDivisionsRequest $request, int $seasonId): JsonResponse
     {
         try {
+            $data = ReorderDivisionsData::from($request->validated());
             $divisions = $this->divisionService->reorderDivisions($seasonId, $data, $this->getAuthenticatedUserId());
             return ApiResponse::success($divisions, 'Divisions reordered successfully');
         } catch (\InvalidArgumentException $e) {

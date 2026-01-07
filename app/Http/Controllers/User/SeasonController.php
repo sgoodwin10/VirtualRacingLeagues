@@ -10,6 +10,10 @@ use App\Application\Competition\Services\SeasonApplicationService;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\ArchiveSeasonRequest;
+use App\Http\Requests\User\CompleteSeasonRequest;
+use App\Http\Requests\User\CreateSeasonRequest;
+use App\Http\Requests\User\UpdateSeasonRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +21,7 @@ use Illuminate\Support\Facades\Auth;
 /**
  * Season Controller.
  * Thin controller for season management (3-5 lines per method).
+ * Activity logging handled via domain events and listeners.
  */
 final class SeasonController extends Controller
 {
@@ -51,15 +56,11 @@ final class SeasonController extends Controller
     /**
      * Create a new season.
      */
-    public function store(Request $request, int $competitionId): JsonResponse
+    public function store(CreateSeasonRequest $request, int $competitionId): JsonResponse
     {
-        $validated = $request->validate(CreateSeasonData::rules());
-        $validated['competition_id'] = $competitionId;
-
-        $data = CreateSeasonData::from($validated);
-        $season = $this->seasonService->createSeason($data, $this->getAuthenticatedUserId());
-
-        return ApiResponse::created($season->toArray(), 'Season created successfully');
+        $data = CreateSeasonData::from($request->validated());
+        $seasonData = $this->seasonService->createSeason($data, $this->getAuthenticatedUserId());
+        return ApiResponse::created($seasonData->toArray(), 'Season created successfully');
     }
 
     /**
@@ -74,14 +75,16 @@ final class SeasonController extends Controller
     /**
      * Update a season.
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateSeasonRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate(UpdateSeasonData::rules());
-
-        $data = UpdateSeasonData::from($validated);
-        $season = $this->seasonService->updateSeason($id, $data, $this->getAuthenticatedUserId(), $validated);
-
-        return ApiResponse::success($season->toArray(), 'Season updated successfully');
+        $data = UpdateSeasonData::from($request->validated());
+        $seasonData = $this->seasonService->updateSeason(
+            $id,
+            $data,
+            $this->getAuthenticatedUserId(),
+            $request->validated()
+        );
+        return ApiResponse::success($seasonData->toArray(), 'Season updated successfully');
     }
 
     /**
@@ -96,10 +99,10 @@ final class SeasonController extends Controller
     /**
      * Archive a season.
      */
-    public function archive(int $id): JsonResponse
+    public function archive(ArchiveSeasonRequest $request, int $id): JsonResponse
     {
-        $season = $this->seasonService->archiveSeason($id, $this->getAuthenticatedUserId());
-        return ApiResponse::success($season->toArray(), 'Season archived successfully');
+        $seasonData = $this->seasonService->archiveSeason($id, $this->getAuthenticatedUserId());
+        return ApiResponse::success($seasonData->toArray(), 'Season archived successfully');
     }
 
     /**
@@ -123,10 +126,10 @@ final class SeasonController extends Controller
     /**
      * Complete a season.
      */
-    public function complete(int $id): JsonResponse
+    public function complete(CompleteSeasonRequest $request, int $id): JsonResponse
     {
-        $season = $this->seasonService->completeSeason($id, $this->getAuthenticatedUserId());
-        return ApiResponse::success($season->toArray(), 'Season completed successfully');
+        $seasonData = $this->seasonService->completeSeason($id, $this->getAuthenticatedUserId());
+        return ApiResponse::success($seasonData->toArray(), 'Season completed successfully');
     }
 
     /**

@@ -120,9 +120,9 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
         }
 
         /** @var RoundEloquent|null $eloquent */
-        $eloquent = RoundEloquent::withTrashed()->find($round->id());
+        $eloquent = RoundEloquent::find($round->id());
         if ($eloquent !== null) {
-            $eloquent->forceDelete(); // Hard delete - cascades to races and race_results
+            $eloquent->delete(); // Hard delete - cascades to races and race_results via database constraints
         }
     }
 
@@ -204,6 +204,7 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
         $model->race_time_results = $entity->raceTimeResults();
         $model->fastest_lap_results = $entity->fastestLapResults();
         $model->team_championship_results = $entity->teamChampionshipResults();
+        $model->round_totals_tiebreaker_rules_information = $entity->tiebreakerInformation()?->toArray();
         $model->created_by_user_id = $entity->createdByUserId();
     }
 
@@ -257,9 +258,25 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
                 ? TiebreakerInformation::fromArray($model->round_totals_tiebreaker_rules_information)
                 : null,
             createdByUserId: $model->created_by_user_id,
-            createdAt: new DateTimeImmutable($model->created_at->toDateTimeString()),
-            updatedAt: new DateTimeImmutable($model->updated_at->toDateTimeString()),
-            deletedAt: $model->deleted_at ? new DateTimeImmutable($model->deleted_at->toDateTimeString()) : null,
+            createdAt: new DateTimeImmutable(
+                is_string($model->created_at) ? $model->created_at : $model->created_at->toDateTimeString()
+            ),
+            updatedAt: new DateTimeImmutable(
+                is_string($model->updated_at) ? $model->updated_at : $model->updated_at->toDateTimeString()
+            ),
         );
+    }
+
+    /**
+     * Check if a user owns the league that contains this round.
+     */
+    public function isOwnedByUser(int $roundId, int $userId): bool
+    {
+        return RoundEloquent::query()
+            ->where('id', $roundId)
+            ->whereHas('season.competition.league', function ($query) use ($userId) {
+                $query->where('owner_user_id', $userId);
+            })
+            ->exists();
     }
 }

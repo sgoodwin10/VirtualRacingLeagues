@@ -14,6 +14,7 @@ import Skeleton from 'primevue/skeleton';
 import Message from 'primevue/message';
 
 import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
+import SeasonFormSplitModal from '@app/components/season/modals/SeasonFormSplitModal.vue';
 
 const route = useRoute();
 const { showError } = useToastError();
@@ -25,6 +26,9 @@ const season = ref<Season | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const showEditDrawer = ref(false);
+
+// Toggle between drawer and split modal design (set to true to use new split modal)
+const useSplitModal = ref(true);
 
 const leagueId = computed(() => parseInt(route.params.leagueId as string, 10));
 const competitionId = computed(() => parseInt(route.params.competitionId as string, 10));
@@ -150,8 +154,17 @@ function handleSeasonUpdated(updated: Season): void {
       <!-- Nested router view for tabs -->
       <router-view />
 
-      <!-- Edit Drawer -->
+      <!-- Edit Modal (toggle between drawer and split modal) -->
+      <SeasonFormSplitModal
+        v-if="useSplitModal"
+        v-model:visible="showEditDrawer"
+        :competition-id="competitionId"
+        :season="season"
+        is-edit-mode
+        @season-saved="handleSeasonUpdated"
+      />
       <SeasonFormDrawer
+        v-else
         v-model:visible="showEditDrawer"
         :competition-id="competitionId"
         :season="season"

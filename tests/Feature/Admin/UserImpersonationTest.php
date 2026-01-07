@@ -70,6 +70,10 @@ class UserImpersonationTest extends TestCase
         $this->assertIsString($token);
         $this->assertNotEmpty($token);
 
+        // Verify token is a 64-character hex string
+        $this->assertEquals(64, strlen($token));
+        $this->assertMatchesRegularExpression('/^[a-f0-9]+$/i', $token);
+
         // Verify token exists in Redis
         $redisKey = 'user_impersonation:' . $token;
         $this->assertNotNull(Redis::get($redisKey));
@@ -180,8 +184,6 @@ class UserImpersonationTest extends TestCase
 
     public function test_can_consume_valid_token(): void
     {
-        $this->markTestSkipped('User impersonation endpoint validation needs implementation');
-
         // Generate token
         $tokenResponse = $this->actingAs($this->superAdmin, 'admin')
             ->postJson("/api/admin/users/{$this->user->id}/login-as");
@@ -215,8 +217,6 @@ class UserImpersonationTest extends TestCase
 
     public function test_token_is_single_use(): void
     {
-        $this->markTestSkipped('User impersonation endpoint validation needs implementation');
-
         // Generate token
         $tokenResponse = $this->actingAs($this->superAdmin, 'admin')
             ->postJson("/api/admin/users/{$this->user->id}/login-as");
@@ -245,8 +245,11 @@ class UserImpersonationTest extends TestCase
 
     public function test_cannot_consume_invalid_token(): void
     {
+        // Use a valid 64-character hex string that doesn't exist in Redis
+        $invalidToken = str_repeat('0', 64);
+
         $response = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
-            'token' => '00000000-0000-0000-0000-000000000000',
+            'token' => $invalidToken,
         ]);
 
         $response->assertStatus(400);
@@ -258,7 +261,7 @@ class UserImpersonationTest extends TestCase
     public function test_cannot_consume_token_with_invalid_format(): void
     {
         $response = $this->postJson('http://app.virtualracingleagues.localhost/api/impersonate', [
-            'token' => 'not-a-uuid',
+            'token' => 'not-a-hex-string',
         ]);
 
         $response->assertStatus(422);
@@ -275,8 +278,6 @@ class UserImpersonationTest extends TestCase
 
     public function test_token_consumption_logs_activity(): void
     {
-        $this->markTestSkipped('User impersonation activity logging needs implementation');
-
         // Generate token
         $tokenResponse = $this->actingAs($this->superAdmin, 'admin')
             ->postJson("/api/admin/users/{$this->user->id}/login-as");
@@ -296,12 +297,23 @@ class UserImpersonationTest extends TestCase
             'subject_type' => User::class,
             'subject_id' => $this->user->id,
         ]);
+
+        // Verify properties were logged - get the LATEST activity log entry
+        $activity = Activity::where('description', 'Admin impersonated user')
+            ->where('subject_id', $this->user->id)
+            ->latest()
+            ->first();
+
+        $this->assertNotNull($activity, 'Activity log entry was not created');
+
+        $this->assertEquals($this->superAdmin->id, $activity->properties->get('admin_id'));
+        $this->assertEquals($this->superAdmin->email, $activity->properties->get('admin_email'));
+        $this->assertEquals($this->user->email, $activity->properties->get('user_email'));
+        $this->assertArrayHasKey('ip_address', $activity->properties->toArray());
     }
 
     public function test_impersonation_regenerates_session(): void
     {
-        $this->markTestSkipped('User impersonation endpoint validation needs implementation');
-
         // Generate token
         $tokenResponse = $this->actingAs($this->superAdmin, 'admin')
             ->postJson("/api/admin/users/{$this->user->id}/login-as");
@@ -338,8 +350,6 @@ class UserImpersonationTest extends TestCase
 
     public function test_can_consume_token_via_get_on_app_subdomain(): void
     {
-        $this->markTestSkipped('User impersonation GET route needs implementation');
-
         // Generate token
         $tokenResponse = $this->actingAs($this->superAdmin, 'admin')
             ->postJson("/api/admin/users/{$this->user->id}/login-as");
@@ -359,8 +369,6 @@ class UserImpersonationTest extends TestCase
 
     public function test_can_consume_token_via_get_on_main_domain(): void
     {
-        $this->markTestSkipped('User impersonation GET route needs implementation');
-
         // Generate token
         $tokenResponse = $this->actingAs($this->superAdmin, 'admin')
             ->postJson("/api/admin/users/{$this->user->id}/login-as");
@@ -380,8 +388,9 @@ class UserImpersonationTest extends TestCase
 
     public function test_get_route_with_invalid_token_redirects_to_login(): void
     {
-        // Try to consume invalid token via GET
-        $response = $this->get('http://app.virtualracingleagues.localhost/login-as?token=00000000-0000-0000-0000-000000000000');
+        // Try to consume invalid token via GET (valid hex format but doesn't exist in Redis)
+        $invalidToken = str_repeat('0', 64);
+        $response = $this->get("http://app.virtualracingleagues.localhost/login-as?token={$invalidToken}");
 
         // Should redirect to public login with error
         $response->assertRedirect('http://virtualracingleagues.localhost/login');
@@ -390,8 +399,6 @@ class UserImpersonationTest extends TestCase
 
     public function test_get_route_with_expired_token_redirects_to_login(): void
     {
-        $this->markTestSkipped('User impersonation GET route needs implementation');
-
         // Generate token
         $tokenResponse = $this->actingAs($this->superAdmin, 'admin')
             ->postJson("/api/admin/users/{$this->user->id}/login-as");
@@ -422,8 +429,8 @@ class UserImpersonationTest extends TestCase
 
     public function test_get_route_with_invalid_token_format_fails_validation(): void
     {
-        // Try to access GET route with invalid token format
-        $response = $this->get('http://app.virtualracingleagues.localhost/login-as?token=not-a-uuid');
+        // Try to access GET route with invalid token format (not a hex string)
+        $response = $this->get('http://app.virtualracingleagues.localhost/login-as?token=not-a-hex-string');
 
         // Should return validation error (422 or redirect with errors)
         $this->assertTrue(
@@ -433,8 +440,6 @@ class UserImpersonationTest extends TestCase
 
     public function test_get_route_for_deleted_user_redirects_to_login(): void
     {
-        $this->markTestSkipped('User impersonation GET route needs implementation');
-
         // Generate token
         $tokenResponse = $this->actingAs($this->superAdmin, 'admin')
             ->postJson("/api/admin/users/{$this->user->id}/login-as");
@@ -454,8 +459,6 @@ class UserImpersonationTest extends TestCase
 
     public function test_cannot_consume_token_for_deleted_user(): void
     {
-        $this->markTestSkipped('User impersonation endpoint validation needs implementation');
-
         // Generate token
         $tokenResponse = $this->actingAs($this->superAdmin, 'admin')
             ->postJson("/api/admin/users/{$this->user->id}/login-as");

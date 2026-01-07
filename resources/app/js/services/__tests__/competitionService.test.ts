@@ -216,10 +216,14 @@ describe('competitionService', () => {
 
       const result = await checkSlugAvailability(1, 'GT3 Championship');
 
-      expect(apiClient.post).toHaveBeenCalledWith('/leagues/1/competitions/check-slug', {
-        name: 'GT3 Championship',
-        exclude_id: undefined,
-      });
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/leagues/1/competitions/check-slug',
+        {
+          name: 'GT3 Championship',
+          exclude_id: undefined,
+        },
+        { signal: undefined },
+      );
       expect(result).toEqual(mockResponse);
     });
 
@@ -238,10 +242,14 @@ describe('competitionService', () => {
 
       const result = await checkSlugAvailability(1, 'GT3 Championship', 5);
 
-      expect(apiClient.post).toHaveBeenCalledWith('/leagues/1/competitions/check-slug', {
-        name: 'GT3 Championship',
-        exclude_id: 5,
-      });
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/leagues/1/competitions/check-slug',
+        {
+          name: 'GT3 Championship',
+          exclude_id: 5,
+        },
+        { signal: undefined },
+      );
       expect(result.suggestion).toBe('gt3-championship-02');
     });
   });

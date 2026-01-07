@@ -39,6 +39,7 @@ final class RaceApplicationService
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
         private readonly RaceResultsCacheService $raceResultsCache,
+        private readonly \App\Application\Activity\Services\LeagueActivityLogService $activityLogService,
     ) {
     }
 
@@ -140,6 +141,9 @@ final class RaceApplicationService
             $this->raceRepository->save($race);
             $this->dispatchEvents($race);
 
+            // Log activity
+            $this->logRaceCreated($race->id() ?? 0, $userId);
+
             return RaceData::fromEntity($race);
         });
     }
@@ -157,6 +161,13 @@ final class RaceApplicationService
 
             // Authorize user owns the league
             $this->authorizeRaceOwnership($raceId, $userId);
+
+            // Capture original data for change tracking
+            $originalData = [
+                'race_number' => $race->raceNumber(),
+                'name' => $race->name()?->value(),
+                'laps' => $race->lengthValue(),
+            ];
 
             // Handle status change if provided
             $statusChanged = false;
@@ -418,6 +429,14 @@ final class RaceApplicationService
                 $this->updateRaceResultStatuses($raceId, $newStatus);
             }
 
+            // Log activity with changes
+            $newData = [
+                'race_number' => $race->raceNumber(),
+                'name' => $race->name()?->value(),
+                'laps' => $race->lengthValue(),
+            ];
+            $this->logRaceUpdated($raceId, $userId, $originalData, $newData);
+
             return RaceData::fromEntity($race);
         });
 
@@ -481,6 +500,10 @@ final class RaceApplicationService
             $this->authorizeRaceOwnership($raceId, $userId);
 
             $race = $this->raceRepository->findById($raceId);
+
+            // Log activity before deletion
+            $this->logRaceDeleted($raceId, $userId);
+
             $this->raceRepository->delete($race);
         });
     }
@@ -934,6 +957,81 @@ final class RaceApplicationService
 
         if ($league->ownerUserId() !== $userId) {
             throw new UnauthorizedException('Only league owner can manage races');
+        }
+    }
+
+    /**
+     * Log race creation activity.
+     */
+    private function logRaceCreated(int $raceId, int $userId): void
+    {
+        try {
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
+            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            if ($user === null) {
+                return;
+            }
+
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $race */
+            $race = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($raceId);
+            $this->activityLogService->logRaceCreated($user, $race);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to log race creation activity', [
+                'error' => $e->getMessage(),
+                'race_id' => $raceId,
+            ]);
+        }
+    }
+
+    /**
+     * Log race update activity.
+     *
+     * @param array<string, mixed> $originalData
+     * @param array<string, mixed> $newData
+     */
+    private function logRaceUpdated(int $raceId, int $userId, array $originalData, array $newData): void
+    {
+        try {
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
+            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            if ($user === null) {
+                return;
+            }
+
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $race */
+            $race = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($raceId);
+            $this->activityLogService->logRaceUpdated($user, $race, [
+                'old' => $originalData,
+                'new' => $newData,
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to log race update activity', [
+                'error' => $e->getMessage(),
+                'race_id' => $raceId,
+            ]);
+        }
+    }
+
+    /**
+     * Log race deletion activity.
+     */
+    private function logRaceDeleted(int $raceId, int $userId): void
+    {
+        try {
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
+            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            if ($user === null) {
+                return;
+            }
+
+            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $race */
+            $race = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($raceId);
+            $this->activityLogService->logRaceDeleted($user, $race);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to log race deletion activity', [
+                'error' => $e->getMessage(),
+                'race_id' => $raceId,
+            ]);
         }
     }
 }

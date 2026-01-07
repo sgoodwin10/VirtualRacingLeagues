@@ -845,4 +845,185 @@ final class DriverControllerTest extends UserControllerTestCase
                 'message' => 'Unauthorized to access this league',
             ]);
     }
+
+    /**
+     * Test Fix #1: CSV values with SQL LIKE wildcards (% and _) are NOT escaped
+     * for exact match queries, allowing proper duplicate detection.
+     */
+    public function test_csv_import_handles_platform_ids_with_wildcards_correctly(): void
+    {
+        // Create a driver with a PSN ID containing wildcard characters
+        $existingDriver = Driver::factory()->create([
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'psn_id' => 'Player_100%Win',  // Contains both _ and %
+        ]);
+        DB::table('league_drivers')->insert([
+            'league_id' => $this->league->id,
+            'driver_id' => $existingDriver->id,
+            'status' => 'active',
+            'added_to_league_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Try to import the same driver - should be detected as duplicate
+        $csvData = "FirstName,LastName,PSN_ID\n"
+            . "Test,User,Player_100%Win";
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
+                'csv_data' => $csvData,
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.success_count', 0);
+
+        // Verify there is an error about duplicate
+        $errors = $response->json('data.errors');
+        $this->assertNotEmpty($errors);
+        $errorMessages = array_column($errors, 'message');
+        $hasDuplicateError = false;
+        foreach ($errorMessages as $message) {
+            if (str_contains($message, 'already exists in this league')) {
+                $hasDuplicateError = true;
+                break;
+            }
+        }
+        $this->assertTrue($hasDuplicateError, 'Expected duplicate detection to work for platform IDs with wildcards');
+    }
+
+    /**
+     * Test Fix #1: Creating a driver with wildcards in platform ID should work correctly.
+     */
+    public function test_can_create_driver_with_wildcard_characters_in_platform_id(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'first_name' => 'Wildcard',
+                'last_name' => 'Racer',
+                'psn_id' => 'Speed_50%Fast',  // Contains both _ and %
+                'driver_number' => 99,
+                'status' => 'active',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'driver' => [
+                        'first_name' => 'Wildcard',
+                        'last_name' => 'Racer',
+                        'psn_id' => 'Speed_50%Fast',
+                    ],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('drivers', [
+            'first_name' => 'Wildcard',
+            'last_name' => 'Racer',
+            'psn_id' => 'Speed_50%Fast',
+        ]);
+
+        // Now try to create the same driver again - should fail with duplicate error
+        $response2 = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'first_name' => 'Different',
+                'last_name' => 'Name',
+                'psn_id' => 'Speed_50%Fast',  // Same PSN ID
+                'driver_number' => 88,
+                'status' => 'active',
+            ]);
+
+        $response2->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+            ]);
+    }
+
+    /**
+     * Test Fix #2: CSV import handles partial failures gracefully.
+     * Valid rows are imported successfully, while invalid rows are reported as errors.
+     * The import continues processing all rows even when some fail.
+     */
+    public function test_csv_import_handles_partial_failures(): void
+    {
+        // Create a driver that will cause a conflict on the 3rd row
+        $conflictingDriver = Driver::factory()->create(['psn_id' => 'ConflictPSN']);
+        DB::table('league_drivers')->insert([
+            'league_id' => $this->league->id,
+            'driver_id' => $conflictingDriver->id,
+            'status' => 'active',
+            'added_to_league_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Get initial driver count
+        $initialDriverCount = Driver::count();
+        $initialLeagueDriverCount = DB::table('league_drivers')->where('league_id', $this->league->id)->count();
+
+        // CSV with 2 valid rows followed by a duplicate
+        $csvData = "FirstName,LastName,PSN_ID\n"
+            . "Valid1,Driver1,ValidPSN1\n"
+            . "Valid2,Driver2,ValidPSN2\n"
+            . "Conflict,Driver,ConflictPSN";  // This will fail - already exists
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
+                'csv_data' => $csvData,
+            ]);
+
+        // Should report only 2 successes
+        $response->assertOk()
+            ->assertJsonPath('data.success_count', 2);
+
+        // The first 2 drivers should have been created despite the error on row 3
+        // (Each row is caught and continues - errors don't rollback the transaction)
+        $this->assertEquals($initialDriverCount + 2, Driver::count(), 'Two new drivers should be created');
+        $this->assertEquals(
+            $initialLeagueDriverCount + 2,
+            DB::table('league_drivers')->where('league_id', $this->league->id)->count(),
+            'Two new league_drivers should be created'
+        );
+
+        // Verify the successful imports
+        $this->assertDatabaseHas('drivers', ['psn_id' => 'ValidPSN1']);
+        $this->assertDatabaseHas('drivers', ['psn_id' => 'ValidPSN2']);
+    }
+
+    /**
+     * Test Fix #2: Verify CSV import with formula injection prevention still works.
+     */
+    public function test_csv_import_prevents_formula_injection(): void
+    {
+        // CSV with formula injection attempts (leading =, +, -, @)
+        $csvData = "FirstName,LastName,PSN_ID\n"
+            . "=cmd,+calc,Normal123\n"  // Leading = and + should be stripped
+            . "-system,@admin,Valid456";  // Leading - and @ should be stripped
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
+                'csv_data' => $csvData,
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.success_count', 2);
+
+        // Verify dangerous characters were stripped
+        $this->assertDatabaseHas('drivers', [
+            'first_name' => 'cmd',      // = stripped
+            'last_name' => 'calc',      // + stripped
+            'psn_id' => 'Normal123',
+        ]);
+        $this->assertDatabaseHas('drivers', [
+            'first_name' => 'system',   // - stripped
+            'last_name' => 'admin',     // @ stripped
+            'psn_id' => 'Valid456',
+        ]);
+
+        // Verify original values (with dangerous chars) were NOT stored
+        $this->assertDatabaseMissing('drivers', ['first_name' => '=cmd']);
+        $this->assertDatabaseMissing('drivers', ['last_name' => '+calc']);
+        $this->assertDatabaseMissing('drivers', ['first_name' => '-system']);
+        $this->assertDatabaseMissing('drivers', ['last_name' => '@admin']);
+    }
 }

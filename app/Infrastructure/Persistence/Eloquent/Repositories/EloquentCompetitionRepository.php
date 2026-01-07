@@ -194,17 +194,14 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
         $totalRounds = \App\Infrastructure\Persistence\Eloquent\Models\Round::query()
             ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
             ->where('seasons.competition_id', $competitionId)
-            ->whereNull('rounds.deleted_at')
             ->whereNull('seasons.deleted_at')
             ->count();
 
         // Count races through seasons -> rounds -> races
-        // Note: races table does not have soft deletes or deleted_at column
         $totalRaces = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
             ->where('seasons.competition_id', $competitionId)
-            ->whereNull('rounds.deleted_at')
             ->whereNull('seasons.deleted_at')
             ->count();
 
@@ -251,20 +248,17 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             ->select('seasons.competition_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
             ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
             ->whereIn('seasons.competition_id', $competitionIds)
-            ->whereNull('rounds.deleted_at')
             ->whereNull('seasons.deleted_at')
             ->groupBy('seasons.competition_id')
             ->pluck('total', 'competition_id')
             ->toArray();
 
         // Count races for all competitions
-        // Note: races table does not have soft deletes or deleted_at column
         $raceCounts = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
             ->select('seasons.competition_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->join('seasons', 'rounds.season_id', '=', 'seasons.id')
             ->whereIn('seasons.competition_id', $competitionIds)
-            ->whereNull('rounds.deleted_at')
             ->whereNull('seasons.deleted_at')
             ->groupBy('seasons.competition_id')
             ->pluck('total', 'competition_id')

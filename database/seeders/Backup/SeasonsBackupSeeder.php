@@ -9,12 +9,13 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Seasons Backup Seeder
+ * SeasonsBackupSeeder
  *
  * This seeder restores the seasons table data from a backup.
- * Generated: 2025-12-22
+ * Generated: 2026-01-07
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
+ * Dependencies: competitions, users tables must have required records
  */
 class SeasonsBackupSeeder extends Seeder
 {
@@ -38,39 +39,39 @@ class SeasonsBackupSeeder extends Seeder
             [
                 'id' => 4,
                 'competition_id' => 1,
-                'name' => 'Season 1',
-                'slug' => 'season-1',
+                'name' => 'Season 15',
+                'slug' => 'season-15',
                 'car_class' => null,
                 'description' => null,
                 'technical_specs' => null,
                 'logo_path' => null,
                 'banner_path' => null,
                 'team_championship_enabled' => true,
-                'teams_drivers_for_calculation' => null,
-                'teams_drop_rounds' => false,
-                'teams_total_drop_rounds' => null,
+                'teams_drivers_for_calculation' => 6,
+                'teams_drop_rounds' => true,
+                'teams_total_drop_rounds' => 1,
                 'race_divisions_enabled' => true,
                 'race_times_required' => true,
-                'drop_round' => false,
-                'total_drop_rounds' => 0,
+                'drop_round' => true,
+                'total_drop_rounds' => 1,
                 'status' => 'active',
                 'created_by_user_id' => 1,
                 'created_at' => '2025-11-27 11:32:10',
-                'updated_at' => '2025-12-01 13:12:41',
+                'updated_at' => '2026-01-07 01:50:05',
                 'deleted_at' => null,
-            ],
+            ]
         ];
 
-        foreach ($seasons as $seasonData) {
+        foreach ($seasons as $seasonsData) {
             SeasonEloquent::updateOrCreate(
-                ['id' => $seasonData['id']],
-                $seasonData
+                ['id' => $seasonsData['id']],
+                $seasonsData
             );
         }
 
         // Re-enable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $this->command->info('Seasons backup seeded successfully. Total records: ' . count($seasons));
+        $this->command->info('SeasonsBackupSeeder seeded successfully. Total records: ' . count($seasons));
     }
 }

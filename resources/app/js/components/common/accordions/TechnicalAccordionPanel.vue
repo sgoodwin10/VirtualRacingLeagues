@@ -46,17 +46,17 @@ const passthroughOptions = computed(() => ({
 }
 
 .technical-accordion-panel:hover:not(.is-active) {
-  transform: translateX(4px);
+  /* transform: translateX(4px); */
   border-color: var(--accordion-accent-cyan);
 }
 
 .technical-accordion-panel.is-active {
-  border-color: var(--accordion-border-active);
+  /* border-color: var(--accordion-border-active); */
   background-color: var(--accordion-bg-elevated);
 }
 
 .technical-accordion-panel:focus-within {
-  outline: 1px solid var(--accordion-accent-cyan);
+  /* outline: 1px solid var(--accordion-accent-cyan); */
   /* outline-offset: 2px; */
 }
 </style>

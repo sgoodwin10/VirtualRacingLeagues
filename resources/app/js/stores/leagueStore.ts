@@ -63,9 +63,6 @@ export const useLeagueStore = defineStore('league', () => {
   const platformFormFields = ref<PlatformFormField[]>([]);
   const platformCsvHeaders = ref<PlatformCsvHeader[]>([]);
 
-  // Debounce state for checkSlug
-  let checkSlugTimeout: ReturnType<typeof setTimeout> | null = null;
-
   // Getters
   const hasReachedFreeLimit = computed(() => {
     // Free tier allows 1 league
@@ -189,13 +186,13 @@ export const useLeagueStore = defineStore('league', () => {
    * Check if a league slug is available (debounced to reduce API calls)
    * @param name - The league name to check
    * @param leagueId - Optional league ID to exclude from the check (for edit mode)
-   * @param debounceMs - Debounce delay in milliseconds (default: 300ms)
+   * @param signal - Optional AbortSignal to cancel the request
    * @returns SlugCheckResponse with availability status, generated slug, suggestion, and error state
    */
   async function checkSlug(
     name: string,
     leagueId?: number,
-    debounceMs = 300,
+    signal?: AbortSignal,
   ): Promise<{
     available: boolean;
     slug: string;
@@ -206,41 +203,39 @@ export const useLeagueStore = defineStore('league', () => {
       return { available: false, slug: '', suggestion: null };
     }
 
-    // Clear any pending slug check
-    if (checkSlugTimeout) {
-      clearTimeout(checkSlugTimeout);
-      checkSlugTimeout = null;
+    // Check if already aborted
+    if (signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
     }
 
-    // Debounce the slug check
-    return new Promise((resolve) => {
-      checkSlugTimeout = setTimeout(async () => {
-        try {
-          const result = await checkSlugAvailability(name, leagueId);
-          resolve({
-            available: result.available,
-            slug: result.slug,
-            suggestion: result.suggestion,
-          });
-        } catch (err: unknown) {
-          // Differentiate between network errors and validation errors
-          // Network errors should be logged and return unavailable with error state
-          // Validation errors (422) are expected and should be handled gracefully
-          if (err && typeof err === 'object' && 'status' in err) {
-            const errorWithStatus = err as { status: unknown };
-            if (typeof errorWithStatus.status === 'number' && errorWithStatus.status === 422) {
-              // Validation error - expected, don't log as error
-              resolve({ available: false, slug: '', suggestion: null, error: 'validation' });
-              return;
-            }
-          }
+    try {
+      const result = await checkSlugAvailability(name, leagueId, signal);
+      return {
+        available: result.available,
+        slug: result.slug,
+        suggestion: result.suggestion,
+      };
+    } catch (err: unknown) {
+      // Re-throw abort errors immediately
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw err;
+      }
 
-          // Network or server error - log it and return distinct error state
-          logError('Slug check network error', { context: 'leagueStore', data: err });
-          resolve({ available: false, slug: '', suggestion: null, error: 'network' });
+      // Differentiate between network errors and validation errors
+      // Network errors should be logged and return unavailable with error state
+      // Validation errors (422) are expected and should be handled gracefully
+      if (err && typeof err === 'object' && 'status' in err) {
+        const errorWithStatus = err as { status: unknown };
+        if (typeof errorWithStatus.status === 'number' && errorWithStatus.status === 422) {
+          // Validation error - expected, don't log as error
+          return { available: false, slug: '', suggestion: null, error: 'validation' };
         }
-      }, debounceMs);
-    });
+      }
+
+      // Network or server error - log it and return distinct error state
+      logError('Slug check network error', { context: 'leagueStore', data: err });
+      return { available: false, slug: '', suggestion: null, error: 'network' };
+    }
   }
 
   /**

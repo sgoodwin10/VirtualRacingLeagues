@@ -729,8 +729,8 @@ describe('RaceEventResultsSection', () => {
       const wrapper = createWrapper();
 
       const html = wrapper.html();
-      // Check that gray text class exists for Charles Leclerc's null
-      expect(html).toContain('text-gray-600');
+      // Check that text-secondary class exists for null/0 values
+      expect(html).toContain('text-secondary');
     });
   });
 });

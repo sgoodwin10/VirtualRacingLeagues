@@ -208,7 +208,6 @@ describe('ListRow', () => {
     });
 
     expect(wrapper.classes()).toContain('hover:border-[var(--cyan)]');
-    expect(wrapper.classes()).toContain('hover:translate-x-1');
   });
 
   it('removes hover classes when noHover is true', () => {
@@ -222,7 +221,6 @@ describe('ListRow', () => {
     });
 
     expect(wrapper.classes()).not.toContain('hover:border-[var(--cyan)]');
-    expect(wrapper.classes()).not.toContain('hover:translate-x-1');
   });
 
   it('applies ARIA listitem role', () => {

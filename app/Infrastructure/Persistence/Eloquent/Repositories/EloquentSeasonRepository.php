@@ -225,12 +225,10 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             ->toArray();
 
         // Get race counts for all seasons (races through rounds)
-        // Note: races table does not have soft deletes or deleted_at column
         $raceCounts = \Illuminate\Support\Facades\DB::table('races')
             ->select('rounds.season_id', \Illuminate\Support\Facades\DB::raw('COUNT(races.id) as total'))
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->whereIn('rounds.season_id', $seasonIds)
-            ->whereNull('rounds.deleted_at')
             ->groupBy('rounds.season_id')
             ->pluck('total', 'season_id')
             ->toArray();
@@ -301,7 +299,6 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             ->select('rounds.season_id', \Illuminate\Support\Facades\DB::raw('COUNT(races.id) as total'))
             ->join('rounds', 'races.round_id', '=', 'rounds.id')
             ->whereIn('rounds.season_id', $seasonIds)
-            ->whereNull('rounds.deleted_at')
             ->groupBy('rounds.season_id')
             ->pluck('total', 'season_id')
             ->toArray();

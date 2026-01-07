@@ -9,10 +9,8 @@ use App\Infrastructure\Persistence\Eloquent\Models\Division;
 use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SiteConfigFileModel;
-use App\Infrastructure\Persistence\Eloquent\Models\SiteConfigModel;
 use App\Infrastructure\Persistence\Eloquent\Models\Team;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class CleanupLegacyMediaCommand extends Command

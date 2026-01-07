@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Season Form - Sidebar Design</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #faf8f5;
+      --cream-dark: #f0ebe3;
+      --ink: #1a1a1a;
+      --ink-light: #3d3d3d;
+      --ink-muted: #6b6b6b;
+      --racing-red: #c41e3a;
+      --racing-red-light: rgba(196, 30, 58, 0.08);
+      --racing-green: #1e5631;
+      --gold: #b8860b;
+      --gold-light: rgba(184, 134, 11, 0.1);
+      --border-light: rgba(26, 26, 26, 0.1);
+      --border-medium: rgba(26, 26, 26, 0.15);
+      --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    /* Layout */
+    .page-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .main-content {
+      flex: 1;
+      max-width: 720px;
+      padding: 3rem 4rem;
+      margin-right: 360px;
+    }
+
+    .sidebar {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 360px;
+      height: 100vh;
+      background: white;
+      border-left: 1px solid var(--border-medium);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 30px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Header */
+    .page-header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .mode-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.875rem;
+      background: var(--racing-red-light);
+      color: var(--racing-red);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border-radius: 2rem;
+    }
+
+    .mode-pill::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: currentColor;
+      border-radius: 50%;
+    }
+
+    .breadcrumb {
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+    }
+
+    .breadcrumb a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--racing-red);
+    }
+
+    .breadcrumb span {
+      margin: 0 0.5rem;
+      opacity: 0.5;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.75rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .page-subtitle {
+      font-size: 1.1rem;
+      color: var(--ink-muted);
+      font-weight: 400;
+    }
+
+    /* Sections */
+    .form-section {
+      margin-bottom: 3rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--racing-red);
+      opacity: 0.8;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .section-divider {
+      flex: 1;
+      height: 1px;
+      background: var(--border-light);
+      margin-left: 1rem;
+    }
+
+    /* Form Fields */
+    .field-group {
+      margin-bottom: 1.75rem;
+    }
+
+    .field-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-label {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.625rem;
+    }
+
+    .field-label .label-text {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--ink);
+    }
+
+    .field-label .required {
+      color: var(--racing-red);
+      font-size: 0.8rem;
+    }
+
+    .field-label .optional {
+      color: var(--ink-muted);
+      font-size: 0.8rem;
+      font-weight: 400;
+    }
+
+    .field-hint {
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+      margin-top: 0.5rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      background: white;
+      border: 1px solid var(--border-medium);
+      border-radius: 6px;
+      padding: 0.875rem 1rem;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 1rem;
+      color: var(--ink);
+      transition: all 0.2s ease;
+    }
+
+    input[type="text"]:hover,
+    input[type="number"]:hover,
+    textarea:hover,
+    select:hover {
+      border-color: var(--ink-muted);
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--racing-red);
+      box-shadow: 0 0 0 3px var(--racing-red-light);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #aaa;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .slug-preview {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--cream-dark);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    .slug-preview .icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .slug-preview.available .icon {
+      fill: var(--racing-green);
+    }
+
+    .slug-preview .url {
+      color: var(--ink-light);
+    }
+
+    .slug-preview .slug {
+      color: var(--racing-green);
+      font-weight: 500;
+    }
+
+    /* Upload Areas */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .upload-card {
+      background: white;
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .upload-card:hover {
+      border-color: var(--racing-red);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .upload-card.has-file {
+      border-color: var(--racing-green);
+      background: rgba(30, 86, 49, 0.02);
+    }
+
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1rem;
+      opacity: 0.3;
+    }
+
+    .upload-card:hover .upload-icon {
+      opacity: 0.6;
+    }
+
+    .upload-preview {
+      max-width: 100%;
+      max-height: 80px;
+      object-fit: contain;
+      border-radius: 4px;
+      margin-bottom: 0.75rem;
+    }
+
+    .upload-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .upload-hint {
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+    }
+
+    /* Info Card */
+    .info-card {
+      display: flex;
+      gap: 1rem;
+      padding: 1.25rem;
+      background: var(--gold-light);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 6px 6px 0;
+      margin-top: 2rem;
+    }
+
+    .info-card svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--gold);
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+
+    .info-card p {
+      font-size: 0.9rem;
+      color: var(--ink-light);
+      line-height: 1.5;
+    }
+
+    /* Sidebar Styles */
+    .sidebar-header {
+      padding: 1.5rem 1.75rem;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--cream);
+    }
+
+    .sidebar-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .sidebar-subtitle {
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 1.75rem;
+    }
+
+    .sidebar-footer {
+      padding: 1.25rem 1.75rem;
+      border-top: 1px solid var(--border-light);
+      background: white;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    /* Toggle List */
+    .toggle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .toggle-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.875rem;
+      padding: 1rem;
+      background: var(--cream);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .toggle-item:hover {
+      background: var(--cream-dark);
+    }
+
+    .toggle-item.active {
+      background: var(--racing-red-light);
+      border-color: var(--racing-red);
+    }
+
+    .toggle-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-medium);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    .toggle-item.active .toggle-checkbox {
+      background: var(--racing-red);
+      border-color: var(--racing-red);
+    }
+
+    .toggle-checkbox svg {
+      width: 12px;
+      height: 12px;
+      fill: white;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .toggle-item.active .toggle-checkbox svg {
+      opacity: 1;
+    }
+
+    .toggle-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .toggle-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.125rem;
+    }
+
+    .toggle-desc {
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+      line-height: 1.4;
+    }
+
+    /* Nested Panel */
+    .nested-panel {
+      display: none;
+      margin-top: 0.75rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid var(--border-light);
+    }
+
+    .toggle-item.active .nested-panel {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .nested-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.625rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .nested-header svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--racing-red);
+    }
+
+    .nested-header span {
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--racing-red);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .nested-field {
+      margin-bottom: 0.75rem;
+    }
+
+    .nested-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .nested-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.375rem;
+      color: var(--ink-light);
+    }
+
+    .nested-field input,
+    .nested-field select {
+      padding: 0.625rem 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    /* Drag List */
+    .drag-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .drag-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      cursor: grab;
+      transition: all 0.2s ease;
+    }
+
+    .drag-item:hover {
+      border-color: var(--racing-red);
+      background: white;
+    }
+
+    .drag-grip {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      opacity: 0.3;
+    }
+
+    .drag-grip span {
+      width: 14px;
+      height: 2px;
+      background: var(--ink);
+      border-radius: 1px;
+    }
+
+    .drag-rank {
+      width: 22px;
+      height: 22px;
+      background: var(--racing-red);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .drag-name {
+      flex: 1;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    /* Section Label in Sidebar */
+    .sidebar-section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-muted);
+      margin-bottom: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .sidebar-section-label:first-child {
+      margin-top: 0;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.5rem;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink-muted);
+      padding: 0.875rem 1rem;
+    }
+
+    .btn-ghost:hover {
+      background: var(--cream);
+      color: var(--ink);
+    }
+
+    .btn-primary {
+      flex: 1;
+      background: var(--racing-red);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #a91a32;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* Scrollbar */
+    .sidebar-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar-content::-webkit-scrollbar-thumb {
+      background: var(--border-medium);
+      border-radius: 3px;
+    }
+
+    .sidebar-content::-webkit-scrollbar-thumb:hover {
+      background: var(--ink-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .main-content {
+        margin-right: 0;
+        max-width: 100%;
+        padding: 2rem;
+      }
+
+      .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        border-left: none;
+        border-top: 1px solid var(--border-medium);
+      }
+
+      .page-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="page-header">
+        <div class="header-meta">
+          <div class="mode-pill" id="modeBadge">Create Mode</div>
+          <nav class="breadcrumb">
+            <a href="#">Competition</a>
+            <span>/</span>
+            <a href="#">Seasons</a>
+            <span>/</span>
+            <span>New Season</span>
+          </nav>
+        </div>
+        <h1 class="page-title">Configure Your<br>Championship Season</h1>
+        <p class="page-subtitle">Define the identity, rules, and branding for this competitive season</p>
+      </header>
+
+      <!-- Section 1: Identity -->
+      <section class="form-section">
+        <div class="section-header">
+          <span class="section-number">01</span>
+          <h2 class="section-title">Season Identity</h2>
+          <div class="section-divider"></div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span class="label-text">Season Name</span>
+            <span class="required">Required</span>
+          </label>
+          <input type="text" id="seasonName" placeholder="e.g., Season 1, 2024 Winter Championship" oninput="updateSlug()">
+          <div class="slug-preview available" id="slugPreview" style="display: none;">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span class="url">/seasons/</span><span class="slug" id="slugText">season-1</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span class="label-text">Car Class</span>
+            <span class="optional">Optional</span>
+          </label>
+          <input type="text" placeholder="e.g., GT3, Formula 1, LMP1">
+          <p class="field-hint">Specify the car class or category used in this season</p>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span class="label-text">Description</span>
+            <span class="optional">Optional</span>
+          </label>
+          <textarea placeholder="Describe this season, race format, special rules, or any information participants should know..."></textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span class="label-text">Technical Specifications</span>
+            <span class="optional">Optional</span>
+          </label>
+          <textarea placeholder="Car setup rules, performance restrictions, balance of performance settings..."></textarea>
+        </div>
+      </section>
+
+      <!-- Section 2: Branding -->
+      <section class="form-section">
+        <div class="section-header">
+          <span class="section-number">02</span>
+          <h2 class="section-title">Season Branding</h2>
+          <div class="section-divider"></div>
+        </div>
+
+        <div class="upload-grid">
+          <div class="upload-card" onclick="document.getElementById('logoInput').click()">
+            <input type="file" id="logoInput" accept="image/*" hidden onchange="handleUpload(this, 'logoPreview', this.closest('.upload-card'))">
+            <img id="logoPreview" class="upload-preview" style="display: none;">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 16H6c-.55 0-1-.45-1-1V6c0-.55.45-1 1-1h12c.55 0 1 .45 1 1v12c0 .55-.45 1-1 1zm-4.44-6.19l-2.35 3.02-1.56-1.88c-.2-.25-.58-.24-.78.01l-1.74 2.23c-.26.33-.02.81.39.81h8.98c.41 0 .65-.47.4-.8l-2.55-3.39c-.19-.26-.59-.26-.79 0z"/></svg>
+            <div class="upload-title">Season Logo</div>
+            <div class="upload-hint">Square format, 500x500px</div>
+          </div>
+
+          <div class="upload-card" onclick="document.getElementById('bannerInput').click()">
+            <input type="file" id="bannerInput" accept="image/*" hidden onchange="handleUpload(this, 'bannerPreview', this.closest('.upload-card'))">
+            <img id="bannerPreview" class="upload-preview" style="display: none;">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v12H4zm0 14h16v2H4z"/></svg>
+            <div class="upload-title">Season Banner</div>
+            <div class="upload-hint">Wide format, 1920x400px</div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <p>If no custom logo is uploaded, the season will automatically inherit the competition logo. You can update branding assets at any time after creation.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h3 class="sidebar-title">Season Settings</h3>
+        <p class="sidebar-subtitle">Configure rules and championship modes</p>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="sidebar-section-label">Race Rules</div>
+
+        <div class="toggle-list">
+          <div class="toggle-item active" id="raceTimesToggle" onclick="toggleItem('raceTimesToggle')">
+            <div class="toggle-checkbox">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div class="toggle-content">
+              <div class="toggle-label">Require Race Times</div>
+              <div class="toggle-desc">Lap times must be recorded for results</div>
+            </div>
+          </div>
+
+          <div class="toggle-item" id="dropRoundToggle" onclick="toggleItem('dropRoundToggle')">
+            <div class="toggle-checkbox">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div class="toggle-content">
+              <div class="toggle-label">Drop Rounds</div>
+              <div class="toggle-desc">Exclude lowest scoring rounds</div>
+
+              <div class="nested-panel">
+                <div class="nested-header">
+                  <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                  <span>Configuration</span>
+                </div>
+                <div class="nested-field">
+                  <div class="nested-label">Total Drop Rounds</div>
+                  <input type="number" min="0" max="10" value="1">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="toggle-item" id="tiebreakerToggle" onclick="toggleItem('tiebreakerToggle')">
+            <div class="toggle-checkbox">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div class="toggle-content">
+              <div class="toggle-label">Tiebreaker Rules</div>
+              <div class="toggle-desc">Rules for equal championship points</div>
+
+              <div class="nested-panel">
+                <div class="nested-header">
+                  <svg viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg>
+                  <span>Priority Order</span>
+                </div>
+                <div class="drag-list">
+                  <div class="drag-item" draggable="true">
+                    <div class="drag-grip"><span></span><span></span><span></span></div>
+                    <div class="drag-rank">1</div>
+                    <div class="drag-name">Most Wins</div>
+                  </div>
+                  <div class="drag-item" draggable="true">
+                    <div class="drag-grip"><span></span><span></span><span></span></div>
+                    <div class="drag-rank">2</div>
+                    <div class="drag-name">Most Podiums</div>
+                  </div>
+                  <div class="drag-item" draggable="true">
+                    <div class="drag-grip"><span></span><span></span><span></span></div>
+                    <div class="drag-rank">3</div>
+                    <div class="drag-name">Best Result</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-section-label">Championship Modes</div>
+
+        <div class="toggle-list">
+          <div class="toggle-item" id="divisionsToggle" onclick="toggleItem('divisionsToggle')">
+            <div class="toggle-checkbox">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div class="toggle-content">
+              <div class="toggle-label">Division Championship</div>
+              <div class="toggle-desc">Organize into competitive divisions</div>
+            </div>
+          </div>
+
+          <div class="toggle-item" id="teamChampToggle" onclick="toggleItem('teamChampToggle')">
+            <div class="toggle-checkbox">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div class="toggle-content">
+              <div class="toggle-label">Team Championship</div>
+              <div class="toggle-desc">Track team standings</div>
+
+              <div class="nested-panel">
+                <div class="nested-header">
+                  <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3z"/></svg>
+                  <span>Team Settings</span>
+                </div>
+
+                <div class="nested-field">
+                  <div class="nested-label">Drivers for Calculation</div>
+                  <select>
+                    <option value="all">All Drivers</option>
+                    <option value="1">Top 1</option>
+                    <option value="2" selected>Top 2</option>
+                    <option value="3">Top 3</option>
+                  </select>
+                </div>
+
+                <div class="toggle-item" id="teamDropToggle" onclick="event.stopPropagation(); toggleItem('teamDropToggle')" style="margin-top: 0.75rem; padding: 0.75rem; background: var(--cream);">
+                  <div class="toggle-checkbox" style="width: 18px; height: 18px;">
+                    <svg viewBox="0 0 24 24" style="width: 10px; height: 10px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                  </div>
+                  <div class="toggle-content">
+                    <div class="toggle-label" style="font-size: 0.85rem;">Team Drop Rounds</div>
+
+                    <div class="nested-panel" style="margin-top: 0.5rem; padding: 0.75rem;">
+                      <div class="nested-field">
+                        <div class="nested-label">Drop Count</div>
+                        <input type="number" min="0" max="10" value="1">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-primary" onclick="submitForm()">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Create Season
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    function toggleItem(itemId) {
+      const item = document.getElementById(itemId);
+      item.classList.toggle('active');
+    }
+
+    function updateSlug() {
+      const name = document.getElementById('seasonName').value;
+      const slugPreview = document.getElementById('slugPreview');
+      const slugText = document.getElementById('slugText');
+
+      if (name.length >= 3) {
+        slugPreview.style.display = 'flex';
+        slugText.textContent = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      } else {
+        slugPreview.style.display = 'none';
+      }
+    }
+
+    function handleUpload(input, previewId, card) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.getElementById(previewId);
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          card.classList.add('has-file');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function submitForm() {
+      alert('Season created successfully!');
+    }
+  </script>
+</body>
+</html>

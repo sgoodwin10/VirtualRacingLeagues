@@ -8,7 +8,6 @@ use App\Application\Admin\DTOs\CreateAdminData;
 use App\Application\Admin\DTOs\UpdateAdminData;
 use App\Application\Admin\Services\AdminApplicationService;
 use App\Domain\Admin\Exceptions\AdminNotFoundException;
-use App\Domain\Admin\Exceptions\CannotDeleteSelfException;
 use App\Helpers\ApiResponse;
 use App\Helpers\PaginationHelper;
 use App\Http\Controllers\Controller;
@@ -19,7 +18,6 @@ use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentAdminRepository
 use App\Models\Admin;
 use DomainException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 

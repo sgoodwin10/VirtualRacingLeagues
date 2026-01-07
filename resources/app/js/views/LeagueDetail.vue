@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { PhPlus, PhArrowRight } from '@phosphor-icons/vue';
+import { PhPlus, PhArrowRight, PhPencil } from '@phosphor-icons/vue';
 import { Button } from '@app/components/common/buttons';
 import Skeleton from 'primevue/skeleton';
 import Toast from 'primevue/toast';
@@ -11,7 +11,7 @@ import { usePageTitle } from '@app/composables/usePageTitle';
 import { useCompetitionStore } from '@app/stores/competitionStore';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import LeagueIdentityPanel from '@app/components/league/partials/LeagueIdentityPanel.vue';
-import LeagueWizardDrawer from '@app/components/league/modals/LeagueWizardDrawer.vue';
+import EditLeagueModal from '@app/components/league/modals/EditLeagueModal.vue';
 import CompetitionFormDrawer from '@app/components/competition/CompetitionFormDrawer.vue';
 import {
   ListContainer,
@@ -20,8 +20,10 @@ import {
   ListRowStats,
   ListRowStat,
 } from '@app/components/common/lists';
+import ActivityLog from '@app/components/activity/ActivityLog.vue';
 import type { League } from '@app/types/league';
 import type { Season } from '@app/types/season';
+import type { Competition } from '@app/types/competition';
 
 const route = useRoute();
 const router = useRouter();
@@ -35,6 +37,8 @@ const error = ref<string | null>(null);
 const showEditModal = ref(false);
 const showSettingsModal = ref(false);
 const showCompetitionDrawer = ref(false);
+const selectedCompetition = ref<Competition | null>(null);
+const isEditingCompetition = ref(false);
 
 // Get league ID from route params
 const leagueId = computed(() => route.params.id as string);
@@ -117,8 +121,22 @@ async function loadCompetitions(): Promise<void> {
 async function loadSeasons(): Promise<void> {
   try {
     // Fetch seasons for all competitions in this league (in parallel)
+    // Use allSettled to handle partial failures gracefully
     const competitionIds = competitions.value.map((c) => c.id);
-    await Promise.all(competitionIds.map((id) => seasonStore.fetchSeasons(id)));
+    const results = await Promise.allSettled(
+      competitionIds.map((id) => seasonStore.fetchSeasons(id)),
+    );
+
+    // Log any failures for debugging
+    const failures = results.filter((r) => r.status === 'rejected');
+    if (failures.length > 0) {
+      console.warn(`Failed to load seasons for ${failures.length} competition(s)`);
+      failures.forEach((failure) => {
+        if (failure.status === 'rejected') {
+          console.error('Season fetch error:', failure.reason);
+        }
+      });
+    }
   } catch (err: unknown) {
     console.error('Failed to load seasons:', err);
   }
@@ -149,11 +167,21 @@ function handleNewSeason(): void {
 }
 
 function handleAddCompetition(): void {
+  selectedCompetition.value = null;
+  isEditingCompetition.value = false;
+  showCompetitionDrawer.value = true;
+}
+
+function handleEditCompetition(competition: Competition): void {
+  selectedCompetition.value = competition;
+  isEditingCompetition.value = true;
   showCompetitionDrawer.value = true;
 }
 
 function handleCompetitionSaved(): void {
   showCompetitionDrawer.value = false;
+  selectedCompetition.value = null;
+  isEditingCompetition.value = false;
   loadCompetitions();
 }
 
@@ -196,10 +224,35 @@ function getSeasonRoundsProgress(season: Season): string {
   const completed = season.stats?.completed_races || 0;
   return `Round ${completed} of ${total}`;
 }
+
+/**
+ * Generate initials from competition name
+ * e.g., "Thunder Racing League" → "TRL"
+ */
+function getCompetitionInitials(name: string): string {
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) {
+    // Single word: take first 3 characters
+    return words[0].substring(0, 3).toUpperCase();
+  }
+  // Multiple words: take first letter of each word (max 4)
+  return words
+    .slice(0, 4)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
+}
+
+/**
+ * Get competition status class (active/idle)
+ */
+function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' {
+  return competition.stats.active_seasons > 0 ? 'active' : 'idle';
+}
 </script>
 
 <template>
-  <div class="flex">
+  <div class="flex h-full">
     <!-- Loading State -->
     <div v-if="isLoading" class="flex-1 p-6">
       <Skeleton width="100%" height="100vh" />
@@ -333,56 +386,6 @@ function getSeasonRoundsProgress(season: Season): string {
           <!-- Competitions Section -->
           <section class="mb-8">
             <ListSectionHeader title="Competitions" class="mb-4" />
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              <!-- Competition Tiles -->
-              <div
-                v-for="competition in competitions"
-                :key="competition.id"
-                class="flex flex-col items-center p-5 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] cursor-pointer transition-all duration-200 hover:border-[var(--cyan)] hover:bg-[var(--bg-elevated)] hover:-translate-y-0.5"
-                @click="
-                  toast.add({
-                    severity: 'info',
-                    summary: 'Coming Soon',
-                    detail: 'Competition details will be available soon',
-                    life: 3000,
-                  })
-                "
-              >
-                <!-- Competition Icon/Logo -->
-                <div
-                  class="w-12 h-12 rounded-[var(--radius)] flex items-center justify-center mb-3"
-                  :style="{
-                    backgroundColor: 'var(--cyan-dim)',
-                    color: 'var(--cyan)',
-                  }"
-                >
-                  <i class="pi pi-trophy" style="font-size: 24px"></i>
-                </div>
-                <!-- Competition Name -->
-                <span
-                  class="font-mono text-[11px] font-semibold text-[var(--text-primary)] text-center"
-                >
-                  {{ competition.name }}
-                </span>
-              </div>
-
-              <!-- Add Competition Tile -->
-              <div
-                class="flex flex-col items-center p-5 bg-[var(--bg-card)] border border-[var(--border)] border-dashed rounded-[var(--radius)] cursor-pointer transition-all duration-200 hover:border-[var(--cyan)] hover:bg-[var(--bg-elevated)] hover:-translate-y-0.5"
-                @click="handleAddCompetition"
-              >
-                <div
-                  class="w-12 h-12 rounded-[var(--radius)] flex items-center justify-center mb-3 bg-[var(--green-dim)] text-[var(--green)]"
-                >
-                  <PhPlus :size="24" />
-                </div>
-                <span
-                  class="font-mono text-[11px] font-semibold text-[var(--text-primary)] text-center"
-                >
-                  Add Competition
-                </span>
-              </div>
-            </div>
 
             <!-- Empty state for competitions -->
             <div
@@ -402,27 +405,95 @@ function getSeasonRoundsProgress(season: Season): string {
                 @click="handleAddCompetition"
               />
             </div>
+
+            <!-- Competition Cards Grid -->
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <!-- Competition Card -->
+              <article
+                v-for="competition in competitions"
+                :key="competition.id"
+                class="competition-card"
+              >
+                <div class="card-top">
+                  <div class="card-indicator" :class="getCompetitionStatusClass(competition)"></div>
+                  <div class="card-header">
+                    <div class="card-logo">
+                      {{ getCompetitionInitials(competition.name) }}
+                    </div>
+                    <div class="card-info">
+                      <h3 class="card-name">{{ competition.name }}</h3>
+                      <div class="card-meta">
+                        <span class="card-platform">{{ competition.platform_name }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-body">
+                  <p class="card-tagline">
+                    {{ competition.description || 'No description provided yet.' }}
+                  </p>
+                  <div class="card-stats">
+                    <div class="card-stat">
+                      <span class="card-stat-value">{{ competition.stats.total_seasons }}</span>
+                      <span class="card-stat-label">Seasons</span>
+                    </div>
+                    <div class="card-stat">
+                      <span class="card-stat-value">{{ competition.stats.total_drivers }}</span>
+                      <span class="card-stat-label">Drivers</span>
+                    </div>
+                    <div class="card-stat">
+                      <span class="card-stat-value">{{ competition.stats.active_seasons }}</span>
+                      <span class="card-stat-label">Active</span>
+                    </div>
+                    <div class="card-stat">
+                      <span class="card-stat-value">{{ competition.stats.total_races }}</span>
+                      <span class="card-stat-label">Races</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-footer">
+                  <span
+                    class="status-badge"
+                    :class="competition.status === 'active' ? 'active' : 'archived'"
+                  >
+                    {{ competition.status }}
+                  </span>
+                  <button
+                    class="card-action"
+                    :aria-label="`Edit ${competition.name}`"
+                    @click="handleEditCompetition(competition)"
+                  >
+                    <PhPencil :size="14" />
+                  </button>
+                </div>
+              </article>
+
+              <!-- Add Competition Card -->
+              <article class="competition-card add-card" @click="handleAddCompetition">
+                <div class="add-card-content">
+                  <div class="add-card-icon">
+                    <PhPlus :size="32" />
+                  </div>
+                  <h3 class="add-card-title">Add Competition</h3>
+                  <p class="add-card-text">Create a new competition to organize your seasons</p>
+                </div>
+              </article>
+            </div>
           </section>
 
-          <!-- Recent Activity Section (Placeholder) -->
+          <!-- Recent Activity Section -->
           <section class="mb-8">
-            <ListSectionHeader title="Recent Activity" class="mb-4" />
-            <div
-              class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-8 text-center"
-            >
-              <i class="pi pi-clock text-4xl text-[var(--text-muted)] opacity-30 mb-4"></i>
-              <p class="text-[var(--text-secondary)]">Coming in Version 3</p>
-              <p class="text-[var(--text-muted)] text-sm mt-1">
-                Activity feed will show recent updates, results, and changes
-              </p>
-            </div>
+            <ListSectionHeader title="Activity Logs" class="mb-4" />
+            <ActivityLog :league-id="leagueIdNumber" :limit="10" :compact="true" />
           </section>
         </div>
       </main>
     </template>
 
     <!-- Edit League Modal -->
-    <LeagueWizardDrawer
+    <EditLeagueModal
       v-if="league"
       v-model:visible="showEditModal"
       :is-edit-mode="true"
@@ -431,7 +502,7 @@ function getSeasonRoundsProgress(season: Season): string {
     />
 
     <!-- Settings Modal (same as Edit for now) -->
-    <LeagueWizardDrawer
+    <EditLeagueModal
       v-if="league"
       v-model:visible="showSettingsModal"
       :is-edit-mode="true"
@@ -444,6 +515,8 @@ function getSeasonRoundsProgress(season: Season): string {
       v-if="league"
       v-model:visible="showCompetitionDrawer"
       :league-id="leagueIdNumber"
+      :competition="selectedCompetition"
+      :is-edit-mode="isEditingCompetition"
       @competition-saved="handleCompetitionSaved"
     />
 
@@ -458,5 +531,256 @@ function getSeasonRoundsProgress(season: Season): string {
   .flex {
     flex-direction: column;
   }
+}
+
+/* Competition Card Styles */
+.competition-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.competition-card:not(.add-card):hover {
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Card Top Section */
+.card-top {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.card-indicator {
+  width: 4px;
+  flex-shrink: 0;
+}
+
+.card-indicator.active {
+  background: var(--green);
+}
+
+.card-indicator.idle {
+  background: var(--cyan);
+}
+
+.card-header {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+}
+
+.card-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
+.card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-platform {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Card Body */
+.card-body {
+  padding: 14px 16px;
+  flex: 1;
+}
+
+.card-tagline {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.8em; /* Reserve space for 2 lines */
+}
+
+.card-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.card-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-stat-value {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-stat-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Card Footer */
+.card-footer {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-muted);
+  align-items: center;
+}
+
+.status-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  padding: 4px 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-muted);
+  border-radius: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-badge.active {
+  color: var(--green);
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.status-badge.archived {
+  color: var(--text-muted);
+  border-color: var(--border-muted);
+}
+
+.card-action {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.card-action:hover {
+  background: var(--cyan);
+  color: var(--bg-dark);
+}
+
+/* Add Competition Card */
+.add-card {
+  border: 2px dashed var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+}
+
+.add-card:hover {
+  border-color: var(--green);
+  background: var(--bg-elevated);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.add-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.add-card-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: var(--green-dim);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.add-card:hover .add-card-icon {
+  background: var(--green);
+  color: var(--bg-dark);
+}
+
+.add-card-title {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.add-card-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+  max-width: 200px;
 }
 </style>

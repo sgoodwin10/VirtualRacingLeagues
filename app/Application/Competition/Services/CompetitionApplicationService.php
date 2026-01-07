@@ -20,7 +20,6 @@ use App\Domain\Competition\ValueObjects\CompetitionSlug;
 use App\Domain\League\Exceptions\InvalidPlatformException;
 use App\Domain\League\Exceptions\LeagueNotFoundException;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
-use App\Domain\Platform\Exceptions\PlatformNotFoundException;
 use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionEloquent;

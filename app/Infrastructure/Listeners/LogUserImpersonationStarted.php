@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Infrastructure\Listeners;
 
 use App\Domain\Admin\Events\UserImpersonationStarted;
-use Spatie\Activitylog\Models\Activity;
 
 /**
  * Listener for UserImpersonationStarted event.

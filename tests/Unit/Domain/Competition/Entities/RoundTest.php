@@ -98,7 +98,6 @@ final class RoundTest extends TestCase
             createdByUserId: 1,
             createdAt: new DateTimeImmutable('2025-01-01 00:00:00'),
             updatedAt: new DateTimeImmutable('2025-01-02 00:00:00'),
-            deletedAt: null,
         );
 
         $this->assertEquals(1, $round->id());
@@ -209,7 +208,6 @@ final class RoundTest extends TestCase
 
         $round->delete();
 
-        $this->assertNotNull($round->deletedAt());
         $this->assertTrue($round->hasEvents());
 
         $events = $round->releaseEvents();

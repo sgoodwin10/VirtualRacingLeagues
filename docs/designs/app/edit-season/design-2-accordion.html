@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Season Form - Accordion Design</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --concrete: #e8e4df;
+      --concrete-dark: #d4cfc8;
+      --concrete-light: #f5f3f0;
+      --steel: #2d2d2d;
+      --steel-light: #4a4a4a;
+      --rust: #c45c26;
+      --rust-glow: rgba(196, 92, 38, 0.15);
+      --caution: #f4b942;
+      --success-green: #2d8a4e;
+      --error-red: #c73e3a;
+      --shadow-hard: 4px 4px 0 var(--steel);
+      --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Archivo', sans-serif;
+      background: var(--concrete);
+      color: var(--steel);
+      min-height: 100vh;
+      padding: 2rem;
+      background-image:
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .form-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .form-header {
+      background: var(--steel);
+      color: white;
+      padding: 2rem 2.5rem;
+      margin-bottom: 2rem;
+      position: relative;
+      box-shadow: var(--shadow-hard);
+    }
+
+    .form-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--caution) 0px,
+        var(--caution) 20px,
+        var(--steel) 20px,
+        var(--steel) 40px
+      );
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--rust);
+      padding: 0.5rem 1rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .form-header h1 {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 2.5rem;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+
+    .form-header p {
+      font-size: 1rem;
+      opacity: 0.7;
+      margin-top: 0.5rem;
+    }
+
+    /* Progress Bar */
+    .progress-track {
+      background: rgba(255, 255, 255, 0.1);
+      height: 6px;
+      margin-top: 1.5rem;
+      position: relative;
+    }
+
+    .progress-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: var(--caution);
+      width: 25%;
+      transition: width 0.4s ease;
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      opacity: 0.6;
+    }
+
+    /* Accordion */
+    .accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .accordion-section {
+      background: var(--concrete-light);
+      border: 3px solid var(--steel);
+      margin-bottom: -3px;
+      transition: all 0.2s ease;
+    }
+
+    .accordion-section:first-child {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+
+    .accordion-section.expanded {
+      box-shadow: var(--shadow-hard);
+      transform: translateX(-4px);
+      z-index: 10;
+      position: relative;
+    }
+
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s ease;
+    }
+
+    .accordion-header:hover {
+      background: var(--concrete-dark);
+    }
+
+    .accordion-section.expanded .accordion-header {
+      background: var(--steel);
+      color: white;
+    }
+
+    .section-number {
+      width: 36px;
+      height: 36px;
+      background: var(--steel);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .accordion-section.expanded .section-number {
+      background: var(--rust);
+    }
+
+    .accordion-section.completed .section-number {
+      background: var(--success-green);
+    }
+
+    .section-info {
+      flex: 1;
+    }
+
+    .section-title {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .section-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.6;
+      margin-top: 0.125rem;
+    }
+
+    .section-status {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      background: var(--concrete-dark);
+      border: 1px solid var(--steel-light);
+    }
+
+    .accordion-section.completed .section-status {
+      background: var(--success-green);
+      color: white;
+      border-color: var(--success-green);
+    }
+
+    .accordion-section.expanded .section-status {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .accordion-icon {
+      width: 24px;
+      height: 24px;
+      position: relative;
+    }
+
+    .accordion-icon::before,
+    .accordion-icon::after {
+      content: '';
+      position: absolute;
+      background: currentColor;
+      transition: transform 0.3s ease;
+    }
+
+    .accordion-icon::before {
+      width: 100%;
+      height: 3px;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+    }
+
+    .accordion-icon::after {
+      width: 3px;
+      height: 100%;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+    }
+
+    .accordion-section.expanded .accordion-icon::after {
+      transform: translateX(-50%) rotate(90deg);
+    }
+
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .accordion-section.expanded .accordion-content {
+      max-height: 1500px;
+    }
+
+    .accordion-body {
+      padding: 2rem;
+      border-top: 3px solid var(--steel);
+    }
+
+    /* Form Elements */
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-row.single {
+      grid-template-columns: 1fr;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .field-label .required {
+      color: var(--rust);
+      font-weight: 400;
+    }
+
+    .field-label .optional {
+      color: var(--steel-light);
+      font-weight: 400;
+      font-size: 0.65rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      background: white;
+      border: 3px solid var(--steel);
+      padding: 0.875rem 1rem;
+      font-family: 'Archivo', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--steel);
+      transition: all 0.2s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--rust);
+      box-shadow: 4px 4px 0 var(--rust-glow);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #999;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .slug-display {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: white;
+      border: 2px dashed var(--steel-light);
+      margin-top: 0.5rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    .slug-display.available {
+      border-color: var(--success-green);
+      background: rgba(45, 138, 78, 0.05);
+    }
+
+    .slug-display .icon {
+      width: 20px;
+      height: 20px;
+      fill: var(--success-green);
+    }
+
+    /* Toggle Cards */
+    .toggle-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .toggle-card {
+      background: white;
+      border: 3px solid var(--steel);
+      padding: 1.25rem;
+      display: flex;
+      gap: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-card:hover {
+      background: var(--concrete);
+    }
+
+    .toggle-card.active {
+      border-color: var(--rust);
+      box-shadow: 4px 4px 0 var(--rust);
+    }
+
+    .toggle-checkbox {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--steel);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-card.active .toggle-checkbox {
+      background: var(--rust);
+      border-color: var(--rust);
+    }
+
+    .toggle-checkbox svg {
+      width: 16px;
+      height: 16px;
+      fill: white;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .toggle-card.active .toggle-checkbox svg {
+      opacity: 1;
+    }
+
+    .toggle-info {
+      flex: 1;
+    }
+
+    .toggle-title {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .toggle-description {
+      font-size: 0.85rem;
+      color: var(--steel-light);
+      line-height: 1.4;
+    }
+
+    /* Nested Config */
+    .nested-config {
+      display: none;
+      margin-top: 1rem;
+      padding: 1.25rem;
+      background: var(--concrete);
+      border-left: 4px solid var(--rust);
+    }
+
+    .toggle-card.active .nested-config {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .nested-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--steel);
+    }
+
+    .nested-header svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--rust);
+    }
+
+    .nested-header span {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Drag List */
+    .drag-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .drag-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: white;
+      border: 2px solid var(--steel);
+      padding: 1rem;
+      cursor: grab;
+      transition: all 0.2s ease;
+    }
+
+    .drag-item:hover {
+      transform: translateX(4px);
+      box-shadow: 4px 4px 0 var(--steel);
+    }
+
+    .drag-item:active {
+      cursor: grabbing;
+    }
+
+    .drag-grip {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      opacity: 0.4;
+    }
+
+    .drag-grip span {
+      width: 20px;
+      height: 2px;
+      background: var(--steel);
+    }
+
+    .drag-rank {
+      width: 32px;
+      height: 32px;
+      background: var(--caution);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 1rem;
+      color: var(--steel);
+      flex-shrink: 0;
+    }
+
+    .drag-content {
+      flex: 1;
+    }
+
+    .drag-name {
+      font-weight: 700;
+    }
+
+    .drag-desc {
+      font-size: 0.8rem;
+      color: var(--steel-light);
+      margin-top: 0.125rem;
+    }
+
+    /* Upload Areas */
+    .upload-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .upload-zone {
+      border: 3px dashed var(--steel);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--rust);
+      background: var(--rust-glow);
+    }
+
+    .upload-zone.has-file {
+      border-style: solid;
+      border-color: var(--success-green);
+    }
+
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1rem;
+      fill: var(--steel-light);
+    }
+
+    .upload-zone:hover .upload-icon {
+      fill: var(--rust);
+    }
+
+    .upload-label {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .upload-hint {
+      font-size: 0.8rem;
+      color: var(--steel-light);
+    }
+
+    .upload-preview {
+      max-width: 100%;
+      max-height: 100px;
+      object-fit: contain;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Info Box */
+    .info-box {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--caution);
+      border-left: 4px solid var(--steel);
+      margin-top: 1.5rem;
+    }
+
+    .info-box svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--steel);
+      flex-shrink: 0;
+    }
+
+    .info-box p {
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    .form-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 3px solid var(--steel);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.75rem;
+      font-family: 'Archivo', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 3px solid var(--steel);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--steel);
+    }
+
+    .btn-ghost:hover {
+      background: var(--steel);
+      color: white;
+    }
+
+    .btn-primary {
+      background: var(--rust);
+      color: white;
+      border-color: var(--rust);
+      box-shadow: 4px 4px 0 var(--steel);
+    }
+
+    .btn-primary:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 var(--steel);
+    }
+
+    .btn-primary:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--steel);
+    }
+
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .upload-row {
+        grid-template-columns: 1fr;
+      }
+
+      .form-header h1 {
+        font-size: 1.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <!-- Header -->
+    <div class="form-header">
+      <div class="header-top">
+        <div>
+          <h1>Season<br>Configuration</h1>
+          <p>Configure all aspects of your championship season</p>
+        </div>
+        <div class="header-badge">
+          <span id="modeBadge">Create Mode</span>
+        </div>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-labels">
+        <span>Start</span>
+        <span id="progressText">25% Complete</span>
+        <span>Finish</span>
+      </div>
+    </div>
+
+    <!-- Accordion -->
+    <div class="accordion">
+      <!-- Section 1: Identity -->
+      <div class="accordion-section expanded" data-section="1">
+        <div class="accordion-header" onclick="toggleSection(1)">
+          <div class="section-number">01</div>
+          <div class="section-info">
+            <div class="section-title">Season Identity</div>
+            <div class="section-subtitle">Name, description, and classification</div>
+          </div>
+          <div class="section-status">In Progress</div>
+          <div class="accordion-icon"></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            <div class="form-row">
+              <div class="field-group">
+                <label class="field-label">Season Name <span class="required">*Required</span></label>
+                <input type="text" id="seasonName" placeholder="e.g., Season 1, 2024 Winter Championship" oninput="updateSlug()">
+                <div class="slug-display available" id="slugDisplay" style="display: none;">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                  <span>/seasons/<span id="slugText">season-1</span></span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Car Class <span class="optional">(Optional)</span></label>
+                <input type="text" placeholder="e.g., GT3, Formula 1, LMP1">
+              </div>
+            </div>
+
+            <div class="form-row single">
+              <div class="field-group">
+                <label class="field-label">Description <span class="optional">(Optional)</span></label>
+                <textarea placeholder="Describe this season, race format, rules..."></textarea>
+              </div>
+            </div>
+
+            <div class="form-row single">
+              <div class="field-group">
+                <label class="field-label">Technical Specifications <span class="optional">(Optional)</span></label>
+                <textarea placeholder="Car setup rules, performance restrictions, balance of performance..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Race Rules -->
+      <div class="accordion-section" data-section="2">
+        <div class="accordion-header" onclick="toggleSection(2)">
+          <div class="section-number">02</div>
+          <div class="section-info">
+            <div class="section-title">Race Rules</div>
+            <div class="section-subtitle">Timing, scoring, and tiebreaker settings</div>
+          </div>
+          <div class="section-status">Pending</div>
+          <div class="accordion-icon"></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            <div class="toggle-cards">
+              <div class="toggle-card active" id="raceTimesCard" onclick="toggleCard('raceTimesCard')">
+                <div class="toggle-checkbox">
+                  <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+                <div class="toggle-info">
+                  <div class="toggle-title">Require Race Times</div>
+                  <div class="toggle-description">Lap times must be recorded for all race results</div>
+                </div>
+              </div>
+
+              <div class="toggle-card" id="dropRoundCard" onclick="toggleCard('dropRoundCard')">
+                <div class="toggle-checkbox">
+                  <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+                <div class="toggle-info">
+                  <div class="toggle-title">Enable Drop Rounds</div>
+                  <div class="toggle-description">Exclude lowest scoring rounds from final championship standings</div>
+
+                  <div class="nested-config">
+                    <div class="nested-header">
+                      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                      <span>Drop Configuration</span>
+                    </div>
+                    <div class="field-group">
+                      <label class="field-label">Total Drop Rounds</label>
+                      <input type="number" min="0" max="10" value="1" style="max-width: 150px;">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="toggle-card" id="tiebreakerCard" onclick="toggleCard('tiebreakerCard')">
+                <div class="toggle-checkbox">
+                  <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+                <div class="toggle-info">
+                  <div class="toggle-title">Enable Tiebreaker Rules</div>
+                  <div class="toggle-description">Apply tiebreaker rules when drivers have equal championship points</div>
+
+                  <div class="nested-config">
+                    <div class="nested-header">
+                      <svg viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg>
+                      <span>Rule Priority Order</span>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--steel-light); margin-bottom: 1rem;">Drag to reorder priority. Applied top to bottom.</p>
+                    <div class="drag-list">
+                      <div class="drag-item" draggable="true">
+                        <div class="drag-grip"><span></span><span></span><span></span></div>
+                        <div class="drag-rank">1</div>
+                        <div class="drag-content">
+                          <div class="drag-name">Most Wins</div>
+                          <div class="drag-desc">Driver with more race wins ranks higher</div>
+                        </div>
+                      </div>
+                      <div class="drag-item" draggable="true">
+                        <div class="drag-grip"><span></span><span></span><span></span></div>
+                        <div class="drag-rank">2</div>
+                        <div class="drag-content">
+                          <div class="drag-name">Most Podiums</div>
+                          <div class="drag-desc">Driver with more podium finishes ranks higher</div>
+                        </div>
+                      </div>
+                      <div class="drag-item" draggable="true">
+                        <div class="drag-grip"><span></span><span></span><span></span></div>
+                        <div class="drag-rank">3</div>
+                        <div class="drag-content">
+                          <div class="drag-name">Best Race Result</div>
+                          <div class="drag-desc">Driver with better individual result ranks higher</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Championships -->
+      <div class="accordion-section" data-section="3">
+        <div class="accordion-header" onclick="toggleSection(3)">
+          <div class="section-number">03</div>
+          <div class="section-info">
+            <div class="section-title">Championship Modes</div>
+            <div class="section-subtitle">Division and team championship settings</div>
+          </div>
+          <div class="section-status">Pending</div>
+          <div class="accordion-icon"></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            <div class="toggle-cards">
+              <div class="toggle-card" id="divisionsCard" onclick="toggleCard('divisionsCard')">
+                <div class="toggle-checkbox">
+                  <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+                <div class="toggle-info">
+                  <div class="toggle-title">Division Championship</div>
+                  <div class="toggle-description">Organize drivers into competitive divisions for balanced racing</div>
+                </div>
+              </div>
+
+              <div class="toggle-card" id="teamChampCard" onclick="toggleCard('teamChampCard')">
+                <div class="toggle-checkbox">
+                  <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+                <div class="toggle-info">
+                  <div class="toggle-title">Team Championship</div>
+                  <div class="toggle-description">Track team standings alongside individual driver championship</div>
+
+                  <div class="nested-config">
+                    <div class="nested-header">
+                      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                      <span>Team Settings</span>
+                    </div>
+
+                    <div class="form-row" style="margin-bottom: 1rem;">
+                      <div class="field-group">
+                        <label class="field-label">Drivers for Team Calculation</label>
+                        <select>
+                          <option value="all">All Drivers</option>
+                          <option value="1">Top 1 Driver</option>
+                          <option value="2" selected>Top 2 Drivers</option>
+                          <option value="3">Top 3 Drivers</option>
+                          <option value="4">Top 4 Drivers</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="toggle-card" id="teamDropCard" onclick="event.stopPropagation(); toggleCard('teamDropCard')" style="margin: 0; padding: 1rem;">
+                      <div class="toggle-checkbox" style="width: 24px; height: 24px;">
+                        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                      </div>
+                      <div class="toggle-info">
+                        <div class="toggle-title" style="font-size: 0.9rem;">Team Drop Rounds</div>
+                        <div class="toggle-description" style="font-size: 0.8rem;">Exclude lowest rounds from team standings</div>
+
+                        <div class="nested-config" style="margin-top: 0.75rem; padding: 1rem;">
+                          <div class="field-group">
+                            <label class="field-label">Team Drop Rounds</label>
+                            <input type="number" min="0" max="10" value="1" style="max-width: 150px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Branding -->
+      <div class="accordion-section" data-section="4">
+        <div class="accordion-header" onclick="toggleSection(4)">
+          <div class="section-number">04</div>
+          <div class="section-info">
+            <div class="section-title">Season Branding</div>
+            <div class="section-subtitle">Custom logo and banner images</div>
+          </div>
+          <div class="section-status">Pending</div>
+          <div class="accordion-icon"></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            <div class="upload-row">
+              <div class="upload-zone" onclick="document.getElementById('logoInput').click()">
+                <input type="file" id="logoInput" accept="image/*" hidden onchange="handleUpload(this, 'logoPreview', this.closest('.upload-zone'))">
+                <img id="logoPreview" class="upload-preview" style="display: none;">
+                <svg class="upload-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 16H6c-.55 0-1-.45-1-1V6c0-.55.45-1 1-1h12c.55 0 1 .45 1 1v12c0 .55-.45 1-1 1zm-4.44-6.19l-2.35 3.02-1.56-1.88c-.2-.25-.58-.24-.78.01l-1.74 2.23c-.26.33-.02.81.39.81h8.98c.41 0 .65-.47.4-.8l-2.55-3.39c-.19-.26-.59-.26-.79 0z"/></svg>
+                <div class="upload-label">Season Logo</div>
+                <div class="upload-hint">Square, 500x500px recommended</div>
+              </div>
+
+              <div class="upload-zone" onclick="document.getElementById('bannerInput').click()">
+                <input type="file" id="bannerInput" accept="image/*" hidden onchange="handleUpload(this, 'bannerPreview', this.closest('.upload-zone'))">
+                <img id="bannerPreview" class="upload-preview" style="display: none;">
+                <svg class="upload-icon" viewBox="0 0 24 24"><path d="M4 4h16v12H4zm0 14h16v2H4z"/></svg>
+                <div class="upload-label">Season Banner</div>
+                <div class="upload-hint">Wide format, 1920x400px recommended</div>
+              </div>
+            </div>
+
+            <div class="info-box">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+              <p><strong>Note:</strong> If no custom logo is uploaded, the season will inherit the competition logo. You can update branding at any time.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="form-footer">
+      <button class="btn btn-ghost">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        Cancel
+      </button>
+      <button class="btn btn-primary" onclick="submitForm()">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        Create Season
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let expandedSections = [1];
+    let completedSections = [];
+
+    function toggleSection(sectionNum) {
+      const section = document.querySelector(`[data-section="${sectionNum}"]`);
+      const isExpanded = section.classList.contains('expanded');
+
+      // Close all sections
+      document.querySelectorAll('.accordion-section').forEach(s => {
+        s.classList.remove('expanded');
+      });
+
+      // Toggle clicked section
+      if (!isExpanded) {
+        section.classList.add('expanded');
+        expandedSections = [sectionNum];
+      } else {
+        expandedSections = [];
+      }
+
+      updateProgress();
+    }
+
+    function toggleCard(cardId) {
+      const card = document.getElementById(cardId);
+      card.classList.toggle('active');
+    }
+
+    function updateSlug() {
+      const name = document.getElementById('seasonName').value;
+      const slugDisplay = document.getElementById('slugDisplay');
+      const slugText = document.getElementById('slugText');
+
+      if (name.length >= 3) {
+        slugDisplay.style.display = 'flex';
+        slugText.textContent = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      } else {
+        slugDisplay.style.display = 'none';
+      }
+    }
+
+    function updateProgress() {
+      const totalSections = 4;
+      const completed = completedSections.length;
+      const inProgress = expandedSections.length;
+
+      let progress = (completed / totalSections) * 100;
+      if (inProgress > 0 && !completedSections.includes(expandedSections[0])) {
+        progress += 25 / 2;
+      }
+
+      document.getElementById('progressFill').style.width = progress + '%';
+      document.getElementById('progressText').textContent = Math.round(progress) + '% Complete';
+    }
+
+    function handleUpload(input, previewId, zone) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.getElementById(previewId);
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          zone.classList.add('has-file');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function submitForm() {
+      alert('Season created successfully!');
+    }
+
+    // Initialize progress
+    updateProgress();
+  </script>
+</body>
+</html>

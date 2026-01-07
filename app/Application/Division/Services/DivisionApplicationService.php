@@ -20,9 +20,14 @@ use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\Division\ValueObjects\DivisionDescription;
 use App\Domain\Division\ValueObjects\DivisionName;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
+use App\Infrastructure\Persistence\Eloquent\Models\Division as DivisionEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -53,6 +58,7 @@ final class DivisionApplicationService
         private readonly SeasonRepositoryInterface $seasonRepository,
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
+        private readonly \App\Application\Activity\Services\LeagueActivityLogService $activityLogService,
     ) {
     }
 
@@ -107,6 +113,9 @@ final class DivisionApplicationService
             // Dispatch domain events
             $this->dispatchEvents($division);
 
+            // Log activity
+            $this->logDivisionCreated($division->id());
+
             return DivisionData::fromEntity($division);
         });
     }
@@ -137,7 +146,11 @@ final class DivisionApplicationService
         // Store old logo path for cleanup AFTER successful transaction
         $oldLogoPath = $division->logoUrl();
 
-        return DB::transaction(function () use ($divisionId, $data, $oldLogoPath) {
+        // Capture original data for change tracking BEFORE transaction
+        $originalName = $division->name()->value();
+        $originalDescription = $division->description()->value();
+
+        return DB::transaction(function () use ($divisionId, $data, $oldLogoPath, $originalName, $originalDescription) {
             // Re-fetch division inside transaction for consistency
             $division = $this->divisionRepository->findById($divisionId);
 
@@ -172,6 +185,25 @@ final class DivisionApplicationService
                 Storage::disk('public')->delete($oldLogoPath);
             }
 
+            // Log activity with changes
+            $newName = $division->name()->value();
+            $newDescription = $division->description()->value();
+
+            $changes = [];
+            if ($originalName !== $newName) {
+                $changes['name'] = ['old' => $originalName, 'new' => $newName];
+            }
+            if ($originalDescription !== $newDescription) {
+                $changes['description'] = ['old' => $originalDescription, 'new' => $newDescription];
+            }
+            if ($logoPath !== null) {
+                $changes['logo'] = ['old' => $oldLogoPath, 'new' => $logoPath];
+            }
+
+            if (!empty($changes)) {
+                $this->logDivisionUpdated($divisionId, ['old' => $changes, 'new' => []]);
+            }
+
             return DivisionData::fromEntity($division);
         });
     }
@@ -204,6 +236,9 @@ final class DivisionApplicationService
 
             // Dispatch domain events
             $this->dispatchEvents($division);
+
+            // Log activity BEFORE deletion
+            $this->logDivisionDeleted($divisionId);
 
             // Perform hard delete (this will cascade to season_drivers.division_id)
             $this->divisionRepository->delete($division);
@@ -343,6 +378,9 @@ final class DivisionApplicationService
             foreach ($divisions as $division) {
                 $this->dispatchEvents($division);
             }
+
+            // Log activity
+            $this->logDivisionsReordered($seasonId);
 
             // Fetch updated divisions and return
             $updatedDivisions = $this->divisionRepository->findBySeasonId($seasonId);
@@ -520,6 +558,95 @@ final class DivisionApplicationService
             throw new \InvalidArgumentException(
                 "Logo file size exceeds maximum allowed size of {$maxSizeMb}MB. Got: {$fileSizeMb}MB"
             );
+        }
+    }
+
+    /**
+     * Log division created activity.
+     *
+     * @param int|null $divisionId
+     */
+    private function logDivisionCreated(?int $divisionId): void
+    {
+        if ($divisionId === null) {
+            return;
+        }
+
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $division = DivisionEloquent::findOrFail($divisionId);
+                $this->activityLogService->logDivisionCreated($user, $division);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log division creation activity', [
+                'error' => $e->getMessage(),
+                'division_id' => $divisionId,
+            ]);
+        }
+    }
+
+    /**
+     * Log division updated activity.
+     *
+     * @param int $divisionId
+     * @param array<string, mixed> $changes
+     */
+    private function logDivisionUpdated(int $divisionId, array $changes): void
+    {
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $division = DivisionEloquent::findOrFail($divisionId);
+                $this->activityLogService->logDivisionUpdated($user, $division, $changes);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log division update activity', [
+                'error' => $e->getMessage(),
+                'division_id' => $divisionId,
+            ]);
+        }
+    }
+
+    /**
+     * Log division deleted activity.
+     *
+     * @param int $divisionId
+     */
+    private function logDivisionDeleted(int $divisionId): void
+    {
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $division = DivisionEloquent::findOrFail($divisionId);
+                $this->activityLogService->logDivisionDeleted($user, $division);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log division deletion activity', [
+                'error' => $e->getMessage(),
+                'division_id' => $divisionId,
+            ]);
+        }
+    }
+
+    /**
+     * Log divisions reordered activity.
+     *
+     * @param int $seasonId
+     */
+    private function logDivisionsReordered(int $seasonId): void
+    {
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $season = SeasonEloquent::findOrFail($seasonId);
+                $this->activityLogService->logDivisionsReordered($user, $season);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log division reorder activity', [
+                'error' => $e->getMessage(),
+                'season_id' => $seasonId,
+            ]);
         }
     }
 }

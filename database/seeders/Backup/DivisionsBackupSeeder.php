@@ -9,10 +9,10 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Divisions Backup Seeder
+ * DivisionsBackupSeeder
  *
  * This seeder restores the divisions table data from a backup.
- * Generated: 2025-12-22
+ * Generated: 2026-01-07
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
  * Dependencies: SeasonsBackupSeeder must run first
@@ -78,16 +78,16 @@ class DivisionsBackupSeeder extends Seeder
             ],
         ];
 
-        foreach ($divisions as $divisionData) {
+        foreach ($divisions as $divisionsData) {
             Division::updateOrCreate(
-                ['id' => $divisionData['id']],
-                $divisionData
+                ['id' => $divisionsData['id']],
+                $divisionsData
             );
         }
 
         // Re-enable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $this->command->info('Divisions backup seeded successfully. Total records: ' . count($divisions));
+        $this->command->info('DivisionsBackupSeeder seeded successfully. Total records: ' . count($divisions));
     }
 }

@@ -20,7 +20,7 @@ use App\Http\Requests\User\UpdateLeagueRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
-class LeagueController extends Controller
+final class LeagueController extends Controller
 {
     public function __construct(
         private readonly LeagueApplicationService $leagueService
@@ -57,12 +57,14 @@ class LeagueController extends Controller
      */
     public function store(CreateLeagueRequest $request): JsonResponse
     {
-        $user = $this->authenticatedUser();
-
         try {
             $data = CreateLeagueData::from($request->validated());
-            $league = $this->leagueService->createLeague($data, $user->id);
-            return ApiResponse::created($league->toArray(), 'League created successfully');
+            $leagueData = $this->leagueService->createLeagueWithActivityLog(
+                $data,
+                $this->authenticatedUser()->id,
+                $this->authenticatedUser()
+            );
+            return ApiResponse::created($leagueData->toArray(), 'League created successfully');
         } catch (LeagueLimitReachedException $e) {
             return ApiResponse::error($e->getMessage(), null, 422);
         }
@@ -90,12 +92,15 @@ class LeagueController extends Controller
      */
     public function update(UpdateLeagueRequest $request, int $id): JsonResponse
     {
-        $user = $this->authenticatedUser();
-
         try {
             $data = UpdateLeagueData::from($request->validated());
-            $league = $this->leagueService->updateLeague($id, $data, $user->id);
-            return ApiResponse::success($league->toArray(), 'League updated successfully');
+            $leagueData = $this->leagueService->updateLeagueWithActivityLog(
+                $id,
+                $data,
+                $this->authenticatedUser()->id,
+                $this->authenticatedUser()
+            );
+            return ApiResponse::success($leagueData->toArray(), 'League updated successfully');
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
         } catch (UnauthorizedException $e) {

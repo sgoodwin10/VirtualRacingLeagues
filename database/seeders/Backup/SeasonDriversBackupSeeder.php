@@ -9,10 +9,10 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Season Drivers Backup Seeder
+ * SeasonDriversBackupSeeder
  *
  * This seeder restores the season_drivers table data from a backup.
- * Generated: 2025-12-22
+ * Generated: 2026-01-07
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
  * Dependencies: SeasonsBackupSeeder, TeamsBackupSeeder, DivisionsBackupSeeder must run first
@@ -35,7 +35,7 @@ class SeasonDriversBackupSeeder extends Seeder
         // Disable foreign key checks temporarily
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
-        $seasonDrivers = [
+        $season_drivers = [
             [
                 'id' => 1,
                 'season_id' => 4,
@@ -580,11 +580,11 @@ class SeasonDriversBackupSeeder extends Seeder
                 'season_id' => 4,
                 'league_driver_id' => 24,
                 'team_id' => null,
-                'division_id' => 4,
+                'division_id' => 3,
                 'status' => 'active',
                 'notes' => null,
                 'added_at' => '2025-12-22 04:37:31',
-                'updated_at' => '2025-12-22 05:03:00',
+                'updated_at' => '2025-12-22 23:47:38',
             ],
             [
                 'id' => 69,
@@ -635,11 +635,11 @@ class SeasonDriversBackupSeeder extends Seeder
                 'season_id' => 4,
                 'league_driver_id' => 3,
                 'team_id' => null,
-                'division_id' => 3,
+                'division_id' => 4,
                 'status' => 'active',
                 'notes' => null,
                 'added_at' => '2025-12-22 04:37:37',
-                'updated_at' => '2025-12-22 05:11:06',
+                'updated_at' => '2025-12-22 23:31:32',
             ],
             [
                 'id' => 75,
@@ -690,11 +690,11 @@ class SeasonDriversBackupSeeder extends Seeder
                 'season_id' => 4,
                 'league_driver_id' => 31,
                 'team_id' => 1,
-                'division_id' => 2,
+                'division_id' => 3,
                 'status' => 'active',
                 'notes' => null,
                 'added_at' => '2025-12-22 04:37:42',
-                'updated_at' => '2025-12-22 05:17:58',
+                'updated_at' => '2025-12-22 23:31:26',
             ],
             [
                 'id' => 81,
@@ -720,16 +720,16 @@ class SeasonDriversBackupSeeder extends Seeder
             ],
         ];
 
-        foreach ($seasonDrivers as $driverData) {
+        foreach ($season_drivers as $seasonDriversData) {
             SeasonDriverEloquent::updateOrCreate(
-                ['id' => $driverData['id']],
-                $driverData
+                ['id' => $seasonDriversData['id']],
+                $seasonDriversData
             );
         }
 
         // Re-enable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $this->command->info('Season drivers backup seeded successfully. Total records: ' . count($seasonDrivers));
+        $this->command->info('SeasonDriversBackupSeeder seeded successfully. Total records: ' . count($season_drivers));
     }
 }

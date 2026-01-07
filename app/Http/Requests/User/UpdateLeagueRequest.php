@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\User;
 
-use App\Infrastructure\Persistence\Eloquent\Models\League;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 /**

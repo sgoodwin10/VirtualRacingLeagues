@@ -19,7 +19,7 @@ import { Button } from '@app/components/common/buttons';
 import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 import Checkbox from 'primevue/checkbox';
-import InputNumber from 'primevue/inputnumber';
+import StyledInputNumber from '@app/components/common/forms/StyledInputNumber.vue';
 import Select from 'primevue/select';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
@@ -156,6 +156,9 @@ const canSubmit = computed(() => {
   );
 });
 
+// AbortController for slug checking
+let slugCheckController: AbortController | null = null;
+
 // Slug checking (debounced with timeout)
 const checkSlug = useDebounceFn(async () => {
   if (!form.name || form.name.trim().length < 3) {
@@ -164,24 +167,34 @@ const checkSlug = useDebounceFn(async () => {
     return;
   }
 
+  // Cancel previous request if exists
+  if (slugCheckController) {
+    slugCheckController.abort();
+  }
+
+  // Create new AbortController with timeout
+  slugCheckController = new AbortController();
+  const timeoutId = setTimeout(() => slugCheckController?.abort(), 10000);
+
   slugStatus.value = 'checking';
 
-  // Create timeout promise
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error('Slug check timeout')), 10000);
-  });
-
   try {
-    const result: SlugCheckResponse = await Promise.race([
-      checkSeasonSlugAvailability(props.competitionId, form.name, props.season?.id),
-      timeoutPromise,
-    ]);
+    const result: SlugCheckResponse = await checkSeasonSlugAvailability(
+      props.competitionId,
+      form.name,
+      props.season?.id,
+      slugCheckController.signal,
+    );
 
+    clearTimeout(timeoutId);
     slugPreview.value = result.slug;
     slugStatus.value = result.available ? 'available' : 'taken';
     slugSuggestion.value = result.suggestion;
   } catch (error) {
-    if (error instanceof Error && error.message === 'Slug check timeout') {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error && error.name === 'AbortError') {
+      // Request was aborted (either cancelled or timeout)
       slugStatus.value = 'timeout';
     } else {
       slugStatus.value = 'error';
@@ -646,9 +659,9 @@ function cancelNameChange(): void {
           <!-- Total Drop Rounds Input -->
           <FormInputGroup v-if="form.drop_round">
             <FormLabel for="total_drop_rounds" text="Total Drop Rounds" />
-            <InputNumber
-              id="total_drop_rounds"
+            <StyledInputNumber
               v-model="form.total_drop_rounds"
+              input-id="total_drop_rounds"
               :min="0"
               :max="10"
               :disabled="isSubmitting"
@@ -706,9 +719,9 @@ function cancelNameChange(): void {
               <!-- Total Teams Drop Rounds -->
               <FormInputGroup v-if="form.teams_drop_rounds">
                 <FormLabel for="teams_total_drop_rounds" text="Total Teams Drop Rounds" />
-                <InputNumber
-                  id="teams_total_drop_rounds"
+                <StyledInputNumber
                   v-model="form.teams_total_drop_rounds"
+                  input-id="teams_total_drop_rounds"
                   :min="0"
                   :max="10"
                   :disabled="isSubmitting"

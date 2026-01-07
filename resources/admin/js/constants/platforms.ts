@@ -31,25 +31,3 @@ export const PLATFORM_OPTIONS: PlatformOption[] = [
   { label: 'Gran Turismo', value: 5 },
   { label: 'Project CARS', value: 6 },
 ];
-
-/**
- * Get platform label by value
- *
- * @param value - Platform ID
- * @returns Platform label or 'Unknown' if not found
- */
-export const getPlatformLabel = (value: number): string => {
-  const platform = PLATFORM_OPTIONS.find((p) => p.value === value);
-  return platform?.label ?? 'Unknown';
-};
-
-/**
- * Get platform value by label
- *
- * @param label - Platform label
- * @returns Platform value or undefined if not found
- */
-export const getPlatformValue = (label: string): number | undefined => {
-  const platform = PLATFORM_OPTIONS.find((p) => p.label === label);
-  return platform?.value;
-};

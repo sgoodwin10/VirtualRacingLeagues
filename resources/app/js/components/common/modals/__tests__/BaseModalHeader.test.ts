@@ -55,8 +55,8 @@ describe('BaseModalHeader', () => {
 
       const div = wrapper.find('div');
       expect(div.classes()).toContain('text-lg');
-      expect(div.classes()).toContain('font-semibold');
-      expect(div.classes()).toContain('text-gray-900');
+      expect(div.classes()).toContain('font-bold');
+      expect(div.classes()).toContain('text-primary');
     });
 
     it('merges additional classes with defaults', () => {
@@ -70,8 +70,8 @@ describe('BaseModalHeader', () => {
       const div = wrapper.find('div');
       // Default classes
       expect(div.classes()).toContain('text-lg');
-      expect(div.classes()).toContain('font-semibold');
-      expect(div.classes()).toContain('text-gray-900');
+      expect(div.classes()).toContain('font-bold');
+      expect(div.classes()).toContain('text-primary');
       // Additional classes
       expect(div.classes()).toContain('text-xl');
       expect(div.classes()).toContain('uppercase');
@@ -81,7 +81,7 @@ describe('BaseModalHeader', () => {
       const wrapper = mount(BaseModalHeader, {
         props: {
           title: 'Test',
-          class: 'text-2xl font-bold text-blue-600',
+          class: 'text-2xl font-medium text-blue-600',
           overrideClass: true,
         },
       });
@@ -89,12 +89,12 @@ describe('BaseModalHeader', () => {
       const div = wrapper.find('div');
       // Custom classes
       expect(div.classes()).toContain('text-2xl');
-      expect(div.classes()).toContain('font-bold');
+      expect(div.classes()).toContain('font-medium');
       expect(div.classes()).toContain('text-blue-600');
       // Default classes should NOT be present
       expect(div.classes()).not.toContain('text-lg');
-      expect(div.classes()).not.toContain('font-semibold');
-      expect(div.classes()).not.toContain('text-gray-900');
+      expect(div.classes()).not.toContain('font-bold');
+      expect(div.classes()).not.toContain('text-primary');
     });
 
     it('uses default classes when overrideClass is true but no class provided', () => {
@@ -107,8 +107,8 @@ describe('BaseModalHeader', () => {
 
       const div = wrapper.find('div');
       expect(div.classes()).toContain('text-lg');
-      expect(div.classes()).toContain('font-semibold');
-      expect(div.classes()).toContain('text-gray-900');
+      expect(div.classes()).toContain('font-bold');
+      expect(div.classes()).toContain('text-primary');
     });
 
     it('handles empty string class prop', () => {
@@ -121,8 +121,8 @@ describe('BaseModalHeader', () => {
 
       const div = wrapper.find('div');
       expect(div.classes()).toContain('text-lg');
-      expect(div.classes()).toContain('font-semibold');
-      expect(div.classes()).toContain('text-gray-900');
+      expect(div.classes()).toContain('font-bold');
+      expect(div.classes()).toContain('text-primary');
     });
   });
 

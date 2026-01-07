@@ -125,6 +125,12 @@ const router = createRouter({
           component: () => import('@app/views/season/SettingsView.vue'),
           meta: { title: 'Settings', requiresCompetitionContext: true },
         },
+        {
+          path: 'season-status',
+          name: 'season-status',
+          component: () => import('@app/views/season/SeasonStatusView.vue'),
+          meta: { title: 'Season Status', requiresCompetitionContext: true },
+        },
       ],
     },
   ],
@@ -132,9 +138,16 @@ const router = createRouter({
 
 // Get public site domain from environment
 const getPublicDomain = (): string => {
-  // Extract domain without 'app.' subdomain
-  // e.g., http://app.virtualracingleagues.localhost -> http://virtualracingleagues.localhost
-  return import.meta.env.VITE_APP_URL.replace('//app.', '//');
+  try {
+    const url = new URL(import.meta.env.VITE_APP_URL);
+    // Remove 'app.' prefix from hostname if present
+    const hostname = url.hostname.replace(/^app\./, '');
+    return `${url.protocol}//${hostname}${url.port ? ':' + url.port : ''}`;
+  } catch (error) {
+    console.error('Invalid VITE_APP_URL:', import.meta.env.VITE_APP_URL, error);
+    // Fallback to string replacement
+    return import.meta.env.VITE_APP_URL.replace('//app.', '//');
+  }
 };
 
 // Navigation guard - ALL routes require authentication

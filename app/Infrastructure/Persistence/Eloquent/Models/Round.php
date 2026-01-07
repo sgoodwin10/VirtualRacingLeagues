@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use App\Infrastructure\Persistence\Eloquent\Casts\DoubleEncodedJson;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -42,7 +42,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $created_by_user_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
  * @method static Round firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  *
  * @method static \Illuminate\Database\Eloquent\Builder<Round> where($column, $operator = null, $value = null)
@@ -53,7 +52,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 final class Round extends Model
 {
     use HasFactory;
-    use SoftDeletes;
 
     protected $table = 'rounds';
 
@@ -107,15 +105,14 @@ final class Round extends Model
         'fastest_lap_top_10' => 'boolean',
         'qualifying_pole_top_10' => 'boolean',
         'round_points' => 'boolean',
-        'round_results' => 'json',
-        'qualifying_results' => 'json',
-        'race_time_results' => 'json',
-        'fastest_lap_results' => 'json',
-        'team_championship_results' => 'json',
-        'round_totals_tiebreaker_rules_information' => 'json',
+        'round_results' => DoubleEncodedJson::class,
+        'qualifying_results' => DoubleEncodedJson::class,
+        'race_time_results' => DoubleEncodedJson::class,
+        'fastest_lap_results' => DoubleEncodedJson::class,
+        'team_championship_results' => DoubleEncodedJson::class,
+        'round_totals_tiebreaker_rules_information' => DoubleEncodedJson::class,
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
     ];
 
     /**
