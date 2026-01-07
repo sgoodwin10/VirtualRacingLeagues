@@ -35,7 +35,8 @@ function createMountOptions(props: { competition: Competition }) {
         },
         SeasonFormSplitModal: {
           name: 'SeasonFormSplitModal',
-          template: '<div class="season-form-split-modal-stub" data-testid="season-form-split-modal"></div>',
+          template:
+            '<div class="season-form-split-modal-stub" data-testid="season-form-split-modal"></div>',
           props: ['visible', 'competitionId', 'isEditMode', 'season'],
           emits: ['update:visible', 'season-saved', 'hide'],
         },

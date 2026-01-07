@@ -10,6 +10,7 @@ use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use App\Domain\Team\ValueObjects\TeamName;
 use App\Infrastructure\Persistence\Eloquent\Models\Team as TeamEloquent;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Eloquent implementation of Team Repository.
@@ -82,6 +83,43 @@ final class EloquentTeamRepository implements TeamRepositoryInterface
         return TeamEloquent::where('id', $teamId)
             ->where('season_id', $seasonId)
             ->exists();
+    }
+
+    /**
+     * Batch fetch team data for multiple team IDs to avoid N+1 queries.
+     *
+     * @param array<int> $teamIds
+     * @return array<int, array{name: string, logo_url: string|null}> Map of team ID => team data
+     */
+    public function findDataByIds(array $teamIds): array
+    {
+        if (empty($teamIds)) {
+            return [];
+        }
+
+        $teams = TeamEloquent::query()
+            ->whereIn('id', $teamIds)
+            ->select('id', 'name', 'logo_url')
+            ->get();
+
+        $map = [];
+        foreach ($teams as $team) {
+            // If logo_url is already a full URL (http/https), use it as-is
+            // Otherwise, generate storage URL from relative path
+            $logoUrl = null;
+            if ($team->logo_url !== null) {
+                $logoUrl = str_starts_with($team->logo_url, 'http://') || str_starts_with($team->logo_url, 'https://')
+                    ? $team->logo_url
+                    : Storage::url($team->logo_url);
+            }
+
+            $map[$team->id] = [
+                'name' => $team->name,
+                'logo_url' => $logoUrl,
+            ];
+        }
+
+        return $map;
     }
 
     /**

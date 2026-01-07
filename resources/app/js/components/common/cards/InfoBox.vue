@@ -23,7 +23,7 @@ const props = withDefaults(defineProps<InfoBoxProps>(), {
         :class="[
           'info-box-title',
           `info-box-title--${variant}`,
-          'font-mono text-[11px] font-semibold tracking-wide mb-2',
+          'font-mono text-xs font-semibold tracking-wide mb-2',
         ]"
       >
         {{ title }}

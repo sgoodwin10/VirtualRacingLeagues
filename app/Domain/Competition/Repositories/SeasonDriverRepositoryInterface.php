@@ -140,4 +140,14 @@ interface SeasonDriverRepositoryInterface
      * @return array<int, int> Map of league_driver_id => driver_id
      */
     public function getLeagueDriverToDriverIdMap(int $seasonId): array;
+
+    /**
+     * Batch fetch team IDs for drivers in a season.
+     * Returns a map of driver_id => team_id|null.
+     *
+     * @param int $seasonId
+     * @param array<int> $driverIds List of driver IDs (from league_drivers table)
+     * @return array<int, int|null> Map of driver ID => team ID (null if not on a team)
+     */
+    public function findTeamIdsByDriverIds(int $seasonId, array $driverIds): array;
 }

@@ -34,7 +34,7 @@ const isLast = (index: number): boolean => {
           'items-center',
           'gap-1.5',
           'font-data',
-          'text-[11px]',
+          'text-xs',
           !isLast(index) && item.to
             ? 'hover:text-racing-gold transition-colors cursor-pointer'
             : '',

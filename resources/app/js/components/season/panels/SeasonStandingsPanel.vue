@@ -358,6 +358,7 @@ const TeamsStandingsTable = defineComponent({
                           letterSpacing: '1px',
                           color: 'var(--text-muted)',
                           padding: '12px 16px',
+                          borderRight: '1px solid var(--border)',
                         },
                       },
                       `R${roundNum}`,
@@ -413,7 +414,7 @@ const TeamsStandingsTable = defineComponent({
                       ? 'rgba(110, 118, 129, 0.08)'
                       : team.position === 3
                         ? 'rgba(240, 136, 62, 0.08)'
-                        : 'transparent';
+                        : 'var(--bg-card)';
                 const positionColor =
                   team.position === 1
                     ? '#d29922'
@@ -427,7 +428,9 @@ const TeamsStandingsTable = defineComponent({
                   'tr',
                   {
                     key: team.team_id,
-                    class: podiumClass,
+                    class: [podiumClass, 'transition-colors hover:brightness-110']
+                      .filter(Boolean)
+                      .join(' '),
                     style: {
                       backgroundColor: podiumBg,
                       borderBottom: '1px solid var(--border-muted)',
@@ -473,6 +476,7 @@ const TeamsStandingsTable = defineComponent({
                             fontSize: '13px',
                             color: 'var(--text-secondary)',
                             padding: '14px 16px',
+                            borderRight: '1px solid var(--border)',
                           },
                         },
                         roundData?.points ?? 0,
@@ -750,7 +754,7 @@ const StandingsTable = defineComponent({
                       ? 'rgba(110, 118, 129, 0.08)'
                       : driver.position === 3
                         ? 'rgba(240, 136, 62, 0.08)'
-                        : 'transparent';
+                        : 'var(--bg-card)';
                 const positionColor =
                   driver.position === 1
                     ? '#d29922'
@@ -764,7 +768,9 @@ const StandingsTable = defineComponent({
                   'tr',
                   {
                     key: driver.driver_id,
-                    class: podiumClass,
+                    class: [podiumClass, 'transition-colors hover:brightness-110']
+                      .filter(Boolean)
+                      .join(' '),
                     style: {
                       backgroundColor: podiumBg,
                       borderBottom: '1px solid var(--border-muted)',
@@ -785,7 +791,7 @@ const StandingsTable = defineComponent({
                       },
                       driver.position,
                     ),
-                    // Driver name
+                    // Driver name (with team info)
                     h(
                       'td',
                       {
@@ -796,7 +802,40 @@ const StandingsTable = defineComponent({
                           padding: '14px 16px',
                         },
                       },
-                      driver.driver_name,
+                      driver.team_id
+                        ? h(
+                            'div',
+                            {
+                              class: 'flex justify-between items-center gap-3',
+                            },
+                            [
+                              // Driver name
+                              h('span', {}, driver.driver_name),
+                              // Team info (logo or name)
+                              driver.team_logo
+                                ? h('img', {
+                                    src: driver.team_logo,
+                                    alt: driver.team_name || 'Team logo',
+                                    style: {
+                                      height: '20px',
+                                      width: 'auto',
+                                      maxWidth: '60px',
+                                      objectFit: 'contain',
+                                    },
+                                  })
+                                : h(
+                                    'span',
+                                    {
+                                      style: {
+                                        fontSize: '11px',
+                                        color: 'var(--text-muted)',
+                                      },
+                                    },
+                                    driver.team_name,
+                                  ),
+                            ],
+                          )
+                        : driver.driver_name,
                     ),
                     // Podiums count
                     h(

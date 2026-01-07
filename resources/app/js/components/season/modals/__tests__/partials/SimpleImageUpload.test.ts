@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import SimpleImageUpload from '../../partials/SimpleImageUpload.vue';
 
@@ -36,9 +36,12 @@ describe('SimpleImageUpload', () => {
         // Simulate async callback
         setTimeout(() => {
           if (this.onload) {
-            this.onload.call(this as unknown as FileReader, {
-              target: this,
-            } as ProgressEvent<FileReader>);
+            this.onload.call(
+              this as unknown as FileReader,
+              {
+                target: this,
+              } as ProgressEvent<FileReader>,
+            );
           }
         }, 0);
       }

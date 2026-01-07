@@ -120,12 +120,6 @@ const router = createRouter({
           meta: { title: 'Divisions & Teams', requiresCompetitionContext: true },
         },
         {
-          path: 'settings',
-          name: 'season-settings',
-          component: () => import('@app/views/season/SettingsView.vue'),
-          meta: { title: 'Settings', requiresCompetitionContext: true },
-        },
-        {
           path: 'season-status',
           name: 'season-status',
           component: () => import('@app/views/season/SeasonStatusView.vue'),

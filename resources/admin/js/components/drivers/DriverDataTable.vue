@@ -2,14 +2,18 @@
   <DataTable
     :value="drivers"
     :loading="loading"
-    :rows="15"
+    :rows="rows"
+    :first="first"
+    :total-records="totalRecords"
     :paginator="true"
     :rows-per-page-options="[15, 25, 50]"
     paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
     current-page-report-template="Showing {first} to {last} of {totalRecords} drivers"
+    lazy
     striped-rows
     responsive-layout="scroll"
     class="drivers-table"
+    @page="onPage"
   >
     <!-- Empty state -->
     <template #empty>
@@ -133,6 +137,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -156,6 +161,31 @@ export interface DriverDataTableProps {
    * Whether the table is loading
    */
   loading?: boolean;
+
+  /**
+   * Total number of records (for server-side pagination)
+   */
+  totalRecords?: number;
+
+  /**
+   * Current page number (1-based)
+   */
+  currentPage?: number;
+
+  /**
+   * Number of rows per page
+   */
+  rows?: number;
+}
+
+/**
+ * Page event payload from PrimeVue DataTable
+ */
+export interface PageEvent {
+  page: number;
+  first: number;
+  rows: number;
+  pageCount: number;
 }
 
 /**
@@ -176,12 +206,20 @@ export interface DriverDataTableEmits {
    * Emitted when user clicks delete
    */
   (event: 'delete', driver: Driver): void;
+
+  /**
+   * Emitted when pagination changes
+   */
+  (event: 'page', payload: PageEvent): void;
 }
 
 // Props
-withDefaults(defineProps<DriverDataTableProps>(), {
+const props = withDefaults(defineProps<DriverDataTableProps>(), {
   drivers: () => [],
   loading: false,
+  totalRecords: 0,
+  currentPage: 1,
+  rows: 15,
 });
 
 // Emits
@@ -190,6 +228,19 @@ const emit = defineEmits<DriverDataTableEmits>();
 // Composables
 const { formatDate } = useDateFormatter();
 const { getUserInitials } = useNameHelpers();
+
+/**
+ * Computed first index for DataTable (0-based)
+ * Converts from 1-based page number to 0-based first record index
+ */
+const first = computed(() => (props.currentPage - 1) * props.rows);
+
+/**
+ * Handle page change event from DataTable
+ */
+const onPage = (event: PageEvent): void => {
+  emit('page', event);
+};
 
 /**
  * Get driver initials for avatar

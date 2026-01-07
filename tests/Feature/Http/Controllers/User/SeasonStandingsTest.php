@@ -560,6 +560,57 @@ class SeasonStandingsTest extends TestCase
         $this->assertEquals(25, $standings[2]['drop_total']);
     }
 
+    public function test_includes_team_information_in_standings(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create a team
+        $team = \App\Infrastructure\Persistence\Eloquent\Models\Team::create([
+            'season_id' => $this->season->id,
+            'name' => 'Red Bull Racing',
+            'logo_url' => 'https://example.com/red-bull.png',
+        ]);
+
+        // Create drivers - one with team, one without
+        $drivers = $this->createDrivers(['Driver 1', 'Driver 2']);
+        $driver1Id = $drivers[0];
+        $driver2Id = $drivers[1];
+
+        // Assign first driver to team
+        SeasonDriverEloquent::where('id', $driver1Id)->update(['team_id' => $team->id]);
+
+        // Create round with standings
+        $this->createRoundWithStandings(1, [
+            ['driver_id' => $driver1Id, 'driver_name' => 'Driver 1', 'total_points' => 25],
+            ['driver_id' => $driver2Id, 'driver_name' => 'Driver 2', 'total_points' => 18],
+        ]);
+
+        $url = "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/standings";
+        $response = $this->getJson($url);
+
+        $response->assertStatus(200);
+        $standings = $response->json('data.standings');
+
+        // Verify team data is present for driver with team
+        $this->assertArrayHasKey('team_id', $standings[0]);
+        $this->assertArrayHasKey('team_name', $standings[0]);
+        $this->assertArrayHasKey('team_logo', $standings[0]);
+
+        // Find driver 1 in standings
+        $driver1Standing = collect($standings)->firstWhere('driver_id', $driver1Id);
+        $this->assertNotNull($driver1Standing);
+        $this->assertEquals($team->id, $driver1Standing['team_id']);
+        $this->assertEquals('Red Bull Racing', $driver1Standing['team_name']);
+        $this->assertEquals('https://example.com/red-bull.png', $driver1Standing['team_logo']);
+
+        // Find driver 2 in standings (no team)
+        $driver2Standing = collect($standings)->firstWhere('driver_id', $driver2Id);
+        $this->assertNotNull($driver2Standing);
+        $this->assertNull($driver2Standing['team_id']);
+        $this->assertNull($driver2Standing['team_name']);
+        $this->assertNull($driver2Standing['team_logo']);
+    }
+
     /**
      * Helper: Create drivers and return their season driver IDs.
      *

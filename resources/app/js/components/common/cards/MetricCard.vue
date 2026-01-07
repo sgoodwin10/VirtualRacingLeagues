@@ -81,7 +81,7 @@ const formattedValue = computed(() => {
           <div
             v-if="change"
             :class="[
-              'flex items-center gap-1 mt-1.5 font-mono text-[11px]',
+              'flex items-center gap-1 mt-1.5 font-mono text-xs',
               `metric-change--${changeDirection}`,
             ]"
           >

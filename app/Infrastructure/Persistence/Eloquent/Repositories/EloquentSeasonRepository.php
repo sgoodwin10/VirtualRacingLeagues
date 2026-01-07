@@ -289,7 +289,6 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
         $roundCounts = \Illuminate\Support\Facades\DB::table('rounds')
             ->select('season_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
             ->whereIn('season_id', $seasonIds)
-            ->whereNull('deleted_at')
             ->groupBy('season_id')
             ->pluck('total', 'season_id')
             ->toArray();

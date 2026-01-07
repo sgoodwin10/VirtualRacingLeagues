@@ -37,7 +37,9 @@ describe('StyledInputNumber', () => {
 
     it('renders with custom id', () => {
       const wrapper = createWrapper({ inputId: 'test-input-number' });
-      expect(wrapper.findComponent({ name: 'InputNumber' }).attributes('id')).toBe('test-input-number');
+      expect(wrapper.findComponent({ name: 'InputNumber' }).attributes('id')).toBe(
+        'test-input-number',
+      );
     });
   });
 
@@ -88,9 +90,15 @@ describe('StyledInputNumber', () => {
 
   describe('Button Layouts', () => {
     it('renders with horizontal buttons layout', () => {
-      const wrapper = createWrapper({ showButtons: true, buttonLayout: 'horizontal', modelValue: 5 });
+      const wrapper = createWrapper({
+        showButtons: true,
+        buttonLayout: 'horizontal',
+        modelValue: 5,
+      });
       expect(wrapper.findComponent({ name: 'InputNumber' }).props('showButtons')).toBe(true);
-      expect(wrapper.findComponent({ name: 'InputNumber' }).props('buttonLayout')).toBe('horizontal');
+      expect(wrapper.findComponent({ name: 'InputNumber' }).props('buttonLayout')).toBe(
+        'horizontal',
+      );
     });
 
     it('renders with stacked buttons layout', () => {
@@ -134,7 +142,9 @@ describe('StyledInputNumber', () => {
   describe('Placeholder', () => {
     it('applies placeholder text', () => {
       const wrapper = createWrapper({ placeholder: 'Enter a number' });
-      expect(wrapper.findComponent({ name: 'InputNumber' }).props('placeholder')).toBe('Enter a number');
+      expect(wrapper.findComponent({ name: 'InputNumber' }).props('placeholder')).toBe(
+        'Enter a number',
+      );
     });
   });
 
@@ -209,7 +219,12 @@ describe('StyledInputNumber', () => {
     });
 
     it('applies currency display mode', () => {
-      const wrapper = createWrapper({ mode: 'currency', currency: 'USD', currencyDisplay: 'code', modelValue: 100 });
+      const wrapper = createWrapper({
+        mode: 'currency',
+        currency: 'USD',
+        currencyDisplay: 'code',
+        modelValue: 100,
+      });
       expect(wrapper.findComponent({ name: 'InputNumber' }).props('currencyDisplay')).toBe('code');
     });
   });

@@ -73,7 +73,7 @@ function handleRemoveDriver(driver: LeagueDriver): void {
         <!-- Search and Filter -->
         <div class="flex gap-2 flex-1">
           <IconField>
-            <InputIcon class="pi pi-search" />
+            <InputIcon class="pi pi-search text-white" />
             <InputText v-model="searchQuery" placeholder="Search drivers..." class="w-full" />
           </IconField>
           <Select

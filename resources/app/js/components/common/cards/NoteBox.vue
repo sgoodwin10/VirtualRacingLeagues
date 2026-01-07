@@ -16,7 +16,7 @@ const props = defineProps<NoteBoxProps>();
   >
     <!-- Title -->
     <slot name="title">
-      <div class="font-mono text-[11px] font-semibold tracking-wide text-[var(--cyan)] mb-2">
+      <div class="font-mono text-xs font-semibold tracking-wide text-[var(--cyan)] mb-2">
         {{ title }}
       </div>
     </slot>

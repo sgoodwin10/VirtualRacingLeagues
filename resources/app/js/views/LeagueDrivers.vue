@@ -8,6 +8,8 @@ import Toast from 'primevue/toast';
 import { getLeagueById } from '@app/services/leagueService';
 import { useLeagueDrivers } from '@app/composables/useLeagueDrivers';
 import { usePageTitle } from '@app/composables/usePageTitle';
+import { useCompetitionStore } from '@app/stores/competitionStore';
+import { useSeasonStore } from '@app/stores/seasonStore';
 import DriverFormDialog from '@app/components/driver/modals/DriverFormDialog.vue';
 import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
 import CSVImportDialog from '@app/components/driver/modals/CSVImportDialog.vue';
@@ -20,6 +22,8 @@ import type { LeagueDriver, CreateDriverRequest } from '@app/types/driver';
 const route = useRoute();
 const toast = useToast();
 const confirm = useConfirm();
+const competitionStore = useCompetitionStore();
+const seasonStore = useSeasonStore();
 
 const league = ref<League | null>(null);
 const isLoading = ref(true);
@@ -61,11 +65,23 @@ const { loadDrivers, addDriver, updateDriver, removeDriver, importFromCSV } = us
 const pageTitle = computed(() => (league.value ? `${league.value.name} - Drivers` : 'Drivers'));
 usePageTitle(pageTitle);
 
-// Seasons count for identity panel (can be 0 for now)
-const seasonsCount = computed(() => 0);
+// Get competitions for this league
+const competitions = computed(() => {
+  return competitionStore.competitions.filter((c) => c.league_id === leagueIdNumber.value);
+});
+
+// Seasons count for identity panel
+const seasonsCount = computed(() => {
+  const leagueSeasons = seasonStore.seasons.filter((season) => {
+    return season.competition?.league?.id === leagueIdNumber.value;
+  });
+  return leagueSeasons.length;
+});
 
 onMounted(async () => {
   await loadLeague();
+  await loadCompetitions();
+  await loadSeasons();
   await loadDrivers();
 });
 
@@ -92,6 +108,40 @@ async function loadLeague(): Promise<void> {
     });
   } finally {
     isLoading.value = false;
+  }
+}
+
+async function loadCompetitions(): Promise<void> {
+  if (!leagueIdNumber.value) return;
+
+  try {
+    await competitionStore.fetchCompetitions(leagueIdNumber.value);
+  } catch (err: unknown) {
+    console.error('Failed to load competitions:', err);
+  }
+}
+
+async function loadSeasons(): Promise<void> {
+  try {
+    // Fetch seasons for all competitions in this league (in parallel)
+    // Use allSettled to handle partial failures gracefully
+    const competitionIds = competitions.value.map((c) => c.id);
+    const results = await Promise.allSettled(
+      competitionIds.map((id) => seasonStore.fetchSeasons(id)),
+    );
+
+    // Log any failures for debugging
+    const failures = results.filter((r) => r.status === 'rejected');
+    if (failures.length > 0) {
+      console.warn(`Failed to load seasons for ${failures.length} competition(s)`);
+      failures.forEach((failure) => {
+        if (failure.status === 'rejected') {
+          console.error('Season fetch error:', failure.reason);
+        }
+      });
+    }
+  } catch (err: unknown) {
+    console.error('Failed to load seasons:', err);
   }
 }
 
@@ -183,7 +233,7 @@ function getDriverName(leagueDriver: LeagueDriver): string {
 </script>
 
 <template>
-  <div class="flex">
+  <div class="flex h-full">
     <!-- Loading State -->
     <div v-if="isLoading" class="flex-1 p-6">
       <Skeleton width="100%" height="100vh" />

@@ -28,7 +28,7 @@ interface Props {
   visible: boolean;
   mode: 'create' | 'edit';
   driver?: LeagueDriver | null;
-  leagueId?: number;
+  leagueId: number;
 }
 
 interface Emits {
@@ -73,7 +73,7 @@ const dialogTitle = computed(() => {
 // Fetch platform form fields - composable MUST be called unconditionally
 // at the top level, not inside an if block
 usePlatformFormFields({
-  leagueId: computed(() => props.leagueId),
+  leagueId: props.leagueId,
   onSuccess: () => {
     if (props.mode === 'create') {
       resetForm();

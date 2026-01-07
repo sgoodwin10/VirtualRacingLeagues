@@ -43,7 +43,7 @@ function isSafeUrl(url: string | null | undefined): boolean {
     </div>
 
     <!-- Terminal Body -->
-    <div class="p-3 font-mono text-[11px]">
+    <div class="p-3 font-mono text-xs">
       <!-- Timezone -->
       <div class="flex mb-2">
         <span class="text-[var(--cyan)] min-w-[100px]">timezone:</span>

@@ -26,15 +26,7 @@ import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
 import { PhArrowClockwise } from '@phosphor-icons/vue';
 
 import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
-import {
-  PhUsers,
-  PhEye,
-  PhTrash,
-  PhCaretDoubleLeft,
-  PhCaretLeft,
-  PhCaretRight,
-  PhCaretDoubleRight,
-} from '@phosphor-icons/vue';
+import { PhUsers, PhEye, PhTrash } from '@phosphor-icons/vue';
 
 interface Props {
   seasonId: number;
@@ -643,103 +635,14 @@ async function handleRefresh(): Promise<void> {
       lazy
       paginator
       :rows="perPage"
+      :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
       :total-records="totalRecords"
       :first="(currentPage - 1) * perPage"
+      entity-name="drivers"
       responsive-layout="scroll"
       @page="onPage"
       @sort="onSort"
     >
-      <template
-        #paginatorcontainer="{
-          first,
-          last,
-          page,
-          pageCount,
-          prevPageCallback,
-          nextPageCallback,
-          totalRecords: total,
-        }"
-      >
-        <div class="flex items-center justify-between w-full px-4 py-2">
-          <!-- Left: Record info -->
-          <span class="text-sm text-gray-600">
-            Showing {{ first }} to {{ last }} of {{ total ?? 0 }} drivers
-          </span>
-
-          <!-- Center: Rows per page -->
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-600">Rows per page:</span>
-            <Select
-              :model-value="perPage"
-              :options="ROWS_PER_PAGE_OPTIONS"
-              class="w-20"
-              @change="
-                (e) =>
-                  onPage({
-                    page: 0,
-                    rows: e.value,
-                    first: 0,
-                    pageCount: Math.ceil((total ?? 0) / e.value),
-                  } as DataTablePageEvent)
-              "
-            />
-          </div>
-
-          <!-- Right: Navigation -->
-          <div class="flex items-center gap-1">
-            <Button
-              :icon="PhCaretDoubleLeft"
-              text
-              rounded
-              :disabled="(page ?? 0) === 0"
-              aria-label="First page"
-              @click="
-                onPage({
-                  page: 0,
-                  rows: perPage,
-                  first: 0,
-                  pageCount: pageCount ?? 0,
-                } as DataTablePageEvent)
-              "
-            />
-            <Button
-              :icon="PhCaretLeft"
-              text
-              rounded
-              :disabled="(page ?? 0) === 0"
-              aria-label="Previous page"
-              @click="prevPageCallback"
-            />
-            <span class="text-sm text-gray-600 mx-2">
-              Page {{ (page ?? 0) + 1 }} of {{ pageCount ?? 0 }}
-            </span>
-            <Button
-              :icon="PhCaretRight"
-              text
-              rounded
-              :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
-              aria-label="Next page"
-              @click="nextPageCallback"
-            />
-            <Button
-              :icon="PhCaretDoubleRight"
-              text
-              rounded
-              :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
-              aria-label="Last page"
-              @click="
-                onPage({
-                  page: (pageCount ?? 1) - 1,
-                  rows: perPage,
-                  first: ((pageCount ?? 1) - 1) * perPage,
-                  pageCount: pageCount ?? 0,
-                } as DataTablePageEvent)
-              "
-            />
-          </div>
-        </div>
-      </template>
-
       <template #empty>
         <div class="text-center py-8">
           <i class="pi pi-users text-4xl text-gray-400 mb-3"></i>

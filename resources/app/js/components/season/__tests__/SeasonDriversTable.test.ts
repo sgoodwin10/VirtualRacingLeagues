@@ -83,9 +83,18 @@ vi.mock('primevue/chip', () => ({
 vi.mock('primevue/select', () => ({
   default: {
     name: 'Select',
-    props: ['modelValue', 'options', 'optionLabel', 'optionValue', 'placeholder', 'disabled', 'showClear'],
+    props: [
+      'modelValue',
+      'options',
+      'optionLabel',
+      'optionValue',
+      'placeholder',
+      'disabled',
+      'showClear',
+    ],
     emits: ['update:modelValue'],
-    template: '<select :disabled="disabled" @change="$emit(\'update:modelValue\', $event.target.value)"><option v-for="opt in options" :key="opt[optionValue] || opt.value" :value="opt[optionValue] || opt.value">{{ opt[optionLabel] || opt.label }}</option></select>',
+    template:
+      '<select :disabled="disabled" @change="$emit(\'update:modelValue\', $event.target.value)"><option v-for="opt in options" :key="opt[optionValue] || opt.value" :value="opt[optionValue] || opt.value">{{ opt[optionLabel] || opt.label }}</option></select>',
   },
 }));
 

@@ -11,7 +11,7 @@ const seasonId = computed(() => parseInt(route.params.seasonId as string, 10));
 
 <template>
   <div>
-    <Card>
+    <Card :body-padding="false">
       <template #header>
         <CardHeader
           title="Season Standings"

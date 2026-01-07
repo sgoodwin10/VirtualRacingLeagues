@@ -51,9 +51,13 @@
           <DriverDataTable
             :drivers="drivers ?? []"
             :loading="loading"
+            :total-records="totalRecords"
+            :current-page="currentPage"
+            :rows="rowsPerPage"
             @view="handleView"
             @edit="handleEdit"
             @delete="handleDelete"
+            @page="handlePage"
           />
         </template>
       </Card>
@@ -99,7 +103,8 @@ const { showErrorToast, showSuccessToast } = useErrorToast();
 const confirm = useConfirm();
 
 // Destructure store state and getters with reactivity
-const { drivers, loading, searchQuery } = storeToRefs(driverStore);
+const { drivers, loading, searchQuery, currentPage, rowsPerPage, totalRecords } =
+  storeToRefs(driverStore);
 
 // Local modal state
 const initialLoading = ref(true);
@@ -189,6 +194,24 @@ const handleDelete = (driver: Driver) => {
       }
     },
   });
+};
+
+/**
+ * Handle pagination change
+ */
+const handlePage = async (event: { page: number; rows: number }) => {
+  // Update store with new pagination values
+  // Note: PrimeVue page is 0-based, store uses 1-based
+  const newPage = event.page + 1;
+
+  // Check if rows per page changed (setRowsPerPage resets to page 1)
+  if (event.rows !== rowsPerPage.value) {
+    driverStore.setRowsPerPage(event.rows);
+  } else {
+    driverStore.setPage(newPage);
+  }
+
+  await loadDrivers();
 };
 
 /**

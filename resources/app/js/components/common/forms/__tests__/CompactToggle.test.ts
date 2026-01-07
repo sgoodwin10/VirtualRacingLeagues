@@ -235,7 +235,9 @@ describe('CompactToggle', () => {
       expect(switchContainer).toBeTruthy();
       // Verify it has the on state styling (cyan background and border)
       const classStr = switchContainer?.classes().join(' ') || '';
-      expect(classStr.includes('cyan') || classStr.includes('bg-') && classStr.includes('border-')).toBe(true);
+      expect(
+        classStr.includes('cyan') || (classStr.includes('bg-') && classStr.includes('border-')),
+      ).toBe(true);
     });
   });
 

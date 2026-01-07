@@ -80,7 +80,7 @@ describe('ListSectionHeader', () => {
     });
 
     const title = wrapper.find('span');
-    expect(title.classes()).toContain('text-[11px]');
+    expect(title.classes()).toContain('text-xs');
     expect(title.classes()).toContain('tracking-[1px]');
   });
 });

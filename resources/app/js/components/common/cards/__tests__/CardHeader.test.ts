@@ -7,8 +7,14 @@ import CardHeader from '@app/components/common/cards/CardHeader.vue';
 const MockIcon = defineComponent({
   name: 'MockIcon',
   props: {
-    size: Number,
-    class: String,
+    size: {
+      type: Number,
+      default: 24,
+    },
+    class: {
+      type: String,
+      default: '',
+    },
   },
   setup(props) {
     return () => h('svg', { class: ['mock-icon', props.class], 'data-testid': 'mock-icon' });

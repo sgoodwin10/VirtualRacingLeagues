@@ -9,7 +9,7 @@ import { useDriverStore } from '@app/stores/driverStore';
 import type { LeagueDriver, Driver } from '@app/types/driver';
 import type { DataTablePageEvent } from 'primevue/datatable';
 import { createLogger } from '@app/utils/logger';
-import { DEFAULT_ROWS_PER_PAGE, ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
+import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
 import { PhEye, PhPencil, PhTrash } from '@phosphor-icons/vue';
 
 interface Props {
@@ -153,10 +153,11 @@ onMounted(async () => {
     :loading="loading"
     lazy
     paginator
-    :rows="DEFAULT_ROWS_PER_PAGE"
+    :rows="perPage"
     :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
     :total-records="totalDrivers"
     :first="first"
+    entity-name="drivers"
     data-key="id"
     responsive-layout="scroll"
     class="driver-table"

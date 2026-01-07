@@ -72,23 +72,23 @@ const localRules = computed({
     >
       <template #item="{ element, index }">
         <div
-          class="drag-handle flex items-center p-2.5 px-3 bg-dark border border-[--border] rounded-md cursor-grab transition-all duration-150 gap-3 hover:border-[--cyan] active:cursor-grabbing"
+          class="drag-handle flex items-center p-2.5 px-3 bg-dark border border-[var(--border-muted)] rounded-md cursor-grab transition-all duration-150 gap-3 hover:border-[var(--cyan)] active:cursor-grabbing"
         >
           <!-- Position Badge -->
           <div
-            class="w-[22px] h-[22px] flex items-center justify-center bg-[--orange] rounded font-mono text-[11px] font-semibold text-[--bg-dark] shrink-0"
+            class="w-[22px] h-[22px] flex items-center justify-center bg-[--orange] rounded font-mono text-xs font-semibold text-[--bg-dark] shrink-0"
           >
             {{ index + 1 }}
           </div>
 
           <!-- Rule Details -->
           <div class="flex-1 min-w-0">
-            <div class="text-xs font-medium text-[--text-primary] mb-0.5">
+            <div class="text-md font-medium text-[--text-primary] mb-0.5">
               {{ element.rule_name }}
             </div>
             <div
               v-if="element.rule_description"
-              class="text-[11px] text-[--text-muted] leading-snug"
+              class="text-xs text-[var(--text-muted)] leading-snug"
             >
               {{ element.rule_description }}
             </div>

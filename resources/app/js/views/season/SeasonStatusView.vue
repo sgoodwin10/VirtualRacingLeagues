@@ -1,48 +1,56 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useSeasonStore } from '@app/stores/seasonStore';
+import { useToastError, TOAST_DURATION } from '@app/composables/useToastError';
+import SeasonSettings from '@app/components/season/SeasonSettings.vue';
 
+const route = useRoute();
+const router = useRouter();
 const seasonStore = useSeasonStore();
+const { showSuccess } = useToastError();
 
+const TRANSITION_DELAY = 1500;
+
+const seasonId = computed(() => parseInt(route.params.seasonId as string, 10));
+const leagueId = computed(() => parseInt(route.params.leagueId as string, 10));
 const season = computed(() => seasonStore.currentSeason);
+
+async function handleUpdated(): Promise<void> {
+  // Reload the season after update
+  await seasonStore.fetchSeason(seasonId.value);
+}
+
+function handleArchived(): void {
+  // Reload the season after archiving
+  seasonStore.fetchSeason(seasonId.value);
+}
+
+function handleDeleted(): void {
+  showSuccess('Redirecting to league...', {
+    summary: 'Season Deleted',
+    life: TOAST_DURATION.SHORT,
+  });
+
+  setTimeout(() => {
+    router.push({
+      name: 'league-detail',
+      params: {
+        id: leagueId.value,
+      },
+    });
+  }, TRANSITION_DELAY);
+}
 </script>
 
 <template>
-  <div class="season-status-view">
-    <div v-if="season" class="space-y-6">
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-2xl font-semibold mb-4">Season Status</h2>
-        <p class="text-gray-600">
-          This view will display the current status and progress of the season.
-        </p>
-      </div>
-
-      <!-- Placeholder content - to be implemented -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-medium mb-4">Season Information</h3>
-        <div class="space-y-2">
-          <div>
-            <span class="font-medium">Season Name:</span>
-            {{ season.name }}
-          </div>
-          <div>
-            <span class="font-medium">Status:</span>
-            {{ season.status }}
-          </div>
-          <div v-if="season.startDate">
-            <span class="font-medium">Start Date:</span>
-            {{ new Date(season.startDate).toLocaleDateString() }}
-          </div>
-          <div v-if="season.endDate">
-            <span class="font-medium">End Date:</span>
-            {{ new Date(season.endDate).toLocaleDateString() }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-else class="bg-white rounded-lg shadow p-6">
-      <p class="text-gray-500">Loading season data...</p>
-    </div>
+  <div>
+    <SeasonSettings
+      v-if="season"
+      :season="season"
+      @updated="handleUpdated"
+      @archived="handleArchived"
+      @deleted="handleDeleted"
+    />
   </div>
 </template>

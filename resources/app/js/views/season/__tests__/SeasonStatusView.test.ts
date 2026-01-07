@@ -4,6 +4,9 @@ import { createPinia, setActivePinia } from 'pinia';
 import SeasonStatusView from '../SeasonStatusView.vue';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import type { Season } from '@app/types/season';
+import PrimeVue from 'primevue/config';
+import ConfirmationService from 'primevue/confirmationservice';
+import ToastService from 'primevue/toastservice';
 
 // Mock vue-router
 vi.mock('vue-router', () => ({
@@ -19,83 +22,78 @@ vi.mock('vue-router', () => ({
   }),
 }));
 
+// Mock PrimeVue hooks
+vi.mock('primevue/usetoast', () => ({
+  useToast: () => ({
+    add: vi.fn(),
+  }),
+}));
+
+vi.mock('primevue/useconfirm', () => ({
+  useConfirm: () => ({
+    require: vi.fn(),
+  }),
+}));
+
 describe('SeasonStatusView', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  it('renders loading state when season is not loaded', () => {
-    const wrapper = mount(SeasonStatusView);
+  const mountComponent = (season: Season | null = null) => {
+    const seasonStore = useSeasonStore();
+    if (season) {
+      seasonStore.currentSeason = season;
+    }
 
-    expect(wrapper.text()).toContain('Loading season data...');
+    return mount(SeasonStatusView, {
+      global: {
+        plugins: [PrimeVue, ConfirmationService, ToastService],
+        stubs: {
+          SeasonSettings: {
+            name: 'SeasonSettings',
+            props: ['season'],
+            template: '<div data-testid="season-settings">Season Settings: {{ season?.name }}</div>',
+          },
+        },
+      },
+    });
+  };
+
+  const mockSeason: Season = {
+    id: 1,
+    name: 'Test Season',
+    status: 'active',
+    startDate: '2024-01-01',
+    endDate: '2024-12-31',
+    competitionId: 1,
+    leagueId: 1,
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01',
+  };
+
+  it('does not render SeasonSettings when season is not loaded', () => {
+    const wrapper = mountComponent(null);
+
+    expect(wrapper.find('[data-testid="season-settings"]').exists()).toBe(false);
   });
 
-  it('renders season information when season is loaded', () => {
-    const seasonStore = useSeasonStore();
-    const mockSeason: Season = {
-      id: 1,
-      name: 'Test Season',
-      status: 'active',
-      startDate: '2024-01-01',
-      endDate: '2024-12-31',
-      competitionId: 1,
-      leagueId: 1,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-01',
-    };
+  it('renders SeasonSettings component when season is loaded', () => {
+    const wrapper = mountComponent(mockSeason);
 
-    seasonStore.currentSeason = mockSeason;
-
-    const wrapper = mount(SeasonStatusView);
-
-    expect(wrapper.text()).toContain('Season Status');
-    expect(wrapper.text()).toContain('Test Season');
-    expect(wrapper.text()).toContain('active');
+    expect(wrapper.find('[data-testid="season-settings"]').exists()).toBe(true);
   });
 
-  it('displays formatted dates when available', () => {
-    const seasonStore = useSeasonStore();
-    const mockSeason: Season = {
-      id: 1,
-      name: 'Test Season',
-      status: 'active',
-      startDate: '2024-01-01',
-      endDate: '2024-12-31',
-      competitionId: 1,
-      leagueId: 1,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-01',
-    };
+  it('passes season prop to SeasonSettings', () => {
+    const wrapper = mountComponent(mockSeason);
 
-    seasonStore.currentSeason = mockSeason;
-
-    const wrapper = mount(SeasonStatusView);
-
-    // Check that dates are displayed (exact format may vary by locale)
-    expect(wrapper.text()).toContain('Start Date:');
-    expect(wrapper.text()).toContain('End Date:');
+    const seasonSettings = wrapper.find('[data-testid="season-settings"]');
+    expect(seasonSettings.text()).toContain('Test Season');
   });
 
-  it('renders the placeholder content structure', () => {
-    const seasonStore = useSeasonStore();
-    const mockSeason: Season = {
-      id: 1,
-      name: 'Test Season',
-      status: 'active',
-      startDate: '2024-01-01',
-      endDate: '2024-12-31',
-      competitionId: 1,
-      leagueId: 1,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-01',
-    };
+  it('renders within a container div', () => {
+    const wrapper = mountComponent(mockSeason);
 
-    seasonStore.currentSeason = mockSeason;
-
-    const wrapper = mount(SeasonStatusView);
-
-    expect(wrapper.text()).toContain('Season Information');
-    expect(wrapper.text()).toContain('Season Name:');
-    expect(wrapper.text()).toContain('Status:');
+    expect(wrapper.element.tagName).toBe('DIV');
   });
 });

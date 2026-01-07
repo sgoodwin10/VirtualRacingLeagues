@@ -91,6 +91,9 @@ describe('SeasonStandingsPanel', () => {
         total_points: 150,
         drop_total: 150,
         podiums: 2,
+        team_id: 1,
+        team_name: 'Mercedes',
+        team_logo: 'https://example.com/mercedes.png',
         rounds: [
           { round_id: 1, round_number: 1, points: 75, has_pole: true, has_fastest_lap: false },
           { round_id: 2, round_number: 2, points: 75, has_pole: false, has_fastest_lap: true },
@@ -103,6 +106,9 @@ describe('SeasonStandingsPanel', () => {
         total_points: 140,
         drop_total: 140,
         podiums: 2,
+        team_id: 2,
+        team_name: 'Red Bull Racing',
+        team_logo: null,
         rounds: [
           { round_id: 1, round_number: 1, points: 70, has_pole: false, has_fastest_lap: true },
           { round_id: 2, round_number: 2, points: 70, has_pole: true, has_fastest_lap: false },
@@ -115,6 +121,9 @@ describe('SeasonStandingsPanel', () => {
         total_points: 130,
         drop_total: 130,
         podiums: 1,
+        team_id: null,
+        team_name: null,
+        team_logo: null,
         rounds: [
           { round_id: 1, round_number: 1, points: 65, has_pole: false, has_fastest_lap: false },
           { round_id: 2, round_number: 2, points: 65, has_pole: false, has_fastest_lap: false },
@@ -144,6 +153,9 @@ describe('SeasonStandingsPanel', () => {
             total_points: 150,
             drop_total: 150,
             podiums: 2,
+            team_id: 1,
+            team_name: 'Mercedes',
+            team_logo: 'https://example.com/mercedes.png',
             rounds: [
               { round_id: 1, round_number: 1, points: 75, has_pole: true, has_fastest_lap: false },
               { round_id: 2, round_number: 2, points: 75, has_pole: false, has_fastest_lap: true },
@@ -156,6 +168,9 @@ describe('SeasonStandingsPanel', () => {
             total_points: 140,
             drop_total: 140,
             podiums: 2,
+            team_id: 2,
+            team_name: 'Red Bull Racing',
+            team_logo: null,
             rounds: [
               { round_id: 1, round_number: 1, points: 70, has_pole: false, has_fastest_lap: true },
               { round_id: 2, round_number: 2, points: 70, has_pole: true, has_fastest_lap: false },
@@ -175,6 +190,9 @@ describe('SeasonStandingsPanel', () => {
             total_points: 120,
             drop_total: 120,
             podiums: 1,
+            team_id: null,
+            team_name: null,
+            team_logo: null,
             rounds: [
               { round_id: 1, round_number: 1, points: 60, has_pole: true, has_fastest_lap: true },
               { round_id: 2, round_number: 2, points: 60, has_pole: false, has_fastest_lap: false },
@@ -449,6 +467,9 @@ describe('SeasonStandingsPanel', () => {
             total_points: 30,
             drop_total: 30,
             podiums: 1,
+            team_id: 1,
+            team_name: 'Mercedes',
+            team_logo: null,
             rounds: [
               { round_id: 1, round_number: 1, points: 30, has_pole: true, has_fastest_lap: false },
             ],
@@ -460,6 +481,9 @@ describe('SeasonStandingsPanel', () => {
             total_points: 28,
             drop_total: 28,
             podiums: 1,
+            team_id: 2,
+            team_name: 'Red Bull Racing',
+            team_logo: null,
             rounds: [
               { round_id: 1, round_number: 1, points: 28, has_pole: false, has_fastest_lap: true },
             ],
@@ -471,6 +495,9 @@ describe('SeasonStandingsPanel', () => {
             total_points: 26,
             drop_total: 26,
             podiums: 1,
+            team_id: 1,
+            team_name: 'Mercedes',
+            team_logo: null,
             rounds: [
               { round_id: 1, round_number: 1, points: 26, has_pole: false, has_fastest_lap: false },
             ],
@@ -483,6 +510,9 @@ describe('SeasonStandingsPanel', () => {
             total_points: 26,
             drop_total: 26,
             podiums: 1,
+            team_id: 3,
+            team_name: 'Ferrari',
+            team_logo: null,
             rounds: [
               { round_id: 1, round_number: 1, points: 26, has_pole: false, has_fastest_lap: false },
             ],
@@ -494,6 +524,9 @@ describe('SeasonStandingsPanel', () => {
             total_points: 26,
             drop_total: 26,
             podiums: 1,
+            team_id: 4,
+            team_name: 'McLaren',
+            team_logo: null,
             rounds: [
               { round_id: 1, round_number: 1, points: 26, has_pole: false, has_fastest_lap: false },
             ],
@@ -506,6 +539,9 @@ describe('SeasonStandingsPanel', () => {
             total_points: 23,
             drop_total: 23,
             podiums: 0,
+            team_id: 3,
+            team_name: 'Ferrari',
+            team_logo: null,
             rounds: [
               { round_id: 1, round_number: 1, points: 23, has_pole: false, has_fastest_lap: false },
             ],
@@ -634,6 +670,9 @@ describe('SeasonStandingsPanel', () => {
                 total_points: 150,
                 drop_total: 150,
                 podiums: 2,
+                team_id: 1,
+                team_name: 'Mercedes',
+                team_logo: null,
                 rounds: [
                   {
                     round_id: 1,
@@ -652,6 +691,9 @@ describe('SeasonStandingsPanel', () => {
                 total_points: 140,
                 drop_total: 140,
                 podiums: 2,
+                team_id: 2,
+                team_name: 'Red Bull Racing',
+                team_logo: null,
                 rounds: [
                   {
                     round_id: 1,
@@ -669,6 +711,9 @@ describe('SeasonStandingsPanel', () => {
                 total_points: 140,
                 drop_total: 140,
                 podiums: 2,
+                team_id: 3,
+                team_name: 'Ferrari',
+                team_logo: null,
                 rounds: [
                   {
                     round_id: 1,
@@ -687,6 +732,9 @@ describe('SeasonStandingsPanel', () => {
                 total_points: 130,
                 drop_total: 130,
                 podiums: 1,
+                team_id: 1,
+                team_name: 'Mercedes',
+                team_logo: null,
                 rounds: [
                   {
                     round_id: 1,

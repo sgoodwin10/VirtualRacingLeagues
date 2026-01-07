@@ -317,7 +317,7 @@ describe('VrlBreadcrumbs', () => {
 
       const span = wrapper.find('span');
       expect(span.classes()).toContain('font-data');
-      expect(span.classes()).toContain('text-[11px]');
+      expect(span.classes()).toContain('text-xs');
     });
   });
 

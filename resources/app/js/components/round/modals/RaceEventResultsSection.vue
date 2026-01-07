@@ -18,14 +18,30 @@
             position-field="position"
           >
             <!-- Position Column -->
-            <Column field="position" header="#" class="w-16">
+            <Column
+              field="position"
+              header="#"
+              class="w-16"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
+            >
               <template #body="{ data }">
                 <PositionCell :position="data.position" />
               </template>
             </Column>
 
             <!-- Driver Column -->
-            <Column field="driver.name" header="Driver" class="min-w-[170px]">
+            <Column
+              field="driver.name"
+              header="Driver"
+              class="min-w-[170px]"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
+            >
               <template #body="{ data }">
                 <div class="flex items-center gap-2">
                   <span class="font-medium text-primary">{{ data.driver?.name || 'Unknown' }}</span>
@@ -77,6 +93,10 @@
               field="final_race_time"
               header="Time"
               class="w-42"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
             >
               <template #body="{ data }">
                 <div
@@ -98,6 +118,10 @@
               field="calculated_time_diff"
               header="Gap"
               class="w-42"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
             >
               <template #body="{ data }">
                 <div
@@ -130,7 +154,15 @@
             </Column>
 
             <!-- Fastest Lap / Lap Time Column -->
-            <Column v-if="raceTimesRequired" field="fastest_lap" class="w-42">
+            <Column
+              v-if="raceTimesRequired"
+              field="fastest_lap"
+              class="w-42"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
+            >
               <template #header>
                 <span>{{ raceEvent.is_qualifier ? 'Lap Time' : 'Fastest Lap' }}</span>
               </template>
@@ -169,6 +201,10 @@
               field="penalties"
               header="Penalties"
               class="w-42"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
             >
               <template #body="{ data }">
                 <div
@@ -189,6 +225,10 @@
               field="positions_gained"
               header="+/-"
               class="w-24"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
             >
               <template #body="{ data }">
                 <div

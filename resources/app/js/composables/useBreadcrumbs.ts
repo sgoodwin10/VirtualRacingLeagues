@@ -63,7 +63,7 @@ export function useBreadcrumbs() {
       case 'season-standings':
       case 'season-drivers':
       case 'season-divisions-teams':
-      case 'season-settings': {
+      case 'season-status': {
         // Season-related pages
         const leagueId = parseInt(route.params.leagueId as string);
         const league = navigationStore.leagues.find((l) => l.id === leagueId);
@@ -95,7 +95,7 @@ export function useBreadcrumbs() {
             'season-standings': 'Standings',
             'season-drivers': 'Drivers',
             'season-divisions-teams': 'Divisions & Teams',
-            'season-settings': 'Settings',
+            'season-status': 'Season Status',
           };
 
           items.push({

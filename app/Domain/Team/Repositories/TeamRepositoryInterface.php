@@ -46,4 +46,13 @@ interface TeamRepositoryInterface
      * Check if a team exists in a specific season.
      */
     public function existsInSeason(int $teamId, int $seasonId): bool;
+
+    /**
+     * Batch fetch team data for multiple team IDs to avoid N+1 queries.
+     * Returns name and logo URL for each team.
+     *
+     * @param array<int> $teamIds
+     * @return array<int, array{name: string, logo_url: string|null}> Map of team ID => team data
+     */
+    public function findDataByIds(array $teamIds): array;
 }

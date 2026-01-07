@@ -47,7 +47,8 @@ const createWrapper = (props = {}) => {
       ],
       stubs: {
         Dialog: {
-          template: '<div class="mock-dialog" v-if="visible"><slot></slot><slot name="header"></slot><slot name="footer"></slot></div>',
+          template:
+            '<div class="mock-dialog" v-if="visible"><slot></slot><slot name="header"></slot><slot name="footer"></slot></div>',
           props: ['visible', 'modal', 'header', 'dismissableMask', 'closeOnEscape'],
           emits: ['update:visible'],
         },
@@ -212,7 +213,9 @@ describe('EditLeagueModal', () => {
 
     // Look for any close button with the times icon
     const closeButtons = wrapper.findAll('button');
-    const closeButton = closeButtons.find((btn) => btn.html().includes('pi-times') || btn.html().includes('PhX'));
+    const closeButton = closeButtons.find(
+      (btn) => btn.html().includes('pi-times') || btn.html().includes('PhX'),
+    );
 
     if (closeButton) {
       await closeButton.trigger('click');

@@ -26,9 +26,9 @@ const colors = computed(() => {
 });
 
 const sizeClasses = {
-  sm: 'min-w-[20px] h-[20px] text-[10px] rounded-[3px]',
-  md: 'min-w-[24px] h-[24px] text-[11px] rounded',
-  lg: 'min-w-[28px] h-[28px] text-[12px] rounded-md',
+  sm: 'min-w-[20px] h-[20px] text-xs rounded-[3px]',
+  md: 'min-w-[24px] h-[24px] text-sm rounded',
+  lg: 'min-w-[28px] h-[28px] text-md rounded-md',
 };
 
 const fontWeight = computed(() => (props.position <= 3 ? 700 : 600));

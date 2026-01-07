@@ -4,6 +4,7 @@ import type { CardProps } from './types';
 
 const props = withDefaults(defineProps<CardProps>(), {
   showHeader: undefined,
+  bodyPadding: true,
 });
 
 /**
@@ -51,7 +52,7 @@ const shouldShowHeader = computed(() => {
     </div>
 
     <!-- Body Slot -->
-    <div class="p-[18px]">
+    <div :class="[props.bodyPadding ? 'p-[18px]' : 'p-0']">
       <slot name="body">
         <slot />
       </slot>

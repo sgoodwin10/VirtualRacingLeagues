@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import TechDataTable from '../TechDataTable.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import PrimeVue from 'primevue/config';
 
 interface TestData {
   id: number;
@@ -126,7 +127,12 @@ describe('TechDataTable', () => {
         rows: 2,
       },
       global: {
+        plugins: [PrimeVue],
         components: { DataTable },
+        stubs: {
+          Button: true,
+          Select: true,
+        },
       },
     });
 
@@ -149,7 +155,12 @@ describe('TechDataTable', () => {
         first: 0,
       },
       global: {
+        plugins: [PrimeVue],
         components: { DataTable },
+        stubs: {
+          Button: true,
+          Select: true,
+        },
       },
     });
 
@@ -187,5 +198,95 @@ describe('TechDataTable', () => {
 
     const dataTable = wrapper.findComponent(DataTable);
     expect(dataTable.props('rowHover')).toBe(false);
+  });
+
+  it('uses default entity name "records" when not provided', () => {
+    const wrapper = mount(TechDataTable, {
+      props: {
+        value: mockData,
+        paginator: true,
+        rows: 10,
+        totalRecords: 4,
+      },
+      global: {
+        components: { DataTable },
+        stubs: {
+          Select: true,
+          Button: true,
+        },
+      },
+    });
+
+    // The entity name should appear in the paginator container
+    expect(wrapper.html()).toContain('records');
+  });
+
+  it('uses custom entity name when provided', () => {
+    const wrapper = mount(TechDataTable, {
+      props: {
+        value: mockData,
+        paginator: true,
+        rows: 10,
+        totalRecords: 4,
+        entityName: 'drivers',
+      },
+      global: {
+        components: { DataTable },
+        stubs: {
+          Select: true,
+          Button: true,
+        },
+      },
+    });
+
+    // The custom entity name should appear in the paginator container
+    expect(wrapper.html()).toContain('drivers');
+  });
+
+  it('renders custom paginator when useCustomPaginator is true', () => {
+    const wrapper = mount(TechDataTable, {
+      props: {
+        value: mockData,
+        paginator: true,
+        rows: 10,
+        totalRecords: 4,
+        useCustomPaginator: true,
+        rowsPerPageOptions: [5, 10, 20],
+      },
+      global: {
+        components: { DataTable },
+        stubs: {
+          Select: true,
+          Button: true,
+        },
+      },
+    });
+
+    // Check for custom paginator elements
+    const html = wrapper.html();
+    expect(html).toContain('Showing');
+    expect(html).toContain('Rows per page:');
+    expect(html).toContain('Page');
+  });
+
+  it('does not render custom paginator when useCustomPaginator is false', () => {
+    const wrapper = mount(TechDataTable, {
+      props: {
+        value: mockData,
+        paginator: true,
+        rows: 10,
+        totalRecords: 4,
+        useCustomPaginator: false,
+      },
+      global: {
+        plugins: [PrimeVue],
+        components: { DataTable },
+      },
+    });
+
+    // The default PrimeVue paginator should be used (no custom elements)
+    const html = wrapper.html();
+    // Custom paginator text should not be present
+    expect(html).not.toContain('Rows per page:');
   });
 });

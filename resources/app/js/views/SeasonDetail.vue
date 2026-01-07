@@ -8,8 +8,6 @@ import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import { useNavigationStore } from '@app/stores/navigationStore';
 import type { Season } from '@app/types/season';
 
-import { PhPencil } from '@phosphor-icons/vue';
-import { Button } from '@app/components/common/buttons';
 import Skeleton from 'primevue/skeleton';
 import Message from 'primevue/message';
 
@@ -120,10 +118,6 @@ async function loadDrivers(): Promise<void> {
   }
 }
 
-function handleEdit(): void {
-  showEditDrawer.value = true;
-}
-
 function handleSeasonUpdated(updated: Season): void {
   season.value = updated;
   // Reload season to get fresh data
@@ -143,14 +137,6 @@ function handleSeasonUpdated(updated: Season): void {
 
     <!-- Season content -->
     <div v-else-if="season" class="space-y-6">
-      <Button
-        label="Edit Season"
-        :icon="PhPencil"
-        variant="outline"
-        size="sm"
-        :disabled="season.is_archived"
-        @click="handleEdit"
-      />
       <!-- Nested router view for tabs -->
       <router-view />
 

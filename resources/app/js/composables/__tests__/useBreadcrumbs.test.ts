@@ -177,22 +177,22 @@ describe('useBreadcrumbs', () => {
       });
     });
 
-    it('generates breadcrumbs for season settings page', () => {
+    it('generates breadcrumbs for season status page', () => {
       vi.mocked(useRoute).mockReturnValue({
-        name: 'season-settings',
+        name: 'season-status',
         params: {
           leagueId: '1',
           competitionId: '10',
           seasonId: '20',
         },
-        meta: { title: 'Settings', requiresCompetitionContext: true },
+        meta: { title: 'Season Status', requiresCompetitionContext: true },
       } as any);
 
       const breadcrumbs = useBreadcrumbs();
 
       expect(breadcrumbs.value).toHaveLength(4);
       expect(breadcrumbs.value[3]).toEqual({
-        label: 'Settings',
+        label: 'Season Status',
       });
     });
 

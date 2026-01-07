@@ -50,7 +50,7 @@ export const useDriverStore = defineStore('driver', () => {
 
   // Pagination state
   const currentPage = ref(1);
-  const perPage = ref(15);
+  const perPage = ref(10);
   const totalDrivers = ref(0);
   const lastPage = ref(1);
 
@@ -341,7 +341,7 @@ export const useDriverStore = defineStore('driver', () => {
   function resetStore(): void {
     resetCrudStore();
     currentPage.value = 1;
-    perPage.value = 15;
+    perPage.value = 10;
     totalDrivers.value = 0;
     lastPage.value = 1;
     searchQuery.value = '';

@@ -56,7 +56,7 @@ describe('driverStore', () => {
       expect(store.loading).toBe(false);
       expect(store.error).toBeNull();
       expect(store.currentPage).toBe(1);
-      expect(store.perPage).toBe(15);
+      expect(store.perPage).toBe(10);
       expect(store.totalDrivers).toBe(0);
       expect(store.lastPage).toBe(1);
       expect(store.searchQuery).toBe('');
@@ -293,7 +293,7 @@ describe('driverStore', () => {
         data: [],
         meta: {
           current_page: 1,
-          per_page: 15,
+          per_page: 10,
           total: 0,
           last_page: 1,
           from: null,
@@ -313,7 +313,7 @@ describe('driverStore', () => {
         1,
         {
           page: 1,
-          per_page: 15,
+          per_page: 10,
           search: 'test',
           status: 'active',
         },

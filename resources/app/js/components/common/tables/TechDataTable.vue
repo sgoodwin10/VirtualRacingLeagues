@@ -1,6 +1,14 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
 import { computed } from 'vue';
 import DataTable from 'primevue/datatable';
+import Select from 'primevue/select';
+import Button from '@app/components/common/buttons/Button.vue';
+import {
+  PhCaretDoubleLeft,
+  PhCaretLeft,
+  PhCaretRight,
+  PhCaretDoubleRight,
+} from '@phosphor-icons/vue';
 import type {
   DataTablePageEvent,
   DataTableSortEvent,
@@ -25,6 +33,10 @@ interface Props {
   first?: number;
   /** Enable lazy loading */
   lazy?: boolean;
+  /** Paginator template */
+  paginatorTemplate?: string;
+  /** Current page report template */
+  currentPageReportTemplate?: string;
   /** Enable row hover */
   rowHover?: boolean;
   /** Empty message */
@@ -39,6 +51,10 @@ interface Props {
   positionField?: keyof T;
   /** Enable reorderable rows */
   reorderableRows?: boolean;
+  /** Entity name for pagination (e.g., 'drivers', 'records') */
+  entityName?: string;
+  /** Use custom paginator template */
+  useCustomPaginator?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -49,6 +65,9 @@ const props = withDefaults(defineProps<Props>(), {
   totalRecords: undefined,
   first: 0,
   lazy: false,
+  paginatorTemplate:
+    'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown',
+  currentPageReportTemplate: 'Showing {first} to {last} of {totalRecords} entries',
   rowHover: true,
   emptyMessage: 'No data available',
   responsiveLayout: 'scroll',
@@ -56,6 +75,8 @@ const props = withDefaults(defineProps<Props>(), {
   podiumHighlight: false,
   positionField: 'position' as keyof T,
   reorderableRows: false,
+  entityName: 'records',
+  useCustomPaginator: true,
 });
 
 interface Emits {
@@ -134,6 +155,8 @@ function onRowReorder(event: DataTableRowReorderEvent): void {
     :total-records="totalRecords"
     :first="first"
     :lazy="lazy"
+    :paginator-template="paginatorTemplate"
+    :current-page-report-template="currentPageReportTemplate"
     :row-hover="rowHover"
     :responsive-layout="responsiveLayout"
     :reorderable-rows="reorderableRows"
@@ -170,8 +193,101 @@ function onRowReorder(event: DataTableRowReorderEvent): void {
     <!-- Default slot for columns -->
     <slot />
 
-    <!-- Paginator template -->
-    <template v-if="paginator" #paginatorcontainer="slotProps">
+    <!-- Custom Paginator Template -->
+    <template
+      v-if="useCustomPaginator && paginator"
+      #paginatorcontainer="{
+        first: paginatorFirst,
+        last: paginatorLast,
+        page,
+        pageCount,
+        prevPageCallback,
+        nextPageCallback,
+        totalRecords: total,
+      }"
+    >
+      <div class="flex items-center justify-between w-full px-4 py-2">
+        <!-- Left: Record info -->
+        <span class="text-sm text-gray-600">
+          Showing {{ paginatorFirst }} to {{ paginatorLast }} of {{ total ?? 0 }} {{ entityName }}
+        </span>
+
+        <!-- Center: Rows per page -->
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600">Rows per page:</span>
+          <Select
+            :model-value="rows"
+            :options="rowsPerPageOptions"
+            class="w-20"
+            @change="
+              (e) =>
+                onPage({
+                  page: 0,
+                  rows: e.value,
+                  first: 0,
+                  pageCount: Math.ceil((total ?? 0) / e.value),
+                } as DataTablePageEvent)
+            "
+          />
+        </div>
+
+        <!-- Right: Navigation -->
+        <div class="flex items-center gap-1">
+          <Button
+            :icon="PhCaretDoubleLeft"
+            variant="outline"
+            size="sm"
+            :disabled="(page ?? 0) === 0"
+            aria-label="First page"
+            @click="
+              onPage({
+                page: 0,
+                rows: rows,
+                first: 0,
+                pageCount: pageCount ?? 0,
+              } as DataTablePageEvent)
+            "
+          />
+          <Button
+            :icon="PhCaretLeft"
+            variant="outline"
+            size="sm"
+            :disabled="(page ?? 0) === 0"
+            aria-label="Previous page"
+            @click="prevPageCallback"
+          />
+          <span class="text-sm text-gray-600 mx-2">
+            Page {{ (page ?? 0) + 1 }} of {{ pageCount ?? 0 }}
+          </span>
+          <Button
+            :icon="PhCaretRight"
+            variant="outline"
+            size="sm"
+            :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
+            aria-label="Next page"
+            @click="nextPageCallback"
+          />
+          <Button
+            :icon="PhCaretDoubleRight"
+            variant="outline"
+            size="sm"
+            :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
+            aria-label="Last page"
+            @click="
+              onPage({
+                page: (pageCount ?? 1) - 1,
+                rows: rows,
+                first: ((pageCount ?? 1) - 1) * rows,
+                pageCount: pageCount ?? 0,
+              } as DataTablePageEvent)
+            "
+          />
+        </div>
+      </div>
+    </template>
+
+    <!-- Allow custom paginator override if slot is provided -->
+    <template v-else-if="$slots.paginatorcontainer" #paginatorcontainer="slotProps">
       <slot name="paginatorcontainer" v-bind="slotProps" />
     </template>
   </DataTable>

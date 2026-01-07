@@ -49,6 +49,12 @@ export interface CardProps {
   showHeader?: boolean;
 
   /**
+   * Whether to remove default padding from the card body
+   * @default false
+   */
+  bodyPadding?: boolean;
+
+  /**
    * Additional CSS classes for the card container
    */
   class?: string;

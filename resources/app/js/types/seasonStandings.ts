@@ -25,6 +25,9 @@ export interface SeasonStandingDriver {
   readonly drop_total: number;
   readonly podiums: number;
   readonly rounds: readonly RoundPoints[];
+  readonly team_id: number | null;
+  readonly team_name: string | null;
+  readonly team_logo: string | null;
 }
 
 /**

@@ -234,7 +234,7 @@ describe('PositionIndicator', () => {
 
       expect(wrapper.classes()).toContain('min-w-[24px]');
       expect(wrapper.classes()).toContain('h-[24px]');
-      expect(wrapper.classes()).toContain('text-[11px]');
+      expect(wrapper.classes()).toContain('text-sm');
       expect(wrapper.classes()).toContain('rounded');
     });
 
@@ -247,7 +247,7 @@ describe('PositionIndicator', () => {
 
       expect(wrapper.classes()).toContain('min-w-[20px]');
       expect(wrapper.classes()).toContain('h-[20px]');
-      expect(wrapper.classes()).toContain('text-[10px]');
+      expect(wrapper.classes()).toContain('text-xs');
       expect(wrapper.classes()).toContain('rounded-[3px]');
     });
 
@@ -260,7 +260,7 @@ describe('PositionIndicator', () => {
 
       expect(wrapper.classes()).toContain('min-w-[24px]');
       expect(wrapper.classes()).toContain('h-[24px]');
-      expect(wrapper.classes()).toContain('text-[11px]');
+      expect(wrapper.classes()).toContain('text-sm');
       expect(wrapper.classes()).toContain('rounded');
     });
 
@@ -273,7 +273,7 @@ describe('PositionIndicator', () => {
 
       expect(wrapper.classes()).toContain('min-w-[28px]');
       expect(wrapper.classes()).toContain('h-[28px]');
-      expect(wrapper.classes()).toContain('text-[12px]');
+      expect(wrapper.classes()).toContain('text-md');
       expect(wrapper.classes()).toContain('rounded-md');
     });
   });

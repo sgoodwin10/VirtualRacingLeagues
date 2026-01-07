@@ -805,6 +805,9 @@ final class SeasonApplicationService
         bool $dropRoundEnabled,
         int $totalDropRounds
     ): array {
+        // Get season ID from first round
+        $seasonId = ! empty($rounds) ? $rounds[0]->seasonId() : 0;
+
         // Extract unique driver IDs for batch fetch
         $driverIds = [];
         foreach ($rounds as $round) {
@@ -821,6 +824,13 @@ final class SeasonApplicationService
 
         // Batch fetch driver names to avoid N+1 queries
         $driverNames = $this->batchFetchDriverNames($driverIds);
+
+        // Batch fetch team IDs for all drivers in this season
+        $driverTeamIds = $this->batchFetchDriverTeams($seasonId, $driverIds);
+
+        // Extract unique team IDs and batch fetch team data
+        $teamIds = array_filter(array_unique(array_values($driverTeamIds)));
+        $teamData = ! empty($teamIds) ? $this->batchFetchTeamData($teamIds) : [];
 
         // Aggregate points per driver
         $driverTotals = [];
@@ -939,6 +949,10 @@ final class SeasonApplicationService
                 $driversAtCurrentPosition = 0;
             }
 
+            // Get team information for this driver
+            $teamId = $driverTeamIds[$driverId] ?? null;
+            $team = $teamId !== null && isset($teamData[$teamId]) ? $teamData[$teamId] : null;
+
             $standing = [
                 'position' => $position,
                 'driver_id' => $data['driver_id'],
@@ -947,6 +961,9 @@ final class SeasonApplicationService
                 'podiums' => $data['podiums'],
                 'poles' => $data['poles'],
                 'rounds' => $driverRoundData[$driverId],
+                'team_id' => $teamId,
+                'team_name' => $team !== null ? $team['name'] : null,
+                'team_logo' => $team !== null ? $team['logo_url'] : null,
             ];
 
             // Add drop_total if drop rounds are enabled
@@ -973,6 +990,9 @@ final class SeasonApplicationService
         bool $dropRoundEnabled,
         int $totalDropRounds
     ): array {
+        // Get season ID from first round
+        $seasonId = ! empty($rounds) ? $rounds[0]->seasonId() : 0;
+
         // Extract unique driver IDs and division IDs for batch fetch
         $driverIds = [];
         $divisionIds = [];
@@ -1000,6 +1020,13 @@ final class SeasonApplicationService
         // Batch fetch driver names and division data (name + order)
         $driverNames = $this->batchFetchDriverNames($driverIds);
         $divisionData = $this->batchFetchDivisionData($divisionIds);
+
+        // Batch fetch team IDs for all drivers in this season
+        $driverTeamIds = $this->batchFetchDriverTeams($seasonId, $driverIds);
+
+        // Extract unique team IDs and batch fetch team data
+        $teamIds = array_filter(array_unique(array_values($driverTeamIds)));
+        $teamData = ! empty($teamIds) ? $this->batchFetchTeamData($teamIds) : [];
 
         // Aggregate points per driver per division
         $divisionDriverTotals = [];
@@ -1165,6 +1192,10 @@ final class SeasonApplicationService
                     $driversAtCurrentPosition = 0;
                 }
 
+                // Get team information for this driver
+                $teamId = $driverTeamIds[$driverId] ?? null;
+                $team = $teamId !== null && isset($teamData[$teamId]) ? $teamData[$teamId] : null;
+
                 $driver = [
                     'position' => $position,
                     'driver_id' => $driverData['driver_id'],
@@ -1173,6 +1204,9 @@ final class SeasonApplicationService
                     'podiums' => $driverData['podiums'],
                     'poles' => $driverData['poles'],
                     'rounds' => $divisionDriverRoundData[$divisionId][$driverId],
+                    'team_id' => $teamId,
+                    'team_name' => $team !== null ? $team['name'] : null,
+                    'team_logo' => $team !== null ? $team['logo_url'] : null,
                 ];
 
                 // Add drop_total if drop rounds are enabled

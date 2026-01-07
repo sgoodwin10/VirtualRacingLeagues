@@ -387,6 +387,37 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     }
 
     /**
+     * Batch fetch team IDs for drivers in a season.
+     * Returns a map of driver_id => team_id|null.
+     *
+     * @param array<int> $driverIds List of driver IDs (from league_drivers table)
+     * @return array<int, int|null> Map of driver ID => team ID (null if not on a team)
+     */
+    public function findTeamIdsByDriverIds(int $seasonId, array $driverIds): array
+    {
+        if (empty($driverIds)) {
+            return [];
+        }
+
+        // Query to get team IDs for drivers in the season
+        // We need to join with league_drivers to map driver_id to team_id
+        $results = SeasonDriverEloquent::query()
+            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
+            ->where('season_drivers.season_id', $seasonId)
+            ->whereIn('league_drivers.driver_id', $driverIds)
+            ->select('league_drivers.driver_id as driver_id', 'season_drivers.team_id as team_id')
+            ->get();
+
+        $map = [];
+        foreach ($results as $result) {
+            /** @var object{driver_id: int, team_id: int|null} $result */
+            $map[$result->driver_id] = $result->team_id;
+        }
+
+        return $map;
+    }
+
+    /**
      * Map domain entity to Eloquent data array.
      *
      * @return array<string, mixed>

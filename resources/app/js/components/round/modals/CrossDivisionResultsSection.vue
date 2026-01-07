@@ -8,19 +8,43 @@
         :podium-highlight="true"
         position-field="position"
       >
-        <Column field="position" header="#" class="w-16">
+        <Column
+          field="position"
+          header="#"
+          class="w-16"
+          :pt="{
+            headerCell: { style: { borderRight: '1px solid var(--border)' } },
+            bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+          }"
+        >
           <template #body="{ data }">
             <PositionCell :position="data.position" />
           </template>
         </Column>
 
-        <Column field="driverName" header="Driver" class="min-w-[200px]">
+        <Column
+          field="driverName"
+          header="Driver"
+          class="min-w-[200px]"
+          :pt="{
+            headerCell: { style: { borderRight: '1px solid var(--border)' } },
+            bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+          }"
+        >
           <template #body="{ data }">
             <span class="font-medium text-primary">{{ data.driverName }}</span>
           </template>
         </Column>
 
-        <Column field="divisionName" header="Division" class="w-32">
+        <Column
+          field="divisionName"
+          header="Division"
+          class="w-32"
+          :pt="{
+            headerCell: { style: { borderRight: '1px solid var(--border)' } },
+            bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+          }"
+        >
           <template #body="{ data }">
             <BaseBadge
               v-if="data.divisionName"
@@ -33,7 +57,15 @@
           </template>
         </Column>
 
-        <Column field="formattedTime" header="Time" class="w-42">
+        <Column
+          field="formattedTime"
+          header="Time"
+          class="w-42"
+          :pt="{
+            headerCell: { style: { borderRight: '1px solid var(--border)' } },
+            bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+          }"
+        >
           <template #body="{ data }">
             <span class="font-mono text-secondary">{{ data.formattedTime }}</span>
           </template>
