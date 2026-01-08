@@ -13,7 +13,6 @@ import Tooltip from 'primevue/tooltip';
 import SpeedDial from 'primevue/speeddial';
 import { Button, FooterAddButton } from '@app/components/common/buttons';
 import InfoItem from '@app/components/common/InfoItem.vue';
-import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
 import SeasonFormSplitModal from '@app/components/season/modals/SeasonFormSplitModal.vue';
 import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 import { useCompetitionStore } from '@app/stores/competitionStore';
@@ -58,9 +57,6 @@ const TOAST_ERROR_DURATION = 5000;
 const showSeasonDrawer = ref(false);
 const editingSeasonId = ref<number | null>(null);
 const seasonOperations = ref<Record<number, boolean>>({});
-
-// Toggle between drawer and split modal design (set to true to use new split modal)
-const useSplitModal = ref(true);
 
 const cardClasses = computed(() => ({
   'opacity-60': props.competition.is_archived,
@@ -560,20 +556,11 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Season Form Modal (toggle between drawer and split modal) -->
+    <!-- Season Form Modal -->
     <SeasonFormSplitModal
-      v-if="useSplitModal"
       v-model:visible="showSeasonDrawer"
       :competition-id="competition.id"
-      :season="editingSeasonData"
-      :is-edit-mode="!!editingSeasonId"
-      @season-saved="handleSeasonSaved"
-      @hide="handleDrawerHide"
-    />
-    <SeasonFormDrawer
-      v-else
-      v-model:visible="showSeasonDrawer"
-      :competition-id="competition.id"
+      :competition-name="competition.name"
       :season="editingSeasonData"
       :is-edit-mode="!!editingSeasonId"
       @season-saved="handleSeasonSaved"

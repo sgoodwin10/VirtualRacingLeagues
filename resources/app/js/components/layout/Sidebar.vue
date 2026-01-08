@@ -117,6 +117,7 @@ function handleSeasonSaved(): void {
       v-model:visible="showEditSeasonModal"
       :is-edit-mode="true"
       :competition-id="navigationStore.competitionId ?? 0"
+      :competition-name="competitionName"
       :season="navigationStore.currentSeason"
       @season-saved="handleSeasonSaved"
     />

@@ -3,7 +3,8 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { PhPlus, PhArrowRight, PhPencil } from '@phosphor-icons/vue';
-import { Button } from '@app/components/common/buttons';
+import { Button, IconButton } from '@app/components/common/buttons';
+import BaseBadge from '@app/components/common/indicators/BaseBadge.vue';
 import Skeleton from 'primevue/skeleton';
 import Toast from 'primevue/toast';
 import { getLeagueById } from '@app/services/leagueService';
@@ -13,6 +14,7 @@ import { useSeasonStore } from '@app/stores/seasonStore';
 import LeagueIdentityPanel from '@app/components/league/partials/LeagueIdentityPanel.vue';
 import EditLeagueModal from '@app/components/league/modals/EditLeagueModal.vue';
 import CompetitionFormDrawer from '@app/components/competition/CompetitionFormDrawer.vue';
+import SeasonFormSplitModal from '@app/components/season/modals/SeasonFormSplitModal.vue';
 import {
   ListContainer,
   ListRow,
@@ -39,6 +41,8 @@ const showSettingsModal = ref(false);
 const showCompetitionDrawer = ref(false);
 const selectedCompetition = ref<Competition | null>(null);
 const isEditingCompetition = ref(false);
+const showNewSeasonModal = ref(false);
+const selectedCompetitionForNewSeason = ref<Competition | null>(null);
 
 // Get league ID from route params
 const leagueId = computed(() => route.params.id as string);
@@ -156,14 +160,9 @@ function handleLeagueSaved(): void {
   loadLeague();
 }
 
-function handleNewSeason(): void {
-  // TODO: Implement season creation
-  toast.add({
-    severity: 'info',
-    summary: 'Coming Soon',
-    detail: 'Season creation will be available soon',
-    life: 3000,
-  });
+function handleNewSeason(competition: Competition): void {
+  selectedCompetitionForNewSeason.value = competition;
+  showNewSeasonModal.value = true;
 }
 
 function handleAddCompetition(): void {
@@ -183,6 +182,12 @@ function handleCompetitionSaved(): void {
   selectedCompetition.value = null;
   isEditingCompetition.value = false;
   loadCompetitions();
+}
+
+function handleSeasonSaved(): void {
+  showNewSeasonModal.value = false;
+  selectedCompetitionForNewSeason.value = null;
+  loadSeasons();
 }
 
 function handleViewSeason(season: Season): void {
@@ -223,24 +228,6 @@ function getSeasonRoundsProgress(season: Season): string {
   const total = season.stats?.total_races || 0;
   const completed = season.stats?.completed_races || 0;
   return `Round ${completed} of ${total}`;
-}
-
-/**
- * Generate initials from competition name
- * e.g., "Thunder Racing League" → "TRL"
- */
-function getCompetitionInitials(name: string): string {
-  const words = name.trim().split(/\s+/);
-  if (words.length === 1) {
-    // Single word: take first 3 characters
-    return words[0].substring(0, 3).toUpperCase();
-  }
-  // Multiple words: take first letter of each word (max 4)
-  return words
-    .slice(0, 4)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase();
 }
 
 /**
@@ -297,15 +284,6 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
           >
             <span class="text-[var(--cyan)]">//</span> DASHBOARD
           </h2>
-          <div class="flex gap-2">
-            <Button
-              label="New Season"
-              :icon="PhPlus"
-              variant="primary"
-              size="sm"
-              @click="handleNewSeason"
-            />
-          </div>
         </header>
 
         <!-- Content Body -->
@@ -417,9 +395,6 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                 <div class="card-top">
                   <div class="card-indicator" :class="getCompetitionStatusClass(competition)"></div>
                   <div class="card-header">
-                    <div class="card-logo">
-                      {{ getCompetitionInitials(competition.name) }}
-                    </div>
                     <div class="card-info">
                       <h3 class="card-name">{{ competition.name }}</h3>
                       <div class="card-meta">
@@ -430,8 +405,8 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                 </div>
 
                 <div class="card-body">
-                  <p class="card-tagline">
-                    {{ competition.description || 'No description provided yet.' }}
+                  <p v-if="competition.description" class="card-tagline">
+                    {{ competition.description }}
                   </p>
                   <div class="card-stats">
                     <div class="card-stat">
@@ -454,19 +429,31 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                 </div>
 
                 <div class="card-footer">
-                  <span
-                    class="status-badge"
-                    :class="competition.status === 'active' ? 'active' : 'archived'"
+                  <BaseBadge
+                    :variant="competition.status === 'active' ? 'green' : 'default'"
+                    size="sm"
+                    uppercase
                   >
                     {{ competition.status }}
-                  </span>
-                  <button
-                    class="card-action"
+                  </BaseBadge>
+                  <Button
+                    label="Create Season"
+                    :icon="PhPlus"
+                    variant="outline"
+                    size="sm"
+                    class="mx-auto"
+                    :aria-label="`Create new season for ${competition.name}`"
+                    @click="handleNewSeason(competition)"
+                  />
+                  <Button
+                    :icon="PhPencil"
+                    label="Edit Season"
+                    variant="secondary"
+                    size="sm"
+                    class="mx-auto"
                     :aria-label="`Edit ${competition.name}`"
                     @click="handleEditCompetition(competition)"
-                  >
-                    <PhPencil :size="14" />
-                  </button>
+                  />
                 </div>
               </article>
 
@@ -518,6 +505,16 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
       :competition="selectedCompetition"
       :is-edit-mode="isEditingCompetition"
       @competition-saved="handleCompetitionSaved"
+    />
+
+    <!-- Season Form Modal -->
+    <SeasonFormSplitModal
+      v-if="selectedCompetitionForNewSeason"
+      v-model:visible="showNewSeasonModal"
+      :competition-id="selectedCompetitionForNewSeason.id"
+      :competition-name="selectedCompetitionForNewSeason.name"
+      :is-edit-mode="false"
+      @season-saved="handleSeasonSaved"
     />
 
     <!-- Toast for notifications -->
@@ -678,50 +675,6 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
   background: var(--bg-elevated);
   border-top: 1px solid var(--border-muted);
   align-items: center;
-}
-
-.status-badge {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 500;
-  padding: 4px 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-muted);
-  border-radius: 3px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.status-badge.active {
-  color: var(--green);
-  border-color: rgba(34, 197, 94, 0.3);
-  background: rgba(34, 197, 94, 0.1);
-}
-
-.status-badge.archived {
-  color: var(--text-muted);
-  border-color: var(--border-muted);
-}
-
-.card-action {
-  margin-left: auto;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius);
-  border: 1px solid rgba(88, 166, 255, 0.3);
-  background: var(--cyan-dim);
-  color: var(--cyan);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.card-action:hover {
-  background: var(--cyan);
-  color: var(--bg-dark);
 }
 
 /* Add Competition Card */

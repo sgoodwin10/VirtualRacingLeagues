@@ -1,6 +1,6 @@
 # DDD Backend Architecture Overview
 
-**Version**: 3.0
+**Version**: 4.0
 **Last Updated**: January 2025
 **Purpose**: Core DDD architecture principles and patterns for this Laravel backend
 
@@ -9,13 +9,15 @@
 ## Table of Contents
 
 1. [Architecture Layers](#architecture-layers)
-2. [Decision Trees](#decision-trees)
-3. [Core Patterns](#core-patterns)
-4. [Packages & Tools](#packages--tools)
-5. [Testing Strategy](#testing-strategy)
-6. [Common Commands](#common-commands)
-7. [Do's and Don'ts](#dos-and-donts)
-8. [Troubleshooting](#troubleshooting)
+2. [Bounded Contexts](#bounded-contexts)
+3. [Decision Trees](#decision-trees)
+4. [Core Patterns](#core-patterns)
+5. [Implementation Examples](#implementation-examples)
+6. [Packages & Tools](#packages--tools)
+7. [Testing Strategy](#testing-strategy)
+8. [Common Commands](#common-commands)
+9. [Do's and Don'ts](#dos-and-donts)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -24,46 +26,42 @@
 ### Four-Layer Architecture
 
 ```
-┌─────────────────────────────────────┐
-│  Interface Layer                    │  HTTP Controllers (3-5 lines/method)
-│  app/Http/Controllers/Admin/        │  Form Requests, ApiResponse helper
-└─────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────┐
-│  Application Layer                  │  Use case orchestration
-│  app/Application/{Context}/         │  DTOs (Spatie Laravel Data)
-│    - Services/                      │  Transactions, event dispatching
-│    - DTOs/                          │
-└─────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────┐
-│  Domain Layer (Pure PHP)            │  Business logic, domain events
-│  app/Domain/{Context}/              │  NO Laravel dependencies
-│    - Entities/                      │  Value objects for validation
-│    - ValueObjects/                  │  Repository interfaces only
-│    - Events/                        │
-│    - Exceptions/                    │
-│    - Repositories/ (interfaces)     │
-└─────────────────────────────────────┘
-              ↑
-┌─────────────────────────────────────┐
-│  Infrastructure Layer               │  Eloquent models (anemic)
-│  app/Infrastructure/Persistence/    │  Repository implementations
-│    - Eloquent/Models/               │  Entity ↔ Eloquent mapping
-│    - Eloquent/Repositories/         │  Event listeners
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│  Interface Layer                                                    │
+│  app/Http/Controllers/{Context}/                                    │
+│  - Thin controllers (3-5 lines/method)                              │
+│  - Form Requests for validation                                     │
+│  - ApiResponse helper for consistent JSON                           │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  Application Layer                                                  │
+│  app/Application/{Context}/                                         │
+│  - Services/ (use case orchestration, transactions)                 │
+│  - DTOs/ (Spatie Laravel Data with validation)                      │
+│  - Authorization, file handling, event dispatch                     │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  Domain Layer (Pure PHP - NO Laravel)                               │
+│  app/Domain/{Context}/                                              │
+│  - Entities/ (aggregate roots with business logic)                  │
+│  - ValueObjects/ (immutable, self-validating)                       │
+│  - Events/ (domain events for state changes)                        │
+│  - Exceptions/ (domain-specific errors)                             │
+│  - Repositories/ (interfaces only)                                  │
+│  - Services/ (stateless domain services)                            │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↑
+┌─────────────────────────────────────────────────────────────────────┐
+│  Infrastructure Layer                                               │
+│  app/Infrastructure/                                                │
+│  - Persistence/Eloquent/Models/ (anemic Eloquent models)            │
+│  - Persistence/Eloquent/Repositories/ (implements domain interfaces)│
+│  - Listeners/ (domain event handlers, activity logging)             │
+│  - Cache/, Media/, Services/                                        │
+└─────────────────────────────────────────────────────────────────────┘
 ```
-
-### Bounded Contexts
-
-This application is organized into three main bounded contexts:
-
-- **Admin**: `/app/Domain/Admin/`, `/app/Application/Admin/` - Administrator management with roles and permissions
-- **User**: `/app/Domain/User/`, `/app/Application/User/` - End-user accounts managed by admins
-- **SiteConfig**: `/app/Domain/SiteConfig/`, `/app/Application/SiteConfig/` - System-wide configuration
-- **Shared**: `/app/Domain/Shared/` - Shared value objects (EmailAddress, FullName)
-
-**Important Note**: Admin and User are **separate bounded contexts** with different business rules and lifecycles. See context-specific guides for details.
 
 ### Dependency Rule
 
@@ -74,6 +72,50 @@ This application is organized into three main bounded contexts:
 - ✅ Interface → Application (calls services)
 - ❌ Domain → Infrastructure (NEVER)
 - ❌ Domain → Application (NEVER)
+- ❌ Domain → Laravel (NEVER - no `use Illuminate\...`)
+
+---
+
+## Bounded Contexts
+
+This application has **10 bounded contexts**, each with complete DDD structure:
+
+### Core Contexts
+
+| Context | Location | Purpose |
+|---------|----------|---------|
+| **Admin** | `app/Domain/Admin/` | Administrator management with role hierarchy (SuperAdmin, Admin, Moderator) |
+| **User** | `app/Domain/User/` | End-user accounts and profiles |
+| **League** | `app/Domain/League/` | League creation, management, visibility |
+| **Competition** | `app/Domain/Competition/` | Seasons, rounds, races, race results |
+| **Division** | `app/Domain/Division/` | Driver divisions within seasons |
+| **Driver** | `app/Domain/Driver/` | Driver management and platform ID mappings |
+| **Team** | `app/Domain/Team/` | Team management |
+| **Platform** | `app/Domain/Platform/` | Racing platforms (iRacing, ACC, etc.) and cars |
+| **SiteConfig** | `app/Domain/SiteConfig/` | System-wide configuration settings |
+| **Shared** | `app/Domain/Shared/` | Cross-context value objects and exceptions |
+
+### Context Structure
+
+Each bounded context follows this structure:
+
+```
+app/Domain/{Context}/
+├── Entities/           # Aggregate roots with business logic
+├── ValueObjects/       # Immutable domain concepts (including enums)
+├── Events/             # Domain events for state changes
+├── Exceptions/         # Domain-specific exceptions
+├── Repositories/       # Repository interfaces
+└── Services/           # Optional: stateless domain services
+
+app/Application/{Context}/
+├── Services/           # Application services (use case orchestration)
+└── DTOs/               # Input/output data transfer objects
+
+app/Infrastructure/Persistence/Eloquent/
+├── Repositories/{Context}/ # Repository implementations
+└── Models/{Context}/       # Anemic Eloquent models
+```
 
 ---
 
@@ -82,137 +124,492 @@ This application is organized into three main bounded contexts:
 ### Where Does This Code Go?
 
 ```
-┌─ Is it a business rule or invariant?
+┌─ Is it a business rule or domain invariant?
 │  → Domain Entity method
+│  Example: Admin.changeRole() enforces role hierarchy rules
 │
-├─ Is it validation or a domain concept?
-│  → Value Object (readonly class) OR Enum (predefined set)
+├─ Is it a domain concept (validation, constraints)?
+│  → Value Object (immutable class) OR Enum (predefined set with behavior)
+│  Example: EmailAddress validates format, AdminRole defines hierarchy
 │
-├─ Is it data validation for API input?
-│  → DTO with rules() method
+├─ Is it stateless domain logic across aggregates?
+│  → Domain Service
+│  Example: PlatformMappingService maps platform IDs to driver fields
 │
 ├─ Is it use case orchestration (multi-step operation)?
 │  → Application Service method
+│  Example: createDivision() handles auth, transaction, file upload, events
+│
+├─ Is it data validation for API input?
+│  → DTO with validation attributes
+│  Example: CreateDivisionData with #[Required, Min(2), Max(60)]
 │
 ├─ Is it database access or querying?
 │  → Repository implementation
+│  Example: EloquentDivisionRepository.findBySeasonId()
 │
 ├─ Is it HTTP request handling?
-│  → Controller (thin, 3-5 lines)
+│  → Controller (thin, 3-5 lines per method)
+│  Example: DivisionController.store() delegates to service
 │
-├─ Is it external service integration?
-│  → Infrastructure layer service
+├─ Is it data transformation for API output?
+│  → DTO::fromEntity() method
+│  Example: DivisionData::fromEntity() extracts data from Division entity
 │
-└─ Is it data transformation for API output?
-   → DTO::fromEntity() method
+└─ Is it a side effect of domain events?
+   → Infrastructure Event Listener
+   Example: LogAdminActivity listens to AdminCreated events
 ```
 
 ### Entity vs Value Object vs Enum
 
 ```
 ┌─ Does it have identity (needs an ID)?
-│  → Entity
-│  Examples: User, Admin, SiteConfig
+│  → Entity (aggregate root)
+│  Examples: User, Admin, League, Division, Season
 │
 ├─ Is it a predefined set of values with behavior?
 │  → Enum (PHP 8.1+)
-│  Examples: AdminRole, UserStatus, AdminStatus
+│  Examples: AdminRole (hierarchy), AdminStatus, UserStatus, LeagueVisibility
 │
 └─ Is it a domain concept without identity?
    → Value Object (readonly class)
-   Examples: EmailAddress, FullName, TrackingId
+   Examples: EmailAddress, FullName, DivisionName, LeagueSlug, Tagline
 ```
 
 ### When to Create Domain Events
 
 ```
-┌─ Does this action have side effects elsewhere in the system?
-│  YES → Create domain event
-│  Examples: UserCreated (send welcome email), AdminUpdated (log activity)
-│
-└─ Is it a significant state change worth tracking?
-   YES → Create domain event
-   Examples: UserDeleted, ProfilePictureUpdated
-```
+Create a domain event when:
+✓ The action has side effects elsewhere (notifications, logging)
+✓ It's a significant state change worth tracking
+✓ Other bounded contexts need to react
 
-### When to Create a New Bounded Context
-
-```
-Create a new bounded context when:
-✓ The concept has its own lifecycle
-✓ It has distinct business rules from existing contexts
-✓ It will grow independently
-✓ It has different stakeholders or experts
-
-DON'T create a new context for:
-✗ Simple CRUD entities without complex business logic
-✗ Entities that are just properties of another entity
-✗ Entities that share the same lifecycle as another entity
+Examples:
+- AdminCreated → Log activity, send welcome email
+- AdminRoleChanged → Log activity with old/new role
+- DivisionCreated → Log activity
+- LeagueUpdated → Update search index
 ```
 
 ---
 
 ## Core Patterns
 
-### Layer Responsibilities
+### Pattern 1: Rich Domain Entities
 
-#### Domain Layer (`app/Domain/{Context}/`)
+Entities contain business logic, enforce invariants, and record domain events.
 
-**What goes here:**
-- ✅ Business logic and invariants
-- ✅ Domain entities (aggregate roots)
-- ✅ Value objects and enums
-- ✅ Domain events
-- ✅ Domain exceptions
-- ✅ Repository interfaces
+```php
+// app/Domain/Division/Entities/Division.php
+final class Division
+{
+    private array $domainEvents = [];
 
-**What NEVER goes here:**
-- ❌ Laravel framework classes (no `use Illuminate\...`)
-- ❌ Database queries
-- ❌ HTTP logic
-- ❌ Infrastructure concerns (hashing, file storage, etc.)
+    private function __construct(
+        private ?int $id,
+        private int $seasonId,
+        private DivisionName $name,
+        private DivisionDescription $description,
+        private ?string $logoUrl,
+        private int $order,
+        private \DateTimeImmutable $createdAt,
+        private \DateTimeImmutable $updatedAt,
+    ) {}
 
-#### Application Layer (`app/Application/{Context}/`)
+    // Factory method for creation
+    public static function create(
+        int $seasonId,
+        DivisionName $name,
+        DivisionDescription $description,
+        ?string $logoUrl,
+        int $order,
+    ): self {
+        return new self(
+            id: null,
+            seasonId: $seasonId,
+            name: $name,
+            description: $description,
+            logoUrl: $logoUrl,
+            order: $order,
+            createdAt: new \DateTimeImmutable(),
+            updatedAt: new \DateTimeImmutable(),
+        );
+    }
 
-**What goes here:**
-- ✅ Use case orchestration
-- ✅ DTOs (input and output)
-- ✅ Transaction management (`DB::transaction()`)
-- ✅ Domain event dispatching
-- ✅ Calling multiple repositories
-- ✅ Infrastructure concerns (hashing passwords, sending emails)
+    // Factory method for reconstituting from persistence
+    public static function reconstitute(
+        int $id,
+        int $seasonId,
+        DivisionName $name,
+        // ... all fields
+    ): self {
+        $division = new self(/* ... */);
+        $division->id = $id;
+        return $division;
+    }
 
-**What NEVER goes here:**
-- ❌ Business logic (belongs in entities)
-- ❌ HTTP concerns (belongs in controllers)
-- ❌ Direct database access (use repositories)
+    // Business logic with event recording
+    public function changeOrder(int $newOrder): void
+    {
+        $oldOrder = $this->order;
+        $this->order = $newOrder;
+        $this->updatedAt = new \DateTimeImmutable();
+        $this->recordDomainEvent(new DivisionReordered($this, $oldOrder, $newOrder));
+    }
 
-#### Infrastructure Layer (`app/Infrastructure/`)
+    // Domain event management
+    public function recordCreationEvent(): void
+    {
+        $this->recordDomainEvent(new DivisionCreated($this));
+    }
 
-**What goes here:**
-- ✅ Eloquent models (anemic, no business logic)
-- ✅ Repository implementations
-- ✅ Entity ↔ Eloquent mapping
-- ✅ Event listeners
-- ✅ External service integrations
-- ✅ Read Model Services (for infrastructure-only fields)
+    public function releaseEvents(): array
+    {
+        $events = $this->domainEvents;
+        $this->domainEvents = [];
+        return $events;
+    }
 
-**What NEVER goes here:**
-- ❌ Business logic (belongs in domain)
-- ❌ Use case orchestration (belongs in application)
+    // ID setter for repository use after persistence
+    public function setId(int $id): void
+    {
+        $this->id = $id;
+    }
+}
+```
 
-#### Interface Layer (`app/Http/`)
+### Pattern 2: Immutable Value Objects
 
-**What goes here:**
-- ✅ Thin controllers (3-5 lines per method, max 10)
-- ✅ Request validation (inline or Form Requests)
-- ✅ Response formatting (ApiResponse helper)
-- ✅ Exception handling
+Value objects are immutable, self-validating, and have equality based on attributes.
 
-**What NEVER goes here:**
-- ❌ Business logic
-- ❌ Database queries
-- ❌ Fat controllers (>10 lines per method)
+```php
+// app/Domain/Division/ValueObjects/DivisionName.php
+readonly final class DivisionName
+{
+    private const int MIN_LENGTH = 2;
+    private const int MAX_LENGTH = 60;
+
+    private function __construct(
+        private string $value
+    ) {
+        $length = mb_strlen($value);
+        if ($length < self::MIN_LENGTH) {
+            throw InvalidDivisionNameException::tooShort(self::MIN_LENGTH);
+        }
+        if ($length > self::MAX_LENGTH) {
+            throw InvalidDivisionNameException::tooLong(self::MAX_LENGTH);
+        }
+    }
+
+    public static function from(string $value): self
+    {
+        return new self(trim($value));
+    }
+
+    public function value(): string
+    {
+        return $this->value;
+    }
+
+    public function equals(self $other): bool
+    {
+        return $this->value === $other->value;
+    }
+}
+```
+
+### Pattern 3: Enum-Based Value Objects
+
+Use PHP 8.1+ enums for predefined sets with behavior.
+
+```php
+// app/Domain/Admin/ValueObjects/AdminRole.php
+enum AdminRole: string
+{
+    case SUPER_ADMIN = 'super_admin';
+    case ADMIN = 'admin';
+    case MODERATOR = 'moderator';
+
+    public function hierarchyLevel(): int
+    {
+        return match ($this) {
+            self::SUPER_ADMIN => 3,
+            self::ADMIN => 2,
+            self::MODERATOR => 1,
+        };
+    }
+
+    public function isHigherThan(self $other): bool
+    {
+        return $this->hierarchyLevel() > $other->hierarchyLevel();
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this === self::SUPER_ADMIN;
+    }
+
+    public function canManageRole(self $targetRole): bool
+    {
+        return $this->hierarchyLevel() > $targetRole->hierarchyLevel();
+    }
+}
+```
+
+### Pattern 4: Application Service Orchestration
+
+Application services orchestrate use cases with transactions, authorization, and event dispatch.
+
+```php
+// app/Application/Division/Services/DivisionApplicationService.php
+final class DivisionApplicationService
+{
+    public function __construct(
+        private readonly DivisionRepositoryInterface $divisionRepository,
+        private readonly SeasonRepositoryInterface $seasonRepository,
+    ) {}
+
+    public function createDivision(
+        CreateDivisionData $data,
+        int $seasonId,
+        int $userId
+    ): DivisionData {
+        // 1. Authorization FIRST (fail fast, outside transaction)
+        $season = $this->seasonRepository->findById($seasonId);
+        $this->authorizeSeasonOwner($season, $userId);
+
+        // 2. Validate file BEFORE transaction (avoid orphaned files)
+        if ($data->logo) {
+            $this->validateLogoFile($data->logo);
+        }
+
+        // 3. Execute inside transaction
+        return DB::transaction(function () use ($data, $seasonId) {
+            // Store file INSIDE transaction for rollback
+            $logoPath = $data->logo?->store("divisions/season-{$seasonId}", 'public');
+
+            // Create domain entity
+            $division = Division::create(
+                seasonId: $seasonId,
+                name: DivisionName::from($data->name),
+                description: DivisionDescription::from($data->description),
+                logoUrl: $logoPath,
+                order: $this->divisionRepository->getNextOrderForSeason($seasonId),
+            );
+
+            // Persist (sets ID on entity)
+            $this->divisionRepository->save($division);
+
+            // Record event AFTER ID is set
+            $division->recordCreationEvent();
+
+            // Dispatch events AFTER persistence
+            $this->dispatchEvents($division);
+
+            // Log activity
+            $this->logDivisionCreated($division->id());
+
+            return DivisionData::fromEntity($division);
+        });
+    }
+
+    private function dispatchEvents(Division $division): void
+    {
+        foreach ($division->releaseEvents() as $event) {
+            event($event);
+        }
+    }
+}
+```
+
+### Pattern 5: Repository with Entity Mapping
+
+Repositories implement domain interfaces and map between entities and Eloquent models.
+
+```php
+// app/Infrastructure/Persistence/Eloquent/Repositories/EloquentDivisionRepository.php
+final class EloquentDivisionRepository implements DivisionRepositoryInterface
+{
+    public function save(Division $division): void
+    {
+        if ($division->id() === null) {
+            // CREATE
+            $eloquentDivision = new DivisionEloquent();
+            $this->fillEloquentModel($eloquentDivision, $division);
+            $eloquentDivision->save();
+            $division->setId($eloquentDivision->id);
+        } else {
+            // UPDATE with optimistic locking
+            $eloquentDivision = DivisionEloquent::findOrFail($division->id());
+
+            // Check for concurrent modification
+            if ($division->updatedAt()->format('Y-m-d H:i:s') !==
+                $eloquentDivision->updated_at->format('Y-m-d H:i:s')) {
+                throw new \RuntimeException('Division has been modified by another process');
+            }
+
+            $this->fillEloquentModel($eloquentDivision, $division);
+            $eloquentDivision->save();
+        }
+    }
+
+    public function findById(int $id): Division
+    {
+        $eloquentDivision = DivisionEloquent::find($id);
+        if ($eloquentDivision === null) {
+            throw DivisionNotFoundException::withId($id);
+        }
+        return $this->toDomainEntity($eloquentDivision);
+    }
+
+    private function toDomainEntity(DivisionEloquent $model): Division
+    {
+        return Division::reconstitute(
+            id: $model->id,
+            seasonId: $model->season_id,
+            name: DivisionName::from($model->name),
+            description: DivisionDescription::from($model->description),
+            logoUrl: $model->logo_url,
+            order: $model->order,
+            createdAt: $model->created_at->toDateTimeImmutable(),
+            updatedAt: $model->updated_at->toDateTimeImmutable(),
+        );
+    }
+
+    private function fillEloquentModel(DivisionEloquent $model, Division $division): void
+    {
+        $model->season_id = $division->seasonId();
+        $model->name = $division->name()->value();
+        $model->description = $division->description()->value();
+        $model->logo_url = $division->logoUrl();
+        $model->order = $division->order();
+    }
+}
+```
+
+### Pattern 6: Thin Controllers
+
+Controllers are thin (3-5 lines per method), delegating to application services.
+
+```php
+// app/Http/Controllers/User/DivisionController.php
+final class DivisionController extends Controller
+{
+    public function __construct(
+        private readonly DivisionApplicationService $divisionService
+    ) {}
+
+    public function store(CreateDivisionRequest $request, int $seasonId): JsonResponse
+    {
+        try {
+            $data = CreateDivisionData::from($request->validated());
+            $divisionData = $this->divisionService->createDivision(
+                $data,
+                $seasonId,
+                $this->getAuthenticatedUserId()
+            );
+            return ApiResponse::created($divisionData->toArray(), 'Division created successfully');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        }
+    }
+
+    public function destroy(int $seasonId, int $divisionId): JsonResponse
+    {
+        try {
+            $this->divisionService->deleteDivision($divisionId, $this->getAuthenticatedUserId());
+            return ApiResponse::success(null, 'Division deleted successfully');
+        } catch (DivisionNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        }
+    }
+}
+```
+
+### Pattern 7: DTOs with Spatie Laravel Data
+
+Input DTOs validate data; output DTOs transform entities for API responses.
+
+```php
+// app/Application/Division/DTOs/CreateDivisionData.php (Input)
+final class CreateDivisionData extends Data
+{
+    public function __construct(
+        #[Required, Min(2), Max(60)]
+        public readonly string $name,
+
+        #[Nullable, Sometimes, Min(10), Max(500)]
+        public readonly ?string $description = null,
+
+        #[Sometimes, File, Image, Max(2048)]
+        public readonly ?UploadedFile $logo = null,
+    ) {}
+}
+
+// app/Application/Division/DTOs/DivisionData.php (Output)
+final class DivisionData extends Data
+{
+    public function __construct(
+        public readonly int $id,
+        public readonly int $season_id,
+        public readonly string $name,
+        public readonly ?string $description,
+        public readonly ?string $logo_url,
+        public readonly int $order,
+        public readonly string $created_at,
+    ) {}
+
+    public static function fromEntity(Division $division): self
+    {
+        return new self(
+            id: $division->id(),
+            season_id: $division->seasonId(),
+            name: $division->name()->value(),
+            description: $division->description()->value(),
+            logo_url: $division->logoUrl()
+                ? Storage::disk('public')->url($division->logoUrl())
+                : null,
+            order: $division->order(),
+            created_at: $division->createdAt()->format('Y-m-d H:i:s'),
+        );
+    }
+}
+```
+
+### Pattern 8: Infrastructure Event Listeners
+
+Event listeners in infrastructure handle side effects like activity logging.
+
+```php
+// app/Infrastructure/Listeners/LogAdminActivity.php
+final class LogAdminActivity
+{
+    public function handle(object $event): void
+    {
+        match (true) {
+            $event instanceof AdminCreated => $this->logAdminCreated($event),
+            $event instanceof AdminRoleChanged => $this->logAdminRoleChanged($event),
+            $event instanceof AdminPasswordChanged => $this->logAdminPasswordChanged($event),
+            default => null,
+        };
+    }
+
+    private function logAdminRoleChanged(AdminRoleChanged $event): void
+    {
+        activity('admin')
+            ->causedBy($this->getCurrentAdmin())
+            ->performedOn($this->getAdminModel($event->admin))
+            ->withProperties([
+                'old_role' => $event->oldRole->value,
+                'new_role' => $event->newRole->value,
+            ])
+            ->log('Changed admin role');
+    }
+}
+```
 
 ---
 
@@ -221,18 +618,14 @@ DON'T create a new context for:
 ### Core Dependencies
 
 **Domain-Driven Design:**
-- **spatie/laravel-data** (^4.17) - Type-safe DTOs with validation
-- **spatie/laravel-activitylog** (^4.10) - User activity tracking
+- **spatie/laravel-data** (^4.17) - Type-safe DTOs with validation attributes
+- **spatie/laravel-activitylog** (^4.10) - Activity tracking via domain events
 
 **Testing & Quality:**
 - **phpunit/phpunit** - Unit and feature testing
 - **phpstan/phpstan** - Static analysis (Level 8)
-- **squizlabs/php_codesniffer** - PSR-12 code style checking
+- **squizlabs/php_codesniffer** - PSR-12 code style
 - **laravel/pint** - Laravel code formatter
-
-**Infrastructure:**
-- **laravel/sanctum** - API authentication
-- Docker stack: Nginx, PHP 8.2+, MariaDB 10.11, Redis 7, Elasticsearch 8.11
 
 ### ApiResponse Helper
 
@@ -275,12 +668,31 @@ ApiResponse::paginated($data, $meta, $links);
 
 **Target**: 100% coverage of entities and value objects
 
-**Key Principles:**
-- No database
-- Test business logic
-- Test invariants
-- Test domain events
-- Use pure entity/value object creation (no factories)
+```php
+// tests/Unit/Domain/Division/ValueObjects/DivisionNameTest.php
+public function test_creates_valid_division_name(): void
+{
+    $name = DivisionName::from('Pro Division');
+    $this->assertSame('Pro Division', $name->value());
+}
+
+public function test_throws_exception_for_name_too_short(): void
+{
+    $this->expectException(InvalidDivisionNameException::class);
+    DivisionName::from('A');
+}
+
+// tests/Unit/Domain/Admin/Entities/AdminTest.php
+public function test_super_admin_can_change_any_role(): void
+{
+    $superAdmin = Admin::create(/* super admin */);
+    $targetAdmin = Admin::create(/* admin role */);
+
+    $targetAdmin->changeRole(AdminRole::MODERATOR, $superAdmin);
+
+    $this->assertSame(AdminRole::MODERATOR, $targetAdmin->role());
+}
+```
 
 **Location**: `tests/Unit/Domain/{Context}/`
 
@@ -288,22 +700,25 @@ ApiResponse::paginated($data, $meta, $links);
 
 **Target**: Cover all API endpoints
 
-**Key Principles:**
-- Test HTTP layer
-- Use database (RefreshDatabase trait)
-- Test authentication
-- Test response structure
-- Use factories for test data
+```php
+// tests/Feature/User/DivisionControllerTest.php
+public function test_can_create_division(): void
+{
+    $user = User::factory()->create();
+    $season = Season::factory()->create(['user_id' => $user->id]);
 
-**Location**: `tests/Feature/Admin/`
+    $response = $this->actingAs($user)
+        ->postJson("/api/seasons/{$season->id}/divisions", [
+            'name' => 'Pro Division',
+            'description' => 'Top tier drivers',
+        ]);
 
-### PHPStan (Level 8)
+    $response->assertStatus(201)
+        ->assertJsonPath('data.name', 'Pro Division');
+}
+```
 
-**Requirements:**
-- All properties must have type hints
-- All methods must have return type hints
-- Arrays must have PHPDoc type hints (`@return array<User>`)
-- Nullable values must be handled explicitly
+**Location**: `tests/Feature/{Context}/`
 
 ---
 
@@ -312,68 +727,28 @@ ApiResponse::paginated($data, $meta, $links);
 ### Testing
 
 ```bash
-# Run all tests
-composer test
-
-# Run specific test file
-composer test tests/Unit/Domain/User/Entities/UserTest.php
-
-# Run tests with filter
-composer test --filter=UserTest
-
-# Run unit tests only
-composer test tests/Unit/
-
-# Run feature tests only
-composer test tests/Feature/
+composer test                                    # Run all tests
+composer test tests/Unit/                        # Unit tests only
+composer test tests/Feature/                     # Feature tests only
+composer test --filter=DivisionTest              # Specific test
 ```
 
 ### Static Analysis & Code Style
 
 ```bash
-# PHPStan (level 8)
-composer phpstan
-
-# PHP CodeSniffer (PSR-12)
-composer phpcs
-
-# Auto-fix code style
-composer phpcbf
-
-# Laravel Pint
-./vendor/bin/pint
-
-# Run all quality checks
-composer phpstan && composer phpcs
+composer phpstan                                 # PHPStan (level 8)
+composer phpcs                                   # PHP CodeSniffer (PSR-12)
+composer phpcbf                                  # Auto-fix code style
+./vendor/bin/pint                                # Laravel Pint
+composer phpstan && composer phpcs               # All quality checks
 ```
 
 ### Migrations & Database
 
 ```bash
-# Run migrations
-php artisan migrate
-
-# Rollback migrations
-php artisan migrate:rollback
-
-# Fresh migrations with seeders
-php artisan migrate:fresh --seed
-
-# Create migration
-php artisan make:migration create_users_table
-```
-
-### Cache Management
-
-```bash
-# Clear all caches
-php artisan optimize:clear
-
-# Clear specific caches
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
+php artisan migrate                              # Run migrations
+php artisan migrate:fresh --seed                 # Fresh with seeders
+php artisan make:migration create_divisions_table
 ```
 
 ---
@@ -386,54 +761,56 @@ php artisan view:clear
 - ✅ Put ALL business logic in entities
 - ✅ Use value objects for domain concepts (EmailAddress, not string)
 - ✅ Use enums for predefined sets with behavior
-- ✅ Emit domain events for significant state changes
-- ✅ Keep domain layer pure PHP (no Laravel)
-- ✅ Write unit tests for all entities
-- ✅ Throw domain exceptions
+- ✅ Record domain events for significant state changes
+- ✅ Keep domain layer pure PHP (no `use Illuminate\...`)
+- ✅ Use factory methods (`create()`, `reconstitute()`)
+- ✅ Implement optimistic locking via `updatedAt` checks
 
 **Application Layer:**
-- ✅ Use transactions for multi-step operations
-- ✅ Dispatch domain events AFTER persistence
+- ✅ Authorize FIRST (before transactions)
+- ✅ Validate files BEFORE transactions
+- ✅ Use `DB::transaction()` for multi-step operations
+- ✅ Dispatch events AFTER persistence
 - ✅ Return DTOs from application services
-- ✅ Hash passwords in application service
-- ✅ Orchestrate use cases, don't implement business logic
+- ✅ Handle infrastructure concerns (hashing, file storage)
 
 **Infrastructure Layer:**
-- ✅ Keep Eloquent models anemic
+- ✅ Keep Eloquent models anemic (no business logic)
 - ✅ Map between entities and Eloquent in repositories
 - ✅ Use `withTrashed()` for soft-deleted records
-- ✅ Use Read Model Services for infrastructure-only fields
+- ✅ Implement optimistic locking
+- ✅ Use event listeners for side effects (activity logging)
 
 **Interface Layer:**
 - ✅ Keep controllers thin (3-5 lines per method)
-- ✅ Validate input with DTOs
+- ✅ Use DTOs for request validation
 - ✅ Use ApiResponse helper
 - ✅ Call `toArray()` on DTOs before returning JSON
 
 ### ❌ DON'T
 
 **Domain Layer:**
-- ❌ Don't use Laravel classes in domain
+- ❌ Don't use Laravel classes in domain (no `use Illuminate\...`)
 - ❌ Don't access database directly
 - ❌ Don't use primitive types for domain concepts
-- ❌ Don't skip domain events
 - ❌ Don't use public setters on entities
+- ❌ Don't skip domain events for state changes
 
 **Application Layer:**
-- ❌ Don't put business logic in application services
+- ❌ Don't put business logic in services (belongs in entities)
 - ❌ Don't return entities (return DTOs)
-- ❌ Don't skip transactions
-- ❌ Don't hash passwords in domain layer
+- ❌ Don't skip transactions for multi-step operations
+- ❌ Don't dispatch events BEFORE persistence
 
 **Infrastructure Layer:**
 - ❌ Don't put business logic in Eloquent models
 - ❌ Don't expose Eloquent models outside infrastructure
-- ❌ Don't bypass repositories
+- ❌ Don't bypass repositories for database access
 
 **Interface Layer:**
 - ❌ Don't put business logic in controllers
 - ❌ Don't return entities (return DTOs)
-- ❌ Don't make controllers fat
+- ❌ Don't make fat controllers (>10 lines per method)
 
 ---
 
@@ -457,53 +834,38 @@ public function getAll(): array
 
 // ✅ Correct
 /**
- * @return array<User>
+ * @return array<Division>
  */
 public function getAll(): array
-```
-
-**Possibly null value:**
-```php
-// ❌ Wrong
-$admin = Auth::guard('admin')->user();
-$admin->id; // PHPStan error
-
-// ✅ Correct
-/** @var Admin $admin */
-$admin = Auth::guard('admin')->user();
-assert($admin instanceof Admin);
-$admin->id;
-```
-
-### DTO Issues
-
-**Not serializing:**
-```php
-// ❌ Wrong
-return response()->json(['data' => $userDTO]);
-
-// ✅ Correct
-return ApiResponse::success($userDTO->toArray());
-```
-
-### Repository Issues
-
-**Soft-deleted records:**
-```php
-// ❌ Wrong - excludes soft deletes
-$eloquentUser = UserEloquent::find($id);
-
-// ✅ Correct - includes soft deletes
-$eloquentUser = UserEloquent::withTrashed()->find($id);
 ```
 
 ### Domain Event Issues
 
 **Events not firing - check:**
-1. Entity recording event: `$this->recordEvent(new UserCreated(...))`
-2. Application service dispatching: `$this->dispatchEvents($user)`
-3. Event listener registered in `EventServiceProvider`
+1. Entity recording: `$this->recordDomainEvent(new DivisionCreated(...))`
+2. Service dispatching: `$this->dispatchEvents($division)` AFTER persistence
+3. Listener registered in `EventServiceProvider`
 4. Transaction committed (events dispatch AFTER commit)
+
+### Repository Issues
+
+**Optimistic locking failure:**
+```php
+// Entity was modified by another process
+// Solution: Fetch fresh entity and re-apply changes
+$division = $this->divisionRepository->findById($id);
+$division->updateDetails(...);
+$this->divisionRepository->save($division);
+```
+
+**Soft-deleted records:**
+```php
+// ❌ Wrong - excludes soft deletes
+$model = DivisionEloquent::find($id);
+
+// ✅ Correct - includes soft deletes
+$model = DivisionEloquent::withTrashed()->find($id);
+```
 
 ---
 
@@ -515,17 +877,18 @@ Value Object          → app/Domain/{Context}/ValueObjects/ or Shared/
 Enum                  → app/Domain/{Context}/ValueObjects/ (as enum)
 Domain Event          → app/Domain/{Context}/Events/
 Domain Exception      → app/Domain/{Context}/Exceptions/
+Domain Service        → app/Domain/{Context}/Services/
 Repository Interface  → app/Domain/{Context}/Repositories/
 Application Service   → app/Application/{Context}/Services/
 DTO                   → app/Application/{Context}/DTOs/
 Eloquent Model        → app/Infrastructure/Persistence/Eloquent/Models/
 Repository Impl       → app/Infrastructure/Persistence/Eloquent/Repositories/
-Read Model Service    → app/Infrastructure/Persistence/Eloquent/Repositories/
-Controller            → app/Http/Controllers/Admin/
-Form Request          → app/Http/Requests/Admin/
+Event Listener        → app/Infrastructure/Listeners/
+Controller            → app/Http/Controllers/{Context}/
+Form Request          → app/Http/Requests/{Context}/
 Migration             → database/migrations/
 Unit Test             → tests/Unit/Domain/{Context}/
-Feature Test          → tests/Feature/Admin/
+Feature Test          → tests/Feature/{Context}/
 ```
 
 ---
@@ -537,4 +900,4 @@ Feature Test          → tests/Feature/Admin/
 
 ---
 
-**End of DDD Backend Architecture Overview v3.0**
+**End of DDD Backend Architecture Overview v4.0**

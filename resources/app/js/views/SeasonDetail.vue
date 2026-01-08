@@ -11,7 +11,6 @@ import type { Season } from '@app/types/season';
 import Skeleton from 'primevue/skeleton';
 import Message from 'primevue/message';
 
-import SeasonFormDrawer from '@app/components/season/modals/SeasonFormDrawer.vue';
 import SeasonFormSplitModal from '@app/components/season/modals/SeasonFormSplitModal.vue';
 
 const route = useRoute();
@@ -25,12 +24,12 @@ const isLoading = ref(true);
 const error = ref<string | null>(null);
 const showEditDrawer = ref(false);
 
-// Toggle between drawer and split modal design (set to true to use new split modal)
-const useSplitModal = ref(true);
-
 const leagueId = computed(() => parseInt(route.params.leagueId as string, 10));
 const competitionId = computed(() => parseInt(route.params.competitionId as string, 10));
 const seasonId = computed(() => parseInt(route.params.seasonId as string, 10));
+const competitionName = computed(
+  () => season.value?.competition?.name || season.value?.competition_name || '',
+);
 
 // Set dynamic page title: <season name> - <competition name> - <league name> - App Dashboard
 const pageTitle = computed(() => {
@@ -140,19 +139,11 @@ function handleSeasonUpdated(updated: Season): void {
       <!-- Nested router view for tabs -->
       <router-view />
 
-      <!-- Edit Modal (toggle between drawer and split modal) -->
+      <!-- Edit Season Modal -->
       <SeasonFormSplitModal
-        v-if="useSplitModal"
         v-model:visible="showEditDrawer"
         :competition-id="competitionId"
-        :season="season"
-        is-edit-mode
-        @season-saved="handleSeasonUpdated"
-      />
-      <SeasonFormDrawer
-        v-else
-        v-model:visible="showEditDrawer"
-        :competition-id="competitionId"
+        :competition-name="competitionName"
         :season="season"
         is-edit-mode
         @season-saved="handleSeasonUpdated"

@@ -35,11 +35,11 @@ function createMountOptions(props: { competition: Competition }) {
     global: {
       plugins: [router, PrimeVue, ToastService, ConfirmationService],
       stubs: {
-        SeasonFormDrawer: {
-          name: 'SeasonFormDrawer',
-          template: '<div class="season-form-drawer-stub"></div>',
+        SeasonFormSplitModal: {
+          name: 'SeasonFormSplitModal',
+          template: '<div class="season-form-split-modal-stub"></div>',
           props: ['visible', 'competitionId', 'isEditMode', 'season'],
-          emits: ['update:visible', 'season-saved'],
+          emits: ['update:visible', 'season-saved', 'hide'],
         },
       },
     },

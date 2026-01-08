@@ -1,2 +1,2 @@
-Run all eslint and prettier. Check all vuejs, ts, js files and look for any unused variables, incorrect imports, duplicate code, files, functions, etc, and fix and update.
+Check all vuejs, ts, js files and look for any unused variables, incorrect imports, duplicate code, files, functions, etc, and fix and update. Run all linters and prettiers.
 Use as many @agent-dev-fe-admin, @agent-dev-fe-app and @agent-dev-fe-public as needed

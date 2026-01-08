@@ -53,7 +53,8 @@ describe('SeasonStatusView', () => {
           SeasonSettings: {
             name: 'SeasonSettings',
             props: ['season'],
-            template: '<div data-testid="season-settings">Season Settings: {{ season?.name }}</div>',
+            template:
+              '<div data-testid="season-settings">Season Settings: {{ season?.name }}</div>',
           },
         },
       },

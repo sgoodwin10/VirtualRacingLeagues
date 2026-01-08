@@ -177,6 +177,26 @@ describe('SeasonFormSplitModal', () => {
 
       expect(wrapper.text()).toContain('Update season configuration');
     });
+
+    it('displays competition name when provided', () => {
+      const wrapper = createWrapper({
+        visible: true,
+        competitionId: 1,
+        competitionName: 'GT3 Championship',
+      });
+
+      expect(wrapper.text()).toContain('Competition:');
+      expect(wrapper.text()).toContain('GT3 Championship');
+    });
+
+    it('does not display competition banner when competitionName is not provided', () => {
+      const wrapper = createWrapper({
+        visible: true,
+        competitionId: 1,
+      });
+
+      expect(wrapper.text()).not.toContain('Competition:');
+    });
   });
 
   describe('navigation', () => {

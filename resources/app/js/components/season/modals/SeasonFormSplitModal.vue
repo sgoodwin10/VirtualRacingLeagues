@@ -33,11 +33,13 @@ type SectionType = 'basic' | 'driver' | 'team' | 'branding';
 interface Props {
   visible: boolean;
   competitionId: number;
+  competitionName?: string;
   season?: Season | null;
   isEditMode?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  competitionName: '',
   season: null,
   isEditMode: false,
 });
@@ -577,6 +579,19 @@ async function handleSubmit(): Promise<void> {
 
       <!-- Main Content -->
       <main class="overflow-y-auto bg-[var(--bg-dark)] p-6">
+        <!-- Competition Context Banner -->
+        <div
+          v-if="competitionName"
+          class="mb-6 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3"
+        >
+          <div class="flex items-center gap-2">
+            <span class="font-medium text-[var(--text-secondary)]">Competition:</span>
+            <span class="font-mono font-semibold tracking-wide text-[var(--text-primary)]">{{
+              competitionName
+            }}</span>
+          </div>
+        </div>
+
         <!-- Basic Info Section -->
         <BasicInfoSection
           v-show="activeSection === 'basic'"

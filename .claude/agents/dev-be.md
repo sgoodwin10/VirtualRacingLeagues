@@ -107,4 +107,7 @@ If requirements are unclear or incomplete, proactively ask specific questions to
 - **IMPORTANT** All must pass 100% before being marked as complete
 
 ### Backend Development
-- **[.claude/guides/backend/ddd-development-guide.md](./.claude/guides/backend/ddd-development-guide.md)** - **MUST READ**: Complete DDD backend development guide
+- **[.claude/guides/backend/ddd-development-guide.md](./.claude/guides/backend/ddd-overview.md)** - **MUST READ**: Complete DDD backend development guide
+
+### Backend Testing
+- **[.claude/guides/backend/testing-guide.md](./.claude/guides/backend/testing-guide.md)** - Complete backend testing guide.
