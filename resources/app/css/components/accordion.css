@@ -35,7 +35,7 @@
   width: 3.5rem;
   display: flex;
   flex-direction: column;
-  line-height: 1;
+  line-height: 1.2;
   align-items: center;
   justify-content: center;
   border-radius: var(--accordion-radius) 0 0 var(--accordion-radius);
@@ -52,7 +52,7 @@
 
 .round-number {
   font-family: var(--accordion-font-mono);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: white;
 }

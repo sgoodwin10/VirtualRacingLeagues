@@ -582,13 +582,15 @@ async function handleSubmit(): Promise<void> {
         <!-- Competition Context Banner -->
         <div
           v-if="competitionName"
-          class="mb-6 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3"
+          class="mb-6 rounded-lg border-l-4 border-l-[var(--cyan)] border-y border-r border-[var(--border-muted)] bg-gradient-to-r from-[var(--cyan-dim)] to-transparent px-4 py-3.5"
         >
-          <div class="flex items-center gap-2">
-            <span class="font-medium text-[var(--text-secondary)]">Competition:</span>
-            <span class="font-mono font-semibold tracking-wide text-[var(--text-primary)]">{{
-              competitionName
-            }}</span>
+          <div class="flex items-center gap-2.5">
+            <span class="font-medium text-[var(--text-tertiary)] uppercase tracking-wider text-md">
+              Competition:
+            </span>
+            <span class="font-mono font-bold tracking-wide text-[var(--cyan)] text-xl">
+              {{ competitionName }}
+            </span>
           </div>
         </div>
 

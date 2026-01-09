@@ -88,11 +88,13 @@ const emit = defineEmits<{
       <FormError :error="errors.car_class" />
     </FormInputGroup>
 
+    <div class="grid grid-cols-2 gap-4">
     <!-- Description -->
     <FormInputGroup>
       <FormLabel for="description" text="Description" />
       <Textarea
         id="description"
+        class="w-full"
         :model-value="form.description"
         rows="3"
         placeholder="Describe this season, race format, rules..."
@@ -109,6 +111,7 @@ const emit = defineEmits<{
       <FormLabel for="technical_specs" text="Technical Specifications" />
       <Textarea
         id="technical_specs"
+        class="w-full"
         :model-value="form.technical_specs"
         rows="3"
         placeholder="Car setup rules, performance restrictions, BoP..."
@@ -119,5 +122,6 @@ const emit = defineEmits<{
       />
       <FormError :error="errors.technical_specs" />
     </FormInputGroup>
+  </div>
   </div>
 </template>

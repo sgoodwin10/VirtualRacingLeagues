@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { PhPlus, PhArrowRight, PhPencil } from '@phosphor-icons/vue';
-import { Button, IconButton } from '@app/components/common/buttons';
+import { Button } from '@app/components/common/buttons';
 import BaseBadge from '@app/components/common/indicators/BaseBadge.vue';
 import Skeleton from 'primevue/skeleton';
 import Toast from 'primevue/toast';
@@ -392,43 +392,101 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                 :key="competition.id"
                 class="competition-card"
               >
-                <div class="card-top">
-                  <div class="card-indicator" :class="getCompetitionStatusClass(competition)"></div>
-                  <div class="card-header">
-                    <div class="card-info">
-                      <h3 class="card-name">{{ competition.name }}</h3>
-                      <div class="card-meta">
-                        <span class="card-platform">{{ competition.platform_name }}</span>
+                <!-- Card Top Section -->
+                <div class="flex items-stretch border-b border-[var(--border-muted)]">
+                  <!-- Status Indicator -->
+                  <div
+                    class="w-1 flex-shrink-0"
+                    :class="{
+                      'bg-[var(--green)]': getCompetitionStatusClass(competition) === 'active',
+                      'bg-[var(--cyan)]': getCompetitionStatusClass(competition) === 'idle',
+                    }"
+                  ></div>
+
+                  <!-- Card Header -->
+                  <div class="flex-1 flex items-center gap-3.5 p-4">
+                    <div class="flex-1 min-w-0">
+                      <h3
+                        class="font-mono text-[13px] font-semibold text-[var(--text-primary)] mb-1 whitespace-nowrap overflow-hidden text-ellipsis"
+                      >
+                        {{ competition.name }}
+                      </h3>
+                      <div class="flex items-center gap-2">
+                        <span
+                          class="font-mono text-[10px] font-medium tracking-[0.3px] uppercase text-[var(--text-muted)]"
+                        >
+                          {{ competition.platform_name }}
+                        </span>
                       </div>
                     </div>
+                    
                   </div>
                 </div>
 
-                <div class="card-body">
+                <!-- Card Body -->
+                <div class="p-3.5 px-4 flex-1">
                   <p v-if="competition.description" class="card-tagline">
                     {{ competition.description }}
                   </p>
-                  <div class="card-stats">
-                    <div class="card-stat">
-                      <span class="card-stat-value">{{ competition.stats.total_seasons }}</span>
-                      <span class="card-stat-label">Seasons</span>
+                  <div class="flex gap-4 content-center justify-center">
+                    <div class="flex flex-col gap-0.5">
+                      <span class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center">
+                        {{ competition.stats.total_seasons }}
+                      </span>
+                      <span
+                        class="font-mono text-[11px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
+                      >
+                        Seasons
+                      </span>
                     </div>
-                    <div class="card-stat">
-                      <span class="card-stat-value">{{ competition.stats.total_drivers }}</span>
-                      <span class="card-stat-label">Drivers</span>
+                    <div class="flex flex-col gap-0.5">
+                      <span class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center">
+                        {{ competition.stats.total_drivers }}
+                      </span>
+                      <span
+                        class="font-mono text-[11px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
+                      >
+                        Drivers
+                      </span>
                     </div>
-                    <div class="card-stat">
-                      <span class="card-stat-value">{{ competition.stats.active_seasons }}</span>
-                      <span class="card-stat-label">Active</span>
+                    <div class="flex flex-col gap-0.5">
+                      <span class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center">
+                        {{ competition.stats.active_seasons }}
+                      </span>
+                      <span
+                        class="font-mono text-[11px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
+                      >
+                        Active
+                      </span>
                     </div>
-                    <div class="card-stat">
-                      <span class="card-stat-value">{{ competition.stats.total_races }}</span>
-                      <span class="card-stat-label">Races</span>
+                    <div class="flex flex-col gap-0.5">
+                      <span class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center">
+                        {{ competition.stats.total_races }}
+                      </span>
+                      <span
+                        class="font-mono text-[11px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
+                      >
+                        Races
+                      </span>
                     </div>
                   </div>
+                  <div class="flex justify-center content-center mt-4">
+                      <Button
+                        label="Create New Season"
+                        :icon="PhPlus"
+                        variant="outline"
+                        size="sm"
+                        class="mx-auto"
+                        :aria-label="`Create new season for ${competition?.name}`"
+                        @click="handleNewSeason(competition)"
+                      />
+                    </div>
                 </div>
 
-                <div class="card-footer">
+                <!-- Card Footer -->
+                <div
+                  class="flex gap-1.5 p-3 px-4 bg-[var(--bg-elevated)] border-t border-[var(--border-muted)] items-center"
+                >
                   <BaseBadge
                     :variant="competition.status === 'active' ? 'green' : 'default'"
                     size="sm"
@@ -436,21 +494,13 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                   >
                     {{ competition.status }}
                   </BaseBadge>
-                  <Button
-                    label="Create Season"
-                    :icon="PhPlus"
-                    variant="outline"
-                    size="sm"
-                    class="mx-auto"
-                    :aria-label="`Create new season for ${competition.name}`"
-                    @click="handleNewSeason(competition)"
-                  />
+
                   <Button
                     :icon="PhPencil"
-                    label="Edit Season"
+                    label="Edit Competition"
                     variant="secondary"
                     size="sm"
-                    class="mx-auto"
+                    class="ml-auto"
                     :aria-label="`Edit ${competition.name}`"
                     @click="handleEditCompetition(competition)"
                   />
@@ -458,13 +508,17 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
               </article>
 
               <!-- Add Competition Card -->
-              <article class="competition-card add-card" @click="handleAddCompetition">
-                <div class="add-card-content">
+              <article class="add-card" @click="handleAddCompetition">
+                <div class="flex flex-col items-center gap-3 p-6 text-center">
                   <div class="add-card-icon">
                     <PhPlus :size="32" />
                   </div>
-                  <h3 class="add-card-title">Add Competition</h3>
-                  <p class="add-card-text">Create a new competition to organize your seasons</p>
+                  <h3 class="font-mono text-[14px] font-semibold text-[var(--text-primary)] m-0">
+                    Add Competition
+                  </h3>
+                  <p class="text-[12px] text-[var(--text-muted)] leading-[1.4] m-0 max-w-[200px]">
+                    Create a new competition to organize your seasons
+                  </p>
                 </div>
               </article>
             </div>
@@ -530,7 +584,7 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
   }
 }
 
-/* Competition Card Styles */
+/* Competition Card - Keep complex transitions and hover states */
 .competition-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -547,87 +601,7 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
-/* Card Top Section */
-.card-top {
-  display: flex;
-  align-items: stretch;
-  border-bottom: 1px solid var(--border-muted);
-}
-
-.card-indicator {
-  width: 4px;
-  flex-shrink: 0;
-}
-
-.card-indicator.active {
-  background: var(--green);
-}
-
-.card-indicator.idle {
-  background: var(--cyan);
-}
-
-.card-header {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px;
-}
-
-.card-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--cyan);
-  flex-shrink: 0;
-}
-
-.card-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.card-name {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.card-platform {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-/* Card Body */
-.card-body {
-  padding: 14px 16px;
-  flex: 1;
-}
-
+/* Card Tagline - Keep webkit-specific line-clamp */
 .card-tagline {
   font-size: 12px;
   color: var(--text-muted);
@@ -640,44 +614,7 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
   min-height: 2.8em; /* Reserve space for 2 lines */
 }
 
-.card-stats {
-  display: flex;
-  gap: 16px;
-}
-
-.card-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.card-stat-value {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.card-stat-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-/* Card Footer */
-.card-footer {
-  display: flex;
-  gap: 6px;
-  padding: 12px 16px;
-  background: var(--bg-elevated);
-  border-top: 1px solid var(--border-muted);
-  align-items: center;
-}
-
-/* Add Competition Card */
+/* Add Competition Card - Keep complex hover states and transitions */
 .add-card {
   border: 2px dashed var(--border);
   background: transparent;
@@ -686,6 +623,9 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
   align-items: center;
   justify-content: center;
   min-height: 240px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.2s ease;
 }
 
 .add-card:hover {
@@ -693,15 +633,6 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
   background: var(--bg-elevated);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-
-.add-card-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 24px;
-  text-align: center;
 }
 
 .add-card-icon {
@@ -719,21 +650,5 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
 .add-card:hover .add-card-icon {
   background: var(--green);
   color: var(--bg-dark);
-}
-
-.add-card-title {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.add-card-text {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.4;
-  margin: 0;
-  max-width: 200px;
 }
 </style>
