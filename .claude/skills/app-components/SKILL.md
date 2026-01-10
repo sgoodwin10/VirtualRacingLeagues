@@ -1,5 +1,5 @@
 ---
-name: app-dashboard
+name: app-components
 description: Specialized frontend development for the app and public dashboards (resources/app and rssources/publi) using Vue 3, TypeScript, PrimeVue, and Pinia. Automatically invokes the dev-fe-app or dev-fe-public agent for comprehensive Vue expertise.
 allowed-tools: Bash, Glob, Grep, Read, Edit, MultiEdit, Write, WebFetch, WebSearch, TodoWrite, Task, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 ---
@@ -124,6 +124,7 @@ size: 'sm' | 'default' | 'lg' | 'xl'
 | `ImageUpload` | File upload with preview | PrimeVue FileUpload directly |
 | `StyledInputNumber` | Styled number input | PrimeVue InputNumber directly |
 | `BaseToggleSwitch` | Green toggle switch | PrimeVue ToggleSwitch directly |
+| `BaseCheckbox` | Blue checkbox | Optional Label |
 
 **FormInputGroup Layouts:**
 ```vue

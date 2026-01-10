@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useNavigationStore } from '@app/stores/navigationStore';
-import {
-  PhCalendar,
-  PhTrophy,
-  PhUsers,
-  PhUsersThree,
-  PhGear,
-  PhChartLineUp,
-} from '@phosphor-icons/vue';
+import { PhCalendar, PhTrophy, PhUsers, PhUsersThree, PhGear, PhPower } from '@phosphor-icons/vue';
 import SidebarLink from './SidebarLink.vue';
 import SidebarButton from './SidebarButton.vue';
 import SeasonFormSplitModal from '@app/components/season/modals/SeasonFormSplitModal.vue';
@@ -61,7 +54,7 @@ const navigationLinks = computed(() => {
     {
       id: 'season-status',
       to: `${basePath}/season-status`,
-      icon: PhChartLineUp,
+      icon: PhPower,
       label: 'Season Status',
     },
   ];
@@ -78,21 +71,26 @@ function handleSeasonSaved(): void {
 </script>
 
 <template>
-  <aside v-if="showSidebar" class="sidebar">
+  <aside
+    v-if="showSidebar"
+    class="w-60 bg-[var(--bg-panel)] border-r border-[var(--border)] flex flex-col"
+  >
     <!-- Header -->
-    <div class="sidebar-header">
-      <div class="sidebar-title">
+    <div class="p-5 border-b border-surface-200">
+      <div class="font-mono text-sm font-semibold tracking-wide uppercase text-cyan-500 mb-1">
         <span class="text-primary">{{ competitionName }}</span>
       </div>
-      <div class="sidebar-subtitle">{{ seasonName }}</div>
+      <div class="text-secondary text-lg">{{ seasonName }}</div>
     </div>
 
     <!-- Navigation Sections -->
-    <div class="sidebar-content">
+    <div class="flex-1 py-4 overflow-y-auto">
       <!-- Navigation Links -->
-      <div class="sidebar-section">
-        <div class="sidebar-label">Navigation</div>
-        <nav class="sidebar-nav">
+      <div class="mb-6">
+        <div class="font-mono text-xs font-semibold tracking-wider uppercase text-muted px-5 mb-2">
+          Navigation
+        </div>
+        <nav class="flex flex-col">
           <SidebarLink
             v-for="link in navigationLinks"
             :key="link.id"
@@ -105,9 +103,9 @@ function handleSeasonSaved(): void {
       </div>
 
       <!-- Settings Section -->
-      <div class="sidebar-section">
-        <nav class="sidebar-nav">
-          <SidebarButton :icon="PhGear" label="Edit Settings" @click="openEditSeasonModal" />
+      <div class="mb-6">
+        <nav class="flex flex-col">
+          <SidebarButton :icon="PhGear" label="Edit Season Settings" @click="openEditSeasonModal" />
         </nav>
       </div>
     </div>
@@ -123,59 +121,3 @@ function handleSeasonSaved(): void {
     />
   </aside>
 </template>
-
-<style scoped>
-.sidebar {
-  width: 240px;
-  background: var(--bg-panel);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.sidebar-title {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--cyan);
-  margin-bottom: 4px;
-}
-
-.sidebar-subtitle {
-  font-size: var(--font-size-md);
-  color: var(--text-secondary);
-}
-
-.sidebar-content {
-  flex: 1;
-  padding: 16px 0;
-  overflow-y: auto;
-}
-
-.sidebar-section {
-  margin-bottom: 24px;
-}
-
-.sidebar-label {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  padding: 0 20px;
-  margin-bottom: 8px;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-}
-</style>

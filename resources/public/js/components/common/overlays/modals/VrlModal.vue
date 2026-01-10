@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* global HTMLElement, KeyboardEvent */
+/* global HTMLElement */
 import { computed, watch, onUnmounted, ref, nextTick } from 'vue';
 import { PhX } from '@phosphor-icons/vue';
 import { onKeyStroke } from '@vueuse/core';

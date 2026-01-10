@@ -94,7 +94,6 @@ const handleClick = () => {
   }
 };
 
-// eslint-disable-next-line no-undef
 const handleKeydown = (event: KeyboardEvent) => {
   if (!props.disabled && (event.key === ' ' || event.key === 'Enter')) {
     event.preventDefault();

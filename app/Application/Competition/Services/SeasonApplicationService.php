@@ -851,6 +851,9 @@ final class SeasonApplicationService
                 $hasPole = ($standing['pole_position_points'] ?? 0) > 0;
                 $hasFastestLap = ($standing['fastest_lap_points'] ?? 0) > 0;
                 $position = $standing['position'] ?? null;
+                $totalPenalties = is_numeric($standing['total_penalties'] ?? 0)
+                    ? max(0, (int) ($standing['total_penalties'] ?? 0))
+                    : 0;
 
                 if (! isset($driverTotals[$driverId])) {
                     $driverTotals[$driverId] = [
@@ -859,6 +862,7 @@ final class SeasonApplicationService
                         'total_points' => 0,
                         'podiums' => 0,
                         'poles' => 0,
+                        'total_penalties' => 0,
                     ];
                     $driverRoundData[$driverId] = [];
                 }
@@ -875,6 +879,9 @@ final class SeasonApplicationService
                     $driverTotals[$driverId]['poles']++;
                 }
 
+                // Sum penalties
+                $driverTotals[$driverId]['total_penalties'] += $totalPenalties;
+
                 $driverRoundData[$driverId][] = [
                     'round_id' => $roundId,
                     'round_number' => $roundNumber,
@@ -882,6 +889,7 @@ final class SeasonApplicationService
                     'position' => $position,
                     'has_pole' => $hasPole,
                     'has_fastest_lap' => $hasFastestLap,
+                    'total_penalties' => $totalPenalties,
                 ];
             }
         }
@@ -960,6 +968,7 @@ final class SeasonApplicationService
                 'total_points' => $data['total_points'],
                 'podiums' => $data['podiums'],
                 'poles' => $data['poles'],
+                'total_penalties' => $data['total_penalties'],
                 'rounds' => $driverRoundData[$driverId],
                 'team_id' => $teamId,
                 'team_name' => $team !== null ? $team['name'] : null,
@@ -1067,6 +1076,9 @@ final class SeasonApplicationService
                     $hasPole = ($standing['pole_position_points'] ?? 0) > 0;
                     $hasFastestLap = ($standing['fastest_lap_points'] ?? 0) > 0;
                     $position = $standing['position'] ?? null;
+                    $totalPenalties = is_numeric($standing['total_penalties'] ?? 0)
+                        ? max(0, (int) ($standing['total_penalties'] ?? 0))
+                        : 0;
 
                     if (! isset($divisionDriverTotals[$divisionId]['drivers'][$driverId])) {
                         $divisionDriverTotals[$divisionId]['drivers'][$driverId] = [
@@ -1075,6 +1087,7 @@ final class SeasonApplicationService
                             'total_points' => 0,
                             'podiums' => 0,
                             'poles' => 0,
+                            'total_penalties' => 0,
                         ];
                         $divisionDriverRoundData[$divisionId][$driverId] = [];
                     }
@@ -1091,6 +1104,9 @@ final class SeasonApplicationService
                         $divisionDriverTotals[$divisionId]['drivers'][$driverId]['poles']++;
                     }
 
+                    // Sum penalties
+                    $divisionDriverTotals[$divisionId]['drivers'][$driverId]['total_penalties'] += $totalPenalties;
+
                     $divisionDriverRoundData[$divisionId][$driverId][] = [
                         'round_id' => $roundId,
                         'round_number' => $roundNumber,
@@ -1098,6 +1114,7 @@ final class SeasonApplicationService
                         'position' => $position,
                         'has_pole' => $hasPole,
                         'has_fastest_lap' => $hasFastestLap,
+                        'total_penalties' => $totalPenalties,
                     ];
                 }
             }
@@ -1177,6 +1194,7 @@ final class SeasonApplicationService
                  *     total_points: float|int,
                  *     podiums: int,
                  *     poles: int,
+                 *     total_penalties: int,
                  *     drop_total?: float|int
                  * } $driverData
                  */
@@ -1203,6 +1221,7 @@ final class SeasonApplicationService
                     'total_points' => $driverData['total_points'],
                     'podiums' => $driverData['podiums'],
                     'poles' => $driverData['poles'],
+                    'total_penalties' => $driverData['total_penalties'],
                     'rounds' => $divisionDriverRoundData[$divisionId][$driverId],
                     'team_id' => $teamId,
                     'team_name' => $team !== null ? $team['name'] : null,

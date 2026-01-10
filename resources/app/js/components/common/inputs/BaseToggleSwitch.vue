@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import PrimeToggleSwitch from 'primevue/toggleswitch';
+import { computed } from 'vue';
 
 interface Props {
   modelValue?: boolean;
@@ -18,14 +19,23 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 /**
- * PrimeVue passthrough configuration for custom styling
- * Using passthrough to override the checked background color to green
+ * Design tokens for ToggleSwitch component
+ * Defines custom colors for ON (green) and OFF (red) states
  */
-const passThroughConfig = {
+const toggleTokens = computed(() => ({
   root: {
-    class: 'base-toggle-switch',
+    background: '#ef4444', // OFF - red-500
+    hoverBackground: '#dc2626', // OFF hover - red-600
+    checkedBackground: '#22c55e', // ON - green-500
+    checkedHoverBackground: '#16a34a', // ON hover - green-600
+    disabledBackground: '#fca5a5', // OFF disabled - red-300
+    checkedDisabledBackground: '#86efac', // ON disabled - green-300
   },
-};
+  handle: {
+    background: '#ffffff', // White handle for both states
+    checkedBackground: '#ffffff',
+  },
+}));
 
 function handleUpdate(value: boolean): void {
   emit('update:modelValue', value);
@@ -36,7 +46,7 @@ function handleUpdate(value: boolean): void {
   <PrimeToggleSwitch
     :model-value="modelValue"
     :disabled="disabled"
-    :pt="passThroughConfig"
+    :dt="toggleTokens"
     @update:model-value="handleUpdate"
   >
     <!-- Pass through the handle slot for custom check/times icons -->
@@ -48,26 +58,7 @@ function handleUpdate(value: boolean): void {
 
 <style scoped>
 /**
- * Custom styles for BaseToggleSwitch
- * Using scoped styles to ensure specificity without affecting other components
+ * No custom CSS needed - all styling is handled via PrimeVue design tokens
+ * Passed through the :dt prop to maintain separation of concerns
  */
-:deep(.base-toggle-switch.p-toggleswitch-checked .p-toggleswitch-slider) {
-  background-color: #22c55e !important; /* Green-500 */
-}
-
-:deep(.base-toggle-switch.p-toggleswitch-checked:hover .p-toggleswitch-slider) {
-  background-color: #16a34a !important; /* Green-600 */
-}
-
-/**
- * Ensure the toggle switch maintains proper focus styles
- */
-:deep(
-  .base-toggle-switch.p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:focus-visible)
-    .p-toggleswitch-slider
-) {
-  outline: 0 none;
-  outline-offset: 0;
-  box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.2); /* Green with opacity */
-}
 </style>

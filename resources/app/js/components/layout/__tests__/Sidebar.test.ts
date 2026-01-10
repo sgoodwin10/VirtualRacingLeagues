@@ -39,12 +39,13 @@ describe('Sidebar.vue', () => {
         plugins: [router],
         stubs: {
           SidebarLink: true,
+          SidebarButton: true,
           SeasonFormSplitModal: true,
         },
       },
     });
 
-    expect(wrapper.find('.sidebar').exists()).toBe(true);
+    expect(wrapper.find('aside').exists()).toBe(true);
   });
 
   it('does not render when showSidebar is false', () => {
@@ -56,12 +57,13 @@ describe('Sidebar.vue', () => {
         plugins: [router],
         stubs: {
           SidebarLink: true,
+          SidebarButton: true,
           SeasonFormSplitModal: true,
         },
       },
     });
 
-    expect(wrapper.find('.sidebar').exists()).toBe(false);
+    expect(wrapper.find('aside').exists()).toBe(false);
   });
 
   it('displays competition and season name in header', () => {
@@ -124,13 +126,14 @@ describe('Sidebar.vue', () => {
         plugins: [router],
         stubs: {
           SidebarLink: true,
+          SidebarButton: true,
           SeasonFormSplitModal: true,
         },
       },
     });
 
-    expect(wrapper.find('.sidebar-title').text()).toContain('Test Championship');
-    expect(wrapper.find('.sidebar-subtitle').text()).toBe('2024 Season');
+    expect(wrapper.find('.text-primary').text()).toContain('Test Championship');
+    expect(wrapper.find('.text-secondary').text()).toBe('2024 Season');
   });
 
   it('displays navigation section label', () => {
@@ -194,13 +197,14 @@ describe('Sidebar.vue', () => {
         plugins: [router],
         stubs: {
           SidebarLink: true,
+          SidebarButton: true,
           SeasonFormSplitModal: true,
         },
       },
     });
 
-    expect(wrapper.find('.sidebar-label').exists()).toBe(true);
-    expect(wrapper.find('.sidebar-label').text()).toBe('Navigation');
+    expect(wrapper.find('.text-muted').exists()).toBe(true);
+    expect(wrapper.find('.text-muted').text()).toBe('Navigation');
   });
 
   it('displays navigation links when in competition context', async () => {
@@ -267,6 +271,7 @@ describe('Sidebar.vue', () => {
             template: '<a>{{ label }}</a>',
             props: ['to', 'label', 'icon', 'tag'],
           },
+          SidebarButton: true,
           SeasonFormSplitModal: true,
         },
       },
@@ -274,9 +279,8 @@ describe('Sidebar.vue', () => {
 
     await wrapper.vm.$nextTick();
 
-    const navSection = wrapper.findAll('.sidebar-section').find((section) => {
-      const label = section.find('.sidebar-label');
-      return label.exists() && label.text() === 'Navigation';
+    const navSection = wrapper.findAll('nav').find((nav) => {
+      return nav.findComponent({ name: 'SidebarLink' }).exists();
     });
 
     expect(navSection).toBeDefined();

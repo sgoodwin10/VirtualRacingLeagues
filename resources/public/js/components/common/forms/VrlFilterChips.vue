@@ -75,7 +75,6 @@ const handleChipClick = (value: string | number) => {
   emit('update:modelValue', value);
 };
 
-// eslint-disable-next-line no-undef
 const handleKeydown = (event: KeyboardEvent, index: number) => {
   let newIndex = index;
 

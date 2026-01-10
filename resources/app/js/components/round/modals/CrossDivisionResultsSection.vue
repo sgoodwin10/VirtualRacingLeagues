@@ -62,8 +62,8 @@
           header="Time"
           class="w-42"
           :pt="{
-            headerCell: { style: { borderRight: '1px solid var(--border)' } },
-            bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+            headerCell: { style: { borderRight: '1px solid var(--border)', textAlign: 'right' } },
+            bodyCell: { style: { borderRight: '1px solid var(--border)', textAlign: 'right' } },
           }"
         >
           <template #body="{ data }">

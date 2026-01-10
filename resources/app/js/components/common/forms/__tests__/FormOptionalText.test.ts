@@ -22,7 +22,7 @@ describe('FormOptionalText', () => {
     });
 
     const paragraph = wrapper.find('p');
-    expect(paragraph.classes()).toContain('text-sm');
+    expect(paragraph.classes()).toContain('text-md');
     expect(paragraph.classes()).toContain('text-[var(--text-muted)]');
   });
 
@@ -38,7 +38,7 @@ describe('FormOptionalText', () => {
     expect(paragraph.classes()).toContain('text-lg');
     expect(paragraph.classes()).toContain('text-blue-600');
     expect(paragraph.classes()).toContain('font-semibold');
-    expect(paragraph.classes()).not.toContain('text-sm');
+    expect(paragraph.classes()).not.toContain('text-md');
     expect(paragraph.classes()).not.toContain('text-[var(--text-muted)]');
   });
 

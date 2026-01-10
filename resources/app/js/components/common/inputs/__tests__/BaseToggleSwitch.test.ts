@@ -12,14 +12,30 @@ describe('BaseToggleSwitch', () => {
       expect(toggleSwitch.exists()).toBe(true);
     });
 
-    it('applies the base-toggle-switch class via passthrough config', () => {
+    it('applies custom design tokens via dt prop', () => {
       const wrapper = mount(BaseToggleSwitch);
 
       const toggleSwitch = wrapper.findComponent(PrimeToggleSwitch);
-      expect(toggleSwitch.props('pt')).toEqual({
-        root: {
-          class: 'base-toggle-switch',
-        },
+      const dtProp = toggleSwitch.props('dt');
+
+      // Verify design tokens are passed
+      expect(dtProp).toBeDefined();
+      expect(dtProp).toHaveProperty('root');
+      expect(dtProp).toHaveProperty('handle');
+
+      // Verify color tokens
+      expect(dtProp.root).toEqual({
+        background: '#ef4444', // OFF - red-500
+        hoverBackground: '#dc2626', // OFF hover - red-600
+        checkedBackground: '#22c55e', // ON - green-500
+        checkedHoverBackground: '#16a34a', // ON hover - green-600
+        disabledBackground: '#fca5a5', // OFF disabled - red-300
+        checkedDisabledBackground: '#86efac', // ON disabled - green-300
+      });
+
+      expect(dtProp.handle).toEqual({
+        background: '#ffffff',
+        checkedBackground: '#ffffff',
       });
     });
   });
@@ -119,16 +135,20 @@ describe('BaseToggleSwitch', () => {
   });
 
   describe('Styling', () => {
-    it('includes custom green background styles', () => {
+    it('passes design tokens for custom red/green styling', () => {
       const wrapper = mount(BaseToggleSwitch, {
         props: {
           modelValue: true,
         },
       });
 
-      // The component should have the base-toggle-switch class
-      const html = wrapper.html();
-      expect(html).toContain('base-toggle-switch');
+      const toggleSwitch = wrapper.findComponent(PrimeToggleSwitch);
+      const dtProp = toggleSwitch.props('dt');
+
+      // Verify that design tokens contain the custom colors
+      expect(dtProp.root.background).toBe('#ef4444'); // Red for OFF
+      expect(dtProp.root.checkedBackground).toBe('#22c55e'); // Green for ON
+      expect(dtProp.handle.background).toBe('#ffffff'); // White handle
     });
   });
 

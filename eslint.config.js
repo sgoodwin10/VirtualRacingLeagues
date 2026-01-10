@@ -32,6 +32,7 @@ export default [
         DragEvent: 'readonly',
         MouseEvent: 'readonly',
         FocusEvent: 'readonly',
+        KeyboardEvent: 'readonly',
         HTMLInputElement: 'readonly',
         HTMLImageElement: 'readonly',
         document: 'readonly',

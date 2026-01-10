@@ -91,9 +91,9 @@ export interface UpdateDriverRequest {
   iracing_id?: string;
   iracing_customer_id?: number;
   // League-specific fields
-  driver_number?: number;
+  driver_number?: number | null;
   status?: DriverStatus;
-  league_notes?: string;
+  league_notes?: string | null;
 }
 
 /**

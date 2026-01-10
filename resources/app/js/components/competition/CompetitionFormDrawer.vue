@@ -14,6 +14,7 @@ import type {
   SlugCheckResponse,
   RGBColor,
 } from '@app/types/competition';
+import { logError } from '@app/utils/logger';
 
 // PrimeVue Components
 import InputText from 'primevue/inputtext';
@@ -143,7 +144,7 @@ const checkSlug = useDebounceFn(async () => {
   } catch (error) {
     // Only update error state if this request wasn't aborted
     if (!currentController.signal.aborted) {
-      console.error('Slug check failed:', error);
+      logError('Slug check failed:', { context: 'CompetitionFormDrawer', data: error });
       slugStatus.value = 'error';
     }
   }
@@ -172,7 +173,10 @@ watch(
           await leagueStore.fetchLeague(props.leagueId);
         }
       } catch (error) {
-        console.error('Failed to load required data:', error);
+        logError('Failed to load required data:', {
+          context: 'CompetitionFormDrawer',
+          data: error,
+        });
         toast.add({
           severity: 'error',
           summary: 'Error',
@@ -309,7 +313,7 @@ async function submitForm(): Promise<void> {
     localVisible.value = false;
     resetForm();
   } catch (error) {
-    console.error('Failed to save competition:', error);
+    logError('Failed to save competition:', { context: 'CompetitionFormDrawer', data: error });
 
     const errorMessage = error instanceof Error ? error.message : 'Failed to save competition';
     toast.add({
@@ -517,9 +521,10 @@ onUnmounted(() => {
       <div class="flex justify-end gap-3">
         <Button label="Cancel" variant="secondary" :disabled="isSubmitting" @click="handleCancel" />
         <Button
-          :label="isEditMode ? 'Save Changes' : 'Create Competition'"
+          :label="isEditMode ? 'Update Competition' : 'Create Competition'"
           :loading="isSubmitting"
           :disabled="!canSubmit"
+          variant="success"
           @click="handleSubmit"
         />
       </div>

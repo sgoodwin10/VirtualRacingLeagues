@@ -138,7 +138,7 @@ const toggleItem = (index: number) => {
 };
 
 // Keyboard navigation
-// eslint-disable-next-line no-undef -- KeyboardEvent is a TypeScript DOM type
+
 const handleKeydown = (event: KeyboardEvent, index: number) => {
   switch (event.key) {
     case 'Enter':

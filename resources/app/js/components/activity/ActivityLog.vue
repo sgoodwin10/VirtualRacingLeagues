@@ -7,7 +7,7 @@ import Skeleton from 'primevue/skeleton';
 import Button from '@app/components/common/buttons/Button.vue';
 import type { ActivityFilterParams } from '@app/types/activityLog';
 import HTag from '@app/components/common/HTag.vue';
-import { PhArrowClockwise } from '@phosphor-icons/vue';
+import { PhArrowClockwise, PhCaretDown } from '@phosphor-icons/vue';
 
 interface Props {
   leagueId: number;
@@ -92,7 +92,7 @@ function handleLoadMore() {
         <p class="font-medium">Failed to load activities</p>
       </div>
       <p class="text-sm mt-1">{{ error }}</p>
-      <Button label="Try Again" severity="danger" size="small" class="mt-3" @click="refresh" />
+      <Button label="Try Again" variant="danger" size="sm" class="mt-3" @click="refresh" />
     </div>
 
     <!-- Loading skeleton -->
@@ -139,7 +139,7 @@ function handleLoadMore() {
       v-if="!loading && formattedActivities.length > 0 && currentPage < lastPage"
       class="mt-6 text-center"
     >
-      <Button label="Load More" icon="pi pi-chevron-down" outlined @click="handleLoadMore" />
+      <Button label="Load More" :icon="PhCaretDown" variant="outline" @click="handleLoadMore" />
       <p class="text-sm text-[var(--text-muted)] mt-2">
         Showing page {{ currentPage }} of {{ lastPage }}
       </p>

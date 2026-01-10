@@ -237,8 +237,8 @@
     </template>
   </BasePanel>
 
-  <!-- Round Form Drawer -->
-  <RoundFormDrawer
+  <!-- Round Form Modal -->
+  <RoundFormModal
     v-model:visible="showFormDrawer"
     :season-id="seasonId"
     :platform-id="platformId"
@@ -290,7 +290,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { PhPlus, PhCalculator, PhTrophy, PhPencil, PhTrash } from '@phosphor-icons/vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import { Button, FooterAddButton } from '@app/components/common/buttons';
-import RoundFormDrawer from '@app/components/round/modals/RoundFormDrawer.vue';
+import RoundFormModal from '@app/components/round/modals/RoundFormModal.vue';
 import RaceFormDrawer from '@app/components/round/modals/RaceFormDrawer.vue';
 import RaceListItem from '@app/components/round/RaceListItem.vue';
 import QualifierListItem from '@app/components/round/QualifierListItem.vue';

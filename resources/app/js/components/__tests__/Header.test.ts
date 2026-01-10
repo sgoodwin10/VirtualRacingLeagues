@@ -26,7 +26,6 @@ describe('Header', () => {
       email: 'john@example.com',
       email_verified_at: null,
     };
-    userStore.isAuthenticated = true;
 
     const wrapper = mountWithStubs(Header, {
       global: {
@@ -50,7 +49,6 @@ describe('Header', () => {
       email: 'john@example.com',
       email_verified_at: null,
     };
-    userStore.isAuthenticated = true;
 
     const wrapper = mountWithStubs(Header, {
       global: {
@@ -77,7 +75,6 @@ describe('Header', () => {
       email: 'john@example.com',
       email_verified_at: null,
     };
-    userStore.isAuthenticated = true;
 
     const wrapper = mountWithStubs(Header, {
       global: {
@@ -103,7 +100,6 @@ describe('Header', () => {
       email: 'john@example.com',
       email_verified_at: null,
     };
-    userStore.isAuthenticated = true;
 
     const wrapper = mountWithStubs(Header, {
       global: {

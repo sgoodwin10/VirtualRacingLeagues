@@ -419,7 +419,6 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                         </span>
                       </div>
                     </div>
-                    
                   </div>
                 </div>
 
@@ -430,7 +429,9 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                   </p>
                   <div class="flex gap-4 content-center justify-center">
                     <div class="flex flex-col gap-0.5">
-                      <span class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center">
+                      <span
+                        class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center"
+                      >
                         {{ competition.stats.total_seasons }}
                       </span>
                       <span
@@ -440,7 +441,9 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                       </span>
                     </div>
                     <div class="flex flex-col gap-0.5">
-                      <span class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center">
+                      <span
+                        class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center"
+                      >
                         {{ competition.stats.total_drivers }}
                       </span>
                       <span
@@ -450,7 +453,9 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                       </span>
                     </div>
                     <div class="flex flex-col gap-0.5">
-                      <span class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center">
+                      <span
+                        class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center"
+                      >
                         {{ competition.stats.active_seasons }}
                       </span>
                       <span
@@ -460,7 +465,9 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                       </span>
                     </div>
                     <div class="flex flex-col gap-0.5">
-                      <span class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center">
+                      <span
+                        class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center"
+                      >
                         {{ competition.stats.total_races }}
                       </span>
                       <span
@@ -471,16 +478,16 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                     </div>
                   </div>
                   <div class="flex justify-center content-center mt-4">
-                      <Button
-                        label="Create New Season"
-                        :icon="PhPlus"
-                        variant="outline"
-                        size="sm"
-                        class="mx-auto"
-                        :aria-label="`Create new season for ${competition?.name}`"
-                        @click="handleNewSeason(competition)"
-                      />
-                    </div>
+                    <Button
+                      label="Create New Season"
+                      :icon="PhPlus"
+                      variant="outline"
+                      size="sm"
+                      class="mx-auto"
+                      :aria-label="`Create new season for ${competition?.name}`"
+                      @click="handleNewSeason(competition)"
+                    />
+                  </div>
                 </div>
 
                 <!-- Card Footer -->

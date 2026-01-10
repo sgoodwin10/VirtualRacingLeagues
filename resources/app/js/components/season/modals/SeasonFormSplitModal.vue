@@ -113,10 +113,12 @@ const modalTitle = computed(() =>
   props.isEditMode ? `Edit Season: ${form.name}` : 'Create Season',
 );
 const modalSubtitle = computed(() =>
-  props.isEditMode ? 'Update season configuration' : 'Create new racing season',
+  props.isEditMode ? 'Update season configuration' : 'Create new season',
 );
 
-const submitButtonLabel = computed(() => (props.isEditMode ? 'Save Changes' : 'Create Season'));
+const submitButtonLabel = computed(() =>
+  props.isEditMode ? 'Update Season' : 'Create New Season',
+);
 
 const canSubmit = computed(() => {
   return (
@@ -678,6 +680,7 @@ async function handleSubmit(): Promise<void> {
           :label="submitButtonLabel"
           :loading="isSubmitting"
           :disabled="!canSubmit"
+          variant="success"
           @click="handleSubmit"
         />
       </div>

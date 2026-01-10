@@ -1,607 +1,119 @@
 <template>
   <BaseModal
     v-model:visible="localVisible"
-    width="4xl"
+    :header="
+      mode === 'edit'
+        ? isQualifying
+          ? 'Edit Qualifying'
+          : 'Edit Race'
+        : isQualifying
+          ? 'Create Qualifying'
+          : 'Create Race'
+    "
+    width="6xl"
     :closable="!saving"
     :dismissable-mask="false"
-    content-class="bg-slate-50"
+    :loading="saving"
+    content-class="!p-0"
+    @hide="handleClose"
   >
-    <template #header>
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-gray-900">
-          {{
-            mode === 'edit'
-              ? isQualifying
-                ? 'Edit Qualifying'
-                : 'Edit Race'
-              : isQualifying
-                ? 'Create Qualifying'
-                : 'Create Race'
-          }}
-        </h2>
-      </div>
-    </template>
+    <!-- Split Layout -->
+    <div class="grid grid-cols-[200px_1fr] min-h-[520px] max-h-[72vh]">
+      <!-- Sidebar -->
+      <RaceEditSidebar
+        :active-section="activeSection"
+        :is-qualifying="isQualifying"
+        @change-section="handleSectionChange"
+      />
 
-    <div class="space-y-3">
-      <!-- Top Section: Race Type + Race Name -->
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-        <!-- Race Type (20% width) -->
-        <div class="md:col-span-1">
-          <FormLabel for="race_type" text="Race Type" required />
-          <Select
-            id="race_type"
-            v-model="form.race_type"
-            :options="RACE_TYPE_OPTIONS"
-            option-label="label"
-            option-value="value"
-            placeholder="Select type"
-            :invalid="!!errors.race_type"
-            size="small"
-            fluid
-            class="w-full"
-          />
-          <FormError :error="errors.race_type" />
-          <small v-if="mode === 'edit'" class="text-xs text-gray-500">
-            Changing type will adjust available fields
-          </small>
-        </div>
+      <!-- Main Content -->
+      <main class="overflow-y-auto bg-[var(--bg-dark)] p-6">
+        <!-- Basic Info Section -->
+        <RaceBasicInfoSection
+          v-show="activeSection === 'basic'"
+          :is-qualifying="isQualifying"
+          :race-type="form.race_type as string"
+          :race-name="form.name || ''"
+          :qualifying-format="form.qualifying_format as string"
+          :qualifying-length="form.qualifying_length"
+          :qualifying-tire="form.qualifying_tire || ''"
+          :qualifying-pole="form.qualifying_pole"
+          :qualifying-pole-top10="form.qualifying_pole_top_10"
+          :grid-source="form.grid_source as string"
+          :grid-source-race-id="form.grid_source_race_id"
+          :source-race-options="sourceRaceOptions"
+          :length-type="form.length_type as string"
+          :length-value="form.length_value"
+          :track-limits-enforced="form.track_limits_enforced"
+          :false-start-detection="form.false_start_detection"
+          :mandatory-pit-stop="form.mandatory_pit_stop"
+          :errors="{
+            race_type: errors.race_type,
+            name: errors.name,
+            qualifying_format: undefined,
+            qualifying_length: errors.qualifying_length,
+            grid_source: undefined,
+            grid_source_race_id: errors.grid_source_race_id,
+            length_type: undefined,
+            length_value: errors.length_value,
+          }"
+          :disabled="saving"
+          @update:race-type="form.race_type = $event as any"
+          @update:race-name="form.name = $event"
+          @update:qualifying-format="form.qualifying_format = $event as any"
+          @update:qualifying-length="form.qualifying_length = $event ?? form.qualifying_length"
+          @update:qualifying-tire="form.qualifying_tire = $event"
+          @update:qualifying-pole="form.qualifying_pole = $event"
+          @update:qualifying-pole-top10="form.qualifying_pole_top_10 = $event"
+          @update:grid-source="form.grid_source = $event as any"
+          @update:grid-source-race-id="form.grid_source_race_id = $event"
+          @update:length-type="form.length_type = $event as any"
+          @update:length-value="form.length_value = $event ?? form.length_value"
+          @update:track-limits-enforced="form.track_limits_enforced = $event"
+          @update:false-start-detection="form.false_start_detection = $event"
+          @update:mandatory-pit-stop="form.mandatory_pit_stop = $event"
+        />
 
-        <!-- Race Name (80% width) -->
-        <div class="md:col-span-4 space-y-1">
-          <FormLabel for="name" text="Race Name" />
-          <InputText
-            id="name"
-            v-model="form.name"
-            :invalid="!!errors.name"
-            placeholder="e.g., Sprint Race, Feature Race"
-            size="small"
-            class="w-full"
-          />
-          <FormOptionalText :show-optional="false" text="Custom name for this race" />
-          <FormError :error="errors.name" />
-        </div>
-      </div>
+        <!-- Points Section -->
+        <RacePointsSection
+          v-show="activeSection === 'points'"
+          :is-qualifying="isQualifying"
+          :race-points="form.race_points"
+          :points-system="form.points_system"
+          :fastest-lap="form.fastest_lap ?? null"
+          :fastest-lap-top10="form.fastest_lap_top_10"
+          :dnf-points="form.dnf_points"
+          :can-copy-round-points="canCopyRoundPoints"
+          :can-copy-race1-points="canCopyRace1Points"
+          :is-first-race="isFirstRace"
+          :errors="{
+            race_points: undefined,
+            points_system: errors.points_system,
+            fastest_lap: undefined,
+          }"
+          :disabled="saving"
+          @update:race-points="form.race_points = $event"
+          @update:points-system="form.points_system = $event"
+          @update:fastest-lap="form.fastest_lap = $event ?? null"
+          @update:fastest-lap-top10="form.fastest_lap_top_10 = $event"
+          @update:dnf-points="form.dnf_points = $event ?? form.dnf_points"
+          @copy-round-points="copyRoundPoints"
+          @copy-race1-points="copyRace1Points"
+        />
 
-      <!-- Section: Qualifying Configuration (Only for qualifying type) -->
-      <TechnicalAccordion
-        v-if="isQualifying"
-        :model-value="['qualifying']"
-        :multiple="true"
-        gap="md"
-      >
-        <TechnicalAccordionPanel value="qualifying">
-          <TechnicalAccordionHeader
-            title="Qualifying Configuration"
-            subtitle="Set up qualifying session parameters"
-            :icon="PhGear"
-            icon-variant="purple"
-          />
-          <TechnicalAccordionContent elevated padding="md">
-            <div class="flex flex-row gap-4">
-              <div class="flex-grow">
-                <FormLabel for="qualifying_format" text="Format" required />
-                <Select
-                  id="qualifying_format"
-                  v-model="form.qualifying_format"
-                  :options="QUALIFYING_FORMAT_OPTIONS"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select format"
-                  size="small"
-                  fluid
-                  class="w-full"
-                />
-              </div>
-
-              <!-- Qualifying Length -->
-              <div>
-                <FormLabel for="qualifying_length" text="Length (min)" />
-                <StyledInputNumber
-                  v-model="form.qualifying_length"
-                  input-id="qualifying_length"
-                  :min="1"
-                  :max="999"
-                  :invalid="!!errors.qualifying_length"
-                  size="small"
-                  fluid
-                  class="w-24"
-                />
-                <FormError :error="errors.qualifying_length" />
-              </div>
-
-              <!-- Qualifying Tire -->
-              <div>
-                <FormLabel for="qualifying_tire" text="Tire" />
-                <InputText
-                  id="qualifying_tire"
-                  v-model="form.qualifying_tire"
-                  placeholder="e.g., Soft"
-                  size="small"
-                  class="w-32"
-                />
-              </div>
-
-              <div class="space-y-2">
-                <label for="bonus_pole" class="text-sm font-medium text-gray-900"
-                  >Pole position bonus</label
-                >
-                <div class="space-y-2">
-                  <div class="flex items-center gap-2 pt-1">
-                    <Checkbox id="bonus_pole" v-model="hasQualifyingPole" :binary="true" />
-                    <label for="bonus_pole" class="text-sm">Enable pole bonus</label>
-                    <StyledInputNumber
-                      v-if="hasQualifyingPole"
-                      v-model="form.qualifying_pole"
-                      :max-fraction-digits="2"
-                      :min="1"
-                      placeholder="Pts"
-                      size="small"
-                      fluid
-                      class="w-20"
-                    />
-                  </div>
-                  <div
-                    v-if="hasQualifyingPole && form.qualifying_pole && form.qualifying_pole > 0"
-                    class="ml-6"
-                  >
-                    <Checkbox
-                      id="bonus_pole_top_10"
-                      v-model="form.qualifying_pole_top_10"
-                      :binary="true"
-                    />
-                    <label for="bonus_pole_top_10" class="ml-2 text-sm"
-                      >Only award if driver finishes in top 10</label
-                    >
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TechnicalAccordionContent>
-        </TechnicalAccordionPanel>
-      </TechnicalAccordion>
-
-      <!-- Section: Race Details (Only for race types) -->
-      <TechnicalAccordion v-if="!isQualifying" :model-value="['details']" :multiple="true" gap="md">
-        <TechnicalAccordionPanel value="details">
-          <TechnicalAccordionHeader
-            title="Race Details"
-            subtitle="Configure grid, length, and race rules"
-            :icon="PhFlagCheckered"
-            icon-variant="cyan"
-          />
-          <TechnicalAccordionContent padding="md">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              <!-- Left Column (66% - 2 cols) -->
-              <div class="lg:col-span-2 space-y-3">
-                <!-- Starting Grid -->
-                <div>
-                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Starting Grid</h3>
-                  <div class="space-y-2.5">
-                    <!-- Grid Source + Source Race on SAME row (grid-cols-2) -->
-                    <div class="grid grid-cols-2 gap-3">
-                      <FormInputGroup>
-                        <FormLabel for="grid_source" text="Grid Source" required />
-                        <Select
-                          id="grid_source"
-                          v-model="form.grid_source"
-                          :options="GRID_SOURCE_OPTIONS"
-                          option-label="label"
-                          option-value="value"
-                          placeholder="Select source"
-                          size="small"
-                          fluid
-                          class="w-full"
-                        />
-                      </FormInputGroup>
-                      <FormInputGroup v-if="requiresGridSourceRace">
-                        <FormLabel for="grid_source_race_id" :text="sourceRaceLabel" />
-                        <Select
-                          id="grid_source_race_id"
-                          v-model="form.grid_source_race_id"
-                          :options="sourceRaceOptions"
-                          option-label="label"
-                          option-value="value"
-                          :placeholder="
-                            form.grid_source === 'qualifying' ? 'Select qualifier' : 'Select race'
-                          "
-                          :invalid="!!errors.grid_source_race_id"
-                          size="small"
-                          fluid
-                          class="w-full"
-                        />
-                        <FormError :error="errors.grid_source_race_id" />
-                        <Message
-                          v-if="sourceRaceOptions.length === 0"
-                          severity="warn"
-                          :closable="false"
-                        >
-                          {{
-                            form.grid_source === 'qualifying'
-                              ? 'No qualifiers available'
-                              : 'No previous races available'
-                          }}
-                        </Message>
-                      </FormInputGroup>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Race Length -->
-                <div>
-                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Race Length</h3>
-                  <div class="space-y-2.5">
-                    <!-- Length Type + Length Value on SAME row (grid-cols-2) -->
-                    <div class="grid grid-cols-2 gap-3">
-                      <FormInputGroup>
-                        <FormLabel text="Length Type" required />
-                        <div class="flex gap-4">
-                          <div
-                            v-for="option in RACE_LENGTH_TYPE_OPTIONS"
-                            :key="option.value"
-                            class="flex items-center"
-                          >
-                            <RadioButton
-                              v-model="form.length_type"
-                              :input-id="`length_type_${option.value}`"
-                              :value="option.value"
-                            />
-                            <label :for="`length_type_${option.value}`" class="ml-2">{{
-                              option.label
-                            }}</label>
-                          </div>
-                        </div>
-                      </FormInputGroup>
-                      <FormInputGroup>
-                        <FormLabel
-                          for="length_value"
-                          :text="
-                            form.length_type === 'laps' ? 'Number of Laps' : 'Duration (minutes)'
-                          "
-                          required
-                        />
-                        <StyledInputNumber
-                          v-model="form.length_value"
-                          input-id="length_value"
-                          :min="1"
-                          :max="form.length_type === 'laps' ? 999 : 9999"
-                          :invalid="!!errors.length_value"
-                          size="small"
-                          fluid
-                          class="w-full"
-                        />
-                        <FormError :error="errors.length_value" />
-                      </FormInputGroup>
-                    </div>
-                    <!-- Extra lap after time checkbox -->
-                    <div class="flex items-center gap-2 hidden">
-                      <Checkbox
-                        id="extra_lap_after_time"
-                        v-model="form.extra_lap_after_time"
-                        :binary="true"
-                      />
-                      <label for="extra_lap_after_time"
-                        >Complete current lap after time expires</label
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Right Column (33% - 1 col) -->
-              <div class="lg:col-span-1 space-y-3">
-                <!-- Penalties & Rules -->
-                <div>
-                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Penalties & Rules</h3>
-                  <div class="space-y-2">
-                    <div class="flex items-center gap-2">
-                      <Checkbox
-                        id="track_limits_enforced"
-                        v-model="form.track_limits_enforced"
-                        :binary="true"
-                      />
-                      <label for="track_limits_enforced">Track limits enforced</label>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <Checkbox
-                        id="false_start_detection"
-                        v-model="form.false_start_detection"
-                        :binary="true"
-                      />
-                      <label for="false_start_detection">False start detection</label>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <Checkbox
-                        id="mandatory_pit_stop"
-                        v-model="form.mandatory_pit_stop"
-                        :binary="true"
-                      />
-                      <label for="mandatory_pit_stop">Mandatory pit stop</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TechnicalAccordionContent>
-        </TechnicalAccordionPanel>
-      </TechnicalAccordion>
-
-      <!-- Section: Points (Only for race types) -->
-      <TechnicalAccordion v-if="!isQualifying" :model-value="['points']" :multiple="true" gap="md">
-        <TechnicalAccordionPanel value="points">
-          <TechnicalAccordionHeader
-            title="Points Configuration"
-            subtitle="Define race points, bonuses, and penalties"
-            :icon="PhTrophy"
-            icon-variant="green"
-          />
-          <TechnicalAccordionContent padding="md">
-            <div class="space-y-3">
-              <!-- Race Points Toggle -->
-              <FormInputGroup>
-                <FormLabel text="Race Points" />
-                <div class="space-y-3">
-                  <div class="flex items-center gap-2">
-                    <ToggleSwitch
-                      id="race_points"
-                      v-model="form.race_points"
-                      aria-label="Enable race points"
-                    />
-                    <label for="race_points" class="text-sm font-medium"
-                      >Enable race-level points calculation</label
-                    >
-                  </div>
-                  <FormOptionalText
-                    :show-optional="false"
-                    text="When enabled, race results create standings using this race's points system"
-                  />
-                </div>
-              </FormInputGroup>
-
-              <!-- Points System Section - Only show when race_points is enabled -->
-              <div v-if="form.race_points" class="space-y-3">
-                <!-- Horizontal Rule -->
-                <hr class="border-gray-300" />
-
-                <!-- 2/3 - 1/3 Layout: Points System + Bonuses -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  <!-- Left Column (66% width): Points System -->
-                  <div class="lg:col-span-2">
-                    <FormInputGroup>
-                      <div class="bg-white rounded-lg border border-gray-200 p-4">
-                        <div class="grid grid-cols-5 gap-3">
-                          <InputGroup
-                            v-for="position in Object.keys(form.points_system).map(Number)"
-                            :key="position"
-                          >
-                            <InputGroupAddon class="bg-slate-100">P{{ position }}</InputGroupAddon>
-                            <StyledInputNumber
-                              v-model="form.points_system[position]"
-                              :input-id="`position_${position}`"
-                              :max-fraction-digits="2"
-                              :min="0"
-                              :max="999"
-                              size="small"
-                              fluid
-                              class="w-full"
-                            />
-                          </InputGroup>
-                        </div>
-                        <div class="mt-3 flex gap-2">
-                          <Button
-                            label="Add Position"
-                            :icon="PhPlus"
-                            size="sm"
-                            variant="success"
-                            @click="addPointsPosition"
-                          />
-                          <Button
-                            label="Remove Last"
-                            :icon="PhTrash"
-                            size="sm"
-                            variant="danger"
-                            :disabled="Object.keys(form.points_system).length <= 1"
-                            @click="removeLastPointsPosition"
-                          />
-                          <!-- Copy Round Points (only for Race #1) -->
-                          <Button
-                            v-if="isFirstRace"
-                            label="Copy Round Points"
-                            :icon="PhCopy"
-                            size="sm"
-                            variant="outline"
-                            :disabled="!canCopyRoundPoints"
-                            @click="copyRoundPoints"
-                          />
-                          <!-- Copy Race 1 Points (only for Race #2+) -->
-                          <Button
-                            v-if="!isFirstRace && !isQualifying"
-                            label="Copy Race 1 Points"
-                            :icon="PhCopy"
-                            size="sm"
-                            variant="outline"
-                            :disabled="!canCopyRace1Points"
-                            @click="copyRace1Points"
-                          />
-                        </div>
-                      </div>
-                      <FormError :error="errors.points_system" />
-                    </FormInputGroup>
-                  </div>
-
-                  <!-- Right Column (33% width): Bonuses -->
-                  <div class="lg:col-span-1 space-y-3">
-                    <!-- Fastest Lap Bonus -->
-                    <FormInputGroup>
-                      <FormLabel text="Fastest Lap Bonus" />
-                      <div class="space-y-2">
-                        <div class="flex items-center gap-2">
-                          <Checkbox
-                            id="bonus_fastest_lap"
-                            v-model="hasFastestLapBonus"
-                            :binary="true"
-                          />
-                          <label for="bonus_fastest_lap" class="text-sm"
-                            >Enable fastest lap bonus</label
-                          >
-                          <StyledInputNumber
-                            v-if="hasFastestLapBonus"
-                            v-model="form.fastest_lap"
-                            :max-fraction-digits="2"
-                            :min="1"
-                            :max="99"
-                            fluid
-                            placeholder="Pts"
-                            size="small"
-                            class="w-20"
-                          />
-                        </div>
-                        <div
-                          v-if="hasFastestLapBonus && form.fastest_lap && form.fastest_lap > 0"
-                          class="ml-6"
-                        >
-                          <Checkbox
-                            id="bonus_fastest_lap_top_10"
-                            v-model="form.fastest_lap_top_10"
-                            :binary="true"
-                          />
-                          <label for="bonus_fastest_lap_top_10" class="ml-2 text-sm"
-                            >Only award if driver finishes in top 10</label
-                          >
-                        </div>
-                      </div>
-                      <FormOptionalText
-                        :show-optional="false"
-                        text="Award points for fastest lap in this race"
-                      />
-                    </FormInputGroup>
-
-                    <hr class="border-gray-300" />
-
-                    <!-- DNF Points -->
-                    <FormInputGroup>
-                      <FormLabel for="dnf_points" text="DNF Points" />
-                      <StyledInputNumber
-                        v-model="form.dnf_points"
-                        input-id="dnf_points"
-                        :max-fraction-digits="2"
-                        :min="0"
-                        :max="99"
-                        size="small"
-                        fluid
-                        class="w-full"
-                      />
-                      <small class="text-xs text-gray-500">Points awarded for Did Not Finish</small>
-                    </FormInputGroup>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Horizontal Rule -->
-              <hr v-if="!form.race_points" class="border-gray-300" />
-
-              <!-- Bonus Points Section (shown when race_points is disabled) -->
-              <div v-if="!form.race_points" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <!-- Fastest Lap Bonus (for non-qualifying races) -->
-                <div>
-                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Bonus Points</h3>
-                  <div class="space-y-2">
-                    <div class="flex items-center gap-2">
-                      <Checkbox
-                        id="bonus_fastest_lap_disabled"
-                        v-model="hasFastestLapBonus"
-                        :binary="true"
-                      />
-                      <label for="bonus_fastest_lap_disabled" class="text-sm">Fastest lap</label>
-                      <StyledInputNumber
-                        v-if="hasFastestLapBonus"
-                        v-model="form.fastest_lap"
-                        :max-fraction-digits="2"
-                        :min="1"
-                        placeholder="Pts"
-                        size="small"
-                        class="w-20"
-                      />
-                    </div>
-                    <div
-                      v-if="hasFastestLapBonus && form.fastest_lap && form.fastest_lap > 0"
-                      class="ml-6"
-                    >
-                      <Checkbox
-                        id="bonus_fastest_lap_top_10_disabled"
-                        v-model="form.fastest_lap_top_10"
-                        :binary="true"
-                      />
-                      <label for="bonus_fastest_lap_top_10_disabled" class="ml-2 text-sm"
-                        >Only award if driver finishes in top 10</label
-                      >
-                    </div>
-                  </div>
-                </div>
-
-                <!-- DNF/DNS Points -->
-                <div>
-                  <h3 class="text-sm font-semibold text-gray-900 mb-2">DNF Points</h3>
-                  <div class="grid grid-cols-2 gap-2">
-                    <FormInputGroup>
-                      <FormLabel for="dnf_points_disabled" text="DNF" />
-                      <StyledInputNumber
-                        v-model="form.dnf_points"
-                        input-id="dnf_points_disabled"
-                        :max-fraction-digits="2"
-                        :min="0"
-                        :max="99"
-                        size="small"
-                        fluid
-                      />
-                      <small class="text-xs text-gray-500">Did Not Finish</small>
-                    </FormInputGroup>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TechnicalAccordionContent>
-        </TechnicalAccordionPanel>
-      </TechnicalAccordion>
-
-      <!-- Section: Notes (Only for race types) -->
-      <TechnicalAccordion v-if="!isQualifying" :model-value="['notes']" :multiple="true" gap="md">
-        <TechnicalAccordionPanel value="notes">
-          <TechnicalAccordionHeader
-            title="Race Notes"
-            subtitle="Add optional notes and comments"
-            :icon="PhNote"
-            icon-variant="orange"
-          />
-          <TechnicalAccordionContent padding="md">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              <!-- Left Column (66% - 2 cols) -->
-              <div class="lg:col-span-2">
-                <FormInputGroup>
-                  <FormLabel for="race_notes" text="Race Notes" />
-                  <Textarea
-                    id="race_notes"
-                    v-model="form.race_notes"
-                    rows="4"
-                    placeholder="Additional race notes, special rules, etc."
-                    class="w-full"
-                  />
-                  <FormOptionalText text="Additional race notes, special rules, etc." />
-                </FormInputGroup>
-              </div>
-
-              <!-- Right Column (33% - 1 col) -->
-              <div class="lg:col-span-1">
-                <!-- Empty -->
-              </div>
-            </div>
-          </TechnicalAccordionContent>
-        </TechnicalAccordionPanel>
-      </TechnicalAccordion>
+        <!-- Notes Section -->
+        <RaceNotesSection
+          v-show="activeSection === 'notes'"
+          :race-notes="form.race_notes || ''"
+          :disabled="saving"
+          @update:race-notes="form.race_notes = $event"
+        />
+      </main>
     </div>
 
     <template #footer>
-      <div class="flex justify-end gap-2">
-        <Button label="Cancel" variant="outline" :disabled="saving" @click="handleCancel" />
+      <div class="flex gap-2 justify-end">
+        <Button label="Cancel" variant="secondary" :disabled="saving" @click="handleClose" />
         <Button
           :label="
             mode === 'edit'
@@ -613,7 +125,8 @@
                 : 'Create Race'
           "
           :loading="saving"
-          variant="primary"
+          :disabled="saving"
+          variant="success"
           @click="handleSave"
         />
       </div>
@@ -630,35 +143,11 @@ import { useRaceSettingsStore } from '@app/stores/raceSettingsStore';
 import { useRaceValidation } from '@app/composables/useRaceValidation';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import { Button } from '@app/components/common/buttons';
-import {
-  PhPlus,
-  PhTrash,
-  PhCopy,
-  PhGear,
-  PhFlagCheckered,
-  PhTrophy,
-  PhNote,
-} from '@phosphor-icons/vue';
-import InputText from 'primevue/inputtext';
-import StyledInputNumber from '@app/components/common/forms/StyledInputNumber.vue';
-import Select from 'primevue/select';
-import Textarea from 'primevue/textarea';
-import Checkbox from 'primevue/checkbox';
-import RadioButton from 'primevue/radiobutton';
-import ToggleSwitch from 'primevue/toggleswitch';
-import InputGroup from 'primevue/inputgroup';
-import InputGroupAddon from 'primevue/inputgroupaddon';
-import {
-  TechnicalAccordion,
-  TechnicalAccordionPanel,
-  TechnicalAccordionHeader,
-  TechnicalAccordionContent,
-} from '@app/components/common/accordions';
-import Message from 'primevue/message';
-import FormLabel from '@app/components/common/forms/FormLabel.vue';
-import FormError from '@app/components/common/forms/FormError.vue';
-import FormOptionalText from '@app/components/common/forms/FormOptionalText.vue';
-import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
+import RaceEditSidebar from './partials/RaceEditSidebar.vue';
+import RaceBasicInfoSection from './partials/sections/RaceBasicInfoSection.vue';
+import RacePointsSection from './partials/sections/RacePointsSection.vue';
+import RaceNotesSection from './partials/sections/RaceNotesSection.vue';
+import type { SectionId } from './partials/RaceEditSidebar.vue';
 import type {
   Race,
   RaceForm,
@@ -667,13 +156,7 @@ import type {
   PlatformRaceSettings,
 } from '@app/types/race';
 import type { PointsSystemMap } from '@app/types/round';
-import {
-  RACE_TYPE_OPTIONS,
-  QUALIFYING_FORMAT_OPTIONS,
-  GRID_SOURCE_OPTIONS,
-  RACE_LENGTH_TYPE_OPTIONS,
-  F1_STANDARD_POINTS,
-} from '@app/types/race';
+import { F1_STANDARD_POINTS } from '@app/types/race';
 
 interface Props {
   visible: boolean;
@@ -700,6 +183,11 @@ const raceStore = useRaceStore();
 const roundStore = useRoundStore();
 const raceSettingsStore = useRaceSettingsStore();
 const toast = useToast();
+
+const saving = ref(false);
+const platformSettings = ref<PlatformRaceSettings | null>(null);
+const loadingSettings = ref(false);
+const activeSection = ref<SectionId>('basic');
 
 const form = reactive<RaceForm>({
   race_number: 1,
@@ -781,10 +269,6 @@ watch(
   },
 );
 
-const saving = ref(false);
-const platformSettings = ref<PlatformRaceSettings | null>(null);
-const loadingSettings = ref(false);
-
 const localVisible = computed({
   get: () => props.visible,
   set: (value) => emit('update:visible', value),
@@ -825,41 +309,6 @@ const sourceRaceOptions = computed(() => {
     return availableRaces.value;
   }
   return [];
-});
-
-const sourceRaceLabel = computed(() => {
-  if (form.grid_source === 'qualifying') {
-    return 'Select Qualifier';
-  } else if (form.grid_source === 'previous_race' || form.grid_source === 'reverse_previous') {
-    return 'Select Race';
-  }
-  return 'Source Race';
-});
-
-// Computed property for fastest lap bonus checkbox
-const hasFastestLapBonus = computed({
-  get: () => form.fastest_lap !== null && form.fastest_lap > 0,
-  set: (enabled: boolean) => {
-    if (enabled) {
-      form.fastest_lap = 1;
-    } else {
-      form.fastest_lap = null;
-      form.fastest_lap_top_10 = false;
-    }
-  },
-});
-
-// Computed property for qualifying pole bonus checkbox
-const hasQualifyingPole = computed({
-  get: () => form.qualifying_pole !== null && form.qualifying_pole > 0,
-  set: (enabled: boolean) => {
-    if (enabled) {
-      form.qualifying_pole = 1;
-    } else {
-      form.qualifying_pole = null;
-      form.qualifying_pole_top_10 = false;
-    }
-  },
 });
 
 // Computed property to check if this is the first race (race_number === 1)
@@ -972,6 +421,7 @@ watch(
   async (visible) => {
     if (visible) {
       clearErrors();
+      activeSection.value = 'basic';
       await loadPlatformSettings();
       if (props.race) {
         loadRaceIntoForm(props.race);
@@ -1089,25 +539,13 @@ function resetForm(): void {
   form.race_notes = '';
 }
 
-function addPointsPosition(): void {
-  const keys = Object.keys(form.points_system);
-  // Guard against empty object - start at position 1 if empty
-  const maxPosition = keys.length > 0 ? Math.max(...keys.map(Number)) : 0;
-  form.points_system[maxPosition + 1] = 0;
+function handleSectionChange(sectionId: SectionId): void {
+  activeSection.value = sectionId;
 }
 
-function removeLastPointsPosition(): void {
-  const positions = Object.keys(form.points_system)
-    .map(Number)
-    .sort((a, b) => a - b);
-  if (positions.length > 1) {
-    const lastPosition = positions[positions.length - 1];
-    if (lastPosition !== undefined) {
-      const newSystem = { ...form.points_system };
-      delete newSystem[lastPosition];
-      form.points_system = newSystem;
-    }
-  }
+function handleClose(): void {
+  clearErrors();
+  localVisible.value = false;
 }
 
 async function handleSave(): Promise<void> {
@@ -1202,16 +640,11 @@ async function handleSave(): Promise<void> {
     }
 
     emit('saved');
-    localVisible.value = false;
+    handleClose();
   } catch (error) {
     console.error('[RaceFormDrawer] Failed to save race:', error);
   } finally {
     saving.value = false;
   }
-}
-
-function handleCancel(): void {
-  emit('cancel');
-  localVisible.value = false;
 }
 </script>

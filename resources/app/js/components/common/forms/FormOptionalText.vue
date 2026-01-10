@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const computedClasses = computed(() => {
   // If custom class provided, use it; otherwise use design system defaults
-  return props.class || 'text-sm text-[var(--text-muted)]';
+  return props.class || 'text-md text-[var(--text-muted)] pt-1';
 });
 </script>
 

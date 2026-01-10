@@ -89,39 +89,39 @@ const emit = defineEmits<{
     </FormInputGroup>
 
     <div class="grid grid-cols-2 gap-4">
-    <!-- Description -->
-    <FormInputGroup>
-      <FormLabel for="description" text="Description" />
-      <Textarea
-        id="description"
-        class="w-full"
-        :model-value="form.description"
-        rows="3"
-        placeholder="Describe this season, race format, rules..."
-        :class="{ 'p-invalid': errors.description }"
-        :disabled="isSubmitting"
-        maxlength="2000"
-        @update:model-value="emit('update:description', $event)"
-      />
-      <FormError :error="errors.description" />
-    </FormInputGroup>
+      <!-- Description -->
+      <FormInputGroup>
+        <FormLabel for="description" text="Description" />
+        <Textarea
+          id="description"
+          class="w-full"
+          :model-value="form.description"
+          rows="3"
+          placeholder="Describe this season, race format, rules..."
+          :class="{ 'p-invalid': errors.description }"
+          :disabled="isSubmitting"
+          maxlength="2000"
+          @update:model-value="emit('update:description', $event)"
+        />
+        <FormError :error="errors.description" />
+      </FormInputGroup>
 
-    <!-- Technical Specs -->
-    <FormInputGroup>
-      <FormLabel for="technical_specs" text="Technical Specifications" />
-      <Textarea
-        id="technical_specs"
-        class="w-full"
-        :model-value="form.technical_specs"
-        rows="3"
-        placeholder="Car setup rules, performance restrictions, BoP..."
-        :class="{ 'p-invalid': errors.technical_specs }"
-        :disabled="isSubmitting"
-        maxlength="2000"
-        @update:model-value="emit('update:technicalSpecs', $event)"
-      />
-      <FormError :error="errors.technical_specs" />
-    </FormInputGroup>
-  </div>
+      <!-- Technical Specs -->
+      <FormInputGroup>
+        <FormLabel for="technical_specs" text="Technical Specifications" />
+        <Textarea
+          id="technical_specs"
+          class="w-full"
+          :model-value="form.technical_specs"
+          rows="3"
+          placeholder="Car setup rules, performance restrictions, BoP..."
+          :class="{ 'p-invalid': errors.technical_specs }"
+          :disabled="isSubmitting"
+          maxlength="2000"
+          @update:model-value="emit('update:technicalSpecs', $event)"
+        />
+        <FormError :error="errors.technical_specs" />
+      </FormInputGroup>
+    </div>
   </div>
 </template>

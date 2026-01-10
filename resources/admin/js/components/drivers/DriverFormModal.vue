@@ -166,10 +166,16 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button label="Cancel" severity="secondary" @click="emit('update:visible', false)" />
         <Button
-          :label="isEditMode ? 'Update' : 'Create'"
+          label="Cancel"
+          severity="secondary"
+          :disabled="loading"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          :label="isEditMode ? 'Update Driver' : 'Create New Driver'"
           :loading="loading"
+          variant="success"
           @click="handleSubmit"
         />
       </div>
@@ -178,7 +184,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import BaseModal from '@admin/components/modals/BaseModal.vue';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
@@ -241,7 +247,7 @@ const isValidationError = (
 };
 
 // Computed
-const isEditMode = ref(false);
+const isEditMode = computed(() => !!props.driver);
 
 /**
  * Check if a field has an error
@@ -281,8 +287,8 @@ const resetForm = (): void => {
 watch(
   () => props.driver,
   (driver) => {
+    fieldErrors.value = {};
     if (driver) {
-      isEditMode.value = true;
       form.value = {
         first_name: driver.first_name,
         last_name: driver.last_name,
@@ -295,7 +301,6 @@ watch(
         discord_id: driver.discord_id,
       };
     } else {
-      isEditMode.value = false;
       resetForm();
     }
   },
@@ -360,9 +365,23 @@ const handleSubmit = async (): Promise<void> => {
  * Handle modal close
  */
 const handleClose = (): void => {
-  resetForm();
+  loading.value = false;
+  cancelRequests('Modal closed');
   emit('update:visible', false);
 };
+
+/**
+ * Watch for modal visibility to reset form when it closes
+ */
+watch(
+  () => props.visible,
+  (visible) => {
+    if (!visible) {
+      resetForm();
+      fieldErrors.value = {};
+    }
+  },
+);
 </script>
 
 <style scoped></style>

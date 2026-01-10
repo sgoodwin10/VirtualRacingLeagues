@@ -213,7 +213,8 @@ const handleArchive = (league: League) => {
 const handleDelete = (league: League) => {
   // Delete functionality is disabled - coming soon
   // The button is disabled in the table component
-  console.log('Delete requested for league:', league.name);
+  // No action needed yet
+  void league;
 };
 
 /**

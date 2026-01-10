@@ -78,11 +78,11 @@
             :is-qualifying="false"
             @orphans-removed="handleOrphansRemoved"
           />
-          <ToggleSwitch v-model="isCompleted" @update:model-value="handleToggleStatus">
+          <BaseToggleSwitch v-model="isCompleted" @update:model-value="handleToggleStatus">
             <template #handle="{ checked }">
               <i :class="['!text-xs pi', { 'pi-check': checked, 'pi-times': !checked }]" />
             </template>
-          </ToggleSwitch>
+          </BaseToggleSwitch>
           <span :class="['text-sm font-medium', isCompleted ? 'text-green-600' : 'text-slate-400']">
             Completed
           </span>
@@ -114,7 +114,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Button } from '@app/components/common/buttons';
-import ToggleSwitch from 'primevue/toggleswitch';
+import BaseToggleSwitch from '@app/components/common/inputs/BaseToggleSwitch.vue';
 import { BaseBadge } from '@app/components/common/indicators';
 import OrphanedResultsWarning from './OrphanedResultsWarning.vue';
 import type { Race, GridSource } from '@app/types/race';

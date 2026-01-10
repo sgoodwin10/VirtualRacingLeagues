@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import {
-  PhGameController,
-  PhHash,
-  PhCalendar,
-  PhNotePencil,
-  PhPencil,
-  PhTrophy,
-} from '@phosphor-icons/vue';
+import { PhGameController, PhHash, PhCalendar, PhTrophy, PhCaretRight } from '@phosphor-icons/vue';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import BaseModalHeader from '@app/components/common/modals/BaseModalHeader.vue';
 import { Button } from '@app/components/common/buttons';
 import { TagIndicator, BaseBadge } from '@app/components/common/indicators';
+import { ListSectionHeader } from '@app/components/common/lists';
 import DriverStatusBadge from './DriverStatusBadge.vue';
 import { useDateFormatter } from '@app/composables/useDateFormatter';
 import { getLeagueDriverSeasons } from '@app/services/driverSeasonService';
@@ -187,64 +181,54 @@ const handleEdit = (): void => {
       <BaseModalHeader :title="`Driver Details - ${driverName}`" />
     </template>
 
-    <div v-if="driver" class="space-y-4">
-      <!-- Driver Header Card -->
-      <div
-        class="bg-gradient-to-br from-surface-100 to-surface-200 rounded-lg p-6 border border-[var(--border)]"
-      >
-        <div class="flex items-start gap-6">
-          <!-- Avatar -->
-          <div
-            class="flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center border-2 border-cyan-400 shadow-lg"
-          >
-            <span class="font-mono font-bold text-2xl text-white">{{ driverInitials }}</span>
+    <div v-if="driver" class="space-y-6">
+      <!-- Driver Header -->
+      <div class="flex items-start gap-6 pb-6 border-b border-[var(--border)]">
+        <!-- Avatar -->
+        <div
+          class="flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center border-2 border-cyan-400 shadow-lg"
+        >
+          <span class="font-mono font-bold text-2xl text-white">{{ driverInitials }}</span>
+        </div>
+
+        <!-- Driver Info -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <h2 class="text-card-title text-xl mb-1">
+                {{ driver.driver.display_name }}
+              </h2>
+              <p v-if="driver.driver.nickname" class="text-body-small text-[var(--text-muted)]">
+                "{{ driver.driver.nickname }}"
+              </p>
+            </div>
+            <DriverStatusBadge :status="driver.status" />
           </div>
 
-          <!-- Driver Info -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-start justify-between gap-4">
-              <div class="flex-1 min-w-0">
-                <h2 class="text-card-title text-xl mb-1">
-                  {{ driver.driver.display_name }}
-                </h2>
-                <p v-if="driver.driver.nickname" class="text-body-small text-[var(--text-muted)]">
-                  "{{ driver.driver.nickname }}"
-                </p>
-              </div>
-              <DriverStatusBadge :status="driver.status" />
+          <!-- Driver Number and Date -->
+          <div class="flex gap-6 mt-4">
+            <div class="flex items-center gap-2">
+              <PhHash :size="16" class="text-[var(--text-muted)]" />
+              <span class="text-form-label text-[var(--text-muted)]">Number</span>
+              <span class="font-mono font-semibold text-[var(--text-primary)]">
+                {{ driver.driver_number ?? 'N/A' }}
+              </span>
             </div>
-
-            <!-- Driver Number and Date -->
-            <div class="flex gap-6 mt-4">
-              <div class="flex items-center gap-2">
-                <PhHash :size="16" class="text-[var(--text-muted)]" />
-                <span class="text-form-label text-[var(--text-muted)]">Number</span>
-                <span class="font-mono font-semibold text-[var(--text-primary)]">
-                  {{ driver.driver_number ?? 'N/A' }}
-                </span>
-              </div>
-              <div class="flex items-center gap-2">
-                <PhCalendar :size="16" class="text-[var(--text-muted)]" />
-                <span class="text-form-label text-[var(--text-muted)]">Added</span>
-                <span class="text-body-small text-[var(--text-secondary)]">
-                  {{ formatDate(driver.added_to_league_at) }}
-                </span>
-              </div>
+            <div class="flex items-center gap-2">
+              <PhCalendar :size="16" class="text-[var(--text-muted)]" />
+              <span class="text-form-label text-[var(--text-muted)]">Added</span>
+              <span class="text-body-small text-[var(--text-secondary)]">
+                {{ formatDate(driver.added_to_league_at) }}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Platform Identifiers Panel -->
-      <div class="bg-surface-100 rounded-lg border border-[var(--border)] overflow-hidden">
-        <div
-          class="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-surface-200"
-        >
-          <PhGameController :size="20" weight="fill" class="text-purple-600" />
-          <h3 class="text-card-title-small">Platform Identifiers</h3>
-        </div>
-
-        <div v-if="hasPlatformIds" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+      <!-- Platform Identifiers Section -->
+      <section>
+        <ListSectionHeader title="Platform Identifiers" class="mb-4" />
+        <div v-if="hasPlatformIds" class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <!-- Platform Items -->
           <div
             v-for="platform in platformIds"
@@ -281,35 +265,39 @@ const handleEdit = (): void => {
         </div>
 
         <!-- Empty State -->
-        <div v-else class="p-8 text-center">
+        <div
+          v-else
+          class="text-center py-8 px-4 bg-surface-100 rounded-lg border border-[var(--border)]"
+        >
           <PhGameController :size="48" class="text-[var(--text-muted)] opacity-30 mx-auto mb-3" />
           <p class="text-body-small text-[var(--text-muted)]">No platform identifiers available</p>
         </div>
-      </div>
+      </section>
 
-      <!-- Competitions & Seasons Panel -->
-      <div class="bg-surface-100 rounded-lg border border-[var(--border)] overflow-hidden">
-        <div
-          class="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-surface-200"
-        >
-          <PhTrophy :size="20" weight="fill" class="text-orange-600" />
-          <h3 class="text-card-title-small">Competitions & Seasons</h3>
-        </div>
+      <!-- Competitions & Seasons Section -->
+      <section>
+        <ListSectionHeader title="Competitions & Seasons" class="mb-4" />
 
         <!-- Loading State -->
-        <div v-if="loadingSeasons" class="p-8 text-center">
+        <div
+          v-if="loadingSeasons"
+          class="text-center py-12 px-4 bg-surface-100 rounded-lg border border-[var(--border)]"
+        >
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500" />
           <p class="mt-3 text-body-small text-[var(--text-muted)]">Loading seasons...</p>
         </div>
 
         <!-- Error State -->
-        <div v-else-if="seasonsError" class="p-8 text-center">
+        <div
+          v-else-if="seasonsError"
+          class="text-center py-12 px-4 bg-surface-100 rounded-lg border border-[var(--border)]"
+        >
           <PhTrophy :size="48" class="text-red-500 opacity-30 mx-auto mb-3" />
           <p class="text-body-small text-red-600">{{ seasonsError }}</p>
         </div>
 
         <!-- Season List -->
-        <div v-else-if="driverSeasons.length > 0" class="p-4 space-y-2">
+        <div v-else-if="driverSeasons.length > 0" class="space-y-2">
           <button
             v-for="season in driverSeasons"
             :key="season.season_id"
@@ -349,59 +337,41 @@ const handleEdit = (): void => {
             </div>
 
             <!-- Arrow Icon -->
-            <div
+            <PhCaretRight
+              :size="20"
+              weight="bold"
               class="flex-shrink-0 text-[var(--text-muted)] group-hover:text-cyan-500 transition-colors"
-            >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
+            />
           </button>
         </div>
 
         <!-- Empty State -->
-        <div v-else class="p-8 text-center">
+        <div
+          v-else
+          class="text-center py-12 px-4 bg-surface-100 rounded-lg border border-[var(--border)]"
+        >
           <PhTrophy :size="48" class="text-[var(--text-muted)] opacity-30 mx-auto mb-3" />
           <p class="text-body-small text-[var(--text-muted)]">
             Not participating in any seasons yet
           </p>
         </div>
-      </div>
+      </section>
 
-      <!-- League Notes Panel -->
-      <div
-        v-if="driver.league_notes"
-        class="bg-surface-100 rounded-lg border border-[var(--border)] overflow-hidden"
-      >
-        <div
-          class="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-surface-200"
-        >
-          <PhNotePencil :size="20" weight="fill" class="text-orange-600" />
-          <h3 class="text-card-title-small">League Notes</h3>
-        </div>
-        <div class="p-4">
+      <!-- League Notes Section -->
+      <section v-if="driver.league_notes">
+        <ListSectionHeader title="League Notes" class="mb-4" />
+        <div class="p-4 bg-surface-100 rounded-lg border border-[var(--border)]">
           <p class="text-body text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
             {{ driver.league_notes }}
           </p>
         </div>
-      </div>
+      </section>
     </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button label="Close" variant="outline" @click="handleClose" />
-        <Button label="Edit Driver" :icon="PhPencil" @click="handleEdit" />
+        <Button label="Close" variant="secondary" @click="handleClose" />
+        <Button label="Edit Driver" variant="warning" @click="handleEdit" />
       </div>
     </template>
   </BaseModal>

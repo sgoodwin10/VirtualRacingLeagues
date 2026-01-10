@@ -46,7 +46,7 @@ const selectTab = (index: number) => {
 };
 
 // Keyboard navigation
-// eslint-disable-next-line no-undef
+
 const handleKeydown = (event: KeyboardEvent, currentIndex: number) => {
   let newIndex = currentIndex;
 

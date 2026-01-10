@@ -131,7 +131,7 @@ const lastPage = () => {
 };
 
 // Keyboard navigation
-// eslint-disable-next-line no-undef
+
 const handleKeydown = (event: KeyboardEvent, page?: number) => {
   // Only handle keyboard events when focus is on a pagination button
   const target = event.target as HTMLElement;

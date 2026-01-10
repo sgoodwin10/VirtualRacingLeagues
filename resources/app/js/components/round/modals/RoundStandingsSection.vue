@@ -17,13 +17,29 @@
             :podium-highlight="true"
             position-field="position"
           >
-            <Column field="position" header="#" class="w-16">
+            <Column
+              field="position"
+              header="#"
+              class="w-16"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
+            >
               <template #body="{ data }">
                 <PositionCell :position="data.position" />
               </template>
             </Column>
 
-            <Column field="driver_name" header="Driver" class="min-w-[170px]">
+            <Column
+              field="driver_name"
+              header="Driver"
+              class="min-w-[170px]"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
+            >
               <template #body="{ data }">
                 <span class="font-medium text-primary">{{ data.driver_name }}</span>
               </template>
@@ -34,13 +50,25 @@
               field="race_points"
               header="Total Race Points"
               class="w-32"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
             >
               <template #body="{ data }">
                 <PointsCell :points="data.race_points" />
               </template>
             </Column>
 
-            <Column field="fastest_lap_points" header="Fastest Lap" class="w-32">
+            <Column
+              field="fastest_lap_points"
+              header="Fastest Lap"
+              class="w-32"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
+            >
               <template #body="{ data }">
                 <div v-if="data.fastest_lap_points" class="flex items-center justify-center gap-2">
                   <PhLightning :size="16" weight="fill" class="text-purple-500" />
@@ -49,7 +77,15 @@
               </template>
             </Column>
 
-            <Column field="pole_position_points" header="Pole Position" class="w-32">
+            <Column
+              field="pole_position_points"
+              header="Pole Position"
+              class="w-32"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
+            >
               <template #body="{ data }">
                 <div
                   v-if="data.pole_position_points"
@@ -61,7 +97,17 @@
               </template>
             </Column>
 
-            <Column field="total_positions_gained" header="+/-" class="w-24">
+            <Column
+              field="total_positions_gained"
+              header="+/-"
+              class="w-24"
+              :pt="{
+                headerCell: {
+                  style: { borderRight: '1px solid var(--border)', textAlign: 'center' },
+                },
+                bodyCell: { style: { borderRight: '1px solid var(--border)' } },
+              }"
+            >
               <template #body="{ data }">
                 <div class="text-center font-semibold" :class="getPositionsGainedClass(data)">
                   {{ formatPositionsGained(data.total_positions_gained) }}
@@ -69,7 +115,17 @@
               </template>
             </Column>
 
-            <Column field="total_points" header="Final Points" class="w-32">
+            <Column
+              field="total_points"
+              header="Final Points"
+              class="w-32"
+              :pt="{
+                headerCell: { style: { borderRight: '1px solid var(--border)' } },
+                bodyCell: {
+                  style: { borderRight: '1px solid var(--border)', textAlign: 'center' },
+                },
+              }"
+            >
               <template #body="{ data }">
                 <PointsCell :points="data.total_points" bold />
               </template>

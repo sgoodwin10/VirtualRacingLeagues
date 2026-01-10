@@ -40,12 +40,11 @@ function toggle(): void {
     @click="toggle"
   >
     <div
-      class="w-5 h-5 border-2 rounded flex items-center justify-center shrink-0 transition-all duration-150 mt-0.5"
+      class="w-5 h-5 border-2 rounded flex items-center justify-center shrink-0 transition-all duration-150 mt-0.5 mr-3.5"
       :class="{
         'bg-[var(--cyan)] border-[var(--cyan)]': modelValue,
         'border-[var(--border)]': !modelValue,
       }"
-      style="margin-right: 14px"
     >
       <svg
         width="12"
@@ -62,7 +61,7 @@ function toggle(): void {
       </svg>
     </div>
     <div class="flex-1">
-      <div class="text-md font-medium text-[var(--text-primary)] mb-0.5">{{ title }}</div>
+      <div class="text-md text-form-label text-[var(--text-primary)] mb-0.5">{{ title }}</div>
       <div class="text-sm text-[var(--text-muted)]">{{ description }}</div>
 
       <!-- Nested Options Slot with Transition -->

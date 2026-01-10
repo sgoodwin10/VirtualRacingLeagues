@@ -164,7 +164,7 @@ describe('SeasonFormSplitModal', () => {
         isEditMode: false,
       });
 
-      expect(wrapper.text()).toContain('Create new racing season');
+      expect(wrapper.text()).toContain('Create new season');
     });
 
     it('displays correct title for edit mode', () => {

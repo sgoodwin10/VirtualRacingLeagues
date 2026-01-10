@@ -871,9 +871,9 @@ const StandingsTable = defineComponent({
                             ? h(PhCheck, {
                                 size: 14,
                                 weight: 'bold',
-                                style: { color: 'var(--purple)' },
+                                style: { color: 'var(--cyan)' },
                               })
-                            : h('span', { style: { color: 'var(--text-muted)' } }, '-'),
+                            : h('span', { style: { color: 'var(--text-muted)' } }, ''),
                         ),
                         // Fastest Lap
                         h(
@@ -891,7 +891,7 @@ const StandingsTable = defineComponent({
                                 weight: 'bold',
                                 style: { color: 'var(--purple)' },
                               })
-                            : h('span', { style: { color: 'var(--text-muted)' } }, '-'),
+                            : h('span', { style: { color: 'var(--text-muted)' } }, ''),
                         ),
                         // Points
                         h(
@@ -901,7 +901,10 @@ const StandingsTable = defineComponent({
                             class: 'text-center',
                             style: {
                               fontSize: '13px',
-                              color: 'var(--text-secondary)',
+                              color:
+                                roundData && roundData.total_penalties > 0
+                                  ? '#ef4444'
+                                  : 'var(--text-secondary)',
                               padding: '14px 4px',
                               borderRight: '1px solid var(--border)',
                             },

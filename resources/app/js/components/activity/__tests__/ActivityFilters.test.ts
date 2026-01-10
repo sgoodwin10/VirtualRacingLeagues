@@ -6,18 +6,9 @@ import Aura from '@primevue/themes/aura';
 import ActivityFilters from '../ActivityFilters.vue';
 
 describe('ActivityFilters', () => {
-  const globalConfig = {
+  const globalConfig: Parameters<typeof mount>[1] = {
     global: {
-      plugins: [
-        [
-          PrimeVue,
-          {
-            theme: {
-              preset: Aura,
-            },
-          },
-        ],
-      ],
+      plugins: [[PrimeVue, { theme: { preset: Aura } }]],
       stubs: {
         Select: {
           template: `

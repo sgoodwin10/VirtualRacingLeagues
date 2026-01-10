@@ -12,6 +12,7 @@ export interface RoundPoints {
   readonly points: number;
   readonly has_pole: boolean;
   readonly has_fastest_lap: boolean;
+  readonly total_penalties: number;
 }
 
 /**

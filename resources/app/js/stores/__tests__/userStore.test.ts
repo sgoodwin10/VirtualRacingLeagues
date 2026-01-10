@@ -70,7 +70,6 @@ describe('useUserStore', () => {
       email: 'john@example.com',
       email_verified_at: null,
     };
-    userStore.isAuthenticated = true;
 
     vi.mocked(authService.logout).mockResolvedValue();
 
@@ -99,7 +98,6 @@ describe('useUserStore', () => {
       email: 'john@example.com',
       email_verified_at: null,
     };
-    userStore.isAuthenticated = true;
 
     vi.mocked(authService.logout).mockRejectedValue(new Error('API error'));
 
@@ -183,7 +181,6 @@ describe('useUserStore', () => {
     };
 
     userStore.user = initialUser;
-    userStore.isAuthenticated = true;
 
     vi.mocked(authService.updateProfile).mockResolvedValue(updatedUser);
 

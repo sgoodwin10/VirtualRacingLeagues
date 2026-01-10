@@ -51,7 +51,6 @@ const handleInput = (event: Event) => {
   emit('update:modelValue', target.value);
 };
 
-// eslint-disable-next-line no-undef
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Enter') {
     event.preventDefault();

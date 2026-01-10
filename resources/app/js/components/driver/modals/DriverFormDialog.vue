@@ -1,28 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
-import BaseModalHeader from '@app/components/common/modals/BaseModalHeader.vue';
-import InputText from 'primevue/inputtext';
-import StyledInputNumber from '@app/components/common/forms/StyledInputNumber.vue';
-import Select from 'primevue/select';
-import Textarea from 'primevue/textarea';
 import { Button } from '@app/components/common/buttons';
-import {
-  TechnicalAccordion,
-  TechnicalAccordionPanel,
-  TechnicalAccordionHeader,
-  TechnicalAccordionContent,
-  AccordionBadge,
-} from '@app/components/common/accordions';
-import { PhUserCircle } from '@phosphor-icons/vue';
-import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
-import FormLabel from '@app/components/common/forms/FormLabel.vue';
-import FormError from '@app/components/common/forms/FormError.vue';
-import FormHelper from '@app/components/common/forms/FormHelper.vue';
-import FormCharacterCount from '@app/components/common/forms/FormCharacterCount.vue';
+import DriverEditSidebar from './partials/DriverEditSidebar.vue';
+import BasicInfoSection from './partials/sections/BasicInfoSection.vue';
+import AdditionalSection from './partials/sections/AdditionalSection.vue';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import { usePlatformFormFields } from '@app/composables/usePlatformFormFields';
 import type { LeagueDriver, CreateDriverRequest, DriverFormData } from '@app/types/driver';
+import type { SectionId } from './partials/DriverEditSidebar.vue';
 
 interface Props {
   visible: boolean;
@@ -58,12 +44,17 @@ const formData = ref<DriverFormData>({
 // Validation errors
 const errors = ref<Record<string, string>>({});
 
-// Status options
-const statusOptions = [
-  { label: 'Active', value: 'active' },
-  { label: 'Inactive', value: 'inactive' },
-  { label: 'Banned', value: 'banned' },
-];
+// Loading state
+const saving = ref(false);
+
+// Active section for sidebar
+const activeSection = ref<SectionId>('basic');
+
+// Computed visibility
+const isVisible = computed({
+  get: () => props.visible,
+  set: (value) => emit('update:visible', value),
+});
 
 // Dialog title
 const dialogTitle = computed(() => {
@@ -125,6 +116,10 @@ watch(
   (visible) => {
     if (visible && props.mode === 'create') {
       resetForm();
+    }
+    // Reset active section when modal opens
+    if (visible) {
+      activeSection.value = 'basic';
     }
   },
 );
@@ -206,12 +201,19 @@ const handleSubmit = (): void => {
 };
 
 /**
+ * Handle modal close
+ */
+const handleClose = (): void => {
+  resetForm();
+};
+
+/**
  * Handle cancel button click
  */
 const handleCancel = (): void => {
   resetForm();
   emit('cancel');
-  emit('update:visible', false);
+  isVisible.value = false;
 };
 
 /**
@@ -238,191 +240,94 @@ const resetForm = (): void => {
   formData.value = newFormData;
   errors.value = {};
 };
+
+/**
+ * Handle section change from sidebar
+ */
+const handleSectionChange = (sectionId: SectionId): void => {
+  activeSection.value = sectionId;
+};
+
+/**
+ * Handle platform field update
+ */
+const handlePlatformFieldUpdate = (field: string, value: string | number | undefined): void => {
+  formData.value[field] = value;
+};
 </script>
 
 <template>
-  <BaseModal :visible="visible" width="2xl" @update:visible="$emit('update:visible', $event)">
-    <template #header>
-      <BaseModalHeader :title="dialogTitle" />
-    </template>
+  <BaseModal
+    v-model:visible="isVisible"
+    :header="dialogTitle"
+    width="6xl"
+    :closable="!saving"
+    :dismissable-mask="false"
+    :loading="saving"
+    content-class="!p-0"
+    @hide="handleClose"
+  >
+    <!-- Split Layout -->
+    <div class="grid grid-cols-[200px_1fr] min-h-[520px] max-h-[72vh]">
+      <!-- Sidebar -->
+      <DriverEditSidebar :active-section="activeSection" @change-section="handleSectionChange" />
 
-    <form class="space-y-3" @submit.prevent="handleSubmit">
-      <!-- Primary Fields Section -->
-      <div class="space-y-3">
-        <!-- Nickname and Discord ID - At least one required -->
-        <div class="grid grid-cols-2 gap-3">
-          <FormInputGroup>
-            <FormLabel for="nickname" text="Nickname" />
-            <InputText
-              id="nickname"
-              v-model="formData.nickname"
-              placeholder="JSmith"
-              class="w-full"
-            />
-          </FormInputGroup>
+      <!-- Main Content -->
+      <main class="overflow-y-auto bg-[var(--bg-dark)] p-6">
+        <!-- Basic Info Section -->
+        <BasicInfoSection
+          v-show="activeSection === 'basic'"
+          :nickname="formData.nickname || ''"
+          :discord-id="formData.discord_id || ''"
+          :status="formData.status || 'active'"
+          :first-name="formData.first_name || ''"
+          :last-name="formData.last_name || ''"
+          :platform-form-fields="platformFormFields"
+          :form-data="formData"
+          :errors="{
+            identifier: errors.identifier,
+            status: errors.status,
+            platform: errors.platform,
+          }"
+          :disabled="saving"
+          @update:nickname="formData.nickname = $event"
+          @update:discord-id="formData.discord_id = $event"
+          @update:status="formData.status = $event as 'active' | 'inactive' | 'banned'"
+          @update:first-name="formData.first_name = $event"
+          @update:last-name="formData.last_name = $event"
+          @update:platform-field="handlePlatformFieldUpdate"
+        />
 
-          <FormInputGroup>
-            <FormLabel for="discord_id" text="Discord ID" />
-            <InputText
-              id="discord_id"
-              v-model="formData.discord_id"
-              placeholder="Discord username or ID"
-              class="w-full"
-            />
-          </FormInputGroup>
-        </div>
-
-        <!-- Validation Message for Identifier -->
-        <div v-if="errors.identifier">
-          <FormError :error="errors.identifier" />
-        </div>
-
-        <!-- Status and Dynamic Platform Fields in Grid -->
-        <div class="grid grid-cols-2 gap-3">
-          <FormInputGroup>
-            <FormLabel for="status" text="Status" required />
-            <Select
-              id="status"
-              v-model="formData.status"
-              :options="statusOptions"
-              option-label="label"
-              option-value="value"
-              placeholder="Select status"
-              class="w-full"
-            />
-          </FormInputGroup>
-
-          <!-- Dynamic Platform Fields - Rendered based on league's platforms -->
-          <FormInputGroup v-for="field in platformFormFields" :key="field.field">
-            <FormLabel :for="field.field" :text="field.label" />
-            <InputText
-              v-if="field.type === 'text'"
-              :id="field.field"
-              :model-value="(formData[field.field] as string) || ''"
-              :placeholder="field.placeholder || ''"
-              class="w-full"
-              @update:model-value="formData[field.field] = $event"
-            />
-            <StyledInputNumber
-              v-else-if="field.type === 'number'"
-              :input-id="field.field"
-              :model-value="(formData[field.field] as number) || undefined"
-              :use-grouping="false"
-              :placeholder="field.placeholder || ''"
-              class="w-full"
-              @update:model-value="formData[field.field] = $event"
-            />
-          </FormInputGroup>
-        </div>
-
-        <!-- Platform Validation Message -->
-        <div v-if="errors.platform">
-          <FormError :error="errors.platform" />
-        </div>
-      </div>
-
-      <!-- Secondary Fields Section (Expandable) -->
-      <TechnicalAccordion class="mt-4">
-        <TechnicalAccordionPanel value="additional">
-          <TechnicalAccordionHeader
-            title="Additional Information"
-            subtitle="Name, contact details, and notes"
-            :icon="PhUserCircle"
-            icon-variant="cyan"
-          >
-            <template #suffix>
-              <AccordionBadge text="OPTIONAL" severity="muted" />
-            </template>
-          </TechnicalAccordionHeader>
-          <TechnicalAccordionContent padding="md">
-            <div class="space-y-3">
-              <!-- Name Fields -->
-              <div class="grid grid-cols-2 gap-3">
-                <FormInputGroup>
-                  <FormLabel for="first_name" text="First Name" />
-                  <InputText
-                    id="first_name"
-                    v-model="formData.first_name"
-                    placeholder="John"
-                    class="w-full"
-                  />
-                </FormInputGroup>
-                <FormInputGroup>
-                  <FormLabel for="last_name" text="Last Name" />
-                  <InputText
-                    id="last_name"
-                    v-model="formData.last_name"
-                    placeholder="Smith"
-                    class="w-full"
-                  />
-                </FormInputGroup>
-              </div>
-
-              <!-- Contact Fields -->
-              <div class="grid grid-cols-2 gap-3">
-                <FormInputGroup>
-                  <FormLabel for="email" text="Email" />
-                  <InputText
-                    id="email"
-                    v-model="formData.email"
-                    type="email"
-                    placeholder="john@example.com"
-                    class="w-full"
-                  />
-                  <FormError :error="errors.email" />
-                </FormInputGroup>
-                <FormInputGroup>
-                  <FormLabel for="phone" text="Phone" />
-                  <InputText
-                    id="phone"
-                    v-model="formData.phone"
-                    placeholder="+1234567890"
-                    class="w-full"
-                  />
-                </FormInputGroup>
-                <!-- Driver Number -->
-                <FormInputGroup>
-                  <FormLabel for="driver_number" text="Driver Number" />
-                  <StyledInputNumber
-                    v-model="formData.driver_number"
-                    input-id="driver_number"
-                    :min="1"
-                    :max="999"
-                    :use-grouping="false"
-                    placeholder="5"
-                    class=""
-                  />
-                  <FormHelper text="Between 1 and 999" />
-                  <FormError :error="errors.driver_number" />
-                </FormInputGroup>
-              </div>
-
-              <!-- League Notes -->
-              <FormInputGroup>
-                <FormLabel for="league_notes" text="League Notes" />
-                <Textarea
-                  id="league_notes"
-                  v-model="formData.league_notes"
-                  rows="3"
-                  placeholder="Add any notes about this driver..."
-                  class="w-full"
-                  maxlength="500"
-                />
-                <div class="flex justify-between items-center">
-                  <FormHelper text="Notes specific to this league" />
-                  <FormCharacterCount :current="formData.league_notes?.length || 0" :max="500" />
-                </div>
-              </FormInputGroup>
-            </div>
-          </TechnicalAccordionContent>
-        </TechnicalAccordionPanel>
-      </TechnicalAccordion>
-    </form>
+        <!-- Additional Section -->
+        <AdditionalSection
+          v-show="activeSection === 'additional'"
+          :email="formData.email || ''"
+          :phone="formData.phone || ''"
+          :driver-number="formData.driver_number"
+          :league-notes="formData.league_notes || ''"
+          :errors="{
+            email: errors.email,
+            driver_number: errors.driver_number,
+          }"
+          :disabled="saving"
+          @update:email="formData.email = $event"
+          @update:phone="formData.phone = $event"
+          @update:driver-number="formData.driver_number = $event"
+          @update:league-notes="formData.league_notes = $event"
+        />
+      </main>
+    </div>
 
     <template #footer>
-      <div class="flex justify-end gap-2">
-        <Button label="Cancel" variant="secondary" @click="handleCancel" />
-        <Button :label="mode === 'create' ? 'Add Driver' : 'Save Changes'" @click="handleSubmit" />
+      <div class="flex gap-2 justify-end">
+        <Button label="Cancel" variant="secondary" :disabled="saving" @click="handleCancel" />
+        <Button
+          :label="mode === 'create' ? 'Add Driver' : 'Save Changes'"
+          :loading="saving"
+          :disabled="saving"
+          variant="success"
+          @click="handleSubmit"
+        />
       </div>
     </template>
   </BaseModal>

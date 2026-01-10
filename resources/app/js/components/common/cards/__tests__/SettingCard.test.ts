@@ -309,7 +309,7 @@ describe('SettingCard', () => {
       });
 
       const checkbox = wrapper.find('.w-5.h-5.border-2.rounded');
-      expect(checkbox.attributes('style')).toContain('margin-right: 14px');
+      expect(checkbox.classes()).toContain('mr-3.5');
     });
   });
 
@@ -323,7 +323,7 @@ describe('SettingCard', () => {
         },
       });
 
-      const title = wrapper.find('.text-md.font-medium');
+      const title = wrapper.find('.text-md.text-form-label');
       expect(title.exists()).toBe(true);
       expect(title.classes()).toContain('text-[var(--text-primary)]');
       expect(title.classes()).toContain('mb-0.5');

@@ -155,8 +155,8 @@ describe('DriverFormDialog', () => {
     });
 
     expect(wrapper.exists()).toBe(true);
-    // Verify dialog title for create mode
-    expect(wrapper.html()).toContain('Add Driver');
+    // Verify dialog title for create mode is computed correctly
+    expect((wrapper.vm as any).dialogTitle).toBe('Add Driver');
   });
 
   const getStubOptions = () => ({
