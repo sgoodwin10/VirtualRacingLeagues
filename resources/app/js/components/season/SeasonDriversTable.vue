@@ -39,6 +39,7 @@ interface Props {
   divisions?: Division[];
   showManageButton?: boolean;
   manageButtonDisabled?: boolean;
+  isSeasonCompleted?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -51,6 +52,7 @@ const props = withDefaults(defineProps<Props>(), {
   divisions: () => [],
   showManageButton: true,
   manageButtonDisabled: false,
+  isSeasonCompleted: false,
 });
 
 const emit = defineEmits<{
@@ -611,9 +613,9 @@ async function handleRefresh(): Promise<void> {
         </div>
       </div>
       <div class="flex items-end gap-3 flex-1 justify-end">
-        <!-- Manage Drivers Button -->
+        <!-- Manage Drivers Button (hidden for completed seasons) -->
         <Button
-          v-if="showManageButton"
+          v-if="showManageButton && !props.isSeasonCompleted"
           label="Manage Drivers"
           :icon="PhUsers"
           :disabled="manageButtonDisabled"
@@ -694,7 +696,7 @@ async function handleRefresh(): Promise<void> {
             option-value="value"
             placeholder="Select division"
             :loading="updatingDivision[data.id]"
-            :disabled="updatingDivision[data.id]"
+            :disabled="updatingDivision[data.id] || props.isSeasonCompleted"
             class="w-full min-w-[150px]"
             @change="(event) => handleDivisionChange(data, event.value)"
           >
@@ -739,7 +741,7 @@ async function handleRefresh(): Promise<void> {
             option-value="value"
             placeholder="Select team"
             :loading="updatingTeam[data.id]"
-            :disabled="updatingTeam[data.id]"
+            :disabled="updatingTeam[data.id] || props.isSeasonCompleted"
             class="w-full min-w-[150px]"
             @change="(event) => handleTeamChange(data, event.value)"
           >
@@ -784,6 +786,7 @@ async function handleRefresh(): Promise<void> {
               @click="handleView(data)"
             />
             <Button
+              v-if="!props.isSeasonCompleted"
               :icon="PhTrash"
               size="sm"
               variant="danger"

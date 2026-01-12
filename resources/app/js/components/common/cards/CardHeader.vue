@@ -52,7 +52,7 @@ const iconColorClasses = computed(() => {
           >
             {{ title }}
           </h2>
-          <p v-if="description" class="text-xs text-[var(--text-secondary)]">
+          <p v-if="description" class="text-sm text-[var(--text-secondary)]">
             {{ description }}
           </p>
         </slot>

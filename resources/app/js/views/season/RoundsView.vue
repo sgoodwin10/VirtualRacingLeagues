@@ -46,6 +46,7 @@ onMounted(async () => {
         :season-id="seasonId"
         :platform-id="season.competition.platform_id"
         :competition-colour="season.competition.competition_colour"
+        :is-season-completed="season.is_completed"
       />
     </Card>
   </div>

@@ -20,9 +20,12 @@ import { CardHeader } from '@app/components/common/cards';
 interface Props {
   seasonId: number;
   raceDivisionsEnabled: boolean;
+  isSeasonCompleted?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  isSeasonCompleted: false,
+});
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -204,7 +207,7 @@ function truncateDescription(description: string | null, maxLength: number = 30)
       <TechDataTable
         :value="divisions"
         :loading="loading || isReordering"
-        :reorderable-rows="!isReordering"
+        :reorderable-rows="!isReordering && !props.isSeasonCompleted"
         responsive-layout="scroll"
         class="text-sm"
         @row-reorder="handleRowReorder"
@@ -252,7 +255,7 @@ function truncateDescription(description: string | null, maxLength: number = 30)
           </template>
         </Column>
 
-        <Column header="Actions" :exportable="false" style="width: 8rem">
+        <Column v-if="!props.isSeasonCompleted" header="Actions" :exportable="false" style="width: 8rem">
           <template #body="{ data }">
             <div class="flex gap-1">
               <Button
@@ -274,9 +277,9 @@ function truncateDescription(description: string | null, maxLength: number = 30)
         </Column>
       </TechDataTable>
 
-      <!-- Add Division Button (footer) -->
+      <!-- Add Division Button (footer, hidden for completed seasons) -->
       <FooterAddButton
-        v-if="raceDivisionsEnabled"
+        v-if="raceDivisionsEnabled && !props.isSeasonCompleted"
         label="Add Division"
         @click="handleAddDivision"
       />

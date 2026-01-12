@@ -287,13 +287,12 @@ onUnmounted(() => {
     </template>
     <div class="space-y-4">
       <!-- Instructions -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="border border-[var(--border)] bg-[var(--bg-card)] rounded-lg p-4">
         <h4 class="font-semibold text-blue-900 mb-2">CSV Format Instructions</h4>
         <FormHelper
           text="Paste your CSV data below. The CSV must include headers and at least the following columns:"
-          class="text-blue-800"
         />
-        <ul class="text-sm text-blue-800 space-y-1 my-3">
+        <ul class="text-sm space-y-1 my-3">
           <li><strong>Required:</strong> At least one of Nickname or DiscordID</li>
           <li class="text-xs italic ml-4">
             Note: If Nickname is empty, Discord ID will be used as the nickname
@@ -314,8 +313,8 @@ onUnmounted(() => {
           <Button label="Use Example" size="sm" severity="info" @click="useExample" />
         </div>
         <div v-if="leagueStore.platformCsvHeaders.length > 0">
-          <p class="text-xs text-blue-800 mb-1">Expected headers for this league:</p>
-          <pre class="text-xs bg-white border border-blue-200 rounded p-2 overflow-x-auto">{{
+          <p class="text-md mb-1">Expected headers for this league:</p>
+          <pre class="text-md border border-blue-200 rounded p-2 overflow-x-auto">{{
             leagueStore.platformCsvHeaders.map((h) => h.field).join(',')
           }}</pre>
         </div>

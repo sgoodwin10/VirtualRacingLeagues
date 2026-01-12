@@ -18,9 +18,12 @@ import { CardHeader } from '@app/components/common/cards';
 interface Props {
   seasonId: number;
   teamChampionshipEnabled: boolean;
+  isSeasonCompleted?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  isSeasonCompleted: false,
+});
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -164,7 +167,7 @@ function handleTeamSaved(): void {
           </template>
         </Column>
 
-        <Column header="Actions" :exportable="false" style="width: 8rem">
+        <Column v-if="!props.isSeasonCompleted" header="Actions" :exportable="false" style="width: 8rem">
           <template #body="{ data }">
             <div class="flex gap-1">
               <Button :icon="PhPencil" size="sm" variant="outline" @click="handleEditTeam(data)" />
@@ -174,8 +177,12 @@ function handleTeamSaved(): void {
         </Column>
       </TechDataTable>
 
-      <!-- Add Team Button (footer) -->
-      <FooterAddButton v-if="teamChampionshipEnabled" label="Add Team" @click="handleAddTeam" />
+      <!-- Add Team Button (footer, hidden for completed seasons) -->
+      <FooterAddButton
+        v-if="teamChampionshipEnabled && !props.isSeasonCompleted"
+        label="Add Team"
+        @click="handleAddTeam"
+      />
     </div>
 
     <!-- Team Form Modal -->

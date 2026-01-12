@@ -20,6 +20,7 @@ const season = computed(() => seasonStore.currentSeason);
         v-if="season"
         :season-id="seasonId"
         :race-divisions-enabled="season.race_divisions_enabled"
+        :is-season-completed="season.is_completed"
         icon-color="yellow-600"
       />
 
@@ -28,6 +29,7 @@ const season = computed(() => seasonStore.currentSeason);
         v-if="season"
         :season-id="seasonId"
         :team-championship-enabled="season.team_championship_enabled"
+        :is-season-completed="season.is_completed"
       />
     </div>
   </div>

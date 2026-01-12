@@ -12,6 +12,7 @@ const showEditSeasonModal = ref(false);
 const showSidebar = computed(() => navigationStore.showSidebar);
 const competitionName = computed(() => navigationStore.currentCompetition?.name || 'COMPETITION');
 const seasonName = computed(() => navigationStore.currentSeason?.name || 'Season');
+const isSeasonCompleted = computed(() => navigationStore.currentSeason?.is_completed ?? false);
 
 const navigationLinks = computed(() => {
   if (!navigationStore.currentCompetition || !navigationStore.currentSeason) {
@@ -102,8 +103,8 @@ function handleSeasonSaved(): void {
         </nav>
       </div>
 
-      <!-- Settings Section -->
-      <div class="mb-6">
+      <!-- Settings Section (hidden for completed seasons) -->
+      <div v-if="!isSeasonCompleted" class="mb-6">
         <nav class="flex flex-col">
           <SidebarButton :icon="PhGear" label="Edit Season Settings" @click="openEditSeasonModal" />
         </nav>

@@ -16,6 +16,7 @@
         <i class="pi pi-calendar text-4xl text-gray-400 mb-4"></i>
         <p class="text-gray-600 mb-4">No rounds scheduled yet</p>
         <Button
+          v-if="!props.isSeasonCompleted"
           label="Create First Round"
           :icon="PhPlus"
           variant="outline"
@@ -78,7 +79,7 @@
                 </template>
               </BaseBadge>
 
-              <div class="flex items-center gap-2" @click.stop>
+              <div v-if="!props.isSeasonCompleted" class="flex items-center gap-2" @click.stop>
                 <BaseToggleSwitch
                   :model-value="round.status === 'completed'"
                   :disabled="completingRoundId === round.id"
@@ -227,9 +228,9 @@
         </TechnicalAccordionPanel>
       </TechnicalAccordion>
 
-      <!-- Add Round Button (shown when rounds exist) -->
+      <!-- Add Round Button (shown when rounds exist and season not completed) -->
       <FooterAddButton
-        v-if="!roundStore.isLoading && rounds.length > 0"
+        v-if="!roundStore.isLoading && rounds.length > 0 && !props.isSeasonCompleted"
         label="Add Round"
         variant="elevated"
         @click="handleCreateRound"
@@ -323,6 +324,7 @@ interface Props {
   seasonId: number;
   platformId: number;
   competitionColour?: string | null;
+  isSeasonCompleted?: boolean;
 }
 
 const props = defineProps<Props>();

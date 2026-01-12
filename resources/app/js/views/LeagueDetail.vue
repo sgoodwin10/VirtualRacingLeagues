@@ -73,6 +73,15 @@ const activeSeasons = computed(() => {
   return leagueSeasons.filter((s) => s.status === 'active' || s.status === 'setup');
 });
 
+const completedSeasons = computed(() => {
+  const leagueSeasons = seasonStore.seasons.filter((season) => {
+    return season.competition?.league?.id === leagueIdNumber.value;
+  });
+
+  // Filter to completed seasons only
+  return leagueSeasons.filter((s) => s.status === 'completed');
+});
+
 const seasonsCount = computed(() => {
   const leagueSeasons = seasonStore.seasons.filter((season) => {
     return season.competition?.league?.id === leagueIdNumber.value;
@@ -354,10 +363,7 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
               class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-8 text-center"
             >
               <i class="pi pi-calendar text-4xl text-[var(--text-muted)] opacity-30 mb-4"></i>
-              <p class="text-[var(--text-secondary)]">No active seasons yet</p>
-              <p class="text-[var(--text-muted)] text-sm mt-1">
-                Create your first season to get started
-              </p>
+              <p class="text-[var(--text-secondary)]">No active seasons.</p>
             </div>
           </section>
 
@@ -530,6 +536,72 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                 </div>
               </article>
             </div>
+          </section>
+
+          <!-- Completed Seasons Section -->
+          <section class="mb-8">
+            <ListSectionHeader title="Completed Seasons" class="mb-4" />
+
+            <!-- Empty state for completed seasons -->
+            <div
+              v-if="completedSeasons.length === 0"
+              class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-8 text-center"
+            >
+              <i class="pi pi-calendar text-4xl text-[var(--text-muted)] opacity-30 mb-4"></i>
+              <p class="text-[var(--text-secondary)]">No completed seasons yet.</p>
+            </div>
+
+            <!-- Completed Seasons List -->
+            <ListContainer v-else gap="12px">
+              <ListRow
+                v-for="season in completedSeasons"
+                :key="season.id"
+                clickable
+                @click="handleViewSeason(season)"
+              >
+                <template #indicator>
+                  <div
+                    class="w-1 h-10 rounded-sm"
+                    :style="{
+                      backgroundColor: getSeasonIndicatorColor(season),
+                    }"
+                  ></div>
+                </template>
+
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-mono text-[13px] font-semibold text-[var(--text-primary)] mb-1">
+                    {{ season.name }}
+                  </h3>
+                  <div class="flex gap-4 text-xs text-[var(--text-muted)]">
+                    <span class="flex items-center gap-1">
+                      <i class="pi pi-trophy" style="font-size: 10px"></i>
+                      {{ season.competition?.name || 'Unknown Competition' }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <i class="pi pi-calendar" style="font-size: 10px"></i>
+                      {{ getSeasonRoundsProgress(season) }}
+                    </span>
+                  </div>
+                </div>
+
+                <template #stats>
+                  <ListRowStats class="hidden md:flex">
+                    <ListRowStat :value="season.stats?.total_drivers || 0" label="Drivers" />
+                    <ListRowStat :value="season.stats?.completed_races || 0" label="Races" />
+                  </ListRowStats>
+                </template>
+
+                <template #action>
+                  <Button
+                    label="View"
+                    :icon="PhArrowRight"
+                    variant="ghost"
+                    size="sm"
+                    @click.stop="handleViewSeason(season)"
+                  />
+                </template>
+              </ListRow>
+            </ListContainer>
           </section>
 
           <!-- Recent Activity Section -->

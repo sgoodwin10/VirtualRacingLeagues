@@ -104,6 +104,7 @@ async function handleDriverUpdated(): Promise<void> {
         :race-divisions-enabled="season.race_divisions_enabled"
         :divisions="divisions"
         :manage-button-disabled="season.is_archived"
+        :is-season-completed="season.is_completed"
         @manage-drivers="handleManageDrivers"
       />
     </Card>
