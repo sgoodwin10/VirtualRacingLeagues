@@ -93,12 +93,14 @@ final class LeagueController extends Controller
     public function update(UpdateLeagueRequest $request, int $id): JsonResponse
     {
         try {
-            $data = UpdateLeagueData::from($request->validated());
+            $validated = $request->validated();
+            $data = UpdateLeagueData::from($validated);
             $leagueData = $this->leagueService->updateLeagueWithActivityLog(
                 $id,
                 $data,
                 $this->authenticatedUser()->id,
-                $this->authenticatedUser()
+                $this->authenticatedUser(),
+                $validated
             );
             return ApiResponse::success($leagueData->toArray(), 'League updated successfully');
         } catch (LeagueNotFoundException $e) {

@@ -28,7 +28,7 @@ final class RaceData extends Data
         public readonly ?int $grid_source_race_id,
         // Length
         public readonly string $length_type,
-        public readonly int $length_value,
+        public readonly ?int $length_value,
         public readonly bool $extra_lap_after_time,
         // Platform settings
         public readonly ?string $weather,

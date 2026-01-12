@@ -335,9 +335,13 @@ final class LeagueApplicationService
      * @throws LeagueNotFoundException
      * @throws InvalidPlatformException
      */
-    public function updateLeague(int $leagueId, UpdateLeagueData $data, int $userId): LeagueData
-    {
-        return DB::transaction(function () use ($leagueId, $data, $userId) {
+    public function updateLeague(
+        int $leagueId,
+        UpdateLeagueData $data,
+        int $userId,
+        array $validatedData = []
+    ): LeagueData {
+        return DB::transaction(function () use ($leagueId, $data, $userId, $validatedData) {
             // Fetch existing league
             $league = $this->leagueRepository->findById($leagueId);
 
@@ -390,14 +394,29 @@ final class LeagueApplicationService
             }
 
             // Update social media if any provided
-            if ($this->hasSocialMediaUpdates($data)) {
+            // Use array_key_exists to differentiate between:
+            // - "field not sent" (keep existing value)
+            // - "field sent as null" (clear the value)
+            if ($this->hasSocialMediaUpdatesInValidatedData($validatedData)) {
                 $league->updateSocialMedia(
-                    $data->discord_url ?? $league->discordUrl(),
-                    $data->website_url ?? $league->websiteUrl(),
-                    $data->twitter_handle ?? $league->twitterHandle(),
-                    $data->instagram_handle ?? $league->instagramHandle(),
-                    $data->youtube_url ?? $league->youtubeUrl(),
-                    $data->twitch_url ?? $league->twitchUrl()
+                    array_key_exists('discord_url', $validatedData)
+                        ? $data->discord_url
+                        : $league->discordUrl(),
+                    array_key_exists('website_url', $validatedData)
+                        ? $data->website_url
+                        : $league->websiteUrl(),
+                    array_key_exists('twitter_handle', $validatedData)
+                        ? $data->twitter_handle
+                        : $league->twitterHandle(),
+                    array_key_exists('instagram_handle', $validatedData)
+                        ? $data->instagram_handle
+                        : $league->instagramHandle(),
+                    array_key_exists('youtube_url', $validatedData)
+                        ? $data->youtube_url
+                        : $league->youtubeUrl(),
+                    array_key_exists('twitch_url', $validatedData)
+                        ? $data->twitch_url
+                        : $league->twitchUrl()
                 );
             }
 
@@ -562,7 +581,8 @@ final class LeagueApplicationService
         int $leagueId,
         UpdateLeagueData $data,
         int $userId,
-        UserEloquent $user
+        UserEloquent $user,
+        array $validatedData = []
     ): LeagueData {
         // Capture original data for change tracking
         $eloquentLeague = EloquentLeague::findOrFail($leagueId);
@@ -576,7 +596,7 @@ final class LeagueApplicationService
             'description',
         ]);
 
-        $leagueData = $this->updateLeague($leagueId, $data, $userId);
+        $leagueData = $this->updateLeague($leagueId, $data, $userId, $validatedData);
 
         // Log activity with changes
         try {
@@ -719,16 +739,19 @@ final class LeagueApplicationService
     }
 
     /**
-     * Check if any social media fields are being updated.
+     * Check if any social media fields are present in the validated data.
+     *
+     * @param array<string, mixed> $validatedData
+     * @return bool
      */
-    private function hasSocialMediaUpdates(UpdateLeagueData $data): bool
+    private function hasSocialMediaUpdatesInValidatedData(array $validatedData): bool
     {
-        return $data->discord_url !== null
-            || $data->website_url !== null
-            || $data->twitter_handle !== null
-            || $data->instagram_handle !== null
-            || $data->youtube_url !== null
-            || $data->twitch_url !== null;
+        return array_key_exists('discord_url', $validatedData)
+            || array_key_exists('website_url', $validatedData)
+            || array_key_exists('twitter_handle', $validatedData)
+            || array_key_exists('instagram_handle', $validatedData)
+            || array_key_exists('youtube_url', $validatedData)
+            || array_key_exists('twitch_url', $validatedData);
     }
 
     /**

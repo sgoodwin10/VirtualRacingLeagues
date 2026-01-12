@@ -505,8 +505,9 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                   <Button
                     :icon="PhPencil"
                     label="Edit Competition"
-                    variant="secondary"
+                    variant="warning"
                     size="sm"
+                    outline
                     class="ml-auto"
                     :aria-label="`Edit ${competition.name}`"
                     @click="handleEditCompetition(competition)"

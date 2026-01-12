@@ -32,53 +32,12 @@ const toast = useToast();
 const confirm = useConfirm();
 
 const showDeleteDialog = ref(false);
-const isArchiving = ref(false);
 const isActivating = ref(false);
 const isCompleting = ref(false);
 
 // Computed properties for valid state transitions
 const canActivate = computed(() => props.season.status === 'setup');
 const canComplete = computed(() => props.season.status === 'active');
-const canArchive = computed(
-  () => props.season.status === 'completed' || props.season.status === 'active',
-);
-
-async function handleArchive(): Promise<void> {
-  confirm.require({
-    message:
-      'Archive this season? It will be hidden from active lists and cannot be edited while archived.',
-    header: 'Archive Season',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Archive',
-    rejectLabel: 'Cancel',
-    accept: async () => {
-      isArchiving.value = true;
-
-      try {
-        await seasonStore.archiveExistingSeason(props.season.id);
-
-        toast.add({
-          severity: 'success',
-          summary: 'Season Archived',
-          detail: 'Season has been archived successfully',
-          life: 3000,
-        });
-
-        emit('archived');
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to archive season';
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: errorMessage,
-          life: 5000,
-        });
-      } finally {
-        isArchiving.value = false;
-      }
-    },
-  });
-}
 
 async function handleActivate(): Promise<void> {
   confirm.require({
@@ -222,29 +181,6 @@ function handleSeasonDeleted(): void {
                 :loading="isCompleting"
                 :disabled="!canComplete"
                 @click="handleComplete"
-              />
-            </div>
-
-            <!-- Archive Action -->
-            <div class="flex items-center justify-between py-4">
-              <div class="flex items-center gap-3">
-                <PhArchive :size="20" class="text-[var(--text-secondary)]" weight="fill" />
-                <div>
-                  <div class="text-body-small font-medium text-[var(--text-primary)]">
-                    Archive Season
-                  </div>
-                  <div class="text-body-small text-[var(--text-muted)]">
-                    Hide from lists and make read-only
-                  </div>
-                </div>
-              </div>
-              <Button
-                label="Archive"
-                size="sm"
-                variant="secondary"
-                :loading="isArchiving"
-                :disabled="!canArchive"
-                @click="handleArchive"
               />
             </div>
           </div>

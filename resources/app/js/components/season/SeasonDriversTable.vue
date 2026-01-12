@@ -559,6 +559,7 @@ async function handleRefresh(): Promise<void> {
     <ViewDriverModal
       v-model:visible="showViewDriverModal"
       :driver="selectedDriver"
+      :show-edit-button="false"
       @close="handleCloseModal"
       @edit="handleEditDriver"
     />

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { mount } from '@vue/test-utils';
 import RoundFormModal from '../RoundFormModal.vue';
-import type { Track } from '@app/types/track';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 import ToastService from 'primevue/toastservice';

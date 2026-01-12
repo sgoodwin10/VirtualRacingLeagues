@@ -114,8 +114,8 @@ describe('PointsSection', () => {
       });
 
       const checkboxes = wrapper.findAllComponents(BaseCheckbox);
-      const fastestLapCheckbox = checkboxes.find((cb) =>
-        cb.attributes('id') === 'bonus_fastest_lap_top_10',
+      const fastestLapCheckbox = checkboxes.find(
+        (cb) => cb.attributes('id') === 'bonus_fastest_lap_top_10',
       );
       expect(fastestLapCheckbox?.exists()).toBe(true);
     });
@@ -136,8 +136,8 @@ describe('PointsSection', () => {
       });
 
       const checkboxes = wrapper.findAllComponents(BaseCheckbox);
-      const qualifyingCheckbox = checkboxes.find((cb) =>
-        cb.attributes('id') === 'bonus_qualifying_pole_top_10',
+      const qualifyingCheckbox = checkboxes.find(
+        (cb) => cb.attributes('id') === 'bonus_qualifying_pole_top_10',
       );
       expect(qualifyingCheckbox?.exists()).toBe(true);
     });
@@ -336,7 +336,9 @@ describe('PointsSection', () => {
       });
 
       const settingCards = wrapper.findAllComponents(SettingCard);
-      const fastestLapCard = settingCards.find((card) => card.props('title') === 'Fastest Lap Bonus');
+      const fastestLapCard = settingCards.find(
+        (card) => card.props('title') === 'Fastest Lap Bonus',
+      );
       await fastestLapCard?.vm.$emit('update:modelValue', true);
 
       expect(wrapper.emitted('update:fastestLap')).toBeTruthy();
@@ -359,7 +361,9 @@ describe('PointsSection', () => {
       });
 
       const settingCards = wrapper.findAllComponents(SettingCard);
-      const qualifyingCard = settingCards.find((card) => card.props('title') === 'Qualifying Pole Bonus');
+      const qualifyingCard = settingCards.find(
+        (card) => card.props('title') === 'Qualifying Pole Bonus',
+      );
       await qualifyingCard?.vm.$emit('update:modelValue', true);
 
       expect(wrapper.emitted('update:qualifyingPole')).toBeTruthy();

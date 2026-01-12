@@ -56,7 +56,7 @@
               }"
             >
               <template #body="{ data }">
-                <PointsCell :points="data.race_points" />
+                <PointsCell :points="data.race_points" class="text-center" />
               </template>
             </Column>
 

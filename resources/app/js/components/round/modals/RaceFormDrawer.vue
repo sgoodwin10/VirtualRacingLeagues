@@ -68,10 +68,11 @@
           @update:grid-source="form.grid_source = $event as any"
           @update:grid-source-race-id="form.grid_source_race_id = $event"
           @update:length-type="form.length_type = $event as any"
-          @update:length-value="form.length_value = $event ?? form.length_value"
+          @update:length-value="form.length_value = $event ?? 0"
           @update:track-limits-enforced="form.track_limits_enforced = $event"
           @update:false-start-detection="form.false_start_detection = $event"
           @update:mandatory-pit-stop="form.mandatory_pit_stop = $event"
+          @blur-length-value="handleLengthValueBlur"
         />
 
         <!-- Points Section -->
@@ -231,7 +232,10 @@ const isFirstRaceForRound = computed(() => {
 });
 
 // Pass the reactive computed ref to useRaceValidation so validation adapts dynamically
-const { errors, validateAll, clearErrors } = useRaceValidation(form, isQualifying);
+const { errors, validateAll, validateLengthValue, clearErrors } = useRaceValidation(
+  form,
+  isQualifying,
+);
 
 // Watch for race type changes and apply appropriate defaults
 watch(
@@ -543,6 +547,10 @@ function handleSectionChange(sectionId: SectionId): void {
   activeSection.value = sectionId;
 }
 
+function handleLengthValueBlur(): void {
+  errors.length_value = validateLengthValue();
+}
+
 function handleClose(): void {
   clearErrors();
   localVisible.value = false;
@@ -604,7 +612,7 @@ async function handleSave(): Promise<void> {
             ? form.grid_source_race_id || null
             : null,
           length_type: form.length_type,
-          length_value: form.length_value,
+          length_value: form.length_value || null,
           extra_lap_after_time: form.extra_lap_after_time,
           weather: form.weather.trim() || null,
           tire_restrictions: form.tire_restrictions.trim() || null,

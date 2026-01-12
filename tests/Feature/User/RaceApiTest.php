@@ -287,4 +287,115 @@ final class RaceApiTest extends TestCase
 
         $response->assertStatus(404);
     }
+
+    public function test_can_create_non_qualifying_race_without_length_value(): void
+    {
+        $data = [
+            'race_number' => 1,
+            'name' => 'Feature Race',
+            'race_type' => 'feature',
+            'qualifying_format' => 'standard',
+            'qualifying_length' => 15,
+            'grid_source' => 'qualifying',
+            'length_type' => 'laps',
+            // length_value is missing - should succeed as it's now optional
+            'points_system' => [1 => 25, 2 => 18, 3 => 15],
+            'dnf_points' => 0,
+            'dns_points' => 0,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
+
+        $response->assertStatus(201);
+    }
+
+    public function test_can_create_qualifying_race_without_length_value(): void
+    {
+        $data = [
+            'race_number' => 0,
+            'name' => 'Qualifying Session',
+            'race_type' => 'qualifying',
+            'qualifying_format' => 'standard',
+            'qualifying_length' => 20,
+            'grid_source' => 'qualifying',
+            'length_type' => 'time',
+            // length_value is missing - should succeed as it's optional
+            'points_system' => [1 => 0],
+            'dnf_points' => 0,
+            'dns_points' => 0,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
+
+        $response->assertStatus(201);
+    }
+
+    public function test_can_create_qualifying_race_without_qualifying_length(): void
+    {
+        $data = [
+            'race_number' => 0,
+            'name' => 'Qualifying Session',
+            'race_type' => 'qualifying',
+            'qualifying_format' => 'standard',
+            // qualifying_length is missing - should succeed as it's optional
+            'grid_source' => 'qualifying',
+            'length_type' => 'time',
+            'points_system' => [1 => 0],
+            'dnf_points' => 0,
+            'dns_points' => 0,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
+
+        $response->assertStatus(201);
+    }
+
+    public function test_can_update_non_qualifying_race_without_length_value(): void
+    {
+        $race = Race::factory()->create([
+            'round_id' => $this->round->id,
+            'race_type' => 'feature',
+            'length_value' => 50,
+        ]);
+
+        $updateData = [
+            'race_type' => 'sprint',
+            // Intentionally omitting length_value - should succeed as it's optional
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->putJson("http://app.virtualracingleagues.localhost/api/races/{$race->id}", $updateData);
+
+        $response->assertStatus(200)
+            ->assertJsonFragment([
+                'race_type' => 'sprint',
+            ]);
+    }
+
+    public function test_can_update_qualifying_race_without_length_value(): void
+    {
+        $race = Race::factory()->create([
+            'round_id' => $this->round->id,
+            'race_type' => 'feature',
+            'length_value' => 50,
+        ]);
+
+        $updateData = [
+            'race_type' => 'qualifying',
+            'name' => 'Updated Qualifying',
+            // Omitting length_value - should succeed as it's optional
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->putJson("http://app.virtualracingleagues.localhost/api/races/{$race->id}", $updateData);
+
+        $response->assertStatus(200)
+            ->assertJsonFragment([
+                'race_type' => 'qualifying',
+                'name' => 'Updated Qualifying',
+            ]);
+    }
 }

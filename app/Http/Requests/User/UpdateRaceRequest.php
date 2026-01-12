@@ -94,6 +94,8 @@ final class UpdateRaceRequest extends FormRequest
     {
         return [
             'status.in' => 'Status must be either scheduled or completed.',
+            'length_value.integer' => 'The race length must be a whole number.',
+            'length_value.min' => 'The race length must be at least 1.',
         ];
     }
 }

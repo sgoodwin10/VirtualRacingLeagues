@@ -173,7 +173,7 @@ export const RACE_TYPE_OPTIONS: { value: RaceType; label: string }[] = [
   { value: 'feature', label: 'Feature' },
   { value: 'endurance', label: 'Endurance' },
   { value: 'qualifying', label: 'Qualifying' },
-  { value: 'custom', label: 'Custom' },
+  // { value: 'custom', label: 'Custom' },
 ];
 
 // Dropdown options for qualifying formats

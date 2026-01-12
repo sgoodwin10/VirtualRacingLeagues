@@ -41,7 +41,7 @@ final class Race
         private ?int $gridSourceRaceId,
         // Length
         private RaceLengthType $lengthType,
-        private int $lengthValue,
+        private ?int $lengthValue,
         private bool $extraLapAfterTime,
         // Platform settings (stored as strings)
         private ?string $weather,
@@ -86,7 +86,7 @@ final class Race
         GridSource $gridSource,
         ?int $gridSourceRaceId,
         RaceLengthType $lengthType,
-        int $lengthValue,
+        ?int $lengthValue,
         bool $extraLapAfterTime,
         ?string $weather,
         ?string $tireRestrictions,
@@ -248,7 +248,7 @@ final class Race
         GridSource $gridSource,
         ?int $gridSourceRaceId,
         RaceLengthType $lengthType,
-        int $lengthValue,
+        ?int $lengthValue,
         bool $extraLapAfterTime,
         ?string $weather,
         ?string $tireRestrictions,
@@ -431,7 +431,7 @@ final class Race
         int $roundId,
         ?RaceName $name,
         QualifyingFormat $qualifyingFormat,
-        int $qualifyingLength,
+        ?int $qualifyingLength,
         ?string $qualifyingTire,
         ?string $weather,
         ?string $tireRestrictions,
@@ -447,7 +447,7 @@ final class Race
             throw InvalidQualifierConfigurationException::noQualifyingFormat();
         }
 
-        if ($qualifyingLength < 1) {
+        if ($qualifyingLength !== null && $qualifyingLength < 1) {
             throw InvalidQualifierConfigurationException::invalidLength($qualifyingLength);
         }
 
@@ -507,7 +507,7 @@ final class Race
     public function updateQualifierConfiguration(
         ?RaceName $name,
         QualifyingFormat $qualifyingFormat,
-        int $qualifyingLength,
+        ?int $qualifyingLength,
         ?string $qualifyingTire,
         ?string $weather,
         ?string $tireRestrictions,
@@ -527,7 +527,7 @@ final class Race
             throw InvalidQualifierConfigurationException::noQualifyingFormat();
         }
 
-        if ($qualifyingLength < 1) {
+        if ($qualifyingLength !== null && $qualifyingLength < 1) {
             throw InvalidQualifierConfigurationException::invalidLength($qualifyingLength);
         }
 
@@ -668,7 +668,7 @@ final class Race
         return $this->lengthType;
     }
 
-    public function lengthValue(): int
+    public function lengthValue(): ?int
     {
         return $this->lengthValue;
     }

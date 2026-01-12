@@ -294,6 +294,7 @@ function getDriverName(leagueDriver: LeagueDriver): string {
     <ViewDriverModal
       v-model:visible="showViewModal"
       :driver="selectedDriver"
+      :show-edit-button="true"
       @close="showViewModal = false"
       @edit="handleEditFromView"
     />

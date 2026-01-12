@@ -79,11 +79,6 @@ final class RaceApplicationService
                     throw new \InvalidArgumentException('Qualifiers must have a qualifying format (cannot be "none")');
                 }
 
-                // Validate qualifying_length is required for qualifiers
-                if ($data->qualifying_length === null || $data->qualifying_length < 1) {
-                    throw new \InvalidArgumentException('Qualifiers must have a valid qualifying length');
-                }
-
                 // Create qualifier using the dedicated factory method
                 // Note: Penalty fields are NOT passed from user input for qualifiers - they get safe defaults
                 $race = Race::createQualifier(
@@ -204,11 +199,6 @@ final class RaceApplicationService
                 $qualifyingLength = !($data->qualifying_length instanceof Optional)
                     ? ($data->qualifying_length ?? $race->qualifyingLength())
                     : $race->qualifyingLength();
-
-                // Validate qualifying_length for qualifiers
-                if ($qualifyingLength === null || $qualifyingLength < 1) {
-                    throw new \InvalidArgumentException('Qualifiers must have a valid qualifying length');
-                }
 
                 $qualifyingTire = !($data->qualifying_tire instanceof Optional)
                     ? $data->qualifying_tire

@@ -34,7 +34,7 @@ return new class extends Migration
 
             // Length
             $table->enum('length_type', ['laps', 'time']);
-            $table->integer('length_value');
+            $table->integer('length_value')->nullable();
             $table->boolean('extra_lap_after_time')->default(true);
 
             // Platform settings

@@ -68,7 +68,8 @@ function handleLoadMore() {
       <Button
         label="Refresh Activity Log"
         :icon="PhArrowClockwise"
-        variant="warning"
+        variant="secondary"
+        outline
         size="sm"
         @click="refresh"
       />

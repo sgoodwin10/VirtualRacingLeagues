@@ -58,20 +58,7 @@ function formatValue(value: number | null | undefined): string {
 </script>
 
 <template>
-  <div class="points-cell" :class="{ 'points-cell--bold': bold }">
+  <div class="font-mono text-sm font-semibold" :class="{ 'font-bold': bold }">
     {{ formatValue(pointsValue) }}
   </div>
 </template>
-
-<style scoped>
-.points-cell {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--text-primary);
-}
-
-.points-cell--bold {
-  font-weight: 700;
-}
-</style>

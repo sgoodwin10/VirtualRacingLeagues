@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
+import Card from 'primevue/card';
 import StyledInputNumber from '@app/components/common/forms/StyledInputNumber.vue';
 import BaseCheckbox from '@app/components/common/inputs/BaseCheckbox.vue';
 import RadioButton from 'primevue/radiobutton';
@@ -8,7 +9,9 @@ import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
 import FormError from '@app/components/common/forms/FormError.vue';
 import FormOptionalText from '@app/components/common/forms/FormOptionalText.vue';
+import ListSectionHeader from '@app/components/common/lists/ListSectionHeader.vue';
 import Message from 'primevue/message';
+import { computed } from 'vue';
 import {
   RACE_TYPE_OPTIONS,
   QUALIFYING_FORMAT_OPTIONS,
@@ -46,7 +49,7 @@ interface Props {
   disabled?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   disabled: false,
 });
 
@@ -67,6 +70,7 @@ const emit = defineEmits<{
   'update:mandatoryPitStop': [value: boolean];
   'blur-race-type': [];
   'blur-name': [];
+  'blur-length-value': [];
 }>();
 
 function handleRaceNameUpdate(value: string | undefined): void {
@@ -76,6 +80,11 @@ function handleRaceNameUpdate(value: string | undefined): void {
 function handleQualifyingTireUpdate(value: string | undefined): void {
   emit('update:qualifyingTire', value ?? '');
 }
+
+const raceTypeLabel = computed(() => {
+  const selectedOption = RACE_TYPE_OPTIONS.find((option) => option.value === props.raceType);
+  return 'Race Type: ' + (selectedOption?.label ?? 'Race');
+});
 </script>
 
 <template>
@@ -107,7 +116,6 @@ function handleQualifyingTireUpdate(value: string | undefined): void {
             option-value="value"
             placeholder="Select type"
             :invalid="!!errors.race_type"
-            size="small"
             fluid
             :disabled="disabled"
             class="w-full"
@@ -145,73 +153,76 @@ function handleQualifyingTireUpdate(value: string | undefined): void {
 
     <!-- Qualifying Configuration (Only for qualifying type) -->
     <template v-if="isQualifying">
-      <div class="space-y-3">
-        <div class="flex flex-row gap-4">
-          <div class="flex-grow">
-            <FormInputGroup>
-              <FormLabel for="qualifying_format" text="Format" required />
-              <Select
-                id="qualifying_format"
-                :model-value="qualifyingFormat"
-                :options="QUALIFYING_FORMAT_OPTIONS"
-                option-label="label"
-                option-value="value"
-                placeholder="Select format"
-                size="small"
-                fluid
-                :disabled="disabled"
-                class="w-full"
-                @update:model-value="emit('update:qualifyingFormat', $event)"
-              />
-              <FormError v-if="errors.qualifying_format">
-                {{ errors.qualifying_format }}
-              </FormError>
-            </FormInputGroup>
-          </div>
+      <ListSectionHeader :title="'Race Type: Qualifying'" class="mb-4" />
+      <Card class="shadow-sm p-4 border border-[var(--border)]">
+        <template #content>
+          <div class="space-y-3">
+            <!-- Format, Length, and Tire on one row -->
+            <div class="flex flex-row gap-4">
+              <div class="flex-none">
+                <FormInputGroup>
+                  <FormLabel for="qualifying_format" text="Format" required />
+                  <Select
+                    id="qualifying_format"
+                    :model-value="qualifyingFormat"
+                    :options="QUALIFYING_FORMAT_OPTIONS"
+                    option-label="label"
+                    option-value="value"
+                    placeholder="Select format"
+                    fluid
+                    :disabled="disabled"
+                    class="w-full"
+                    @update:model-value="emit('update:qualifyingFormat', $event)"
+                  />
+                  <FormError v-if="errors.qualifying_format">
+                    {{ errors.qualifying_format }}
+                  </FormError>
+                </FormInputGroup>
+              </div>
 
-          <!-- Qualifying Length -->
-          <div>
-            <FormInputGroup>
-              <FormLabel for="qualifying_length" text="Length (min)" />
-              <StyledInputNumber
-                :model-value="qualifyingLength"
-                input-id="qualifying_length"
-                :min="1"
-                :max="999"
-                :invalid="!!errors.qualifying_length"
-                size="small"
-                fluid
-                :disabled="disabled"
-                class="w-24"
-                @update:model-value="emit('update:qualifyingLength', $event)"
-              />
-              <FormError v-if="errors.qualifying_length">
-                {{ errors.qualifying_length }}
-              </FormError>
-            </FormInputGroup>
-          </div>
+              <!-- Qualifying Length -->
+              <div>
+                <FormInputGroup>
+                  <FormLabel for="qualifying_length" text="Length (min)" />
+                  <StyledInputNumber
+                    :model-value="qualifyingLength"
+                    input-id="qualifying_length"
+                    :min="1"
+                    :max="999"
+                    :invalid="!!errors.qualifying_length"
+                    fluid
+                    :disabled="disabled"
+                    class="w-24"
+                    @update:model-value="emit('update:qualifyingLength', $event)"
+                  />
+                  <FormError v-if="errors.qualifying_length">
+                    {{ errors.qualifying_length }}
+                  </FormError>
+                </FormInputGroup>
+              </div>
 
-          <!-- Qualifying Tire -->
-          <div>
-            <FormInputGroup>
-              <FormLabel for="qualifying_tire" text="Tire" />
-              <InputText
-                id="qualifying_tire"
-                :model-value="qualifyingTire"
-                placeholder="e.g., Soft"
-                size="small"
-                :disabled="disabled"
-                class="w-32"
-                @update:model-value="handleQualifyingTireUpdate"
-              />
-            </FormInputGroup>
-          </div>
+              <!-- Qualifying Tire -->
+              <div>
+                <FormInputGroup>
+                  <FormLabel for="qualifying_tire" text="Tire" />
+                  <InputText
+                    id="qualifying_tire"
+                    :model-value="qualifyingTire"
+                    placeholder="e.g., Soft"
+                    size="small"
+                    :disabled="disabled"
+                    class="w-32"
+                    @update:model-value="handleQualifyingTireUpdate"
+                  />
+                </FormInputGroup>
+              </div>
+            </div>
 
-          <div>
-            <FormInputGroup>
-              <FormLabel for="bonus_pole" text="Pole position bonus" />
-              <div class="space-y-2">
-                <div class="flex items-center gap-2 pt-1">
+            <!-- Pole Position Bonus on its own row -->
+            <div>
+              <FormInputGroup>
+                <FormLabel for="bonus_pole" text="Pole position bonus" />
+                <div class="flex flex-row gap-4 items-center pt-1">
                   <BaseCheckbox
                     id="bonus_pole"
                     :model-value="qualifyingPole !== null && qualifyingPole > 0"
@@ -222,193 +233,198 @@ function handleQualifyingTireUpdate(value: string | undefined): void {
                       if (!$event) emit('update:qualifyingPoleTop10', false);
                     "
                   />
-                  <StyledInputNumber
-                    v-if="qualifyingPole !== null && qualifyingPole > 0"
-                    :model-value="qualifyingPole"
-                    :max-fraction-digits="2"
-                    :min="1"
-                    placeholder="Pts"
-                    size="small"
-                    fluid
-                    :disabled="disabled"
-                    class="w-20"
-                    @update:model-value="emit('update:qualifyingPole', $event)"
-                  />
+                  <template v-if="qualifyingPole !== null && qualifyingPole > 0">
+                    <FormInputGroup>
+                      <FormLabel text="Points" />
+                      <StyledInputNumber
+                        :model-value="qualifyingPole"
+                        :min="1"
+                        :max="99"
+                        :disabled="disabled"
+                        fluid
+                        placeholder="Enter points"
+                        @update:model-value="emit('update:qualifyingPole', $event)"
+                      />
+                    </FormInputGroup>
+                    <BaseCheckbox
+                      id="bonus_pole_top_10"
+                      class="mt-5"
+                      :model-value="qualifyingPoleTop10"
+                      :disabled="disabled"
+                      label="Only award if driver finishes in top 10"
+                      @update:model-value="emit('update:qualifyingPoleTop10', $event)"
+                    />
+                  </template>
                 </div>
-                <div v-if="qualifyingPole !== null && qualifyingPole > 0" class="ml-6">
-                  <BaseCheckbox
-                    id="bonus_pole_top_10"
-                    :model-value="qualifyingPoleTop10"
-                    :disabled="disabled"
-                    label="Only award if driver finishes in top 10"
-                    @update:model-value="emit('update:qualifyingPoleTop10', $event)"
-                  />
-                </div>
-              </div>
-            </FormInputGroup>
+              </FormInputGroup>
+            </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </Card>
     </template>
 
     <!-- Race Details (Only for race types) -->
     <template v-if="!isQualifying">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <!-- Left Column (66% - 2 cols) -->
-        <div class="lg:col-span-2 space-y-3">
-          <!-- Starting Grid -->
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900 mb-2">Starting Grid</h3>
-            <div class="space-y-2.5">
-              <!-- Grid Source + Source Race on SAME row (grid-cols-2) -->
-              <div class="grid grid-cols-2 gap-3">
-                <FormInputGroup>
-                  <FormLabel for="grid_source" text="Grid Source" required />
-                  <Select
-                    id="grid_source"
-                    :model-value="gridSource"
-                    :options="GRID_SOURCE_OPTIONS"
-                    option-label="label"
-                    option-value="value"
-                    placeholder="Select source"
-                    size="small"
-                    fluid
-                    :disabled="disabled"
-                    class="w-full"
-                    @update:model-value="emit('update:gridSource', $event)"
-                  />
-                  <FormError v-if="errors.grid_source">
-                    {{ errors.grid_source }}
-                  </FormError>
-                </FormInputGroup>
-                <FormInputGroup
-                  v-if="
-                    gridSource === 'qualifying' ||
-                    gridSource === 'previous_race' ||
-                    gridSource === 'reverse_previous'
-                  "
-                >
-                  <FormLabel
-                    for="grid_source_race_id"
-                    :text="gridSource === 'qualifying' ? 'Select Qualifier' : 'Select Race'"
-                  />
-                  <Select
-                    id="grid_source_race_id"
-                    :model-value="gridSourceRaceId"
-                    :options="sourceRaceOptions"
-                    option-label="label"
-                    option-value="value"
-                    :placeholder="gridSource === 'qualifying' ? 'Select qualifier' : 'Select race'"
-                    :invalid="!!errors.grid_source_race_id"
-                    size="small"
-                    fluid
-                    :disabled="disabled"
-                    class="w-full"
-                    @update:model-value="emit('update:gridSourceRaceId', $event)"
-                  />
-                  <FormError v-if="errors.grid_source_race_id">
-                    {{ errors.grid_source_race_id }}
-                  </FormError>
-                  <Message v-if="sourceRaceOptions.length === 0" severity="warn" :closable="false">
-                    {{
-                      gridSource === 'qualifying'
-                        ? 'No qualifiers available'
-                        : 'No previous races available'
-                    }}
-                  </Message>
-                </FormInputGroup>
-              </div>
-            </div>
-          </div>
-
-          <!-- Race Length -->
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900 mb-2">Race Length</h3>
-            <div class="space-y-2.5">
-              <!-- Length Type + Length Value on SAME row (grid-cols-2) -->
-              <div class="grid grid-cols-2 gap-3">
-                <FormInputGroup>
-                  <FormLabel text="Length Type" required />
-                  <div class="flex gap-4">
-                    <div
-                      v-for="option in RACE_LENGTH_TYPE_OPTIONS"
-                      :key="option.value"
-                      class="flex items-center"
+      <ListSectionHeader :title="raceTypeLabel" class="mb-4" />
+      <Card class="shadow-sm p-4 border border-[var(--border)]">
+        <template #content>
+          <div class="space-y-3">
+            <!-- Starting Grid -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2">Starting Grid</h3>
+              <div class="space-y-2.5">
+                <!-- Grid Source + Source Race on SAME row (grid-cols-2) -->
+                <div class="grid grid-cols-3 gap-3">
+                  <FormInputGroup>
+                    <FormLabel for="grid_source" text="Grid Source" required />
+                    <Select
+                      id="grid_source"
+                      :model-value="gridSource"
+                      :options="GRID_SOURCE_OPTIONS"
+                      option-label="label"
+                      option-value="value"
+                      placeholder="Select source"
+                      fluid
+                      :disabled="disabled"
+                      class="w-full"
+                      @update:model-value="emit('update:gridSource', $event)"
+                    />
+                    <FormError v-if="errors.grid_source">
+                      {{ errors.grid_source }}
+                    </FormError>
+                  </FormInputGroup>
+                  <FormInputGroup
+                    v-if="
+                      gridSource === 'qualifying' ||
+                      gridSource === 'previous_race' ||
+                      gridSource === 'reverse_previous'
+                    "
+                  >
+                    <FormLabel
+                      for="grid_source_race_id"
+                      :text="gridSource === 'qualifying' ? 'Select Qualifier' : 'Select Race'"
+                      required
+                    />
+                    <Select
+                      id="grid_source_race_id"
+                      :model-value="gridSourceRaceId"
+                      :options="sourceRaceOptions"
+                      option-label="label"
+                      option-value="value"
+                      :placeholder="
+                        gridSource === 'qualifying' ? 'Select qualifier' : 'Select race'
+                      "
+                      :invalid="!!errors.grid_source_race_id"
+                      fluid
+                      :disabled="disabled"
+                      class="w-full"
+                      @update:model-value="emit('update:gridSourceRaceId', $event)"
+                    />
+                    <FormError v-if="errors.grid_source_race_id">
+                      {{ errors.grid_source_race_id }}
+                    </FormError>
+                    <Message
+                      v-if="sourceRaceOptions.length === 0"
+                      severity="warn"
+                      :closable="false"
                     >
-                      <RadioButton
-                        :model-value="lengthType"
-                        :input-id="`length_type_${option.value}`"
-                        :value="option.value"
-                        :disabled="disabled"
-                        @update:model-value="emit('update:lengthType', $event)"
-                      />
-                      <label :for="`length_type_${option.value}`" class="ml-2">{{
-                        option.label
-                      }}</label>
+                      {{
+                        gridSource === 'qualifying'
+                          ? 'No qualifiers available'
+                          : 'No previous races available'
+                      }}
+                    </Message>
+                  </FormInputGroup>
+                </div>
+              </div>
+            </div>
+
+            <!-- Race Length -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2">Race Length</h3>
+              <div class="space-y-2.5">
+                <!-- Length Type + Length Value on SAME row (grid-cols-2) -->
+                <div class="grid grid-cols-3 gap-3">
+                  <FormInputGroup>
+                    <FormLabel text="Length Type" />
+                    <div class="flex gap-4 pt-2">
+                      <div
+                        v-for="option in RACE_LENGTH_TYPE_OPTIONS"
+                        :key="option.value"
+                        class="flex items-center"
+                      >
+                        <RadioButton
+                          :model-value="lengthType"
+                          :input-id="`length_type_${option.value}`"
+                          :value="option.value"
+                          :disabled="disabled"
+                          @update:model-value="emit('update:lengthType', $event)"
+                        />
+                        <label :for="`length_type_${option.value}`" class="ml-2">{{
+                          option.label
+                        }}</label>
+                      </div>
                     </div>
-                  </div>
-                  <FormError v-if="errors.length_type">
-                    {{ errors.length_type }}
-                  </FormError>
-                </FormInputGroup>
-                <FormInputGroup>
-                  <FormLabel
-                    for="length_value"
-                    :text="lengthType === 'laps' ? 'Number of Laps' : 'Duration (minutes)'"
-                    required
-                  />
-                  <StyledInputNumber
-                    :model-value="lengthValue"
-                    input-id="length_value"
-                    :min="1"
-                    :max="lengthType === 'laps' ? 999 : 9999"
-                    :invalid="!!errors.length_value"
-                    size="small"
-                    fluid
-                    :disabled="disabled"
-                    class="w-full"
-                    @update:model-value="emit('update:lengthValue', $event)"
-                  />
-                  <FormError v-if="errors.length_value">
-                    {{ errors.length_value }}
-                  </FormError>
-                </FormInputGroup>
+                    <FormError v-if="errors.length_type">
+                      {{ errors.length_type }}
+                    </FormError>
+                  </FormInputGroup>
+                  <FormInputGroup>
+                    <FormLabel
+                      for="length_value"
+                      :text="lengthType === 'laps' ? 'Number of Laps' : 'Duration (minutes)'"
+                    />
+                    <StyledInputNumber
+                      :model-value="lengthValue"
+                      input-id="length_value"
+                      :min="1"
+                      :max="lengthType === 'laps' ? 999 : 9999"
+                      :invalid="!!errors.length_value"
+                      size="small"
+                      fluid
+                      :disabled="disabled"
+                      class="w-full"
+                      @update:model-value="emit('update:lengthValue', $event)"
+                      @blur="emit('blur-length-value')"
+                    />
+                    <FormError v-if="errors.length_value">
+                      {{ errors.length_value }}
+                    </FormError>
+                  </FormInputGroup>
+                </div>
+              </div>
+            </div>
+
+            <!-- Penalties & Rules -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2">Penalties & Rules</h3>
+              <div class="space-x-8">
+                <BaseCheckbox
+                  id="track_limits_enforced"
+                  :model-value="trackLimitsEnforced"
+                  :disabled="disabled"
+                  label="Track limits enforced"
+                  @update:model-value="emit('update:trackLimitsEnforced', $event)"
+                />
+                <BaseCheckbox
+                  id="false_start_detection"
+                  :model-value="falseStartDetection"
+                  :disabled="disabled"
+                  label="False start detection"
+                  @update:model-value="emit('update:falseStartDetection', $event)"
+                />
+                <BaseCheckbox
+                  id="mandatory_pit_stop"
+                  :model-value="mandatoryPitStop"
+                  :disabled="disabled"
+                  label="Mandatory pit stop"
+                  @update:model-value="emit('update:mandatoryPitStop', $event)"
+                />
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Right Column (33% - 1 col) -->
-        <div class="lg:col-span-1 space-y-3">
-          <!-- Penalties & Rules -->
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900 mb-2">Penalties & Rules</h3>
-            <div class="space-y-2">
-              <BaseCheckbox
-                id="track_limits_enforced"
-                :model-value="trackLimitsEnforced"
-                :disabled="disabled"
-                label="Track limits enforced"
-                @update:model-value="emit('update:trackLimitsEnforced', $event)"
-              />
-              <BaseCheckbox
-                id="false_start_detection"
-                :model-value="falseStartDetection"
-                :disabled="disabled"
-                label="False start detection"
-                @update:model-value="emit('update:falseStartDetection', $event)"
-              />
-              <BaseCheckbox
-                id="mandatory_pit_stop"
-                :model-value="mandatoryPitStop"
-                :disabled="disabled"
-                label="Mandatory pit stop"
-                @update:model-value="emit('update:mandatoryPitStop', $event)"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+        </template>
+      </Card>
     </template>
   </div>
 </template>

@@ -10,7 +10,7 @@ import DriverTable from '@app/components/driver/DriverTable.vue';
 import { useLeagueDrivers } from '@app/composables/useLeagueDrivers';
 import { useDriverStore } from '@app/stores/driverStore';
 import type { LeagueDriver } from '@app/types/driver';
-import { PhUpload, PhPlus } from '@phosphor-icons/vue';
+import { PhUpload, PhPlus, PhMagnifyingGlass } from '@phosphor-icons/vue';
 
 interface Props {
   leagueId: number;
@@ -73,8 +73,10 @@ function handleRemoveDriver(driver: LeagueDriver): void {
         <!-- Search and Filter -->
         <div class="flex gap-2 flex-1">
           <IconField>
-            <InputIcon class="pi pi-search text-white" />
-            <InputText v-model="searchQuery" placeholder="Search drivers..." class="w-full" />
+            <InputIcon>
+              <PhMagnifyingGlass class="text-[var(--text-primary)]" size="16" />
+            </InputIcon>
+            <InputText v-model="searchQuery" placeholder="Search drivers..." class="w-full !pl-8" />
           </IconField>
           <Select
             v-model="driverStore.statusFilter"

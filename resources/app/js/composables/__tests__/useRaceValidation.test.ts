@@ -140,9 +140,17 @@ describe('useRaceValidation', () => {
       expect(validateQualifyingLength()).toBeUndefined();
     });
 
-    it('should return error if qualifying_length is missing when required', () => {
+    it('should return undefined if qualifying_length is missing (optional field)', () => {
       form.qualifying_format = 'standard';
       form.qualifying_length = 0;
+      const { validateQualifyingLength } = useRaceValidation(form);
+
+      expect(validateQualifyingLength()).toBeUndefined();
+    });
+
+    it('should return error if qualifying_length is negative when provided', () => {
+      form.qualifying_format = 'standard';
+      form.qualifying_length = -5;
       const { validateQualifyingLength } = useRaceValidation(form);
 
       expect(validateQualifyingLength()).toBe('Qualifying length must be a positive number');
@@ -172,8 +180,15 @@ describe('useRaceValidation', () => {
       expect(validateLengthValue()).toBeUndefined();
     });
 
-    it('should return error if length_value is missing', () => {
+    it('should return undefined if length_value is missing (optional field)', () => {
       form.length_value = null as any;
+      const { validateLengthValue } = useRaceValidation(form);
+
+      expect(validateLengthValue()).toBeUndefined();
+    });
+
+    it('should return error if length_value is negative when provided', () => {
+      form.length_value = -5;
       const { validateLengthValue } = useRaceValidation(form);
 
       expect(validateLengthValue()).toBe('Race length must be a positive number');

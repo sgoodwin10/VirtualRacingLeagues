@@ -1168,5 +1168,192 @@ describe('RaceFormDrawer', () => {
       // Verify errors are cleared
       expect(vm.errors.race_type).toBeUndefined();
     });
+
+    it('should validate length_value format when provided for non-qualifying races', async () => {
+      const pinia = createPinia();
+      setActivePinia(pinia);
+
+      const { useRaceStore } = await import('@app/stores/raceStore');
+      const raceStore = useRaceStore();
+      const raceSettingsStore = useRaceSettingsStore();
+
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      // Add a qualifying race so the form defaults to 'sprint' race type
+      const qualifyingRace: Race = {
+        ...mockRace,
+        id: 1,
+        race_type: 'qualifying',
+        is_qualifier: true,
+      };
+      raceStore.races = [qualifyingRace];
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          plugins: [pinia],
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          race_type: string;
+          length_value: number;
+        };
+        errors: Record<string, string | undefined>;
+        validateLengthValue: () => string | undefined;
+        handleLengthValueBlur: () => void;
+      };
+
+      // Verify form defaults to sprint race type (not qualifying since one already exists)
+      expect(vm.form.race_type).toBe('sprint');
+
+      // Set length_value to 0 (invalid - if provided, must be positive)
+      vm.form.length_value = 0;
+
+      // Trigger blur validation
+      vm.handleLengthValueBlur();
+
+      // Verify validation error is set for invalid format
+      expect(vm.errors.length_value).toBe('Race length must be a positive number');
+
+      // Fix the value
+      vm.form.length_value = 20;
+
+      // Trigger blur validation again
+      vm.handleLengthValueBlur();
+
+      // Verify error is cleared
+      expect(vm.errors.length_value).toBeUndefined();
+    });
+
+    it('should accept empty/null length_value for non-qualifying races (optional field)', async () => {
+      const pinia = createPinia();
+      setActivePinia(pinia);
+
+      const { useRaceStore } = await import('@app/stores/raceStore');
+      const raceStore = useRaceStore();
+      const raceSettingsStore = useRaceSettingsStore();
+
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      // Add a qualifying race so the form defaults to 'sprint' race type
+      const qualifyingRace: Race = {
+        ...mockRace,
+        id: 1,
+        race_type: 'qualifying',
+        is_qualifier: true,
+      };
+      raceStore.races = [qualifyingRace];
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          plugins: [pinia],
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          race_type: string;
+          length_value: number | null;
+        };
+        errors: Record<string, string | undefined>;
+        validateLengthValue: () => string | undefined;
+        handleLengthValueBlur: () => void;
+      };
+
+      // Verify form defaults to sprint race type
+      expect(vm.form.race_type).toBe('sprint');
+
+      // Set length_value to null (empty - should be acceptable as it's optional)
+      vm.form.length_value = null;
+
+      // Trigger blur validation
+      vm.handleLengthValueBlur();
+
+      // Verify no validation error for empty value (optional field)
+      expect(vm.errors.length_value).toBeUndefined();
+    });
+
+    it('should not validate length_value for qualifying races', async () => {
+      const raceSettingsStore = useRaceSettingsStore();
+      vi.spyOn(raceSettingsStore, 'fetchRaceSettings').mockResolvedValue({
+        weather_conditions: [],
+        tire_restrictions: [],
+        fuel_usage: [],
+        damage_model: [],
+        assists_restrictions: [],
+      });
+
+      const wrapper = mount(RaceFormDrawer, {
+        props: {
+          visible: true,
+          roundId: 1,
+          platformId: 1,
+          race: null,
+          mode: 'create',
+        },
+        global: {
+          stubs: commonStubs,
+        },
+      });
+
+      await nextTick();
+      await flushPromises();
+
+      const vm = wrapper.vm as unknown as {
+        form: {
+          race_type: string;
+          length_value: number;
+        };
+        errors: Record<string, string | undefined>;
+        handleLengthValueBlur: () => void;
+      };
+
+      // Verify form defaults to qualifying (first race for round)
+      expect(vm.form.race_type).toBe('qualifying');
+
+      // Set length_value to 0
+      vm.form.length_value = 0;
+
+      // Trigger blur validation
+      vm.handleLengthValueBlur();
+
+      // Verify no validation error for qualifying races
+      expect(vm.errors.length_value).toBeUndefined();
+    });
   });
 });

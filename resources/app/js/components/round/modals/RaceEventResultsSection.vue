@@ -245,7 +245,12 @@
             </Column>
 
             <!-- Points Column -->
-            <Column v-if="raceEvent.race_points" field="race_points" header="Points" class="w-24">
+            <Column
+              v-if="raceEvent.race_points"
+              field="race_points"
+              header="Points"
+              class="w-24 text-center"
+            >
               <template #body="{ data }">
                 <PointsCell :points="data.race_points ?? 0" bold />
               </template>

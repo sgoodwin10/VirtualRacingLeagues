@@ -325,7 +325,8 @@ function handleViewCompetitions(): void {
       <Button
         label="Edit League"
         :icon="PhPencilSimple"
-        variant="primary"
+        variant="warning"
+        outline
         size="sm"
         class="w-full justify-center"
         @click="handleEdit"

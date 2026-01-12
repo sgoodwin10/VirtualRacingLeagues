@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\CreateRaceRequest;
 use App\Http\Requests\User\UpdateRaceRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 final class RaceController extends Controller
 {
@@ -74,7 +75,7 @@ final class RaceController extends Controller
         }
     }
 
-    public function destroy(UpdateRaceRequest $request, int $raceId): JsonResponse
+    public function destroy(Request $request, int $raceId): JsonResponse
     {
         try {
             $userId = $request->user()->id;
@@ -89,7 +90,7 @@ final class RaceController extends Controller
         }
     }
 
-    public function removeOrphanedResults(UpdateRaceRequest $request, int $raceId): JsonResponse
+    public function removeOrphanedResults(Request $request, int $raceId): JsonResponse
     {
         try {
             $userId = $request->user()->id;

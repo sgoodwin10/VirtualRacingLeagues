@@ -52,7 +52,12 @@ export function useRaceValidation(form: RaceForm, isQualifier: Ref<boolean> | bo
       return undefined;
     }
 
-    if (!form.qualifying_length || form.qualifying_length <= 0) {
+    // qualifying_length is optional - only validate if a value is provided
+    if (!form.qualifying_length) {
+      return undefined;
+    }
+
+    if (form.qualifying_length <= 0) {
       return 'Qualifying length must be a positive number';
     }
 
@@ -69,7 +74,12 @@ export function useRaceValidation(form: RaceForm, isQualifier: Ref<boolean> | bo
       return undefined;
     }
 
-    if (!form.length_value || form.length_value <= 0) {
+    // length_value is optional - only validate if a value is provided
+    if (!form.length_value) {
+      return undefined;
+    }
+
+    if (form.length_value <= 0) {
       return 'Race length must be a positive number';
     }
 

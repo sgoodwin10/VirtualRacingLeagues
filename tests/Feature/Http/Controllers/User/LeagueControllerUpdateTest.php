@@ -271,6 +271,60 @@ class LeagueControllerUpdateTest extends UserControllerTestCase
         ]);
     }
 
+    public function test_can_clear_social_media_links_with_empty_strings(): void
+    {
+        // First, verify the league has social media values set
+        $this->assertNotNull($this->league->discord_url);
+        $this->assertNotNull($this->league->twitter_handle);
+
+        // Send empty strings to clear the fields
+        $response = $this->actingAs($this->user, 'web')
+            ->putJson("/api/leagues/{$this->league->id}", [
+                'discord_url' => '',
+                'website_url' => '',
+                'twitter_handle' => '',
+                'instagram_handle' => '',
+                'youtube_url' => '',
+                'twitch_url' => '',
+            ]);
+
+        $response->assertOk();
+
+        // Verify the fields are now null in the database
+        $this->assertDatabaseHas('leagues', [
+            'id' => $this->league->id,
+            'discord_url' => null,
+            'website_url' => null,
+            'twitter_handle' => null,
+            'instagram_handle' => null,
+            'youtube_url' => null,
+            'twitch_url' => null,
+        ]);
+    }
+
+    public function test_can_clear_individual_social_media_link_while_keeping_others(): void
+    {
+        // Send empty string for only one field, leave others untouched
+        $response = $this->actingAs($this->user, 'web')
+            ->putJson("/api/leagues/{$this->league->id}", [
+                'discord_url' => '', // Clear this one
+                // Don't send other fields - they should remain unchanged
+            ]);
+
+        $response->assertOk();
+
+        // Verify discord_url is now null but others remain unchanged
+        $this->assertDatabaseHas('leagues', [
+            'id' => $this->league->id,
+            'discord_url' => null,
+            'website_url' => 'https://original.com', // Unchanged
+            'twitter_handle' => 'original', // Unchanged
+            'instagram_handle' => 'original', // Unchanged
+            'youtube_url' => 'https://youtube.com/original', // Unchanged
+            'twitch_url' => 'https://twitch.tv/original', // Unchanged
+        ]);
+    }
+
     public function test_validation_fails_for_invalid_name(): void
     {
         $response = $this->actingAs($this->user, 'web')

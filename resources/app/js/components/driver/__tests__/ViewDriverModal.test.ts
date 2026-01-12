@@ -535,7 +535,7 @@ describe('ViewDriverModal', () => {
   });
 
   describe('Footer Actions', () => {
-    it('renders Close and Edit Driver buttons', () => {
+    it('renders Close and Edit Driver buttons by default', () => {
       const wrapper = mountWithStubs(ViewDriverModal, {
         props: {
           visible: true,
@@ -548,6 +548,37 @@ describe('ViewDriverModal', () => {
       expect(footerButtons).toHaveLength(2);
       expect(footerButtons[0]?.text()).toBe('Close');
       expect(footerButtons[1]?.text()).toBe('Edit Driver');
+    });
+
+    it('renders Close and Edit Driver buttons when showEditButton is true', () => {
+      const wrapper = mountWithStubs(ViewDriverModal, {
+        props: {
+          visible: true,
+          driver: mockDriver,
+          showEditButton: true,
+        },
+      });
+
+      // Find buttons in the footer
+      const footerButtons = wrapper.findAll('.modal-footer button');
+      expect(footerButtons).toHaveLength(2);
+      expect(footerButtons[0]?.text()).toBe('Close');
+      expect(footerButtons[1]?.text()).toBe('Edit Driver');
+    });
+
+    it('renders only Close button when showEditButton is false', () => {
+      const wrapper = mountWithStubs(ViewDriverModal, {
+        props: {
+          visible: true,
+          driver: mockDriver,
+          showEditButton: false,
+        },
+      });
+
+      // Find buttons in the footer
+      const footerButtons = wrapper.findAll('.modal-footer button');
+      expect(footerButtons).toHaveLength(1);
+      expect(footerButtons[0]?.text()).toBe('Close');
     });
 
     it('emits close event when Close button is clicked', async () => {
@@ -578,6 +609,23 @@ describe('ViewDriverModal', () => {
       await footerButtons[1]?.trigger('click');
 
       expect(wrapper.emitted('edit')).toBeTruthy();
+    });
+
+    it('does not emit edit event when Edit Driver button is hidden', async () => {
+      const wrapper = mountWithStubs(ViewDriverModal, {
+        props: {
+          visible: true,
+          driver: mockDriver,
+          showEditButton: false,
+        },
+      });
+
+      // Verify edit button is not rendered
+      const footerButtons = wrapper.findAll('.modal-footer button');
+      expect(footerButtons).toHaveLength(1);
+
+      // Should not be able to emit edit event
+      expect(wrapper.emitted('edit')).toBeFalsy();
     });
   });
 

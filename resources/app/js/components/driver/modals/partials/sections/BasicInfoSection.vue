@@ -45,58 +45,63 @@ const statusOptions = [
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-2">
     <div class="mb-4">
       <h3 class="text-section-label mb-1">Basic Information</h3>
       <p class="text-[var(--text-secondary)] m-0">Driver identification and status</p>
     </div>
 
-    <!-- Nickname -->
-    <FormInputGroup>
-      <FormLabel for="nickname" text="Nickname" />
-      <InputText
-        id="nickname"
-        :model-value="nickname"
-        size="sm"
-        placeholder="JSmith"
-        :disabled="disabled"
-        class="w-full"
-        @update:model-value="emit('update:nickname', $event ?? '')"
-      />
-      <FormOptionalText text="In-game or preferred nickname" />
-    </FormInputGroup>
+    <div class="grid grid-cols-3 gap-3">
+      <div>
+        <!-- Status -->
+        <FormInputGroup>
+          <FormLabel for="status" text="Status" required />
+          <Select
+            id="status"
+            :model-value="status"
+            :options="statusOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Select status"
+            :disabled="disabled"
+            size="sm"
+            fluid
+            class="w-full"
+            @update:model-value="emit('update:status', $event)"
+          />
+          <FormOptionalText :show-optional="false" text="Driver's current status in the league" />
+          <FormError v-if="errors.status">
+            {{ errors.status }}
+          </FormError>
+        </FormInputGroup>
+      </div>
+    </div>
 
-    <!-- Status -->
-    <FormInputGroup>
-      <FormLabel for="status" text="Status" required />
-      <Select
-        id="status"
-        :model-value="status"
-        :options="statusOptions"
-        option-label="label"
-        option-value="value"
-        placeholder="Select status"
-        :disabled="disabled"
-        size="sm"
-        fluid
-        class="w-full"
-        @update:model-value="emit('update:status', $event)"
-      />
-      <FormOptionalText :show-optional="false" text="Driver's current status in the league" />
-      <FormError v-if="errors.status">
-        {{ errors.status }}
-      </FormError>
-    </FormInputGroup>
+    <div class="grid grid-cols-3 gap-3">
+      <!-- Nickname -->
+      <FormInputGroup>
+        <FormLabel for="nickname" text="Nickname" />
+        <InputText
+          id="nickname"
+          :model-value="nickname"
+          size="sm"
+          placeholder=""
+          :disabled="disabled"
+          class="w-full"
+          @update:model-value="emit('update:nickname', $event ?? '')"
+        />
+        <FormOptionalText text="In-game or preferred nickname" />
+      </FormInputGroup>
 
-    <!-- Name Fields -->
-    <div class="grid grid-cols-2 gap-3">
+      <!-- Name Fields -->
+
       <FormInputGroup>
         <FormLabel for="first_name" text="First Name" />
         <InputText
           id="first_name"
           :model-value="firstName"
           size="sm"
-          placeholder="John"
+          placeholder=""
           :disabled="disabled"
           class="w-full"
           @update:model-value="emit('update:first-name', $event ?? '')"
@@ -109,7 +114,7 @@ const statusOptions = [
           id="last_name"
           :model-value="lastName"
           size="sm"
-          placeholder="Smith"
+          placeholder=""
           :disabled="disabled"
           class="w-full"
           @update:model-value="emit('update:last-name', $event ?? '')"
@@ -118,59 +123,63 @@ const statusOptions = [
     </div>
 
     <!-- Platform IDs Section -->
-    <div class="mt-6 pt-6 border-t border-[var(--border)]">
-      <h4 class="text-sm font-semibold mb-3">Platform IDs</h4>
+    <div class="pt-2">
+      <div class="mb-3">
+        <h4 class="text-sm font-semibold mb-2">Platform IDs</h4>
+        <p class="text-[var(--text-secondary)] m-0">At least one platform identifier is required</p>
+      </div>
 
-      <!-- Discord ID -->
-      <FormInputGroup>
-        <FormLabel for="discord_id" text="Discord ID" />
-        <InputText
-          id="discord_id"
-          :model-value="discordId"
-          size="sm"
-          placeholder="Discord username or ID"
-          :disabled="disabled"
-          class="w-full"
-          @update:model-value="emit('update:discord-id', $event ?? '')"
-        />
-        <FormOptionalText text="Discord identifier for communication" />
-      </FormInputGroup>
-
-      <!-- Identifier Error -->
-      <FormError v-if="errors.identifier">
-        {{ errors.identifier }}
-      </FormError>
-
-      <!-- Platform Error (shown at top if no platform values) -->
-      <FormError v-if="errors.platform">
-        {{ errors.platform }}
-      </FormError>
-
-      <!-- Dynamic Platform Fields -->
-      <div v-if="platformFormFields.length > 0" class="space-y-4 mt-4">
-        <FormInputGroup v-for="field in platformFormFields" :key="field.field">
-          <FormLabel :for="field.field" :text="field.label" />
+      <div class="grid grid-cols-3 gap-3">
+        <!-- Discord ID -->
+        <FormInputGroup>
+          <FormLabel for="discord_id" text="Discord ID" />
           <InputText
-            v-if="field.type === 'text'"
-            :id="field.field"
-            :model-value="(formData[field.field] as string) || ''"
-            :placeholder="field.placeholder || ''"
-            :disabled="disabled"
+            id="discord_id"
+            :model-value="discordId"
             size="sm"
-            class="w-full"
-            @update:model-value="emit('update:platform-field', field.field, $event)"
-          />
-          <StyledInputNumber
-            v-else-if="field.type === 'number'"
-            :input-id="field.field"
-            :model-value="(formData[field.field] as number | null | undefined) ?? undefined"
-            :use-grouping="false"
-            :placeholder="field.placeholder || ''"
+            placeholder=""
             :disabled="disabled"
             class="w-full"
-            @update:model-value="emit('update:platform-field', field.field, $event ?? undefined)"
+            @update:model-value="emit('update:discord-id', $event ?? '')"
           />
         </FormInputGroup>
+
+        <!-- Identifier Error -->
+        <FormError v-if="errors.identifier">
+          {{ errors.identifier }}
+        </FormError>
+
+        <!-- Platform Error (shown at top if no platform values) -->
+        <FormError v-if="errors.platform">
+          {{ errors.platform }}
+        </FormError>
+
+        <!-- Dynamic Platform Fields -->
+        <template v-if="platformFormFields.length > 0">
+          <FormInputGroup v-for="field in platformFormFields" :key="field.field">
+            <FormLabel :for="field.field" :text="field.label" />
+            <InputText
+              v-if="field.type === 'text'"
+              :id="field.field"
+              :model-value="(formData[field.field] as string) || ''"
+              :placeholder="field.placeholder || ''"
+              :disabled="disabled"
+              size="sm"
+              class="w-full"
+              @update:model-value="emit('update:platform-field', field.field, $event)"
+            />
+            <StyledInputNumber
+              v-else-if="field.type === 'number'"
+              :input-id="field.field"
+              :model-value="(formData[field.field] as number | null | undefined) ?? undefined"
+              :use-grouping="false"
+              :placeholder="field.placeholder || ''"
+              :disabled="disabled"
+              class="w-full"
+              @update:model-value="emit('update:platform-field', field.field, $event ?? undefined)"
+            />
+          </FormInputGroup>
+        </template>
       </div>
     </div>
   </div>

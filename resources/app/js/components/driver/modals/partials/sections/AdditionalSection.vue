@@ -41,60 +41,64 @@ const emit = defineEmits<{
       <p class="text-[var(--text-secondary)] m-0">Contact details, driver number, and notes</p>
     </div>
 
-    <!-- Email -->
-    <FormInputGroup>
-      <FormLabel for="email" text="Email" />
-      <InputText
-        id="email"
-        :model-value="email"
-        type="email"
-        size="sm"
-        placeholder="john@example.com"
-        :invalid="!!errors.email"
-        :disabled="disabled"
-        class="w-full"
-        @update:model-value="emit('update:email', $event ?? '')"
-      />
-      <FormOptionalText text="Driver's email address" />
-      <FormError v-if="errors.email">
-        {{ errors.email }}
-      </FormError>
-    </FormInputGroup>
+    <div class="grid grid-cols-3 gap-3">
+      <!-- Email -->
+      <FormInputGroup>
+        <FormLabel for="email" text="Email" />
+        <InputText
+          id="email"
+          :model-value="email"
+          type="email"
+          size="sm"
+          placeholder="john@example.com"
+          :invalid="!!errors.email"
+          :disabled="disabled"
+          class="w-full"
+          @update:model-value="emit('update:email', $event ?? '')"
+        />
+        <FormOptionalText text="Driver's email address" />
+        <FormError v-if="errors.email">
+          {{ errors.email }}
+        </FormError>
+      </FormInputGroup>
 
-    <!-- Phone -->
-    <FormInputGroup>
-      <FormLabel for="phone" text="Phone" />
-      <InputText
-        id="phone"
-        :model-value="phone"
-        size="sm"
-        placeholder="+1234567890"
-        :disabled="disabled"
-        class="w-full"
-        @update:model-value="emit('update:phone', $event ?? '')"
-      />
-      <FormOptionalText text="Driver's phone number" />
-    </FormInputGroup>
+      <!-- Phone -->
+      <FormInputGroup>
+        <FormLabel for="phone" text="Phone" />
+        <InputText
+          id="phone"
+          :model-value="phone"
+          size="sm"
+          placeholder="+1234567890"
+          :disabled="disabled"
+          class="w-full"
+          @update:model-value="emit('update:phone', $event ?? '')"
+        />
+        <FormOptionalText text="Driver's phone number" />
+      </FormInputGroup>
+    </div>
 
-    <!-- Driver Number -->
-    <FormInputGroup>
-      <FormLabel for="driver_number" text="Driver Number" />
-      <StyledInputNumber
-        :model-value="driverNumber"
-        input-id="driver_number"
-        :min="1"
-        :max="999"
-        :use-grouping="false"
-        placeholder="5"
-        :disabled="disabled"
-        class="w-full"
-        @update:model-value="emit('update:driver-number', $event ?? undefined)"
-      />
-      <FormHelper text="Between 1 and 999" />
-      <FormError v-if="errors.driver_number">
-        {{ errors.driver_number }}
-      </FormError>
-    </FormInputGroup>
+    <div class="grid grid-cols-3 gap-3">
+      <!-- Driver Number -->
+      <FormInputGroup>
+        <FormLabel for="driver_number" text="Driver Number" />
+        <StyledInputNumber
+          :model-value="driverNumber"
+          input-id="driver_number"
+          :min="1"
+          :max="999"
+          :use-grouping="false"
+          placeholder="5"
+          :disabled="disabled"
+          class="w-full"
+          @update:model-value="emit('update:driver-number', $event ?? undefined)"
+        />
+        <FormHelper text="Between 1 and 999" />
+        <FormError v-if="errors.driver_number">
+          {{ errors.driver_number }}
+        </FormError>
+      </FormInputGroup>
+    </div>
 
     <!-- League Notes -->
     <FormInputGroup>

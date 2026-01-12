@@ -15,6 +15,7 @@ import type { LeagueDriver, LeagueDriverSeasonData } from '@app/types/driver';
 interface Props {
   visible: boolean;
   driver: LeagueDriver | null;
+  showEditButton?: boolean;
 }
 
 interface Emits {
@@ -23,7 +24,9 @@ interface Emits {
   (e: 'edit'): void;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  showEditButton: true,
+});
 const emit = defineEmits<Emits>();
 const router = useRouter();
 
@@ -371,7 +374,7 @@ const handleEdit = (): void => {
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button label="Close" variant="secondary" @click="handleClose" />
-        <Button label="Edit Driver" variant="warning" @click="handleEdit" />
+        <Button v-if="showEditButton" label="Edit Driver" variant="warning" @click="handleEdit" />
       </div>
     </template>
   </BaseModal>

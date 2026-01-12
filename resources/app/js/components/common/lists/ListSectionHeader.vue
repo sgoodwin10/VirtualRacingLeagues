@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<ListSectionHeaderProps>(), {
     aria-label="Section divider"
   >
     <span
-      class="font-mono text-xs font-semibold tracking-[1px] uppercase text-[var(--text-muted)] whitespace-nowrap"
+      class="font-mono text-sm font-semibold tracking-[1px] uppercase text-[var(--text-muted)] whitespace-nowrap"
     >
       {{ props.title }}
     </span>

@@ -83,4 +83,17 @@ final class CreateRaceRequest extends FormRequest
             'race_notes' => ['nullable', 'string'],
         ];
     }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'length_value.integer' => 'The race length must be a whole number.',
+            'length_value.min' => 'The race length must be at least 1.',
+        ];
+    }
 }
