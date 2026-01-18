@@ -3,199 +3,192 @@ import { mount } from '@vue/test-utils';
 import VrlCard from '../VrlCard.vue';
 
 describe('VrlCard', () => {
-  describe('Rendering', () => {
-    it('renders with default props', () => {
-      const wrapper = mount(VrlCard, {
-        slots: {
-          default: 'Card content',
-        },
-      });
-
-      expect(wrapper.exists()).toBe(true);
-      expect(wrapper.text()).toContain('Card content');
-      expect(wrapper.classes()).toContain('card-racing');
-    });
-
-    it('renders with custom class', () => {
-      const wrapper = mount(VrlCard, {
-        props: {
-          class: 'custom-class',
-        },
-      });
-
-      expect(wrapper.classes()).toContain('custom-class');
-    });
+  it('renders without props', () => {
+    const wrapper = mount(VrlCard);
+    expect(wrapper.find('[data-test="card"]').exists()).toBe(true);
   });
 
-  describe('Variants', () => {
-    it('renders default variant', () => {
-      const wrapper = mount(VrlCard, {
-        props: {
-          variant: 'default',
-        },
-      });
-
-      expect(wrapper.classes()).toContain('card-racing');
-      expect(wrapper.classes()).not.toContain('gradient-border');
+  it('renders with default slot content', () => {
+    const wrapper = mount(VrlCard, {
+      slots: {
+        default: '<p>Card content</p>',
+      },
     });
-
-    it('renders league variant', () => {
-      const wrapper = mount(VrlCard, {
-        props: {
-          variant: 'league',
-        },
-      });
-
-      expect(wrapper.classes()).toContain('card-racing');
-    });
-
-    it('renders stats variant with gradient border', () => {
-      const wrapper = mount(VrlCard, {
-        props: {
-          variant: 'stats',
-        },
-      });
-
-      expect(wrapper.classes()).toContain('gradient-border');
-    });
-
-    it('renders feature variant with animated top border', () => {
-      const wrapper = mount(VrlCard, {
-        props: {
-          variant: 'feature',
-        },
-      });
-
-      const topBorder = wrapper.find('.bg-gradient-to-r');
-      expect(topBorder.exists()).toBe(true);
-      expect(topBorder.classes()).toContain('from-racing-gold');
-      expect(topBorder.classes()).toContain('to-racing-safety');
-    });
-
-    it('does not render top border for non-feature variants', () => {
-      const wrapper = mount(VrlCard, {
-        props: {
-          variant: 'default',
-        },
-      });
-
-      const topBorder = wrapper.find('.bg-gradient-to-r');
-      expect(topBorder.exists()).toBe(false);
-    });
+    expect(wrapper.html()).toContain('Card content');
   });
 
-  describe('Hoverable', () => {
-    it('adds cursor-pointer class when hoverable is true', () => {
-      const wrapper = mount(VrlCard, {
-        props: {
-          hoverable: true,
-        },
-      });
-
-      expect(wrapper.classes()).toContain('cursor-pointer');
+  it('renders title when provided', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        title: 'Test Card Title',
+      },
     });
-
-    it('does not add cursor-pointer class when hoverable is false', () => {
-      const wrapper = mount(VrlCard, {
-        props: {
-          hoverable: false,
-        },
-      });
-
-      expect(wrapper.classes()).not.toContain('cursor-pointer');
-    });
-
-    it('adds group class for feature variant', () => {
-      const wrapper = mount(VrlCard, {
-        props: {
-          variant: 'feature',
-        },
-      });
-
-      expect(wrapper.classes()).toContain('group');
-    });
+    expect(wrapper.find('[data-test="card-title"]').text()).toBe('Test Card Title');
   });
 
-  describe('Slots', () => {
-    it('renders header slot when provided', () => {
-      const wrapper = mount(VrlCard, {
-        slots: {
-          header: '<div class="test-header">Header content</div>',
-        },
-      });
-
-      const header = wrapper.find('.card-header');
-      expect(header.exists()).toBe(true);
-      expect(header.html()).toContain('Header content');
+  it('shows header when title is provided', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        title: 'Test Title',
+      },
     });
-
-    it('does not render header slot when not provided', () => {
-      const wrapper = mount(VrlCard);
-
-      const header = wrapper.find('.card-header');
-      expect(header.exists()).toBe(false);
-    });
-
-    it('renders default slot', () => {
-      const wrapper = mount(VrlCard, {
-        slots: {
-          default: '<p>Main content</p>',
-        },
-      });
-
-      const body = wrapper.find('.card-body');
-      expect(body.exists()).toBe(true);
-      expect(body.html()).toContain('Main content');
-    });
-
-    it('renders footer slot when provided', () => {
-      const wrapper = mount(VrlCard, {
-        slots: {
-          footer: '<div class="test-footer">Footer content</div>',
-        },
-      });
-
-      const footer = wrapper.find('.card-footer');
-      expect(footer.exists()).toBe(true);
-      expect(footer.html()).toContain('Footer content');
-    });
-
-    it('does not render footer slot when not provided', () => {
-      const wrapper = mount(VrlCard);
-
-      const footer = wrapper.find('.card-footer');
-      expect(footer.exists()).toBe(false);
-    });
-
-    it('renders all slots together', () => {
-      const wrapper = mount(VrlCard, {
-        slots: {
-          header: 'Header',
-          default: 'Body',
-          footer: 'Footer',
-        },
-      });
-
-      expect(wrapper.text()).toContain('Header');
-      expect(wrapper.text()).toContain('Body');
-      expect(wrapper.text()).toContain('Footer');
-    });
+    expect(wrapper.find('[data-test="card-header"]').exists()).toBe(true);
   });
 
-  describe('Styling', () => {
-    it('has correct base classes', () => {
-      const wrapper = mount(VrlCard);
-
-      expect(wrapper.classes()).toContain('card-racing');
-      expect(wrapper.classes()).toContain('rounded');
-      expect(wrapper.classes()).toContain('transition-all');
+  it('hides header when showHeader is false', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        title: 'Test Title',
+        showHeader: false,
+      },
     });
+    expect(wrapper.find('[data-test="card-header"]').exists()).toBe(false);
+  });
 
-    it('applies transition duration and easing', () => {
-      const wrapper = mount(VrlCard);
-
-      expect(wrapper.classes()).toContain('duration-300');
-      expect(wrapper.classes()).toContain('ease-[cubic-bezier(0.16,1,0.3,1)]');
+  it('shows header when showHeader is true even without title', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        showHeader: true,
+      },
+      slots: {
+        header: '<div>Custom Header</div>',
+      },
     });
+    expect(wrapper.find('[data-test="card-header"]').exists()).toBe(true);
+  });
+
+  it('renders header slot content', () => {
+    const wrapper = mount(VrlCard, {
+      slots: {
+        header: '<div class="custom-header">Custom Header</div>',
+      },
+    });
+    expect(wrapper.find('.custom-header').exists()).toBe(true);
+    expect(wrapper.html()).toContain('Custom Header');
+  });
+
+  it('renders body slot content', () => {
+    const wrapper = mount(VrlCard, {
+      slots: {
+        body: '<div class="custom-body">Body Content</div>',
+      },
+    });
+    expect(wrapper.find('.custom-body').exists()).toBe(true);
+  });
+
+  it('renders footer slot content', () => {
+    const wrapper = mount(VrlCard, {
+      slots: {
+        footer: '<div class="custom-footer">Footer Content</div>',
+      },
+    });
+    expect(wrapper.find('[data-test="card-footer"]').exists()).toBe(true);
+    expect(wrapper.find('.custom-footer').exists()).toBe(true);
+  });
+
+  it('renders actions slot content', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        title: 'Test Title',
+      },
+      slots: {
+        actions: '<button class="action-button">Action</button>',
+      },
+    });
+    expect(wrapper.find('[data-test="card-header-actions"]').exists()).toBe(true);
+    expect(wrapper.find('.action-button').exists()).toBe(true);
+  });
+
+  it('does not render footer when footer slot is empty', () => {
+    const wrapper = mount(VrlCard, {
+      slots: {
+        default: '<p>Content</p>',
+      },
+    });
+    expect(wrapper.find('[data-test="card-footer"]').exists()).toBe(false);
+  });
+
+  it('applies hoverable class when hoverable prop is true', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        hoverable: true,
+      },
+    });
+    const card = wrapper.find('[data-test="card"]');
+    expect(card.classes()).toContain('hover:border-[var(--cyan)]');
+  });
+
+  it('does not apply hoverable class when hoverable prop is false', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        hoverable: false,
+      },
+    });
+    const card = wrapper.find('[data-test="card"]');
+    expect(card.classes()).not.toContain('hover:border-[var(--cyan)]');
+  });
+
+  it('applies custom classes', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        class: 'custom-class another-class',
+      },
+    });
+    const card = wrapper.find('[data-test="card"]');
+    expect(card.classes()).toContain('custom-class');
+    expect(card.classes()).toContain('another-class');
+  });
+
+  it('applies body padding by default', () => {
+    const wrapper = mount(VrlCard);
+    const body = wrapper.find('[data-test="card-body"]');
+    expect(body.attributes('data-padded')).toBe('true');
+  });
+
+  it('removes body padding when bodyPadding is false', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        bodyPadding: false,
+      },
+    });
+    const body = wrapper.find('[data-test="card-body"]');
+    expect(body.attributes('data-padded')).toBe('false');
+  });
+
+  it('has correct accessibility attributes', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        title: 'Accessible Card',
+      },
+    });
+    const card = wrapper.find('[data-test="card"]');
+    expect(card.attributes('role')).toBe('region');
+    expect(card.attributes('aria-label')).toBe('Accessible Card');
+  });
+
+  it('uses default aria-label when no title provided', () => {
+    const wrapper = mount(VrlCard);
+    const card = wrapper.find('[data-test="card"]');
+    expect(card.attributes('aria-label')).toBe('Card');
+  });
+
+  it('renders all slots together', () => {
+    const wrapper = mount(VrlCard, {
+      props: {
+        title: 'Full Card',
+      },
+      slots: {
+        actions: '<button>Action</button>',
+        default: '<p>Body Content</p>',
+        footer: '<span>Footer Content</span>',
+      },
+    });
+    expect(wrapper.find('[data-test="card-header"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="card-title"]').text()).toBe('Full Card');
+    expect(wrapper.find('[data-test="card-header-actions"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="card-body"]').exists()).toBe(true);
+    expect(wrapper.html()).toContain('Body Content');
+    expect(wrapper.find('[data-test="card-footer"]').exists()).toBe(true);
+    expect(wrapper.html()).toContain('Footer Content');
   });
 });

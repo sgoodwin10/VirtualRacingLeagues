@@ -258,7 +258,7 @@ function handleViewCompetitions(): void {
             {{ league.competitions_count || 0 }}
           </div>
           <div
-            class="font-mono text-[9px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)] mt-1.5"
+            class="text-xs font-medium tracking-[0.5px] uppercase text-[var(--text-muted)] mt-1.5"
           >
             Competitions
           </div>
@@ -270,7 +270,7 @@ function handleViewCompetitions(): void {
             {{ league.drivers_count || 0 }}
           </div>
           <div
-            class="font-mono text-[9px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)] mt-1.5"
+            class="text-xs font-medium tracking-[0.5px] uppercase text-[var(--text-muted)] mt-1.5"
           >
             Drivers
           </div>
@@ -282,7 +282,7 @@ function handleViewCompetitions(): void {
             {{ seasonsCount }}
           </div>
           <div
-            class="font-mono text-[9px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)] mt-1.5"
+            class="text-xs font-medium tracking-[0.5px] uppercase text-[var(--text-muted)] mt-1.5"
           >
             Seasons
           </div>
@@ -294,7 +294,7 @@ function handleViewCompetitions(): void {
             {{ league.platforms?.length || 0 }}
           </div>
           <div
-            class="font-mono text-[9px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)] mt-1.5"
+            class="text-xs font-medium tracking-[0.5px] uppercase text-[var(--text-muted)] mt-1.5"
           >
             Platforms
           </div>

@@ -58,82 +58,64 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center pattern-carbon p-4 md:p-8">
-    <div class="w-full max-w-md">
-      <div class="card-racing p-8 md:p-10">
-        <!-- Header -->
-        <div class="text-center mb-8">
-          <div
-            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-tarmac mb-4"
-          >
-            <i class="pi pi-lock text-3xl text-gold"></i>
-          </div>
-          <h1 class="font-display text-3xl md:text-4xl mb-3 text-gold uppercase tracking-wider">
-            Forgot Password?
-          </h1>
-          <p class="font-body text-barrier">
-            Enter your email address and we'll send you a link to reset your password.
-          </p>
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <!-- Header -->
+      <div>
+        <h2 class="text-center text-3xl font-bold text-gray-900">Forgot your password?</h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+          Enter your email address and we'll send you a link to reset your password.
+        </p>
+      </div>
+
+      <!-- Success Message -->
+      <Message v-if="emailSent" severity="success" :closable="false">
+        Password reset link has been sent to your email. Please check your inbox.
+      </Message>
+
+      <!-- Error Message -->
+      <Message v-if="errorMessage" severity="error" :closable="false">
+        {{ errorMessage }}
+      </Message>
+
+      <!-- Form -->
+      <form v-if="!emailSent" class="mt-8 space-y-6" @submit.prevent="handleSubmit">
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700"> Email address </label>
+          <InputText
+            id="email"
+            v-model="email"
+            type="email"
+            placeholder="john@example.com"
+            :class="{ 'p-invalid': emailError }"
+            class="mt-1 w-full"
+            :disabled="isSubmitting"
+            autocomplete="email"
+            aria-label="Email Address"
+            @input="emailError = ''"
+          />
+          <small v-if="emailError" class="text-red-600 mt-1 block text-sm">
+            {{ emailError }}
+          </small>
         </div>
 
-        <!-- Success Message -->
-        <Message v-if="emailSent" severity="success" :closable="false" class="mb-6">
-          Password reset link has been sent to your email. Please check your inbox.
-        </Message>
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          :disabled="!isFormValid || isSubmitting"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          :aria-busy="isSubmitting"
+        >
+          <span v-if="!isSubmitting">Send Reset Link</span>
+          <span v-else>Sending...</span>
+        </button>
+      </form>
 
-        <!-- Error Message -->
-        <Message v-if="errorMessage" severity="error" :closable="false" class="mb-6">
-          {{ errorMessage }}
-        </Message>
-
-        <!-- Form -->
-        <form v-if="!emailSent" class="space-y-6" @submit.prevent="handleSubmit">
-          <!-- Email Field -->
-          <div>
-            <label
-              for="email"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
-              Email Address
-            </label>
-            <InputText
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="john@example.com"
-              :class="{ 'p-invalid': emailError }"
-              class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold transition-colors"
-              :disabled="isSubmitting"
-              autocomplete="email"
-              aria-label="Email Address"
-              @input="emailError = ''"
-            />
-            <small v-if="emailError" class="text-dnf mt-1 block font-body text-sm">
-              {{ emailError }}
-            </small>
-          </div>
-
-          <!-- Submit Button -->
-          <button
-            type="submit"
-            :disabled="!isFormValid || isSubmitting"
-            class="w-full btn btn-primary"
-            :aria-busy="isSubmitting"
-          >
-            <span v-if="!isSubmitting">Send Reset Link</span>
-            <span v-else>Sending...</span>
-          </button>
-        </form>
-
-        <!-- Back to Login -->
-        <div class="mt-8 text-center">
-          <router-link
-            to="/login"
-            class="font-body text-sm text-gold hover:text-gold-bright transition-colors"
-          >
-            Back to Login
-          </router-link>
-        </div>
+      <!-- Back to Login -->
+      <div class="text-center">
+        <router-link to="/login" class="text-sm text-gray-600 hover:text-gray-900">
+          Back to login
+        </router-link>
       </div>
     </div>
   </div>

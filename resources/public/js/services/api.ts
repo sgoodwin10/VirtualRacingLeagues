@@ -7,6 +7,7 @@ class ApiService {
     this.client = axios.create({
       baseURL: '/api',
       withCredentials: true,
+      timeout: 30000, // 30 seconds timeout
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
@@ -26,6 +27,7 @@ class ApiService {
           config.headers['X-XSRF-TOKEN'] = token;
         }
       }
+
       return config;
     });
 
@@ -33,20 +35,25 @@ class ApiService {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
-        // Handle 419 CSRF token mismatch
-        if (error.response?.status === 419) {
-          await this.fetchCSRFToken();
+        // Handle 419 CSRF token mismatch (with retry limit to prevent infinite loops)
+        if (error.response?.status === 419 && !error.config?._retry) {
           const originalRequest = error.config;
           if (originalRequest) {
+            originalRequest._retry = true;
+            await this.fetchCSRFToken();
             return this.client.request(originalRequest);
           }
         }
 
         // Handle 401 Unauthorized
         if (error.response?.status === 401) {
-          // If we're on the public site and get 401, just let it bubble up
-          // The auth views will handle it appropriately
-          console.warn('Unauthorized - authentication required');
+          // Redirect to login if not already there
+          if (!window.location.pathname.includes('/login')) {
+            // Redirect to public site login with return URL
+            const publicDomain = window.location.origin.replace('//app.', '//');
+            const returnUrl = encodeURIComponent(window.location.pathname);
+            window.location.href = `${publicDomain}/login?redirect=${returnUrl}`;
+          }
         }
 
         return Promise.reject(error);

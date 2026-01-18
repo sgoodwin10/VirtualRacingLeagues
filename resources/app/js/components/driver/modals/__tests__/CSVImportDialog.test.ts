@@ -104,7 +104,15 @@ Mike Ross,3`;
     });
 
     it('generates CSV example with PSN ID column for Gran Turismo 7 league', () => {
-      const gt7Headers: PlatformCsvHeader[] = [{ field: 'psn_id', label: 'PSN ID', type: 'text' }];
+      const gt7Headers: PlatformCsvHeader[] = [
+        {
+          platform_id: 1,
+          platform_name: 'Gran Turismo 7',
+          field: 'psn_id',
+          label: 'PSN ID',
+          type: 'text',
+        },
+      ];
 
       const csvExample = generateCsvExample(gt7Headers);
 
@@ -132,8 +140,20 @@ Mike Ross,3`;
 
     it('generates CSV example with iRacing columns for iRacing league', () => {
       const iracingHeaders: PlatformCsvHeader[] = [
-        { field: 'iracing_id', label: 'iRacing ID', type: 'text' },
-        { field: 'iracing_customer_id', label: 'iRacing Customer ID', type: 'number' },
+        {
+          platform_id: 2,
+          platform_name: 'iRacing',
+          field: 'iracing_id',
+          label: 'iRacing ID',
+          type: 'text',
+        },
+        {
+          platform_id: 2,
+          platform_name: 'iRacing',
+          field: 'iracing_customer_id',
+          label: 'iRacing Customer ID',
+          type: 'number',
+        },
       ];
 
       const csvExample = generateCsvExample(iracingHeaders);
@@ -151,9 +171,27 @@ Mike Ross,3`;
 
     it('generates CSV example with multiple platform columns for multi-platform league', () => {
       const multiPlatformHeaders: PlatformCsvHeader[] = [
-        { field: 'psn_id', label: 'PSN ID', type: 'text' },
-        { field: 'iracing_id', label: 'iRacing ID', type: 'text' },
-        { field: 'iracing_customer_id', label: 'iRacing Customer ID', type: 'number' },
+        {
+          platform_id: 1,
+          platform_name: 'Gran Turismo 7',
+          field: 'psn_id',
+          label: 'PSN ID',
+          type: 'text',
+        },
+        {
+          platform_id: 2,
+          platform_name: 'iRacing',
+          field: 'iracing_id',
+          label: 'iRacing ID',
+          type: 'text',
+        },
+        {
+          platform_id: 2,
+          platform_name: 'iRacing',
+          field: 'iracing_customer_id',
+          label: 'iRacing Customer ID',
+          type: 'number',
+        },
       ];
 
       const csvExample = generateCsvExample(multiPlatformHeaders);
@@ -170,8 +208,20 @@ Mike Ross,3`;
 
     it('generates CSV with correct number of columns matching headers', () => {
       const headers: PlatformCsvHeader[] = [
-        { field: 'psn_id', label: 'PSN ID', type: 'text' },
-        { field: 'iracing_id', label: 'iRacing ID', type: 'text' },
+        {
+          platform_id: 1,
+          platform_name: 'Gran Turismo 7',
+          field: 'psn_id',
+          label: 'PSN ID',
+          type: 'text',
+        },
+        {
+          platform_id: 2,
+          platform_name: 'iRacing',
+          field: 'iracing_id',
+          label: 'iRacing ID',
+          type: 'text',
+        },
       ];
 
       const csvExample = generateCsvExample(headers);
@@ -197,8 +247,20 @@ Mike Ross,3`;
 
     it('generates example rows with realistic platform-specific values', () => {
       const headers: PlatformCsvHeader[] = [
-        { field: 'psn_id', label: 'PSN ID', type: 'text' },
-        { field: 'iracing_customer_id', label: 'iRacing Customer ID', type: 'number' },
+        {
+          platform_id: 1,
+          platform_name: 'Gran Turismo 7',
+          field: 'psn_id',
+          label: 'PSN ID',
+          type: 'text',
+        },
+        {
+          platform_id: 2,
+          platform_name: 'iRacing',
+          field: 'iracing_customer_id',
+          label: 'iRacing Customer ID',
+          type: 'number',
+        },
       ];
 
       const csvExample = generateCsvExample(headers);
@@ -212,7 +274,15 @@ Mike Ross,3`;
     });
 
     it('includes empty driver number in third example row to show optional field', () => {
-      const headers: PlatformCsvHeader[] = [{ field: 'psn_id', label: 'PSN ID', type: 'text' }];
+      const headers: PlatformCsvHeader[] = [
+        {
+          platform_id: 1,
+          platform_name: 'Gran Turismo 7',
+          field: 'psn_id',
+          label: 'PSN ID',
+          type: 'text',
+        },
+      ];
 
       const csvExample = generateCsvExample(headers);
       const lines = csvExample.split('\n');
@@ -228,8 +298,20 @@ Mike Ross,3`;
 
       // Set platform headers
       const headers: PlatformCsvHeader[] = [
-        { field: 'psn_id', label: 'PSN ID', type: 'text' },
-        { field: 'iracing_id', label: 'iRacing ID', type: 'text' },
+        {
+          platform_id: 1,
+          platform_name: 'Gran Turismo 7',
+          field: 'psn_id',
+          label: 'PSN ID',
+          type: 'text',
+        },
+        {
+          platform_id: 2,
+          platform_name: 'iRacing',
+          field: 'iracing_id',
+          label: 'iRacing ID',
+          type: 'text',
+        },
       ];
       leagueStore.platformCsvHeaders = headers;
 
@@ -251,7 +333,15 @@ Mike Ross,3`;
       expect(csvExample.value).toContain('Nickname,DriverNumber');
 
       // Update headers
-      leagueStore.platformCsvHeaders = [{ field: 'psn_id', label: 'PSN ID', type: 'text' }];
+      leagueStore.platformCsvHeaders = [
+        {
+          platform_id: 1,
+          platform_name: 'Gran Turismo 7',
+          field: 'psn_id',
+          label: 'PSN ID',
+          type: 'text',
+        },
+      ];
 
       // Should update to include PSN ID
       expect(csvExample.value).toContain('Nickname,psn_id,DriverNumber');

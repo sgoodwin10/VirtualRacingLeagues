@@ -289,9 +289,9 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
           class="flex items-center justify-between px-8 py-5 bg-[var(--bg-panel)] border-b border-[var(--border)]"
         >
           <h2
-            class="font-mono text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2"
+            class="font-mono text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2 tracking-wide"
           >
-            <span class="text-[var(--cyan)]">//</span> DASHBOARD
+            <span class="text-[var(--cyan)]">//</span> Dashboard
           </h2>
         </header>
 
@@ -413,13 +413,13 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                   <div class="flex-1 flex items-center gap-3.5 p-4">
                     <div class="flex-1 min-w-0">
                       <h3
-                        class="font-mono text-[13px] font-semibold text-[var(--text-primary)] mb-1 whitespace-nowrap overflow-hidden text-ellipsis"
+                        class="font-mono font-semibold text-[var(--text-primary)] mb-1 whitespace-nowrap overflow-hidden text-ellipsis"
                       >
                         {{ competition.name }}
                       </h3>
                       <div class="flex items-center gap-2">
                         <span
-                          class="font-mono text-[10px] font-medium tracking-[0.3px] uppercase text-[var(--text-muted)]"
+                          class="text-sm font-medium tracking-[0.3px] uppercase text-[var(--text-muted)]"
                         >
                           {{ competition.platform_name }}
                         </span>
@@ -436,48 +436,48 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
                   <div class="flex gap-4 content-center justify-center">
                     <div class="flex flex-col gap-0.5">
                       <span
-                        class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center"
+                        class="font-mono text-lg font-semibold text-[var(--text-primary)] text-center"
                       >
                         {{ competition.stats.total_seasons }}
                       </span>
                       <span
-                        class="font-mono text-[11px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
+                        class="text-xs font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
                       >
                         Seasons
                       </span>
                     </div>
                     <div class="flex flex-col gap-0.5">
                       <span
-                        class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center"
+                        class="font-mono text-lg font-semibold text-[var(--text-primary)] text-center"
                       >
                         {{ competition.stats.total_drivers }}
                       </span>
                       <span
-                        class="font-mono text-[11px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
+                        class="text-xs font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
                       >
                         Drivers
                       </span>
                     </div>
                     <div class="flex flex-col gap-0.5">
                       <span
-                        class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center"
+                        class="font-mono text-lg font-semibold text-[var(--text-primary)] text-center"
                       >
                         {{ competition.stats.active_seasons }}
                       </span>
                       <span
-                        class="font-mono text-[11px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
+                        class="text-xs font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
                       >
                         Active
                       </span>
                     </div>
                     <div class="flex flex-col gap-0.5">
                       <span
-                        class="font-mono text-[16px] font-semibold text-[var(--text-primary)] text-center"
+                        class="font-mono text-lg font-semibold text-[var(--text-primary)] text-center"
                       >
                         {{ competition.stats.total_races }}
                       </span>
                       <span
-                        class="font-mono text-[11px] font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
+                        class="text-xs font-medium tracking-[0.5px] uppercase text-[var(--text-muted)]"
                       >
                         Races
                       </span>

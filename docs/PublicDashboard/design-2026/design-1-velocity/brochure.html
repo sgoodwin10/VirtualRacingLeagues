@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Racing Leagues - Bold Velocity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Technical Blueprint Color Palette */
+      --bg-dark: #0d1117;
+      --bg-panel: #161b22;
+      --bg-card: #1c2128;
+      --bg-elevated: #21262d;
+      --bg-highlight: #272d36;
+
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+
+      --border: #30363d;
+      --border-muted: #21262d;
+
+      --cyan: #58a6ff;
+      --green: #7ee787;
+      --orange: #f0883e;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --yellow: #d29922;
+
+      --cyan-dim: rgba(88, 166, 255, 0.15);
+      --green-dim: rgba(126, 231, 135, 0.15);
+      --orange-dim: rgba(240, 136, 62, 0.15);
+
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'Inter', sans-serif;
+
+      --radius: 6px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Animated background grid */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Speed lines animation */
+    .speed-lines {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .speed-line {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0.3;
+      animation: speedLine 3s linear infinite;
+    }
+
+    .speed-line:nth-child(1) { top: 10%; animation-delay: 0s; width: 200px; }
+    .speed-line:nth-child(2) { top: 25%; animation-delay: 0.5s; width: 300px; }
+    .speed-line:nth-child(3) { top: 45%; animation-delay: 1s; width: 150px; }
+    .speed-line:nth-child(4) { top: 65%; animation-delay: 1.5s; width: 250px; }
+    .speed-line:nth-child(5) { top: 85%; animation-delay: 2s; width: 180px; }
+
+    @keyframes speedLine {
+      0% { transform: translateX(-100%); opacity: 0; }
+      10% { opacity: 0.4; }
+      90% { opacity: 0.4; }
+      100% { transform: translateX(100vw); opacity: 0; }
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      background: linear-gradient(180deg, var(--bg-dark), transparent);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      transform: skewX(-5deg);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--cyan);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      letter-spacing: 1px;
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    .btn-primary:hover {
+      background: #79b8ff;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(88, 166, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-elevated);
+      border-color: var(--cyan);
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 8rem 2rem 4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .hero-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .hero-content {
+      animation: slideInLeft 1s ease-out;
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--green-dim);
+      color: var(--green);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: 4rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      letter-spacing: 2px;
+    }
+
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      max-width: 500px;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 3rem;
+    }
+
+    .stat {
+      text-align: left;
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .hero-visual {
+      position: relative;
+      animation: slideInRight 1s ease-out 0.3s both;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .hero-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
+      box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.5),
+        0 0 100px rgba(88, 166, 255, 0.1);
+    }
+
+    .hero-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-card-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.75rem;
+      background: var(--red-dim);
+      color: var(--red);
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .live-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    .standings-row {
+      display: grid;
+      grid-template-columns: 40px 1fr 80px;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-muted);
+    }
+
+    .standings-row:last-child {
+      border-bottom: none;
+    }
+
+    .position {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .position.p1 { color: var(--yellow); }
+    .position.p2 { color: var(--text-muted); }
+    .position.p3 { color: var(--orange); }
+
+    .driver-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .driver-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    .driver-name {
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .driver-team {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .points {
+      font-family: var(--font-display);
+      font-weight: 700;
+      text-align: right;
+      font-size: 1rem;
+    }
+
+    /* Features Section */
+    .features {
+      padding: 6rem 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .section-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-tag {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--cyan);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--cyan);
+      box-shadow: 0 20px 40px rgba(88, 166, 255, 0.1);
+    }
+
+    .feature-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      background: var(--cyan-dim);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .feature-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+
+    .feature-desc {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    /* How It Works */
+    .how-it-works {
+      padding: 6rem 2rem;
+      background: linear-gradient(180deg, transparent, var(--bg-panel), transparent);
+      position: relative;
+      z-index: 10;
+    }
+
+    .steps-container {
+      display: flex;
+      gap: 2rem;
+      margin-top: 4rem;
+    }
+
+    .step {
+      flex: 1;
+      position: relative;
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .step::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -1rem;
+      width: 2rem;
+      height: 2px;
+      background: var(--cyan);
+    }
+
+    .step:last-child::after {
+      display: none;
+    }
+
+    .step-number {
+      position: absolute;
+      top: -1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2rem;
+      height: 2rem;
+      background: var(--cyan);
+      color: var(--bg-dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .step-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 1rem 0 0.5rem;
+      letter-spacing: 0.5px;
+    }
+
+    .step-desc {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    /* Pricing */
+    .pricing {
+      padding: 6rem 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .pricing-card {
+      max-width: 500px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+      border: 2px solid var(--green);
+      border-radius: 20px;
+      padding: 3rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pricing-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, var(--green-dim), transparent);
+      pointer-events: none;
+    }
+
+    .pricing-badge {
+      display: inline-block;
+      padding: 0.5rem 1.5rem;
+      background: var(--green);
+      color: var(--bg-dark);
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pricing-price {
+      font-family: var(--font-display);
+      font-size: 5rem;
+      font-weight: 900;
+      color: var(--green);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pricing-period {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pricing-features {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .pricing-features li:last-child {
+      border-bottom: none;
+    }
+
+    .pricing-features li::before {
+      content: '✓';
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* Platforms */
+    .platforms {
+      padding: 6rem 2rem;
+      background: var(--bg-panel);
+      position: relative;
+      z-index: 10;
+    }
+
+    .platform-grid {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin-top: 3rem;
+    }
+
+    .platform-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 3rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .platform-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--cyan);
+    }
+
+    .platform-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .platform-name {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* Coming Soon */
+    .coming-soon {
+      padding: 6rem 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .coming-soon-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .coming-soon-item {
+      background: var(--bg-card);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      opacity: 0.7;
+      transition: all 0.3s ease;
+    }
+
+    .coming-soon-item:hover {
+      opacity: 1;
+      border-style: solid;
+      border-color: var(--purple);
+    }
+
+    .coming-soon-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .coming-soon-text {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* CTA Section */
+    .cta {
+      padding: 8rem 2rem;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .cta-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .cta h2 {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      letter-spacing: 2px;
+    }
+
+    .cta p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    /* Footer */
+    footer {
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--border);
+      position: relative;
+      z-index: 10;
+    }
+
+    .footer-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.3s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--cyan);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .hero-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .hero h1 {
+        font-size: 3rem;
+      }
+
+      .hero-subtitle {
+        margin: 0 auto 2rem;
+      }
+
+      .hero-cta {
+        justify-content: center;
+      }
+
+      .hero-stats {
+        justify-content: center;
+      }
+
+      .hero-visual {
+        display: none;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .steps-container {
+        flex-direction: column;
+      }
+
+      .step::after {
+        display: none;
+      }
+
+      .coming-soon-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero-stats {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .cta h2 {
+        font-size: 2rem;
+      }
+
+      .footer-container {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Effects -->
+  <div class="bg-grid"></div>
+  <div class="speed-lines">
+    <div class="speed-line"></div>
+    <div class="speed-line"></div>
+    <div class="speed-line"></div>
+    <div class="speed-line"></div>
+    <div class="speed-line"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <span class="logo-icon">VR</span>
+        VRL
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="leagues.html">Browse Leagues</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="#" class="btn btn-secondary">Login</a>
+        <a href="#" class="btn btn-primary">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <span class="hero-badge">100% Free Forever</span>
+        <h1>
+          MANAGE YOUR<br>
+          <span class="highlight">RACING LEAGUE</span><br>
+          LIKE A PRO
+        </h1>
+        <p class="hero-subtitle">
+          Setup your league, competitions, and seasons in minutes. Track results,
+          manage drivers, and share standings with your community.
+        </p>
+        <div class="hero-cta">
+          <a href="#" class="btn btn-primary">Start Racing Free</a>
+          <a href="leagues.html" class="btn btn-secondary">Browse Leagues</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="stat-value">500+</div>
+            <div class="stat-label">Active Leagues</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">10K+</div>
+            <div class="stat-label">Drivers</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">50K+</div>
+            <div class="stat-label">Races Tracked</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card">
+          <div class="hero-card-header">
+            <span class="hero-card-title">GT4 CHAMPIONSHIP</span>
+            <span class="live-badge">LIVE</span>
+          </div>
+          <div class="standings-row">
+            <span class="position p1">1</span>
+            <div class="driver-info">
+              <span class="driver-avatar">MV</span>
+              <div>
+                <div class="driver-name">Max Velocity</div>
+                <div class="driver-team">Red Storm Racing</div>
+              </div>
+            </div>
+            <span class="points">256</span>
+          </div>
+          <div class="standings-row">
+            <span class="position p2">2</span>
+            <div class="driver-info">
+              <span class="driver-avatar">LH</span>
+              <div>
+                <div class="driver-name">Lewis Hamilton</div>
+                <div class="driver-team">Silver Arrows</div>
+              </div>
+            </div>
+            <span class="points">243</span>
+          </div>
+          <div class="standings-row">
+            <span class="position p3">3</span>
+            <div class="driver-info">
+              <span class="driver-avatar">CL</span>
+              <div>
+                <div class="driver-name">Charles Leclerc</div>
+                <div class="driver-team">Prancing Horse</div>
+              </div>
+            </div>
+            <span class="points">231</span>
+          </div>
+          <div class="standings-row">
+            <span class="position">4</span>
+            <div class="driver-info">
+              <span class="driver-avatar">LN</span>
+              <div>
+                <div class="driver-name">Lando Norris</div>
+                <div class="driver-team">Papaya Racing</div>
+              </div>
+            </div>
+            <span class="points">198</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="section-container">
+      <div class="section-header">
+        <div class="section-tag">Features</div>
+        <h2 class="section-title">Everything You Need to Run Your League</h2>
+        <p class="section-subtitle">
+          Powerful tools designed specifically for sim racing league managers and organizers.
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🏁</div>
+          <h3 class="feature-title">Multi-Platform Support</h3>
+          <p class="feature-desc">
+            Gran Turismo 7, iRacing, and more. Run competitions across multiple platforms seamlessly.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title">Automatic Standings</h3>
+          <p class="feature-desc">
+            Points calculated automatically with support for custom scoring systems, penalties, and drop rounds.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👥</div>
+          <h3 class="feature-title">Driver Management</h3>
+          <p class="feature-desc">
+            Track driver stats, manage teams, handle divisions, and monitor performance across seasons.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📤</div>
+          <h3 class="feature-title">CSV Import/Export</h3>
+          <p class="feature-desc">
+            Bulk import drivers and results. Export standings and data in multiple formats.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <h3 class="feature-title">Shareable Links</h3>
+          <p class="feature-desc">
+            Generate public links for your league. Let everyone view standings without an account.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">Real-Time Updates</h3>
+          <p class="feature-desc">
+            Instant standings updates as you enter results. No refresh needed for your viewers.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="section-container">
+      <div class="section-header">
+        <div class="section-tag">How It Works</div>
+        <h2 class="section-title">Get Racing in Minutes</h2>
+        <p class="section-subtitle">
+          Setting up your league has never been easier. Follow these simple steps.
+        </p>
+      </div>
+      <div class="steps-container">
+        <div class="step">
+          <span class="step-number">1</span>
+          <h3 class="step-title">Create Your League</h3>
+          <p class="step-desc">Sign up and create your league with your custom branding and settings.</p>
+        </div>
+        <div class="step">
+          <span class="step-number">2</span>
+          <h3 class="step-title">Add Drivers</h3>
+          <p class="step-desc">Import your driver roster via CSV or add them manually.</p>
+        </div>
+        <div class="step">
+          <span class="step-number">3</span>
+          <h3 class="step-title">Setup Season</h3>
+          <p class="step-desc">Create competitions, seasons, and rounds with your point system.</p>
+        </div>
+        <div class="step">
+          <span class="step-number">4</span>
+          <h3 class="step-title">Enter Results</h3>
+          <p class="step-desc">Add race results and watch standings update automatically.</p>
+        </div>
+        <div class="step">
+          <span class="step-number">5</span>
+          <h3 class="step-title">Share</h3>
+          <p class="step-desc">Share your public link for everyone to view the championship.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing" id="pricing">
+    <div class="section-container">
+      <div class="section-header">
+        <div class="section-tag">Pricing</div>
+        <h2 class="section-title">Completely Free</h2>
+        <p class="section-subtitle">
+          No hidden fees. No premium tiers. Just racing.
+        </p>
+      </div>
+      <div class="pricing-card">
+        <span class="pricing-badge">ALL FEATURES INCLUDED</span>
+        <div class="pricing-price">$0</div>
+        <div class="pricing-period">Forever free, no credit card required</div>
+        <ul class="pricing-features">
+          <li>Unlimited leagues</li>
+          <li>Unlimited competitions & seasons</li>
+          <li>Unlimited drivers</li>
+          <li>All platform support</li>
+          <li>CSV import/export</li>
+          <li>Public shareable links</li>
+          <li>Custom point systems</li>
+          <li>Team & division management</li>
+        </ul>
+        <a href="#" class="btn btn-primary" style="width: 100%; display: block;">Get Started Free</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platforms -->
+  <section class="platforms">
+    <div class="section-container">
+      <div class="section-header">
+        <div class="section-tag">Supported Platforms</div>
+        <h2 class="section-title">Race Anywhere</h2>
+      </div>
+      <div class="platform-grid">
+        <div class="platform-card">
+          <div class="platform-icon">🎮</div>
+          <div class="platform-name">Gran Turismo 7</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-icon">🏎️</div>
+          <div class="platform-name">iRacing</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Coming Soon -->
+  <section class="coming-soon">
+    <div class="section-container">
+      <div class="section-header">
+        <div class="section-tag">Coming Soon</div>
+        <h2 class="section-title">What's Next</h2>
+      </div>
+      <div class="coming-soon-grid">
+        <div class="coming-soon-item">
+          <div class="coming-soon-icon">📈</div>
+          <div class="coming-soon-text">GT7 Daily Race Stats</div>
+        </div>
+        <div class="coming-soon-item">
+          <div class="coming-soon-icon">🛤️</div>
+          <div class="coming-soon-text">Track Database</div>
+        </div>
+        <div class="coming-soon-item">
+          <div class="coming-soon-icon">🚗</div>
+          <div class="coming-soon-text">Car Selection</div>
+        </div>
+        <div class="coming-soon-item">
+          <div class="coming-soon-icon">🤖</div>
+          <div class="coming-soon-text">AI OCR Reader</div>
+        </div>
+        <div class="coming-soon-item">
+          <div class="coming-soon-icon">📊</div>
+          <div class="coming-soon-text">Google Sheets Import</div>
+        </div>
+        <div class="coming-soon-item">
+          <div class="coming-soon-icon">🎯</div>
+          <div class="coming-soon-text">More Platforms</div>
+        </div>
+        <div class="coming-soon-item">
+          <div class="coming-soon-icon">📱</div>
+          <div class="coming-soon-text">Mobile App</div>
+        </div>
+        <div class="coming-soon-item">
+          <div class="coming-soon-icon">🔔</div>
+          <div class="coming-soon-text">Discord Integration</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="cta-container">
+      <h2>READY TO START RACING?</h2>
+      <p>Join hundreds of league managers already using Virtual Racing Leagues.</p>
+      <a href="#" class="btn btn-primary">Create Your League Now</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-text">© 2026 Virtual Racing Leagues. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

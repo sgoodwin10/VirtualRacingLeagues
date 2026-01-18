@@ -1,181 +1,156 @@
 <script setup lang="ts">
-import { computed, getCurrentInstance } from 'vue';
+import { computed } from 'vue';
 
-type ToggleSize = 'sm' | 'md' | 'lg';
+/**
+ * VrlToggle Component
+ *
+ * Toggle switch for boolean settings with full accessibility support.
+ *
+ * Features:
+ * - Toggle switch with sliding knob animation
+ * - Full keyboard navigation (Space/Enter to toggle)
+ * - Accessible with hidden native input and role="switch"
+ * - Focus visible indicators
+ * - Disabled state support
+ * - Green when active
+ *
+ * @example
+ * Basic usage:
+ * <VrlToggle v-model="emailNotifications" label="Email Notifications" />
+ *
+ * @example
+ * With change handler:
+ * <VrlToggle v-model="darkMode" label="Dark Mode" @change="handleThemeChange" />
+ */
 
 interface Props {
+  /** The current toggle state */
   modelValue: boolean;
-  size?: ToggleSize;
+  /** Label text to display */
+  label: string;
+  /** Whether the toggle is disabled */
   disabled?: boolean;
-  label?: string;
-  description?: string;
-}
-
-interface Emits {
-  (e: 'update:modelValue', value: boolean): void;
+  /** HTML id attribute */
+  id?: string;
+  /** HTML name attribute */
+  name?: string;
+  /** Additional CSS classes */
+  class?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'md',
   disabled: false,
-  label: '',
-  description: '',
+  id: undefined,
+  name: undefined,
+  class: '',
 });
+
+interface Emits {
+  /** Emitted when the toggle state changes */
+  (e: 'update:modelValue', value: boolean): void;
+  /** Emitted when the toggle is switched */
+  (e: 'change', value: boolean): void;
+}
 
 const emit = defineEmits<Emits>();
 
-// Generate unique ID using component instance uid
-const instance = getCurrentInstance();
-const descriptionId = computed(
-  () => `toggle-description-${instance?.uid || Math.random().toString(36).substring(2, 9)}`,
-);
+/**
+ * Handle toggle change event
+ */
+function handleChange(event: Event): void {
+  if (props.disabled) return;
 
-const toggleClasses = computed(() => {
-  const baseClasses = ['relative', 'border-2', 'transition-all', 'duration-300', 'flex-shrink-0'];
+  const target = event.target as HTMLInputElement;
+  const newValue = target.checked;
 
-  // Size-specific classes
-  const sizeClasses: Record<ToggleSize, string[]> = {
-    sm: ['w-9', 'h-5', 'rounded-[10px]'],
-    md: ['w-11', 'h-6', 'rounded-[12px]'],
-    lg: ['w-[52px]', 'h-7', 'rounded-[14px]'],
-  };
+  emit('update:modelValue', newValue);
+  emit('change', newValue);
+}
 
-  baseClasses.push(...sizeClasses[props.size]);
+/**
+ * Handle keyboard interaction (Space/Enter to toggle)
+ */
+function handleKeydown(event: KeyboardEvent): void {
+  if (props.disabled) return;
 
-  // State classes
-  if (props.disabled) {
-    baseClasses.push('opacity-50', 'cursor-not-allowed');
-  } else {
-    baseClasses.push('cursor-pointer');
-  }
-
-  // Active/inactive background
-  if (props.modelValue) {
-    baseClasses.push('bg-racing-gold', 'border-racing-gold');
-  } else {
-    baseClasses.push('theme-bg-tertiary', 'theme-border');
-  }
-
-  return baseClasses;
-});
-
-const indicatorClasses = computed(() => {
-  const baseClasses = ['absolute', 'rounded-full', 'transition-all', 'duration-300', 'top-0.5'];
-
-  // Size-specific classes
-  const sizeClasses: Record<ToggleSize, string[]> = {
-    sm: ['w-3', 'h-3', 'left-0.5'],
-    md: ['w-4', 'h-4', 'left-0.5'],
-    lg: ['w-5', 'h-5', 'left-0.5'],
-  };
-
-  baseClasses.push(...sizeClasses[props.size]);
-
-  // Active/inactive indicator color and position
-  if (props.modelValue) {
-    baseClasses.push('bg-racing-carbon');
-    // Translate based on size
-    const translateClasses: Record<ToggleSize, string> = {
-      sm: 'translate-x-4',
-      md: 'translate-x-5',
-      lg: 'translate-x-6',
-    };
-    baseClasses.push(translateClasses[props.size]);
-  } else {
-    baseClasses.push('theme-text-muted', 'bg-current');
-  }
-
-  return baseClasses;
-});
-
-const handleClick = () => {
-  if (!props.disabled) {
-    emit('update:modelValue', !props.modelValue);
-  }
-};
-
-const handleKeydown = (event: KeyboardEvent) => {
-  if (!props.disabled && (event.key === ' ' || event.key === 'Enter')) {
+  // Space or Enter key to toggle
+  if (event.key === ' ' || event.key === 'Enter') {
     event.preventDefault();
-    emit('update:modelValue', !props.modelValue);
+    const checkbox = event.target as HTMLInputElement;
+    checkbox.checked = !checkbox.checked;
+    // Create a proper Event object instead of casting
+    const changeEvent = new Event('change', { bubbles: true });
+    Object.defineProperty(changeEvent, 'target', {
+      value: checkbox,
+      writable: false,
+    });
+    handleChange(changeEvent);
   }
-};
+}
+
+/**
+ * Generate a unique ID if not provided
+ */
+const toggleId = computed(() => {
+  return props.id || `toggle-${Math.random().toString(36).substring(2, 11)}`;
+});
+
+/**
+ * Compute wrapper classes with disabled state
+ */
+const wrapperClasses = computed(() => {
+  const baseClasses = 'flex items-center gap-3 cursor-pointer';
+  const disabledClass = props.disabled ? 'opacity-50 cursor-not-allowed' : '';
+  const classes = `${baseClasses} ${disabledClass}`;
+  return props.class ? `${classes} ${props.class}` : classes;
+});
+
+/**
+ * Compute toggle switch classes
+ */
+const toggleClasses = computed(() => {
+  const baseClasses =
+    'w-11 h-6 rounded-[var(--radius-pill)] relative cursor-pointer transition-[var(--transition)] shrink-0';
+  const stateClass = props.modelValue ? 'bg-[var(--green-dim)]' : 'bg-[var(--bg-elevated)]';
+  return `${baseClasses} ${stateClass}`;
+});
+
+/**
+ * Compute toggle knob classes
+ */
+const knobClasses = computed(() => {
+  const baseClasses = 'absolute top-0.5 w-5 h-5 rounded-full transition-[var(--transition)]';
+  const positionClass = props.modelValue ? 'left-[22px]' : 'left-0.5';
+  const colorClass = props.modelValue ? 'bg-[var(--green)]' : 'bg-[var(--text-muted)]';
+  return `${baseClasses} ${positionClass} ${colorClass}`;
+});
 </script>
 
 <template>
-  <div class="vrl-toggle-wrapper">
-    <!-- Simple toggle (no label/description) -->
-    <label
-      v-if="!label && !description"
-      class="flex items-center gap-3"
-      :class="{ 'cursor-not-allowed': disabled, 'cursor-pointer': !disabled }"
-    >
-      <div
-        :class="toggleClasses"
-        role="switch"
-        :aria-checked="modelValue"
-        :aria-disabled="disabled"
-        tabindex="0"
-        @click="handleClick"
-        @keydown="handleKeydown"
-      >
-        <div :class="indicatorClasses" />
-      </div>
-    </label>
-
-    <!-- Toggle with label only -->
-    <label
-      v-else-if="label && !description"
-      class="flex items-center gap-3"
-      :class="{ 'cursor-not-allowed': disabled, 'cursor-pointer': !disabled }"
-    >
-      <div
-        :class="toggleClasses"
-        role="switch"
-        :aria-checked="modelValue"
-        :aria-disabled="disabled"
-        :aria-label="label"
-        tabindex="0"
-        @click="handleClick"
-        @keydown="handleKeydown"
-      >
-        <div :class="indicatorClasses" />
-      </div>
-      <span class="text-sm theme-text-primary">{{ label }}</span>
-    </label>
-
-    <!-- Toggle with label and description -->
-    <div v-else class="flex items-start justify-between gap-4 p-4 rounded theme-bg-tertiary">
-      <div>
-        <div class="text-sm font-medium mb-1 theme-text-primary">{{ label }}</div>
-        <div :id="descriptionId" class="text-xs theme-text-muted">{{ description }}</div>
-      </div>
-      <div
-        :class="toggleClasses"
-        role="switch"
-        :aria-checked="modelValue"
-        :aria-disabled="disabled"
-        :aria-label="label"
-        :aria-describedby="description ? descriptionId : undefined"
-        tabindex="0"
-        @click="handleClick"
-        @keydown="handleKeydown"
-      >
-        <div :class="indicatorClasses" />
-      </div>
-    </div>
-  </div>
+  <label :for="toggleId" :class="wrapperClasses">
+    <input
+      :id="toggleId"
+      type="checkbox"
+      :name="name"
+      :checked="modelValue"
+      :disabled="disabled"
+      class="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0"
+      role="switch"
+      :aria-checked="modelValue"
+      @change="handleChange"
+      @keydown="handleKeydown"
+    />
+    <span :class="toggleClasses" :aria-hidden="true">
+      <span :class="knobClasses"></span>
+    </span>
+    <span class="text-[0.9rem] text-[var(--text-primary)] select-none">{{ label }}</span>
+  </label>
 </template>
 
 <style scoped>
-/* Hover effect */
-[role='switch']:not([aria-disabled='true']):hover {
-  border-color: var(--accent-gold);
-}
-
-/* Focus effect */
-[role='switch']:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.12);
+/* Focus visible indicator for keyboard navigation */
+label:has(input:focus-visible) span:first-of-type {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 </style>

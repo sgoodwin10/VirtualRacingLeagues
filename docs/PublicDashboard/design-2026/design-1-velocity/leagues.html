@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public Leagues - Virtual Racing Leagues</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --bg-panel: #161b22;
+      --bg-card: #1c2128;
+      --bg-elevated: #21262d;
+      --bg-highlight: #272d36;
+
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+
+      --border: #30363d;
+      --border-muted: #21262d;
+
+      --cyan: #58a6ff;
+      --green: #7ee787;
+      --orange: #f0883e;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --yellow: #d29922;
+
+      --cyan-dim: rgba(88, 166, 255, 0.15);
+      --green-dim: rgba(126, 231, 135, 0.15);
+      --orange-dim: rgba(240, 136, 62, 0.15);
+
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'Inter', sans-serif;
+
+      --radius: 6px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      background: var(--bg-dark);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      transform: skewX(-5deg);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--cyan);
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      letter-spacing: 1px;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    .btn-primary:hover {
+      background: #79b8ff;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-elevated);
+      border-color: var(--cyan);
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 6rem 2rem 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Page Header */
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .breadcrumb a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--cyan);
+    }
+
+    .breadcrumb span {
+      color: var(--text-muted);
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-title .accent {
+      color: var(--cyan);
+    }
+
+    .page-subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    /* Search & Filters */
+    .search-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .search-input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.75rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: var(--font-body);
+      transition: all 0.3s ease;
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px var(--cyan-dim);
+    }
+
+    .filter-select {
+      padding: 0.75rem 1rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: var(--font-body);
+      cursor: pointer;
+      min-width: 150px;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--cyan);
+    }
+
+    /* League Cards Grid */
+    .leagues-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .league-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .league-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--cyan);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .league-banner {
+      height: 120px;
+      background: linear-gradient(135deg, var(--bg-elevated), var(--bg-highlight));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .league-banner.has-image {
+      background-size: cover;
+      background-position: center;
+    }
+
+    .league-banner::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(transparent, var(--bg-card));
+    }
+
+    .league-logo {
+      position: absolute;
+      bottom: -30px;
+      left: 1.5rem;
+      width: 60px;
+      height: 60px;
+      background: var(--bg-elevated);
+      border: 3px solid var(--bg-card);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--cyan);
+      z-index: 2;
+    }
+
+    .league-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 9px;
+    }
+
+    .league-content {
+      padding: 2.5rem 1.5rem 1.5rem;
+    }
+
+    .league-name {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+
+    .league-platform {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.75rem;
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .league-stats {
+      display: flex;
+      gap: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .league-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .league-stat-value {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .league-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* League Detail View */
+    .league-detail {
+      display: none;
+    }
+
+    .league-detail.active {
+      display: block;
+    }
+
+    .league-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .league-header-banner {
+      height: 200px;
+      background: linear-gradient(135deg, var(--bg-elevated), var(--bg-highlight));
+      position: relative;
+    }
+
+    .league-header-banner.has-image {
+      background-size: cover;
+      background-position: center;
+    }
+
+    .league-header-content {
+      padding: 1.5rem;
+      display: flex;
+      align-items: flex-end;
+      gap: 1.5rem;
+      margin-top: -50px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .league-header-logo {
+      width: 100px;
+      height: 100px;
+      background: var(--bg-elevated);
+      border: 4px solid var(--bg-card);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--cyan);
+      flex-shrink: 0;
+    }
+
+    .league-header-info {
+      flex: 1;
+    }
+
+    .league-header-name {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+
+    .league-header-meta {
+      display: flex;
+      gap: 1rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Competitions List */
+    .competitions-section {
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-title::before {
+      content: '//';
+      color: var(--cyan);
+    }
+
+    .competition-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .competition-card:hover {
+      border-color: var(--cyan);
+    }
+
+    .competition-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .competition-name {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .competition-status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .competition-status.active {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .competition-status.completed {
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+    }
+
+    .seasons-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .season-chip {
+      padding: 0.5rem 1rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .season-chip:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .season-chip.active {
+      background: var(--cyan-dim);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    /* Standings Table */
+    .standings-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .standings-header {
+      padding: 1rem 1.5rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .standings-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .standings-tabs {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .standings-tab {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-family: var(--font-display);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .standings-tab:hover {
+      border-color: var(--cyan);
+    }
+
+    .standings-tab.active {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .standings-table th {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .standings-table th.center {
+      text-align: center;
+    }
+
+    .standings-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-muted);
+      font-size: 0.9rem;
+    }
+
+    .standings-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .standings-table tr:hover {
+      background: var(--bg-elevated);
+    }
+
+    .standings-table tr.podium-1 {
+      background: rgba(210, 153, 34, 0.08);
+    }
+
+    .standings-table tr.podium-2 {
+      background: rgba(110, 118, 129, 0.08);
+    }
+
+    .standings-table tr.podium-3 {
+      background: rgba(240, 136, 62, 0.08);
+    }
+
+    .position-cell {
+      font-family: var(--font-display);
+      font-weight: 700;
+      text-align: center;
+      width: 50px;
+    }
+
+    .position-cell.p1 { color: var(--yellow); }
+    .position-cell.p2 { color: var(--text-muted); }
+    .position-cell.p3 { color: var(--orange); }
+
+    .driver-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .driver-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .driver-name {
+      font-weight: 500;
+    }
+
+    .driver-team {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .team-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .team-color {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .points-cell {
+      font-family: var(--font-display);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .round-cell {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 2rem 0;
+    }
+
+    .page-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .page-btn:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .page-btn.active {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Back Button */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      transition: color 0.3s ease;
+    }
+
+    .back-btn:hover {
+      color: var(--cyan);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .page-title {
+        font-size: 1.75rem;
+      }
+
+      .search-bar {
+        flex-direction: column;
+      }
+
+      .leagues-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .league-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-top: 0;
+        padding-top: 4rem;
+      }
+
+      .league-header-logo {
+        margin-top: -80px;
+      }
+
+      .standings-table {
+        font-size: 0.8rem;
+      }
+
+      .standings-table th,
+      .standings-table td {
+        padding: 0.75rem 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <a href="brochure.html" class="logo">
+        <span class="logo-icon">VR</span>
+        VRL
+      </a>
+      <ul class="nav-links">
+        <li><a href="brochure.html#features">Features</a></li>
+        <li><a href="brochure.html#how-it-works">How It Works</a></li>
+        <li><a href="brochure.html#pricing">Pricing</a></li>
+        <li><a href="leagues.html" class="active">Browse Leagues</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="#" class="btn btn-secondary">Login</a>
+        <a href="#" class="btn btn-primary">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+
+      <!-- Leagues List View -->
+      <div id="leagues-list">
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="breadcrumb">
+            <a href="brochure.html">Home</a>
+            <span>/</span>
+            <span>Public Leagues</span>
+          </div>
+          <h1 class="page-title"><span class="accent">//</span> PUBLIC LEAGUES</h1>
+          <p class="page-subtitle">Browse and explore racing leagues from around the world.</p>
+        </div>
+
+        <!-- Search & Filters -->
+        <div class="search-bar">
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" placeholder="Search leagues by name...">
+          </div>
+          <select class="filter-select">
+            <option value="">All Platforms</option>
+            <option value="gt7">Gran Turismo 7</option>
+            <option value="iracing">iRacing</option>
+          </select>
+          <select class="filter-select">
+            <option value="">Sort By</option>
+            <option value="popular">Most Popular</option>
+            <option value="recent">Recently Active</option>
+            <option value="name">Name A-Z</option>
+          </select>
+        </div>
+
+        <!-- League Cards -->
+        <div class="leagues-grid">
+          <div class="league-card" onclick="showLeagueDetail()">
+            <div class="league-banner" style="background: linear-gradient(135deg, #1a1a2e, #16213e);"></div>
+            <div class="league-logo">RS</div>
+            <div class="league-content">
+              <h3 class="league-name">Red Storm Racing</h3>
+              <span class="league-platform">🎮 Gran Turismo 7</span>
+              <div class="league-stats">
+                <div class="league-stat">
+                  <span class="league-stat-value">24</span>
+                  <span class="league-stat-label">Drivers</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">3</span>
+                  <span class="league-stat-label">Competitions</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">128</span>
+                  <span class="league-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="league-card">
+            <div class="league-banner" style="background: linear-gradient(135deg, #2d1b4e, #1a1a2e);"></div>
+            <div class="league-logo">VP</div>
+            <div class="league-content">
+              <h3 class="league-name">Virtual Pro Series</h3>
+              <span class="league-platform">🏎️ iRacing</span>
+              <div class="league-stats">
+                <div class="league-stat">
+                  <span class="league-stat-value">48</span>
+                  <span class="league-stat-label">Drivers</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">5</span>
+                  <span class="league-stat-label">Competitions</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">312</span>
+                  <span class="league-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="league-card">
+            <div class="league-banner" style="background: linear-gradient(135deg, #1e3a5f, #0d1b2a);"></div>
+            <div class="league-logo">SG</div>
+            <div class="league-content">
+              <h3 class="league-name">Sunday GT League</h3>
+              <span class="league-platform">🎮 Gran Turismo 7</span>
+              <div class="league-stats">
+                <div class="league-stat">
+                  <span class="league-stat-value">16</span>
+                  <span class="league-stat-label">Drivers</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">2</span>
+                  <span class="league-stat-label">Competitions</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">64</span>
+                  <span class="league-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="league-card">
+            <div class="league-banner" style="background: linear-gradient(135deg, #4a1942, #1a1a2e);"></div>
+            <div class="league-logo">MR</div>
+            <div class="league-content">
+              <h3 class="league-name">Midnight Racers</h3>
+              <span class="league-platform">🎮 Gran Turismo 7</span>
+              <div class="league-stats">
+                <div class="league-stat">
+                  <span class="league-stat-value">32</span>
+                  <span class="league-stat-label">Drivers</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">4</span>
+                  <span class="league-stat-label">Competitions</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">156</span>
+                  <span class="league-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="league-card">
+            <div class="league-banner" style="background: linear-gradient(135deg, #1a3c34, #0d1b2a);"></div>
+            <div class="league-logo">AP</div>
+            <div class="league-content">
+              <h3 class="league-name">Apex Predators</h3>
+              <span class="league-platform">🏎️ iRacing</span>
+              <div class="league-stats">
+                <div class="league-stat">
+                  <span class="league-stat-value">20</span>
+                  <span class="league-stat-label">Drivers</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">2</span>
+                  <span class="league-stat-label">Competitions</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">88</span>
+                  <span class="league-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="league-card">
+            <div class="league-banner" style="background: linear-gradient(135deg, #3d2914, #1a1a2e);"></div>
+            <div class="league-logo">TC</div>
+            <div class="league-content">
+              <h3 class="league-name">Track Champions</h3>
+              <span class="league-platform">🎮 Gran Turismo 7</span>
+              <div class="league-stats">
+                <div class="league-stat">
+                  <span class="league-stat-value">28</span>
+                  <span class="league-stat-label">Drivers</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">3</span>
+                  <span class="league-stat-label">Competitions</span>
+                </div>
+                <div class="league-stat">
+                  <span class="league-stat-value">112</span>
+                  <span class="league-stat-label">Races</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button class="page-btn" disabled>←</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">4</button>
+          <button class="page-btn">→</button>
+        </div>
+      </div>
+
+      <!-- League Detail View (Hidden by default) -->
+      <div id="league-detail" class="league-detail">
+        <a href="#" class="back-btn" onclick="hideLeagueDetail()">← Back to Leagues</a>
+
+        <div class="league-header">
+          <div class="league-header-banner" style="background: linear-gradient(135deg, #1a1a2e, #16213e);"></div>
+          <div class="league-header-content">
+            <div class="league-header-logo">RS</div>
+            <div class="league-header-info">
+              <h1 class="league-header-name">Red Storm Racing</h1>
+              <div class="league-header-meta">
+                <span>🎮 Gran Turismo 7</span>
+                <span>•</span>
+                <span>24 Drivers</span>
+                <span>•</span>
+                <span>3 Active Competitions</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Competitions -->
+        <div class="competitions-section">
+          <h2 class="section-title">COMPETITIONS</h2>
+
+          <div class="competition-card">
+            <div class="competition-header">
+              <h3 class="competition-name">GT4 Championship</h3>
+              <span class="competition-status active">Active</span>
+            </div>
+            <div class="seasons-list">
+              <button class="season-chip active">Winter 2026</button>
+              <button class="season-chip">Fall 2025</button>
+              <button class="season-chip">Summer 2025</button>
+            </div>
+          </div>
+
+          <div class="competition-card">
+            <div class="competition-header">
+              <h3 class="competition-name">Endurance Series</h3>
+              <span class="competition-status active">Active</span>
+            </div>
+            <div class="seasons-list">
+              <button class="season-chip active">Season 3</button>
+              <button class="season-chip">Season 2</button>
+            </div>
+          </div>
+
+          <div class="competition-card">
+            <div class="competition-header">
+              <h3 class="competition-name">Sprint Cup</h3>
+              <span class="competition-status completed">Completed</span>
+            </div>
+            <div class="seasons-list">
+              <button class="season-chip">2024 Finals</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Standings -->
+        <div class="standings-section">
+          <div class="standings-header">
+            <h2 class="standings-title">GT4 Championship - Winter 2026</h2>
+            <div class="standings-tabs">
+              <button class="standings-tab active">Drivers</button>
+              <button class="standings-tab">Teams</button>
+              <button class="standings-tab">Rounds</button>
+            </div>
+          </div>
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th class="center">#</th>
+                <th>Driver</th>
+                <th>Team</th>
+                <th class="center">R1</th>
+                <th class="center">R2</th>
+                <th class="center">R3</th>
+                <th class="center">R4</th>
+                <th class="center">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="podium-1">
+                <td class="position-cell p1">1</td>
+                <td>
+                  <div class="driver-cell">
+                    <span class="driver-avatar">MV</span>
+                    <div>
+                      <div class="driver-name">Max Velocity</div>
+                      <div class="driver-team">Red Storm Racing</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="team-cell">
+                    <span class="team-color" style="background: #e74c3c;"></span>
+                    Red Storm
+                  </div>
+                </td>
+                <td class="round-cell">25</td>
+                <td class="round-cell">25</td>
+                <td class="round-cell">18</td>
+                <td class="round-cell">25</td>
+                <td class="points-cell">93</td>
+              </tr>
+              <tr class="podium-2">
+                <td class="position-cell p2">2</td>
+                <td>
+                  <div class="driver-cell">
+                    <span class="driver-avatar">SA</span>
+                    <div>
+                      <div class="driver-name">Speed Ace</div>
+                      <div class="driver-team">Blue Lightning</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="team-cell">
+                    <span class="team-color" style="background: #3498db;"></span>
+                    Blue Lightning
+                  </div>
+                </td>
+                <td class="round-cell">18</td>
+                <td class="round-cell">18</td>
+                <td class="round-cell">25</td>
+                <td class="round-cell">18</td>
+                <td class="points-cell">79</td>
+              </tr>
+              <tr class="podium-3">
+                <td class="position-cell p3">3</td>
+                <td>
+                  <div class="driver-cell">
+                    <span class="driver-avatar">TF</span>
+                    <div>
+                      <div class="driver-name">Track Fury</div>
+                      <div class="driver-team">Green Machine</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="team-cell">
+                    <span class="team-color" style="background: #27ae60;"></span>
+                    Green Machine
+                  </div>
+                </td>
+                <td class="round-cell">15</td>
+                <td class="round-cell">15</td>
+                <td class="round-cell">15</td>
+                <td class="round-cell">15</td>
+                <td class="points-cell">60</td>
+              </tr>
+              <tr>
+                <td class="position-cell">4</td>
+                <td>
+                  <div class="driver-cell">
+                    <span class="driver-avatar">NR</span>
+                    <div>
+                      <div class="driver-name">Night Rider</div>
+                      <div class="driver-team">Dark Horse</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="team-cell">
+                    <span class="team-color" style="background: #9b59b6;"></span>
+                    Dark Horse
+                  </div>
+                </td>
+                <td class="round-cell">12</td>
+                <td class="round-cell">12</td>
+                <td class="round-cell">12</td>
+                <td class="round-cell">12</td>
+                <td class="points-cell">48</td>
+              </tr>
+              <tr>
+                <td class="position-cell">5</td>
+                <td>
+                  <div class="driver-cell">
+                    <span class="driver-avatar">GP</span>
+                    <div>
+                      <div class="driver-name">Grid Pro</div>
+                      <div class="driver-team">Red Storm Racing</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="team-cell">
+                    <span class="team-color" style="background: #e74c3c;"></span>
+                    Red Storm
+                  </div>
+                </td>
+                <td class="round-cell">10</td>
+                <td class="round-cell">10</td>
+                <td class="round-cell">10</td>
+                <td class="round-cell">10</td>
+                <td class="points-cell">40</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    function showLeagueDetail() {
+      document.getElementById('leagues-list').style.display = 'none';
+      document.getElementById('league-detail').classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    function hideLeagueDetail() {
+      event.preventDefault();
+      document.getElementById('leagues-list').style.display = 'block';
+      document.getElementById('league-detail').classList.remove('active');
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>

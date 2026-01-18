@@ -11,7 +11,7 @@
 
 @theme {
   /* Font Family - Technical Blueprint */
-  --font-mono: 'IBM Plex Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+  --font-mono: 'Orbitron', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Font family utilities for Tailwind v4 */
@@ -168,7 +168,7 @@
      ============================================ */
 
   /* Typography - Font Families */
-  --font-mono: 'IBM Plex Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+  --font-mono: 'Orbitron', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Background Colors */

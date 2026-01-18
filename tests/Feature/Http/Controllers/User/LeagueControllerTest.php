@@ -700,7 +700,7 @@ class LeagueControllerTest extends UserControllerTestCase
             ->assertJson([
                 'success' => true,
                 'data' => [
-                    ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
+                    ['field' => 'PsnId', 'label' => 'PSN ID', 'type' => 'text'],
                 ],
             ])
             ->assertJsonCount(1, 'data');
@@ -729,8 +729,8 @@ class LeagueControllerTest extends UserControllerTestCase
             ->assertJson([
                 'success' => true,
                 'data' => [
-                    ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
-                    ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
+                    ['field' => 'IracingId', 'label' => 'iRacing ID', 'type' => 'text'],
+                    ['field' => 'IracingCustomerId', 'label' => 'iRacing Customer ID', 'type' => 'number'],
                 ],
             ])
             ->assertJsonCount(2, 'data');
@@ -759,9 +759,9 @@ class LeagueControllerTest extends UserControllerTestCase
             ->assertJson([
                 'success' => true,
                 'data' => [
-                    ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
-                    ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
-                    ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
+                    ['field' => 'PsnId', 'label' => 'PSN ID', 'type' => 'text'],
+                    ['field' => 'IracingId', 'label' => 'iRacing ID', 'type' => 'text'],
+                    ['field' => 'IracingCustomerId', 'label' => 'iRacing Customer ID', 'type' => 'number'],
                 ],
             ])
             ->assertJsonCount(3, 'data');

@@ -200,6 +200,8 @@ export interface PlatformFormField {
  * Platform CSV header configuration for driver import
  */
 export interface PlatformCsvHeader {
+  platform_id: number;
+  platform_name: string;
   field: string;
   label: string;
   type: 'text' | 'number';

@@ -3,210 +3,285 @@ import { mount } from '@vue/test-utils';
 import VrlBadge from '../VrlBadge.vue';
 
 describe('VrlBadge', () => {
-  it('renders with default props', () => {
-    const wrapper = mount(VrlBadge, {
-      props: {
-        label: 'Test Badge',
-      },
+  describe('Rendering', () => {
+    it('renders with default props', () => {
+      const wrapper = mount(VrlBadge, {
+        slots: {
+          default: 'Test Badge',
+        },
+      });
+
+      expect(wrapper.text()).toBe('Test Badge');
+      expect(wrapper.classes()).toContain('inline-flex');
+      expect(wrapper.classes()).toContain('items-center');
     });
 
-    expect(wrapper.text()).toContain('Test Badge');
-    expect(wrapper.find('span').exists()).toBe(true);
+    it('renders slot content correctly', () => {
+      const wrapper = mount(VrlBadge, {
+        slots: {
+          default: 'Platform: GT7',
+        },
+      });
+
+      expect(wrapper.text()).toBe('Platform: GT7');
+    });
+
+    it('renders as a span element', () => {
+      const wrapper = mount(VrlBadge, {
+        slots: {
+          default: 'Test',
+        },
+      });
+
+      expect(wrapper.element.tagName).toBe('SPAN');
+    });
+
+    it('renders with empty slot content', () => {
+      const wrapper = mount(VrlBadge);
+      expect(wrapper.text()).toBe('');
+    });
   });
 
-  describe('variant prop', () => {
-    it('renders active variant with pulse', () => {
-      const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Active',
-          variant: 'active',
-        },
-      });
+  describe('Variants', () => {
+    const variants = ['default', 'cyan', 'green', 'orange', 'red', 'purple'] as const;
 
-      expect(wrapper.text()).toContain('Active');
-      expect(wrapper.classes()).toContain('bg-racing-success/10');
-      expect(wrapper.classes()).toContain('text-racing-success');
-      expect(wrapper.classes()).toContain('rounded-full');
-      // Should have pulse indicator
-      expect(wrapper.find('.animate-pulse').exists()).toBe(true);
-    });
-
-    it('renders featured variant with star icon', () => {
-      const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Featured',
-          variant: 'featured',
-        },
-      });
-
-      expect(wrapper.text()).toContain('Featured');
-      expect(wrapper.classes()).toContain('bg-racing-gold/10');
-      expect(wrapper.classes()).toContain('text-racing-gold');
-      expect(wrapper.classes()).toContain('rounded-full');
-    });
-
-    it('renders upcoming variant with clock icon', () => {
-      const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Upcoming',
-          variant: 'upcoming',
-        },
-      });
-
-      expect(wrapper.text()).toContain('Upcoming');
-      expect(wrapper.classes()).toContain('bg-racing-warning/10');
-      expect(wrapper.classes()).toContain('text-racing-warning');
-      expect(wrapper.classes()).toContain('rounded-full');
-    });
-
-    it('renders completed variant', () => {
-      const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Completed',
-          variant: 'completed',
-        },
-      });
-
-      expect(wrapper.text()).toContain('Completed');
-      expect(wrapper.classes()).toContain('bg-racing-tarmac');
-      expect(wrapper.classes()).toContain('text-racing-barrier');
-    });
-
-    it('renders private variant with border', () => {
-      const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Private',
-          variant: 'private',
-        },
-      });
-
-      expect(wrapper.text()).toContain('Private');
-      expect(wrapper.classes()).toContain('bg-pink-500/20');
-      expect(wrapper.classes()).toContain('text-pink-300');
-      expect(wrapper.classes()).toContain('border');
-    });
-
-    it('renders race status variants without rounded-full', () => {
-      const variants: Array<'dnf' | 'dns' | 'fastest-lap' | 'pole' | 'penalty'> = [
-        'dnf',
-        'dns',
-        'fastest-lap',
-        'pole',
-        'penalty',
-      ];
-
-      variants.forEach((variant) => {
+    variants.forEach((variant) => {
+      it(`renders ${variant} variant correctly`, () => {
         const wrapper = mount(VrlBadge, {
-          props: {
-            label: variant.toUpperCase(),
-            variant,
-          },
+          props: { variant },
+          slots: { default: 'Test' },
         });
 
-        expect(wrapper.classes()).toContain('rounded');
-        expect(wrapper.classes()).not.toContain('rounded-full');
+        // Check that component has the base badge styling
+        expect(wrapper.classes()).toContain('inline-flex');
+        expect(wrapper.classes()).toContain('items-center');
       });
     });
 
-    it('renders platform variant', () => {
+    it('applies correct styling for cyan variant', () => {
       const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'GT7',
-          variant: 'platform',
-        },
+        props: { variant: 'cyan' },
+        slots: { default: 'Cyan Badge' },
       });
 
-      expect(wrapper.text()).toContain('GT7');
-      expect(wrapper.classes()).toContain('bg-racing-gold');
-      expect(wrapper.classes()).toContain('text-racing-carbon');
-    });
-  });
-
-  describe('rounded prop', () => {
-    it('overrides default rounded behavior when set to true', () => {
-      const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'DNF',
-          variant: 'dnf',
-          rounded: true,
-        },
-      });
-
-      expect(wrapper.classes()).toContain('rounded-full');
+      expect(wrapper.classes()).toContain('bg-[var(--cyan-dim)]');
+      expect(wrapper.classes()).toContain('text-[var(--cyan)]');
     });
 
-    it('overrides default rounded behavior when set to false', () => {
+    it('applies correct styling for green variant', () => {
       const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Active',
-          variant: 'active',
-          rounded: false,
-        },
+        props: { variant: 'green' },
+        slots: { default: 'Green Badge' },
       });
 
-      expect(wrapper.classes()).toContain('rounded');
-      expect(wrapper.classes()).not.toContain('rounded-full');
-    });
-  });
-
-  describe('pulse prop', () => {
-    it('shows pulse when pulse prop is true', () => {
-      const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Custom',
-          pulse: true,
-        },
-      });
-
-      expect(wrapper.find('.animate-pulse').exists()).toBe(true);
+      expect(wrapper.classes()).toContain('bg-[var(--green-dim)]');
+      expect(wrapper.classes()).toContain('text-[var(--green)]');
     });
 
-    it('does not show pulse when variant is not active and pulse is false', () => {
+    it('applies correct styling for orange variant', () => {
       const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Completed',
-          variant: 'completed',
-          pulse: false,
-        },
+        props: { variant: 'orange' },
+        slots: { default: 'Orange Badge' },
       });
 
-      expect(wrapper.find('.animate-pulse').exists()).toBe(false);
+      expect(wrapper.classes()).toContain('bg-[var(--orange-dim)]');
+      expect(wrapper.classes()).toContain('text-[var(--orange)]');
+    });
+
+    it('applies correct styling for red variant', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { variant: 'red' },
+        slots: { default: 'Red Badge' },
+      });
+
+      expect(wrapper.classes()).toContain('bg-[var(--red-dim)]');
+      expect(wrapper.classes()).toContain('text-[var(--red)]');
+    });
+
+    it('applies correct styling for purple variant', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { variant: 'purple' },
+        slots: { default: 'Purple Badge' },
+      });
+
+      expect(wrapper.classes()).toContain('bg-[var(--purple-dim)]');
+      expect(wrapper.classes()).toContain('text-[var(--purple)]');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role status', () => {
+  describe('Dot Feature', () => {
+    it('does not render dot by default', () => {
       const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Test',
-        },
+        slots: { default: 'Test' },
       });
 
-      expect(wrapper.attributes('role')).toBe('status');
+      expect(wrapper.classes()).not.toContain('badge-dot');
+    });
+
+    it('renders with dot when dot prop is true', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { dot: true },
+        slots: { default: 'Test' },
+      });
+
+      expect(wrapper.classes()).toContain('badge-dot');
+    });
+
+    it('does not render dot when dot prop is false', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { dot: false },
+        slots: { default: 'Test' },
+      });
+
+      expect(wrapper.classes()).not.toContain('badge-dot');
+    });
+
+    it('combines dot with variant', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { variant: 'green', dot: true },
+        slots: { default: 'Active' },
+      });
+
+      expect(wrapper.classes()).toContain('bg-[var(--green-dim)]');
+      expect(wrapper.classes()).toContain('badge-dot');
     });
   });
 
-  describe('styling', () => {
-    it('applies font-display and uppercase classes', () => {
+  describe('Pulse Animation', () => {
+    it('does not apply pulse class by default', () => {
       const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Test',
-        },
+        slots: { default: 'Test' },
       });
 
-      expect(wrapper.classes()).toContain('font-display');
-      expect(wrapper.classes()).toContain('uppercase');
-      expect(wrapper.classes()).toContain('tracking-wider');
+      expect(wrapper.classes()).not.toContain('pulse');
     });
 
-    it('has correct text size', () => {
+    it('applies pulse class when both dot and pulse are true', () => {
       const wrapper = mount(VrlBadge, {
-        props: {
-          label: 'Test',
-        },
+        props: { dot: true, pulse: true },
+        slots: { default: 'Live' },
       });
 
-      expect(wrapper.classes()).toContain('text-[10px]');
+      expect(wrapper.classes()).toContain('badge-dot');
+      expect(wrapper.classes()).toContain('pulse');
+    });
+
+    it('does not apply pulse class when dot is false', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { dot: false, pulse: true },
+        slots: { default: 'Test' },
+      });
+
+      expect(wrapper.classes()).not.toContain('pulse');
+    });
+
+    it('does not apply pulse class when pulse is false', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { dot: true, pulse: false },
+        slots: { default: 'Test' },
+      });
+
+      expect(wrapper.classes()).toContain('badge-dot');
+      expect(wrapper.classes()).not.toContain('pulse');
+    });
+
+    it('combines pulse with variant and dot', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { variant: 'red', dot: true, pulse: true },
+        slots: { default: 'Live' },
+      });
+
+      expect(wrapper.classes()).toContain('bg-[var(--red-dim)]');
+      expect(wrapper.classes()).toContain('badge-dot');
+      expect(wrapper.classes()).toContain('pulse');
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('text content is readable', () => {
+      const wrapper = mount(VrlBadge, {
+        slots: { default: 'Platform: GT7' },
+      });
+
+      expect(wrapper.text()).toBe('Platform: GT7');
+    });
+
+    it('renders as inline element', () => {
+      const wrapper = mount(VrlBadge, {
+        slots: { default: 'Test' },
+      });
+
+      // Check that it renders as a span (which is inline by default)
+      expect(wrapper.element.tagName).toBe('SPAN');
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('handles very long text', () => {
+      const longText = 'This is a very long badge text that might cause overflow issues';
+      const wrapper = mount(VrlBadge, {
+        slots: { default: longText },
+      });
+
+      expect(wrapper.text()).toBe(longText);
+    });
+
+    it('handles special characters', () => {
+      const wrapper = mount(VrlBadge, {
+        slots: { default: 'GT7 / iRacing & More!' },
+      });
+
+      expect(wrapper.text()).toBe('GT7 / iRacing & More!');
+    });
+
+    it('multiple badges can be rendered together', () => {
+      const wrapper1 = mount(VrlBadge, {
+        props: { variant: 'cyan' },
+        slots: { default: 'Badge 1' },
+      });
+
+      const wrapper2 = mount(VrlBadge, {
+        props: { variant: 'green' },
+        slots: { default: 'Badge 2' },
+      });
+
+      expect(wrapper1.exists()).toBe(true);
+      expect(wrapper2.exists()).toBe(true);
+      expect(wrapper1.classes()).toContain('bg-[var(--cyan-dim)]');
+      expect(wrapper2.classes()).toContain('bg-[var(--green-dim)]');
+    });
+  });
+
+  describe('Snapshots', () => {
+    it('matches snapshot for default variant', () => {
+      const wrapper = mount(VrlBadge, {
+        slots: { default: 'Default' },
+      });
+      expect(wrapper.html()).toMatchSnapshot();
+    });
+
+    it('matches snapshot for cyan variant', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { variant: 'cyan' },
+        slots: { default: 'Cyan' },
+      });
+      expect(wrapper.html()).toMatchSnapshot();
+    });
+
+    it('matches snapshot with dot', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { variant: 'green', dot: true },
+        slots: { default: 'Active' },
+      });
+      expect(wrapper.html()).toMatchSnapshot();
+    });
+
+    it('matches snapshot with pulse', () => {
+      const wrapper = mount(VrlBadge, {
+        props: { variant: 'red', dot: true, pulse: true },
+        slots: { default: 'Live' },
+      });
+      expect(wrapper.html()).toMatchSnapshot();
     });
   });
 });

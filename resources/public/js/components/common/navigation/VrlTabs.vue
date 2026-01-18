@@ -1,210 +1,179 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
+import VrlTab from './VrlTab.vue';
+import type { TabItem, TabVariant } from '@public/types/navigation';
 
-export interface TabItem {
-  label: string;
-  count?: number;
-  disabled?: boolean;
-}
-
+/**
+ * Props for the Tabs component
+ */
 interface Props {
-  modelValue?: number;
+  /** Currently active tab key (v-model) */
+  modelValue: string;
+
+  /** Array of tab definitions */
   tabs: TabItem[];
-  class?: string;
+
+  /** Visual style variant */
+  variant?: TabVariant;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: 0,
-  class: '',
+  variant: 'default',
 });
 
-const emit = defineEmits<{
-  'update:modelValue': [value: number];
-  'tab-change': [index: number, tab: TabItem];
-}>();
+/**
+ * Emits
+ */
+interface Emits {
+  /** v-model update */
+  (e: 'update:modelValue', key: string): void;
 
-const activeTab = ref(props.modelValue);
-// eslint-disable-next-line no-undef
-const tabRefs = ref<(HTMLElement | null)[]>([]);
+  /** Tab changed event */
+  (e: 'change', key: string): void;
+}
 
-// Sync with v-model
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    activeTab.value = newValue;
-  },
-);
+const emit = defineEmits<Emits>();
 
-// Select a tab
-const selectTab = (index: number) => {
-  const tab = props.tabs[index];
-  if (!tab || tab.disabled) return;
+/**
+ * Currently focused tab index (for keyboard navigation)
+ */
+const focusedIndex = ref(0);
 
-  activeTab.value = index;
-  emit('update:modelValue', index);
-  emit('tab-change', index, tab);
+/**
+ * Get enabled tabs only
+ */
+const _enabledTabs = computed(() => {
+  return props.tabs.filter((tab) => !tab.disabled);
+});
+
+/**
+ * Handle tab click
+ */
+const handleTabClick = (key: string) => {
+  emit('update:modelValue', key);
+  emit('change', key);
 };
 
-// Keyboard navigation
-
-const handleKeydown = (event: KeyboardEvent, currentIndex: number) => {
+/**
+ * Handle keyboard navigation
+ */
+const handleKeyDown = (event: KeyboardEvent, currentIndex: number) => {
   let newIndex = currentIndex;
 
   switch (event.key) {
     case 'ArrowLeft':
     case 'ArrowUp':
       event.preventDefault();
-      newIndex = currentIndex > 0 ? currentIndex - 1 : props.tabs.length - 1;
+      // Move to previous enabled tab
+      do {
+        newIndex = (newIndex - 1 + props.tabs.length) % props.tabs.length;
+      } while (props.tabs[newIndex].disabled);
+      focusedIndex.value = newIndex;
       break;
+
     case 'ArrowRight':
     case 'ArrowDown':
       event.preventDefault();
-      newIndex = currentIndex < props.tabs.length - 1 ? currentIndex + 1 : 0;
+      // Move to next enabled tab
+      do {
+        newIndex = (newIndex + 1) % props.tabs.length;
+      } while (props.tabs[newIndex].disabled);
+      focusedIndex.value = newIndex;
       break;
+
     case 'Home':
       event.preventDefault();
-      newIndex = 0;
+      // Move to first enabled tab
+      newIndex = props.tabs.findIndex((tab) => !tab.disabled);
+      if (newIndex !== -1) {
+        focusedIndex.value = newIndex;
+      }
       break;
+
     case 'End':
       event.preventDefault();
-      newIndex = props.tabs.length - 1;
+      // Move to last enabled tab
+      for (let i = props.tabs.length - 1; i >= 0; i--) {
+        if (!props.tabs[i].disabled) {
+          focusedIndex.value = i;
+          break;
+        }
+      }
       break;
+
     case 'Enter':
     case ' ':
       event.preventDefault();
-      selectTab(currentIndex);
-      return;
-    default:
-      return;
+      if (!props.tabs[currentIndex].disabled) {
+        handleTabClick(props.tabs[currentIndex].key);
+      }
+      break;
   }
-
-  // Skip disabled tabs with infinite loop protection
-  let attempts = 0;
-  while (
-    props.tabs[newIndex]?.disabled &&
-    newIndex !== currentIndex &&
-    attempts < props.tabs.length
-  ) {
-    attempts++;
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp' || event.key === 'Home') {
-      newIndex = newIndex > 0 ? newIndex - 1 : props.tabs.length - 1;
-    } else {
-      newIndex = newIndex < props.tabs.length - 1 ? newIndex + 1 : 0;
-    }
-  }
-
-  // Focus the new tab button using template refs
-  tabRefs.value[newIndex]?.focus();
 };
 
-const tabButtonClasses = computed(() => (index: number) => {
-  const isActive = activeTab.value === index;
-  const tab = props.tabs[index];
+/**
+ * Get tabindex for roving tabindex pattern
+ */
+const getTabIndex = (index: number, tab: TabItem): number => {
+  if (tab.disabled) return -1;
+  return index === focusedIndex.value ? 0 : -1;
+};
 
-  const baseClasses =
-    'relative px-4 sm:px-6 py-3 sm:py-4 font-display text-[10px] sm:text-xs uppercase tracking-wider whitespace-nowrap transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-racing-gold focus-visible:ring-inset';
+/**
+ * Get computed classes for tabs container
+ */
+const tabsClasses = computed(() => {
+  const classes = [
+    'flex',
+    'gap-2',
+    'rounded-[var(--radius)]',
+    'max-sm:overflow-x-auto',
+    'max-sm:[-webkit-overflow-scrolling:touch]',
+    'max-sm:[&::-webkit-scrollbar]:hidden',
+  ];
 
-  const activeClasses = isActive
-    ? 'text-racing-gold bg-racing-gold/10'
-    : 'text-[var(--text-muted)] hover:bg-[var(--bg-tertiary)]';
+  if (props.variant === 'default') {
+    classes.push('bg-[var(--bg-elevated)]', 'p-2');
+  } else if (props.variant === 'minimal') {
+    classes.push('bg-transparent', 'p-0');
+  }
 
-  const disabledClasses = tab?.disabled ? 'opacity-50 cursor-not-allowed' : '';
-
-  const borderClasses = index > 0 ? 'border-l border-[var(--border-primary)]' : '';
-
-  return [baseClasses, activeClasses, disabledClasses, borderClasses].filter(Boolean).join(' ');
+  return classes.join(' ');
 });
-
-const tabId = (index: number) => `tab-${index}`;
-const panelId = (index: number) => `panel-${index}`;
 </script>
 
 <template>
-  <div :class="['card-racing', 'rounded', 'overflow-hidden', props.class]">
-    <!-- Tab buttons -->
-    <div
-      role="tablist"
-      class="flex overflow-x-auto"
-      style="border-bottom: 1px solid var(--border-primary)"
-      :aria-label="'Tab navigation'"
+  <div
+    :class="tabsClasses"
+    role="tablist"
+    :aria-label="$attrs['aria-label'] || 'Tabs'"
+    data-test="tabs"
+  >
+    <VrlTab
+      v-for="(tab, index) in tabs"
+      :id="`tab-${tab.key}`"
+      :key="tab.key"
+      :active="tab.key === modelValue"
+      :disabled="tab.disabled"
+      :icon="tab.icon"
+      :tabindex="getTabIndex(index, tab)"
+      role="tab"
+      :aria-selected="tab.key === modelValue"
+      :aria-disabled="tab.disabled"
+      @click="handleTabClick(tab.key)"
+      @keydown="(e: KeyboardEvent) => handleKeyDown(e, index)"
     >
-      <button
-        v-for="(tab, index) in tabs"
-        :id="tabId(index)"
-        :key="index"
-        :ref="
-          (el) => {
-            tabRefs[index] = el as HTMLElement | null;
-          }
-        "
-        role="tab"
-        :aria-selected="activeTab === index"
-        :aria-controls="panelId(index)"
-        :aria-disabled="tab.disabled"
-        :tabindex="activeTab === index ? 0 : -1"
-        :class="tabButtonClasses(index)"
-        :disabled="tab.disabled"
-        @click="selectTab(index)"
-        @keydown="handleKeydown($event, index)"
-      >
-        <!-- Icon slot -->
-        <span class="mr-1 sm:mr-2 inline-block align-middle">
-          <slot :name="`icon-${index}`" :active="activeTab === index" />
-        </span>
-
-        <!-- Label -->
-        <span class="align-middle">{{ tab.label }}</span>
-
-        <!-- Count badge -->
+      <!-- Custom tab-label slot or default label -->
+      <slot name="tab-label" :tab="tab">
+        {{ tab.label }}
         <span
-          v-if="tab.count !== undefined"
-          class="ml-1 sm:ml-2 px-1.5 py-0.5 text-[10px] rounded"
-          style="background: var(--bg-tertiary); color: var(--text-dim)"
+          v-if="tab.badge"
+          class="inline-flex items-center justify-center min-w-[1.25rem] px-1.5 py-0.5 text-[0.65rem] font-semibold rounded-[var(--radius-pill)] bg-[var(--bg-dark)] text-[var(--cyan)] ml-1"
+          data-test="tab-badge"
         >
-          {{ tab.count }}
+          {{ tab.badge }}
         </span>
-
-        <!-- Active indicator -->
-        <span
-          v-if="activeTab === index"
-          class="absolute bottom-0 left-0 right-0 h-0.5 bg-racing-gold"
-        />
-      </button>
-    </div>
-
-    <!-- Tab panels -->
-    <div class="p-4 sm:p-6">
-      <div
-        v-for="(_tab, index) in tabs"
-        :id="panelId(index)"
-        :key="index"
-        role="tabpanel"
-        :aria-labelledby="tabId(index)"
-        :hidden="activeTab !== index"
-      >
-        <slot v-if="activeTab === index" :name="`tab-${index}`">
-          <slot />
-        </slot>
-      </div>
-    </div>
+      </slot>
+    </VrlTab>
   </div>
 </template>
-
-<style scoped>
-.card-racing {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-}
-
-.text-racing-gold {
-  color: var(--racing-gold, #d4a853);
-}
-
-.bg-racing-gold\/10 {
-  background-color: rgba(212, 168, 83, 0.1);
-}
-
-.focus-visible\:ring-racing-gold:focus-visible {
-  --tw-ring-color: var(--racing-gold, #d4a853);
-}
-</style>

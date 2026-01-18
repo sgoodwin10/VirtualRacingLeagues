@@ -1,7 +1,7 @@
 <template>
-  <div id="app">
+  <div id="app" class="min-h-screen flex flex-col">
     <PublicHeader />
-    <main>
+    <main class="flex-1">
       <router-view />
     </main>
     <PublicFooter />
@@ -10,12 +10,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue';
+import { onMounted } from 'vue';
 import PublicHeader from '@public/components/layout/PublicHeader.vue';
 import PublicFooter from '@public/components/layout/PublicFooter.vue';
 import Toast from 'primevue/toast';
 import { useAuthStore } from '@public/stores/authStore';
-import { cleanupTheme } from '@public/composables/useTheme';
 
 const authStore = useAuthStore();
 
@@ -23,21 +22,4 @@ const authStore = useAuthStore();
 onMounted(async () => {
   await authStore.checkAuth();
 });
-
-// Cleanup theme listener when the app is destroyed
-onBeforeUnmount(() => {
-  cleanupTheme();
-});
 </script>
-
-<style scoped>
-#app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-main {
-  flex: 1;
-}
-</style>

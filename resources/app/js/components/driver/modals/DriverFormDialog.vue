@@ -2,13 +2,13 @@
 import { ref, computed, watch } from 'vue';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import { Button } from '@app/components/common/buttons';
-import DriverEditSidebar from './partials/DriverEditSidebar.vue';
-import BasicInfoSection from './partials/sections/BasicInfoSection.vue';
-import AdditionalSection from './partials/sections/AdditionalSection.vue';
+import DriverEditSidebar from '@app/components/driver/modals/partials/DriverEditSidebar.vue';
+import BasicInfoSection from '@app/components/driver/modals/partials/sections/BasicInfoSection.vue';
+import AdditionalSection from '@app/components/driver/modals/partials/sections/AdditionalSection.vue';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import { usePlatformFormFields } from '@app/composables/usePlatformFormFields';
 import type { LeagueDriver, CreateDriverRequest, DriverFormData } from '@app/types/driver';
-import type { SectionId } from './partials/DriverEditSidebar.vue';
+import type { SectionId } from '@app/components/driver/modals/partials/DriverEditSidebar.vue';
 
 interface Props {
   visible: boolean;

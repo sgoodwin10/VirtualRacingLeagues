@@ -1,0 +1,313 @@
+/* ============================================
+   VRL VELOCITY - TABLE COMPONENTS
+   ============================================ */
+
+/* Base Table Styles */
+.vrl-datatable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Table Headers */
+.vrl-datatable th {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 1rem 1.25rem;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Table Cells */
+.vrl-datatable td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-muted);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+/* Remove border from last row */
+.vrl-datatable tr:last-child td {
+  border-bottom: none;
+}
+
+/* Row Hover */
+.vrl-datatable--hoverable tbody tr:hover td {
+  background: var(--bg-elevated);
+}
+
+/* Striped Rows */
+.vrl-datatable--striped tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ============================================
+   Podium Row Highlighting
+   ============================================ */
+
+/* 1st Place - Gold */
+.vrl-datatable tr.podium-1 td {
+  background: rgba(210, 153, 34, 0.08);
+}
+
+.vrl-datatable tr.podium-1:hover td {
+  background: rgba(210, 153, 34, 0.12);
+}
+
+/* 2nd Place - Silver */
+.vrl-datatable tr.podium-2 td {
+  background: rgba(139, 148, 158, 0.08);
+}
+
+.vrl-datatable tr.podium-2:hover td {
+  background: rgba(139, 148, 158, 0.12);
+}
+
+/* 3rd Place - Bronze */
+.vrl-datatable tr.podium-3 td {
+  background: rgba(240, 136, 62, 0.08);
+}
+
+.vrl-datatable tr.podium-3:hover td {
+  background: rgba(240, 136, 62, 0.12);
+}
+
+/* ============================================
+   Position Indicator
+   ============================================ */
+
+.position-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 24px;
+}
+
+/* Podium Positions */
+.position-indicator.position-1 {
+  color: var(--yellow); /* Gold */
+}
+
+.position-indicator.position-2 {
+  color: var(--text-secondary); /* Silver */
+}
+
+.position-indicator.position-3 {
+  color: var(--orange); /* Bronze */
+}
+
+/* ============================================
+   Driver Cell
+   ============================================ */
+
+.driver-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.driver-avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.driver-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.driver-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.driver-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.driver-team {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ============================================
+   Points Cell
+   ============================================ */
+
+.points-cell {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ============================================
+   Gap Cell
+   ============================================ */
+
+.gap-cell {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   Table Pagination
+   ============================================ */
+
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+}
+
+.pagination-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.pagination-btn.active {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--bg-dark);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+
+.vrl-datatable-empty {
+  padding: 3rem;
+  text-align: center;
+}
+
+.vrl-datatable-loading {
+  padding: 3rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.vrl-datatable-loading .pi {
+  font-size: 2rem;
+  color: var(--text-muted);
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+@media (max-width: 768px) {
+  .vrl-datatable th,
+  .vrl-datatable td {
+    padding: 0.75rem 1rem;
+  }
+
+  .driver-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.65rem;
+  }
+
+  .driver-name {
+    font-size: 0.85rem;
+  }
+
+  .driver-team {
+    font-size: 0.7rem;
+  }
+
+  .table-pagination {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .pagination-controls {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ============================================
+   Sortable Column Headers
+   ============================================ */
+
+.vrl-datatable th[data-sortable='true'] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.vrl-datatable th[data-sortable='true']:hover {
+  color: var(--cyan);
+}
+
+.vrl-datatable th .p-sortable-column-icon {
+  margin-left: 0.5rem;
+  color: var(--text-muted);
+}
+
+.vrl-datatable th .p-sortable-column-icon:hover {
+  color: var(--cyan);
+}

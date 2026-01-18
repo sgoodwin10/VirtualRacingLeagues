@@ -394,12 +394,17 @@ final class DriverApplicationService
                     ));
                     $psnId = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
                         $rowData,
-                        ['PSN_ID', 'psn_id', 'psnid']
+                        ['PsnId', 'PSN_ID', 'psn_id', 'psnid']
                     ));
                     $iracingId = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
                         $rowData,
-                        ['iRacing_ID', 'iracing_id', 'iracinid']
+                        ['IracingId', 'iRacing_ID', 'iracing_id', 'iracingid']
                     ));
+                    $iracingCustomerIdStr = $this->getCaseInsensitiveValue(
+                        $rowData,
+                        ['IracingCustomerId', 'iracing_customer_id', 'iracingcustomerid']
+                    );
+                    $iracingCustomerId = $iracingCustomerIdStr !== null ? (int) $iracingCustomerIdStr : null;
                     $discordId = $this->sanitizeCsvValue($this->getCaseInsensitiveValue(
                         $rowData,
                         ['Discord_ID', 'discord_id', 'discordid']
@@ -438,6 +443,7 @@ final class DriverApplicationService
                     // Validate: at least one platform ID
                     $hasPlatformId = ($psnId !== null && $psnId !== '')
                         || ($iracingId !== null && $iracingId !== '')
+                        || $iracingCustomerId !== null
                         || ($discordId !== null && $discordId !== '');
 
                     if (! $hasPlatformId) {
@@ -455,11 +461,11 @@ final class DriverApplicationService
                             $leagueId,
                             $psnId,
                             $iracingId,
-                            null,
+                            $iracingCustomerId,
                             $discordId
                         )
                     ) {
-                        $platformStr = $this->getPrimaryPlatformId($psnId, $iracingId, null, $discordId);
+                        $platformStr = $this->getPrimaryPlatformId($psnId, $iracingId, $iracingCustomerId, $discordId);
                         $message = "Row {$rowNumber}: Driver with platform ID '{$platformStr}' ";
                         $message .= 'already exists in this league';
                         $errors[] = [
@@ -479,7 +485,7 @@ final class DriverApplicationService
                         phone: $phone,
                         psn_id: $psnId,
                         iracing_id: $iracingId,
-                        iracing_customer_id: null,
+                        iracing_customer_id: $iracingCustomerId,
                         discord_id: $discordId,
                         driver_number: $driverNumber,
                         status: 'active',
@@ -520,9 +526,18 @@ final class DriverApplicationService
      */
     private function getCaseInsensitiveValue(array $rowData, array $possibleKeys): ?string
     {
-        foreach ($possibleKeys as $key) {
-            if (array_key_exists($key, $rowData) && $rowData[$key] !== null && $rowData[$key] !== '') {
-                return (string) $rowData[$key];
+        // Build a lowercase lookup map of possible keys
+        $lowerPossibleKeys = array_map('strtolower', $possibleKeys);
+
+        // Check each column in the row data
+        foreach ($rowData as $columnName => $value) {
+            $lowerColumnName = strtolower($columnName);
+
+            // If this column matches any of our possible keys (case-insensitive)
+            if (in_array($lowerColumnName, $lowerPossibleKeys, true)) {
+                if ($value !== null && $value !== '') {
+                    return (string) $value;
+                }
             }
         }
 

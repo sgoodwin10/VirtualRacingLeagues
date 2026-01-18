@@ -1,0 +1,2660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VRL Design System - Components</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ================================================================
+       VRL VELOCITY DESIGN SYSTEM - CSS VARIABLES
+       ================================================================ */
+    :root {
+      /* Background Colors */
+      --bg-dark: #0d1117;
+      --bg-panel: #161b22;
+      --bg-card: #1c2128;
+      --bg-elevated: #21262d;
+      --bg-highlight: #272d36;
+
+      /* Text Colors */
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+
+      /* Border Colors */
+      --border: #30363d;
+      --border-muted: #21262d;
+
+      /* Accent Colors */
+      --cyan: #58a6ff;
+      --green: #7ee787;
+      --orange: #f0883e;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --yellow: #d29922;
+
+      /* Dim Variants (with transparency) */
+      --cyan-dim: rgba(88, 166, 255, 0.15);
+      --green-dim: rgba(126, 231, 135, 0.15);
+      --orange-dim: rgba(240, 136, 62, 0.15);
+      --red-dim: rgba(248, 81, 73, 0.15);
+      --purple-dim: rgba(188, 140, 255, 0.15);
+      --yellow-dim: rgba(210, 153, 34, 0.15);
+
+      /* Typography */
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'Inter', sans-serif;
+
+      /* Spacing & Sizing */
+      --radius-sm: 4px;
+      --radius: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-pill: 100px;
+
+      /* Transitions */
+      --transition: all 0.3s ease;
+    }
+
+    /* ================================================================
+       BASE STYLES
+       ================================================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* Background Grid */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ================================================================
+       LAYOUT
+       ================================================================ */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .page-header {
+      text-align: center;
+      padding: 4rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4rem;
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+    }
+
+    .page-title .highlight {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Section Styles */
+    .section {
+      margin-bottom: 4rem;
+      padding-bottom: 4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    .section-header {
+      margin-bottom: 2rem;
+    }
+
+    .section-tag {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--cyan);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-desc {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Subsection */
+    .subsection {
+      margin-bottom: 2rem;
+    }
+
+    .subsection-title {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px dashed var(--border-muted);
+    }
+
+    /* Component Grid */
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .component-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .component-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .component-label {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ================================================================
+       COLOR PALETTE
+       ================================================================ */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .color-swatch {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .color-preview {
+      height: 80px;
+    }
+
+    .color-info {
+      background: var(--bg-card);
+      padding: 0.75rem;
+    }
+
+    .color-name {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.25rem;
+    }
+
+    .color-value {
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* ================================================================
+       TYPOGRAPHY
+       ================================================================ */
+    .typography-showcase {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .typo-item {
+      display: flex;
+      align-items: baseline;
+      gap: 2rem;
+      padding: 1rem 0;
+      border-bottom: 1px dashed var(--border-muted);
+    }
+
+    .typo-label {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      min-width: 120px;
+    }
+
+    .typo-display-h1 {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .typo-display-h2 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .typo-display-h3 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .typo-section-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .typo-card-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .typo-body {
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+
+    .typo-body-secondary {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .typo-small {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .typo-label-text {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
+
+    /* ================================================================
+       BUTTONS
+       ================================================================ */
+    .btn {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      letter-spacing: 1px;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    /* Button Variants */
+    .btn-primary {
+      background: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    .btn-primary:hover {
+      background: #79b8ff;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(88, 166, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-elevated);
+      border-color: var(--cyan);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: none;
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background: var(--bg-elevated);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+    }
+
+    .btn-outline:hover {
+      background: var(--cyan-dim);
+    }
+
+    .btn-success {
+      background: var(--green);
+      color: var(--bg-dark);
+    }
+
+    .btn-success:hover {
+      background: #9ff0a4;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(126, 231, 135, 0.3);
+    }
+
+    .btn-danger {
+      background: var(--red);
+      color: var(--bg-dark);
+    }
+
+    .btn-danger:hover {
+      background: #fa7970;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(248, 81, 73, 0.3);
+    }
+
+    .btn-warning {
+      background: var(--orange);
+      color: var(--bg-dark);
+    }
+
+    .btn-warning:hover {
+      background: #f4a261;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(240, 136, 62, 0.3);
+    }
+
+    /* Button Sizes */
+    .btn-sm {
+      font-size: 0.75rem;
+      padding: 0.5rem 1rem;
+    }
+
+    .btn-lg {
+      font-size: 1rem;
+      padding: 1rem 2rem;
+    }
+
+    .btn-xl {
+      font-size: 1.1rem;
+      padding: 1.25rem 2.5rem;
+    }
+
+    /* Button States */
+    .btn:disabled,
+    .btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Icon Button */
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: var(--radius);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon.btn-sm {
+      width: 32px;
+      height: 32px;
+    }
+
+    .btn-icon.btn-lg {
+      width: 48px;
+      height: 48px;
+    }
+
+    /* ================================================================
+       BADGES & INDICATORS
+       ================================================================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-pill);
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .badge-default {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+    }
+
+    .badge-cyan {
+      background: var(--cyan-dim);
+      color: var(--cyan);
+    }
+
+    .badge-green {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .badge-orange {
+      background: var(--orange-dim);
+      color: var(--orange);
+    }
+
+    .badge-red {
+      background: var(--red-dim);
+      color: var(--red);
+    }
+
+    .badge-purple {
+      background: var(--purple-dim);
+      color: var(--purple);
+    }
+
+    /* Badge with dot */
+    .badge-dot::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge-dot.pulse::before {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    /* Status Indicator */
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-active .status-dot { background: var(--green); }
+    .status-pending .status-dot { background: var(--orange); }
+    .status-inactive .status-dot { background: var(--text-muted); }
+    .status-error .status-dot { background: var(--red); }
+
+    .status-active { color: var(--green); }
+    .status-pending { color: var(--orange); }
+    .status-inactive { color: var(--text-muted); }
+    .status-error { color: var(--red); }
+
+    /* Position Indicator */
+    .position-indicator {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.9rem;
+      border-radius: var(--radius);
+      background: var(--bg-elevated);
+    }
+
+    .position-1 {
+      background: var(--yellow-dim);
+      color: var(--yellow);
+    }
+
+    .position-2 {
+      background: rgba(139, 148, 158, 0.15);
+      color: var(--text-secondary);
+    }
+
+    .position-3 {
+      background: var(--orange-dim);
+      color: var(--orange);
+    }
+
+    /* Tag Indicator */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.7rem;
+      font-weight: 500;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+    }
+
+    .tag-cyan {
+      background: var(--cyan-dim);
+      color: var(--cyan);
+    }
+
+    .tag-success {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .tag-warning {
+      background: var(--orange-dim);
+      color: var(--orange);
+    }
+
+    .tag-danger {
+      background: var(--red-dim);
+      color: var(--red);
+    }
+
+    /* ================================================================
+       CARDS
+       ================================================================ */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .card-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+
+    /* Feature Card */
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--cyan);
+      box-shadow: 0 20px 40px rgba(88, 166, 255, 0.1);
+    }
+
+    .feature-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      background: var(--cyan-dim);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .feature-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+
+    .feature-desc {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    /* Metric Card */
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .metric-card-cyan::before { background: var(--cyan); }
+    .metric-card-green::before { background: var(--green); }
+    .metric-card-orange::before { background: var(--orange); }
+    .metric-card-purple::before { background: var(--purple); }
+
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-change {
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .metric-change.positive { color: var(--green); }
+    .metric-change.negative { color: var(--red); }
+    .metric-change.neutral { color: var(--text-muted); }
+
+    /* Alert Card */
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      border: 1px solid;
+    }
+
+    .alert-info {
+      background: var(--cyan-dim);
+      border-color: rgba(88, 166, 255, 0.3);
+      color: var(--cyan);
+    }
+
+    .alert-success {
+      background: var(--green-dim);
+      border-color: rgba(126, 231, 135, 0.3);
+      color: var(--green);
+    }
+
+    .alert-warning {
+      background: var(--orange-dim);
+      border-color: rgba(240, 136, 62, 0.3);
+      color: var(--orange);
+    }
+
+    .alert-error {
+      background: var(--red-dim);
+      border-color: rgba(248, 81, 73, 0.3);
+      color: var(--red);
+    }
+
+    .alert-icon {
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .alert-content {
+      flex: 1;
+    }
+
+    .alert-title {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .alert-message {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    /* Info Box */
+    .info-box {
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius);
+      background: var(--bg-elevated);
+      border-left: 3px solid;
+    }
+
+    .info-box-info { border-left-color: var(--cyan); }
+    .info-box-success { border-left-color: var(--green); }
+    .info-box-warning { border-left-color: var(--orange); }
+    .info-box-danger { border-left-color: var(--red); }
+
+    .info-box-title {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .info-box-message {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* ================================================================
+       FORM ELEMENTS
+       ================================================================ */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    .form-label .required {
+      color: var(--red);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px var(--cyan-dim);
+    }
+
+    .form-input.error {
+      border-color: var(--red);
+    }
+
+    .form-input.error:focus {
+      box-shadow: 0 0 0 3px var(--red-dim);
+    }
+
+    .form-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Textarea */
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* Select */
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 5.646a.5.5 0 0 1 .708 0L8 8.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+
+    /* Helper Text */
+    .form-helper {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    /* Error Text */
+    .form-error {
+      font-size: 0.75rem;
+      color: var(--red);
+      margin-top: 0.5rem;
+    }
+
+    /* Character Count */
+    .form-char-count {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: 0.25rem;
+    }
+
+    /* Checkbox */
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+    }
+
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .checkbox.checked {
+      background: var(--cyan);
+      border-color: var(--cyan);
+    }
+
+    .checkbox.checked::after {
+      content: '✓';
+      color: var(--bg-dark);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .checkbox-label {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    /* Toggle Switch */
+    .toggle-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .toggle {
+      width: 44px;
+      height: 24px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-pill);
+      position: relative;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+
+    .toggle.active {
+      background: var(--green-dim);
+    }
+
+    .toggle.active::after {
+      left: 22px;
+      background: var(--green);
+    }
+
+    .toggle-label {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    /* Input Group */
+    .input-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    /* ================================================================
+       LISTS
+       ================================================================ */
+    .list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .list-row:hover {
+      border-color: var(--cyan);
+      background: var(--bg-elevated);
+    }
+
+    .list-row-indicator {
+      width: 4px;
+      height: 40px;
+      border-radius: 2px;
+      background: var(--border);
+    }
+
+    .list-row-indicator.active { background: var(--green); }
+    .list-row-indicator.pending { background: var(--orange); }
+    .list-row-indicator.inactive { background: var(--text-muted); }
+
+    .list-row-content {
+      flex: 1;
+    }
+
+    .list-row-title {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .list-row-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .list-row-stats {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .list-row-stat {
+      text-align: right;
+    }
+
+    .list-row-stat-value {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .list-row-stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .list-row-action {
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .list-row:hover .list-row-action {
+      opacity: 1;
+    }
+
+    /* Section Header for Lists */
+    .list-section-header {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 0.75rem 0;
+      margin-top: 1rem;
+    }
+
+    /* ================================================================
+       TABLES
+       ================================================================ */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .data-table th {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 1rem 1.25rem;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-muted);
+      font-size: 0.9rem;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+      background: var(--bg-elevated);
+    }
+
+    /* Podium Rows */
+    .data-table tr.podium-1 td {
+      background: rgba(210, 153, 34, 0.08);
+    }
+
+    .data-table tr.podium-2 td {
+      background: rgba(139, 148, 158, 0.08);
+    }
+
+    .data-table tr.podium-3 td {
+      background: rgba(240, 136, 62, 0.08);
+    }
+
+    /* Driver Cell */
+    .driver-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .driver-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    .driver-name {
+      font-weight: 500;
+    }
+
+    .driver-team {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Points Cell */
+    .points-cell {
+      font-family: var(--font-display);
+      font-weight: 700;
+    }
+
+    /* Gap Cell */
+    .gap-cell {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* Table Pagination */
+    .table-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+    }
+
+    .pagination-info {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .pagination-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .pagination-btn:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .pagination-btn.active {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    /* ================================================================
+       NAVIGATION
+       ================================================================ */
+    /* Breadcrumbs */
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .breadcrumb-item {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .breadcrumb-item:hover {
+      color: var(--cyan);
+    }
+
+    .breadcrumb-item.active {
+      color: var(--text-primary);
+    }
+
+    .breadcrumb-separator {
+      color: var(--text-muted);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg-elevated);
+      padding: 0.5rem;
+      border-radius: var(--radius);
+    }
+
+    .tab {
+      padding: 0.5rem 1rem;
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+      background: var(--bg-card);
+    }
+
+    .tab.active {
+      background: var(--cyan);
+      color: var(--bg-dark);
+      border-color: var(--cyan);
+    }
+
+    /* Navigation Links */
+    .nav-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--cyan);
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    /* ================================================================
+       PANELS & ACCORDIONS
+       ================================================================ */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .panel-header:hover {
+      background: var(--bg-elevated);
+    }
+
+    .panel-title {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-toggle {
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .panel-header.expanded .panel-toggle {
+      transform: rotate(180deg);
+    }
+
+    .panel-content {
+      padding: 1.25rem;
+    }
+
+    /* Accordion */
+    .accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .accordion-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .accordion-header:hover {
+      background: var(--bg-elevated);
+    }
+
+    .accordion-title {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .accordion-content {
+      padding: 0 1.25rem 1.25rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* ================================================================
+       MODALS & OVERLAYS
+       ================================================================ */
+    .modal-preview {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 500px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      border: none;
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .modal-close:hover {
+      background: var(--bg-highlight);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+
+    /* Drawer Preview */
+    .drawer-preview {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 400px;
+      height: 400px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .drawer-back {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      border: none;
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .drawer-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .drawer-body {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    /* ================================================================
+       LOADING STATES
+       ================================================================ */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-highlight) 50%, var(--bg-elevated) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-text {
+      height: 14px;
+      margin-bottom: 0.5rem;
+    }
+
+    .skeleton-text.short {
+      width: 60%;
+    }
+
+    .skeleton-title {
+      height: 20px;
+      width: 40%;
+      margin-bottom: 1rem;
+    }
+
+    .skeleton-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius);
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .spinner-lg {
+      width: 40px;
+      height: 40px;
+      border-width: 4px;
+    }
+
+    /* ================================================================
+       UTILITY CLASSES
+       ================================================================ */
+    .text-cyan { color: var(--cyan); }
+    .text-green { color: var(--green); }
+    .text-orange { color: var(--orange); }
+    .text-red { color: var(--red); }
+    .text-purple { color: var(--purple); }
+    .text-muted { color: var(--text-muted); }
+    .text-secondary { color: var(--text-secondary); }
+
+    .bg-cyan-dim { background: var(--cyan-dim); }
+    .bg-green-dim { background: var(--green-dim); }
+    .bg-orange-dim { background: var(--orange-dim); }
+    .bg-red-dim { background: var(--red-dim); }
+
+    .font-display { font-family: var(--font-display); }
+    .font-body { font-family: var(--font-body); }
+
+    .text-gradient {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ================================================================
+       RESPONSIVE
+       ================================================================ */
+    @media (max-width: 768px) {
+      .page-title {
+        font-size: 2rem;
+      }
+
+      .component-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .input-group {
+        grid-template-columns: 1fr;
+      }
+
+      .typo-item {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <div class="container">
+    <!-- Page Header -->
+    <header class="page-header">
+      <h1 class="page-title">VRL <span class="highlight">DESIGN SYSTEM</span></h1>
+      <p class="page-subtitle">Component library and building blocks for the Velocity design theme</p>
+    </header>
+
+    <!-- =====================================================
+         COLORS
+         ===================================================== -->
+    <section class="section" id="colors">
+      <div class="section-header">
+        <div class="section-tag">Foundation</div>
+        <h2 class="section-title">Color Palette</h2>
+        <p class="section-desc">The technical blueprint color system for dark interfaces</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Accent Colors</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #58a6ff;"></div>
+            <div class="color-info">
+              <div class="color-name">Cyan</div>
+              <div class="color-value">#58a6ff</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #7ee787;"></div>
+            <div class="color-info">
+              <div class="color-name">Green</div>
+              <div class="color-value">#7ee787</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #f0883e;"></div>
+            <div class="color-info">
+              <div class="color-name">Orange</div>
+              <div class="color-value">#f0883e</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #f85149;"></div>
+            <div class="color-info">
+              <div class="color-name">Red</div>
+              <div class="color-value">#f85149</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #bc8cff;"></div>
+            <div class="color-info">
+              <div class="color-name">Purple</div>
+              <div class="color-value">#bc8cff</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #d29922;"></div>
+            <div class="color-info">
+              <div class="color-name">Yellow</div>
+              <div class="color-value">#d29922</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Background Colors</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #0d1117;"></div>
+            <div class="color-info">
+              <div class="color-name">Dark</div>
+              <div class="color-value">#0d1117</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #161b22;"></div>
+            <div class="color-info">
+              <div class="color-name">Panel</div>
+              <div class="color-value">#161b22</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #1c2128;"></div>
+            <div class="color-info">
+              <div class="color-name">Card</div>
+              <div class="color-value">#1c2128</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #21262d;"></div>
+            <div class="color-info">
+              <div class="color-name">Elevated</div>
+              <div class="color-value">#21262d</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #272d36;"></div>
+            <div class="color-info">
+              <div class="color-name">Highlight</div>
+              <div class="color-value">#272d36</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Text & Border Colors</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #e6edf3;"></div>
+            <div class="color-info">
+              <div class="color-name">Primary Text</div>
+              <div class="color-value">#e6edf3</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #8b949e;"></div>
+            <div class="color-info">
+              <div class="color-name">Secondary Text</div>
+              <div class="color-value">#8b949e</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #6e7681;"></div>
+            <div class="color-info">
+              <div class="color-name">Muted Text</div>
+              <div class="color-value">#6e7681</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #30363d;"></div>
+            <div class="color-info">
+              <div class="color-name">Border</div>
+              <div class="color-value">#30363d</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         TYPOGRAPHY
+         ===================================================== -->
+    <section class="section" id="typography">
+      <div class="section-header">
+        <div class="section-tag">Foundation</div>
+        <h2 class="section-title">Typography</h2>
+        <p class="section-desc">Orbitron for display, Inter for body text</p>
+      </div>
+
+      <div class="typography-showcase">
+        <div class="typo-item">
+          <span class="typo-label">Display H1</span>
+          <span class="typo-display-h1">RACING LEAGUE</span>
+        </div>
+        <div class="typo-item">
+          <span class="typo-label">Display H2</span>
+          <span class="typo-display-h2">Championship</span>
+        </div>
+        <div class="typo-item">
+          <span class="typo-label">Display H3</span>
+          <span class="typo-display-h3">Season Results</span>
+        </div>
+        <div class="typo-item">
+          <span class="typo-label">Section Title</span>
+          <span class="typo-section-title">Driver Standings</span>
+        </div>
+        <div class="typo-item">
+          <span class="typo-label">Card Title</span>
+          <span class="typo-card-title">GT4 Pro League</span>
+        </div>
+        <div class="typo-item">
+          <span class="typo-label">Body Text</span>
+          <span class="typo-body">Track your league standings and driver statistics in real-time.</span>
+        </div>
+        <div class="typo-item">
+          <span class="typo-label">Secondary</span>
+          <span class="typo-body-secondary">Last updated 5 minutes ago</span>
+        </div>
+        <div class="typo-item">
+          <span class="typo-label">Small/Muted</span>
+          <span class="typo-small">Points calculated automatically</span>
+        </div>
+        <div class="typo-item">
+          <span class="typo-label">Label</span>
+          <span class="typo-label-text">Features</span>
+        </div>
+        <div class="typo-item">
+          <span class="typo-label">Gradient</span>
+          <span class="typo-display-h2 text-gradient">Virtual Racing</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         BUTTONS
+         ===================================================== -->
+    <section class="section" id="buttons">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Buttons</h2>
+        <p class="section-desc">Interactive button components with multiple variants and sizes</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Button Variants</h3>
+        <div class="component-row">
+          <button class="btn btn-primary">Primary</button>
+          <button class="btn btn-secondary">Secondary</button>
+          <button class="btn btn-ghost">Ghost</button>
+          <button class="btn btn-outline">Outline</button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Semantic Variants</h3>
+        <div class="component-row">
+          <button class="btn btn-success">Success</button>
+          <button class="btn btn-warning">Warning</button>
+          <button class="btn btn-danger">Danger</button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Button Sizes</h3>
+        <div class="component-row">
+          <button class="btn btn-primary btn-sm">Small</button>
+          <button class="btn btn-primary">Default</button>
+          <button class="btn btn-primary btn-lg">Large</button>
+          <button class="btn btn-primary btn-xl">Extra Large</button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Button States</h3>
+        <div class="component-row">
+          <button class="btn btn-primary" disabled>Disabled</button>
+          <button class="btn btn-primary loading" style="min-width: 100px;">Loading</button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Icon Buttons</h3>
+        <div class="component-row">
+          <button class="btn btn-icon btn-secondary btn-sm">+</button>
+          <button class="btn btn-icon btn-secondary">+</button>
+          <button class="btn btn-icon btn-secondary btn-lg">+</button>
+          <button class="btn btn-icon btn-primary">✓</button>
+          <button class="btn btn-icon btn-danger">×</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         BADGES & INDICATORS
+         ===================================================== -->
+    <section class="section" id="badges">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Badges & Indicators</h2>
+        <p class="section-desc">Status badges, position indicators, and inline tags</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Badges</h3>
+        <div class="component-row">
+          <span class="badge badge-default">Default</span>
+          <span class="badge badge-cyan">Cyan</span>
+          <span class="badge badge-green">Green</span>
+          <span class="badge badge-orange">Orange</span>
+          <span class="badge badge-red">Red</span>
+          <span class="badge badge-purple">Purple</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Badges with Dot</h3>
+        <div class="component-row">
+          <span class="badge badge-green badge-dot">Active</span>
+          <span class="badge badge-orange badge-dot">Pending</span>
+          <span class="badge badge-red badge-dot pulse">Live</span>
+          <span class="badge badge-cyan badge-dot">Online</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Status Indicators</h3>
+        <div class="component-row">
+          <span class="status-indicator status-active"><span class="status-dot"></span>Active</span>
+          <span class="status-indicator status-pending"><span class="status-dot"></span>Pending</span>
+          <span class="status-indicator status-inactive"><span class="status-dot"></span>Inactive</span>
+          <span class="status-indicator status-error"><span class="status-dot"></span>Error</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Position Indicators</h3>
+        <div class="component-row">
+          <span class="position-indicator position-1">1</span>
+          <span class="position-indicator position-2">2</span>
+          <span class="position-indicator position-3">3</span>
+          <span class="position-indicator">4</span>
+          <span class="position-indicator">5</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Tags</h3>
+        <div class="component-row">
+          <span class="tag">Default</span>
+          <span class="tag tag-cyan">Platform</span>
+          <span class="tag tag-success">Complete</span>
+          <span class="tag tag-warning">Warning</span>
+          <span class="tag tag-danger">Error</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         CARDS
+         ===================================================== -->
+    <section class="section" id="cards">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Cards</h2>
+        <p class="section-desc">Content containers with various layouts and styles</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Basic Card</h3>
+        <div class="component-grid">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Card Title</span>
+              <span class="badge badge-cyan">Badge</span>
+            </div>
+            <div class="card-body">
+              <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                This is the card body content. Cards can contain any content and are commonly used for grouping related information.
+              </p>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-primary btn-sm">Action</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Feature Cards</h3>
+        <div class="component-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🏁</div>
+            <h3 class="feature-title">Multi-Platform Support</h3>
+            <p class="feature-desc">Gran Turismo 7, iRacing, and more. Run competitions across multiple platforms seamlessly.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3 class="feature-title">Automatic Standings</h3>
+            <p class="feature-desc">Points calculated automatically with support for custom scoring systems and penalties.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">👥</div>
+            <h3 class="feature-title">Driver Management</h3>
+            <p class="feature-desc">Track driver stats, manage teams, and monitor performance across seasons.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Metric Cards</h3>
+        <div class="component-grid">
+          <div class="metric-card metric-card-cyan">
+            <div class="metric-label">Active Drivers</div>
+            <div class="metric-value text-cyan">247</div>
+            <div class="metric-change positive">↑ 12% from last month</div>
+          </div>
+          <div class="metric-card metric-card-green">
+            <div class="metric-label">Races Completed</div>
+            <div class="metric-value text-green">1,842</div>
+            <div class="metric-change positive">↑ 8% from last month</div>
+          </div>
+          <div class="metric-card metric-card-orange">
+            <div class="metric-label">Pending Results</div>
+            <div class="metric-value text-orange">15</div>
+            <div class="metric-change neutral">→ No change</div>
+          </div>
+          <div class="metric-card metric-card-purple">
+            <div class="metric-label">Total Points</div>
+            <div class="metric-value text-purple">52.4K</div>
+            <div class="metric-change negative">↓ 3% from last month</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Alerts</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <div class="alert-content">
+              <div class="alert-title">Information</div>
+              <div class="alert-message">This is an informational message for the user.</div>
+            </div>
+          </div>
+          <div class="alert alert-success">
+            <span class="alert-icon">✓</span>
+            <div class="alert-content">
+              <div class="alert-title">Success</div>
+              <div class="alert-message">Your changes have been saved successfully.</div>
+            </div>
+          </div>
+          <div class="alert alert-warning">
+            <span class="alert-icon">⚠️</span>
+            <div class="alert-content">
+              <div class="alert-title">Warning</div>
+              <div class="alert-message">Please review your settings before continuing.</div>
+            </div>
+          </div>
+          <div class="alert alert-error">
+            <span class="alert-icon">✕</span>
+            <div class="alert-content">
+              <div class="alert-title">Error</div>
+              <div class="alert-message">Something went wrong. Please try again.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Info Boxes</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="info-box info-box-info">
+            <div class="info-box-title">Tip</div>
+            <div class="info-box-message">You can import drivers via CSV for faster setup.</div>
+          </div>
+          <div class="info-box info-box-success">
+            <div class="info-box-title">Completed</div>
+            <div class="info-box-message">All drivers have been processed successfully.</div>
+          </div>
+          <div class="info-box info-box-warning">
+            <div class="info-box-title">Note</div>
+            <div class="info-box-message">Some features require an active season to be configured.</div>
+          </div>
+          <div class="info-box info-box-danger">
+            <div class="info-box-title">Important</div>
+            <div class="info-box-message">This action cannot be undone.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         FORMS
+         ===================================================== -->
+    <section class="section" id="forms">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Form Elements</h2>
+        <p class="section-desc">Input fields, controls, and form layout components</p>
+      </div>
+
+      <div class="component-grid">
+        <div class="component-box">
+          <div class="subsection">
+            <h3 class="subsection-title">Text Input</h3>
+            <div class="form-group">
+              <label class="form-label">League Name <span class="required">*</span></label>
+              <input type="text" class="form-input" placeholder="Enter league name">
+              <div class="form-helper">This will be displayed publicly</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email (Error State)</label>
+              <input type="email" class="form-input error" value="invalid-email">
+              <div class="form-error">Please enter a valid email address</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Disabled Input</label>
+              <input type="text" class="form-input" value="Cannot edit" disabled>
+            </div>
+          </div>
+        </div>
+
+        <div class="component-box">
+          <div class="subsection">
+            <h3 class="subsection-title">Textarea</h3>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea class="form-input form-textarea" placeholder="Enter description...">Welcome to our racing league! We host weekly races across multiple platforms.</textarea>
+              <div class="form-char-count">75 / 500</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="component-box">
+          <div class="subsection">
+            <h3 class="subsection-title">Select</h3>
+            <div class="form-group">
+              <label class="form-label">Platform</label>
+              <select class="form-input form-select">
+                <option value="">Select a platform</option>
+                <option value="gt7">Gran Turismo 7</option>
+                <option value="iracing">iRacing</option>
+                <option value="acc">Assetto Corsa Competizione</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="component-box">
+          <div class="subsection">
+            <h3 class="subsection-title">Checkboxes</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <label class="checkbox-wrapper">
+                <span class="checkbox checked"></span>
+                <span class="checkbox-label">Enable notifications</span>
+              </label>
+              <label class="checkbox-wrapper">
+                <span class="checkbox"></span>
+                <span class="checkbox-label">Allow public viewing</span>
+              </label>
+              <label class="checkbox-wrapper">
+                <span class="checkbox"></span>
+                <span class="checkbox-label">Track lap times</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="component-box">
+          <div class="subsection">
+            <h3 class="subsection-title">Toggle Switches</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <label class="toggle-wrapper">
+                <span class="toggle active"></span>
+                <span class="toggle-label">Public League</span>
+              </label>
+              <label class="toggle-wrapper">
+                <span class="toggle"></span>
+                <span class="toggle-label">Auto-calculate points</span>
+              </label>
+              <label class="toggle-wrapper">
+                <span class="toggle active"></span>
+                <span class="toggle-label">Email notifications</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="component-box">
+          <div class="subsection">
+            <h3 class="subsection-title">Input Group</h3>
+            <div class="input-group">
+              <div class="form-group">
+                <label class="form-label">First Name</label>
+                <input type="text" class="form-input" placeholder="John">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Last Name</label>
+                <input type="text" class="form-input" placeholder="Doe">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         LISTS
+         ===================================================== -->
+    <section class="section" id="lists">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Lists</h2>
+        <p class="section-desc">List containers and row components for displaying collections</p>
+      </div>
+
+      <div class="list-container" style="max-width: 700px;">
+        <div class="list-section-header">Active Seasons</div>
+        <div class="list-row">
+          <div class="list-row-indicator active"></div>
+          <div class="list-row-content">
+            <div class="list-row-title">GT4 Championship 2026</div>
+            <div class="list-row-subtitle">Started Jan 15, 2026 • 12 rounds</div>
+          </div>
+          <div class="list-row-stats">
+            <div class="list-row-stat">
+              <div class="list-row-stat-value text-cyan">24</div>
+              <div class="list-row-stat-label">Drivers</div>
+            </div>
+            <div class="list-row-stat">
+              <div class="list-row-stat-value">8</div>
+              <div class="list-row-stat-label">Races</div>
+            </div>
+          </div>
+          <div class="list-row-action">
+            <button class="btn btn-icon btn-ghost">→</button>
+          </div>
+        </div>
+        <div class="list-row">
+          <div class="list-row-indicator pending"></div>
+          <div class="list-row-content">
+            <div class="list-row-title">Endurance Series</div>
+            <div class="list-row-subtitle">Starts Feb 1, 2026 • 6 rounds</div>
+          </div>
+          <div class="list-row-stats">
+            <div class="list-row-stat">
+              <div class="list-row-stat-value text-orange">18</div>
+              <div class="list-row-stat-label">Drivers</div>
+            </div>
+            <div class="list-row-stat">
+              <div class="list-row-stat-value">0</div>
+              <div class="list-row-stat-label">Races</div>
+            </div>
+          </div>
+          <div class="list-row-action">
+            <button class="btn btn-icon btn-ghost">→</button>
+          </div>
+        </div>
+        <div class="list-section-header">Completed</div>
+        <div class="list-row">
+          <div class="list-row-indicator inactive"></div>
+          <div class="list-row-content">
+            <div class="list-row-title">GT4 Championship 2025</div>
+            <div class="list-row-subtitle">Completed Dec 20, 2025 • 10 rounds</div>
+          </div>
+          <div class="list-row-stats">
+            <div class="list-row-stat">
+              <div class="list-row-stat-value">20</div>
+              <div class="list-row-stat-label">Drivers</div>
+            </div>
+            <div class="list-row-stat">
+              <div class="list-row-stat-value">10</div>
+              <div class="list-row-stat-label">Races</div>
+            </div>
+          </div>
+          <div class="list-row-action">
+            <button class="btn btn-icon btn-ghost">→</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         TABLES
+         ===================================================== -->
+    <section class="section" id="tables">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Tables</h2>
+        <p class="section-desc">Data tables with sorting, pagination, and podium highlighting</p>
+      </div>
+
+      <div style="max-width: 900px;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">Pos</th>
+              <th>Driver</th>
+              <th style="width: 100px;">Team</th>
+              <th style="width: 80px; text-align: right;">Points</th>
+              <th style="width: 80px; text-align: right;">Gap</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="podium-1">
+              <td><span class="position-indicator position-1">1</span></td>
+              <td>
+                <div class="driver-cell">
+                  <span class="driver-avatar">MV</span>
+                  <div>
+                    <div class="driver-name">Max Velocity</div>
+                    <div class="driver-team">Red Storm Racing</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="tag tag-cyan">RSR</span></td>
+              <td class="points-cell" style="text-align: right;">256</td>
+              <td class="gap-cell" style="text-align: right;">—</td>
+            </tr>
+            <tr class="podium-2">
+              <td><span class="position-indicator position-2">2</span></td>
+              <td>
+                <div class="driver-cell">
+                  <span class="driver-avatar">LH</span>
+                  <div>
+                    <div class="driver-name">Lewis Hamilton</div>
+                    <div class="driver-team">Silver Arrows</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="tag">SAR</span></td>
+              <td class="points-cell" style="text-align: right;">243</td>
+              <td class="gap-cell" style="text-align: right;">-13</td>
+            </tr>
+            <tr class="podium-3">
+              <td><span class="position-indicator position-3">3</span></td>
+              <td>
+                <div class="driver-cell">
+                  <span class="driver-avatar">CL</span>
+                  <div>
+                    <div class="driver-name">Charles Leclerc</div>
+                    <div class="driver-team">Prancing Horse</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="tag tag-danger">PH</span></td>
+              <td class="points-cell" style="text-align: right;">231</td>
+              <td class="gap-cell" style="text-align: right;">-25</td>
+            </tr>
+            <tr>
+              <td><span class="position-indicator">4</span></td>
+              <td>
+                <div class="driver-cell">
+                  <span class="driver-avatar">LN</span>
+                  <div>
+                    <div class="driver-name">Lando Norris</div>
+                    <div class="driver-team">Papaya Racing</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="tag tag-warning">PAP</span></td>
+              <td class="points-cell" style="text-align: right;">198</td>
+              <td class="gap-cell" style="text-align: right;">-58</td>
+            </tr>
+            <tr>
+              <td><span class="position-indicator">5</span></td>
+              <td>
+                <div class="driver-cell">
+                  <span class="driver-avatar">GO</span>
+                  <div>
+                    <div class="driver-name">George Oliver</div>
+                    <div class="driver-team">Silver Arrows</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="tag">SAR</span></td>
+              <td class="points-cell" style="text-align: right;">175</td>
+              <td class="gap-cell" style="text-align: right;">-81</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-pagination">
+          <div class="pagination-info">Showing 1-5 of 24 drivers</div>
+          <div class="pagination-controls">
+            <button class="pagination-btn">←</button>
+            <button class="pagination-btn active">1</button>
+            <button class="pagination-btn">2</button>
+            <button class="pagination-btn">3</button>
+            <button class="pagination-btn">4</button>
+            <button class="pagination-btn">5</button>
+            <button class="pagination-btn">→</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         NAVIGATION
+         ===================================================== -->
+    <section class="section" id="navigation">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Navigation</h2>
+        <p class="section-desc">Breadcrumbs, tabs, and navigation links</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Breadcrumbs</h3>
+        <nav class="breadcrumbs">
+          <a href="#" class="breadcrumb-item">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <a href="#" class="breadcrumb-item">Leagues</a>
+          <span class="breadcrumb-separator">/</span>
+          <a href="#" class="breadcrumb-item">GT4 Pro League</a>
+          <span class="breadcrumb-separator">/</span>
+          <span class="breadcrumb-item active">Standings</span>
+        </nav>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Tabs</h3>
+        <div class="tabs">
+          <button class="tab active">Standings</button>
+          <button class="tab">Drivers</button>
+          <button class="tab">Teams</button>
+          <button class="tab">Results</button>
+          <button class="tab">Settings</button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Navigation Links</h3>
+        <div class="component-row">
+          <a href="#" class="nav-link">Features</a>
+          <a href="#" class="nav-link">How It Works</a>
+          <a href="#" class="nav-link">Pricing</a>
+          <a href="#" class="nav-link">Browse Leagues</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         PANELS & ACCORDIONS
+         ===================================================== -->
+    <section class="section" id="panels">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Panels & Accordions</h2>
+        <p class="section-desc">Collapsible content containers</p>
+      </div>
+
+      <div class="component-grid">
+        <div>
+          <div class="subsection">
+            <h3 class="subsection-title">Panel</h3>
+            <div class="panel">
+              <div class="panel-header expanded">
+                <span class="panel-title">League Settings</span>
+                <span class="panel-toggle">▼</span>
+              </div>
+              <div class="panel-content">
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                  Configure your league settings including visibility, scoring system, and notifications.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="subsection">
+            <h3 class="subsection-title">Accordion</h3>
+            <div class="accordion">
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <span class="accordion-title">General Information</span>
+                  <span>▼</span>
+                </div>
+                <div class="accordion-content">
+                  <p>Configure the basic details of your league including name, description, and branding.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <span class="accordion-title">Scoring System</span>
+                  <span>▶</span>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <span class="accordion-title">Advanced Options</span>
+                  <span>▶</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         MODALS & OVERLAYS
+         ===================================================== -->
+    <section class="section" id="modals">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Modals & Overlays</h2>
+        <p class="section-desc">Dialog windows and drawer panels</p>
+      </div>
+
+      <div class="component-grid">
+        <div>
+          <div class="subsection">
+            <h3 class="subsection-title">Modal Dialog</h3>
+            <div class="modal-preview">
+              <div class="modal-header">
+                <span class="modal-title">Add New Driver</span>
+                <button class="modal-close">×</button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <label class="form-label">Driver Name <span class="required">*</span></label>
+                  <input type="text" class="form-input" placeholder="Enter driver name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Team</label>
+                  <select class="form-input form-select">
+                    <option value="">Select team</option>
+                    <option value="1">Red Storm Racing</option>
+                    <option value="2">Silver Arrows</option>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Add Driver</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="subsection">
+            <h3 class="subsection-title">Drawer</h3>
+            <div class="drawer-preview">
+              <div class="drawer-header">
+                <button class="drawer-back">←</button>
+                <span class="drawer-title">Driver Details</span>
+              </div>
+              <div class="drawer-body">
+                <div class="metric-card metric-card-cyan" style="margin-bottom: 1rem;">
+                  <div class="metric-label">Current Position</div>
+                  <div class="metric-value text-cyan">3rd</div>
+                </div>
+                <div class="metric-card metric-card-green">
+                  <div class="metric-label">Total Points</div>
+                  <div class="metric-value text-green">231</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         LOADING STATES
+         ===================================================== -->
+    <section class="section" id="loading">
+      <div class="section-header">
+        <div class="section-tag">Components</div>
+        <h2 class="section-title">Loading States</h2>
+        <p class="section-desc">Skeleton loaders and spinners</p>
+      </div>
+
+      <div class="component-grid">
+        <div class="component-box">
+          <div class="subsection">
+            <h3 class="subsection-title">Skeleton Loader</h3>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+              <div class="skeleton skeleton-avatar"></div>
+              <div style="flex: 1;">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text short"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="component-box">
+          <div class="subsection">
+            <h3 class="subsection-title">Spinners</h3>
+            <div class="component-row">
+              <div class="spinner"></div>
+              <div class="spinner spinner-lg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 3rem 0; border-top: 1px solid var(--border); margin-top: 4rem;">
+      <p style="color: var(--text-muted); font-size: 0.85rem;">
+        VRL Design System • Velocity Theme • 2026
+      </p>
+      <p style="margin-top: 0.5rem;">
+        <a href="../brochure.html" class="nav-link">Back to Brochure</a>
+        <span style="color: var(--text-muted); margin: 0 1rem;">•</span>
+        <a href="../leagues.html" class="nav-link">View Leagues Page</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

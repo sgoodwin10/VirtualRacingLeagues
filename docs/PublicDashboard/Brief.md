@@ -2,12 +2,29 @@
 - This is the public facing side of the app `Virtual Racing Leagues`.
 - its an app that allows virtual racing / sim racing managers can manage their competitions easily.
 - it will consist of 2 main areas
-    - Brochure style with Landing Page/Signup/Product Overview/promoting the app, etc
+    - Brochure style with Landing Page/Signup/Product Overview/carousel/etc promoting the app, etc
     - Area to view public leagues, their competitions, seasons and results.
+
+
+
+# TASK
+- create 3 unqiue html designs that will have 2 pages each - the brochure page, as well as the view leagues page.
+- directory `docs/PublicDashboard/design-2026`
+- it will contain elements like:
+    - navigation
+    - competition standings table
+    - form fields
+    - carousel
+    - etc
+- this will be the basis for the redesign for `resources/public`
 
 
 # Design UI/UX
 this is a site for sim racing managers and drivers come to view and manage results. So theming must be around driving/racing/online competition. 
+Use the design style/ux/ui/colours of `resources/app` as this will be the public facing brochure site for the app. Use the same colours, fonts, padding, etc.
+Important Files and Directories
+- `resources/app/css/app.css` for css styles
+- `resources/app/js/components/common` for resuable components
 
 
 # Brochure Style area
@@ -15,10 +32,23 @@ this is a site for sim racing managers and drivers come to view and manage resul
 
 ## Tagline / Description
 something along the lines of
-- Setup your league, copetitions and seasons in easy steps
+- Setup your league, comptitions and seasons in easy steps
 - Create a few rounds and races.
 - enter results
 - share the link for everyone to view
+
+
+## The Basics
+The steps required for a basic competition:
+- sign up and create you league. Example `Barry's Barry-R League`
+- Add/import a list of drivers
+- Create a Competition `Sunday GT4 League`
+- Create a season `Winter 2026`
+- Add drivers to the league
+- Create a round, and the races for the round
+- When you have completed the round, add/import the race results and complete the round.
+- View the leaderboard.
+
 
 ## Price
 its currently free, but i don't want the typical different tier prices that alot of SAAS products use. i want it indicated that it is all free.
@@ -44,9 +74,10 @@ look in `resources/public/js/views/auth` for existing working files and function
 - GT7 track api data
 - GT7 Car api data
 - Season car selection
+- Individual race car selection
 - Track details
 - AI OCR Reader
-- Google Sheets
+- Google Sheet Imports
 - More platforms and games
 
 

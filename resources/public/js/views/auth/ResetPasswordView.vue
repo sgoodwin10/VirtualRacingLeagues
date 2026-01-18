@@ -17,7 +17,7 @@ const password = ref('');
 const passwordConfirmation = ref('');
 
 // Password validation
-const { passwordStrength, passwordErrors, isPasswordValid } = usePasswordValidation(password);
+const { passwordErrors, isPasswordValid } = usePasswordValidation(password);
 
 const isSubmitting = ref(false);
 const errorMessage = ref('');
@@ -78,14 +78,16 @@ const handleSubmit = async (): Promise<void> => {
     toast.add({
       severity: 'success',
       summary: 'Password Reset Successful',
-      detail: 'Your password has been reset. You can now log in with your new password.',
+      detail: 'Your password has been reset successfully.',
       life: 5000,
     });
 
-    router.push({ name: 'login' });
+    // Redirect to login after a short delay
+    setTimeout(() => {
+      router.push('/login');
+    }, 2000);
   } catch {
-    errorMessage.value =
-      'Failed to reset password. The link may have expired. Please request a new reset link.';
+    errorMessage.value = 'Failed to reset password. Please try again or request a new reset link.';
   } finally {
     isSubmitting.value = false;
   }
@@ -93,35 +95,25 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center pattern-carbon p-4 md:p-8">
-    <div class="w-full max-w-md">
-      <div class="card-racing p-8 md:p-10">
-        <!-- Header -->
-        <div class="text-center mb-8">
-          <div
-            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-tarmac mb-4"
-          >
-            <i class="pi pi-key text-3xl text-gold"></i>
-          </div>
-          <h1 class="font-display text-3xl md:text-4xl mb-3 text-gold uppercase tracking-wider">
-            Reset Password
-          </h1>
-          <p class="font-body text-barrier">Enter your new password below</p>
-        </div>
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <!-- Header -->
+      <div>
+        <h2 class="text-center text-3xl font-bold text-gray-900">Reset your password</h2>
+        <p class="mt-2 text-center text-sm text-gray-600">Enter your new password below.</p>
+      </div>
 
-        <!-- Error Message -->
-        <Message v-if="errorMessage" severity="error" :closable="false" class="mb-6">
-          {{ errorMessage }}
-        </Message>
+      <!-- Error Message -->
+      <Message v-if="errorMessage" severity="error" :closable="false">
+        {{ errorMessage }}
+      </Message>
 
-        <!-- Form -->
-        <form class="space-y-6" @submit.prevent="handleSubmit">
+      <!-- Form -->
+      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
+        <div class="space-y-4">
           <!-- Password Field -->
           <div>
-            <label
-              for="password"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
+            <label for="password" class="block text-sm font-medium text-gray-700">
               New Password
             </label>
             <Password
@@ -129,9 +121,8 @@ const handleSubmit = async (): Promise<void> => {
               v-model="password"
               placeholder="Enter your new password"
               :class="{ 'p-invalid': passwordError }"
-              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
-                root: { class: 'w-full' },
+                root: { class: 'mt-1 w-full' },
                 input: { class: 'w-full' },
               }"
               :disabled="isSubmitting"
@@ -141,38 +132,16 @@ const handleSubmit = async (): Promise<void> => {
               @input="passwordError = ''"
             />
 
-            <!-- Password Strength Indicator -->
-            <div v-if="password" class="mt-2">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-body text-barrier">Password Strength:</span>
-                <span
-                  class="text-xs font-display uppercase tracking-wider font-semibold"
-                  :style="{ color: passwordStrength.color }"
-                >
-                  {{ passwordStrength.label }}
-                </span>
-              </div>
-              <div class="w-full h-1.5 bg-tarmac rounded-full overflow-hidden">
-                <div
-                  class="h-full transition-all duration-300 ease-out rounded-full"
-                  :style="{
-                    width: `${(passwordStrength.score / 4) * 100}%`,
-                    backgroundColor: passwordStrength.color,
-                  }"
-                />
-              </div>
-            </div>
-
             <!-- Password Requirements -->
-            <div v-if="password && passwordErrors.length > 0" class="mt-3 space-y-1">
-              <p class="text-xs font-body text-barrier mb-1.5">Password must:</p>
+            <div v-if="password && passwordErrors.length > 0" class="mt-2 space-y-1">
+              <p class="text-xs text-gray-600">Password must:</p>
               <ul class="space-y-1">
                 <li
                   v-for="error in passwordErrors"
                   :key="error"
-                  class="text-xs font-body text-dnf flex items-start"
+                  class="text-xs text-red-600 flex items-start"
                 >
-                  <i class="pi pi-times-circle text-dnf mr-2 mt-0.5 text-[10px]"></i>
+                  <span class="mr-2">•</span>
                   <span>{{ error }}</span>
                 </li>
               </ul>
@@ -180,62 +149,54 @@ const handleSubmit = async (): Promise<void> => {
 
             <!-- Success Check -->
             <div v-if="password && isPasswordValid" class="mt-2 flex items-center">
-              <i class="pi pi-check-circle text-pole mr-2 text-sm"></i>
-              <span class="text-xs font-body text-pole">Password meets all requirements</span>
+              <span class="text-xs text-green-600">✓ Password meets all requirements</span>
             </div>
 
-            <small v-if="passwordError" class="text-dnf mt-1 block font-body text-sm">
+            <small v-if="passwordError" class="text-red-600 mt-1 block text-sm">
               {{ passwordError }}
             </small>
           </div>
 
           <!-- Confirm Password Field -->
           <div>
-            <label
-              for="password-confirmation"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
+            <label for="password-confirmation" class="block text-sm font-medium text-gray-700">
               Confirm New Password
             </label>
             <Password
               id="password-confirmation"
               v-model="passwordConfirmation"
               placeholder="Confirm your new password"
-              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
-                root: { class: 'w-full' },
+                root: { class: 'mt-1 w-full' },
                 input: { class: 'w-full' },
               }"
               :disabled="isSubmitting"
               :feedback="false"
               :toggle-mask="true"
               autocomplete="new-password"
-              aria-label="Confirm New Password"
+              aria-label="Confirm Password"
               @input="passwordError = ''"
             />
           </div>
-
-          <!-- Submit Button -->
-          <button
-            type="submit"
-            :disabled="!isFormValid || isSubmitting"
-            class="w-full btn btn-primary"
-            :aria-busy="isSubmitting"
-          >
-            <span v-if="!isSubmitting">Reset Password</span>
-            <span v-else>Resetting...</span>
-          </button>
-        </form>
-
-        <!-- Back to Login -->
-        <div class="mt-8 text-center">
-          <router-link
-            to="/login"
-            class="font-body text-sm text-gold hover:text-gold-bright transition-colors"
-          >
-            Back to Login
-          </router-link>
         </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          :disabled="!isFormValid || isSubmitting"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          :aria-busy="isSubmitting"
+        >
+          <span v-if="!isSubmitting">Reset Password</span>
+          <span v-else>Resetting...</span>
+        </button>
+      </form>
+
+      <!-- Back to Login -->
+      <div class="text-center">
+        <router-link to="/login" class="text-sm text-gray-600 hover:text-gray-900">
+          Back to login
+        </router-link>
       </div>
     </div>
   </div>

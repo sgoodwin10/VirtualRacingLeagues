@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VrlBadge > Snapshots > matches snapshot for cyan variant 1`] = `"<span data-v-1e59aedb="" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] font-[var(--font-display)] text-[0.7rem] font-semibold tracking-wider uppercase whitespace-nowrap bg-[var(--cyan-dim)] text-[var(--cyan)]">Cyan</span>"`;
+
+exports[`VrlBadge > Snapshots > matches snapshot for default variant 1`] = `"<span data-v-1e59aedb="" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] font-[var(--font-display)] text-[0.7rem] font-semibold tracking-wider uppercase whitespace-nowrap bg-[var(--bg-elevated)] text-[var(--text-secondary)]">Default</span>"`;
+
+exports[`VrlBadge > Snapshots > matches snapshot with dot 1`] = `"<span data-v-1e59aedb="" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] font-[var(--font-display)] text-[0.7rem] font-semibold tracking-wider uppercase whitespace-nowrap bg-[var(--green-dim)] text-[var(--green)] badge-dot">Active</span>"`;
+
+exports[`VrlBadge > Snapshots > matches snapshot with pulse 1`] = `"<span data-v-1e59aedb="" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] font-[var(--font-display)] text-[0.7rem] font-semibold tracking-wider uppercase whitespace-nowrap bg-[var(--red-dim)] text-[var(--red)] badge-dot pulse">Live</span>"`;

@@ -1,0 +1,141 @@
+/* ============================================
+   VRL VELOCITY DESIGN SYSTEM - NAVIGATION COMPONENTS
+   ============================================ */
+
+/**
+ * Navigation component styles for breadcrumbs, tabs, and navigation links.
+ *
+ * Components:
+ * - VrlBreadcrumbs: Hierarchical navigation path
+ * - VrlTabs: Segmented control for switching between views
+ * - VrlNavLink: Styled navigation link with animated underline
+ *
+ * Most styles are scoped within the Vue components themselves.
+ * This file contains any global navigation utilities and overrides.
+ */
+
+/* ============================================
+   BREADCRUMB UTILITIES
+   ============================================ */
+
+/**
+ * Custom breadcrumb separator utility classes
+ */
+.breadcrumb-separator-arrow::before {
+  content: '→';
+}
+
+.breadcrumb-separator-chevron::before {
+  content: '›';
+}
+
+.breadcrumb-separator-dot::before {
+  content: '•';
+}
+
+/* ============================================
+   TAB UTILITIES
+   ============================================ */
+
+/**
+ * Tab container alignment utilities
+ */
+.tabs-left {
+  justify-content: flex-start;
+}
+
+.tabs-center {
+  justify-content: center;
+}
+
+.tabs-right {
+  justify-content: flex-end;
+}
+
+.tabs-stretch {
+  flex: 1;
+}
+
+/* ============================================
+   NAVIGATION LINK UTILITIES
+   ============================================ */
+
+/**
+ * Navigation group spacing
+ */
+.nav-group {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-group-vertical {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+/* ============================================
+   RESPONSIVE BEHAVIOR
+   ============================================ */
+
+@media (max-width: 768px) {
+  .nav-group {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav-group {
+    gap: 1rem;
+  }
+
+  /* Stack navigation on mobile */
+  .nav-group-mobile-stack {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY ENHANCEMENTS
+   ============================================ */
+
+/**
+ * Skip to main content link (keyboard navigation)
+ */
+.skip-to-main {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--cyan);
+  color: var(--bg-dark);
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 0 0 var(--radius) 0;
+  transition: top 0.2s ease;
+  z-index: 9999;
+}
+
+.skip-to-main:focus {
+  top: 0;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  /* Hide navigation elements when printing */
+  .tabs,
+  .nav-link {
+    display: none;
+  }
+
+  /* Show breadcrumbs but remove underlines */
+  .breadcrumbs .breadcrumb-item::after {
+    display: none;
+  }
+}

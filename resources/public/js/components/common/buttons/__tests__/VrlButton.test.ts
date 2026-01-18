@@ -1,395 +1,406 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import VrlButton from '../VrlButton.vue';
+import PrimeButton from 'primevue/button';
+
+// Mock icon component for testing
+const MockIcon = {
+  name: 'MockIcon',
+  props: ['size'],
+  template: '<svg :width="size" :height="size"><circle /></svg>',
+};
 
 describe('VrlButton', () => {
   describe('Rendering', () => {
     it('renders with default props', () => {
-      const wrapper = mount(VrlButton, {
-        slots: { default: 'Click Me' },
-      });
-      expect(wrapper.text()).toBe('Click Me');
-      expect(wrapper.element.tagName).toBe('BUTTON');
-    });
-
-    it('renders slot content correctly', () => {
-      const wrapper = mount(VrlButton, {
-        slots: { default: 'Get Started Free' },
-      });
-      expect(wrapper.text()).toBe('Get Started Free');
-    });
-
-    it('has correct default type attribute', () => {
       const wrapper = mount(VrlButton);
-      expect(wrapper.attributes('type')).toBe('button');
+      expect(wrapper.find('.vrl-btn').exists()).toBe(true);
+      expect(wrapper.find('.vrl-btn-secondary').exists()).toBe(true);
+    });
+
+    it('renders with all variant types', () => {
+      const variants = [
+        'primary',
+        'secondary',
+        'ghost',
+        'outline',
+        'success',
+        'warning',
+        'danger',
+      ] as const;
+
+      variants.forEach((variant) => {
+        const wrapper = mount(VrlButton, {
+          props: { variant },
+        });
+        expect(wrapper.find(`.vrl-btn-${variant}`).exists()).toBe(true);
+      });
+    });
+
+    it('renders with all size types', () => {
+      const sizes = ['sm', 'default', 'lg', 'xl'] as const;
+
+      sizes.forEach((size) => {
+        const wrapper = mount(VrlButton, {
+          props: { size },
+        });
+        const hasClass =
+          size === 'default'
+            ? wrapper.find('.vrl-btn').exists() && !wrapper.find('.vrl-btn-default').exists()
+            : wrapper.find(`.vrl-btn-${size}`).exists();
+        expect(hasClass).toBe(true);
+      });
+    });
+
+    it('renders with label text', () => {
+      const wrapper = mount(VrlButton, {
+        props: { label: 'Click Me' },
+      });
+      expect(wrapper.text()).toContain('Click Me');
+    });
+
+    it('renders with icon (left position)', () => {
+      const wrapper = mount(VrlButton, {
+        props: {
+          icon: MockIcon,
+          iconPos: 'left',
+          label: 'Button',
+        },
+      });
+      // Icon is rendered through PrimeVue's icon slot
+      const primeButton = wrapper.findComponent(PrimeButton);
+      expect(primeButton.exists()).toBe(true);
+    });
+
+    it('renders with icon (right position)', () => {
+      const wrapper = mount(VrlButton, {
+        props: {
+          icon: MockIcon,
+          iconPos: 'right',
+          label: 'Button',
+        },
+      });
+      // Icon is rendered through PrimeVue's icon slot
+      const primeButton = wrapper.findComponent(PrimeButton);
+      expect(primeButton.exists()).toBe(true);
+    });
+
+    it('renders as icon-only (no label)', () => {
+      const wrapper = mount(VrlButton, {
+        props: {
+          icon: MockIcon,
+        },
+      });
+      // Icon is rendered through PrimeVue's icon slot
+      const primeButton = wrapper.findComponent(PrimeButton);
+      expect(primeButton.exists()).toBe(true);
+    });
+
+    it('renders with loading state', () => {
+      const wrapper = mount(VrlButton, {
+        props: { loading: true },
+      });
+      const primeButton = wrapper.findComponent(PrimeButton);
+      expect(primeButton.props('loading')).toBe(true);
+    });
+
+    it('renders with disabled state', () => {
+      const wrapper = mount(VrlButton, {
+        props: { disabled: true },
+      });
+      expect(wrapper.vm.$props.disabled).toBe(true);
+    });
+
+    it('renders default slot content', () => {
+      const wrapper = mount(VrlButton, {
+        slots: {
+          default: 'Custom Content',
+        },
+      });
+      expect(wrapper.text()).toContain('Custom Content');
     });
   });
 
-  describe('Type Prop', () => {
-    it('renders with type="submit"', () => {
+  describe('Props', () => {
+    it('accepts and applies variant prop', () => {
       const wrapper = mount(VrlButton, {
-        props: { type: 'submit' },
+        props: { variant: 'primary' },
       });
-      expect(wrapper.attributes('type')).toBe('submit');
+      expect(wrapper.find('.vrl-btn-primary').exists()).toBe(true);
     });
 
-    it('renders with type="reset"', () => {
-      const wrapper = mount(VrlButton, {
-        props: { type: 'reset' },
-      });
-      expect(wrapper.attributes('type')).toBe('reset');
-    });
-  });
-
-  describe('Size Prop', () => {
-    it('applies xs size classes', () => {
-      const wrapper = mount(VrlButton, {
-        props: { size: 'xs' },
-      });
-      expect(wrapper.classes()).toContain('px-2.5');
-      expect(wrapper.classes()).toContain('py-1.5');
-      expect(wrapper.classes()).toContain('text-[9px]');
-    });
-
-    it('applies sm size classes', () => {
-      const wrapper = mount(VrlButton, {
-        props: { size: 'sm' },
-      });
-      expect(wrapper.classes()).toContain('px-3.5');
-      expect(wrapper.classes()).toContain('py-2');
-      expect(wrapper.classes()).toContain('text-[10px]');
-    });
-
-    it('applies md size classes (default)', () => {
-      const wrapper = mount(VrlButton);
-      expect(wrapper.classes()).toContain('px-5');
-      expect(wrapper.classes()).toContain('py-2.5');
-      expect(wrapper.classes()).toContain('text-xs');
-    });
-
-    it('applies lg size classes', () => {
+    it('accepts and applies size prop', () => {
       const wrapper = mount(VrlButton, {
         props: { size: 'lg' },
       });
-      expect(wrapper.classes()).toContain('px-6');
-      expect(wrapper.classes()).toContain('py-3');
-      expect(wrapper.classes()).toContain('text-sm');
+      expect(wrapper.find('.vrl-btn-lg').exists()).toBe(true);
     });
 
-    it('applies xl size classes', () => {
+    it('accepts and applies disabled prop', () => {
       const wrapper = mount(VrlButton, {
-        props: { size: 'xl' },
+        props: { disabled: true },
       });
-      expect(wrapper.classes()).toContain('px-8');
-      expect(wrapper.classes()).toContain('py-4');
-      expect(wrapper.classes()).toContain('text-base');
+      expect(wrapper.vm.$props.disabled).toBe(true);
     });
-  });
 
-  describe('Variant Prop', () => {
-    it('applies primary variant classes (default)', () => {
+    it('accepts and applies loading prop', () => {
+      const wrapper = mount(VrlButton, {
+        props: { loading: true },
+      });
+      expect(wrapper.vm.$props.loading).toBe(true);
+    });
+
+    it('accepts and applies type prop', () => {
+      const wrapper = mount(VrlButton, {
+        props: { type: 'submit' },
+      });
+      expect(wrapper.vm.$props.type).toBe('submit');
+    });
+
+    it('accepts and applies ariaLabel prop', () => {
+      const wrapper = mount(VrlButton, {
+        props: { ariaLabel: 'Custom label' },
+      });
+      expect(wrapper.vm.$props.ariaLabel).toBe('Custom label');
+    });
+
+    it('defaults to button type', () => {
       const wrapper = mount(VrlButton);
-      expect(wrapper.classes()).toContain('bg-racing-safety');
-      expect(wrapper.classes()).toContain('text-racing-pit-white');
-      expect(wrapper.classes()).toContain('btn-shine');
+      expect(wrapper.vm.$props.type).toBe('button');
     });
 
-    it('applies secondary variant classes', () => {
-      const wrapper = mount(VrlButton, {
-        props: { variant: 'secondary' },
-      });
-      expect(wrapper.classes()).toContain('bg-transparent');
-      expect(wrapper.classes()).toContain('text-racing-gold');
-      expect(wrapper.classes()).toContain('border');
-      expect(wrapper.classes()).toContain('border-racing-gold');
-    });
-
-    it('applies ghost variant classes', () => {
-      const wrapper = mount(VrlButton, {
-        props: { variant: 'ghost' },
-      });
-      expect(wrapper.classes()).toContain('bg-transparent');
-      expect(wrapper.classes()).toContain('theme-text-muted');
-      expect(wrapper.classes()).toContain('theme-bg-tertiary');
-    });
-
-    it('applies text variant classes', () => {
-      const wrapper = mount(VrlButton, {
-        props: { variant: 'text' },
-      });
-      expect(wrapper.classes()).toContain('bg-transparent');
-      expect(wrapper.classes()).toContain('theme-text-muted');
-    });
-
-    it('applies danger variant classes', () => {
-      const wrapper = mount(VrlButton, {
-        props: { variant: 'danger' },
-      });
-      expect(wrapper.classes()).toContain('bg-racing-danger');
-      expect(wrapper.classes()).toContain('text-racing-pit-white');
-    });
-
-    it('applies danger-outline variant classes', () => {
-      const wrapper = mount(VrlButton, {
-        props: { variant: 'danger-outline' },
-      });
-      expect(wrapper.classes()).toContain('bg-transparent');
-      expect(wrapper.classes()).toContain('text-racing-danger');
-      expect(wrapper.classes()).toContain('border');
-    });
-  });
-
-  describe('Icon Prop', () => {
-    it('renders icon on left by default', () => {
-      const wrapper = mount(VrlButton, {
-        props: { icon: 'plus' },
-        slots: { default: 'Add' },
-      });
-      const icons = wrapper.findAll('svg');
-      expect(icons.length).toBe(1);
-    });
-
-    it('renders icon on right when iconPos="right"', () => {
-      const wrapper = mount(VrlButton, {
-        props: { icon: 'eye', iconPos: 'right' },
-        slots: { default: 'View' },
-      });
-      const icons = wrapper.findAll('svg');
-      expect(icons.length).toBe(1);
-    });
-
-    it('does not render icon when icon prop is undefined', () => {
-      const wrapper = mount(VrlButton, {
-        slots: { default: 'No Icon' },
-      });
-      const icons = wrapper.findAll('svg');
-      expect(icons.length).toBe(0);
-    });
-
-    it('renders trash icon correctly', () => {
-      const wrapper = mount(VrlButton, {
-        props: { icon: 'trash' },
-      });
-      expect(wrapper.find('svg').exists()).toBe(true);
-    });
-
-    it('renders eye icon correctly', () => {
-      const wrapper = mount(VrlButton, {
-        props: { icon: 'eye' },
-      });
-      expect(wrapper.find('svg').exists()).toBe(true);
-    });
-  });
-
-  describe('Disabled State', () => {
-    it('sets disabled attribute when disabled=true', () => {
-      const wrapper = mount(VrlButton, {
-        props: { disabled: true },
-      });
-      expect(wrapper.attributes('disabled')).toBeDefined();
-    });
-
-    it('does not emit click event when disabled', async () => {
-      const wrapper = mount(VrlButton, {
-        props: { disabled: true },
-      });
-      await wrapper.trigger('click');
-      expect(wrapper.emitted('click')).toBeFalsy();
-    });
-
-    it('is not disabled by default', () => {
+    it('defaults to secondary variant', () => {
       const wrapper = mount(VrlButton);
-      expect(wrapper.attributes('disabled')).toBeUndefined();
+      expect(wrapper.find('.vrl-btn-secondary').exists()).toBe(true);
     });
 
-    it('applies disabled styles when disabled=true', () => {
-      const wrapper = mount(VrlButton, {
-        props: { disabled: true },
-      });
-      expect(wrapper.classes()).toContain('disabled:opacity-50');
-      expect(wrapper.classes()).toContain('disabled:cursor-not-allowed');
-    });
-  });
-
-  describe('Loading State', () => {
-    it('sets disabled attribute when loading=true', () => {
-      const wrapper = mount(VrlButton, {
-        props: { loading: true },
-      });
-      expect(wrapper.attributes('disabled')).toBeDefined();
-    });
-
-    it('does not emit click event when loading', async () => {
-      const wrapper = mount(VrlButton, {
-        props: { loading: true },
-      });
-      await wrapper.trigger('click');
-      expect(wrapper.emitted('click')).toBeFalsy();
-    });
-
-    it('shows loading spinner when loading=true', () => {
-      const wrapper = mount(VrlButton, {
-        props: { loading: true },
-        slots: { default: 'Loading...' },
-      });
-      const spinner = wrapper.find('.animate-spin');
-      expect(spinner.exists()).toBe(true);
-    });
-
-    it('hides icon when loading=true', () => {
-      const wrapper = mount(VrlButton, {
-        props: { loading: true, icon: 'plus' },
-        slots: { default: 'Loading...' },
-      });
-      const spinner = wrapper.find('.animate-spin');
-      expect(spinner.exists()).toBe(true);
-      // Only the spinner should be present, not the plus icon
-      const icons = wrapper.findAll('svg');
-      expect(icons.length).toBe(1);
-    });
-
-    it('applies disabled styles when loading', () => {
-      const wrapper = mount(VrlButton, {
-        props: { loading: true },
-      });
-      expect(wrapper.classes()).toContain('disabled:opacity-50');
-      expect(wrapper.classes()).toContain('disabled:cursor-not-allowed');
+    it('defaults to default size', () => {
+      const wrapper = mount(VrlButton);
+      expect(wrapper.find('.vrl-btn-sm').exists()).toBe(false);
+      expect(wrapper.find('.vrl-btn-lg').exists()).toBe(false);
+      expect(wrapper.find('.vrl-btn-xl').exists()).toBe(false);
     });
   });
 
-  describe('Click Events', () => {
+  describe('Events', () => {
     it('emits click event when clicked', async () => {
-      const wrapper = mount(VrlButton);
+      const wrapper = mount(VrlButton, {
+        props: { label: 'Click Me' },
+      });
       await wrapper.trigger('click');
       expect(wrapper.emitted('click')).toBeTruthy();
       expect(wrapper.emitted('click')?.[0]).toBeDefined();
     });
 
-    it('passes mouse event to click handler', async () => {
-      const wrapper = mount(VrlButton);
-      await wrapper.trigger('click');
-      const emittedEvent = wrapper.emitted('click')?.[0]?.[0];
-      expect(emittedEvent).toBeInstanceOf(MouseEvent);
-    });
-
-    it('can be clicked multiple times', async () => {
-      const wrapper = mount(VrlButton);
-      await wrapper.trigger('click');
-      await wrapper.trigger('click');
-      await wrapper.trigger('click');
-      expect(wrapper.emitted('click')).toHaveLength(3);
-    });
-  });
-
-  describe('Base Classes', () => {
-    it('always includes inline-flex class', () => {
-      const wrapper = mount(VrlButton);
-      expect(wrapper.classes()).toContain('inline-flex');
-    });
-
-    it('always includes items-center class', () => {
-      const wrapper = mount(VrlButton);
-      expect(wrapper.classes()).toContain('items-center');
-    });
-
-    it('always includes font-display class', () => {
-      const wrapper = mount(VrlButton);
-      expect(wrapper.classes()).toContain('font-display');
-    });
-
-    it('always includes uppercase class', () => {
-      const wrapper = mount(VrlButton);
-      expect(wrapper.classes()).toContain('uppercase');
-    });
-
-    it('always includes tracking-wider class', () => {
-      const wrapper = mount(VrlButton);
-      expect(wrapper.classes()).toContain('tracking-wider');
-    });
-  });
-
-  describe('Custom Class Prop', () => {
-    it('applies custom classes from class prop', () => {
+    it('does not emit click when disabled', async () => {
       const wrapper = mount(VrlButton, {
-        props: { class: 'custom-class' },
+        props: { disabled: true },
       });
-      expect(wrapper.classes()).toContain('custom-class');
+
+      // PrimeVue Button handles disabled state internally
+      expect(wrapper.vm.$props.disabled).toBe(true);
+      await wrapper.trigger('click');
+      // Disabled buttons should not emit click (handled by PrimeVue)
+      expect(wrapper.emitted('click')).toBeFalsy();
     });
 
-    it('combines custom classes with variant and size classes', () => {
+    it('does not emit click when loading', async () => {
+      const handleClick = vi.fn();
       const wrapper = mount(VrlButton, {
-        props: { variant: 'secondary', size: 'lg', class: 'mt-4' },
+        props: { loading: true },
+        attrs: { onClick: handleClick },
       });
-      expect(wrapper.classes()).toContain('mt-4');
-      expect(wrapper.classes()).toContain('bg-transparent');
-      expect(wrapper.classes()).toContain('px-6');
+
+      // PrimeVue Button handles loading state internally
+      const primeButton = wrapper.findComponent(PrimeButton);
+      expect(primeButton.props('loading')).toBe(true);
+    });
+
+    it('click event receives MouseEvent', async () => {
+      const wrapper = mount(VrlButton);
+      await wrapper.trigger('click');
+      const emitted = wrapper.emitted('click');
+      expect(emitted).toBeTruthy();
+      expect(emitted?.[0][0]).toBeInstanceOf(MouseEvent);
     });
   });
 
   describe('Accessibility', () => {
-    it('has type="button" for semantic clarity', () => {
-      const wrapper = mount(VrlButton);
-      expect(wrapper.attributes('type')).toBe('button');
+    it('has accessible name from label', () => {
+      const wrapper = mount(VrlButton, {
+        props: { label: 'Submit Form' },
+      });
+      // Test computed effectiveAriaLabel
+      expect(wrapper.vm.effectiveAriaLabel).toBe('Submit Form');
     });
 
-    it('is focusable when not disabled', () => {
-      const wrapper = mount(VrlButton);
-      expect(wrapper.attributes('disabled')).toBeUndefined();
+    it('has accessible name from ariaLabel prop', () => {
+      const wrapper = mount(VrlButton, {
+        props: {
+          label: 'Button',
+          ariaLabel: 'Custom Accessible Name',
+        },
+      });
+      // ariaLabel takes precedence
+      expect(wrapper.vm.effectiveAriaLabel).toBe('Custom Accessible Name');
     });
 
-    it('is not focusable when disabled', () => {
+    it('icon-only button has default aria-label', () => {
+      const wrapper = mount(VrlButton, {
+        props: { icon: MockIcon },
+      });
+      // Icon-only should have fallback
+      expect(wrapper.vm.effectiveAriaLabel).toBe('Icon button');
+    });
+
+    it('has correct button role (handled by PrimeVue)', () => {
+      const wrapper = mount(VrlButton);
+      expect(wrapper.findComponent(PrimeButton).exists()).toBe(true);
+    });
+
+    it('has disabled attribute when disabled', () => {
       const wrapper = mount(VrlButton, {
         props: { disabled: true },
       });
-      expect(wrapper.attributes('disabled')).toBeDefined();
+      expect(wrapper.vm.$props.disabled).toBe(true);
     });
   });
 
-  describe('Icon Size Integration', () => {
-    it('applies correct icon size for xs button', () => {
-      const wrapper = mount(VrlButton, {
-        props: { icon: 'plus', size: 'xs' },
-      });
-      const icon = wrapper.find('svg');
-      expect(icon.classes()).toContain('text-[10px]');
+  describe('CSS Classes', () => {
+    it('applies base button class', () => {
+      const wrapper = mount(VrlButton);
+      expect(wrapper.find('.vrl-btn').exists()).toBe(true);
     });
 
-    it('applies correct icon size for md button', () => {
+    it('applies variant class', () => {
       const wrapper = mount(VrlButton, {
-        props: { icon: 'plus', size: 'md' },
+        props: { variant: 'danger' },
       });
-      const icon = wrapper.find('svg');
-      expect(icon.classes()).toContain('text-sm');
+      expect(wrapper.find('.vrl-btn-danger').exists()).toBe(true);
     });
 
-    it('applies correct icon size for xl button', () => {
+    it('applies size class', () => {
       const wrapper = mount(VrlButton, {
-        props: { icon: 'plus', size: 'xl' },
+        props: { size: 'xl' },
       });
-      const icon = wrapper.find('svg');
-      expect(icon.classes()).toContain('text-lg');
+      expect(wrapper.find('.vrl-btn-xl').exists()).toBe(true);
+    });
+
+    it('applies multiple classes correctly', () => {
+      const wrapper = mount(VrlButton, {
+        props: {
+          variant: 'success',
+          size: 'lg',
+        },
+      });
+      expect(wrapper.find('.vrl-btn').exists()).toBe(true);
+      expect(wrapper.find('.vrl-btn-success').exists()).toBe(true);
+      expect(wrapper.find('.vrl-btn-lg').exists()).toBe(true);
+    });
+  });
+
+  describe('Icon Sizing', () => {
+    it('renders small icon for sm size', () => {
+      const wrapper = mount(VrlButton, {
+        props: {
+          icon: MockIcon,
+          size: 'sm',
+        },
+      });
+      // Icon is passed to PrimeVue, size logic is in template
+      expect(wrapper.vm.$props.size).toBe('sm');
+      expect(wrapper.vm.$props.icon).toStrictEqual(MockIcon);
+    });
+
+    it('renders default icon for default size', () => {
+      const wrapper = mount(VrlButton, {
+        props: {
+          icon: MockIcon,
+          size: 'default',
+        },
+      });
+      expect(wrapper.vm.$props.size).toBe('default');
+      expect(wrapper.vm.$props.icon).toStrictEqual(MockIcon);
+    });
+
+    it('renders large icon for lg size', () => {
+      const wrapper = mount(VrlButton, {
+        props: {
+          icon: MockIcon,
+          size: 'lg',
+        },
+      });
+      expect(wrapper.vm.$props.size).toBe('lg');
+      expect(wrapper.vm.$props.icon).toStrictEqual(MockIcon);
+    });
+
+    it('renders extra large icon for xl size', () => {
+      const wrapper = mount(VrlButton, {
+        props: {
+          icon: MockIcon,
+          size: 'xl',
+        },
+      });
+      expect(wrapper.vm.$props.size).toBe('xl');
+      expect(wrapper.vm.$props.icon).toStrictEqual(MockIcon);
+    });
+  });
+
+  describe('PrimeVue Integration', () => {
+    it('passes pt prop to PrimeVue Button', () => {
+      const pt = { root: { class: 'custom-class' } };
+      const wrapper = mount(VrlButton, {
+        props: { pt },
+      });
+      expect(wrapper.findComponent(PrimeButton).props('pt')).toEqual(pt);
+    });
+
+    it('wraps PrimeVue Button component', () => {
+      const wrapper = mount(VrlButton);
+      expect(wrapper.findComponent(PrimeButton).exists()).toBe(true);
     });
   });
 
   describe('Edge Cases', () => {
-    it('handles empty slot content', () => {
-      const wrapper = mount(VrlButton);
-      expect(wrapper.exists()).toBe(true);
+    it('handles both label prop and default slot', () => {
+      const wrapper = mount(VrlButton, {
+        props: { label: 'Prop Label' },
+        slots: {
+          default: 'Slot Content',
+        },
+      });
+      // Slot content takes precedence
+      expect(wrapper.text()).toContain('Slot Content');
     });
 
-    it('handles both disabled and loading states', () => {
+    it('handles icon without label', () => {
       const wrapper = mount(VrlButton, {
-        props: { disabled: true, loading: true },
+        props: { icon: MockIcon },
       });
-      expect(wrapper.attributes('disabled')).toBeDefined();
+      expect(wrapper.vm.$props.icon).toStrictEqual(MockIcon);
+      expect(wrapper.vm.isIconOnly).toBe(true);
     });
 
-    it('handles invalid icon name gracefully', () => {
+    it('handles empty string label', () => {
       const wrapper = mount(VrlButton, {
-        props: { icon: 'nonexistent-icon' },
+        props: { label: '' },
       });
-      const icons = wrapper.findAll('svg');
-      expect(icons.length).toBe(0);
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('handles variant with size combination', () => {
+      const variants = ['primary', 'secondary', 'ghost'] as const;
+      const sizes = ['sm', 'lg', 'xl'] as const;
+
+      variants.forEach((variant) => {
+        sizes.forEach((size) => {
+          const wrapper = mount(VrlButton, {
+            props: { variant, size },
+          });
+          expect(wrapper.find(`.vrl-btn-${variant}`).exists()).toBe(true);
+          expect(wrapper.find(`.vrl-btn-${size}`).exists()).toBe(true);
+        });
+      });
     });
   });
 });

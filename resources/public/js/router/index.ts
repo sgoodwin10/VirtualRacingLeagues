@@ -5,8 +5,6 @@ import LoginView from '@public/views/auth/LoginView.vue';
 import RegisterView from '@public/views/auth/RegisterView.vue';
 import ForgotPasswordView from '@public/views/auth/ForgotPasswordView.vue';
 import ResetPasswordView from '@public/views/auth/ResetPasswordView.vue';
-import VerifyEmailView from '@public/views/VerifyEmailView.vue';
-import VerifyEmailResultView from '@public/views/VerifyEmailResultView.vue';
 
 // Extend vue-router RouteMeta to include custom fields
 declare module 'vue-router' {
@@ -63,63 +61,11 @@ const router = createRouter({
         isAuthRoute: true,
       },
     },
-    {
-      path: '/verify-email',
-      name: 'verify-email',
-      component: VerifyEmailView,
-      meta: {
-        title: 'Verify Email',
-      },
-    },
-    {
-      path: '/verify-email-result',
-      name: 'verify-email-result',
-      component: VerifyEmailResultView,
-      meta: {
-        title: 'Email Verification',
-      },
-    },
-    // Public Leagues routes
-    {
-      path: '/leagues',
-      name: 'leagues',
-      component: () => import('@public/views/leagues/PublicLeaguesView.vue'),
-      meta: {
-        title: 'Leagues',
-      },
-    },
-    {
-      path: '/leagues/:slug',
-      name: 'league-detail',
-      component: () => import('@public/views/leagues/LeagueDetailView.vue'),
-      meta: {
-        title: 'League',
-      },
-    },
-    {
-      path: '/leagues/:slug/seasons/:seasonSlug',
-      name: 'season-detail',
-      component: () => import('@public/views/leagues/SeasonView.vue'),
-      meta: {
-        title: 'Season',
-      },
-    },
-    {
-      path: '/component-demo',
-      name: 'component-demo',
-      component: () => import('@public/views/ComponentDemoView.vue'),
-      meta: {
-        title: 'Component Demo',
-      },
-    },
     // 404 catch-all route (must be last)
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
-      component: () => import('@public/views/NotFoundView.vue'),
-      meta: {
-        title: 'Page Not Found',
-      },
+      redirect: '/',
     },
   ],
 });
@@ -171,16 +117,6 @@ router.beforeEach(async (to, _from, next) => {
 
   // Allow navigation
   next();
-});
-
-// GTM DataLayer tracking for virtual page views
-router.afterEach((to) => {
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({
-    event: 'virtual_page_view',
-    page_path: to.fullPath,
-    page_title: (to.meta.title as string) || document.title,
-  });
 });
 
 export default router;

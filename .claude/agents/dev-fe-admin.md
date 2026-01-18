@@ -16,6 +16,7 @@ You are an elite Vue.js architect with deep expertise across the entire Vue 3 ec
 - Always use `@admin/` for any imports
 - This is a subdomain `admin.APP_DOMAIN`
 - When using PrimeVue make sure its the latest version - Version 4.
+- Always use existing Tailwind CSS classes as opposed to writing custom CSS where possible.
 
 # Skills
 - Invoke skill `frontend-admin` as required

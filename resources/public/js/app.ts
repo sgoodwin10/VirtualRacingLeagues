@@ -34,4 +34,7 @@ app.use(PrimeVue, {
 });
 app.use(ToastService);
 
+// Add global properties
+app.config.globalProperties.$appName = import.meta.env.VITE_APP_NAME || 'App';
+
 app.mount('#public-app');

@@ -1,116 +1,105 @@
 <script setup lang="ts">
-import { computed, type Component } from 'vue';
-import {
-  PhPlus,
-  PhEye,
-  PhTrash,
-  PhDotsThree,
-  PhDotsThreeVertical,
-  PhPencilSimple,
-  PhGear,
-  PhShareNetwork,
-  PhX,
-  PhStar,
-  PhDiscordLogo,
-  PhTwitterLogo,
-  PhYoutubeLogo,
-} from '@phosphor-icons/vue';
+import { computed, onMounted, type Component } from 'vue';
+import VrlButton from './VrlButton.vue';
 
-interface Props {
-  icon: string;
-  variant?: 'angled' | 'rounded' | 'circular' | 'gold-outline' | 'ghost' | 'danger';
-  size?: 'xs' | 'sm' | 'md' | 'lg';
-  ariaLabel: string;
+/**
+ * VRL Velocity Icon Button Component
+ *
+ * A specialized square button for icon-only actions (e.g., close, expand, settings).
+ * Wraps VrlButton with enforced square dimensions and tooltip support.
+ *
+ * @example
+ * ```vue
+ * <VrlIconButton
+ *   :icon="PhX"
+ *   variant="ghost"
+ *   tooltip="Close"
+ *   @click="handleClose"
+ * />
+ * ```
+ */
+
+interface VrlIconButtonProps {
+  /** Icon component (required - e.g., from Phosphor Icons) */
+  icon: Component;
+
+  /** Visual variant of the button */
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'success' | 'warning' | 'danger';
+
+  /** Size of the button (square dimensions) */
+  size?: 'sm' | 'default' | 'lg';
+
+  /** Disabled state */
   disabled?: boolean;
-  class?: string;
+
+  /** Tooltip text (shown on hover) */
+  tooltip?: string | null;
+
+  /** Tooltip position */
+  tooltipPosition?: 'top' | 'bottom' | 'left' | 'right';
+
+  /** ARIA label for accessibility (required if no tooltip) */
+  ariaLabel?: string | null;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  variant: 'angled',
-  size: 'md',
+interface VrlIconButtonEmits {
+  (e: 'click', event: MouseEvent): void;
+}
+
+const props = withDefaults(defineProps<VrlIconButtonProps>(), {
+  variant: 'secondary',
+  size: 'default',
   disabled: false,
-  class: undefined,
+  tooltip: null,
+  tooltipPosition: 'top',
+  ariaLabel: null,
 });
 
-const emit = defineEmits<{
-  click: [event: MouseEvent];
-}>();
+const emit = defineEmits<VrlIconButtonEmits>();
 
-const iconMap: Record<string, Component> = {
-  plus: PhPlus,
-  eye: PhEye,
-  trash: PhTrash,
-  'dots-three': PhDotsThree,
-  'dots-three-vertical': PhDotsThreeVertical,
-  'pencil-simple': PhPencilSimple,
-  gear: PhGear,
-  'share-network': PhShareNetwork,
-  x: PhX,
-  star: PhStar,
-  'discord-logo': PhDiscordLogo,
-  'twitter-logo': PhTwitterLogo,
-  'youtube-logo': PhYoutubeLogo,
-};
-
-const iconComponent = computed(() => {
-  return iconMap[props.icon] || null;
+/**
+ * Computed effective aria-label
+ * Priority: ariaLabel prop > tooltip > fallback warning
+ */
+const effectiveAriaLabel = computed(() => {
+  if (props.ariaLabel) return props.ariaLabel;
+  if (props.tooltip) return props.tooltip;
+  return 'Icon button';
 });
 
-const sizeClasses = computed(() => {
-  const sizes = {
-    xs: 'w-7 h-7',
-    sm: 'w-9 h-9',
-    md: 'w-10 h-10',
-    lg: 'w-12 h-12',
-  };
-  return sizes[props.size];
-});
-
-const iconSizeClasses = computed(() => {
-  const sizes = {
-    xs: 'text-xs',
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg',
-  };
-  return sizes[props.size];
-});
-
-const variantClasses = computed(() => {
-  const variants = {
-    angled:
-      'bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright [clip-path:polygon(15%_0%,100%_0%,85%_100%,0%_100%)]',
-    rounded: 'bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright rounded',
-    circular:
-      'bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright rounded-full shadow-md shadow-racing-safety/20',
-    'gold-outline':
-      'bg-transparent text-racing-gold border border-racing-gold hover:bg-racing-gold/10 rounded',
-    ghost: 'hover:text-racing-gold rounded theme-text-muted theme-bg-tertiary',
-    danger:
-      'bg-transparent text-racing-danger border border-racing-danger/50 hover:bg-racing-danger/10 rounded',
-  };
-  return variants[props.variant];
-});
-
-const classes = computed(() => {
-  return `flex items-center justify-center transition-all ${sizeClasses.value} ${variantClasses.value} ${props.class || ''}`;
-});
-
-const handleClick = (event: MouseEvent) => {
-  if (!props.disabled) {
-    emit('click', event);
+/**
+ * Warn if neither tooltip nor ariaLabel is provided (accessibility issue)
+ */
+onMounted(() => {
+  if (!props.tooltip && !props.ariaLabel) {
+    console.warn(
+      '[VrlIconButton] Neither "tooltip" nor "ariaLabel" prop was provided. ' +
+        'For accessibility, please provide at least one of these props.',
+    );
   }
+});
+
+/**
+ * Handle button click events
+ */
+const handleClick = (event: MouseEvent) => {
+  emit('click', event);
 };
 </script>
 
 <template>
-  <button
-    type="button"
+  <VrlButton
+    v-tooltip.top="tooltip"
+    :icon="icon"
+    :variant="variant"
+    :size="size"
     :disabled="disabled"
-    :aria-label="ariaLabel"
-    :class="classes"
+    :aria-label="effectiveAriaLabel"
+    class="vrl-btn-icon"
     @click="handleClick"
-  >
-    <component :is="iconComponent" v-if="iconComponent" :class="iconSizeClasses" weight="bold" />
-  </button>
+  />
 </template>
+
+<style scoped>
+/* Icon button specific styles are in resources/public/css/components/buttons.css */
+</style>

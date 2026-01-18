@@ -167,7 +167,12 @@ function handleTeamSaved(): void {
           </template>
         </Column>
 
-        <Column v-if="!props.isSeasonCompleted" header="Actions" :exportable="false" style="width: 8rem">
+        <Column
+          v-if="!props.isSeasonCompleted"
+          header="Actions"
+          :exportable="false"
+          style="width: 8rem"
+        >
           <template #body="{ data }">
             <div class="flex gap-1">
               <Button :icon="PhPencil" size="sm" variant="outline" @click="handleEditTeam(data)" />

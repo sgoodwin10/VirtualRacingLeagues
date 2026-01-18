@@ -1,68 +1,74 @@
 <script setup lang="ts">
-import { RouterLink, type RouteLocationRaw } from 'vue-router';
-import { PhCaretRight, PhHouse } from '@phosphor-icons/vue';
+import { computed } from 'vue';
+import VrlBreadcrumbItem from './VrlBreadcrumbItem.vue';
+import type { BreadcrumbItem } from '@public/types/navigation';
 
-export interface BreadcrumbItem {
-  label: string;
-  to?: string | RouteLocationRaw;
-}
-
+/**
+ * Props for the Breadcrumbs component
+ */
 interface Props {
+  /**
+   * Array of breadcrumb items to display
+   * Supports 1-5 items (warning shown if > 5)
+   */
   items: BreadcrumbItem[];
-  class?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  class: '',
+const props = defineProps<Props>();
+
+/**
+ * Validate that items array is within acceptable range
+ */
+const validatedItems = computed(() => {
+  if (props.items.length === 0) {
+    console.warn('VrlBreadcrumbs: items array is empty');
+    return [];
+  }
+  if (props.items.length > 5) {
+    console.warn('VrlBreadcrumbs: more than 5 items provided. Limiting to first 5 for usability.');
+    return props.items.slice(0, 5);
+  }
+  return props.items;
 });
 
-// Check if item is the last (current page)
-const isLast = (index: number): boolean => {
-  return index === props.items.length - 1;
+/**
+ * Check if a breadcrumb item is the last (active) item
+ */
+const isLastItem = (index: number): boolean => {
+  return index === validatedItems.value.length - 1;
 };
 </script>
 
 <template>
-  <nav :class="['flex', 'items-center', 'gap-2', 'flex-wrap', props.class]" aria-label="Breadcrumb">
-    <template v-for="(item, index) in items" :key="index">
-      <!-- Breadcrumb item -->
-      <component
-        :is="!isLast(index) && item.to ? RouterLink : 'span'"
-        :to="item.to"
-        :class="[
-          'flex',
-          'items-center',
-          'gap-1.5',
-          'font-data',
-          'text-xs',
-          !isLast(index) && item.to
-            ? 'hover:text-racing-gold transition-colors cursor-pointer'
-            : '',
-          isLast(index) ? 'font-medium' : '',
-        ]"
-        :style="isLast(index) ? 'color: var(--text-primary)' : 'color: var(--text-dim)'"
-        :aria-current="isLast(index) ? 'page' : undefined"
+  <nav aria-label="Breadcrumb" class="flex items-center w-full" data-test="breadcrumbs">
+    <ol class="flex items-center gap-2 list-none m-0 p-0 text-[0.85rem]">
+      <li
+        v-for="(item, index) in validatedItems"
+        :key="`breadcrumb-${index}`"
+        class="flex items-center gap-2"
+        data-test="breadcrumb-item-wrapper"
       >
-        <!-- Home icon for first item -->
-        <PhHouse v-if="index === 0" :size="14" class="text-sm" />
+        <!-- Breadcrumb Item -->
+        <VrlBreadcrumbItem
+          :href="item.href"
+          :to="item.to"
+          :active="isLastItem(index)"
+          :aria-current="isLastItem(index) ? 'page' : undefined"
+        >
+          {{ item.label }}
+        </VrlBreadcrumbItem>
 
-        <!-- Label -->
-        {{ item.label }}
-      </component>
-
-      <!-- Separator (not after last item) -->
-      <PhCaretRight
-        v-if="!isLast(index)"
-        :size="12"
-        class="text-xs"
-        style="color: var(--text-dim)"
-      />
-    </template>
+        <!-- Separator (not shown after last item) -->
+        <span
+          v-if="!isLastItem(index)"
+          class="text-[var(--text-muted)]"
+          aria-hidden="true"
+          data-test="breadcrumb-separator"
+        >
+          <!-- Custom separator slot, defaults to "/" -->
+          <slot name="separator">/</slot>
+        </span>
+      </li>
+    </ol>
   </nav>
 </template>
-
-<style scoped>
-.hover\:text-racing-gold:hover {
-  color: var(--racing-gold);
-}
-</style>

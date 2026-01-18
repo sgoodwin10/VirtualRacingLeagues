@@ -1,0 +1,305 @@
+/* ============================================
+   VRL VELOCITY DESIGN SYSTEM - BUTTONS
+   ============================================
+
+   Button components for the VRL public dashboard.
+   Features Orbitron typography, dynamic hover effects,
+   and comprehensive variant/size support.
+
+   Components:
+   - VrlButton: Main button component
+   - VrlIconButton: Icon-only square button
+
+   ============================================ */
+
+/* ============================================
+   BASE BUTTON STYLES
+   ============================================ */
+
+.vrl-btn {
+  /* Reset PrimeVue Button defaults */
+  all: unset;
+
+  /* Layout */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* 8px gap between icon and text */
+
+  /* Typography */
+  font-family: var(--font-display);
+  font-size: 0.85rem; /* 13.6px - default size */
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-align: center;
+  white-space: nowrap;
+
+  /* Spacing - default size */
+  padding: 0.75rem 1.5rem; /* 12px 24px */
+
+  /* Visual */
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  user-select: none;
+
+  /* Transitions */
+  transition: all 0.3s ease;
+
+  /* Accessibility */
+  box-sizing: border-box;
+}
+
+/* Remove PrimeVue default focus styles - we'll add our own */
+.vrl-btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Keyboard focus indicator (accessibility) */
+.vrl-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* ============================================
+   SIZE VARIANTS
+   ============================================ */
+
+/* Small */
+.vrl-btn-sm {
+  padding: 0.5rem 1rem; /* 8px 16px */
+  font-size: 0.75rem; /* 12px */
+  gap: 0.375rem; /* 6px */
+}
+
+/* Large */
+.vrl-btn-lg {
+  padding: 1rem 2rem; /* 16px 32px */
+  font-size: 1rem; /* 16px */
+  gap: 0.625rem; /* 10px */
+}
+
+/* Extra Large */
+.vrl-btn-xl {
+  padding: 1.25rem 2.5rem; /* 20px 40px */
+  font-size: 1.1rem; /* 17.6px */
+  gap: 0.75rem; /* 12px */
+}
+
+/* ============================================
+   VARIANT STYLES
+   ============================================ */
+
+/* Primary - Cyan background with hover lift */
+.vrl-btn-primary {
+  background: var(--cyan);
+  color: var(--bg-dark);
+}
+
+.vrl-btn-primary:hover:not(:disabled):not(.p-button-loading) {
+  background: #79b8ff; /* Lighter cyan */
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(88, 166, 255, 0.3);
+}
+
+.vrl-btn-primary:active:not(:disabled):not(.p-button-loading) {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(88, 166, 255, 0.2);
+}
+
+/* Secondary - Transparent with border */
+.vrl-btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.vrl-btn-secondary:hover:not(:disabled):not(.p-button-loading) {
+  background: var(--bg-elevated);
+  border-color: var(--cyan);
+}
+
+.vrl-btn-secondary:active:not(:disabled):not(.p-button-loading) {
+  background: var(--bg-highlight);
+}
+
+/* Ghost - Transparent, minimal styling */
+.vrl-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.vrl-btn-ghost:hover:not(:disabled):not(.p-button-loading) {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.vrl-btn-ghost:active:not(:disabled):not(.p-button-loading) {
+  background: var(--bg-highlight);
+}
+
+/* Outline - Cyan border */
+.vrl-btn-outline {
+  background: transparent;
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+}
+
+.vrl-btn-outline:hover:not(:disabled):not(.p-button-loading) {
+  background: var(--cyan-dim);
+}
+
+.vrl-btn-outline:active:not(:disabled):not(.p-button-loading) {
+  background: rgba(88, 166, 255, 0.25);
+}
+
+/* Success - Green background with hover lift */
+.vrl-btn-success {
+  background: var(--green);
+  color: var(--bg-dark);
+}
+
+.vrl-btn-success:hover:not(:disabled):not(.p-button-loading) {
+  background: #9ff0a4; /* Lighter green */
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(126, 231, 135, 0.3);
+}
+
+.vrl-btn-success:active:not(:disabled):not(.p-button-loading) {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(126, 231, 135, 0.2);
+}
+
+/* Warning - Orange background with hover lift */
+.vrl-btn-warning {
+  background: var(--orange);
+  color: var(--bg-dark);
+}
+
+.vrl-btn-warning:hover:not(:disabled):not(.p-button-loading) {
+  background: #f4a261; /* Lighter orange */
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(240, 136, 62, 0.3);
+}
+
+.vrl-btn-warning:active:not(:disabled):not(.p-button-loading) {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(240, 136, 62, 0.2);
+}
+
+/* Danger - Red background with hover lift */
+.vrl-btn-danger {
+  background: var(--red);
+  color: var(--bg-dark);
+}
+
+.vrl-btn-danger:hover:not(:disabled):not(.p-button-loading) {
+  background: #fa7970; /* Lighter red */
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(248, 81, 73, 0.3);
+}
+
+.vrl-btn-danger:active:not(:disabled):not(.p-button-loading) {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(248, 81, 73, 0.2);
+}
+
+/* ============================================
+   STATE STYLES
+   ============================================ */
+
+/* Disabled */
+.vrl-btn:disabled,
+.vrl-btn.p-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Loading State */
+.vrl-btn.p-button-loading {
+  position: relative;
+  cursor: wait;
+}
+
+/* Hide default PrimeVue loading icon */
+.vrl-btn.p-button-loading .p-button-loading-icon {
+  display: none;
+}
+
+/* Hide text during loading */
+.vrl-btn.p-button-loading .p-button-label {
+  opacity: 0;
+}
+
+/* Custom loading spinner */
+.vrl-btn.p-button-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: vrl-spin 0.8s linear infinite;
+}
+
+/* Spinner animation */
+@keyframes vrl-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* ============================================
+   ICON BUTTON SPECIFIC STYLES
+   ============================================ */
+
+/* Icon-only buttons are square with centered icon */
+.vrl-btn-icon {
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.vrl-btn-icon.vrl-btn-sm {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.vrl-btn-icon.vrl-btn-lg {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+/* ============================================
+   PRIMEVUE OVERRIDES
+   ============================================ */
+
+/* Remove default PrimeVue button padding/margins */
+.vrl-btn .p-button-icon {
+  margin: 0;
+}
+
+/* Ensure label doesn't add extra space */
+.vrl-btn .p-button-label {
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+
+/* Remove PrimeVue default transitions */
+.vrl-btn.p-button {
+  transition: all 0.3s ease;
+}

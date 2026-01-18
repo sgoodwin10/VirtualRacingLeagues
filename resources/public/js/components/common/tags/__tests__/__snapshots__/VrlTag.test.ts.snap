@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VrlTag > Snapshots > matches snapshot for cyan variant 1`] = `"<span class="inline-flex items-center px-2 py-1 rounded-[var(--radius-sm)] font-[var(--font-body)] text-[0.7rem] font-medium leading-none whitespace-nowrap bg-[var(--cyan-dim)] text-[var(--cyan)]">Platform</span>"`;
+
+exports[`VrlTag > Snapshots > matches snapshot for danger variant 1`] = `"<span class="inline-flex items-center px-2 py-1 rounded-[var(--radius-sm)] font-[var(--font-body)] text-[0.7rem] font-medium leading-none whitespace-nowrap bg-[var(--red-dim)] text-[var(--red)]">Error</span>"`;
+
+exports[`VrlTag > Snapshots > matches snapshot for default variant 1`] = `"<span class="inline-flex items-center px-2 py-1 rounded-[var(--radius-sm)] font-[var(--font-body)] text-[0.7rem] font-medium leading-none whitespace-nowrap bg-[var(--bg-elevated)] text-[var(--text-secondary)]">Default</span>"`;
+
+exports[`VrlTag > Snapshots > matches snapshot for success variant 1`] = `"<span class="inline-flex items-center px-2 py-1 rounded-[var(--radius-sm)] font-[var(--font-body)] text-[0.7rem] font-medium leading-none whitespace-nowrap bg-[var(--green-dim)] text-[var(--green)]">Complete</span>"`;
+
+exports[`VrlTag > Snapshots > matches snapshot for warning variant 1`] = `"<span class="inline-flex items-center px-2 py-1 rounded-[var(--radius-sm)] font-[var(--font-body)] text-[0.7rem] font-medium leading-none whitespace-nowrap bg-[var(--orange-dim)] text-[var(--orange)]">Warning</span>"`;

@@ -93,31 +93,25 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center pattern-carbon p-4 md:p-8">
-    <div class="w-full max-w-md">
-      <div class="card-racing p-8 md:p-10">
-        <!-- Header -->
-        <div class="text-center mb-8">
-          <h1 class="font-display text-3xl md:text-4xl mb-3 text-gold uppercase tracking-wider">
-            Welcome Back
-          </h1>
-          <p class="font-body text-barrier">Sign in to your account</p>
-        </div>
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <!-- Header -->
+      <div>
+        <h2 class="text-center text-3xl font-bold text-gray-900">Sign in to your account</h2>
+      </div>
 
-        <!-- Error Message -->
-        <Message v-if="errorMessage" severity="error" :closable="false" class="mb-6">
-          {{ errorMessage }}
-        </Message>
+      <!-- Error Message -->
+      <Message v-if="errorMessage" severity="error" :closable="false">
+        {{ errorMessage }}
+      </Message>
 
-        <!-- Login Form -->
-        <form class="space-y-6" @submit.prevent="handleSubmit">
+      <!-- Login Form -->
+      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
+        <div class="space-y-4">
           <!-- Email Field -->
           <div>
-            <label
-              for="email"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
-              Email Address
+            <label for="email" class="block text-sm font-medium text-gray-700">
+              Email address
             </label>
             <InputText
               id="email"
@@ -125,33 +119,27 @@ const handleSubmit = async (): Promise<void> => {
               type="email"
               placeholder="john@example.com"
               :class="{ 'p-invalid': emailError }"
-              class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold transition-colors"
+              class="mt-1 w-full"
               :disabled="isSubmitting"
               autocomplete="email"
               aria-label="Email Address"
               @input="emailError = ''"
             />
-            <small v-if="emailError" class="text-dnf mt-1 block font-body text-sm">
+            <small v-if="emailError" class="text-red-600 mt-1 block text-sm">
               {{ emailError }}
             </small>
           </div>
 
           <!-- Password Field -->
           <div>
-            <label
-              for="password"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
-              Password
-            </label>
+            <label for="password" class="block text-sm font-medium text-gray-700"> Password </label>
             <Password
               id="password"
               v-model="password"
               placeholder="Enter your password"
               :class="{ 'p-invalid': passwordError }"
-              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
-                root: { class: 'w-full' },
+                root: { class: 'mt-1 w-full' },
                 input: { class: 'w-full' },
               }"
               :disabled="isSubmitting"
@@ -161,57 +149,53 @@ const handleSubmit = async (): Promise<void> => {
               aria-label="Password"
               @input="passwordError = ''"
             />
-            <small v-if="passwordError" class="text-dnf mt-1 block font-body text-sm">
+            <small v-if="passwordError" class="text-red-600 mt-1 block text-sm">
               {{ passwordError }}
             </small>
           </div>
+        </div>
 
-          <!-- Remember Me & Forgot Password -->
-          <div class="flex items-center justify-between flex-wrap gap-4">
-            <div class="flex items-center">
-              <Checkbox
-                v-model="remember"
-                input-id="remember"
-                :binary="true"
-                :disabled="isSubmitting"
-                aria-label="Remember me"
-              />
-              <label for="remember" class="ml-2 font-body text-sm text-barrier cursor-pointer">
-                Remember me
-              </label>
-            </div>
-            <router-link
-              to="/forgot-password"
-              class="font-body text-sm text-gold hover:text-gold-bright transition-colors"
-            >
+        <!-- Remember Me & Forgot Password -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <Checkbox
+              v-model="remember"
+              input-id="remember"
+              :binary="true"
+              :disabled="isSubmitting"
+              aria-label="Remember me"
+            />
+            <label for="remember" class="ml-2 text-sm text-gray-900 cursor-pointer">
+              Remember me
+            </label>
+          </div>
+          <div class="text-sm">
+            <router-link to="/forgot-password" class="text-gray-600 hover:text-gray-900">
               Forgot password?
             </router-link>
           </div>
-
-          <!-- Submit Button -->
-          <button
-            type="submit"
-            :disabled="!isFormValid || isSubmitting"
-            class="w-full btn btn-primary"
-            :aria-busy="isSubmitting"
-          >
-            <span v-if="!isSubmitting">Sign In</span>
-            <span v-else>Signing In...</span>
-          </button>
-        </form>
-
-        <!-- Register Link -->
-        <div class="mt-8 text-center">
-          <p class="font-body text-sm text-barrier">
-            Don't have an account?
-            <router-link
-              to="/register"
-              class="text-gold hover:text-gold-bright transition-colors font-medium"
-            >
-              Sign up
-            </router-link>
-          </p>
         </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          :disabled="!isFormValid || isSubmitting"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          :aria-busy="isSubmitting"
+        >
+          <span v-if="!isSubmitting">Sign In</span>
+          <span v-else>Signing In...</span>
+        </button>
+      </form>
+
+      <!-- Register Link -->
+      <div class="text-center">
+        <p class="text-sm text-gray-600">
+          Don't have an account?
+          <router-link to="/register" class="font-medium text-gray-900 hover:text-gray-700">
+            Sign up
+          </router-link>
+        </p>
       </div>
     </div>
   </div>

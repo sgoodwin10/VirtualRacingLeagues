@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VrlStatusIndicator > Snapshots > matches snapshot for active status 1`] = `"<span class="inline-flex items-center gap-2 font-[var(--font-body)] text-[0.8rem] font-medium leading-none"><span class="w-2 h-2 rounded-full flex-shrink-0 bg-[var(--green)]"></span><span class="leading-none text-[var(--text-primary)]">Active</span></span>"`;
+
+exports[`VrlStatusIndicator > Snapshots > matches snapshot for error status 1`] = `"<span class="inline-flex items-center gap-2 font-[var(--font-body)] text-[0.8rem] font-medium leading-none"><span class="w-2 h-2 rounded-full flex-shrink-0 bg-[var(--red)]"></span><span class="leading-none text-[var(--text-primary)]">Error</span></span>"`;
+
+exports[`VrlStatusIndicator > Snapshots > matches snapshot for inactive status 1`] = `"<span class="inline-flex items-center gap-2 font-[var(--font-body)] text-[0.8rem] font-medium leading-none"><span class="w-2 h-2 rounded-full flex-shrink-0 bg-[var(--text-muted)]"></span><span class="leading-none text-[var(--text-primary)]">Inactive</span></span>"`;
+
+exports[`VrlStatusIndicator > Snapshots > matches snapshot for pending status 1`] = `"<span class="inline-flex items-center gap-2 font-[var(--font-body)] text-[0.8rem] font-medium leading-none"><span class="w-2 h-2 rounded-full flex-shrink-0 bg-[var(--orange)]"></span><span class="leading-none text-[var(--text-primary)]">Pending</span></span>"`;
+
+exports[`VrlStatusIndicator > Snapshots > matches snapshot with custom label 1`] = `"<span class="inline-flex items-center gap-2 font-[var(--font-body)] text-[0.8rem] font-medium leading-none"><span class="w-2 h-2 rounded-full flex-shrink-0 bg-[var(--orange)]"></span><span class="leading-none text-[var(--text-primary)]">Custom Status</span></span>"`;

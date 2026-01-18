@@ -27,7 +27,7 @@ class DriverPlatformColumnServiceTest extends TestCase
 
         $this->assertCount(1, $columns);
         $this->assertEquals([
-            ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
+            ['field' => 'PsnId', 'label' => 'PSN ID', 'type' => 'text'],
         ], $columns);
     }
 
@@ -37,8 +37,8 @@ class DriverPlatformColumnServiceTest extends TestCase
 
         $this->assertCount(2, $columns);
         $this->assertEquals([
-            ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
-            ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
+            ['field' => 'IracingId', 'label' => 'iRacing ID', 'type' => 'text'],
+            ['field' => 'IracingCustomerId', 'label' => 'iRacing Customer ID', 'type' => 'number'],
         ], $columns);
     }
 
@@ -48,9 +48,9 @@ class DriverPlatformColumnServiceTest extends TestCase
 
         $this->assertCount(3, $columns);
         $this->assertEquals([
-            ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
-            ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
-            ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
+            ['field' => 'PsnId', 'label' => 'PSN ID', 'type' => 'text'],
+            ['field' => 'IracingId', 'label' => 'iRacing ID', 'type' => 'text'],
+            ['field' => 'IracingCustomerId', 'label' => 'iRacing Customer ID', 'type' => 'number'],
         ], $columns);
     }
 
@@ -84,13 +84,44 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertEquals($columns, $formFields);
     }
 
-    public function test_get_csv_headers_returns_same_as_columns(): void
+    public function test_get_csv_headers_includes_platform_information(): void
     {
-        $platformIds = [1, 2];
-        $columns = $this->service->getColumnsForLeague($platformIds);
-        $csvHeaders = $this->service->getCsvHeadersForLeague($platformIds);
+        $csvHeaders = $this->service->getCsvHeadersForLeague([1, 2]); // GT7 + iRacing
 
-        $this->assertEquals($columns, $csvHeaders);
+        $this->assertCount(3, $csvHeaders);
+
+        // Check GT7 header
+        $this->assertEquals([
+            'platform_id' => 1,
+            'platform_name' => 'Gran Turismo 7',
+            'field' => 'PsnId',
+            'label' => 'PSN ID',
+            'type' => 'text',
+        ], $csvHeaders[0]);
+
+        // Check iRacing headers
+        $this->assertEquals([
+            'platform_id' => 2,
+            'platform_name' => 'iRacing',
+            'field' => 'IracingId',
+            'label' => 'iRacing ID',
+            'type' => 'text',
+        ], $csvHeaders[1]);
+
+        $this->assertEquals([
+            'platform_id' => 2,
+            'platform_name' => 'iRacing',
+            'field' => 'IracingCustomerId',
+            'label' => 'iRacing Customer ID',
+            'type' => 'number',
+        ], $csvHeaders[2]);
+    }
+
+    public function test_get_csv_headers_returns_empty_array_for_platforms_without_fields(): void
+    {
+        $csvHeaders = $this->service->getCsvHeadersForLeague([3]); // Platform ID 3 = ACC (no fields yet)
+
+        $this->assertEmpty($csvHeaders);
     }
 
     public function test_it_validates_driver_is_compatible_when_has_psn_id(): void

@@ -389,12 +389,27 @@ describe('leagueStore', () => {
   describe('fetchDriverCsvHeadersForLeague', () => {
     it('should fetch CSV headers successfully', async () => {
       const mockHeaders = [
-        { field: 'FirstName', label: 'First Name', type: 'text' as const },
-        { field: 'LastName', label: 'Last Name', type: 'text' as const },
-        { field: 'Email', label: 'Email', type: 'text' as const },
-        { field: 'PSN_ID', label: 'PSN ID', type: 'text' as const },
-        { field: 'iRacing_ID', label: 'iRacing ID', type: 'text' as const },
-        { field: 'DriverNumber', label: 'Driver Number', type: 'number' as const },
+        {
+          platform_id: 1,
+          platform_name: 'Gran Turismo 7',
+          field: 'PsnId',
+          label: 'PSN ID',
+          type: 'text' as const,
+        },
+        {
+          platform_id: 2,
+          platform_name: 'iRacing',
+          field: 'IracingId',
+          label: 'iRacing ID',
+          type: 'text' as const,
+        },
+        {
+          platform_id: 2,
+          platform_name: 'iRacing',
+          field: 'IracingCustomerId',
+          label: 'iRacing Customer ID',
+          type: 'number' as const,
+        },
       ];
 
       vi.mocked(leagueService.getDriverCsvHeaders).mockResolvedValue(mockHeaders);

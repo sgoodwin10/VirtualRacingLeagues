@@ -5,7 +5,6 @@ import Papa from 'papaparse';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import Textarea from 'primevue/textarea';
 import { Button } from '@app/components/common/buttons';
-import { PhDownload } from '@phosphor-icons/vue';
 import Message from 'primevue/message';
 import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
 import FormLabel from '@app/components/common/forms/FormLabel.vue';
@@ -36,6 +35,21 @@ const importResult = ref<ImportDriversResponse | null>(null);
 const error = ref<string | null>(null);
 
 /**
+ * Convert snake_case to PascalCase
+ * If already PascalCase (no underscores), return as-is
+ */
+const toPascalCase = (str: string): string => {
+  if (!str.includes('_')) {
+    // Already PascalCase or single word - return as-is
+    return str;
+  }
+  return str
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+};
+
+/**
  * Memoized function to generate CSV example based on platform headers
  * This prevents expensive recalculations on every access
  */
@@ -49,7 +63,12 @@ Mike Ross,,3`;
   }
 
   // Build headers: Nickname, DiscordID + platform ID columns + DriverNumber (optional)
-  const headers = ['Nickname', 'DiscordID', ...platformHeaders.map((h) => h.field), 'DriverNumber'];
+  const headers = [
+    'Nickname',
+    'DiscordID',
+    ...platformHeaders.map((h) => toPascalCase(h.field)),
+    'DriverNumber',
+  ];
 
   // Generate example data rows based on the platform columns
   const exampleRows: string[][] = [];
@@ -57,14 +76,15 @@ Mike Ross,,3`;
   // Example 1: Full data with both nickname and Discord ID
   const row1 = ['John Smith', 'john#1234'];
   platformHeaders.forEach((header) => {
-    if (header.field === 'psn_id') {
+    const field = toPascalCase(header.field);
+    if (field === 'PsnId') {
       row1.push('john_psn_123');
-    } else if (header.field === 'iracing_id') {
+    } else if (field === 'IracingId') {
       row1.push('john_iracing');
-    } else if (header.field === 'iracing_customer_id') {
+    } else if (field === 'IracingCustomerId') {
       row1.push('123456');
     } else {
-      row1.push('john_' + header.field);
+      row1.push('john_' + field);
     }
   });
   row1.push('5'); // DriverNumber
@@ -73,14 +93,15 @@ Mike Ross,,3`;
   // Example 2: Driver with Discord ID only (no nickname)
   const row2 = ['', 'jane#5678'];
   platformHeaders.forEach((header) => {
-    if (header.field === 'psn_id') {
+    const field = toPascalCase(header.field);
+    if (field === 'PsnId') {
       row2.push('jane_psn_456');
-    } else if (header.field === 'iracing_id') {
+    } else if (field === 'IracingId') {
       row2.push('jane_iracing');
-    } else if (header.field === 'iracing_customer_id') {
+    } else if (field === 'IracingCustomerId') {
       row2.push('789012');
     } else {
-      row2.push('jane_' + header.field);
+      row2.push('jane_' + field);
     }
   });
   row2.push('7'); // DriverNumber
@@ -89,14 +110,15 @@ Mike Ross,,3`;
   // Example 3: Driver with nickname only (no Discord ID)
   const row3 = ['Mike Ross', ''];
   platformHeaders.forEach((header) => {
-    if (header.field === 'psn_id') {
+    const field = toPascalCase(header.field);
+    if (field === 'PsnId') {
       row3.push('mike_psn_789');
-    } else if (header.field === 'iracing_id') {
+    } else if (field === 'IracingId') {
       row3.push('mike_iracing');
-    } else if (header.field === 'iracing_customer_id') {
+    } else if (field === 'IracingCustomerId') {
       row3.push('345678');
     } else {
-      row3.push('mike_' + header.field);
+      row3.push('mike_' + field);
     }
   });
   row3.push(''); // Empty DriverNumber to show it's optional
@@ -112,6 +134,21 @@ Mike Ross,,3`;
 // Generate CSV example dynamically based on league's platform headers
 // Uses memoization to prevent expensive recalculations
 const csvExample = computed(() => generateCsvExample(leagueStore.platformCsvHeaders));
+
+/**
+ * Group CSV headers by platform for display purposes
+ * Returns a map of platform names to their respective headers
+ */
+const headersByPlatform = computed(() => {
+  const grouped = new Map<string, typeof leagueStore.platformCsvHeaders>();
+
+  leagueStore.platformCsvHeaders.forEach((header) => {
+    const existing = grouped.get(header.platform_name) || [];
+    grouped.set(header.platform_name, [...existing, header]);
+  });
+
+  return grouped;
+});
 
 // Watch for visible changes to reset form
 watch(
@@ -234,28 +271,25 @@ const useExample = (): void => {
 };
 
 /**
- * Download CSV template with correct headers
+ * Generate the minimum required headers string
  */
-const downloadTemplate = (): void => {
-  const headers = leagueStore.platformCsvHeaders;
-  if (headers.length === 0) {
-    error.value = 'Platform headers not loaded. Please try again.';
-    return;
+const getMinimumRequiredHeaders = (): string => {
+  return ['Nickname', ...leagueStore.platformCsvHeaders.map((h) => toPascalCase(h.field))].join(
+    ',',
+  );
+};
+
+/**
+ * Add minimum required headers to the textarea
+ * Inserts at the top if data already exists
+ */
+const addHeaders = (): void => {
+  const headers = getMinimumRequiredHeaders();
+  if (csvData.value.trim()) {
+    csvData.value = headers + '\n' + csvData.value;
+  } else {
+    csvData.value = headers;
   }
-
-  const csvContent = headers.map((h) => h.field).join(',');
-  // eslint-disable-next-line no-undef
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-
-  link.setAttribute('href', url);
-  link.setAttribute('download', 'driver_import_template.csv');
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 };
 
 /**
@@ -285,40 +319,111 @@ onUnmounted(() => {
     <template #header>
       <BaseModalHeader title="Import Drivers from CSV" />
     </template>
-    <div class="space-y-4">
-      <!-- Instructions -->
-      <div class="border border-[var(--border)] bg-[var(--bg-card)] rounded-lg p-4">
-        <h4 class="font-semibold text-blue-900 mb-2">CSV Format Instructions</h4>
-        <FormHelper
-          text="Paste your CSV data below. The CSV must include headers and at least the following columns:"
-        />
-        <ul class="text-sm space-y-1 my-3">
-          <li><strong>Required:</strong> At least one of Nickname or DiscordID</li>
-          <li class="text-xs italic ml-4">
-            Note: If Nickname is empty, Discord ID will be used as the nickname
-          </li>
-          <li><strong>Required:</strong> At least one platform ID for this league's platforms</li>
-          <li><strong>Optional:</strong> FirstName, LastName, DriverNumber</li>
-        </ul>
-        <div class="flex items-center gap-2 mb-2">
-          <p class="text-sm font-medium text-blue-900 hidden">CSV Template:</p>
-          <Button
-            label="Download Template"
-            size="sm"
-            severity="info"
-            :icon="PhDownload"
-            class="hidden"
-            @click="downloadTemplate"
-          />
-          <Button label="Use Example" size="sm" severity="info" @click="useExample" />
+    <div class="space-y-6">
+      <!-- Instructions Panel -->
+      <div class="">
+        <!-- Header with action buttons -->
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">CSV Format Requirements</h3>
+          <Button label="Use Example" size="sm" variant="outline" @click="useExample" />
         </div>
-        <div v-if="leagueStore.platformCsvHeaders.length > 0">
-          <p class="text-md mb-1">Expected headers for this league:</p>
-          <pre class="text-md border border-blue-200 rounded p-2 overflow-x-auto">{{
-            leagueStore.platformCsvHeaders.map((h) => h.field).join(',')
-          }}</pre>
+
+        <p class="text-[var(--text-secondary)] mb-4">
+          You can bulk upload drivers from a CSV file. The CSV file must contain the following
+          columns:
+        </p>
+
+        <!-- Requirements List -->
+        <div class="space-y-3 flex flex-row">
+          <div class="w-1/2">
+            <p class="font-medium mb-2">Required Columns:</p>
+            <ul class="space-y-2 text-md text-[var(--text-secondary)]">
+              <li class="flex items-start gap-2">
+                <span class="text-[var(--text-accent)] mt-0.5">•</span>
+                <span
+                  >At least one of <strong class="text-[var(--text-primary)]">Nickname</strong> or
+                  <strong class="text-[var(--text-primary)]">DiscordID</strong></span
+                >
+              </li>
+              <li class="flex items-start gap-2 ml-4">
+                <span class="text-[var(--text-muted)]">→</span>
+                <span class="text-[var(--text-muted)] italic"
+                  >If Nickname is empty, Discord ID will be used as the nickname</span
+                >
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[var(--text-accent)] mt-0.5">•</span>
+                <div class="flex-1">
+                  <span
+                    >At least one
+                    <strong class="text-[var(--text-primary)]">platform ID</strong> for this
+                    league's enabled platform</span
+                  >
+                  <!-- Display possible headers for each platform -->
+                  <div
+                    v-if="headersByPlatform.size > 0"
+                    class="mt-2 ml-4 space-y-2 text-[var(--text-secondary)]"
+                  >
+                    <div
+                      v-for="[platformName, headers] in headersByPlatform"
+                      :key="platformName"
+                      class="flex flex-row gap-2"
+                    >
+                      <div class="font-medium text-[var(--text-primary)]">{{ platformName }}:</div>
+                      <ul class="ml-4 space-y-1">
+                        <li
+                          v-for="header in headers"
+                          :key="header.field"
+                          class="flex items-center gap-2"
+                        >
+                          <code class="font-mono text-[var(--text-accent)]">{{
+                            toPascalCase(header.field)
+                          }}</code>
+                          <span class="text-[var(--text-muted)]">({{ header.label }})</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p class="font-medium mb-2">Optional Columns:</p>
+            <p class="text-sm text-[var(--text-secondary)]">FirstName, LastName, DriverNumber</p>
+          </div>
         </div>
-        <div v-else class="text-sm text-blue-600">Loading CSV template configuration...</div>
+        <h4>Important Notes:</h4>
+        <p class="text-[var(--text-secondary)] mb-4">
+          If a driver/row is missing an optional field, just leave it blank between the commas. For
+          example:<br /><code class="font-mono text-sm text-[var(--text-accent)]"
+            >Nickname,PsnId,DiscordID,DriverNumber<br />
+            John Smith,john1234,,5,</code
+          >
+        </p>
+
+        <hr class="text-[var(--color-text-secondary)] pb-4 mt-4" />
+        <!-- Expected Headers -->
+        <div v-if="leagueStore.platformCsvHeaders.length > 0" class="space-y-2">
+          <p class="font-medium">Minimum Required Headers:</p>
+          <div class="flex flex-row gap-2 w-full">
+            <div
+              class="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-3 overflow-x-auto flex-1"
+            >
+              <code class="font-mono text-sm text-[var(--text-accent)]">{{
+                [
+                  'Nickname',
+                  ...leagueStore.platformCsvHeaders.map((h) => toPascalCase(h.field)),
+                ].join(',')
+              }}</code>
+            </div>
+            <Button label="Add Headers" size="lg" variant="outline" @click="addHeaders" />
+          </div>
+        </div>
+        <div v-else class="text-sm text-[var(--text-muted)] italic">
+          Loading CSV template configuration...
+        </div>
       </div>
 
       <!-- CSV Input -->
@@ -341,9 +446,9 @@ onUnmounted(() => {
       </Message>
 
       <!-- Import Result -->
-      <div v-if="importResult" class="space-y-2">
+      <div v-if="importResult" class="space-y-3">
         <!-- Success Message -->
-        <Message v-if="importResult.success_count > 0" variant="success" :closable="false">
+        <Message v-if="importResult.success_count > 0" severity="success" :closable="false">
           Successfully imported {{ importResult.success_count }} driver{{
             importResult.success_count === 1 ? '' : 's'
           }}
@@ -351,14 +456,23 @@ onUnmounted(() => {
 
         <!-- Errors List -->
         <div v-if="importResult.errors.length > 0" class="space-y-2">
-          <Message variant="warning" :closable="false">
+          <Message severity="warn" :closable="false">
             {{ importResult.errors.length }} error{{ importResult.errors.length === 1 ? '' : 's' }}
-            occurred during import:
+            occurred during import
           </Message>
-          <div class="bg-red-50 border border-red-200 rounded-lg p-4 max-h-48 overflow-y-auto">
-            <ul class="text-sm text-red-800 space-y-1">
-              <li v-for="(err, index) in importResult.errors" :key="index">
-                <strong>Row {{ err.row }}:</strong> {{ err.message }}
+          <div
+            class="bg-[var(--bg-elevated)] border border-[var(--color-red)] rounded-lg p-4 max-h-48 overflow-y-auto"
+          >
+            <ul class="space-y-2 text-sm text-[var(--text-secondary)]">
+              <li
+                v-for="(err, index) in importResult.errors"
+                :key="index"
+                class="flex items-start gap-2"
+              >
+                <span class="text-[var(--color-red)] font-medium whitespace-nowrap"
+                  >Row {{ err.row }}:</span
+                >
+                <span>{{ err.message }}</span>
               </li>
             </ul>
           </div>

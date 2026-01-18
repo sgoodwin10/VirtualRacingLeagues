@@ -1,186 +1,110 @@
 <script setup lang="ts">
+import { computed, type Component } from 'vue';
+import PrimeButton from 'primevue/button';
+
 /**
- * VrlButton - Racing-themed button component with angled edges and multiple variants
+ * VRL Velocity Button Component
  *
- * @component
+ * A customizable button component wrapping PrimeVue Button with the VRL Velocity design system.
+ * Features Orbitron typography, multiple variants, sizes, and dynamic hover effects.
+ *
  * @example
  * ```vue
- * <VrlButton variant="primary" size="md" @click="handleClick">
+ * <VrlButton variant="primary" size="lg" @click="handleClick">
  *   Click Me
- * </VrlButton>
- *
- * <VrlButton variant="secondary" icon="plus" icon-pos="left">
- *   Add Item
- * </VrlButton>
- *
- * <VrlButton variant="danger" :loading="isLoading">
- *   Delete
  * </VrlButton>
  * ```
  */
-import { computed, type Component } from 'vue';
-import {
-  PhPlus,
-  PhEye,
-  PhTrash,
-  PhDotsThree,
-  PhPencilSimple,
-  PhGear,
-  PhShareNetwork,
-  PhX,
-  PhStar,
-  PhDiscordLogo,
-  PhTwitterLogo,
-  PhYoutubeLogo,
-  PhCircleNotch,
-} from '@phosphor-icons/vue';
 
-/**
- * Component props interface
- */
-interface Props {
-  /**
-   * Button visual style variant
-   * - primary: Safety orange with angled clip-path and shine effect
-   * - secondary: Gold outline with angled edge
-   * - ghost: Transparent with hover effect
-   * - text: Minimal text-only button
-   * - danger: Red background for destructive actions
-   * - danger-outline: Red outline variant
-   * - social: Tertiary background for social links
-   * @default 'primary'
-   */
-  variant?: 'primary' | 'secondary' | 'ghost' | 'text' | 'danger' | 'danger-outline' | 'social';
+interface VrlButtonProps {
+  /** Visual variant of the button */
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'success' | 'warning' | 'danger';
 
-  /**
-   * Button size
-   * - xs: 28px height, extra small padding
-   * - sm: 34px height, small padding
-   * - md: 40px height, medium padding (default)
-   * - lg: 48px height, large padding
-   * - xl: 56px height, extra large padding
-   * @default 'md'
-   */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Size of the button */
+  size?: 'sm' | 'default' | 'lg' | 'xl';
 
-  /**
-   * Phosphor icon name to display
-   * Available icons: 'plus', 'eye', 'trash', 'dots-three', 'pencil-simple', 'gear',
-   * 'share-network', 'x', 'star', 'discord-logo', 'twitter-logo', 'youtube-logo'
-   */
-  icon?: string;
+  /** Button text label */
+  label?: string | null;
 
-  /**
-   * Icon position relative to button text
-   * @default 'left'
-   */
+  /** Icon component (e.g., from Phosphor Icons) */
+  icon?: Component | null;
+
+  /** Icon position relative to text */
   iconPos?: 'left' | 'right';
 
-  /**
-   * Show loading state (disables button and shows loading indicator)
-   * @default false
-   */
-  loading?: boolean;
-
-  /**
-   * Disable button interaction
-   * @default false
-   */
+  /** Disabled state */
   disabled?: boolean;
 
-  /**
-   * HTML button type attribute
-   * @default 'button'
-   */
+  /** Loading state with spinner */
+  loading?: boolean;
+
+  /** HTML button type */
   type?: 'button' | 'submit' | 'reset';
 
-  /**
-   * Additional CSS classes to apply
-   */
-  class?: string;
+  /** ARIA label for accessibility */
+  ariaLabel?: string | null;
+
+  /** PrimeVue passthrough props for customization */
+  pt?: Record<string, unknown> | null;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  variant: 'primary',
-  size: 'md',
-  icon: undefined,
+interface VrlButtonEmits {
+  (e: 'click', event: MouseEvent): void;
+}
+
+const props = withDefaults(defineProps<VrlButtonProps>(), {
+  variant: 'secondary',
+  size: 'default',
+  label: null,
+  icon: null,
   iconPos: 'left',
-  type: 'button',
-  loading: false,
   disabled: false,
-  class: undefined,
+  loading: false,
+  type: 'button',
+  ariaLabel: null,
+  pt: null,
 });
 
-const emit = defineEmits<{
-  click: [event: MouseEvent];
-}>();
+const emit = defineEmits<VrlButtonEmits>();
 
-const iconMap: Record<string, Component> = {
-  plus: PhPlus,
-  eye: PhEye,
-  trash: PhTrash,
-  'dots-three': PhDotsThree,
-  'pencil-simple': PhPencilSimple,
-  gear: PhGear,
-  'share-network': PhShareNetwork,
-  x: PhX,
-  star: PhStar,
-  'discord-logo': PhDiscordLogo,
-  'twitter-logo': PhTwitterLogo,
-  'youtube-logo': PhYoutubeLogo,
-};
+/**
+ * Computed CSS classes for the button based on variant and size
+ */
+const buttonClasses = computed(() => {
+  const classes = ['vrl-btn'];
 
-const iconComponent = computed(() => {
-  if (!props.icon) return null;
-  return iconMap[props.icon] || null;
+  // Add variant class
+  classes.push(`vrl-btn-${props.variant}`);
+
+  // Add size class if not default
+  if (props.size !== 'default') {
+    classes.push(`vrl-btn-${props.size}`);
+  }
+
+  return classes.join(' ');
 });
 
-const sizeClasses = computed(() => {
-  const sizes = {
-    xs: 'px-2.5 py-1.5 text-[9px] gap-1.5',
-    sm: 'px-3.5 py-2 text-[10px] gap-2',
-    md: 'px-5 py-2.5 text-xs gap-2 shadow-md',
-    lg: 'px-6 py-3 text-sm gap-2.5 shadow-lg',
-    xl: 'px-8 py-4 text-base gap-3 shadow-lg',
-  };
-  return sizes[props.size];
+/**
+ * Determine if this is an icon-only button (no label or slot content)
+ */
+const isIconOnly = computed(() => {
+  return props.icon && !props.label;
 });
 
-const iconSizeClasses = computed(() => {
-  const sizes = {
-    xs: 'text-[10px]',
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
-    xl: 'text-lg',
-  };
-  return sizes[props.size];
+/**
+ * Get the appropriate aria-label
+ * Priority: ariaLabel prop > label prop > fallback for icon-only
+ */
+const effectiveAriaLabel = computed(() => {
+  if (props.ariaLabel) return props.ariaLabel;
+  if (props.label) return props.label;
+  if (isIconOnly.value) return 'Icon button';
+  return undefined;
 });
 
-const variantClasses = computed(() => {
-  const variants = {
-    primary:
-      'bg-racing-safety text-racing-pit-white hover:bg-racing-safety-bright shadow-lg shadow-racing-safety/30 btn-shine [clip-path:polygon(0_0,100%_0,95%_100%,0%_100%)]',
-    secondary:
-      'bg-transparent text-racing-gold border border-racing-gold hover:bg-racing-gold/10 hover:border-racing-gold-bright hover:text-racing-gold-bright [clip-path:polygon(5%_0,100%_0,100%_100%,0%_100%)]',
-    ghost: 'bg-transparent hover:text-racing-gold theme-text-muted theme-bg-tertiary',
-    text: 'bg-transparent hover:text-racing-gold theme-text-muted',
-    danger:
-      'bg-racing-danger text-racing-pit-white hover:bg-red-500 shadow-lg shadow-racing-danger/20',
-    'danger-outline':
-      'bg-transparent text-racing-danger border border-racing-danger/50 hover:bg-racing-danger/10',
-    social:
-      'theme-bg-tertiary theme-text-muted hover:bg-racing-gold hover:text-racing-carbon transition-all',
-  };
-  return variants[props.variant];
-});
-
-const classes = computed(() => {
-  const disabledClasses =
-    props.disabled || props.loading ? 'disabled:opacity-50 disabled:cursor-not-allowed' : '';
-  return `inline-flex items-center justify-center font-display uppercase tracking-wider transition-all ${sizeClasses.value} ${variantClasses.value} ${disabledClasses} ${props.class || ''}`;
-});
-
+/**
+ * Handle button click events
+ */
 const handleClick = (event: MouseEvent) => {
   if (!props.disabled && !props.loading) {
     emit('click', event);
@@ -189,41 +113,31 @@ const handleClick = (event: MouseEvent) => {
 </script>
 
 <template>
-  <button :type="type" :disabled="disabled || loading" :class="classes" @click="handleClick">
-    <!-- Loading spinner -->
-    <PhCircleNotch
-      v-if="loading"
-      :class="[iconSizeClasses, 'animate-spin']"
-      weight="bold"
-      aria-hidden="true"
-    />
-    <!-- Left icon -->
-    <component
-      :is="iconComponent"
-      v-else-if="iconComponent && iconPos === 'left'"
-      :class="iconSizeClasses"
-      weight="bold"
-    />
-    <slot />
-    <!-- Right icon -->
-    <component
-      :is="iconComponent"
-      v-if="iconComponent && iconPos === 'right' && !loading"
-      :class="iconSizeClasses"
-      weight="bold"
-    />
-  </button>
+  <PrimeButton
+    :class="buttonClasses"
+    :disabled="disabled"
+    :loading="loading"
+    :type="type"
+    :icon-pos="iconPos"
+    :aria-label="effectiveAriaLabel"
+    :pt="pt"
+    @click="handleClick"
+  >
+    <!-- Icon slot (handles both left and right positions) -->
+    <template v-if="icon" #icon>
+      <component
+        :is="icon"
+        :size="size === 'sm' ? 16 : size === 'lg' ? 20 : size === 'xl' ? 24 : 18"
+      />
+    </template>
+
+    <!-- Default slot for button text/content -->
+    <slot>
+      {{ label }}
+    </slot>
+  </PrimeButton>
 </template>
 
 <style scoped>
-/* Spinner animation */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
+/* Component-specific styles are in resources/public/css/components/buttons.css */
 </style>

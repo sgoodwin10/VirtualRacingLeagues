@@ -255,7 +255,12 @@ function truncateDescription(description: string | null, maxLength: number = 30)
           </template>
         </Column>
 
-        <Column v-if="!props.isSeasonCompleted" header="Actions" :exportable="false" style="width: 8rem">
+        <Column
+          v-if="!props.isSeasonCompleted"
+          header="Actions"
+          :exportable="false"
+          style="width: 8rem"
+        >
           <template #body="{ data }">
             <div class="flex gap-1">
               <Button

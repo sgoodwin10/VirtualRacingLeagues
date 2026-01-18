@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { useAuthStore } from '@public/stores/authStore';
-import { useToast } from 'primevue/usetoast';
 import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/types/errors';
 import { usePasswordValidation } from '@public/composables/usePasswordValidation';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Message from 'primevue/message';
 
-const router = useRouter();
 const authStore = useAuthStore();
-const toast = useToast();
 
 // Form data
 const firstName = ref('');
@@ -21,7 +17,7 @@ const password = ref('');
 const passwordConfirmation = ref('');
 
 // Password validation
-const { passwordStrength, passwordErrors, isPasswordValid } = usePasswordValidation(password);
+const { passwordErrors, isPasswordValid } = usePasswordValidation(password);
 
 // Form state
 const isSubmitting = ref(false);
@@ -101,9 +97,9 @@ const handleSubmit = async (): Promise<void> => {
   const isFirstNameValid = validateFirstName();
   const isLastNameValid = validateLastName();
   const isEmailValid = validateEmail();
-  const isPasswordValid = validatePassword();
+  const isPasswordValidated = validatePassword();
 
-  if (!isFirstNameValid || !isLastNameValid || !isEmailValid || !isPasswordValid) {
+  if (!isFirstNameValid || !isLastNameValid || !isEmailValid || !isPasswordValidated) {
     return;
   }
 
@@ -111,30 +107,37 @@ const handleSubmit = async (): Promise<void> => {
 
   try {
     await authStore.register({
-      first_name: firstName.value,
-      last_name: lastName.value,
-      email: email.value,
+      first_name: firstName.value.trim(),
+      last_name: lastName.value.trim(),
+      email: email.value.trim(),
       password: password.value,
       password_confirmation: passwordConfirmation.value,
     });
 
-    toast.add({
-      severity: 'success',
-      summary: 'Registration Successful',
-      detail: 'Please check your email to verify your account.',
-      life: 5000,
-    });
-
-    router.push({ name: 'verify-email' });
+    // Redirect is handled by authStore.register()
   } catch (error: unknown) {
-    if (isAxiosError(error) && hasValidationErrors(error)) {
-      const errors = error.response?.data?.errors;
-      if (errors?.first_name?.[0]) firstNameError.value = errors.first_name[0];
-      if (errors?.last_name?.[0]) lastNameError.value = errors.last_name[0];
-      if (errors?.email?.[0]) emailError.value = errors.email[0];
-      if (errors?.password?.[0]) passwordError.value = errors.password[0];
-      errorMessage.value =
-        error.response?.data?.message || 'Registration failed. Please check your input.';
+    if (isAxiosError(error)) {
+      if (hasValidationErrors(error)) {
+        const validationErrors = error.response?.data?.errors;
+        if (validationErrors) {
+          if (validationErrors.email && Array.isArray(validationErrors.email)) {
+            emailError.value = validationErrors.email[0];
+          }
+          if (validationErrors.password && Array.isArray(validationErrors.password)) {
+            passwordError.value = validationErrors.password[0];
+          }
+          if (validationErrors.first_name && Array.isArray(validationErrors.first_name)) {
+            firstNameError.value = validationErrors.first_name[0];
+          }
+          if (validationErrors.last_name && Array.isArray(validationErrors.last_name)) {
+            lastNameError.value = validationErrors.last_name[0];
+          }
+        }
+      } else if (error.response?.status && error.response.status >= 500) {
+        errorMessage.value = 'Server error. Please try again later.';
+      } else {
+        errorMessage.value = 'Registration failed. Please try again.';
+      }
     } else {
       errorMessage.value = getErrorMessage(error, 'Registration failed. Please try again.');
     }
@@ -145,30 +148,24 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center pattern-carbon p-4 md:p-8">
-    <div class="w-full max-w-md">
-      <div class="card-racing p-8 md:p-10">
-        <!-- Header -->
-        <div class="text-center mb-8">
-          <h1 class="font-display text-3xl md:text-4xl mb-3 text-gold uppercase tracking-wider">
-            Create Account
-          </h1>
-          <p class="font-body text-barrier">Sign up to get started</p>
-        </div>
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <!-- Header -->
+      <div>
+        <h2 class="text-center text-3xl font-bold text-gray-900">Create your account</h2>
+      </div>
 
-        <!-- Error Message -->
-        <Message v-if="errorMessage" severity="error" :closable="false" class="mb-6">
-          {{ errorMessage }}
-        </Message>
+      <!-- Error Message -->
+      <Message v-if="errorMessage" severity="error" :closable="false">
+        {{ errorMessage }}
+      </Message>
 
-        <!-- Registration Form -->
-        <form class="space-y-5" @submit.prevent="handleSubmit">
+      <!-- Registration Form -->
+      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
+        <div class="space-y-4">
           <!-- First Name Field -->
           <div>
-            <label
-              for="first-name"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
+            <label for="first-name" class="block text-sm font-medium text-gray-700">
               First Name
             </label>
             <InputText
@@ -177,22 +174,19 @@ const handleSubmit = async (): Promise<void> => {
               type="text"
               placeholder="John"
               :class="{ 'p-invalid': firstNameError }"
-              class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold transition-colors"
+              class="mt-1 w-full"
               :disabled="isSubmitting"
               aria-label="First Name"
               @input="firstNameError = ''"
             />
-            <small v-if="firstNameError" class="text-dnf mt-1 block font-body text-sm">
+            <small v-if="firstNameError" class="text-red-600 mt-1 block text-sm">
               {{ firstNameError }}
             </small>
           </div>
 
           <!-- Last Name Field -->
           <div>
-            <label
-              for="last-name"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
+            <label for="last-name" class="block text-sm font-medium text-gray-700">
               Last Name
             </label>
             <InputText
@@ -201,23 +195,20 @@ const handleSubmit = async (): Promise<void> => {
               type="text"
               placeholder="Doe"
               :class="{ 'p-invalid': lastNameError }"
-              class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold transition-colors"
+              class="mt-1 w-full"
               :disabled="isSubmitting"
               aria-label="Last Name"
               @input="lastNameError = ''"
             />
-            <small v-if="lastNameError" class="text-dnf mt-1 block font-body text-sm">
+            <small v-if="lastNameError" class="text-red-600 mt-1 block text-sm">
               {{ lastNameError }}
             </small>
           </div>
 
           <!-- Email Field -->
           <div>
-            <label
-              for="email"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
-              Email Address
+            <label for="email" class="block text-sm font-medium text-gray-700">
+              Email address
             </label>
             <InputText
               id="email"
@@ -225,33 +216,27 @@ const handleSubmit = async (): Promise<void> => {
               type="email"
               placeholder="john@example.com"
               :class="{ 'p-invalid': emailError }"
-              class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold transition-colors"
+              class="mt-1 w-full"
               :disabled="isSubmitting"
               autocomplete="email"
               aria-label="Email Address"
               @input="emailError = ''"
             />
-            <small v-if="emailError" class="text-dnf mt-1 block font-body text-sm">
+            <small v-if="emailError" class="text-red-600 mt-1 block text-sm">
               {{ emailError }}
             </small>
           </div>
 
           <!-- Password Field -->
           <div>
-            <label
-              for="password"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
-              Password
-            </label>
+            <label for="password" class="block text-sm font-medium text-gray-700"> Password </label>
             <Password
               id="password"
               v-model="password"
               placeholder="Enter your password"
               :class="{ 'p-invalid': passwordError }"
-              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
-                root: { class: 'w-full' },
+                root: { class: 'mt-1 w-full' },
                 input: { class: 'w-full' },
               }"
               :disabled="isSubmitting"
@@ -261,38 +246,16 @@ const handleSubmit = async (): Promise<void> => {
               @input="passwordError = ''"
             />
 
-            <!-- Password Strength Indicator -->
-            <div v-if="password" class="mt-2">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-body text-barrier">Password Strength:</span>
-                <span
-                  class="text-xs font-display uppercase tracking-wider font-semibold"
-                  :style="{ color: passwordStrength.color }"
-                >
-                  {{ passwordStrength.label }}
-                </span>
-              </div>
-              <div class="w-full h-1.5 bg-tarmac rounded-full overflow-hidden">
-                <div
-                  class="h-full transition-all duration-300 ease-out rounded-full"
-                  :style="{
-                    width: `${(passwordStrength.score / 4) * 100}%`,
-                    backgroundColor: passwordStrength.color,
-                  }"
-                />
-              </div>
-            </div>
-
             <!-- Password Requirements -->
-            <div v-if="password && passwordErrors.length > 0" class="mt-3 space-y-1">
-              <p class="text-xs font-body text-barrier mb-1.5">Password must:</p>
+            <div v-if="password && passwordErrors.length > 0" class="mt-2 space-y-1">
+              <p class="text-xs text-gray-600">Password must:</p>
               <ul class="space-y-1">
                 <li
                   v-for="error in passwordErrors"
                   :key="error"
-                  class="text-xs font-body text-dnf flex items-start"
+                  class="text-xs text-red-600 flex items-start"
                 >
-                  <i class="pi pi-times-circle text-dnf mr-2 mt-0.5 text-[10px]"></i>
+                  <span class="mr-2">•</span>
                   <span>{{ error }}</span>
                 </li>
               </ul>
@@ -300,30 +263,25 @@ const handleSubmit = async (): Promise<void> => {
 
             <!-- Success Check -->
             <div v-if="password && isPasswordValid" class="mt-2 flex items-center">
-              <i class="pi pi-check-circle text-pole mr-2 text-sm"></i>
-              <span class="text-xs font-body text-pole">Password meets all requirements</span>
+              <span class="text-xs text-green-600">✓ Password meets all requirements</span>
             </div>
 
-            <small v-if="passwordError" class="text-dnf mt-1 block font-body text-sm">
+            <small v-if="passwordError" class="text-red-600 mt-1 block text-sm">
               {{ passwordError }}
             </small>
           </div>
 
           <!-- Confirm Password Field -->
           <div>
-            <label
-              for="password-confirmation"
-              class="block font-display text-xs uppercase tracking-widest text-gold mb-2"
-            >
+            <label for="password-confirmation" class="block text-sm font-medium text-gray-700">
               Confirm Password
             </label>
             <Password
               id="password-confirmation"
               v-model="passwordConfirmation"
               placeholder="Confirm your password"
-              input-class="w-full bg-carbon border-tarmac text-pit-white focus:border-gold"
               :pt="{
-                root: { class: 'w-full' },
+                root: { class: 'mt-1 w-full' },
                 input: { class: 'w-full' },
               }"
               :disabled="isSubmitting"
@@ -334,31 +292,28 @@ const handleSubmit = async (): Promise<void> => {
               @input="passwordError = ''"
             />
           </div>
-
-          <!-- Submit Button -->
-          <button
-            type="submit"
-            :disabled="!isFormValid || isSubmitting"
-            class="w-full btn btn-primary"
-            :aria-busy="isSubmitting"
-          >
-            <span v-if="!isSubmitting">Create Account</span>
-            <span v-else>Creating Account...</span>
-          </button>
-        </form>
-
-        <!-- Login Link -->
-        <div class="mt-8 text-center">
-          <p class="font-body text-sm text-barrier">
-            Already have an account?
-            <router-link
-              to="/login"
-              class="text-gold hover:text-gold-bright transition-colors font-medium"
-            >
-              Sign in
-            </router-link>
-          </p>
         </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          :disabled="!isFormValid || isSubmitting"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          :aria-busy="isSubmitting"
+        >
+          <span v-if="!isSubmitting">Create Account</span>
+          <span v-else>Creating Account...</span>
+        </button>
+      </form>
+
+      <!-- Login Link -->
+      <div class="text-center">
+        <p class="text-sm text-gray-600">
+          Already have an account?
+          <router-link to="/login" class="font-medium text-gray-900 hover:text-gray-700">
+            Sign in
+          </router-link>
+        </p>
       </div>
     </div>
   </div>

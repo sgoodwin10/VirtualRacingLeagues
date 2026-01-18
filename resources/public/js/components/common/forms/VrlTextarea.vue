@@ -1,145 +1,111 @@
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue';
-import VrlLabel from '@public/components/common/typography/VrlLabel.vue';
+import { computed } from 'vue';
+import VrlCharacterCount from './VrlCharacterCount.vue';
 
 interface Props {
   modelValue: string;
-  rows?: number;
   placeholder?: string;
   disabled?: boolean;
   readonly?: boolean;
-  invalid?: boolean;
-  errorMessage?: string;
-  label?: string;
+  error?: string | string[];
+  id?: string;
+  name?: string;
+  rows?: number;
+  maxlength?: number;
+  minlength?: number;
   required?: boolean;
-}
-
-interface Emits {
-  (e: 'update:modelValue', value: string): void;
+  showCharacterCount?: boolean;
+  class?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  rows: 4,
   placeholder: '',
   disabled: false,
   readonly: false,
-  invalid: false,
-  errorMessage: '',
-  label: '',
+  error: undefined,
+  id: undefined,
+  name: undefined,
+  rows: 4,
+  maxlength: undefined,
+  minlength: undefined,
   required: false,
+  showCharacterCount: false,
+  class: '',
 });
 
-const emit = defineEmits<Emits>();
-const attrs = useAttrs();
+const emit = defineEmits<{
+  'update:modelValue': [value: string];
+  blur: [event: FocusEvent];
+  focus: [event: FocusEvent];
+  input: [event: Event];
+}>();
 
-const textareaId = computed<string>(() => {
-  return (attrs.id as string) || `vrl-textarea-${Math.random().toString(36).substring(2, 9)}`;
+const hasError = computed(() => {
+  if (!props.error) return false;
+  if (Array.isArray(props.error)) return props.error.length > 0;
+  return props.error.length > 0;
 });
 
-const errorId = computed<string>(() => `${textareaId.value}-error`);
+const textareaClass = computed(() => {
+  const baseClasses =
+    'w-full px-4 py-3 bg-[var(--bg-dark)] border rounded-[var(--radius)] text-[var(--text-primary)] font-body text-[0.9rem] resize-y min-h-[120px] transition-[var(--transition)] placeholder:text-[var(--text-muted)]';
+  const borderClass = hasError.value ? 'border-[var(--red)]' : 'border-[var(--border)]';
+  const focusClass = hasError.value
+    ? 'focus:outline-none focus:border-[var(--red)] focus:shadow-[0_0_0_3px_var(--red-dim)]'
+    : 'focus:outline-none focus:border-[var(--cyan)] focus:shadow-[0_0_0_3px_var(--cyan-dim)]';
+  const disabledClass = props.disabled
+    ? 'opacity-50 cursor-not-allowed bg-[var(--bg-elevated)]'
+    : '';
 
-const textareaClasses = computed(() => {
-  const baseClasses = [
-    'w-full',
-    'px-4',
-    'py-3',
-    'text-sm',
-    'font-body',
-    'transition-all',
-    'resize-y',
-    'border',
-    'outline-none',
-  ];
-
-  // Background and text colors (CSS variables)
-  baseClasses.push('theme-bg-input', 'theme-text-primary');
-
-  // Border and state classes
-  if (props.invalid) {
-    baseClasses.push('border-racing-danger/50');
-  } else {
-    baseClasses.push('theme-border');
-  }
-
-  // Disabled state
-  if (props.disabled) {
-    baseClasses.push('opacity-50', 'cursor-not-allowed');
-  } else if (props.readonly) {
-    baseClasses.push('cursor-default');
-  } else {
-    baseClasses.push('cursor-text');
-  }
-
-  return baseClasses;
+  const classes = `${baseClasses} ${borderClass} ${focusClass} ${disabledClass}`;
+  return props.class ? `${classes} ${props.class}` : classes;
 });
 
-const textareaStyles = computed(() => {
-  const styles: Record<string, string> = {};
-
-  if (props.invalid) {
-    styles.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.12)';
-  }
-
-  return styles;
+const showCharCount = computed(() => {
+  return props.showCharacterCount && props.maxlength !== undefined;
 });
 
 const handleInput = (event: Event) => {
-  // eslint-disable-next-line no-undef
-  const target = event.target as HTMLTextAreaElement;
+  const target = event.target as { value: string } | null;
+  if (!target) return;
   emit('update:modelValue', target.value);
+  emit('input', event);
+};
+
+const handleBlur = (event: FocusEvent) => {
+  emit('blur', event);
+};
+
+const handleFocus = (event: FocusEvent) => {
+  emit('focus', event);
 };
 </script>
 
 <template>
-  <div class="vrl-textarea-wrapper">
-    <!-- Label -->
-    <VrlLabel v-if="label" :for="textareaId" :required="required">
-      {{ label }}
-    </VrlLabel>
-
-    <!-- Textarea -->
+  <div>
     <textarea
-      :id="textareaId"
-      :value="modelValue"
-      :rows="rows"
-      :placeholder="placeholder"
-      :disabled="disabled"
-      :readonly="readonly"
-      :aria-invalid="invalid"
-      :aria-describedby="invalid && errorMessage ? errorId : undefined"
-      :class="textareaClasses"
-      :style="textareaStyles"
+      :id="props.id"
+      :name="props.name"
+      :value="props.modelValue"
+      :placeholder="props.placeholder"
+      :disabled="props.disabled"
+      :readonly="props.readonly"
+      :required="props.required"
+      :maxlength="props.maxlength"
+      :minlength="props.minlength"
+      :rows="props.rows"
+      :class="textareaClass"
+      :aria-invalid="hasError ? 'true' : undefined"
+      :aria-required="props.required ? 'true' : undefined"
+      :aria-describedby="hasError && props.id ? `${props.id}-error` : undefined"
       @input="handleInput"
+      @blur="handleBlur"
+      @focus="handleFocus"
     />
-
-    <!-- Error message -->
-    <small
-      v-if="invalid && errorMessage"
-      :id="errorId"
-      class="block mt-2 text-xs text-racing-danger"
-    >
-      {{ errorMessage }}
-    </small>
+    <VrlCharacterCount
+      v-if="showCharCount"
+      :current="props.modelValue.length"
+      :max="props.maxlength!"
+    />
   </div>
 </template>
-
-<style scoped>
-/* Focus state with gold border and shadow */
-textarea:focus {
-  border-color: var(--accent-gold);
-  box-shadow:
-    0 0 0 3px rgba(212, 168, 83, 0.12),
-    0 0 0 1px var(--accent-gold);
-}
-
-/* Preserve error state box-shadow on focus */
-textarea[aria-invalid='true']:focus {
-  border-color: rgba(239, 68, 68, 0.5);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
-}
-
-/* Placeholder color */
-textarea::placeholder {
-  color: var(--text-dim);
-}
-</style>

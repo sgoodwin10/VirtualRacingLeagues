@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VrlPositionIndicator > Snapshots > matches snapshot for large position number 1`] = `"<span class="inline-flex items-center justify-center min-w-8 w-8 h-8 font-[var(--font-display)] font-bold text-[0.9rem] rounded-[var(--radius)] px-1 leading-none bg-[var(--bg-elevated)] text-[var(--text-primary)]">99</span>"`;
+
+exports[`VrlPositionIndicator > Snapshots > matches snapshot for position 1 (gold) 1`] = `"<span class="inline-flex items-center justify-center min-w-8 w-8 h-8 font-[var(--font-display)] font-bold text-[0.9rem] rounded-[var(--radius)] px-1 leading-none bg-[var(--yellow-dim)] text-[var(--yellow)]">1</span>"`;
+
+exports[`VrlPositionIndicator > Snapshots > matches snapshot for position 2 (silver) 1`] = `"<span class="inline-flex items-center justify-center min-w-8 w-8 h-8 font-[var(--font-display)] font-bold text-[0.9rem] rounded-[var(--radius)] px-1 leading-none bg-[rgba(192,192,192,0.15)] text-[#c0c0c0]">2</span>"`;
+
+exports[`VrlPositionIndicator > Snapshots > matches snapshot for position 3 (bronze) 1`] = `"<span class="inline-flex items-center justify-center min-w-8 w-8 h-8 font-[var(--font-display)] font-bold text-[0.9rem] rounded-[var(--radius)] px-1 leading-none bg-[rgba(205,127,50,0.15)] text-[#cd7f32]">3</span>"`;
+
+exports[`VrlPositionIndicator > Snapshots > matches snapshot for position 4+ (default) 1`] = `"<span class="inline-flex items-center justify-center min-w-8 w-8 h-8 font-[var(--font-display)] font-bold text-[0.9rem] rounded-[var(--radius)] px-1 leading-none bg-[var(--bg-elevated)] text-[var(--text-primary)]">4</span>"`;

@@ -1,55 +1,169 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import VrlToggle from '../VrlToggle.vue';
 
 describe('VrlToggle', () => {
-  it('renders with default props', () => {
-    const wrapper = mount(VrlToggle, {
-      props: {
-        modelValue: false,
-      },
+  describe('Rendering', () => {
+    it('renders with default props', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test Label',
+        },
+      });
+      expect(wrapper.find('.toggle-wrapper').exists()).toBe(true);
+      expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true);
+      expect(wrapper.find('.toggle-label').text()).toBe('Test Label');
     });
 
-    const toggle = wrapper.find('[role="switch"]');
-    expect(toggle.exists()).toBe(true);
+    it('renders with custom id', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+          id: 'custom-toggle',
+        },
+      });
+      expect(wrapper.find('input').attributes('id')).toBe('custom-toggle');
+    });
+
+    it('renders with custom name', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+          name: 'notifications',
+        },
+      });
+      expect(wrapper.find('input').attributes('name')).toBe('notifications');
+    });
+
+    it('renders with custom class', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+          class: 'custom-class',
+        },
+      });
+      expect(wrapper.find('.custom-class').exists()).toBe(true);
+    });
+
+    it('generates unique id when not provided', () => {
+      const wrapper1 = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test 1',
+        },
+      });
+      const wrapper2 = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test 2',
+        },
+      });
+
+      const id1 = wrapper1.find('input').attributes('id');
+      const id2 = wrapper2.find('input').attributes('id');
+
+      expect(id1).toBeTruthy();
+      expect(id2).toBeTruthy();
+      expect(id1).not.toBe(id2);
+    });
   });
 
-  describe('v-model binding', () => {
-    it('displays active state', () => {
+  describe('Active State', () => {
+    it('renders inactive state', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+        },
+      });
+      expect(wrapper.find('input').element.checked).toBe(false);
+      expect(wrapper.find('.toggle.active').exists()).toBe(false);
+    });
+
+    it('renders active state', () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: true,
+          label: 'Test',
         },
       });
-
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.attributes('aria-checked')).toBe('true');
-      expect(toggle.classes()).toContain('bg-racing-gold');
+      expect(wrapper.find('input').element.checked).toBe(true);
+      expect(wrapper.find('.toggle.active').exists()).toBe(true);
     });
 
-    it('displays inactive state', () => {
+    it('toggles active state visually', async () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Test',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.attributes('aria-checked')).toBe('false');
-      expect(toggle.classes()).toContain('theme-bg-tertiary');
+      expect(wrapper.find('.toggle.active').exists()).toBe(false);
+
+      await wrapper.setProps({ modelValue: true });
+      expect(wrapper.find('.toggle.active').exists()).toBe(true);
+
+      await wrapper.setProps({ modelValue: false });
+      expect(wrapper.find('.toggle.active').exists()).toBe(false);
     });
 
-    it('emits update:modelValue on click', async () => {
+    it('shows green color class when active', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: true,
+          label: 'Test',
+        },
+      });
+
+      const toggle = wrapper.find('.toggle.active');
+      expect(toggle.exists()).toBe(true);
+      expect(toggle.classes()).toContain('active');
+    });
+  });
+
+  describe('v-model', () => {
+    it('emits update:modelValue on change', async () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Test',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      await toggle.trigger('click');
+      await wrapper.find('input').setValue(true);
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy();
+      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([true]);
+    });
+
+    it('emits change event', async () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+        },
+      });
+
+      await wrapper.find('input').setValue(true);
+
+      expect(wrapper.emitted('change')).toBeTruthy();
+      expect(wrapper.emitted('change')?.[0]).toEqual([true]);
+    });
+
+    it('toggles from false to true', async () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+        },
+      });
+
+      await wrapper.find('input').setValue(true);
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([true]);
     });
 
@@ -57,26 +171,84 @@ describe('VrlToggle', () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: true,
+          label: 'Test',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      await toggle.trigger('click');
-
+      await wrapper.find('input').setValue(false);
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false]);
     });
   });
 
-  describe('keyboard interaction', () => {
+  describe('Label Click', () => {
+    it('toggles switch when label is clicked', async () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Click me',
+        },
+      });
+
+      // The browser handles the label click -> input toggle
+      // We just verify the structure is correct for this to work
+      expect(wrapper.find('label').attributes('for')).toBe(wrapper.find('input').attributes('id'));
+    });
+  });
+
+  describe('Disabled State', () => {
+    it('renders disabled attribute', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+          disabled: true,
+        },
+      });
+      expect(wrapper.find('input').attributes('disabled')).toBeDefined();
+    });
+
+    it('does not emit events when disabled', async () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+          disabled: true,
+        },
+      });
+
+      const input = wrapper.find('input');
+      await input.trigger('change');
+
+      expect(wrapper.emitted('update:modelValue')).toBeFalsy();
+      expect(wrapper.emitted('change')).toBeFalsy();
+    });
+
+    it('does not respond to keyboard when disabled', async () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+          disabled: true,
+        },
+      });
+
+      await wrapper.find('input').trigger('keydown', { key: ' ' });
+
+      expect(wrapper.emitted('update:modelValue')).toBeFalsy();
+    });
+  });
+
+  describe('Keyboard Navigation', () => {
     it('toggles on Space key', async () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Test',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      await toggle.trigger('keydown', { key: ' ' });
+      const input = wrapper.find('input');
+      await input.trigger('keydown', { key: ' ' });
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy();
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([true]);
@@ -86,11 +258,12 @@ describe('VrlToggle', () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Test',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      await toggle.trigger('keydown', { key: 'Enter' });
+      const input = wrapper.find('input');
+      await input.trigger('keydown', { key: 'Enter' });
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy();
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([true]);
@@ -100,314 +273,187 @@ describe('VrlToggle', () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Test',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      await toggle.trigger('keydown', { key: 'a' });
-
-      expect(wrapper.emitted('update:modelValue')).toBeFalsy();
-    });
-  });
-
-  describe('size prop', () => {
-    it('renders small size', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          size: 'sm',
-        },
-      });
-
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.classes()).toContain('w-9');
-      expect(toggle.classes()).toContain('h-5');
-    });
-
-    it('renders medium size (default)', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          size: 'md',
-        },
-      });
-
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.classes()).toContain('w-11');
-      expect(toggle.classes()).toContain('h-6');
-    });
-
-    it('renders large size', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          size: 'lg',
-        },
-      });
-
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.classes()).toContain('w-[52px]');
-      expect(toggle.classes()).toContain('h-7');
-    });
-  });
-
-  describe('disabled state', () => {
-    it('applies disabled styling', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          disabled: true,
-        },
-      });
-
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.attributes('aria-disabled')).toBe('true');
-      expect(toggle.classes()).toContain('opacity-50');
-      expect(toggle.classes()).toContain('cursor-not-allowed');
-    });
-
-    it('does not emit when disabled on click', async () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          disabled: true,
-        },
-      });
-
-      const toggle = wrapper.find('[role="switch"]');
-      await toggle.trigger('click');
+      await wrapper.find('input').trigger('keydown', { key: 'a' });
 
       expect(wrapper.emitted('update:modelValue')).toBeFalsy();
     });
 
-    it('does not emit when disabled on keyboard', async () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          disabled: true,
-        },
-      });
-
-      const toggle = wrapper.find('[role="switch"]');
-      await toggle.trigger('keydown', { key: ' ' });
-
-      expect(wrapper.emitted('update:modelValue')).toBeFalsy();
-    });
-  });
-
-  describe('label prop', () => {
-    it('displays label without description', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          label: 'Enable feature',
-        },
-      });
-
-      expect(wrapper.text()).toContain('Enable feature');
-      const label = wrapper.find('label');
-      expect(label.exists()).toBe(true);
-    });
-
-    it('renders without label wrapper when no label provided', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-        },
-      });
-
-      const labels = wrapper.findAll('label');
-      expect(labels.length).toBe(1); // Only the simple wrapper
-    });
-  });
-
-  describe('description prop', () => {
-    it('displays label and description in card layout', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          label: 'Email Notifications',
-          description: 'Receive email updates about race results',
-        },
-      });
-
-      expect(wrapper.text()).toContain('Email Notifications');
-      expect(wrapper.text()).toContain('Receive email updates about race results');
-
-      // Should use card layout
-      const card = wrapper.find('.theme-bg-tertiary');
-      expect(card.exists()).toBe(true);
-    });
-
-    it('applies unique aria-describedby when description is present', () => {
+    it('prevents default on Space key to avoid page scroll', async () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
           label: 'Test',
-          description: 'Test description',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      const describedBy = toggle.attributes('aria-describedby');
-      expect(describedBy).toBeDefined();
-      expect(describedBy).toMatch(/^toggle-description-/);
-    });
+      const event = new KeyboardEvent('keydown', { key: ' ' });
+      const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
 
-    it('generates unique IDs for multiple instances', () => {
-      const wrapper1 = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          label: 'Toggle 1',
-          description: 'Description 1',
-        },
-      });
+      await wrapper.find('input').element.dispatchEvent(event);
 
-      const wrapper2 = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          label: 'Toggle 2',
-          description: 'Description 2',
-        },
-      });
-
-      const toggle1 = wrapper1.find('[role="switch"]');
-      const toggle2 = wrapper2.find('[role="switch"]');
-
-      const id1 = toggle1.attributes('aria-describedby');
-      const id2 = toggle2.attributes('aria-describedby');
-
-      expect(id1).toBeDefined();
-      expect(id2).toBeDefined();
-      expect(id1).not.toBe(id2);
+      expect(preventDefaultSpy).toHaveBeenCalled();
     });
   });
 
-  describe('indicator positioning', () => {
-    it('positions indicator on left when inactive', () => {
+  describe('Accessibility', () => {
+    it('has role="switch"', () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Test',
         },
       });
-
-      const indicator = wrapper.find('[role="switch"] > div');
-      expect(indicator.classes()).toContain('left-0.5');
-      expect(indicator.classes()).not.toContain('translate-x-5');
+      expect(wrapper.find('input').attributes('role')).toBe('switch');
     });
 
-    it('positions indicator on right when active (md size)', () => {
+    it('sets aria-checked to match modelValue', () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: true,
-          size: 'md',
+          label: 'Test',
         },
       });
-
-      const indicator = wrapper.find('[role="switch"] > div');
-      expect(indicator.classes()).toContain('translate-x-5');
+      expect(wrapper.find('input').attributes('aria-checked')).toBe('true');
     });
 
-    it('positions indicator correctly for small size when active', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: true,
-          size: 'sm',
-        },
-      });
-
-      const indicator = wrapper.find('[role="switch"] > div');
-      expect(indicator.classes()).toContain('translate-x-4');
-    });
-
-    it('positions indicator correctly for large size when active', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: true,
-          size: 'lg',
-        },
-      });
-
-      const indicator = wrapper.find('[role="switch"] > div');
-      expect(indicator.classes()).toContain('translate-x-6');
-    });
-  });
-
-  describe('accessibility', () => {
-    it('has role switch', () => {
+    it('updates aria-checked when modelValue changes', async () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Test',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.exists()).toBe(true);
+      expect(wrapper.find('input').attributes('aria-checked')).toBe('false');
+
+      await wrapper.setProps({ modelValue: true });
+      expect(wrapper.find('input').attributes('aria-checked')).toBe('true');
+    });
+
+    it('hides native input with sr-only class', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+        },
+      });
+      expect(wrapper.find('input').classes()).toContain('sr-only');
+    });
+
+    it('sets aria-hidden on visual toggle element', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+        },
+      });
+      expect(wrapper.find('.toggle').attributes('aria-hidden')).toBe('true');
+    });
+
+    it('associates label with input via for/id', () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+          id: 'test-toggle',
+        },
+      });
+
+      const label = wrapper.find('label');
+      const input = wrapper.find('input');
+
+      expect(label.attributes('for')).toBe('test-toggle');
+      expect(input.attributes('id')).toBe('test-toggle');
     });
 
     it('is keyboard focusable', () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Test',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.attributes('tabindex')).toBe('0');
-    });
-
-    it('has aria-label when label is provided', () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-          label: 'Enable notifications',
-        },
-      });
-
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.attributes('aria-label')).toBe('Enable notifications');
-    });
-
-    it('updates aria-checked on state change', async () => {
-      const wrapper = mount(VrlToggle, {
-        props: {
-          modelValue: false,
-        },
-      });
-
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.attributes('aria-checked')).toBe('false');
-
-      await wrapper.setProps({ modelValue: true });
-      expect(toggle.attributes('aria-checked')).toBe('true');
+      const input = wrapper.find('input');
+      expect(input.attributes('type')).toBe('checkbox');
+      // Native checkbox inputs are focusable
+      expect(input.element.tagName).toBe('INPUT');
     });
   });
 
-  describe('styling', () => {
-    it('applies transition classes', () => {
+  describe('Focus Ring', () => {
+    it('shows focus ring on keyboard focus', async () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Test',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.classes()).toContain('transition-all');
-      expect(toggle.classes()).toContain('duration-300');
+      const input = wrapper.find('input');
+      await input.trigger('focus');
+
+      // CSS :focus-visible will apply the focus ring via the :has() selector
+      // We verify the input can receive focus
+      expect(input.exists()).toBe(true);
+      expect(input.element.tagName).toBe('INPUT');
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('handles rapid toggle', async () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+        },
+      });
+
+      const input = wrapper.find('input');
+      await input.setValue(true);
+      await input.setValue(false);
+      await input.setValue(true);
+
+      const emitted = wrapper.emitted('update:modelValue');
+      expect(emitted?.length).toBe(3);
+      expect(emitted?.[0]).toEqual([true]);
+      expect(emitted?.[1]).toEqual([false]);
+      expect(emitted?.[2]).toEqual([true]);
     });
 
-    it('changes background color when active', async () => {
+    it('maintains state across prop updates', async () => {
       const wrapper = mount(VrlToggle, {
         props: {
           modelValue: false,
+          label: 'Initial Label',
         },
       });
 
-      const toggle = wrapper.find('[role="switch"]');
-      expect(toggle.classes()).toContain('theme-bg-tertiary');
+      await wrapper.setProps({ label: 'Updated Label' });
+      expect(wrapper.find('.toggle-label').text()).toBe('Updated Label');
 
       await wrapper.setProps({ modelValue: true });
-      expect(toggle.classes()).toContain('bg-racing-gold');
+      expect(wrapper.find('input').element.checked).toBe(true);
+    });
+
+    it('emits both update:modelValue and change on toggle', async () => {
+      const wrapper = mount(VrlToggle, {
+        props: {
+          modelValue: false,
+          label: 'Test',
+        },
+      });
+
+      await wrapper.find('input').setValue(true);
+
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy();
+      expect(wrapper.emitted('change')).toBeTruthy();
+      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([true]);
+      expect(wrapper.emitted('change')?.[0]).toEqual([true]);
     });
   });
 });

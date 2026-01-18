@@ -62,7 +62,7 @@ const emit = defineEmits<{
       <!-- Slug Preview -->
       <div v-if="slugPreview" class="flex items-center gap-2">
         <div class="w-2 h-2 rounded-full bg-[var(--green)]" />
-        <span class="font-mono text-[var(--text-muted)]">
+        <span class="text-[var(--text-muted)]">
           /seasons/<span class="text-[var(--green)]">{{ slugPreview }}</span>
         </span>
       </div>
