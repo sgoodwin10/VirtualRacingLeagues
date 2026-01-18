@@ -262,6 +262,26 @@ watch(
   },
 );
 
+// Watch drop_round toggle - reset total_drop_rounds to 0 when disabled
+watch(
+  () => form.drop_round,
+  (enabled) => {
+    if (!enabled) {
+      form.total_drop_rounds = 0;
+    }
+  },
+);
+
+// Watch teams_drop_rounds toggle - reset teams_total_drop_rounds to 0 when disabled
+watch(
+  () => form.teams_drop_rounds,
+  (enabled) => {
+    if (!enabled) {
+      form.teams_total_drop_rounds = 0;
+    }
+  },
+);
+
 // Watch for modal visibility changes
 watch(
   () => props.visible,
@@ -484,6 +504,9 @@ async function handleSubmit(): Promise<void> {
       });
 
       emit('season-saved', updated);
+
+      // refresh the page
+      window.location.reload();
     } else {
       const created = await seasonStore.createNewSeason(props.competitionId, {
         name: form.name,
@@ -519,6 +542,9 @@ async function handleSubmit(): Promise<void> {
       });
 
       emit('season-saved', created);
+
+      // refresh the page
+      window.location.reload();
     }
 
     closeModal();

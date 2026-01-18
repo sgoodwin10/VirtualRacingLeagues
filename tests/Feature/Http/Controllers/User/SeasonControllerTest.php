@@ -210,6 +210,110 @@ class SeasonControllerTest extends UserControllerTestCase
         $this->assertEquals('active', $season->status);
     }
 
+    // ==================== Reactivate Tests ====================
+
+    public function test_user_can_reactivate_completed_season(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        $season = SeasonEloquent::create([
+            'competition_id' => $this->competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'status' => 'completed',
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        $response = $this->postJson("/api/seasons/{$season->id}/reactivate");
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'data' => [
+                'id',
+                'status',
+                'is_active',
+            ],
+        ]);
+
+        $this->assertDatabaseHas('seasons', [
+            'id' => $season->id,
+            'status' => 'active',
+        ]);
+
+        $season->refresh();
+        $this->assertEquals('active', $season->status);
+    }
+
+    public function test_guest_cannot_reactivate_season(): void
+    {
+        $season = SeasonEloquent::create([
+            'competition_id' => $this->competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'status' => 'completed',
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        $response = $this->postJson("/api/seasons/{$season->id}/reactivate");
+
+        $response->assertStatus(401);
+    }
+
+    public function test_non_owner_cannot_reactivate_season(): void
+    {
+        $season = SeasonEloquent::create([
+            'competition_id' => $this->competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'status' => 'completed',
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        $this->actingAs($this->otherUser, 'web');
+
+        $response = $this->postJson("/api/seasons/{$season->id}/reactivate");
+
+        $response->assertStatus(403);
+    }
+
+    public function test_cannot_reactivate_season_that_is_not_completed(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        $season = SeasonEloquent::create([
+            'competition_id' => $this->competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'status' => 'active',
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        $response = $this->postJson("/api/seasons/{$season->id}/reactivate");
+
+        // Expect a 500 error since InvalidArgumentException is thrown
+        $response->assertStatus(500);
+    }
+
+    public function test_cannot_reactivate_archived_season(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        $season = SeasonEloquent::create([
+            'competition_id' => $this->competition->id,
+            'name' => 'Season 1',
+            'slug' => 'season-1',
+            'status' => 'archived',
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        $response = $this->postJson("/api/seasons/{$season->id}/reactivate");
+
+        // Expect a 500 error since InvalidArgumentException is thrown
+        $response->assertStatus(500);
+    }
+
     public function test_unarchive_updates_timestamp_in_database(): void
     {
         $this->actingAs($this->user, 'web');

@@ -124,6 +124,16 @@ export async function completeSeason(seasonId: number): Promise<Season> {
 }
 
 /**
+ * Reactivate season
+ */
+export async function reactivateSeason(seasonId: number): Promise<Season> {
+  const response: AxiosResponse<ApiResponse<Season>> = await apiClient.post(
+    API_ENDPOINTS.seasons.reactivate(seasonId),
+  );
+  return response.data.data;
+}
+
+/**
  * Delete season (soft delete)
  */
 export async function deleteSeason(seasonId: number): Promise<void> {

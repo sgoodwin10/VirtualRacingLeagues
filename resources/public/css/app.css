@@ -499,3 +499,6 @@ h6 {
 
 /* Import navigation components */
 @import './components/_navigation.css';
+
+/* Import landing page components */
+@import './components/landing.css';

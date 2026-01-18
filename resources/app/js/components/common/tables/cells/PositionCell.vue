@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
  */
 const formattedPosition = computed(() => {
   if (props.position === null || props.position === undefined) return '—';
-  return props.padded ? String(props.position).padStart(2, '0') : String(props.position);
+  return props.padded ? String(props.position).padStart(1, '0') : String(props.position);
 });
 
 /**

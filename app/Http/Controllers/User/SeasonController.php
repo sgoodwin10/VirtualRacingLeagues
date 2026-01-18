@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\ArchiveSeasonRequest;
 use App\Http\Requests\User\CompleteSeasonRequest;
 use App\Http\Requests\User\CreateSeasonRequest;
+use App\Http\Requests\User\ReactivateSeasonRequest;
 use App\Http\Requests\User\UpdateSeasonRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -130,6 +131,15 @@ final class SeasonController extends Controller
     {
         $seasonData = $this->seasonService->completeSeason($id, $this->getAuthenticatedUserId());
         return ApiResponse::success($seasonData->toArray(), 'Season completed successfully');
+    }
+
+    /**
+     * Reactivate a completed season.
+     */
+    public function reactivate(ReactivateSeasonRequest $request, int $id): JsonResponse
+    {
+        $seasonData = $this->seasonService->reactivateSeason($id, $this->getAuthenticatedUserId());
+        return ApiResponse::success($seasonData->toArray(), 'Season reactivated successfully');
     }
 
     /**

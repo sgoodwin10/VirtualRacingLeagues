@@ -1,0 +1,20 @@
+/**
+ * Landing Page Styles
+ *
+ * Component-specific styles for the VRL Velocity landing page.
+ * Includes animations and effects not covered by Tailwind utilities.
+ */
+
+/* Speed lines animation is in SpeedLines.vue scoped styles */
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

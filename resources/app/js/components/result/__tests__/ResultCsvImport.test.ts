@@ -175,7 +175,7 @@ describe('ResultCsvImport', () => {
   };
 
   describe('Basic CSV Parsing', () => {
-    it('parses basic CSV with all columns', async () => {
+    it('parses basic CSV with all columns (snake_case - legacy)', async () => {
       const wrapper = createWrapper();
       const csvData = `driver,race_time,original_race_time_difference,fastest_lap_time
 John Smith,01:23:45.678,,01:32.456
@@ -193,6 +193,43 @@ Jane Doe,,,01:33.123`;
       expect(rows![1]).toMatchObject({
         driver: 'Jane Doe',
         fastest_lap_time: '01:33.123',
+      });
+    });
+
+    it('parses basic CSV with all columns (PascalCase)', async () => {
+      const wrapper = createWrapper();
+      const csvData = `Driver,RaceTime,RaceTimeDifference,FastestLapTime
+John Smith,01:23:45.678,,01:32.456
+Jane Doe,,,01:33.123`;
+
+      const rows = await parseCSV(wrapper, csvData);
+
+      expect(rows).toBeDefined();
+      expect(rows).toHaveLength(2);
+      expect(rows![0]).toMatchObject({
+        driver: 'John Smith',
+        race_time: '01:23:45.678',
+        fastest_lap_time: '01:32.456',
+      });
+      expect(rows![1]).toMatchObject({
+        driver: 'Jane Doe',
+        fastest_lap_time: '01:33.123',
+      });
+    });
+
+    it('parses with mixed case headers (backward compatibility)', async () => {
+      const wrapper = createWrapper();
+      const csvData = `Driver,race_time,RaceTimeDifference,fastest_lap_time
+John Smith,01:23:45.678,,01:32.456`;
+
+      const rows = await parseCSV(wrapper, csvData);
+
+      expect(rows).toBeDefined();
+      expect(rows).toHaveLength(1);
+      expect(rows![0]).toMatchObject({
+        driver: 'John Smith',
+        race_time: '01:23:45.678',
+        fastest_lap_time: '01:32.456',
       });
     });
 
@@ -215,6 +252,20 @@ Bob Wilson,,ret,01:35.000`;
       expect(rows![2]?.original_race_time_difference).toBe('');
     });
 
+    it('handles DNF indicators with PascalCase headers', async () => {
+      const wrapper = createWrapper();
+      const csvData = `Driver,RaceTime,RaceTimeDifference,FastestLapTime
+John Smith,,DNF,01:32.456
+Jane Doe,,retired,01:33.123`;
+
+      const rows = await parseCSV(wrapper, csvData);
+
+      expect(rows).toBeDefined();
+      expect(rows).toHaveLength(2);
+      expect(rows![0]?.dnf).toBe(true);
+      expect(rows![1]?.dnf).toBe(true);
+    });
+
     it('removes leading + from time differences', async () => {
       const wrapper = createWrapper();
       const csvData = `driver,race_time,original_race_time_difference,fastest_lap_time
@@ -228,11 +279,26 @@ John Smith,,+00:00:14.567,01:32.456`;
   });
 
   describe('Lap Format Parsing', () => {
-    it('calculates race time for "1 lap" format', async () => {
+    it('calculates race time for "1 lap" format (snake_case)', async () => {
       const wrapper = createWrapper();
       // Fastest lap: 01:30.000 = 90000ms
       // Expected: (90000 + 500) * 1 = 90500ms = 00:01:30.500
       const csvData = `driver,race_time,original_race_time_difference,fastest_lap_time
+John Smith,,1 lap,01:30.000`;
+
+      const rows = await parseCSV(wrapper, csvData);
+
+      expect(rows).toBeDefined();
+      expect(rows).toHaveLength(1);
+      expect(rows![0]?.original_race_time_difference).toBe('00:01:30.500');
+      expect(rows![0]?.fastest_lap_time).toBe('01:30.000');
+    });
+
+    it('calculates race time for "1 lap" format (PascalCase)', async () => {
+      const wrapper = createWrapper();
+      // Fastest lap: 01:30.000 = 90000ms
+      // Expected: (90000 + 500) * 1 = 90500ms = 00:01:30.500
+      const csvData = `Driver,RaceTime,RaceTimeDifference,FastestLapTime
 John Smith,,1 lap,01:30.000`;
 
       const rows = await parseCSV(wrapper, csvData);
@@ -391,7 +457,7 @@ John,01:23:45.678`;
       await parseButton?.trigger('click');
       await wrapper.vm.$nextTick();
 
-      expect(vm.parseError).toContain('driver');
+      expect(vm.parseError).toContain('Driver');
     });
 
     it('shows error for invalid fastest lap time format with lap calculation', async () => {
@@ -491,9 +557,9 @@ Jane Doe`;
       await parseButton?.trigger('click');
       await wrapper.vm.$nextTick();
 
-      expect(vm.parseError).toContain('race_time');
-      expect(vm.parseError).toContain('original_race_time_difference');
-      expect(vm.parseError).toContain('fastest_lap_time');
+      expect(vm.parseError).toContain('RaceTime');
+      expect(vm.parseError).toContain('RaceTimeDifference');
+      expect(vm.parseError).toContain('FastestLapTime');
     });
 
     it('allows races with only driver column when race_times_required is false', async () => {
@@ -534,32 +600,26 @@ Jane Doe,01:33.123`;
       const wrapper = createWrapper({ isQualifying: true });
       const vm = wrapper.vm as any;
 
-      expect(vm.placeholderText).toContain('driver,fastest_lap_time');
-      expect(vm.placeholderText).not.toContain('race_time');
-      expect(vm.expectedColumnsText).toBe('Required Column Headers: driver, fastest_lap_time');
+      expect(vm.placeholderText).toContain('Driver,FastestLapTime');
+      expect(vm.placeholderText).not.toContain('RaceTime');
+      expect(vm.requiredHeadersDisplay).toBe('Driver,FastestLapTime');
     });
 
     it('shows correct placeholder for races with times required', () => {
       const wrapper = createWrapper({ isQualifying: false, raceTimesRequired: true });
       const vm = wrapper.vm as any;
 
-      expect(vm.placeholderText).toContain(
-        'driver,race_time,original_race_time_difference,fastest_lap_time',
-      );
-      expect(vm.expectedColumnsText).toBe(
-        'Required Column Headers: driver, race_time, original_race_time_difference, fastest_lap_time. Data can be blank if not applicable',
-      );
+      expect(vm.placeholderText).toContain('Driver,RaceTime,RaceTimeDifference,FastestLapTime');
+      expect(vm.requiredHeadersDisplay).toBe('Driver,RaceTime,RaceTimeDifference,FastestLapTime');
     });
 
     it('shows correct placeholder for races without times required', () => {
       const wrapper = createWrapper({ isQualifying: false, raceTimesRequired: false });
       const vm = wrapper.vm as any;
 
-      expect(vm.placeholderText).toContain('driver');
-      expect(vm.placeholderText).not.toContain('race_time');
-      expect(vm.expectedColumnsText).toBe(
-        'Required Column Headers: driver (`fastest_lap_time` optional)',
-      );
+      expect(vm.placeholderText).toContain('Driver');
+      expect(vm.placeholderText).not.toContain('RaceTime');
+      expect(vm.requiredHeadersDisplay).toBe('Driver');
     });
   });
 });

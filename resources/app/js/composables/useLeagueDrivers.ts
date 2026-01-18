@@ -81,6 +81,7 @@ export function useLeagueDrivers(leagueId: Ref<number>, options: UseLeagueDriver
 
   interface ImportResult {
     success_count: number;
+    skipped_count: number;
     errors: Array<{ row: number; message: string }>;
   }
 

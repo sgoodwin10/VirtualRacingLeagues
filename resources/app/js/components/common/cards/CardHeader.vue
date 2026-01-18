@@ -46,10 +46,7 @@ const iconColorClasses = computed(() => {
       <!-- Title and Description -->
       <div>
         <slot>
-          <h2
-            v-if="title"
-            class="font-mono text-md font-semibold tracking-wide text-[var(--text-primary)]"
-          >
+          <h2 v-if="title" class="text-md font-semibold tracking-wide text-[var(--text-primary)]">
             {{ title }}
           </h2>
           <p v-if="description" class="text-md text-[var(--text-secondary)]">

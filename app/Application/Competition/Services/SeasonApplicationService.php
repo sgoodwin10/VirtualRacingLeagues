@@ -504,6 +504,29 @@ final class SeasonApplicationService
     }
 
     /**
+     * Reactivate a completed season (change status from completed back to active).
+     *
+     * @throws SeasonNotFoundException
+     * @throws UnauthorizedException
+     * @throws \InvalidArgumentException if season is not in completed status
+     */
+    public function reactivateSeason(int $id, int $userId): SeasonData
+    {
+        return DB::transaction(function () use ($id, $userId) {
+            $season = $this->seasonRepository->findById($id);
+            $competition = $this->competitionRepository->findById($season->competitionId());
+
+            $this->authorizeLeagueOwner($competition, $userId);
+
+            $season->reactivate();
+            $this->seasonRepository->save($season);
+            $this->dispatchEvents($season);
+
+            return $this->toSeasonData($season, $competition->logoPath());
+        });
+    }
+
+    /**
      * Unarchive a season (restore from archived status).
      *
      * @throws SeasonNotFoundException

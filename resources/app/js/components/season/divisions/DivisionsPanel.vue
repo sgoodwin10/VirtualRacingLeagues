@@ -246,7 +246,7 @@ function truncateDescription(description: string | null, maxLength: number = 30)
                 img-class="w-8 h-8 rounded object-cover flex-shrink-0"
               />
               <div class="flex-1 min-w-0">
-                <p class="font-semibold">{{ data.name }}</p>
+                <p class="font-semibold text-lg">{{ data.name }}</p>
                 <p v-if="data.description" class="text-xs text-gray-500 mt-1 truncate">
                   {{ truncateDescription(data.description, 50) }}
                 </p>

@@ -64,6 +64,7 @@ export const API_ENDPOINTS = {
     unarchive: (id: number) => `/seasons/${id}/unarchive`,
     activate: (id: number) => `/seasons/${id}/activate`,
     complete: (id: number) => `/seasons/${id}/complete`,
+    reactivate: (id: number) => `/seasons/${id}/reactivate`,
     delete: (id: number) => `/seasons/${id}`,
     restore: (id: number) => `/seasons/${id}/restore`,
     rounds: (seasonId: number) => `/seasons/${seasonId}/rounds`,

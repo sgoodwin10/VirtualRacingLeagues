@@ -102,6 +102,7 @@ const isClickable = (item: BreadcrumbItem, index: number): boolean => {
   display: flex;
   align-items: center;
   width: 100%;
+  font-family: var(--font-mono);
 }
 
 .breadcrumb-list {
@@ -111,7 +112,7 @@ const isClickable = (item: BreadcrumbItem, index: number): boolean => {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-family: var(--font-mono);
+
   font-size: 12px;
 }
 

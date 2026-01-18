@@ -559,9 +559,7 @@ const StandingsTable = defineComponent({
           'table',
           {
             class: 'w-full border-collapse',
-            style: {
-              fontFamily: 'var(--font-mono)',
-            },
+            style: {},
           },
           [
             // Header
@@ -573,6 +571,7 @@ const StandingsTable = defineComponent({
                   style: {
                     backgroundColor: 'var(--bg-card)',
                     borderBottom: '1px solid var(--border)',
+                    fontFamily: 'var(--font-mono)',
                   },
                 },
                 [
@@ -687,6 +686,7 @@ const StandingsTable = defineComponent({
                   style: {
                     backgroundColor: 'var(--bg-card)',
                     borderBottom: '1px solid var(--border)',
+                    fontFamily: 'var(--font-mono)',
                   },
                 },
                 [
@@ -787,6 +787,7 @@ const StandingsTable = defineComponent({
                           fontWeight: '600',
                           color: positionColor,
                           padding: '14px 16px',
+                          fontFamily: 'var(--font-mono)',
                         },
                       },
                       driver.position,
@@ -806,7 +807,7 @@ const StandingsTable = defineComponent({
                         ? h(
                             'div',
                             {
-                              class: 'flex justify-between items-center gap-3',
+                              class: 'flex justify-between items-center gap-3 font-body',
                             },
                             [
                               // Driver name

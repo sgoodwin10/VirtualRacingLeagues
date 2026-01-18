@@ -640,6 +640,7 @@ describe('driverStore', () => {
 
       const mockImportResponse: ImportDriversResponse = {
         success_count: 1,
+        skipped_count: 0,
         errors: [],
       };
 

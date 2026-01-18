@@ -91,7 +91,9 @@
 /* ============================================
    Select Dropdowns
    ============================================ */
-
+.p-select-label {
+  color: var(--text-primary);
+}
 .form-select {
   width: 100%;
   padding: 10px 12px;

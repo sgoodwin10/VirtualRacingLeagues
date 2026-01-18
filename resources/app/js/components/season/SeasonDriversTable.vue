@@ -23,10 +23,16 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
-import { PhArrowClockwise } from '@phosphor-icons/vue';
+import {
+  PhArrowClockwise,
+  PhUsers,
+  PhEye,
+  PhTrash,
+  PhMagnifyingGlass,
+  PhSpinner,
+} from '@phosphor-icons/vue';
 
 import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
-import { PhUsers, PhEye, PhTrash } from '@phosphor-icons/vue';
 
 interface Props {
   seasonId: number;
@@ -574,11 +580,18 @@ async function handleRefresh(): Promise<void> {
       <div class="flex items-end gap-3 flex-wrap">
         <div class="flex-1 max-w-md">
           <IconField>
-            <InputIcon :class="isSearching ? 'pi pi-spinner pi-spin' : 'pi pi-search'" />
+            <InputIcon>
+              <PhSpinner
+                v-if="isSearching"
+                class="text-[var(--text-primary)] animate-spin"
+                size="16"
+              />
+              <PhMagnifyingGlass v-else class="text-[var(--text-primary)]" size="16" />
+            </InputIcon>
             <InputText
               v-model="searchQuery"
-              placeholder="Search drivers by name..."
-              class="w-full"
+              placeholder="Search drivers..."
+              class="w-full !pl-8"
               :disabled="isInputDisabled"
             />
           </IconField>
@@ -659,7 +672,7 @@ async function handleRefresh(): Promise<void> {
 
       <Column field="driver_name" header="Driver" sortable>
         <template #body="{ data }">
-          <DriverCell :name="getDriverDisplayName(data)" />
+          <DriverCell :name="getDriverDisplayName(data)" :show-avatar="false" />
         </template>
       </Column>
 

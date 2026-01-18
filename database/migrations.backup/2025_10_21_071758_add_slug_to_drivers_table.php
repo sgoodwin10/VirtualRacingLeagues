@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('drivers', function (Blueprint $table) {
-            $table->string('slug', 255)->unique()->after('nickname');
-            $table->index('slug', 'idx_driver_slug');
+            $table->string('slug', 255)->after('nickname');
         });
     }
 
@@ -23,7 +22,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('drivers', function (Blueprint $table) {
-            $table->dropIndex('idx_driver_slug');
             $table->dropColumn('slug');
         });
     }

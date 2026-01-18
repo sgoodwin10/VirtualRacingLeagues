@@ -5,7 +5,15 @@ import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import type { Season } from '@app/types/season';
 
-import { PhPlay, PhFlag, PhArchive, PhTrash, PhWarning, PhGear } from '@phosphor-icons/vue';
+import {
+  PhPlay,
+  PhFlag,
+  PhArchive,
+  PhTrash,
+  PhWarning,
+  PhGear,
+  PhArrowCounterClockwise,
+} from '@phosphor-icons/vue';
 import { Button } from '@app/components/common/buttons';
 import { CardHeader } from '@app/components/common/cards';
 import Card from '@app/components/common/cards/Card.vue';
@@ -32,48 +40,46 @@ const toast = useToast();
 const confirm = useConfirm();
 
 const showDeleteDialog = ref(false);
-const isActivating = ref(false);
 const isCompleting = ref(false);
+const isReactivating = ref(false);
 
 // Computed properties for valid state transitions
-const canActivate = computed(() => props.season.status === 'setup');
 const canComplete = computed(() => props.season.status === 'active');
+const canReactivate = computed(() => props.season.status === 'completed');
 
-async function handleActivate(): Promise<void> {
-  confirm.require({
-    message: 'Activate this season? It will become the active season for the competition.',
-    header: 'Activate Season',
-    icon: 'pi pi-check-circle',
-    acceptLabel: 'Activate',
-    rejectLabel: 'Cancel',
-    accept: async () => {
-      isActivating.value = true;
-
-      try {
-        await seasonStore.activateExistingSeason(props.season.id);
-
-        toast.add({
-          severity: 'success',
-          summary: 'Season Activated',
-          detail: 'Season has been activated successfully',
-          life: 3000,
-        });
-
-        emit('updated');
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to activate season';
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: errorMessage,
-          life: 5000,
-        });
-      } finally {
-        isActivating.value = false;
-      }
+// Status configuration
+const statusConfig = computed(() => {
+  const configs = {
+    setup: {
+      icon: PhGear,
+      color: 'text-[var(--yellow)]',
+      bgColor: 'bg-[var(--yellow-dim)]',
+      borderColor: 'border-[var(--yellow)]',
+      label: 'Setup',
+      description:
+        'Season is being configured and is not yet active. Complete setup and activate when ready.',
     },
-  });
-}
+    active: {
+      icon: PhPlay,
+      color: 'text-[var(--green)]',
+      bgColor: 'bg-[var(--green-dim)]',
+      borderColor: 'border-[var(--green)]',
+      label: 'Active',
+      description: 'Season is currently active. Racing is in progress and results can be recorded.',
+    },
+    completed: {
+      icon: PhFlag,
+      color: 'text-[var(--cyan)]',
+      bgColor: 'bg-[var(--cyan-dim)]',
+      borderColor: 'border-[var(--cyan)]',
+      label: 'Completed',
+      description:
+        'Season has finished. All races have been completed and final standings are set.',
+    },
+  };
+
+  return configs[props.season.status as keyof typeof configs];
+});
 
 async function handleComplete(): Promise<void> {
   confirm.require({
@@ -96,6 +102,7 @@ async function handleComplete(): Promise<void> {
         });
 
         emit('updated');
+        window.location.reload();
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to complete season';
         toast.add({
@@ -106,6 +113,44 @@ async function handleComplete(): Promise<void> {
         });
       } finally {
         isCompleting.value = false;
+      }
+    },
+  });
+}
+
+async function handleReactivate(): Promise<void> {
+  confirm.require({
+    message: 'Reactivate this season? It will become active again.',
+    header: 'Reactivate Season',
+    icon: 'pi pi-refresh',
+    acceptLabel: 'Reactivate',
+    rejectLabel: 'Cancel',
+    accept: async () => {
+      isReactivating.value = true;
+
+      try {
+        await seasonStore.reactivateExistingSeason(props.season.id);
+
+        toast.add({
+          severity: 'success',
+          summary: 'Season Reactivated',
+          detail: 'Season has been reactivated successfully',
+          life: 3000,
+        });
+
+        emit('updated');
+        // refresh the page
+        window.location.reload();
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to reactivate season';
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage,
+          life: 5000,
+        });
+      } finally {
+        isReactivating.value = false;
       }
     },
   });
@@ -132,35 +177,40 @@ function handleSeasonDeleted(): void {
             <CardHeader title="Season Status" :icon="PhGear" icon-color="blue-300" />
           </template>
 
-          <!-- Status Actions -->
-          <div class="space-y-0">
-            <!-- Activate Action -->
+          <!-- Current Status Indicator -->
+          <div class="mb-6">
             <div
-              class="flex items-center justify-between border-b border-[var(--border-muted)] py-4"
+              :class="['rounded-lg border-2 p-4', statusConfig.bgColor, statusConfig.borderColor]"
             >
-              <div class="flex items-center gap-3">
-                <PhPlay :size="20" class="text-[var(--green)]" weight="fill" />
-                <div>
-                  <div class="text-body-small font-medium text-[var(--text-primary)]">
-                    Activate Season
+              <div class="flex items-start gap-3">
+                <component
+                  :is="statusConfig.icon"
+                  :size="24"
+                  :class="['shrink-0', statusConfig.color]"
+                  weight="fill"
+                />
+                <div class="flex-1">
+                  <div
+                    :class="[
+                      'mb-1 font-mono text-card-title-small uppercase tracking-wide',
+                      statusConfig.color,
+                    ]"
+                  >
+                    {{ statusConfig.label }}
                   </div>
-                  <div class="text-body-small text-[var(--text-muted)]">
-                    Start racing and open for results
+                  <div class="text-body-small text-[var(--text-secondary)]">
+                    {{ statusConfig.description }}
                   </div>
                 </div>
               </div>
-              <Button
-                label="Activate"
-                size="sm"
-                variant="success"
-                :loading="isActivating"
-                :disabled="!canActivate"
-                @click="handleActivate"
-              />
             </div>
+          </div>
 
-            <!-- Complete Action -->
+          <!-- Status Actions -->
+          <div class="space-y-0">
+            <!-- Complete Action (shown when season is active) -->
             <div
+              v-if="!canReactivate"
               class="flex items-center justify-between border-b border-[var(--border-muted)] py-4"
             >
               <div class="flex items-center gap-3">
@@ -181,6 +231,32 @@ function handleSeasonDeleted(): void {
                 :loading="isCompleting"
                 :disabled="!canComplete"
                 @click="handleComplete"
+              />
+            </div>
+
+            <!-- Reactivate Action (shown when season is completed) -->
+            <div
+              v-else
+              class="flex items-center justify-between border-b border-[var(--border-muted)] py-4"
+            >
+              <div class="flex items-center gap-3">
+                <PhArrowCounterClockwise :size="20" class="text-[var(--cyan)]" weight="fill" />
+                <div>
+                  <div class="text-body-small font-medium text-[var(--text-primary)]">
+                    Reactivate Season
+                  </div>
+                  <div class="text-body-small text-[var(--text-muted)]">
+                    Make season active again
+                  </div>
+                </div>
+              </div>
+              <Button
+                label="Reactivate"
+                size="sm"
+                severity="info"
+                :loading="isReactivating"
+                :disabled="!canReactivate"
+                @click="handleReactivate"
               />
             </div>
           </div>

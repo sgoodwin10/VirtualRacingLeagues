@@ -71,3 +71,7 @@
 
 /* Border utilities */
 .border-default { border-color: var(--accordion-border); }
+
+.p-accordioncontent-content {
+  padding: 0;
+}

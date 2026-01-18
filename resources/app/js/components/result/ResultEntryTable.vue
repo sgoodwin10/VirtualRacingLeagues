@@ -102,7 +102,7 @@
                 option-label="name"
                 option-value="id"
                 placeholder="Select driver"
-                class="w-full"
+                class="w-full text-white"
                 filter
                 @change="handleDriverChange"
               />

@@ -69,20 +69,22 @@ const emit = defineEmits<{
         :disabled="isSubmitting"
         @update:model-value="emit('update:dropRound', $event)"
       >
-        <FormInputGroup>
-          <FormLabel for="total_drop_rounds" text="Total Drop Rounds" />
-          <StyledInputNumber
-            input-id="total_drop_rounds"
-            :model-value="form.total_drop_rounds"
-            :min="0"
-            :max="10"
-            :disabled="isSubmitting"
-            show-buttons
-            button-layout="horizontal"
-            class="w-full"
-            @update:model-value="emit('update:totalDropRounds', $event)"
-          />
-        </FormInputGroup>
+        <div class="w-1/3">
+          <FormInputGroup>
+            <FormLabel for="total_drop_rounds" text="Total Drop Rounds" />
+            <StyledInputNumber
+              input-id="total_drop_rounds"
+              :model-value="form.total_drop_rounds"
+              :min="0"
+              :max="10"
+              :disabled="isSubmitting"
+              show-buttons
+              button-layout="horizontal"
+              class="w-full"
+              @update:model-value="emit('update:totalDropRounds', $event)"
+            />
+          </FormInputGroup>
+        </div>
       </SettingCard>
 
       <!-- Tiebreaker Rules -->

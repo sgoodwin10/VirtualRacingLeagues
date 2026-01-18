@@ -349,7 +349,7 @@ final class DriverApplicationService
         // Parse CSV
         $lines = explode("\n", trim($data->csv_data));
         if (count($lines) === 1 && trim($lines[0]) === '') {
-            return new ImportResultData(0, [['row' => 0, 'message' => 'CSV data is empty']]);
+            return new ImportResultData(0, 0, [['row' => 0, 'message' => 'CSV data is empty']]);
         }
 
         // Get header row
@@ -359,6 +359,7 @@ final class DriverApplicationService
         // Wrap entire import in a single transaction for atomicity
         return DB::transaction(function () use ($lines, $header, $leagueId) {
             $successCount = 0;
+            $skippedCount = 0;
             $errors = [];
 
             // Process each row
@@ -455,7 +456,7 @@ final class DriverApplicationService
                         continue;
                     }
 
-                    // Check if already in league
+                    // Skip if driver already exists in league (duplicate platform ID)
                     if (
                         $this->driverRepository->existsInLeagueByPlatformId(
                             $leagueId,
@@ -465,14 +466,8 @@ final class DriverApplicationService
                             $discordId
                         )
                     ) {
-                        $platformStr = $this->getPrimaryPlatformId($psnId, $iracingId, $iracingCustomerId, $discordId);
-                        $message = "Row {$rowNumber}: Driver with platform ID '{$platformStr}' ";
-                        $message .= 'already exists in this league';
-                        $errors[] = [
-                            'row' => $rowNumber,
-                            'message' => $message,
-                        ];
-
+                        // Skip this driver silently - they're already in the league
+                        $skippedCount++;
                         continue;
                     }
 
@@ -514,7 +509,7 @@ final class DriverApplicationService
                 }
             }
 
-            return new ImportResultData($successCount, $errors);
+            return new ImportResultData($successCount, $skippedCount, $errors);
         });
     }
 
@@ -652,7 +647,11 @@ final class DriverApplicationService
         int $userId
     ): LeagueDriverData {
         // Capture original data for change tracking
-        $leagueDriver = LeagueDriverEloquent::with('driver')->findOrFail($driverId);
+        // Query by league_id and driver_id since $driverId is the driver.id, not league_drivers.id
+        $leagueDriver = LeagueDriverEloquent::with('driver')
+            ->where('league_id', $leagueId)
+            ->where('driver_id', $driverId)
+            ->firstOrFail();
         $originalData = [
             'driver_name' => $leagueDriver->driver->name,
             'status' => $leagueDriver->status,
@@ -695,7 +694,11 @@ final class DriverApplicationService
     public function removeDriverFromLeagueWithActivityLog(int $leagueId, int $driverId, int $userId): void
     {
         // Capture driver data before deletion for logging
-        $leagueDriver = LeagueDriverEloquent::with('driver', 'league')->findOrFail($driverId);
+        // Query by league_id and driver_id since $driverId is the driver.id, not league_drivers.id
+        $leagueDriver = LeagueDriverEloquent::with('driver', 'league')
+            ->where('league_id', $leagueId)
+            ->where('driver_id', $driverId)
+            ->firstOrFail();
         /** @var DriverEloquent $driverModel */
         $driverModel = $leagueDriver->driver;
         $leagueName = $leagueDriver->league->name;

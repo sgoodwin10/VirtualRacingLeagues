@@ -271,6 +271,21 @@ const useExample = (): void => {
 };
 
 /**
+ * Download example CSV file
+ */
+const downloadExample = (): void => {
+  const blob = new Blob([csvExample.value], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'driver-import-example.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+/**
  * Generate the minimum required headers string
  */
 const getMinimumRequiredHeaders = (): string => {
@@ -325,7 +340,10 @@ onUnmounted(() => {
         <!-- Header with action buttons -->
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold">CSV Format Requirements</h3>
-          <Button label="Use Example" size="sm" variant="outline" @click="useExample" />
+          <div class="flex gap-2">
+            <Button label="Download Example" size="sm" variant="secondary" @click="downloadExample" />
+            <Button label="Use Example" size="sm" variant="outline" @click="useExample" />
+          </div>
         </div>
 
         <p class="text-[var(--text-secondary)] mb-4">
@@ -396,7 +414,7 @@ onUnmounted(() => {
         </div>
         <h4>Important Notes:</h4>
         <p class="text-[var(--text-secondary)] mb-4">
-          If a driver/row is missing an optional field, just leave it blank between the commas. For
+          If a driver/row is missing an optional field, just leave no spacethe commas. For
           example:<br /><code class="font-mono text-sm text-[var(--text-accent)]"
             >Nickname,PsnId,DiscordID,DriverNumber<br />
             John Smith,john1234,,5,</code
@@ -452,6 +470,14 @@ onUnmounted(() => {
           Successfully imported {{ importResult.success_count }} driver{{
             importResult.success_count === 1 ? '' : 's'
           }}
+        </Message>
+
+        <!-- Skipped Message -->
+        <Message v-if="importResult.skipped_count > 0" severity="info" :closable="false">
+          Skipped {{ importResult.skipped_count }} duplicate driver{{
+            importResult.skipped_count === 1 ? '' : 's'
+          }}
+          (already in league)
         </Message>
 
         <!-- Errors List -->

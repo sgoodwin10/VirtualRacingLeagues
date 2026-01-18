@@ -1,32 +1,52 @@
 <script setup lang="ts">
-//
+import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
+import SpeedLines from '@public/components/landing/SpeedLines.vue';
+import LandingNav from '@public/components/landing/LandingNav.vue';
+import LandingFooter from '@public/components/landing/LandingFooter.vue';
+import HeroSection from '@public/components/landing/sections/HeroSection.vue';
+import FeaturesSection from '@public/components/landing/sections/FeaturesSection.vue';
+import HowItWorksSection from '@public/components/landing/sections/HowItWorksSection.vue';
+import PricingSection from '@public/components/landing/sections/PricingSection.vue';
+import PlatformsSection from '@public/components/landing/sections/PlatformsSection.vue';
+import ComingSoonSection from '@public/components/landing/sections/ComingSoonSection.vue';
+import CtaSection from '@public/components/landing/sections/CtaSection.vue';
+
+/**
+ * HomeView - VRL Velocity Landing Page
+ *
+ * Main landing page for the public site featuring:
+ * - Animated background effects
+ * - Hero section with stats and live standings preview
+ * - Features showcase
+ * - How it works guide
+ * - Pricing information
+ * - Platform support
+ * - Coming soon features
+ * - Call-to-action
+ */
 </script>
 
 <template>
-  <div class="bg-white">
-    <!-- Hero Section -->
-    <div class="relative isolate px-6 pt-14 lg:px-8">
-      <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
-        <div class="text-center">
-          <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            Welcome to {{ $appName || 'Our App' }}
-          </h1>
-          <p class="mt-6 text-lg leading-8 text-gray-600">
-            Get started by signing up for a free account or logging in to your existing account.
-          </p>
-          <div class="mt-10 flex items-center justify-center gap-x-6">
-            <router-link
-              to="/register"
-              class="rounded-md bg-gray-900 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600"
-            >
-              Get started
-            </router-link>
-            <router-link to="/login" class="text-sm font-semibold leading-6 text-gray-900">
-              Sign in <span aria-hidden="true">→</span>
-            </router-link>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="min-h-screen bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden">
+    <!-- Background Effects -->
+    <BackgroundGrid />
+    <SpeedLines />
+
+    <!-- Navigation -->
+    <LandingNav />
+
+    <!-- Main Content -->
+    <main>
+      <HeroSection />
+      <FeaturesSection />
+      <HowItWorksSection />
+      <PricingSection />
+      <PlatformsSection />
+      <ComingSoonSection />
+      <CtaSection />
+    </main>
+
+    <!-- Footer -->
+    <LandingFooter />
   </div>
 </template>

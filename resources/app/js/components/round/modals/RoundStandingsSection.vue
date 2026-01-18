@@ -8,7 +8,7 @@
         icon-variant="orange"
         padding="xs"
       />
-      <TechnicalAccordionContent padding="none">
+      <TechnicalAccordionContent padding="0">
         <!-- Standings Table -->
         <div class="overflow-x-auto">
           <TechDataTable

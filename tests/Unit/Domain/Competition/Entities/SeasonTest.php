@@ -188,6 +188,68 @@ final class SeasonTest extends TestCase
         $this->assertFalse($season->isActive());
     }
 
+    public function test_can_reactivate_completed_season(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+        );
+        $this->setSeasonId($season, 1);
+
+        $season->activate();
+        $season->complete();
+
+        $this->assertTrue($season->isCompleted());
+
+        $season->reactivate();
+
+        $this->assertTrue($season->isActive());
+        $this->assertFalse($season->isCompleted());
+        $this->assertTrue($season->hasEvents());
+    }
+
+    public function test_cannot_reactivate_season_that_is_not_completed(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+        );
+        $this->setSeasonId($season, 1);
+
+        $season->activate();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Can only reactivate seasons with completed status');
+
+        $season->reactivate();
+    }
+
+    public function test_cannot_reactivate_archived_season(): void
+    {
+        $season = Season::create(
+            competitionId: 1,
+            name: SeasonName::from('Season 1'),
+            slug: SeasonSlug::from('season-1'),
+            createdByUserId: 1,
+        );
+        $this->setSeasonId($season, 1);
+
+        $season->activate();
+        $season->complete();
+        $season->archive();
+
+        $this->assertTrue($season->isArchived());
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Can only reactivate seasons with completed status');
+
+        $season->reactivate();
+    }
+
     public function test_can_archive_season(): void
     {
         $season = Season::create(

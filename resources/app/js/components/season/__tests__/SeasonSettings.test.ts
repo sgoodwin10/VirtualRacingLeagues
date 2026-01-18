@@ -117,9 +117,8 @@ describe('SeasonSettings', () => {
     mockSeasonStore = useSeasonStore();
 
     // Mock store methods
-    mockSeasonStore.activateExistingSeason = vi.fn().mockResolvedValue(undefined);
     mockSeasonStore.completeExistingSeason = vi.fn().mockResolvedValue(undefined);
-    mockSeasonStore.archiveExistingSeason = vi.fn().mockResolvedValue(undefined);
+    mockSeasonStore.reactivateExistingSeason = vi.fn().mockResolvedValue(undefined);
   });
 
   describe('rendering', () => {
@@ -129,9 +128,8 @@ describe('SeasonSettings', () => {
 
       expect(wrapper.find('.season-settings').exists()).toBe(true);
       expect(wrapper.text()).toContain('Season Status');
-      expect(wrapper.text()).toContain('Activate Season');
+      expect(wrapper.text()).toContain('Setup');
       expect(wrapper.text()).toContain('Complete Season');
-      expect(wrapper.text()).toContain('Archive Season');
       expect(wrapper.text()).toContain('Danger Zone');
     });
 
@@ -157,7 +155,7 @@ describe('SeasonSettings', () => {
 
       expect(wrapper.text()).toContain('Archived Season');
       expect(wrapper.text()).toContain('Read-Only Mode');
-      expect(wrapper.text()).not.toContain('Activate Season');
+      expect(wrapper.text()).not.toContain('Setup');
     });
 
     it('displays season status card correctly for setup', () => {
@@ -187,16 +185,14 @@ describe('SeasonSettings', () => {
       expect(wrapper.text()).toContain('Season Status');
     });
 
-    it('renders all three action items in Season Status panel', () => {
+    it('renders status indicator and action items in Season Status panel', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
-      expect(wrapper.text()).toContain('Activate Season');
-      expect(wrapper.text()).toContain('Start racing and open for results');
+      expect(wrapper.text()).toContain('Setup');
+      expect(wrapper.text()).toContain('Season is being configured');
       expect(wrapper.text()).toContain('Complete Season');
       expect(wrapper.text()).toContain('Mark season as finished');
-      expect(wrapper.text()).toContain('Archive Season');
-      expect(wrapper.text()).toContain('Hide from lists and make read-only');
     });
 
     it('renders Danger Zone panel with delete action', () => {
@@ -237,47 +233,37 @@ describe('SeasonSettings', () => {
   });
 
   describe('button states - setup status', () => {
-    it('displays all action buttons when status is setup', () => {
+    it('displays action buttons when status is setup', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
       const buttons = wrapper.findAllComponents({ name: 'Button' });
       const labels = buttons.map((btn) => btn.props('label'));
 
-      // All action buttons should be present (activate, complete, archive, delete)
-      expect(labels).toContain('Activate');
+      // Action buttons should be present (complete, delete)
       expect(labels).toContain('Complete');
-      expect(labels).toContain('Archive');
       expect(labels).toContain('Delete Season');
     });
 
-    it('verifies activate button state when status is setup', () => {
+    it('displays status indicator when status is setup', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
-      const activateButton = wrapper
-        .findAllComponents({ name: 'Button' })
-        .find((btn) => btn.props('label') === 'Activate');
-
-      // Button should exist and be clickable (enabled)
-      expect(activateButton?.exists()).toBe(true);
-      const disabled = activateButton?.props('disabled');
-      // When enabled, disabled is either false or undefined
-      expect(disabled === true).toBe(false);
+      // Status indicator should show setup status
+      expect(wrapper.text()).toContain('Setup');
+      expect(wrapper.text()).toContain('Season is being configured');
     });
   });
 
   describe('button states - active status', () => {
-    it('displays all action buttons when status is active', () => {
+    it('displays action buttons when status is active', () => {
       const season = createMockSeason({ status: 'active' });
       wrapper = createWrapper(season);
 
       const buttons = wrapper.findAllComponents({ name: 'Button' });
       const labels = buttons.map((btn) => btn.props('label'));
 
-      expect(labels).toContain('Activate');
       expect(labels).toContain('Complete');
-      expect(labels).toContain('Archive');
       expect(labels).toContain('Delete Season');
     });
 
@@ -294,61 +280,61 @@ describe('SeasonSettings', () => {
       expect(disabled === true).toBe(false);
     });
 
-    it('verifies archive button state when status is active', () => {
+    it('displays status indicator when status is active', () => {
       const season = createMockSeason({ status: 'active' });
       wrapper = createWrapper(season);
 
-      const archiveButton = wrapper
-        .findAllComponents({ name: 'Button' })
-        .find((btn) => btn.props('label') === 'Archive');
-
-      expect(archiveButton?.exists()).toBe(true);
-      const disabled = archiveButton?.props('disabled');
-      expect(disabled === true).toBe(false);
+      // Status indicator should show active status
+      expect(wrapper.text()).toContain('Active');
+      expect(wrapper.text()).toContain('Season is currently active');
     });
   });
 
   describe('button states - completed status', () => {
-    it('displays all action buttons when status is completed', () => {
+    it('displays action buttons when status is completed', () => {
       const season = createMockSeason({ status: 'completed' });
       wrapper = createWrapper(season);
 
       const buttons = wrapper.findAllComponents({ name: 'Button' });
       const labels = buttons.map((btn) => btn.props('label'));
 
-      expect(labels).toContain('Activate');
-      expect(labels).toContain('Complete');
-      expect(labels).toContain('Archive');
+      expect(labels).toContain('Reactivate');
       expect(labels).toContain('Delete Season');
     });
 
-    it('verifies archive button state when status is completed', () => {
+    it('displays status indicator when status is completed', () => {
       const season = createMockSeason({ status: 'completed' });
       wrapper = createWrapper(season);
 
-      const archiveButton = wrapper
-        .findAllComponents({ name: 'Button' })
-        .find((btn) => btn.props('label') === 'Archive');
-
-      expect(archiveButton?.exists()).toBe(true);
-      const disabled = archiveButton?.props('disabled');
-      expect(disabled === true).toBe(false);
+      // Status indicator should show completed status
+      expect(wrapper.text()).toContain('Completed');
+      expect(wrapper.text()).toContain('Season has finished');
     });
   });
 
-  describe('activate season', () => {
-    it('shows confirmation dialog when activate button is clicked', async () => {
+  describe('status indicator', () => {
+    it('displays setup status with correct styling', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
-      const activateButton = wrapper
-        .findAllComponents({ name: 'Button' })
-        .find((btn) => btn.props('label') === 'Activate');
-      await activateButton?.trigger('click');
+      expect(wrapper.text()).toContain('Setup');
+      expect(wrapper.html()).toContain('text-[var(--yellow)]');
+    });
 
-      // PrimeVue ConfirmDialog is rendered outside the component tree
-      // We can verify the confirmation service was called by checking store wasn't called yet
-      expect(mockSeasonStore.activateExistingSeason).not.toHaveBeenCalled();
+    it('displays active status with correct styling', () => {
+      const season = createMockSeason({ status: 'active' });
+      wrapper = createWrapper(season);
+
+      expect(wrapper.text()).toContain('Active');
+      expect(wrapper.html()).toContain('text-[var(--green)]');
+    });
+
+    it('displays completed status with correct styling', () => {
+      const season = createMockSeason({ status: 'completed' });
+      wrapper = createWrapper(season);
+
+      expect(wrapper.text()).toContain('Completed');
+      expect(wrapper.html()).toContain('text-[var(--cyan)]');
     });
   });
 
@@ -367,18 +353,16 @@ describe('SeasonSettings', () => {
     });
   });
 
-  describe('archive season', () => {
-    it('shows confirmation dialog when archive button is clicked', async () => {
-      const season = createMockSeason({ status: 'active' });
+  describe('reactivate season', () => {
+    it('shows reactivate button when status is completed', () => {
+      const season = createMockSeason({ status: 'completed' });
       wrapper = createWrapper(season);
 
-      const archiveButton = wrapper
+      const reactivateButton = wrapper
         .findAllComponents({ name: 'Button' })
-        .find((btn) => btn.props('label') === 'Archive');
-      await archiveButton?.trigger('click');
+        .find((btn) => btn.props('label') === 'Reactivate');
 
-      // PrimeVue ConfirmDialog is rendered outside the component tree
-      expect(mockSeasonStore.archiveExistingSeason).not.toHaveBeenCalled();
+      expect(reactivateButton?.exists()).toBe(true);
     });
   });
 
@@ -441,14 +425,12 @@ describe('SeasonSettings', () => {
   });
 
   describe('visual design', () => {
-    it('renders all action buttons with correct labels', () => {
+    it('renders action buttons with correct labels', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
-      // Verify all three action buttons are rendered
-      expect(wrapper.text()).toContain('Activate');
+      // Verify action buttons are rendered
       expect(wrapper.text()).toContain('Complete');
-      expect(wrapper.text()).toContain('Archive');
       expect(wrapper.text()).toContain('Delete Season');
     });
 
@@ -476,9 +458,8 @@ describe('SeasonSettings', () => {
       const season = createMockSeason({ status: 'setup' });
       wrapper = createWrapper(season);
 
-      expect(wrapper.text()).toContain('Start racing and open for results');
+      expect(wrapper.text()).toContain('Season is being configured');
       expect(wrapper.text()).toContain('Mark season as finished');
-      expect(wrapper.text()).toContain('Hide from lists and make read-only');
     });
 
     it('clearly indicates permanent deletion in danger zone', () => {
@@ -499,7 +480,7 @@ describe('SeasonSettings', () => {
       expect(wrapper.find('.season-settings').exists()).toBe(true);
 
       // Should not show status actions panel
-      expect(wrapper.text()).not.toContain('Activate Season');
+      expect(wrapper.text()).not.toContain('Setup');
       expect(wrapper.text()).not.toContain('Complete Season');
     });
 

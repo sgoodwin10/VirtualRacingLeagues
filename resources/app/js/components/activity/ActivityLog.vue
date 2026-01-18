@@ -12,10 +12,12 @@ import { PhArrowClockwise, PhCaretDown } from '@phosphor-icons/vue';
 interface Props {
   leagueId: number;
   compact?: boolean;
+  limit?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   compact: false,
+  limit: 25,
 });
 
 const {
@@ -29,7 +31,7 @@ const {
   updateFilters,
   goToPage,
   refresh,
-} = useActivityLog(props.leagueId);
+} = useActivityLog(props.leagueId, props.limit);
 
 onMounted(() => {
   fetchActivities();

@@ -259,6 +259,7 @@ describe('driverService', () => {
       const csvData = 'first_name,last_name,psn_id\nJohn,Smith,JSmith77';
       const mockBackendResponse: ImportDriversBackendResponse = {
         success_count: 1,
+        skipped_count: 0,
         errors: [], // Empty array for no errors
       };
 
@@ -279,6 +280,7 @@ describe('driverService', () => {
       const csvData = 'first_name,last_name\nJohn,';
       const mockBackendResponse: ImportDriversBackendResponse = {
         success_count: 0,
+        skipped_count: 0,
         errors: [
           { row: 2, message: 'Row 2: Missing required fields' },
           { row: 5, message: 'Row 5: Invalid platform ID' },
@@ -303,6 +305,7 @@ describe('driverService', () => {
       const csvData = 'first_name,last_name,psn_id\nJohn,,';
       const mockBackendResponse: ImportDriversBackendResponse = {
         success_count: 0,
+        skipped_count: 0,
         errors: [{ row: 2, message: 'Row 2: At least one name field is required' }],
       };
 
@@ -324,6 +327,7 @@ describe('driverService', () => {
       const csvData = 'first_name,last_name,psn_id\nJohn,Smith,JSmith77\nJane,,';
       const mockBackendResponse: ImportDriversBackendResponse = {
         success_count: 1,
+        skipped_count: 0,
         errors: [{ row: 3, message: 'Row 3: Missing platform ID' }],
       };
 

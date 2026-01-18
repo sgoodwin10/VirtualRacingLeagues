@@ -108,6 +108,7 @@ export interface ImportDriversRequest {
  */
 export interface ImportDriversBackendResponse {
   success_count: number;
+  skipped_count: number;
   errors: Array<{ row: number; message: string }>; // [{ row: 2, message: "Row 2: Error message" }]
 }
 
@@ -116,6 +117,7 @@ export interface ImportDriversBackendResponse {
  */
 export interface ImportDriversResponse {
   success_count: number;
+  skipped_count: number;
   errors: ImportError[];
 }
 

@@ -4,14 +4,14 @@
   >
     <div class="flex items-center gap-2 mb-3">
       <PhFileCsv :size="20" class="text-gray-600" />
-      <h3 class="font-medium text-gray-900">Import from CSV</h3>
+      <div class="font-medium font-mono">Import from CSV</div>
     </div>
 
     <Textarea
       v-model="csvText"
       :rows="5"
       :placeholder="placeholderText"
-      class="w-full font-mono"
+      class="w-full"
       :invalid="!!parseError"
     />
 
@@ -19,9 +19,22 @@
       {{ parseError }}
     </div>
 
-    <div class="mt-3 flex items-center justify-between">
-      <span class="text-sm text-gray-500">{{ expectedColumnsText }}</span>
-      <div class="flex gap-2">
+    <div class="mt-3 space-y-3">
+      <div class="space-y-2">
+        <p class="font-medium">Minimum Required Headers:</p>
+        <div class="flex flex-row gap-2 w-full">
+          <div
+            class="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-3 overflow-x-auto flex-1"
+          >
+            <code class="font-mono text-sm text-[var(--text-accent)]">{{
+              requiredHeadersDisplay
+            }}</code>
+          </div>
+          <Button label="Add Headers" size="lg" variant="outline" @click="addHeaders" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2">
         <input
           ref="fileInputRef"
           type="file"
@@ -30,10 +43,16 @@
           @change="handleFileSelect"
         />
         <Button
+          label="Download Example"
+          size="sm"
+          variant="secondary"
+          @click="downloadExample"
+        />
+        <Button
           label="Upload CSV"
           :icon="PhUpload"
           size="sm"
-          variant="secondary"
+          variant="primary"
           @click="triggerFileInput"
         />
         <Button
@@ -88,36 +107,73 @@ const placeholderText = computed(() => {
   if (!props.raceTimesRequired) {
     // Race times not required - only need driver
     return `Paste CSV data here. Example:
-driver
+Driver
 John Smith
 Jane Doe
 Bob Wilson`;
   } else if (props.isQualifying) {
-    // Qualifying with race times required - need driver and fastest_lap_time
+    // Qualifying with race times required - need driver and FastestLapTime
     return `Paste CSV data here. Example:
-driver,fastest_lap_time
+Driver,FastestLapTime
 John Smith,01:32.456
 Jane Doe,01:33.123
 Bob Wilson,01:35.000`;
   } else {
     // Race with times required - need time columns
     return `Paste CSV data here. Example:
-driver,race_time,original_race_time_difference,fastest_lap_time
+Driver,RaceTime,RaceTimeDifference,FastestLapTime
 John Smith,01:23:45.678,,01:32.456
 Jane Doe,,,01:33.123
 Bob Wilson,,DNF,01:35.000`;
   }
 });
 
-const expectedColumnsText = computed(() => {
+const requiredHeadersDisplay = computed(() => {
   if (!props.raceTimesRequired) {
-    return 'Required Column Headers: driver (`fastest_lap_time` optional)';
+    return 'Driver';
   } else if (props.isQualifying) {
-    return 'Required Column Headers: driver, fastest_lap_time';
+    return 'Driver,FastestLapTime';
   } else {
-    return 'Required Column Headers: driver, race_time, original_race_time_difference, fastest_lap_time. Data can be blank if not applicable';
+    return 'Driver,RaceTime,RaceTimeDifference,FastestLapTime';
   }
 });
+
+/**
+ * Generate example CSV content for download
+ */
+const exampleCsvContent = computed(() => {
+  if (!props.raceTimesRequired) {
+    return `Driver
+John Smith
+Jane Doe
+Bob Wilson`;
+  } else if (props.isQualifying) {
+    return `Driver,FastestLapTime
+John Smith,01:32.456
+Jane Doe,01:33.123
+Bob Wilson,01:35.000`;
+  } else {
+    return `Driver,RaceTime,RaceTimeDifference,FastestLapTime
+John Smith,01:23:45.678,,01:32.456
+Jane Doe,,,01:33.123
+Bob Wilson,,DNF,01:35.000`;
+  }
+});
+
+/**
+ * Download example CSV file
+ */
+function downloadExample(): void {
+  const blob = new Blob([exampleCsvContent.value], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = props.isQualifying ? 'qualifying-results-example.csv' : 'race-results-example.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 function handleParse(): void {
   parseError.value = null;
@@ -181,38 +237,47 @@ function parseCsv(text: string, isQualifying: boolean, raceTimesRequired: boolea
     throw new Error('CSV must have at least a header row and one data row');
   }
 
-  // Get headers
+  // Get headers (already lowercase from transformHeader)
   const headers = parseResult.meta.fields || [];
   const driverField = headers.find((h) => h === 'driver');
 
   if (!driverField) {
-    throw new Error('CSV must have a "driver" column');
+    throw new Error('CSV must have a "Driver" column');
   }
 
-  const raceTimeField = headers.find((h) => h === 'race_time');
-  const diffField = headers.find((h) => h === 'original_race_time_difference');
-  const fastestLapField = headers.find((h) => h === 'fastest_lap_time' || h === 'fastest_lap');
+  // Support both PascalCase and snake_case for backward compatibility
+  // PascalCase: RaceTime, RaceTimeDifference, FastestLapTime
+  // Legacy snake_case: race_time, original_race_time_difference, fastest_lap_time
+  const raceTimeField = headers.find((h) => h === 'racetime' || h === 'race_time');
+  const diffField = headers.find(
+    (h) => h === 'racetimedifference' || h === 'original_race_time_difference',
+  );
+  const fastestLapField = headers.find(
+    (h) => h === 'fastestlaptime' || h === 'fastest_lap_time' || h === 'fastest_lap',
+  );
 
   // Validation logic depends on context:
-  // 1. If race times are NOT required: only driver column is needed (already validated above)
-  // 2. For qualifiers with race times required: only driver and fastest_lap_time are required
-  // 3. For races with race times required: need race_time OR original_race_time_difference (at minimum)
+  // 1. If race times are NOT required: only Driver column is needed (already validated above)
+  // 2. For qualifiers with race times required: only Driver and FastestLapTime are required
+  // 3. For races with race times required: need RaceTime OR RaceTimeDifference (at minimum)
   if (raceTimesRequired) {
     if (isQualifying) {
-      // Qualifiers only require fastest_lap_time when race times are enabled
+      // Qualifiers only require FastestLapTime when race times are enabled
       if (!fastestLapField) {
-        throw new Error('CSV must have a "fastest_lap_time" column for qualifying sessions');
+        throw new Error(
+          'CSV must have a "FastestLapTime" column for qualifying sessions (legacy format "fastest_lap_time" also supported)',
+        );
       }
     } else {
       // Races with times required need at least one time column
       if (!raceTimeField && !diffField && !fastestLapField) {
         throw new Error(
-          'CSV must have at least one of: race_time, original_race_time_difference, or fastest_lap_time',
+          'CSV must have at least one of: RaceTime, RaceTimeDifference, or FastestLapTime (legacy snake_case formats also supported)',
         );
       }
     }
   }
-  // If race times are NOT required, only driver column is needed (already validated above)
+  // If race times are NOT required, only Driver column is needed (already validated above)
 
   // Parse data rows
   const results: CsvResultRow[] = [];
@@ -346,5 +411,18 @@ function handleFileSelect(event: Event): void {
   };
 
   reader.readAsText(file);
+}
+
+/**
+ * Add minimum required headers to the textarea
+ * Inserts at the top if data already exists
+ */
+function addHeaders(): void {
+  const headers = requiredHeadersDisplay.value;
+  if (csvText.value.trim()) {
+    csvText.value = headers + '\n' + csvText.value;
+  } else {
+    csvText.value = headers;
+  }
 }
 </script>

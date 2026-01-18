@@ -21,26 +21,11 @@ withDefaults(defineProps<Props>(), {
   <span class="team-indicator">
     <img v-if="logo || logoUrl" :src="logo || logoUrl" :alt="name" class="team-logo" />
     <span v-else-if="color" class="dot" :style="{ backgroundColor: color }"></span>
-    <span>{{ name }}</span>
+    <span class="text-lg">{{ name }}</span>
   </span>
 </template>
 
 <style scoped>
-.team-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  color: var(--text-primary);
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 .team-logo {
   width: 48px;
   height: 24px;

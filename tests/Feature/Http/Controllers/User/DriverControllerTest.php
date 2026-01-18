@@ -849,6 +849,7 @@ final class DriverControllerTest extends UserControllerTestCase
     /**
      * Test Fix #1: CSV values with SQL LIKE wildcards (% and _) are NOT escaped
      * for exact match queries, allowing proper duplicate detection.
+     * Duplicates are now SKIPPED instead of reported as errors.
      */
     public function test_csv_import_handles_platform_ids_with_wildcards_correctly(): void
     {
@@ -866,7 +867,7 @@ final class DriverControllerTest extends UserControllerTestCase
             'updated_at' => now(),
         ]);
 
-        // Try to import the same driver - should be detected as duplicate
+        // Try to import the same driver - should be skipped as duplicate
         $csvData = "FirstName,LastName,PSN_ID\n"
             . "Test,User,Player_100%Win";
 
@@ -875,21 +876,13 @@ final class DriverControllerTest extends UserControllerTestCase
                 'csv_data' => $csvData,
             ]);
 
-        $response->assertOk()
-            ->assertJsonPath('data.success_count', 0);
+        $response->assertStatus(201)
+            ->assertJsonPath('data.success_count', 0)
+            ->assertJsonPath('data.skipped_count', 1);
 
-        // Verify there is an error about duplicate
+        // Verify there are NO errors (duplicates are skipped, not errors)
         $errors = $response->json('data.errors');
-        $this->assertNotEmpty($errors);
-        $errorMessages = array_column($errors, 'message');
-        $hasDuplicateError = false;
-        foreach ($errorMessages as $message) {
-            if (str_contains($message, 'already exists in this league')) {
-                $hasDuplicateError = true;
-                break;
-            }
-        }
-        $this->assertTrue($hasDuplicateError, 'Expected duplicate detection to work for platform IDs with wildcards');
+        $this->assertEmpty($errors, 'Duplicates should be skipped silently, not reported as errors');
     }
 
     /**
@@ -942,12 +935,12 @@ final class DriverControllerTest extends UserControllerTestCase
 
     /**
      * Test Fix #2: CSV import handles partial failures gracefully.
-     * Valid rows are imported successfully, while invalid rows are reported as errors.
+     * Valid rows are imported successfully, duplicates are skipped, invalid rows are reported as errors.
      * The import continues processing all rows even when some fail.
      */
     public function test_csv_import_handles_partial_failures(): void
     {
-        // Create a driver that will cause a conflict on the 3rd row
+        // Create a driver that will be skipped as duplicate on the 3rd row
         $conflictingDriver = Driver::factory()->create(['psn_id' => 'ConflictPSN']);
         DB::table('league_drivers')->insert([
             'league_id' => $this->league->id,
@@ -965,19 +958,19 @@ final class DriverControllerTest extends UserControllerTestCase
         $csvData = "FirstName,LastName,PSN_ID\n"
             . "Valid1,Driver1,ValidPSN1\n"
             . "Valid2,Driver2,ValidPSN2\n"
-            . "Conflict,Driver,ConflictPSN";  // This will fail - already exists
+            . "Conflict,Driver,ConflictPSN";  // This will be skipped - already exists
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
                 'csv_data' => $csvData,
             ]);
 
-        // Should report only 2 successes
-        $response->assertOk()
-            ->assertJsonPath('data.success_count', 2);
+        // Should report 2 successes and 1 skipped (duplicate)
+        $response->assertStatus(201)
+            ->assertJsonPath('data.success_count', 2)
+            ->assertJsonPath('data.skipped_count', 1);
 
-        // The first 2 drivers should have been created despite the error on row 3
-        // (Each row is caught and continues - errors don't rollback the transaction)
+        // The first 2 drivers should have been created, the 3rd skipped
         $this->assertEquals($initialDriverCount + 2, Driver::count(), 'Two new drivers should be created');
         $this->assertEquals(
             $initialLeagueDriverCount + 2,
@@ -988,6 +981,92 @@ final class DriverControllerTest extends UserControllerTestCase
         // Verify the successful imports
         $this->assertDatabaseHas('drivers', ['psn_id' => 'ValidPSN1']);
         $this->assertDatabaseHas('drivers', ['psn_id' => 'ValidPSN2']);
+
+        // Verify no errors were reported (duplicate was skipped, not an error)
+        $errors = $response->json('data.errors');
+        $this->assertEmpty($errors, 'Duplicates should be skipped, not reported as errors');
+    }
+
+    /**
+     * Test that CSV import correctly skips duplicate drivers based on platform ID.
+     * When importing drivers via CSV, if a driver already exists with a matching
+     * platform ID for the current league, that driver should be skipped (not imported/duplicated).
+     */
+    public function test_csv_import_skips_duplicate_drivers(): void
+    {
+        // Create existing drivers in the league
+        $existingDriver1 = Driver::factory()->create(['psn_id' => 'ExistingPSN1']);
+        $existingDriver2 = Driver::factory()->create(['iracing_id' => 'ExistingIRacing2']);
+        DB::table('league_drivers')->insert([
+            [
+                'league_id' => $this->league->id,
+                'driver_id' => $existingDriver1->id,
+                'status' => 'active',
+                'added_to_league_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'league_id' => $this->league->id,
+                'driver_id' => $existingDriver2->id,
+                'status' => 'active',
+                'added_to_league_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        // CSV with mix of new drivers and duplicates
+        $csvData = "FirstName,LastName,PSN_ID,iRacing_ID\n"
+            . "New1,Driver1,NewPSN1,\n"              // New driver
+            . "Existing,One,ExistingPSN1,\n"          // Duplicate - skip
+            . "New2,Driver2,,NewIRacing2\n"          // New driver
+            . "Existing,Two,,ExistingIRacing2\n"     // Duplicate - skip
+            . "New3,Driver3,NewPSN3,";               // New driver
+
+        $initialDriverCount = Driver::count();
+        $initialLeagueDriverCount = DB::table('league_drivers')
+            ->where('league_id', $this->league->id)
+            ->count();
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
+                'csv_data' => $csvData,
+            ]);
+
+        // Should import 3 new drivers and skip 2 duplicates
+        $response->assertStatus(201)
+            ->assertJsonPath('data.success_count', 3)
+            ->assertJsonPath('data.skipped_count', 2)
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data' => [
+                    'success_count',
+                    'skipped_count',
+                    'errors',
+                ],
+            ]);
+
+        // Verify message includes skipped count
+        $message = $response->json('message');
+        $this->assertStringContainsString('3 driver', $message);
+        $this->assertStringContainsString('2 duplicate', $message);
+
+        // Verify 3 new drivers were created
+        $this->assertEquals($initialDriverCount + 3, Driver::count(), 'Three new drivers should be created');
+        $this->assertEquals(
+            $initialLeagueDriverCount + 3,
+            DB::table('league_drivers')->where('league_id', $this->league->id)->count(),
+            'Three new league_drivers should be created'
+        );
+
+        // Verify new drivers were created
+        $this->assertDatabaseHas('drivers', ['psn_id' => 'NewPSN1']);
+        $this->assertDatabaseHas('drivers', ['iracing_id' => 'NewIRacing2']);
+        $this->assertDatabaseHas('drivers', ['psn_id' => 'NewPSN3']);
+
+        // Verify no errors (duplicates are skipped silently)
+        $errors = $response->json('data.errors');
+        $this->assertEmpty($errors, 'No errors should be reported for duplicates');
     }
 
     /**

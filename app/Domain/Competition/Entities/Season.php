@@ -878,6 +878,22 @@ final class Season
     }
 
     /**
+     * Reactivate a completed season (change status from completed back to active).
+     *
+     * @throws \InvalidArgumentException if season is not in completed status
+     */
+    public function reactivate(): void
+    {
+        if (!$this->status->isCompleted()) {
+            throw new \InvalidArgumentException(
+                'Can only reactivate seasons with completed status. Current status: ' . $this->status->value
+            );
+        }
+
+        $this->changeStatus(SeasonStatus::ACTIVE);
+    }
+
+    /**
      * Archive the season.
      */
     public function archive(): void

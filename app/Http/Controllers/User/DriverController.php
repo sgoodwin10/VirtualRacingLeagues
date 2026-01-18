@@ -179,12 +179,25 @@ final class DriverController extends Controller
                 $this->getAuthenticatedUserId()
             );
 
+            // Build response message based on results
+            $messageParts = [];
+            if ($result->success_count > 0) {
+                $messageParts[] = "Imported {$result->success_count} driver" . ($result->success_count === 1 ? '' : 's');
+            }
+            if ($result->skipped_count > 0) {
+                $messageParts[] = "skipped {$result->skipped_count} duplicate" . ($result->skipped_count === 1 ? '' : 's');
+            }
             if ($result->hasErrors()) {
-                $message = "Imported {$result->success_count} drivers with {$result->errorCount()} errors";
+                $messageParts[] = "{$result->errorCount()} error" . ($result->errorCount() === 1 ? '' : 's');
+            }
+
+            $message = !empty($messageParts) ? ucfirst(implode(', ', $messageParts)) : 'No drivers imported';
+
+            if ($result->hasErrors()) {
                 return ApiResponse::success($result->toArray(), $message);
             }
 
-            return ApiResponse::created($result->toArray(), "Successfully imported {$result->success_count} drivers");
+            return ApiResponse::created($result->toArray(), $message);
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
         }

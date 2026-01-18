@@ -15,7 +15,7 @@ import type {
 } from '@app/types/activityLog';
 import { formatDistanceToNow, format } from 'date-fns';
 
-export function useActivityLog(leagueId: number) {
+export function useActivityLog(leagueId: number, initialLimit: number = 25) {
   const activities = ref<Activity[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
@@ -28,7 +28,7 @@ export function useActivityLog(leagueId: number) {
 
   // Filter state
   const filters = ref<ActivityFilterParams>({
-    limit: 25,
+    limit: initialLimit,
     page: 1,
   });
 

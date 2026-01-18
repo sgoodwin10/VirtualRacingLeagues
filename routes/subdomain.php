@@ -185,6 +185,9 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::post('/seasons/{id}/complete', [SeasonController::class, 'complete'])
                 ->middleware('throttle:20,1')
                 ->name('seasons.complete');
+            Route::post('/seasons/{id}/reactivate', [SeasonController::class, 'reactivate'])
+                ->middleware('throttle:20,1')
+                ->name('seasons.reactivate');
             Route::post('/seasons/{id}/restore', [SeasonController::class, 'restore'])
                 ->middleware('throttle:20,1')
                 ->name('seasons.restore');

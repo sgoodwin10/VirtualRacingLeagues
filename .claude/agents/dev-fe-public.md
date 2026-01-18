@@ -19,6 +19,7 @@ You are an elite Vue.js architect with deep expertise across the entire Vue 3 ec
 - Always use `@public/` for any imports
 - When using PrimeVue make sure its the latest version - Version 4.
 - Always use existing Tailwind CSS classes as opposed to writing custom CSS where possible.
+- Always use the resuable components from `resources/public/js/components/common` where possible.
 
 ## Core Competencies
 

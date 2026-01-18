@@ -23,6 +23,7 @@ import {
   unarchiveSeason,
   activateSeason,
   completeSeason,
+  reactivateSeason,
   deleteSeason,
   restoreSeason,
   buildCreateSeasonFormData,
@@ -347,6 +348,37 @@ export const useSeasonStore = defineStore('season', () => {
   }
 
   /**
+   * Reactivate a completed season
+   */
+  async function reactivateExistingSeason(seasonId: number): Promise<Season> {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const reactivatedSeason = await reactivateSeason(seasonId);
+
+      // Update local state using consistent CRUD method
+      updateItemInList(reactivatedSeason);
+
+      // Emit event for competition store to listen to
+      const events = useStoreEvents();
+      events.emit(
+        'season:reactivated',
+        reactivatedSeason.competition_id,
+        toCompetitionSeason(reactivatedSeason),
+      );
+
+      return reactivatedSeason;
+    } catch (err: unknown) {
+      const errorMessage = getErrorMessage(err, 'Failed to reactivate season');
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /**
    * Delete a season (soft delete)
    * @param seasonId - The ID of the season to delete
    * @param competitionId - Competition ID (optional, will try to get from store if not provided)
@@ -594,6 +626,7 @@ export const useSeasonStore = defineStore('season', () => {
     unarchiveExistingSeason,
     activateExistingSeason,
     completeExistingSeason,
+    reactivateExistingSeason,
     deleteExistingSeason,
     restoreDeletedSeason,
 

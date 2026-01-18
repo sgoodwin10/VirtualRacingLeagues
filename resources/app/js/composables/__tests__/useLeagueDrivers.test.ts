@@ -209,6 +209,7 @@ describe('useLeagueDrivers', () => {
   it('imports drivers from CSV successfully', async () => {
     const mockImportResult = {
       success_count: 2,
+      skipped_count: 0,
       errors: [],
     };
     vi.mocked(driverService.importDriversFromCSV).mockResolvedValue(mockImportResult);
@@ -232,6 +233,7 @@ describe('useLeagueDrivers', () => {
   it('handles partial CSV import with errors', async () => {
     const mockImportResult = {
       success_count: 1,
+      skipped_count: 0,
       errors: [{ row: 2, message: 'Invalid data' }],
     };
     vi.mocked(driverService.importDriversFromCSV).mockResolvedValue(mockImportResult);
@@ -251,6 +253,7 @@ describe('useLeagueDrivers', () => {
   it('handles singular driver text in CSV import', async () => {
     const mockImportResult = {
       success_count: 1,
+      skipped_count: 0,
       errors: [],
     };
     vi.mocked(driverService.importDriversFromCSV).mockResolvedValue(mockImportResult);
