@@ -28,6 +28,7 @@ use App\Http\Controllers\User\TeamController;
 use App\Http\Controllers\User\TimezoneController;
 use App\Http\Controllers\User\TrackController;
 use App\Http\Controllers\App\TiebreakerRuleController;
+use App\Http\Controllers\App\ExportController;
 use App\Http\Middleware\AdminSessionMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -298,6 +299,16 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::get('/races/{raceId}/results', [RaceResultController::class, 'index'])->name('races.results.index');
             Route::post('/races/{raceId}/results', [RaceResultController::class, 'store'])->name('races.results.store');
             Route::delete('/races/{raceId}/results', [RaceResultController::class, 'destroy'])->name('races.results.destroy');
+
+            // CSV Export
+            Route::prefix('export')->name('export.')->group(function () {
+                Route::get('/races/{raceId}/csv', [ExportController::class, 'exportRaceResults'])->name('races.csv');
+                Route::get('/rounds/{roundId}/standings/csv', [ExportController::class, 'exportRoundStandings'])->name('rounds.standings.csv');
+                Route::get('/rounds/{roundId}/{type}/csv', [ExportController::class, 'exportCrossDivisionResults'])
+                    ->where('type', 'fastest-laps|race-times|qualifying-times')
+                    ->name('rounds.cross-division.csv');
+                Route::get('/seasons/{seasonId}/standings/csv', [ExportController::class, 'exportSeasonStandings'])->name('seasons.standings.csv');
+            });
         });
     });
 

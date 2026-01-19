@@ -49,6 +49,19 @@
             :key="`division-${division.division_id}`"
             :value="`division-${division.division_id}`"
           >
+            <div class="flex justify-end mb-3">
+              <PrimeButton
+                label="Download CSV"
+                severity="secondary"
+                size="small"
+                :loading="downloadingDivisionId === division.division_id"
+                @click="handleDownloadDivisionStandings(division.division_id)"
+              >
+                <template #icon>
+                  <PhDownload :size="14" weight="regular" color="currentColor" />
+                </template>
+              </PrimeButton>
+            </div>
             <StandingsTable
               :drivers="division.drivers"
               :rounds="getRoundNumbers(division.drivers)"
@@ -89,15 +102,17 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, h, defineComponent } from 'vue';
-import { PhCheck } from '@phosphor-icons/vue';
+import { PhCheck, PhDownload } from '@phosphor-icons/vue';
 import Message from 'primevue/message';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
+import PrimeButton from 'primevue/button';
 import { getSeasonStandings } from '@app/services/seasonService';
 import { getPodiumRowClass } from '@app/constants/podiumColors';
+import { useCsvExport } from '@app/composables/useCsvExport';
 import type {
   SeasonStandingsResponse,
   SeasonStandingDriver,
@@ -122,6 +137,9 @@ const standingsData = ref<SeasonStandingsResponse | null>(null);
  * Will be set to the first available tab when standings data loads
  */
 const activeTabId = ref<string>('drivers');
+const downloadingDivisionId = ref<number | null>(null);
+
+const { downloadSeasonStandingsCsv } = useCsvExport();
 
 /**
  * Get divisions with standings (only when divisions enabled), sorted by order
@@ -249,6 +267,18 @@ async function fetchStandings(): Promise<void> {
     error.value = 'Failed to load season standings';
   } finally {
     isLoading.value = false;
+  }
+}
+
+/**
+ * Download division standings CSV
+ */
+async function handleDownloadDivisionStandings(divisionId: number): Promise<void> {
+  downloadingDivisionId.value = divisionId;
+  try {
+    await downloadSeasonStandingsCsv(props.seasonId, divisionId);
+  } finally {
+    downloadingDivisionId.value = null;
   }
 }
 

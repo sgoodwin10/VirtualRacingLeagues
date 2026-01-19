@@ -7,13 +7,24 @@
     @hide="handleClose"
   >
     <template #header>
-      <div class="flex items-center gap-3">
-        <PhTrophy :size="24" class="text-amber-600" />
-        <h2 class="text-xl font-semibold text-gray-900">
-          Round {{ roundData?.round_number }}
-          <span v-if="roundData?.name">- {{ roundData.name }}</span>
-          Results
-        </h2>
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-3">
+          <PhTrophy :size="24" class="text-amber-600" />
+          <h2 class="text-xl font-semibold text-gray-900">
+            Round {{ roundData?.round_number }}
+            <span v-if="roundData?.name">- {{ roundData.name }}</span>
+            Results
+          </h2>
+        </div>
+        <Button
+          v-if="roundData?.round_results && isRoundCompleted"
+          label="Download Round Results"
+          variant="secondary"
+          size="sm"
+          :icon="PhDownload"
+          :loading="isDownloadingStandings"
+          @click="handleDownloadRoundStandings"
+        />
       </div>
     </template>
 
@@ -109,6 +120,9 @@
                   :results="roundData?.qualifying_results ?? null"
                   :race-events="raceEvents"
                   :divisions="divisions"
+                  download-label="Download CSV"
+                  :is-downloading="isDownloadingQualifying"
+                  @download="handleDownloadQualifying"
                 />
               </TabPanel>
 
@@ -119,6 +133,9 @@
                   :results="roundData?.race_time_results ?? null"
                   :race-events="raceEvents"
                   :divisions="divisions"
+                  download-label="Download CSV"
+                  :is-downloading="isDownloadingRaceTimes"
+                  @download="handleDownloadRaceTimes"
                 />
               </TabPanel>
 
@@ -129,6 +146,9 @@
                   :results="roundData?.fastest_lap_results ?? null"
                   :race-events="raceEvents"
                   :divisions="divisions"
+                  download-label="Download CSV"
+                  :is-downloading="isDownloadingFastestLaps"
+                  @download="handleDownloadFastestLaps"
                 />
               </TabPanel>
             </TabPanels>
@@ -154,13 +174,14 @@ import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import { useToast } from 'primevue/usetoast';
-import { PhTrophy, PhClipboardText } from '@phosphor-icons/vue';
+import { PhTrophy, PhClipboardText, PhDownload } from '@phosphor-icons/vue';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import RaceEventResultsSection from './RaceEventResultsSection.vue';
 import RoundStandingsSection from './RoundStandingsSection.vue';
 import CrossDivisionResultsSection from './CrossDivisionResultsSection.vue';
 import { getRoundResults } from '@app/services/roundService';
 import { useSeasonStore } from '@app/stores/seasonStore';
+import { useCsvExport } from '@app/composables/useCsvExport';
 import type { Round } from '@app/types/round';
 import type { RoundResultsResponse, RaceEventResults } from '@app/types/roundResult';
 
@@ -179,6 +200,11 @@ const emit = defineEmits<Emits>();
 
 const toast = useToast();
 const seasonStore = useSeasonStore();
+const {
+  isDownloading: isDownloadingStandings,
+  downloadRoundStandingsCsv,
+  downloadCrossDivisionCsv,
+} = useCsvExport();
 
 // Constants
 const NO_DIVISION_SELECTED = -1;
@@ -190,6 +216,9 @@ const divisions = ref<RoundResultsResponse['divisions']>([]);
 const raceEvents = ref<RaceEventResults[]>([]);
 const activeDivisionId = ref<number>(NO_DIVISION_SELECTED);
 const activeMainTab = ref<string>('round-results');
+const isDownloadingQualifying = ref(false);
+const isDownloadingRaceTimes = ref(false);
+const isDownloadingFastestLaps = ref(false);
 
 // Computed
 const isVisible = computed({
@@ -262,6 +291,52 @@ function handleClose(): void {
   raceEvents.value = [];
   activeDivisionId.value = NO_DIVISION_SELECTED;
   activeMainTab.value = 'round-results';
+  isDownloadingQualifying.value = false;
+  isDownloadingRaceTimes.value = false;
+  isDownloadingFastestLaps.value = false;
+}
+
+/**
+ * Download round standings CSV
+ */
+async function handleDownloadRoundStandings(): Promise<void> {
+  await downloadRoundStandingsCsv(props.round.id);
+}
+
+/**
+ * Download qualifying times CSV
+ */
+async function handleDownloadQualifying(): Promise<void> {
+  isDownloadingQualifying.value = true;
+  try {
+    await downloadCrossDivisionCsv(props.round.id, 'qualifying-times');
+  } finally {
+    isDownloadingQualifying.value = false;
+  }
+}
+
+/**
+ * Download race times CSV
+ */
+async function handleDownloadRaceTimes(): Promise<void> {
+  isDownloadingRaceTimes.value = true;
+  try {
+    await downloadCrossDivisionCsv(props.round.id, 'race-times');
+  } finally {
+    isDownloadingRaceTimes.value = false;
+  }
+}
+
+/**
+ * Download fastest laps CSV
+ */
+async function handleDownloadFastestLaps(): Promise<void> {
+  isDownloadingFastestLaps.value = true;
+  try {
+    await downloadCrossDivisionCsv(props.round.id, 'fastest-laps');
+  } finally {
+    isDownloadingFastestLaps.value = false;
+  }
 }
 
 // Watch for modal open to load data

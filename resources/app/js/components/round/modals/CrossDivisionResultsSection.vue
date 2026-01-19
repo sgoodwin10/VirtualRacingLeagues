@@ -1,7 +1,21 @@
 <template>
   <div>
+    <!-- Header with Download Button -->
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">{{ title }}</h3>
+      <Button
+        v-if="results && results.length > 0 && downloadLabel"
+        :label="downloadLabel"
+        variant="secondary"
+        size="sm"
+        :icon="PhDownload"
+        :loading="isDownloading"
+        @click="emit('download')"
+      />
+    </div>
+
     <!-- Results Table -->
-    <div v-if="results && results.length > 0" class="overflow-x-auto mt-4">
+    <div v-if="results && results.length > 0" class="overflow-x-auto">
       <TechDataTable
         :value="enrichedResults"
         :rows="50"
@@ -88,8 +102,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import Column from 'primevue/column';
+import { Button } from '@app/components/common/buttons';
 import { BaseBadge } from '@app/components/common/indicators';
-import { PhClipboardText } from '@phosphor-icons/vue';
+import { PhClipboardText, PhDownload } from '@phosphor-icons/vue';
 import { TechDataTable, PositionCell } from '@app/components/common/tables';
 import type { CrossDivisionResult, RaceEventResults } from '@app/types/roundResult';
 
@@ -102,6 +117,8 @@ interface Props {
   results: CrossDivisionResult[] | null;
   raceEvents: RaceEventResults[];
   divisions: Array<{ id: number; name: string }>;
+  downloadLabel?: string;
+  isDownloading?: boolean;
 }
 
 interface EnrichedResult {
@@ -114,6 +131,10 @@ interface EnrichedResult {
 }
 
 const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  download: [];
+}>();
 
 // Computed
 // Create a Map lookup for race results to avoid O(n×m×k) nested loops

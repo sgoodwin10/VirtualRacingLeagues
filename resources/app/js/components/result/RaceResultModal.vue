@@ -117,22 +117,37 @@
     </div>
 
     <template #footer>
-      <div class="flex justify-end gap-3">
-        <!-- Read-only mode: just show Close button -->
-        <template v-if="isReadOnly">
-          <Button label="Close" variant="secondary" @click="handleClose" />
-        </template>
-        <!-- Edit mode: show Cancel and Save buttons -->
-        <template v-else>
-          <Button label="Cancel" variant="secondary" :disabled="isSaving" @click="handleClose" />
+      <div class="flex justify-between">
+        <!-- Left side: Download button (read-only mode only) -->
+        <div v-if="isReadOnly && formResults.length > 0">
           <Button
-            label="Save Results"
-            variant="success"
-            :loading="isSaving"
-            :disabled="!canSave"
-            @click="handleSave"
+            label="Download CSV"
+            variant="secondary"
+            :icon="PhDownload"
+            :loading="isDownloading"
+            @click="handleDownloadCsv"
           />
-        </template>
+        </div>
+        <div v-else></div>
+
+        <!-- Right side: existing buttons -->
+        <div class="flex gap-3">
+          <!-- Read-only mode: just show Close button -->
+          <template v-if="isReadOnly">
+            <Button label="Close" variant="secondary" @click="handleClose" />
+          </template>
+          <!-- Edit mode: show Cancel and Save buttons -->
+          <template v-else>
+            <Button label="Cancel" variant="secondary" :disabled="isSaving" @click="handleClose" />
+            <Button
+              label="Save Results"
+              variant="success"
+              :loading="isSaving"
+              :disabled="!canSave"
+              @click="handleSave"
+            />
+          </template>
+        </div>
       </div>
     </template>
   </BaseModal>
@@ -143,7 +158,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@app/components/common/buttons';
 import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
-import { PhTrophy } from '@phosphor-icons/vue';
+import { PhTrophy, PhDownload } from '@phosphor-icons/vue';
 import BaseModal from '@app/components/common/modals/BaseModal.vue';
 import ResultCsvImport from '@app/components/result/ResultCsvImport.vue';
 import ResultDivisionTabs from '@app/components/result/ResultDivisionTabs.vue';
@@ -153,6 +168,7 @@ import { useSeasonStore } from '@app/stores/seasonStore';
 import { useDivisionStore } from '@app/stores/divisionStore';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import { useRaceTimeCalculation } from '@app/composables/useRaceTimeCalculation';
+import { useCsvExport } from '@app/composables/useCsvExport';
 import { PSN_BASED_PLATFORMS, PLATFORM_SLUG_IRACING } from '@app/constants/platforms';
 import type {
   RaceResultFormData,
@@ -186,6 +202,7 @@ const divisionStore = useDivisionStore();
 const seasonDriverStore = useSeasonDriverStore();
 const toast = useToast();
 const { parseTimeToMs, normalizeTimeInput } = useRaceTimeCalculation();
+const { isDownloading, downloadRaceResultsCsv } = useCsvExport();
 
 // Local state
 const formResults = ref<RaceResultFormData[]>([]);
@@ -623,6 +640,13 @@ function handleClose(): void {
   formResults.value = [];
   localDrivers.value = [];
   missingDriverNames.value = [];
+}
+
+/**
+ * Handle CSV download
+ */
+async function handleDownloadCsv(): Promise<void> {
+  await downloadRaceResultsCsv(props.race.id);
 }
 
 /**
