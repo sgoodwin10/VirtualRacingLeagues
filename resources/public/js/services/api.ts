@@ -46,15 +46,9 @@ class ApiService {
         }
 
         // Handle 401 Unauthorized
-        if (error.response?.status === 401) {
-          // Redirect to login if not already there
-          if (!window.location.pathname.includes('/login')) {
-            // Redirect to public site login with return URL
-            const publicDomain = window.location.origin.replace('//app.', '//');
-            const returnUrl = encodeURIComponent(window.location.pathname);
-            window.location.href = `${publicDomain}/login?redirect=${returnUrl}`;
-          }
-        }
+        // Note: On the public site, 401 is expected for unauthenticated users
+        // and should NOT redirect. The auth store handles this gracefully.
+        // Redirect logic for 401 belongs in the app subdomain, not here.
 
         return Promise.reject(error);
       },

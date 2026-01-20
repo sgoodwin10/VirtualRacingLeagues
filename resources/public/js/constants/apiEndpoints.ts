@@ -8,10 +8,13 @@ export const API_ENDPOINTS = {
   auth: {
     login: () => '/login',
     logout: () => '/logout',
+    register: () => '/register',
     me: () => '/me',
     resendVerificationEmail: () => '/email/resend',
     updateProfile: () => '/profile',
     impersonate: () => '/impersonate',
+    forgotPassword: () => '/forgot-password',
+    resetPassword: () => '/reset-password',
   },
 
   // League endpoints
@@ -131,5 +134,14 @@ export const API_ENDPOINTS = {
     list: () => '/tiebreaker-rules',
     forSeason: (seasonId: number) => `/seasons/${seasonId}/tiebreaker-rules`,
     updateOrder: (seasonId: number) => `/seasons/${seasonId}/tiebreaker-rules`,
+  },
+
+  // Public API endpoints (no authentication required)
+  PUBLIC: {
+    LEAGUES: '/public/leagues',
+    LEAGUE_DETAIL: (slug: string) => `/public/leagues/${slug}`,
+    SEASON_DETAIL: (leagueSlug: string, seasonSlug: string) =>
+      `/public/leagues/${leagueSlug}/seasons/${seasonSlug}`,
+    PLATFORMS: '/public/platforms',
   },
 } as const;

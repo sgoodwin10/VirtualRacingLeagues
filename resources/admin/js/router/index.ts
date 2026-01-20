@@ -141,6 +141,30 @@ const routes: RouteRecordRaw[] = [
           requiredRole: 'admin' as AdminRole, // Only admins and super admins
         },
       },
+      {
+        path: 'notifications',
+        name: 'notifications',
+        component: () => import('@admin/views/NotificationsView.vue'),
+        meta: {
+          title: 'Notification History',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
+          breadcrumb: [{ label: 'System' }, { label: 'Notifications' }],
+          requiresAuth: true,
+          requiredRole: 'admin' as AdminRole, // Only admins and super admins
+        },
+      },
+      {
+        path: 'contacts',
+        name: 'contacts',
+        component: () => import('@admin/views/ContactsView.vue'),
+        meta: {
+          title: 'Contact Submissions',
+          // @ts-expect-error - breadcrumb type mismatch due to shared RouteMeta across apps
+          breadcrumb: [{ label: 'System' }, { label: 'Contacts' }],
+          requiresAuth: true,
+          requiredRole: 'admin' as AdminRole, // Only admins and super admins
+        },
+      },
     ],
   },
 ];

@@ -16,3 +16,10 @@ Schedule::command('app:import-gt7-cars')
     ->withoutOverlapping()
     ->runInBackground()
     ->emailOutputOnFailure(config('app.admin_email', 'admin@example.com'));
+
+// Schedule notification logs cleanup to run daily at 2:00 AM
+Schedule::command('notifications:cleanup')
+    ->daily()
+    ->at('02:00')
+    ->withoutOverlapping()
+    ->runInBackground();

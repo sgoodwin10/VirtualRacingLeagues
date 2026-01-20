@@ -54,8 +54,6 @@ describe('useCsvExport', () => {
     it('should successfully download race results CSV', async () => {
       const { downloadRaceResultsCsv, isDownloading } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -80,7 +78,6 @@ describe('useCsvExport', () => {
     it('should use default filename when Content-Disposition header is missing', async () => {
       const { downloadRaceResultsCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -115,7 +112,6 @@ describe('useCsvExport', () => {
     it('should successfully download round standings CSV', async () => {
       const { downloadRoundStandingsCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -136,7 +132,6 @@ describe('useCsvExport', () => {
     it('should download fastest laps CSV', async () => {
       const { downloadCrossDivisionCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -153,7 +148,6 @@ describe('useCsvExport', () => {
     it('should download race times CSV', async () => {
       const { downloadCrossDivisionCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -170,7 +164,6 @@ describe('useCsvExport', () => {
     it('should download qualifying times CSV', async () => {
       const { downloadCrossDivisionCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -189,7 +182,6 @@ describe('useCsvExport', () => {
     it('should download season standings without division filter', async () => {
       const { downloadSeasonStandingsCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -206,7 +198,6 @@ describe('useCsvExport', () => {
     it('should download season standings with division filter', async () => {
       const { downloadSeasonStandingsCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -225,7 +216,6 @@ describe('useCsvExport', () => {
     it('should set isDownloading to true during download', async () => {
       const { downloadRaceResultsCsv, isDownloading } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       let resolvePromise: (value: unknown) => void;
       const promise = new Promise((resolve) => {
@@ -265,7 +255,6 @@ describe('useCsvExport', () => {
     it('should extract filename from Content-Disposition header', async () => {
       const { downloadRaceResultsCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -283,7 +272,6 @@ describe('useCsvExport', () => {
     it('should handle filename with quotes', async () => {
       const { downloadRaceResultsCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,
@@ -302,7 +290,6 @@ describe('useCsvExport', () => {
     it('should create blob URL and trigger download', async () => {
       const { downloadRaceResultsCsv } = useCsvExport();
 
-      // eslint-disable-next-line no-undef
       const mockBlob = new Blob(['test,data'], { type: 'text/csv' });
       mockApiGet.mockResolvedValue({
         data: mockBlob,

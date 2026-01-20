@@ -341,7 +341,12 @@ onUnmounted(() => {
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold">CSV Format Requirements</h3>
           <div class="flex gap-2">
-            <Button label="Download Example" size="sm" variant="secondary" @click="downloadExample" />
+            <Button
+              label="Download Example"
+              size="sm"
+              variant="secondary"
+              @click="downloadExample"
+            />
             <Button label="Use Example" size="sm" variant="outline" @click="useExample" />
           </div>
         </div>

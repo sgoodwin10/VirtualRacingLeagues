@@ -20,6 +20,12 @@ const authStore = useAuthStore();
 
         <!-- Navigation Links -->
         <div class="flex items-center space-x-4">
+          <router-link
+            to="/leagues"
+            class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-2 text-sm font-medium transition-colors"
+          >
+            Leagues
+          </router-link>
           <template v-if="!authStore.isAuthenticated">
             <router-link
               to="/login"

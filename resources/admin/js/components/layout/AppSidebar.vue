@@ -200,6 +200,42 @@ const menuItems = computed<MenuItem[]>(() => {
     },
   ];
 
+  // System menu - only show to Admins and Super Admins
+  if (adminStore.isAdmin) {
+    const systemItems: MenuItem[] = [
+      {
+        name: 'notifications',
+        label: 'Notifications',
+        icon: 'pi pi-bell',
+        to: '/notifications',
+      },
+      {
+        name: 'contacts',
+        label: 'Contacts',
+        icon: 'pi pi-envelope',
+        to: '/contacts',
+      },
+    ];
+
+    // Activity Logs - only for Super Admins
+    if (adminStore.adminRole === 'super_admin') {
+      systemItems.push({
+        name: 'activity-logs',
+        label: 'Activity Logs',
+        icon: 'pi pi-clock',
+        to: '/activity-logs',
+      });
+    }
+
+    items.push({
+      name: 'system',
+      label: 'System',
+      icon: 'pi pi-server',
+      badge: null,
+      items: systemItems,
+    });
+  }
+
   // Settings menu - only show to Admins and Super Admins
   if (adminStore.isAdmin) {
     const settingsItems: MenuItem[] = [
@@ -210,16 +246,6 @@ const menuItems = computed<MenuItem[]>(() => {
         to: '/admin-users',
       },
     ];
-
-    // Activity Logs - only for Super Admins
-    if (adminStore.adminRole === 'super_admin') {
-      settingsItems.push({
-        name: 'activity-logs',
-        label: 'Activity Logs',
-        icon: 'pi pi-clock',
-        to: '/activity-logs',
-      });
-    }
 
     // Site Config - only for Super Admins
     if (adminStore.adminRole === 'super_admin') {

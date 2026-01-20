@@ -19,6 +19,7 @@ use App\Domain\Competition\Events\SeasonCreated;
 use App\Domain\Competition\Events\SeasonDeleted;
 use App\Domain\Competition\Events\SeasonStatusChanged;
 use App\Domain\Competition\Events\SeasonUpdated;
+use App\Domain\Contact\Events\ContactSubmitted;
 use App\Domain\SiteConfig\Events\SiteConfigApplicationSettingsUpdated;
 use App\Domain\SiteConfig\Events\SiteConfigIdentityUpdated;
 use App\Domain\SiteConfig\Events\SiteConfigTrackingUpdated;
@@ -39,7 +40,9 @@ use App\Infrastructure\Listeners\LogLeagueSeasonActivity;
 use App\Infrastructure\Listeners\LogSiteConfigActivity;
 use App\Infrastructure\Listeners\LogUserActivity;
 use App\Infrastructure\Listeners\LogUserImpersonationStarted;
+use App\Infrastructure\Listeners\SendContactNotification;
 use App\Infrastructure\Listeners\SendEmailVerification;
+use App\Infrastructure\Listeners\SendRegistrationDiscordNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 /**
@@ -74,6 +77,7 @@ final class EventServiceProvider extends ServiceProvider
         ],
         EmailVerificationRequested::class => [
             SendEmailVerification::class,
+            SendRegistrationDiscordNotification::class,
             LogUserActivity::class,
         ],
         EmailVerified::class => [
@@ -157,6 +161,12 @@ final class EventServiceProvider extends ServiceProvider
         ],
         SeasonStatusChanged::class => [
             LogLeagueSeasonActivity::class,
+        ],
+
+        // Contact Domain Events
+        ContactSubmitted::class => [
+            SendContactNotification::class,
+            LogUserActivity::class,
         ],
     ];
 

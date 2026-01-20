@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
 import SpeedLines from '@public/components/landing/SpeedLines.vue';
-import LandingNav from '@public/components/landing/LandingNav.vue';
-import LandingFooter from '@public/components/landing/LandingFooter.vue';
 import HeroSection from '@public/components/landing/sections/HeroSection.vue';
 import FeaturesSection from '@public/components/landing/sections/FeaturesSection.vue';
 import HowItWorksSection from '@public/components/landing/sections/HowItWorksSection.vue';
@@ -27,13 +25,11 @@ import CtaSection from '@public/components/landing/sections/CtaSection.vue';
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden">
+  <div class="bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden">
     <!-- Background Effects -->
     <BackgroundGrid />
     <SpeedLines />
 
-    <!-- Navigation -->
-    <LandingNav />
 
     <!-- Main Content -->
     <main>
@@ -45,8 +41,5 @@ import CtaSection from '@public/components/landing/sections/CtaSection.vue';
       <ComingSoonSection />
       <CtaSection />
     </main>
-
-    <!-- Footer -->
-    <LandingFooter />
   </div>
 </template>

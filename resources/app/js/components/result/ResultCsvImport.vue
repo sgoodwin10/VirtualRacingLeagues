@@ -42,12 +42,7 @@
           class="hidden"
           @change="handleFileSelect"
         />
-        <Button
-          label="Download Example"
-          size="sm"
-          variant="secondary"
-          @click="downloadExample"
-        />
+        <Button label="Download Example" size="sm" variant="secondary" @click="downloadExample" />
         <Button
           label="Upload CSV"
           :icon="PhUpload"
@@ -168,7 +163,9 @@ function downloadExample(): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = props.isQualifying ? 'qualifying-results-example.csv' : 'race-results-example.csv';
+  link.download = props.isQualifying
+    ? 'qualifying-results-example.csv'
+    : 'race-results-example.csv';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

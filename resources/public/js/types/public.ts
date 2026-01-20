@@ -191,9 +191,13 @@ export interface SeasonStandingDriver {
   driver_id: number;
   driver_name: string;
   total_points: number;
+  drop_total: number;
   podiums: number;
   poles: number;
   rounds: RoundPoints[];
+  team_id?: number | null;
+  team_name?: string | null;
+  team_logo?: string | null;
 }
 
 /**
@@ -206,6 +210,28 @@ export interface RoundPoints {
   position: number | null;
   has_pole: boolean;
   has_fastest_lap: boolean;
+  total_penalties: number;
+}
+
+/**
+ * Team Round Points
+ */
+export interface TeamRoundPoints {
+  round_id: number;
+  round_number: number;
+  points: number;
+}
+
+/**
+ * Team Championship Standing
+ */
+export interface TeamChampionshipStanding {
+  team_id: number;
+  team_name: string;
+  total_points: number;
+  drop_total?: number;
+  position: number;
+  rounds: TeamRoundPoints[];
 }
 
 /**
@@ -378,6 +404,10 @@ export interface PublicSeasonDetailResponse {
   rounds: PublicRound[];
   standings: SeasonStandingDriver[] | SeasonStandingDivision[];
   has_divisions: boolean;
+  team_championship_enabled?: boolean;
+  team_championship_results?: TeamChampionshipStanding[];
+  teams_drop_rounds_enabled?: boolean;
+  drop_round_enabled?: boolean;
   qualifying_results?: PublicRaceResult[] | PublicRaceResultDivision[];
   fastest_lap_results?: PublicRaceResult[] | PublicRaceResultDivision[];
   race_time_results?: PublicRaceResult[] | PublicRaceResultDivision[];

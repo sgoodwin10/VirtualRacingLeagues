@@ -3,9 +3,15 @@ import { ref, computed } from 'vue';
 import { useAuthStore } from '@public/stores/authStore';
 import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/types/errors';
 import { usePasswordValidation } from '@public/composables/usePasswordValidation';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Message from 'primevue/message';
+import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
+import LandingNav from '@public/components/landing/LandingNav.vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
+import VrlInput from '@public/components/common/forms/VrlInput.vue';
+import VrlPasswordInput from '@public/components/common/forms/VrlPasswordInput.vue';
+import VrlAlert from '@public/components/common/alerts/VrlAlert.vue';
+import VrlFormGroup from '@public/components/common/forms/VrlFormGroup.vue';
+import VrlFormLabel from '@public/components/common/forms/VrlFormLabel.vue';
+import VrlFormError from '@public/components/common/forms/VrlFormError.vue';
 
 const authStore = useAuthStore();
 
@@ -148,173 +154,165 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
-      <div>
-        <h2 class="text-center text-3xl font-bold text-gray-900">Create your account</h2>
-      </div>
+  <div class="flex-1 bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden">
+    <!-- Background Effects -->
+    <BackgroundGrid />
 
-      <!-- Error Message -->
-      <Message v-if="errorMessage" severity="error" :closable="false">
-        {{ errorMessage }}
-      </Message>
+    <!-- Navigation -->
+    <LandingNav />
 
-      <!-- Registration Form -->
-      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
-        <div class="space-y-4">
-          <!-- First Name Field -->
-          <div>
-            <label for="first-name" class="block text-sm font-medium text-gray-700">
-              First Name
-            </label>
-            <InputText
-              id="first-name"
-              v-model="firstName"
-              type="text"
-              placeholder="John"
-              :class="{ 'p-invalid': firstNameError }"
-              class="mt-1 w-full"
-              :disabled="isSubmitting"
-              aria-label="First Name"
-              @input="firstNameError = ''"
-            />
-            <small v-if="firstNameError" class="text-red-600 mt-1 block text-sm">
-              {{ firstNameError }}
-            </small>
-          </div>
-
-          <!-- Last Name Field -->
-          <div>
-            <label for="last-name" class="block text-sm font-medium text-gray-700">
-              Last Name
-            </label>
-            <InputText
-              id="last-name"
-              v-model="lastName"
-              type="text"
-              placeholder="Doe"
-              :class="{ 'p-invalid': lastNameError }"
-              class="mt-1 w-full"
-              :disabled="isSubmitting"
-              aria-label="Last Name"
-              @input="lastNameError = ''"
-            />
-            <small v-if="lastNameError" class="text-red-600 mt-1 block text-sm">
-              {{ lastNameError }}
-            </small>
-          </div>
-
-          <!-- Email Field -->
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">
-              Email address
-            </label>
-            <InputText
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="john@example.com"
-              :class="{ 'p-invalid': emailError }"
-              class="mt-1 w-full"
-              :disabled="isSubmitting"
-              autocomplete="email"
-              aria-label="Email Address"
-              @input="emailError = ''"
-            />
-            <small v-if="emailError" class="text-red-600 mt-1 block text-sm">
-              {{ emailError }}
-            </small>
-          </div>
-
-          <!-- Password Field -->
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700"> Password </label>
-            <Password
-              id="password"
-              v-model="password"
-              placeholder="Enter your password"
-              :class="{ 'p-invalid': passwordError }"
-              :pt="{
-                root: { class: 'mt-1 w-full' },
-                input: { class: 'w-full' },
-              }"
-              :disabled="isSubmitting"
-              :toggle-mask="true"
-              autocomplete="new-password"
-              aria-label="Password"
-              @input="passwordError = ''"
-            />
-
-            <!-- Password Requirements -->
-            <div v-if="password && passwordErrors.length > 0" class="mt-2 space-y-1">
-              <p class="text-xs text-gray-600">Password must:</p>
-              <ul class="space-y-1">
-                <li
-                  v-for="error in passwordErrors"
-                  :key="error"
-                  class="text-xs text-red-600 flex items-start"
-                >
-                  <span class="mr-2">•</span>
-                  <span>{{ error }}</span>
-                </li>
-              </ul>
-            </div>
-
-            <!-- Success Check -->
-            <div v-if="password && isPasswordValid" class="mt-2 flex items-center">
-              <span class="text-xs text-green-600">✓ Password meets all requirements</span>
-            </div>
-
-            <small v-if="passwordError" class="text-red-600 mt-1 block text-sm">
-              {{ passwordError }}
-            </small>
-          </div>
-
-          <!-- Confirm Password Field -->
-          <div>
-            <label for="password-confirmation" class="block text-sm font-medium text-gray-700">
-              Confirm Password
-            </label>
-            <Password
-              id="password-confirmation"
-              v-model="passwordConfirmation"
-              placeholder="Confirm your password"
-              :pt="{
-                root: { class: 'mt-1 w-full' },
-                input: { class: 'w-full' },
-              }"
-              :disabled="isSubmitting"
-              :feedback="false"
-              :toggle-mask="true"
-              autocomplete="new-password"
-              aria-label="Confirm Password"
-              @input="passwordError = ''"
-            />
-          </div>
-        </div>
-
-        <!-- Submit Button -->
-        <button
-          type="submit"
-          :disabled="!isFormValid || isSubmitting"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          :aria-busy="isSubmitting"
+    <!-- Main Content -->
+    <main class="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md mx-auto">
+        <!-- Auth Card -->
+        <div
+          class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-[var(--radius-lg)] p-8"
         >
-          <span v-if="!isSubmitting">Create Account</span>
-          <span v-else>Creating Account...</span>
-        </button>
-      </form>
+          <!-- Header -->
+          <h1 class="text-display-h2 text-center mb-2">Create Account</h1>
+          <p class="text-body-secondary text-center mb-8">Join Virtual Racing Leagues today</p>
 
-      <!-- Login Link -->
-      <div class="text-center">
-        <p class="text-sm text-gray-600">
-          Already have an account?
-          <router-link to="/login" class="font-medium text-gray-900 hover:text-gray-700">
-            Sign in
-          </router-link>
-        </p>
+          <!-- Error Message -->
+          <VrlAlert
+            v-if="errorMessage"
+            type="error"
+            title="Error"
+            :message="errorMessage"
+            class="mb-6"
+          />
+
+          <!-- Registration Form -->
+          <form class="space-y-6" @submit.prevent="handleSubmit">
+            <!-- Name Fields (Side by Side on Desktop) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <VrlFormGroup>
+                <VrlFormLabel for="first-name" :required="true">First Name</VrlFormLabel>
+                <VrlInput
+                  id="first-name"
+                  v-model="firstName"
+                  type="text"
+                  placeholder="John"
+                  :error="firstNameError"
+                  :disabled="isSubmitting"
+                  @input="firstNameError = ''"
+                />
+                <VrlFormError v-if="firstNameError" :error="firstNameError" />
+              </VrlFormGroup>
+
+              <VrlFormGroup>
+                <VrlFormLabel for="last-name" :required="true">Last Name</VrlFormLabel>
+                <VrlInput
+                  id="last-name"
+                  v-model="lastName"
+                  type="text"
+                  placeholder="Doe"
+                  :error="lastNameError"
+                  :disabled="isSubmitting"
+                  @input="lastNameError = ''"
+                />
+                <VrlFormError v-if="lastNameError" :error="lastNameError" />
+              </VrlFormGroup>
+            </div>
+
+            <!-- Email Field -->
+            <VrlFormGroup>
+              <VrlFormLabel for="email" :required="true">Email Address</VrlFormLabel>
+              <VrlInput
+                id="email"
+                v-model="email"
+                type="email"
+                placeholder="john@example.com"
+                :error="emailError"
+                :disabled="isSubmitting"
+                autocomplete="email"
+                @input="emailError = ''"
+              />
+              <VrlFormError v-if="emailError" :error="emailError" />
+            </VrlFormGroup>
+
+            <!-- Password Field -->
+            <VrlFormGroup>
+              <VrlFormLabel for="password" :required="true">Password</VrlFormLabel>
+              <VrlPasswordInput
+                id="password"
+                v-model="password"
+                placeholder="Enter your password"
+                :error="passwordError"
+                :disabled="isSubmitting"
+                autocomplete="new-password"
+                @input="passwordError = ''"
+              />
+
+              <!-- Password Requirements -->
+              <div
+                v-if="password && passwordErrors.length > 0"
+                class="mt-3 p-3 bg-[var(--bg-card)] rounded-[var(--radius)] border border-[var(--border)]"
+              >
+                <p
+                  class="text-[0.75rem] text-[var(--text-secondary)] font-display tracking-wider uppercase mb-2"
+                >
+                  Password must:
+                </p>
+                <ul class="space-y-1">
+                  <li
+                    v-for="error in passwordErrors"
+                    :key="error"
+                    class="text-[0.8rem] text-[var(--red)] flex items-start gap-2"
+                  >
+                    <span class="text-[var(--red)]">•</span>
+                    <span>{{ error }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Success Check -->
+              <div v-if="password && isPasswordValid" class="mt-3 flex items-center gap-2">
+                <span class="text-[var(--green)]">✓</span>
+                <span class="text-[0.8rem] text-[var(--green)]"
+                  >Password meets all requirements</span
+                >
+              </div>
+
+              <VrlFormError v-if="passwordError" :error="passwordError" />
+            </VrlFormGroup>
+
+            <!-- Confirm Password Field -->
+            <VrlFormGroup>
+              <VrlFormLabel for="password-confirmation" :required="true"
+                >Confirm Password</VrlFormLabel
+              >
+              <VrlPasswordInput
+                id="password-confirmation"
+                v-model="passwordConfirmation"
+                placeholder="Confirm your password"
+                :disabled="isSubmitting"
+                autocomplete="new-password"
+                @input="passwordError = ''"
+              />
+            </VrlFormGroup>
+
+            <!-- Submit Button -->
+            <VrlButton
+              type="submit"
+              variant="primary"
+              size="lg"
+              :disabled="!isFormValid || isSubmitting"
+              :loading="isSubmitting"
+              class="w-full"
+            >
+              {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
+            </VrlButton>
+          </form>
+
+          <!-- Login Link -->
+          <p class="text-center text-body-secondary mt-6">
+            Already have an account?
+            <router-link to="/login" class="text-[var(--cyan)] hover:underline font-medium">
+              Sign in
+            </router-link>
+          </p>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 </template>

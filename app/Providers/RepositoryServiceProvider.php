@@ -11,9 +11,11 @@ use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\Repositories\RoundTiebreakerRuleRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
+use App\Domain\Contact\Repositories\ContactRepositoryInterface;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Notification\Repositories\NotificationLogRepositoryInterface;
 use App\Domain\Platform\Repositories\CarBrandRepositoryInterface;
 use App\Domain\Platform\Repositories\CarRepositoryInterface;
 use App\Domain\Platform\Repositories\PlatformRepositoryInterface;
@@ -24,9 +26,11 @@ use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentAdminRepository
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentCarBrandRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentCarRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetitionRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentContactRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDivisionRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentDriverRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentLeagueRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationLogRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentPlatformRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRaceRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRaceResultRepository;
@@ -141,6 +145,18 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             RoundTiebreakerRuleRepositoryInterface::class,
             EloquentRoundTiebreakerRuleRepository::class
+        );
+
+        // Bind Contact Repository
+        $this->app->bind(
+            ContactRepositoryInterface::class,
+            EloquentContactRepository::class
+        );
+
+        // Bind NotificationLog Repository
+        $this->app->bind(
+            NotificationLogRepositoryInterface::class,
+            EloquentNotificationLogRepository::class
         );
 
         // Bind Admin Read Model Service (singleton for better performance)

@@ -75,6 +75,10 @@ final class PublicSeasonDetailData extends Data
      * @param array<int, mixed> $qualifying_results Results from qualifying sessions (is_qualifier = true)
      * @param array<int, mixed> $fastest_lap_results Results sorted by fastest lap times
      * @param array<int, mixed> $race_time_results Results sorted by race times
+     * @param bool $drop_round_enabled Whether drop rounds are enabled for driver standings
+     * @param bool $team_championship_enabled Whether team championship is enabled
+     * @param array<int, mixed> $team_championship_results Team championship standings
+     * @param bool $teams_drop_rounds_enabled Whether drop rounds are enabled for team standings
      */
     public function __construct(
         public readonly array $league,
@@ -86,6 +90,10 @@ final class PublicSeasonDetailData extends Data
         public readonly array $qualifying_results,
         public readonly array $fastest_lap_results,
         public readonly array $race_time_results,
+        public readonly bool $drop_round_enabled = false,
+        public readonly bool $team_championship_enabled = false,
+        public readonly array $team_championship_results = [],
+        public readonly bool $teams_drop_rounds_enabled = false,
     ) {
     }
 }

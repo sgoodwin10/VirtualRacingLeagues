@@ -61,6 +61,30 @@ const router = createRouter({
         isAuthRoute: true,
       },
     },
+    {
+      path: '/leagues',
+      name: 'leagues',
+      component: () => import('@public/views/leagues/LeaguesView.vue'),
+      meta: {
+        title: 'Leagues',
+      },
+    },
+    {
+      path: '/leagues/:leagueSlug',
+      name: 'league-detail',
+      component: () => import('@public/views/leagues/LeagueDetailView.vue'),
+      meta: {
+        title: 'League',
+      },
+    },
+    {
+      path: '/leagues/:leagueSlug/:competitionSlug/:seasonSlug',
+      name: 'season-detail',
+      component: () => import('@public/views/leagues/SeasonDetailView.vue'),
+      meta: {
+        title: 'Season Standings',
+      },
+    },
     // 404 catch-all route (must be last)
     {
       path: '/:pathMatch(.*)*',

@@ -20,14 +20,17 @@ class PasswordResetNotification extends BaseResetPassword
     {
         $baseUrl = config('app.url');
         $resetUrl = $baseUrl . '/reset-password?token=' . $this->token . '&email=' . urlencode($notifiable->email);
-
         $expireMinutes = config('auth.passwords.users.expire', 60);
+        $appName = config('app.name');
 
         return (new MailMessage())
-            ->subject('Reset Password Notification')
-            ->line('You are receiving this email because we received a password reset request for your account.')
+            ->subject("Reset Your {$appName} Password")
+            ->greeting('Password Reset Request')
+            ->line('We received a request to reset the password for your account.')
+            ->line('Click the button below to choose a new password:')
             ->action('Reset Password', $resetUrl)
-            ->line("This password reset link will expire in {$expireMinutes} minutes.")
-            ->line('If you did not request a password reset, no further action is required.');
+            ->line("This link will expire in {$expireMinutes} minutes for security reasons.")
+            ->line("If you didn't request this reset, no action is needed - your password will remain unchanged.")
+            ->salutation("Stay safe!\n\nThe {$appName} Team");
     }
 }

@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\ContactController as AdminContactController;
+use App\Http\Controllers\Admin\NotificationLogController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UserImpersonationController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Public\PublicDriverController;
 use App\Http\Controllers\Public\PublicLeagueController;
 use App\Http\Controllers\Public\PublicPlatformController;
@@ -110,6 +113,11 @@ Route::domain($appDomain)->middleware('web')->group(function () {
 
             // Profile
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+            // Contact form (authenticated)
+            Route::post('/contact', [ContactController::class, 'store'])
+                ->middleware('throttle:5,1')
+                ->name('contact.store');
 
             // Site Configuration (read-only)
             Route::get('/site-config', [UserSiteConfigController::class, 'show'])->name('site-config.show');
@@ -365,6 +373,11 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
         Route::post('/login', [LoginController::class, 'login'])->name('login');
         Route::post('/forgot-password', [PasswordResetController::class, 'requestReset'])->name('password.request');
         Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.reset');
+
+        // Contact form (public - no auth required)
+        Route::post('/contact', [ContactController::class, 'store'])
+            ->middleware('throttle:5,1')
+            ->name('contact.store');
 
         // Public data endpoints (no authentication required)
         Route::prefix('public')->name('public.')->middleware('throttle:60,1')->group(function () {

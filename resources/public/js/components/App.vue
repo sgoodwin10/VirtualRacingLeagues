@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="min-h-screen flex flex-col">
-    <PublicHeader />
-    <main class="flex-1">
+    <LandingNav />
+    <main class="flex-1 flex flex-col">
       <router-view />
     </main>
     <PublicFooter />
@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import PublicHeader from '@public/components/layout/PublicHeader.vue';
+import LandingNav from '@public/components/landing/LandingNav.vue';
 import PublicFooter from '@public/components/layout/PublicFooter.vue';
 import Toast from 'primevue/toast';
 import { useAuthStore } from '@public/stores/authStore';

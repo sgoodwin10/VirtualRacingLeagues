@@ -2,10 +2,16 @@
 import { ref, computed } from 'vue';
 import { useAuthStore } from '@public/stores/authStore';
 import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/types/errors';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Checkbox from 'primevue/checkbox';
-import Message from 'primevue/message';
+import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
+import LandingNav from '@public/components/landing/LandingNav.vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
+import VrlInput from '@public/components/common/forms/VrlInput.vue';
+import VrlPasswordInput from '@public/components/common/forms/VrlPasswordInput.vue';
+import VrlCheckbox from '@public/components/common/forms/VrlCheckbox.vue';
+import VrlAlert from '@public/components/common/alerts/VrlAlert.vue';
+import VrlFormGroup from '@public/components/common/forms/VrlFormGroup.vue';
+import VrlFormLabel from '@public/components/common/forms/VrlFormLabel.vue';
+import VrlFormError from '@public/components/common/forms/VrlFormError.vue';
 
 const authStore = useAuthStore();
 
@@ -93,110 +99,99 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
-      <div>
-        <h2 class="text-center text-3xl font-bold text-gray-900">Sign in to your account</h2>
-      </div>
+  <div class="flex-1 bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden">
+    <!-- Background Effects -->
+    <BackgroundGrid />
 
-      <!-- Error Message -->
-      <Message v-if="errorMessage" severity="error" :closable="false">
-        {{ errorMessage }}
-      </Message>
+    <!-- Navigation -->
+    <LandingNav />
 
-      <!-- Login Form -->
-      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
-        <div class="space-y-4">
-          <!-- Email Field -->
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">
-              Email address
-            </label>
-            <InputText
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="john@example.com"
-              :class="{ 'p-invalid': emailError }"
-              class="mt-1 w-full"
-              :disabled="isSubmitting"
-              autocomplete="email"
-              aria-label="Email Address"
-              @input="emailError = ''"
-            />
-            <small v-if="emailError" class="text-red-600 mt-1 block text-sm">
-              {{ emailError }}
-            </small>
-          </div>
-
-          <!-- Password Field -->
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700"> Password </label>
-            <Password
-              id="password"
-              v-model="password"
-              placeholder="Enter your password"
-              :class="{ 'p-invalid': passwordError }"
-              :pt="{
-                root: { class: 'mt-1 w-full' },
-                input: { class: 'w-full' },
-              }"
-              :disabled="isSubmitting"
-              :feedback="false"
-              :toggle-mask="true"
-              autocomplete="current-password"
-              aria-label="Password"
-              @input="passwordError = ''"
-            />
-            <small v-if="passwordError" class="text-red-600 mt-1 block text-sm">
-              {{ passwordError }}
-            </small>
-          </div>
-        </div>
-
-        <!-- Remember Me & Forgot Password -->
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <Checkbox
-              v-model="remember"
-              input-id="remember"
-              :binary="true"
-              :disabled="isSubmitting"
-              aria-label="Remember me"
-            />
-            <label for="remember" class="ml-2 text-sm text-gray-900 cursor-pointer">
-              Remember me
-            </label>
-          </div>
-          <div class="text-sm">
-            <router-link to="/forgot-password" class="text-gray-600 hover:text-gray-900">
-              Forgot password?
-            </router-link>
-          </div>
-        </div>
-
-        <!-- Submit Button -->
-        <button
-          type="submit"
-          :disabled="!isFormValid || isSubmitting"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          :aria-busy="isSubmitting"
+    <!-- Main Content -->
+    <main class="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md mx-auto">
+        <!-- Auth Card -->
+        <div
+          class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-[var(--radius-lg)] p-8"
         >
-          <span v-if="!isSubmitting">Sign In</span>
-          <span v-else>Signing In...</span>
-        </button>
-      </form>
+          <!-- Header -->
+          <h1 class="text-display-h2 text-center mb-2">Sign In</h1>
+          <p class="text-body-secondary text-center mb-8">Welcome back to Virtual Racing Leagues</p>
 
-      <!-- Register Link -->
-      <div class="text-center">
-        <p class="text-sm text-gray-600">
-          Don't have an account?
-          <router-link to="/register" class="font-medium text-gray-900 hover:text-gray-700">
-            Sign up
-          </router-link>
-        </p>
+          <!-- Error Message -->
+          <VrlAlert
+            v-if="errorMessage"
+            type="error"
+            title="Error"
+            :message="errorMessage"
+            class="mb-6"
+          />
+
+          <!-- Login Form -->
+          <form class="space-y-6" @submit.prevent="handleSubmit">
+            <!-- Email Field -->
+            <VrlFormGroup>
+              <VrlFormLabel for="email" :required="true">Email Address</VrlFormLabel>
+              <VrlInput
+                id="email"
+                v-model="email"
+                type="email"
+                placeholder="john@example.com"
+                :error="emailError"
+                :disabled="isSubmitting"
+                autocomplete="email"
+                @input="emailError = ''"
+              />
+              <VrlFormError v-if="emailError" :error="emailError" />
+            </VrlFormGroup>
+
+            <!-- Password Field -->
+            <VrlFormGroup>
+              <VrlFormLabel for="password" :required="true">Password</VrlFormLabel>
+              <VrlPasswordInput
+                id="password"
+                v-model="password"
+                placeholder="Enter your password"
+                :error="passwordError"
+                :disabled="isSubmitting"
+                autocomplete="current-password"
+                @input="passwordError = ''"
+              />
+              <VrlFormError v-if="passwordError" :error="passwordError" />
+            </VrlFormGroup>
+
+            <!-- Remember Me & Forgot Password -->
+            <div class="flex items-center justify-between mb-6">
+              <VrlCheckbox v-model="remember" label="Remember me" :disabled="isSubmitting" />
+              <router-link
+                to="/forgot-password"
+                class="text-[0.85rem] text-[var(--text-secondary)] hover:text-[var(--cyan)] transition-colors"
+              >
+                Forgot password?
+              </router-link>
+            </div>
+
+            <!-- Submit Button -->
+            <VrlButton
+              type="submit"
+              variant="primary"
+              size="lg"
+              :disabled="!isFormValid || isSubmitting"
+              :loading="isSubmitting"
+              class="w-full"
+            >
+              {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
+            </VrlButton>
+          </form>
+
+          <!-- Register Link -->
+          <p class="text-center text-body-secondary mt-6">
+            Don't have an account?
+            <router-link to="/register" class="text-[var(--cyan)] hover:underline font-medium">
+              Sign up
+            </router-link>
+          </p>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 </template>

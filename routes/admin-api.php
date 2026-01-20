@@ -17,7 +17,9 @@ use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminLeagueController;
 use App\Http\Controllers\Admin\AdminPlatformCarController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\DriverController;
+use App\Http\Controllers\Admin\NotificationLogController;
 use App\Http\Controllers\Admin\SiteConfigController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\AdminOrSuperAdminOnly;
@@ -132,5 +134,20 @@ Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(
     // Platform Cars Import (Admin - GT7 car import from KudosPrime)
     Route::prefix('platform-cars')->name('platform-cars.')->group(function () {
         Route::post('/import', [AdminPlatformCarController::class, 'import'])->name('import');
+    });
+
+    // Contact Management (Admin)
+    Route::prefix('contacts')->name('contacts.')->group(function () {
+        Route::get('/', [ContactController::class, 'index'])->name('index');
+        Route::get('/{id}', [ContactController::class, 'show'])->name('show');
+        Route::patch('/{id}/read', [ContactController::class, 'markRead'])->name('mark-read');
+        Route::patch('/{id}/responded', [ContactController::class, 'markResponded'])->name('mark-responded');
+        Route::patch('/{id}/archive', [ContactController::class, 'archive'])->name('archive');
+    });
+
+    // Notification Logs (Admin)
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationLogController::class, 'index'])->name('index');
+        Route::get('/{id}', [NotificationLogController::class, 'show'])->name('show');
     });
 });

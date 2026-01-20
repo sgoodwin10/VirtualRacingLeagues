@@ -6,6 +6,7 @@ import IconRail from './IconRail.vue';
 import Sidebar from './Sidebar.vue';
 import HeaderBar from './HeaderBar.vue';
 import ProfileSettingsModal from '@app/components/profile/ProfileSettingsModal.vue';
+import ContactFloatingButton from '@app/components/contact/ContactFloatingButton.vue';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 
@@ -37,6 +38,7 @@ const showProfile = computed({
     <Toast />
     <ConfirmDialog />
     <ProfileSettingsModal v-model:visible="showProfile" />
+    <ContactFloatingButton />
   </div>
 </template>
 

@@ -1397,7 +1397,9 @@ final class LeagueApplicationService
         }
 
         // CRITICAL: Verify season belongs to the specified league
-        // @phpstan-ignore-next-line (relationships are eager-loaded with ->with() so they won't be null, but PHPStan doesn't know this)
+        // Relationships are eager-loaded with ->with() so they won't be null,
+        // but PHPStan doesn't know this
+        /** @phpstan-ignore-next-line identical.alwaysFalse */
         if ($eloquentSeason->competition === null || $eloquentSeason->competition->league === null) {
             return null;
         }
@@ -1559,6 +1561,10 @@ final class LeagueApplicationService
             qualifying_results: $qualifyingResults,
             fastest_lap_results: $fastestLapResults,
             race_time_results: $raceTimeResults,
+            drop_round_enabled: $standingsData['drop_round_enabled'],
+            team_championship_enabled: $standingsData['team_championship_enabled'],
+            team_championship_results: $standingsData['team_championship_results'],
+            teams_drop_rounds_enabled: $standingsData['teams_drop_rounds_enabled'],
         );
     }
 

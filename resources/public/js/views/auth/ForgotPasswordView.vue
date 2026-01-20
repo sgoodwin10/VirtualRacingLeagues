@@ -2,8 +2,14 @@
 import { ref, computed } from 'vue';
 import { authService } from '@public/services/authService';
 import { useToast } from 'primevue/usetoast';
-import InputText from 'primevue/inputtext';
-import Message from 'primevue/message';
+import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
+import LandingNav from '@public/components/landing/LandingNav.vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
+import VrlInput from '@public/components/common/forms/VrlInput.vue';
+import VrlAlert from '@public/components/common/alerts/VrlAlert.vue';
+import VrlFormGroup from '@public/components/common/forms/VrlFormGroup.vue';
+import VrlFormLabel from '@public/components/common/forms/VrlFormLabel.vue';
+import VrlFormError from '@public/components/common/forms/VrlFormError.vue';
 
 const toast = useToast();
 
@@ -58,65 +64,87 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
-      <div>
-        <h2 class="text-center text-3xl font-bold text-gray-900">Forgot your password?</h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          Enter your email address and we'll send you a link to reset your password.
-        </p>
-      </div>
+  <div class="flex-1 bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden">
+    <!-- Background Effects -->
+    <BackgroundGrid />
 
-      <!-- Success Message -->
-      <Message v-if="emailSent" severity="success" :closable="false">
-        Password reset link has been sent to your email. Please check your inbox.
-      </Message>
+    <!-- Navigation -->
+    <LandingNav />
 
-      <!-- Error Message -->
-      <Message v-if="errorMessage" severity="error" :closable="false">
-        {{ errorMessage }}
-      </Message>
-
-      <!-- Form -->
-      <form v-if="!emailSent" class="mt-8 space-y-6" @submit.prevent="handleSubmit">
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700"> Email address </label>
-          <InputText
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="john@example.com"
-            :class="{ 'p-invalid': emailError }"
-            class="mt-1 w-full"
-            :disabled="isSubmitting"
-            autocomplete="email"
-            aria-label="Email Address"
-            @input="emailError = ''"
-          />
-          <small v-if="emailError" class="text-red-600 mt-1 block text-sm">
-            {{ emailError }}
-          </small>
-        </div>
-
-        <!-- Submit Button -->
-        <button
-          type="submit"
-          :disabled="!isFormValid || isSubmitting"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          :aria-busy="isSubmitting"
+    <!-- Main Content -->
+    <main class="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md mx-auto">
+        <!-- Auth Card -->
+        <div
+          class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-[var(--radius-lg)] p-8"
         >
-          <span v-if="!isSubmitting">Send Reset Link</span>
-          <span v-else>Sending...</span>
-        </button>
-      </form>
+          <!-- Header -->
+          <h1 class="text-display-h2 text-center mb-2">Forgot Password?</h1>
+          <p class="text-body-secondary text-center mb-8">
+            Enter your email address and we'll send you a link to reset your password.
+          </p>
 
-      <!-- Back to Login -->
-      <div class="text-center">
-        <router-link to="/login" class="text-sm text-gray-600 hover:text-gray-900">
-          Back to login
-        </router-link>
+          <!-- Success State -->
+          <VrlAlert
+            v-if="emailSent"
+            type="success"
+            title="Email Sent"
+            message="Password reset link has been sent to your email. Please check your inbox."
+            class="mb-6"
+          />
+
+          <!-- Error Message -->
+          <VrlAlert
+            v-if="errorMessage"
+            type="error"
+            title="Error"
+            :message="errorMessage"
+            class="mb-6"
+          />
+
+          <!-- Form -->
+          <form v-if="!emailSent" class="space-y-6" @submit.prevent="handleSubmit">
+            <!-- Email Field -->
+            <VrlFormGroup>
+              <VrlFormLabel for="email" :required="true">Email Address</VrlFormLabel>
+              <VrlInput
+                id="email"
+                v-model="email"
+                type="email"
+                placeholder="john@example.com"
+                :error="emailError"
+                :disabled="isSubmitting"
+                autocomplete="email"
+                @input="emailError = ''"
+              />
+              <VrlFormError v-if="emailError" :error="emailError" />
+            </VrlFormGroup>
+
+            <!-- Submit Button -->
+            <VrlButton
+              type="submit"
+              variant="primary"
+              size="lg"
+              :disabled="!isFormValid || isSubmitting"
+              :loading="isSubmitting"
+              class="w-full"
+            >
+              {{ isSubmitting ? 'Sending...' : 'Send Reset Link' }}
+            </VrlButton>
+          </form>
+
+          <!-- Back to Login Link -->
+          <div class="text-center mt-6">
+            <router-link
+              to="/login"
+              class="text-[var(--text-secondary)] hover:text-[var(--cyan)] transition-colors inline-flex items-center gap-2"
+            >
+              <span>←</span>
+              <span>Back to login</span>
+            </router-link>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 </template>

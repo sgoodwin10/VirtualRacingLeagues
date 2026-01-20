@@ -4,8 +4,14 @@ import { useRoute, useRouter } from 'vue-router';
 import { authService } from '@public/services/authService';
 import { useToast } from 'primevue/usetoast';
 import { usePasswordValidation } from '@public/composables/usePasswordValidation';
-import Password from 'primevue/password';
-import Message from 'primevue/message';
+import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
+import LandingNav from '@public/components/landing/LandingNav.vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
+import VrlPasswordInput from '@public/components/common/forms/VrlPasswordInput.vue';
+import VrlAlert from '@public/components/common/alerts/VrlAlert.vue';
+import VrlFormGroup from '@public/components/common/forms/VrlFormGroup.vue';
+import VrlFormLabel from '@public/components/common/forms/VrlFormLabel.vue';
+import VrlFormError from '@public/components/common/forms/VrlFormError.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -95,109 +101,130 @@ const handleSubmit = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
-      <div>
-        <h2 class="text-center text-3xl font-bold text-gray-900">Reset your password</h2>
-        <p class="mt-2 text-center text-sm text-gray-600">Enter your new password below.</p>
-      </div>
+  <div class="flex-1 bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden">
+    <!-- Background Effects -->
+    <BackgroundGrid />
 
-      <!-- Error Message -->
-      <Message v-if="errorMessage" severity="error" :closable="false">
-        {{ errorMessage }}
-      </Message>
+    <!-- Navigation -->
+    <LandingNav />
 
-      <!-- Form -->
-      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
-        <div class="space-y-4">
-          <!-- Password Field -->
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">
-              New Password
-            </label>
-            <Password
-              id="password"
-              v-model="password"
-              placeholder="Enter your new password"
-              :class="{ 'p-invalid': passwordError }"
-              :pt="{
-                root: { class: 'mt-1 w-full' },
-                input: { class: 'w-full' },
-              }"
-              :disabled="isSubmitting"
-              :toggle-mask="true"
-              autocomplete="new-password"
-              aria-label="New Password"
-              @input="passwordError = ''"
-            />
+    <!-- Main Content -->
+    <main class="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md mx-auto">
+        <!-- Auth Card -->
+        <div
+          class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-[var(--radius-lg)] p-8"
+        >
+          <!-- Header -->
+          <h1 class="text-display-h2 text-center mb-2">Reset Password</h1>
+          <p class="text-body-secondary text-center mb-8">Enter your new password below.</p>
 
-            <!-- Password Requirements -->
-            <div v-if="password && passwordErrors.length > 0" class="mt-2 space-y-1">
-              <p class="text-xs text-gray-600">Password must:</p>
-              <ul class="space-y-1">
-                <li
-                  v-for="error in passwordErrors"
-                  :key="error"
-                  class="text-xs text-red-600 flex items-start"
+          <!-- Invalid Link Error -->
+          <VrlAlert
+            v-if="!email || !token"
+            type="error"
+            title="Invalid Reset Link"
+            message="This reset link is invalid or has expired. Please request a new password reset."
+            class="mb-6"
+          />
+
+          <!-- Error Message -->
+          <VrlAlert
+            v-if="errorMessage"
+            type="error"
+            title="Error"
+            :message="errorMessage"
+            class="mb-6"
+          />
+
+          <!-- Form -->
+          <form class="space-y-6" @submit.prevent="handleSubmit">
+            <!-- Password Field -->
+            <VrlFormGroup>
+              <VrlFormLabel for="password" :required="true">New Password</VrlFormLabel>
+              <VrlPasswordInput
+                id="password"
+                v-model="password"
+                placeholder="Enter your new password"
+                :error="passwordError"
+                :disabled="isSubmitting"
+                autocomplete="new-password"
+                @input="passwordError = ''"
+              />
+
+              <!-- Password Requirements -->
+              <div
+                v-if="password && passwordErrors.length > 0"
+                class="mt-3 p-3 bg-[var(--bg-card)] rounded-[var(--radius)] border border-[var(--border)]"
+              >
+                <p
+                  class="text-[0.75rem] text-[var(--text-secondary)] font-display tracking-wider uppercase mb-2"
                 >
-                  <span class="mr-2">•</span>
-                  <span>{{ error }}</span>
-                </li>
-              </ul>
-            </div>
+                  Password must:
+                </p>
+                <ul class="space-y-1">
+                  <li
+                    v-for="error in passwordErrors"
+                    :key="error"
+                    class="text-[0.8rem] text-[var(--red)] flex items-start gap-2"
+                  >
+                    <span class="text-[var(--red)]">•</span>
+                    <span>{{ error }}</span>
+                  </li>
+                </ul>
+              </div>
 
-            <!-- Success Check -->
-            <div v-if="password && isPasswordValid" class="mt-2 flex items-center">
-              <span class="text-xs text-green-600">✓ Password meets all requirements</span>
-            </div>
+              <!-- Success Check -->
+              <div v-if="password && isPasswordValid" class="mt-3 flex items-center gap-2">
+                <span class="text-[var(--green)]">✓</span>
+                <span class="text-[0.8rem] text-[var(--green)]"
+                  >Password meets all requirements</span
+                >
+              </div>
 
-            <small v-if="passwordError" class="text-red-600 mt-1 block text-sm">
-              {{ passwordError }}
-            </small>
-          </div>
+              <VrlFormError v-if="passwordError" :error="passwordError" />
+            </VrlFormGroup>
 
-          <!-- Confirm Password Field -->
-          <div>
-            <label for="password-confirmation" class="block text-sm font-medium text-gray-700">
-              Confirm New Password
-            </label>
-            <Password
-              id="password-confirmation"
-              v-model="passwordConfirmation"
-              placeholder="Confirm your new password"
-              :pt="{
-                root: { class: 'mt-1 w-full' },
-                input: { class: 'w-full' },
-              }"
-              :disabled="isSubmitting"
-              :feedback="false"
-              :toggle-mask="true"
-              autocomplete="new-password"
-              aria-label="Confirm Password"
-              @input="passwordError = ''"
-            />
+            <!-- Confirm Password Field -->
+            <VrlFormGroup>
+              <VrlFormLabel for="password-confirmation" :required="true"
+                >Confirm New Password</VrlFormLabel
+              >
+              <VrlPasswordInput
+                id="password-confirmation"
+                v-model="passwordConfirmation"
+                placeholder="Confirm your new password"
+                :disabled="isSubmitting"
+                autocomplete="new-password"
+                @input="passwordError = ''"
+              />
+            </VrlFormGroup>
+
+            <!-- Submit Button -->
+            <VrlButton
+              type="submit"
+              variant="primary"
+              size="lg"
+              :disabled="!isFormValid || isSubmitting"
+              :loading="isSubmitting"
+              class="w-full"
+            >
+              {{ isSubmitting ? 'Resetting...' : 'Reset Password' }}
+            </VrlButton>
+          </form>
+
+          <!-- Back to Login Link -->
+          <div class="text-center mt-6">
+            <router-link
+              to="/login"
+              class="text-[var(--text-secondary)] hover:text-[var(--cyan)] transition-colors inline-flex items-center gap-2"
+            >
+              <span>←</span>
+              <span>Back to login</span>
+            </router-link>
           </div>
         </div>
-
-        <!-- Submit Button -->
-        <button
-          type="submit"
-          :disabled="!isFormValid || isSubmitting"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          :aria-busy="isSubmitting"
-        >
-          <span v-if="!isSubmitting">Reset Password</span>
-          <span v-else>Resetting...</span>
-        </button>
-      </form>
-
-      <!-- Back to Login -->
-      <div class="text-center">
-        <router-link to="/login" class="text-sm text-gray-600 hover:text-gray-900">
-          Back to login
-        </router-link>
       </div>
-    </div>
+    </main>
   </div>
 </template>

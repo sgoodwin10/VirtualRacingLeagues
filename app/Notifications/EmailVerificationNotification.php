@@ -24,12 +24,17 @@ class EmailVerificationNotification extends BaseVerifyEmail
     public function toMail(mixed $notifiable): MailMessage
     {
         $verificationUrl = $this->verificationUrl($notifiable);
+        $appName = config('app.name');
 
         return (new MailMessage())
-            ->subject('Verify Your Email Address')
-            ->line('Please click the button below to verify your email address.')
+            ->subject("Welcome to {$appName} - Verify Your Email")
+            ->greeting('Welcome!')
+            ->line("Thanks for signing up to {$appName}! We're excited to have you on board.")
+            ->line('Please click the button below to verify your email address and get started.')
             ->action('Verify Email Address', $verificationUrl)
-            ->line('If you did not create an account, no further action is required.');
+            ->line('This verification link will expire in 60 minutes.')
+            ->line('If you did not create an account, you can safely ignore this email.')
+            ->salutation("See you on the track!\n\nThe {$appName} Team");
     }
 
     /**
