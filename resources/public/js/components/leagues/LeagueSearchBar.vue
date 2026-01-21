@@ -74,6 +74,7 @@ const handleSearchInput = (event: Event) => {
  * Handle platform filter changes
  */
 const handlePlatformChange = (event: Event) => {
+  // eslint-disable-next-line no-undef
   const target = event.target as HTMLSelectElement;
   const value = target.value === 'null' || target.value === '' ? null : Number(target.value);
   emit('update:platform', value);
@@ -83,6 +84,7 @@ const handlePlatformChange = (event: Event) => {
  * Handle sort option changes
  */
 const handleSortChange = (event: Event) => {
+  // eslint-disable-next-line no-undef
   const target = event.target as HTMLSelectElement;
   emit('update:sortBy', target.value as 'popular' | 'recent' | 'name');
 };

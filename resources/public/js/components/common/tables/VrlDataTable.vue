@@ -174,6 +174,9 @@ const tableClasses = computed(() => {
   }
 
   if (props.hoverable) {
+    classes.push('[&_tbody_tr_td]:bg-transparent');
+    classes.push('[&_tbody_tr_td]:transition-colors');
+    classes.push('[&_tbody_tr_td]:duration-150');
     classes.push('[&_tbody_tr:hover_td]:bg-[var(--bg-elevated)]');
   }
 
@@ -209,13 +212,34 @@ function onFilter(event: DataTableFilterEvent): void {
  * Handle page change from custom pagination
  */
 function handlePageChange(page: number): void {
-  const event: DataTablePageEvent = {
+  const pageCount = Math.ceil((props.totalRecords ?? props.value.length) / props.rows);
+  const event = {
     page,
     rows: props.rows,
     first: page * props.rows,
-    pageCount: Math.ceil((props.totalRecords ?? props.value.length) / props.rows),
-  };
+    pageCount,
+    sortField: undefined,
+    sortOrder: undefined,
+    multiSortMeta: undefined,
+    filters: {},
+    filterMatchModes: undefined,
+    originalEvent: new Event('page'),
+  } as DataTablePageEvent;
   onPage(event);
+}
+
+/**
+ * Wrapper for prev page callback
+ */
+function handlePrevPage(callback: (event: Event) => void): void {
+  callback(new Event('prev'));
+}
+
+/**
+ * Wrapper for next page callback
+ */
+function handleNextPage(callback: (event: Event) => void): void {
+  callback(new Event('next'));
 }
 </script>
 
@@ -229,7 +253,7 @@ function handlePageChange(page: number): void {
     :total-records="totalRecords"
     :first="first"
     :lazy="lazy"
-    :row-hover="hoverable"
+    :row-hover="false"
     :responsive-layout="responsiveLayout"
     :row-class="podiumHighlight ? getRowClass : undefined"
     :striped-rows="striped"
@@ -287,8 +311,8 @@ function handlePageChange(page: number): void {
         :last="paginatorLast ?? 0"
         :entity-name="entityName"
         @page-change="handlePageChange"
-        @prev="prevPageCallback"
-        @next="nextPageCallback"
+        @prev="() => handlePrevPage(prevPageCallback)"
+        @next="() => handleNextPage(nextPageCallback)"
       />
     </template>
 
@@ -300,9 +324,49 @@ function handlePageChange(page: number): void {
 </template>
 
 <style scoped>
-/* Component-specific overrides */
-.vrl-datatable {
-  /* Ensure consistent styling */
+/* Override PrimeVue DataTable default backgrounds */
+:deep(.p-datatable) {
   --p-datatable-row-background: transparent;
+  --p-datatable-body-row-background: transparent;
+}
+
+:deep(.p-datatable-tbody > tr) {
+  background: transparent !important;
+  transition: background-color 0.15s ease;
+}
+
+:deep(.p-datatable-tbody > tr > td) {
+  background: transparent;
+}
+
+/* Row hover effect */
+:deep(.p-datatable-tbody > tr:hover) {
+  background-color: var(--bg-elevated) !important;
+}
+
+/* Podium row background colors */
+:deep(.p-datatable-tbody > tr.podium-1) {
+  background-color: rgba(210, 153, 34, 0.08) !important;
+}
+
+:deep(.p-datatable-tbody > tr.podium-2) {
+  background-color: rgba(110, 118, 129, 0.08) !important;
+}
+
+:deep(.p-datatable-tbody > tr.podium-3) {
+  background-color: rgba(240, 136, 62, 0.08) !important;
+}
+
+/* Podium rows hover - slightly brighter */
+:deep(.p-datatable-tbody > tr.podium-1:hover) {
+  background-color: rgba(210, 153, 34, 0.15) !important;
+}
+
+:deep(.p-datatable-tbody > tr.podium-2:hover) {
+  background-color: rgba(110, 118, 129, 0.15) !important;
+}
+
+:deep(.p-datatable-tbody > tr.podium-3:hover) {
+  background-color: rgba(240, 136, 62, 0.15) !important;
 }
 </style>

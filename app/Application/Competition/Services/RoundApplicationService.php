@@ -2222,6 +2222,83 @@ final class RoundApplicationService
     }
 
     /**
+     * Recalculate results for all completed rounds in a season.
+     * This re-runs the calculation logic for each completed round.
+     *
+     * @throws UnauthorizedException
+     * @return array{recalculated_count: int, round_ids: array<int>}
+     */
+    public function recalculateAllCompletedRounds(int $seasonId, int $userId): array
+    {
+        // Authorize - only league owner can recalculate
+        $this->authorizeLeagueOwner($seasonId, $userId);
+
+        Log::info('Recalculating all completed rounds', [
+            'season_id' => $seasonId,
+            'user_id' => $userId,
+        ]);
+
+        // Get all rounds for the season
+        $rounds = $this->roundRepository->findBySeasonId($seasonId);
+
+        // Filter to only completed rounds
+        $completedRounds = array_filter(
+            $rounds,
+            fn(Round $round) => $round->status() === RoundStatus::COMPLETED
+        );
+
+        // Fetch season to check divisions
+        $season = $this->seasonRepository->findById($seasonId);
+        $hasDivisions = $season->raceDivisionsEnabled();
+
+        $recalculatedRoundIds = [];
+
+        foreach ($completedRounds as $round) {
+            $roundId = $round->id();
+            if ($roundId === null) {
+                continue;
+            }
+
+            DB::transaction(function () use ($round, $roundId, $hasDivisions) {
+                Log::info('Recalculating round', ['round_id' => $roundId]);
+
+                // Get all races sorted by race_number
+                $races = $this->raceRepository->findAllByRoundId($roundId);
+
+                // Cascade completion to all races (recalculates race points)
+                $this->cascadeRaceCompletion($races, $roundId);
+
+                // Calculate and store round results
+                $this->calculateAndStoreRoundResults($round, $races, $hasDivisions, null);
+
+                // Calculate and store team championship results
+                $this->calculateTeamChampionshipResults($round);
+
+                // Save round (results are stored)
+                $this->roundRepository->save($round);
+
+                Log::info('Round recalculated successfully', ['round_id' => $roundId]);
+            });
+
+            // Invalidate cache after successful transaction
+            $this->roundResultsCache->forget($roundId);
+
+            $recalculatedRoundIds[] = $roundId;
+        }
+
+        Log::info('All completed rounds recalculated', [
+            'season_id' => $seasonId,
+            'recalculated_count' => count($recalculatedRoundIds),
+            'round_ids' => $recalculatedRoundIds,
+        ]);
+
+        return [
+            'recalculated_count' => count($recalculatedRoundIds),
+            'round_ids' => $recalculatedRoundIds,
+        ];
+    }
+
+    /**
      * Dispatch all recorded domain events.
      */
     private function dispatchEvents(Round $round): void

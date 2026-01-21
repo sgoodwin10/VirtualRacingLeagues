@@ -86,8 +86,10 @@ async function handleComplete(): Promise<void> {
     message: 'Mark this season as completed? This indicates the season has finished.',
     header: 'Complete Season',
     icon: 'pi pi-flag-fill',
-    acceptLabel: 'Complete',
     rejectLabel: 'Cancel',
+    rejectClass: 'p-button-secondary p-button-outlined',
+    acceptLabel: 'Complete',
+    acceptClass: 'p-button-success',
     accept: async () => {
       isCompleting.value = true;
 
@@ -123,8 +125,10 @@ async function handleReactivate(): Promise<void> {
     message: 'Reactivate this season? It will become active again.',
     header: 'Reactivate Season',
     icon: 'pi pi-refresh',
-    acceptLabel: 'Reactivate',
     rejectLabel: 'Cancel',
+    rejectClass: 'p-button-secondary p-button-outlined',
+    acceptLabel: 'Reactivate',
+    acceptClass: 'p-button-success',
     accept: async () => {
       isReactivating.value = true;
 
@@ -227,7 +231,7 @@ function handleSeasonDeleted(): void {
               <Button
                 label="Complete"
                 size="sm"
-                severity="info"
+                variant="primary"
                 :loading="isCompleting"
                 :disabled="!canComplete"
                 @click="handleComplete"
@@ -253,7 +257,7 @@ function handleSeasonDeleted(): void {
               <Button
                 label="Reactivate"
                 size="sm"
-                severity="info"
+                variant="primary"
                 :loading="isReactivating"
                 :disabled="!canReactivate"
                 @click="handleReactivate"

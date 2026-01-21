@@ -14,6 +14,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Public\PublicDriverController;
 use App\Http\Controllers\Public\PublicLeagueController;
 use App\Http\Controllers\Public\PublicPlatformController;
+use App\Http\Controllers\Public\PublicRoundController;
 use App\Http\Controllers\User\CompetitionController;
 use App\Http\Controllers\User\DivisionController;
 use App\Http\Controllers\User\DriverController;
@@ -200,6 +201,9 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::post('/seasons/{id}/restore', [SeasonController::class, 'restore'])
                 ->middleware('throttle:20,1')
                 ->name('seasons.restore');
+            Route::post('/seasons/{id}/recalculate-results', [SeasonController::class, 'recalculateResults'])
+                ->middleware('throttle:5,1')
+                ->name('seasons.recalculate-results');
 
             // Tiebreaker Rules
             Route::get('/tiebreaker-rules', [TiebreakerRuleController::class, 'index'])
@@ -395,6 +399,9 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
             Route::get('/drivers/{seasonDriverId}', [PublicDriverController::class, 'show'])
                 ->whereNumber('seasonDriverId')
                 ->name('drivers.show');
+            Route::get('/rounds/{roundId}/results', [PublicRoundController::class, 'results'])
+                ->whereNumber('roundId')
+                ->name('rounds.results');
             Route::get('/platforms', [PublicPlatformController::class, 'index'])->name('platforms.index');
         });
 

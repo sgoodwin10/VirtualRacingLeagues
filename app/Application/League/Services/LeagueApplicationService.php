@@ -1453,6 +1453,7 @@ final class LeagueApplicationService
             'is_active' => $eloquentSeason->status === 'active',
             'is_completed' => $eloquentSeason->status === 'completed',
             'race_divisions_enabled' => $eloquentSeason->race_divisions_enabled,
+            'race_times_required' => $eloquentSeason->race_times_required,
             'stats' => [
                 'total_drivers' => $eloquentSeason->total_drivers ?? 0,
                 'active_drivers' => $eloquentSeason->active_drivers ?? 0,

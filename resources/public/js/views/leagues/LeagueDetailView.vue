@@ -1,5 +1,7 @@
 <template>
-  <div class="league-detail-view bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden flex-1 flex flex-col">
+  <div
+    class="league-detail-view bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden flex-1 flex flex-col"
+  >
     <!-- Background Effects -->
     <BackgroundGrid />
     <SpeedLines />

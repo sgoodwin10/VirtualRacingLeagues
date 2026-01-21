@@ -1,0 +1,79 @@
+<template>
+  <div
+    class="rounds-section bg-[var(--bg-card)] border border-[var(--border)] rounded-[12px] overflow-hidden"
+  >
+    <!-- Section Header -->
+    <div class="p-6 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
+      <h3
+        class="font-[var(--font-display)] font-semibold tracking-[0.5px] text-[var(--text-primary)]"
+      >
+        Race Rounds
+      </h3>
+    </div>
+
+    <!-- Rounds List -->
+    <div v-if="rounds.length > 0" class="p-4">
+      <VrlAccordion :model-value="expandedRound" gap="md">
+        <RoundAccordion
+          v-for="round in rounds"
+          :key="round.id"
+          :round="round"
+          :has-divisions="hasDivisions"
+          :race-times-required="raceTimesRequired"
+          :value="String(round.id)"
+          :initially-expanded="expandedRound === String(round.id)"
+        />
+      </VrlAccordion>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else class="flex flex-col items-center justify-center py-12 text-center">
+      <div class="text-[var(--text-muted)] mb-2">
+        <i class="ph ph-calendar-blank text-5xl"></i>
+      </div>
+      <p class="text-[var(--text-secondary)]">No rounds scheduled yet</p>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import type { PublicRound } from '@public/types/public';
+import VrlAccordion from '@public/components/common/accordions/VrlAccordion.vue';
+import RoundAccordion from './RoundAccordion.vue';
+
+interface Props {
+  /** Array of rounds from the season */
+  rounds: PublicRound[];
+
+  /** Whether the season has divisions enabled */
+  hasDivisions: boolean;
+
+  /** Whether race times are required for this season */
+  raceTimesRequired: boolean;
+}
+
+const props = defineProps<Props>();
+
+/**
+ * Determine which round should be expanded by default
+ * - If any round is completed, expand the most recent completed round
+ * - Otherwise, expand the next upcoming round (first scheduled/pre_race/in_progress)
+ */
+const expandedRound = computed((): string | undefined => {
+  const completedRounds = props.rounds.filter((r) => r.status === 'completed');
+
+  if (completedRounds.length > 0) {
+    // Get the most recent completed round (last in the completed array)
+    const mostRecentCompleted = completedRounds[completedRounds.length - 1];
+    return mostRecentCompleted ? String(mostRecentCompleted.id) : undefined;
+  }
+
+  // Find the next upcoming round
+  const upcomingRound = props.rounds.find(
+    (r) => r.status === 'scheduled' || r.status === 'pre_race' || r.status === 'in_progress',
+  );
+
+  return upcomingRound ? String(upcomingRound.id) : undefined;
+});
+</script>

@@ -80,6 +80,7 @@ export interface PublicSeason {
   is_active: boolean;
   is_completed: boolean;
   race_divisions_enabled: boolean;
+  race_times_required?: boolean;
   stats: {
     total_drivers: number;
     active_drivers: number;
@@ -92,17 +93,12 @@ export interface PublicSeason {
 
 /**
  * Cross-division aggregate result
+ * Used for qualifying times, race times, and fastest laps across all divisions
  */
 export interface CrossDivisionResult {
   position: number;
-  driver_id: number;
-  driver_name: string;
-  driver_number: string;
-  division_id?: number;
-  division_name?: string;
+  race_result_id: number;
   time_ms: number;
-  time_formatted: string;
-  time_difference?: string | null; // "+0.345" format, null for P1
 }
 
 /**
@@ -432,6 +428,73 @@ export interface PublicRaceResult {
   // Optional division fields for cross-division display
   division_id?: number;
   division_name?: string;
+}
+
+/**
+ * Race result with driver information (used in round results)
+ * Backend returns driver as nested object with id and name
+ */
+export interface RaceResultWithDriver {
+  id: number;
+  race_id: number;
+  driver_id: number;
+  division_id?: number | null;
+  position: number | null;
+  original_race_time: string | null;
+  final_race_time: string | null;
+  original_race_time_difference: string | null;
+  final_race_time_difference: string | null;
+  fastest_lap: string | null;
+  penalties: string | null;
+  has_fastest_lap: boolean;
+  has_pole: boolean;
+  dnf: boolean;
+  status: string;
+  race_points: number;
+  positions_gained: number | null;
+  created_at: string;
+  updated_at: string;
+  driver: {
+    id: number;
+    name: string;
+  };
+}
+
+/**
+ * Race event with its results
+ * Represents a single race or qualifier within a round
+ */
+export interface RaceEventResults {
+  id: number;
+  race_number: number;
+  name: string | null;
+  is_qualifier: boolean;
+  race_points: boolean;
+  status: string;
+  results: RaceResultWithDriver[];
+}
+
+/**
+ * Round results response from API
+ * Contains all race events and their results for a specific round
+ */
+export interface RoundResultsResponse {
+  round: {
+    id: number;
+    round_number: number;
+    name: string | null;
+    status: string;
+    round_results: RoundStandings | null;
+    qualifying_results: CrossDivisionResult[] | null;
+    race_time_results: CrossDivisionResult[] | null;
+    fastest_lap_results: CrossDivisionResult[] | null;
+  };
+  divisions: Array<{
+    id: number;
+    name: string;
+  }>;
+  race_events: RaceEventResults[];
+  has_orphaned_results?: boolean;
 }
 
 /**

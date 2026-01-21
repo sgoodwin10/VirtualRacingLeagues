@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter, useRoute } from 'vue-router';
 import VrlButton from '@public/components/common/buttons/VrlButton.vue';
 
 /**
@@ -9,11 +9,30 @@ import VrlButton from '@public/components/common/buttons/VrlButton.vue';
  * Includes smooth scroll for anchor links and router navigation.
  */
 
+const router = useRouter();
+const route = useRoute();
+
 const handleSmoothScroll = (event: MouseEvent, target: string) => {
   event.preventDefault();
-  const element = document.querySelector(target);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Check if we're on the home page
+  if (route.path === '/') {
+    // On home page - just scroll to the section
+    const element = document.querySelector(target);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  } else {
+    // Not on home page - navigate to home with the anchor
+    router.push('/').then(() => {
+      // Wait for DOM to update after navigation
+      setTimeout(() => {
+        const element = document.querySelector(target);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    });
   }
 };
 </script>

@@ -129,7 +129,6 @@ async function deleteLeague(): Promise<void> {
           @click="confirmDelete"
         />
       </div>
-
     </div>
 
     <!-- League Logo (overlapping header/body boundary) -->

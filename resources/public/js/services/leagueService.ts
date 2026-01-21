@@ -5,6 +5,7 @@ import type {
   PublicLeagueDetailResponse,
   PublicSeasonDetailResponse,
   Platform,
+  RoundResultsResponse,
 } from '@public/types/public';
 
 /**
@@ -88,6 +89,17 @@ export const leagueService = {
   async getPlatforms(): Promise<Platform[]> {
     const response = await apiClient.get<ApiResponseWrapper<Platform[]>>(
       API_ENDPOINTS.PUBLIC.PLATFORMS,
+    );
+    // Extract from ApiResponse wrapper
+    return response.data.data;
+  },
+
+  /**
+   * Get round results with race events and standings
+   */
+  async getRoundResults(roundId: number): Promise<RoundResultsResponse> {
+    const response = await apiClient.get<ApiResponseWrapper<RoundResultsResponse>>(
+      API_ENDPOINTS.PUBLIC.ROUND_RESULTS(roundId),
     );
     // Extract from ApiResponse wrapper
     return response.data.data;

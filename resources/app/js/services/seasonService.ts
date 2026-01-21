@@ -296,3 +296,23 @@ export async function updateSeasonTiebreakerRulesOrder(
     rules: ruleOrder,
   });
 }
+
+/**
+ * Response structure for recalculate results endpoint
+ */
+export interface RecalculateResultsResponse {
+  recalculated_count: number;
+  round_ids: number[];
+}
+
+/**
+ * Recalculate results for all completed rounds in a season
+ */
+export async function recalculateSeasonResults(
+  seasonId: number,
+): Promise<RecalculateResultsResponse> {
+  const response: AxiosResponse<ApiResponse<RecalculateResultsResponse>> = await apiClient.post(
+    API_ENDPOINTS.seasons.recalculateResults(seasonId),
+  );
+  return response.data.data;
+}

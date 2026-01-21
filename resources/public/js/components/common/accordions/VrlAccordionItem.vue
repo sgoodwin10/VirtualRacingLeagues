@@ -55,7 +55,7 @@ const contentId = `${itemId}-content`;
 const itemClasses = computed(() => [
   'bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] overflow-hidden transition-all duration-200',
   !props.disabled && 'hover:border-[var(--cyan)] hover:shadow-[0_0_0_1px_var(--cyan-dim)]',
-  isActive.value && 'bg-[var(--bg-elevated)] border-[var(--cyan)]',
+  isActive.value && 'bg-[var(--bg-elevated)] ',
   props.disabled && 'opacity-50 cursor-not-allowed',
   props.class,
 ]);

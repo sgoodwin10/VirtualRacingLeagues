@@ -36,6 +36,7 @@ final class PublicSeasonDetailData extends Data
      *     is_active: bool,
      *     is_completed: bool,
      *     race_divisions_enabled: bool,
+     *     race_times_required: bool,
      *     stats: array{
      *         total_drivers: int,
      *         active_drivers: int,

@@ -142,6 +142,7 @@ export const API_ENDPOINTS = {
     LEAGUE_DETAIL: (slug: string) => `/public/leagues/${slug}`,
     SEASON_DETAIL: (leagueSlug: string, seasonSlug: string) =>
       `/public/leagues/${leagueSlug}/seasons/${seasonSlug}`,
+    ROUND_RESULTS: (roundId: number) => `/public/rounds/${roundId}/results`,
     PLATFORMS: '/public/platforms',
   },
 } as const;

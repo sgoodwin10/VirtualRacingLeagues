@@ -6,12 +6,26 @@
     @hide="handleClose"
   >
     <template #header>
-      <div class="flex items-center gap-3">
-        <PhTrophy :size="24" class="text-amber-500" />
-        <h2 class="text-xl font-semibold text-primary">
-          {{ isQualifying ? 'Qualifying' : 'Race' }} Results
-          <span v-if="!isQualifying">- {{ raceName }}</span>
-        </h2>
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-3">
+          <PhTrophy :size="24" class="text-amber-500" />
+          <h2 class="text-xl font-semibold text-primary">
+            {{ isQualifying ? 'Qualifying' : 'Race' }} Results
+            <span v-if="!isQualifying">- {{ raceName }}</span>
+          </h2>
+        </div>
+
+        <div v-if="isReadOnly && formResults.length > 0" class="mr-2">
+          <Button
+            :label="`Download ${isQualifying ? 'Qualifying' : 'Race'} Results`"
+            variant="secondary"
+            outline
+            :title="`Download ${isQualifying ? 'Qualifying' : 'Race'} Results`"
+            :icon="PhDownload"
+            :loading="isDownloading"
+            @click="handleDownloadCsv"
+          />
+        </div>
       </div>
     </template>
 
@@ -118,18 +132,6 @@
 
     <template #footer>
       <div class="flex justify-between">
-        <!-- Left side: Download button (read-only mode only) -->
-        <div v-if="isReadOnly && formResults.length > 0">
-          <Button
-            label="Download CSV"
-            variant="secondary"
-            :icon="PhDownload"
-            :loading="isDownloading"
-            @click="handleDownloadCsv"
-          />
-        </div>
-        <div v-else></div>
-
         <!-- Right side: existing buttons -->
         <div class="flex gap-3">
           <!-- Read-only mode: just show Close button -->

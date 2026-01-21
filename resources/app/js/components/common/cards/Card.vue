@@ -34,7 +34,7 @@ const shouldShowHeader = computed(() => {
       class="flex items-center justify-between px-[18px] py-[14px] border-b border-[var(--border)] bg-elevated"
     >
       <!-- Header Content -->
-      <div>
+      <div class="flex-1">
         <slot name="header">
           <span
             v-if="title"

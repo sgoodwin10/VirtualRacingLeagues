@@ -30,7 +30,6 @@ import CtaSection from '@public/components/landing/sections/CtaSection.vue';
     <BackgroundGrid />
     <SpeedLines />
 
-
     <!-- Main Content -->
     <main>
       <HeroSection />

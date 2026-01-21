@@ -69,6 +69,7 @@ export const API_ENDPOINTS = {
     restore: (id: number) => `/seasons/${id}/restore`,
     rounds: (seasonId: number) => `/seasons/${seasonId}/rounds`,
     nextRoundNumber: (seasonId: number) => `/seasons/${seasonId}/rounds/next-number`,
+    recalculateResults: (seasonId: number) => `/seasons/${seasonId}/recalculate-results`,
     teams: (seasonId: number) => `/seasons/${seasonId}/teams`,
     teamDetail: (seasonId: number, teamId: number) => `/seasons/${seasonId}/teams/${teamId}`,
     divisions: (seasonId: number) => `/seasons/${seasonId}/divisions`,

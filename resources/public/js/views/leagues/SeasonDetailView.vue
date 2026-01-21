@@ -1,5 +1,7 @@
 <template>
-  <div class="season-detail-view bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden flex-1 flex flex-col">
+  <div
+    class="season-detail-view bg-[var(--bg-dark)] text-[var(--text-primary)] overflow-x-hidden flex-1 flex flex-col"
+  >
     <!-- Background Effects -->
     <BackgroundGrid />
     <SpeedLines />
@@ -38,7 +40,9 @@
             </div>
 
             <!-- League Name -->
-            <h1 class="league-name font-[var(--font-display)] text-3xl font-bold text-[var(--text-primary)]">
+            <h1
+              class="league-name font-[var(--font-display)] text-3xl font-bold text-[var(--text-primary)]"
+            >
               {{ seasonData.league.name }}
             </h1>
           </div>
@@ -51,16 +55,14 @@
             <div
               class="standings-header p-6 bg-[var(--bg-elevated)] border-b border-[var(--border)]"
             >
-            <div
-              class="page-title font-[var(--font-display)] text-md font-bold tracking-[2px] mb-1 text-[var(--text-secondary)]" 
-            >
-              <span class="text-[var(--cyan)]">//</span>
-              {{ seasonData.competition.name.toUpperCase() }} -
-              {{ seasonData.season.name.toUpperCase() }}
-            </div>
-              <h3
-                class="standings-title font-[var(--font-display)] font-semibold tracking-[0.5px]"
+              <div
+                class="page-title font-[var(--font-display)] text-md font-bold tracking-[2px] mb-1 text-[var(--text-secondary)]"
               >
+                <span class="text-[var(--cyan)]">//</span>
+                {{ seasonData.competition.name.toUpperCase() }} -
+                {{ seasonData.season.name.toUpperCase() }}
+              </div>
+              <h3 class="standings-title font-[var(--font-display)] font-semibold tracking-[0.5px]">
                 Championship Standings
               </h3>
             </div>
@@ -72,6 +74,13 @@
               :season-slug="seasonSlug"
             />
           </div>
+
+          <!-- Rounds Section -->
+          <RoundsSection
+            :rounds="seasonData.rounds"
+            :has-divisions="seasonData.has_divisions"
+            :race-times-required="seasonData.season.race_times_required ?? false"
+          />
         </template>
       </div>
     </main>
@@ -88,6 +97,7 @@ import type { BreadcrumbItem } from '@public/types/navigation';
 import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
 import SpeedLines from '@public/components/landing/SpeedLines.vue';
 import StandingsTable from '@public/components/leagues/StandingsTable.vue';
+import RoundsSection from '@public/components/leagues/rounds/RoundsSection.vue';
 import VrlBreadcrumbs from '@public/components/common/navigation/VrlBreadcrumbs.vue';
 import VrlAlert from '@public/components/common/alerts/VrlAlert.vue';
 import VrlSkeleton from '@public/components/common/loading/VrlSkeleton.vue';

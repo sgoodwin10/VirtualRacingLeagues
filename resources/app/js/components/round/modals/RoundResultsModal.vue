@@ -16,15 +16,18 @@
             Results
           </h2>
         </div>
-        <Button
-          v-if="roundData?.round_results && isRoundCompleted"
-          label="Download Round Results"
-          variant="secondary"
-          size="sm"
-          :icon="PhDownload"
-          :loading="isDownloadingStandings"
-          @click="handleDownloadRoundStandings"
-        />
+        <div class="pr-2">
+          <Button
+            v-if="roundData?.round_results && isRoundCompleted"
+            label="Download Round Results"
+            variant="secondary"
+            outline
+            :title="'Download Round Results'"
+            :icon="PhDownload"
+            :loading="isDownloadingStandings"
+            @click="handleDownloadRoundStandings"
+          />
+        </div>
       </div>
     </template>
 

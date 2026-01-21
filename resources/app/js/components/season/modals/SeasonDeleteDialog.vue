@@ -149,9 +149,9 @@ function handleCancel(): void {
         </div>
 
         <!-- Delete Option -->
-        <div class="border rounded-lg p-4 border-red-300 bg-red-50">
-          <h4 class="font-semibold mb-2 text-red-700">Delete</h4>
-          <ul class="text-sm space-y-1 text-red-600">
+        <div class="border rounded-lg p-4 border-red-600">
+          <h4 class="font-semibold mb-2 !text-red-500">Delete</h4>
+          <ul class="text-sm space-y-1 text-red-500">
             <li class="flex items-start">
               <i class="pi pi-times mr-2 mt-0.5"></i>
               <span>Permanent removal</span>

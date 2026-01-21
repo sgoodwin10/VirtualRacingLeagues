@@ -14,7 +14,7 @@ const props = defineProps<VrlAccordionContentProps>();
   <Transition name="accordion-collapse">
     <div
       v-show="show"
-      :class="['px-5 pb-5 text-[var(--text-secondary)] text-[0.9rem] leading-relaxed', props.class]"
+      :class="['pb-5 text-[var(--text-secondary)] text-[0.9rem] leading-relaxed', props.class]"
       data-test="vrl-accordion-content"
     >
       <slot />

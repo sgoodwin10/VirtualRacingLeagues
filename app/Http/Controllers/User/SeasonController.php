@@ -6,6 +6,7 @@ namespace App\Http\Controllers\User;
 
 use App\Application\Competition\DTOs\CreateSeasonData;
 use App\Application\Competition\DTOs\UpdateSeasonData;
+use App\Application\Competition\Services\RoundApplicationService;
 use App\Application\Competition\Services\SeasonApplicationService;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
@@ -27,7 +28,8 @@ use Illuminate\Support\Facades\Auth;
 final class SeasonController extends Controller
 {
     public function __construct(
-        private readonly SeasonApplicationService $seasonService
+        private readonly SeasonApplicationService $seasonService,
+        private readonly RoundApplicationService $roundService
     ) {
     }
 
@@ -177,5 +179,14 @@ final class SeasonController extends Controller
     {
         $standings = $this->seasonService->getSeasonStandings($id);
         return ApiResponse::success($standings);
+    }
+
+    /**
+     * Recalculate results for all completed rounds in a season.
+     */
+    public function recalculateResults(int $id): JsonResponse
+    {
+        $result = $this->roundService->recalculateAllCompletedRounds($id, $this->getAuthenticatedUserId());
+        return ApiResponse::success($result, 'Results recalculated successfully');
     }
 }
