@@ -30,28 +30,28 @@ class AdminSeeder extends Seeder
         // Create additional test admins
         if (app()->environment('local')) {
             // Create a regular admin
-            Admin::firstOrCreate(
-                ['email' => 'admin@example.com'],
-                [
-                    'first_name' => 'Regular',
-                    'last_name' => 'Admin',
-                    'password' => Hash::make('password'),
-                    'role' => 'admin',
-                    'status' => 'active',
-                ]
-            );
+            // Admin::firstOrCreate(
+            //     ['email' => 'admin@example.com'],
+            //     [
+            //         'first_name' => 'Regular',
+            //         'last_name' => 'Admin',
+            //         'password' => Hash::make('password'),
+            //         'role' => 'admin',
+            //         'status' => 'active',
+            //     ]
+            // );
 
-            // Create a moderator
-            Admin::firstOrCreate(
-                ['email' => 'moderator@example.com'],
-                [
-                    'first_name' => 'Content',
-                    'last_name' => 'Moderator',
-                    'password' => Hash::make('password'),
-                    'role' => 'moderator',
-                    'status' => 'active',
-                ]
-            );
+            // // Create a moderator
+            // Admin::firstOrCreate(
+            //     ['email' => 'moderator@example.com'],
+            //     [
+            //         'first_name' => 'Content',
+            //         'last_name' => 'Moderator',
+            //         'password' => Hash::make('password'),
+            //         'role' => 'moderator',
+            //         'status' => 'active',
+            //     ]
+            // );
 
             // Admin::factory()->count(5)->create(['role' => 'admin']);
             // Admin::factory()->count(5)->create(['role' => 'moderator']);

@@ -16,7 +16,7 @@ class LeagueSeeder extends Seeder
     public function run(): void
     {
         // Get the test user who will own the league
-        $owner = User::where('email', 'user@example.com')->first();
+        $owner = User::where('email', 'samuel.goodwin@gmail.com')->first();
 
         if (!$owner) {
             $this->command->error('User not found. Please run UserSeeder first.');

@@ -244,6 +244,19 @@ watch(
 
       if (props.isEditMode && props.season?.id) {
         await loadSeasonTiebreakerRules(props.season.id);
+
+        // If no rules found in DB (e.g., previously disabled and saved), use available rules
+        if (orderedRules.value.length === 0) {
+          orderedRules.value = seasonStore.availableTiebreakerRules.map((rule, index) => ({
+            id: 0,
+            season_id: 0,
+            rule_id: rule.id,
+            rule_name: rule.name,
+            rule_slug: rule.slug,
+            rule_description: rule.description,
+            order: index + 1,
+          }));
+        }
       } else {
         orderedRules.value = seasonStore.availableTiebreakerRules.map((rule, index) => ({
           id: 0,
@@ -544,7 +557,7 @@ async function handleSubmit(): Promise<void> {
       emit('season-saved', created);
 
       // refresh the page
-      window.location.reload();
+      // window.location.reload();
     }
 
     closeModal();

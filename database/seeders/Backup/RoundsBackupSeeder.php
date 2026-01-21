@@ -1596,7 +1596,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 1,
                 'created_at' => '2025-11-27 11:25:50',
                 'updated_at' => '2025-12-31 03:59:23',
-                'deleted_at' => null,
             ],
             [
                 'id' => 4,
@@ -3206,7 +3205,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 1,
                 'created_at' => '2025-11-27 11:25:50',
                 'updated_at' => '2025-12-31 02:51:52',
-                'deleted_at' => null,
             ],
             [
                 'id' => 5,
@@ -4963,7 +4961,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 4,
                 'created_at' => '2025-12-22 00:01:06',
                 'updated_at' => '2026-01-01 03:51:44',
-                'deleted_at' => null,
             ],
             [
                 'id' => 6,
@@ -6271,7 +6268,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 4,
                 'created_at' => '2025-12-22 00:01:24',
                 'updated_at' => '2025-12-23 12:21:45',
-                'deleted_at' => null,
             ],
             [
                 'id' => 7,
@@ -7587,7 +7583,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 4,
                 'created_at' => '2025-12-22 00:01:41',
                 'updated_at' => '2025-12-24 13:04:12',
-                'deleted_at' => null,
             ],
             [
                 'id' => 8,
@@ -8777,7 +8772,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 4,
                 'created_at' => '2025-12-22 00:01:59',
                 'updated_at' => '2025-12-26 06:31:57',
-                'deleted_at' => null,
             ],
             [
                 'id' => 9,
@@ -9875,7 +9869,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 4,
                 'created_at' => '2025-12-22 00:02:26',
                 'updated_at' => '2026-01-01 02:52:41',
-                'deleted_at' => null,
             ],
             [
                 'id' => 11,
@@ -9905,7 +9898,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 11,
                 'created_at' => '2026-01-01 04:37:56',
                 'updated_at' => '2026-01-01 04:37:56',
-                'deleted_at' => null,
             ],
             [
                 'id' => 12,
@@ -9935,7 +9927,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 14,
                 'created_at' => '2026-01-01 04:38:06',
                 'updated_at' => '2026-01-01 04:38:06',
-                'deleted_at' => null,
             ],
             [
                 'id' => 13,
@@ -9965,7 +9956,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 16,
                 'created_at' => '2026-01-01 04:40:19',
                 'updated_at' => '2026-01-01 04:40:19',
-                'deleted_at' => null,
             ],
             [
                 'id' => 14,
@@ -9995,7 +9985,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 17,
                 'created_at' => '2026-01-01 04:40:30',
                 'updated_at' => '2026-01-01 04:40:30',
-                'deleted_at' => null,
             ],
             [
                 'id' => 15,
@@ -10025,7 +10014,6 @@ class RoundsBackupSeeder extends Seeder
                 'created_by_user_id' => 17,
                 'created_at' => '2026-01-01 04:40:30',
                 'updated_at' => '2026-01-01 04:40:30',
-                'deleted_at' => null,
             ],
         ];
 

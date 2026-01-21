@@ -130,19 +130,21 @@ async function deleteLeague(): Promise<void> {
         />
       </div>
 
-      <!-- League Logo (Bottom-Left, overlapping) -->
-      <div class="league-logo">
+    </div>
+
+    <!-- League Logo (overlapping header/body boundary) -->
+    <div class="league-logo">
+      <div v-if="league.logo || league.logo_url" class="logo-image-wrapper">
         <ResponsiveImage
-          v-if="league.logo || league.logo_url"
           :media="league.logo"
           :fallback-url="league.logo_url ?? undefined"
           :alt="`${league.name} logo`"
           sizes="56px"
           conversion="small"
-          img-class="w-full h-full object-cover"
+          img-class="w-full h-full object-contain"
         />
-        <span v-else class="league-logo-initials">{{ leagueInitials }}</span>
       </div>
+      <span v-else class="league-logo-initials">{{ leagueInitials }}</span>
     </div>
 
     <!-- Card Body -->
@@ -211,12 +213,12 @@ async function deleteLeague(): Promise<void> {
    ============================================ */
 
 .league-card {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s ease;
-  position: relative;
   animation: fadeInUp 0.4s ease forwards;
 }
 
@@ -237,7 +239,7 @@ async function deleteLeague(): Promise<void> {
   transform: translateY(0);
 }
 
-.league-card:hover .card-header-image {
+.league-card:hover :deep(.card-header-image) {
   transform: scale(1.05);
 }
 
@@ -251,7 +253,7 @@ async function deleteLeague(): Promise<void> {
   overflow: hidden;
 }
 
-.card-header-image {
+:deep(.card-header-image) {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -380,7 +382,7 @@ async function deleteLeague(): Promise<void> {
 
 .league-logo {
   position: absolute;
-  bottom: -24px;
+  top: 108px; /* 140px header - 56px logo + 24px overlap */
   left: 20px;
   width: 56px;
   height: 56px;
@@ -393,6 +395,13 @@ async function deleteLeague(): Promise<void> {
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 10;
+}
+
+.logo-image-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .league-logo-initials {

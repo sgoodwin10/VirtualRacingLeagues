@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             PlatformSeeder::class,
             PlatformTrackLocationSeeder::class,
             PlatformTrackSeeder::class,
+            RoundTiebreakerRulesSeeder::class,
         ]);
 
         // Development-only seeders (test data)

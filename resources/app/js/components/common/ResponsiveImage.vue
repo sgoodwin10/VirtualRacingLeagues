@@ -111,8 +111,15 @@ const placeholderStyle = computed(() => {
 <style scoped>
 .responsive-image-wrapper {
   position: relative;
-  display: inline-block;
+  display: block;
   width: 100%;
+  height: 100%;
+}
+
+.responsive-image-wrapper img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .image-placeholder {

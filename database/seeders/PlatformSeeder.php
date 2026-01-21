@@ -26,12 +26,12 @@ class PlatformSeeder extends Seeder
         }
 
         $platforms = [
-            ['id' => 1, 'name' => 'Gran Turismo 7', 'sort_order' => 1],
-            ['id' => 2, 'name' => 'iRacing', 'sort_order' => 2],
-            ['id' => 3, 'name' => 'Assetto Corsa Competizione', 'sort_order' => 3],
-            ['id' => 4, 'name' => 'rFactor 2', 'sort_order' => 4],
-            ['id' => 5, 'name' => 'Automobilista 2', 'sort_order' => 5],
-            ['id' => 6, 'name' => 'F1 24', 'sort_order' => 6],
+            ['id' => 1, 'name' => 'Gran Turismo 7', 'sort_order' => 1, 'is_active' => true],
+            ['id' => 2, 'name' => 'iRacing', 'sort_order' => 2, 'is_active' => false],
+            ['id' => 3, 'name' => 'Assetto Corsa Competizione', 'sort_order' => 3, 'is_active' => false],
+            ['id' => 4, 'name' => 'rFactor 2', 'sort_order' => 4, 'is_active' => false],
+            ['id' => 5, 'name' => 'Automobilista 2', 'sort_order' => 5, 'is_active' => false],
+            ['id' => 6, 'name' => 'F1 24', 'sort_order' => 6, 'is_active' => false],
         ];
 
         foreach ($platforms as $platform) {
@@ -39,7 +39,7 @@ class PlatformSeeder extends Seeder
                 'id' => $platform['id'],
                 'name' => $platform['name'],
                 'slug' => Str::slug($platform['name']),
-                'is_active' => true,
+                'is_active' => $platform['is_active'],
                 'sort_order' => $platform['sort_order'],
                 'created_at' => now(),
                 'updated_at' => now(),

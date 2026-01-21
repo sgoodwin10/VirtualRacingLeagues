@@ -24,14 +24,23 @@
           <VrlBreadcrumbs :items="breadcrumbItems" class="mb-4" />
 
           <!-- Page Header -->
-          <div class="page-header mb-8 pt-2">
-            <div
-              class="page-title font-[var(--font-display)] text-4xl font-bold tracking-[2px] mb-2" 
-            >
-              <span class="text-[var(--cyan)]">//</span>
-              {{ seasonData.competition.name.toUpperCase() }} -
-              {{ seasonData.season.name.toUpperCase() }}
+          <div class="page-header mb-8 pt-2 flex items-center gap-4">
+            <!-- League Logo -->
+            <div class="league-logo-container">
+              <div v-if="leagueLogoUrl" class="logo-image-wrapper">
+                <img
+                  :src="leagueLogoUrl"
+                  :alt="`${seasonData.league.name} logo`"
+                  class="w-full h-full object-contain"
+                />
+              </div>
+              <span v-else class="league-logo-initials">{{ leagueInitials }}</span>
             </div>
+
+            <!-- League Name -->
+            <h1 class="league-name font-[var(--font-display)] text-3xl font-bold text-[var(--text-primary)]">
+              {{ seasonData.league.name }}
+            </h1>
           </div>
 
           <!-- Standings Section -->
@@ -42,11 +51,18 @@
             <div
               class="standings-header p-6 bg-[var(--bg-elevated)] border-b border-[var(--border)]"
             >
-              <h2
+            <div
+              class="page-title font-[var(--font-display)] text-md font-bold tracking-[2px] mb-1 text-[var(--text-secondary)]" 
+            >
+              <span class="text-[var(--cyan)]">//</span>
+              {{ seasonData.competition.name.toUpperCase() }} -
+              {{ seasonData.season.name.toUpperCase() }}
+            </div>
+              <h3
                 class="standings-title font-[var(--font-display)] font-semibold tracking-[0.5px]"
               >
                 Championship Standings
-              </h2>
+              </h3>
             </div>
 
             <!-- Standings Table (handles its own loading, tabs, divisions, teams) -->
@@ -104,6 +120,26 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
 });
 
 /**
+ * League logo URL (prefer new media object, fallback to old URL)
+ */
+const leagueLogoUrl = computed((): string | null => {
+  if (!seasonData.value) return null;
+  return seasonData.value.league.logo?.original || seasonData.value.league.logo_url || null;
+});
+
+/**
+ * League initials (for fallback when no logo is available)
+ */
+const leagueInitials = computed((): string => {
+  if (!seasonData.value) return 'L';
+  const words = seasonData.value.league.name.split(' ');
+  if (words.length >= 2) {
+    return `${words[0]?.[0] ?? ''}${words[1]?.[0] ?? ''}`.toUpperCase();
+  }
+  return (seasonData.value.league.name.substring(0, 2) || 'L').toUpperCase();
+});
+
+/**
  * Fetch season detail (for header and breadcrumbs only)
  * The StandingsTable component will fetch its own data
  */
@@ -139,3 +175,43 @@ onMounted(() => {
   fetchSeasonDetail();
 });
 </script>
+
+<style scoped>
+/* ============================================
+   League Logo in Page Header
+   ============================================ */
+
+.league-logo-container {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.logo-image-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+}
+
+.league-logo-initials {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+.league-name {
+  letter-spacing: -0.5px;
+}
+</style>
