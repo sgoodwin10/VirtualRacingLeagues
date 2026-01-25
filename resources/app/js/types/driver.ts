@@ -8,6 +8,11 @@
 export type DriverStatus = 'active' | 'inactive' | 'banned';
 
 /**
+ * Driver deleted status filter options
+ */
+export type DriverDeletedStatus = 'active' | 'deleted' | 'all';
+
+/**
  * Global driver entity (drivers table)
  */
 export interface Driver {
@@ -23,6 +28,7 @@ export interface Driver {
   iracing_id: string | null;
   iracing_customer_id: number | null;
   primary_platform_id: string | null;
+  deleted_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -157,6 +163,7 @@ export interface LeagueDriversQueryParams {
   per_page?: number;
   search?: string;
   status?: DriverStatus | 'all';
+  deleted_status?: DriverDeletedStatus;
 }
 
 /**

@@ -152,7 +152,7 @@ function handleViewCompetitions(): void {
     class="w-[380px] flex-shrink-0 bg-[var(--bg-panel)] border-r border-[var(--border)] flex flex-col sticky top-0 h-full overflow-y-auto"
   >
     <!-- Header Image Area -->
-    <div class="relative h-[180px] flex-shrink-0">
+    <div class="relative flex-shrink-0" :class="hasHeaderImage ? 'h-[180px]' : 'h-[70px]'">
       <!-- Background Image or Fallback Gradient -->
       <div
         v-if="hasHeaderImage"

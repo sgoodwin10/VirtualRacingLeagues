@@ -58,16 +58,6 @@ const generatedInitials = computed(() => {
 
 <template>
   <div class="flex items-center gap-3" data-test="driver-cell">
-    <!-- Avatar -->
-    <span
-      v-if="showAvatar"
-      class="w-8 h-8 bg-[var(--bg-elevated)] rounded-[var(--radius)] flex items-center justify-center font-[family-name:var(--font-display)] text-[0.7rem] font-semibold border border-[var(--border)] flex-shrink-0 overflow-hidden"
-      data-test="driver-avatar"
-    >
-      <img v-if="avatarUrl" :src="avatarUrl" :alt="name" class="w-full h-full object-cover" />
-      <span v-else>{{ generatedInitials }}</span>
-    </span>
-
     <!-- Driver Info -->
     <div>
       <div class="font-medium text-[var(--text-primary)]" data-test="driver-name">

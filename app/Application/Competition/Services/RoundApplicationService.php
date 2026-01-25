@@ -35,6 +35,7 @@ use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
 use App\Application\Competition\Traits\BatchFetchHelpersTrait;
 use App\Infrastructure\Cache\RoundResultsCacheService;
+use App\Infrastructure\Cache\SeasonDetailCacheService;
 use App\Domain\Competition\Services\RoundTiebreakerDomainService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -66,6 +67,7 @@ final class RoundApplicationService
         private readonly TeamRepositoryInterface $teamRepository,
         private readonly RaceApplicationService $raceApplicationService,
         private readonly RoundResultsCacheService $roundResultsCache,
+        private readonly SeasonDetailCacheService $seasonDetailCache,
         private readonly RoundTiebreakerDomainService $tiebreakerDomainService,
     ) {
     }
@@ -376,9 +378,12 @@ final class RoundApplicationService
      */
     public function completeRound(int $roundId, int $userId, ?CompleteRoundData $data = null): RoundData
     {
-        $result = DB::transaction(function () use ($roundId, $userId, $data) {
-            // Fetch round and authorize
-            $round = $this->roundRepository->findById($roundId);
+        // Fetch round outside transaction to get seasonId for cache invalidation
+        $round = $this->roundRepository->findById($roundId);
+        $seasonId = $round->seasonId();
+
+        $result = DB::transaction(function () use ($round, $roundId, $userId, $data) {
+            // Authorize
             $this->authorizeLeagueOwner($round->seasonId(), $userId);
 
             Log::info('Round completion started', [
@@ -415,8 +420,9 @@ final class RoundApplicationService
             return RoundData::fromEntity($round);
         });
 
-        // Invalidate cache AFTER successful transaction commit
+        // Invalidate caches AFTER successful transaction commit
         $this->roundResultsCache->forget($roundId);
+        $this->seasonDetailCache->forget($seasonId);
 
         return $result;
     }
@@ -538,9 +544,11 @@ final class RoundApplicationService
      */
     public function uncompleteRound(int $roundId, int $userId): RoundData
     {
-        $result = DB::transaction(function () use ($roundId, $userId) {
-            $round = $this->roundRepository->findById($roundId);
+        // Fetch round outside transaction to get seasonId for cache invalidation
+        $round = $this->roundRepository->findById($roundId);
+        $seasonId = $round->seasonId();
 
+        $result = DB::transaction(function () use ($round, $roundId, $userId) {
             // Authorize
             $this->authorizeLeagueOwner($round->seasonId(), $userId);
 
@@ -555,8 +563,9 @@ final class RoundApplicationService
             return RoundData::fromEntity($round);
         });
 
-        // Invalidate cache AFTER successful transaction commit
+        // Invalidate caches AFTER successful transaction commit
         $this->roundResultsCache->forget($roundId);
+        $this->seasonDetailCache->forget($seasonId);
 
         return $result;
     }

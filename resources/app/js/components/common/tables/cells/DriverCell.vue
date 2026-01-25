@@ -21,7 +21,9 @@ withDefaults(defineProps<Props>(), {
 
 /**
  * Get initials from name
+ * Currently unused but kept for future avatar support
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getInitials(name: string): string {
   const parts = name.trim().split(' ');
   if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
@@ -31,15 +33,6 @@ function getInitials(name: string): string {
 
 <template>
   <div class="driver-cell">
-    <!-- Avatar -->
-    <div
-      v-if="showAvatar"
-      class="driver-avatar"
-      :style="teamColor ? { borderColor: teamColor } : undefined"
-    >
-      <img v-if="avatar && avatar.startsWith('http')" :src="avatar" :alt="name" />
-      <span v-else>{{ avatar || getInitials(name) }}</span>
-    </div>
     <!-- Info -->
     <div class="driver-info">
       <span class="driver-name">{{ name }}</span>

@@ -274,7 +274,7 @@ const useExample = (): void => {
  * Download example CSV file
  */
 const downloadExample = (): void => {
-  const blob = new Blob([csvExample.value], { type: 'text/csv;charset=utf-8;' });
+  const blob = new globalThis.Blob([csvExample.value], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

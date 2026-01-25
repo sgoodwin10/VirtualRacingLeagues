@@ -51,7 +51,7 @@ export default defineConfig({
     hmr: {
       host: 'localhost',
       protocol: 'ws',
-      clientPort: 5173,
+      clientPort: 5174,
     },
     // https: true,
     port: 5173, // replace this port with any number you want

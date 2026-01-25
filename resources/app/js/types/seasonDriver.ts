@@ -52,6 +52,7 @@ export interface SeasonDriver {
   discord_id: string | null;
   team_name: string | null;
   division_name: string | null;
+  deleted_at: string | null; // Driver deletion timestamp (from drivers table)
 
   // Division and team IDs
   division_id: number | null;

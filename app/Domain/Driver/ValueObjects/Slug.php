@@ -24,12 +24,15 @@ final readonly class Slug
 
     /**
      * Generate a slug from driver name components.
-     * Priority: "firstname-lastname" > "nickname" > "firstname" or "lastname"
+     * Priority: "firstname-lastname" > "nickname" > "firstname" or "lastname" > "driver-{platformId}" > random
+     *
+     * @param string|null $platformIdFallback Platform ID to use if no name components exist
      */
     public static function generate(
         ?string $firstName,
         ?string $lastName,
-        ?string $nickname
+        ?string $nickname,
+        ?string $platformIdFallback = null
     ): self {
         $hasFirstName = $firstName !== null && trim($firstName) !== '';
         $hasLastName = $lastName !== null && trim($lastName) !== '';
@@ -44,8 +47,12 @@ final readonly class Slug
             $baseSlug = $firstName;
         } elseif ($hasLastName) {
             $baseSlug = $lastName;
+        } elseif ($platformIdFallback !== null && trim($platformIdFallback) !== '') {
+            // Use platform ID as fallback (e.g., "driver-psn123")
+            $baseSlug = 'driver-' . $platformIdFallback;
         } else {
-            throw new InvalidArgumentException('Cannot generate slug: no name components provided');
+            // Last resort: generate random slug when neither name nor platform ID exists
+            $baseSlug = 'driver-' . bin2hex(random_bytes(8));
         }
 
         $slug = self::slugify($baseSlug);

@@ -152,3 +152,12 @@ export async function importDriversFromCSV(
   // Backend now returns the correct format directly
   return response.data.data;
 }
+
+/**
+ * Restore a soft-deleted driver
+ * @param leagueId - League ID
+ * @param driverId - Driver ID
+ */
+export async function restoreDriver(leagueId: number, driverId: number): Promise<void> {
+  await apiClient.post(API_ENDPOINTS.leagues.driverRestore(leagueId, driverId));
+}

@@ -185,7 +185,7 @@ function truncateDescription(description: string | null, maxLength: number = 30)
   <div>
     <!-- Disabled State -->
     <div v-if="!raceDivisionsEnabled" class="text-center py-6">
-      <Message severity="info" :closable="false">
+      <Message severity="info" :closable="false" class="w-full">
         <div class="flex flex-col items-center gap-2">
           <i class="pi pi-info-circle text-2xl"></i>
           <p class="font-semibold">Divisions not enabled for this season</p>

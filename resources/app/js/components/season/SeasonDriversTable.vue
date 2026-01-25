@@ -16,6 +16,7 @@ import { usesPsnId, usesIracingId } from '@app/constants/platforms';
 
 import type { DataTablePageEvent, DataTableSortEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
+import Tag from 'primevue/tag';
 import Select from 'primevue/select';
 import { TechDataTable, DriverCell } from '@app/components/common/tables';
 import { Button } from '@app/components/common/buttons';
@@ -672,7 +673,10 @@ async function handleRefresh(): Promise<void> {
 
       <Column field="driver_name" header="Driver" sortable>
         <template #body="{ data }">
-          <DriverCell :name="getDriverDisplayName(data)" :show-avatar="false" />
+          <div class="flex items-center gap-2">
+            <DriverCell :name="getDriverDisplayName(data)" :show-avatar="false" />
+            <Tag v-if="data.deleted_at" severity="danger" value="Deleted" class="text-xs" />
+          </div>
         </template>
       </Column>
 

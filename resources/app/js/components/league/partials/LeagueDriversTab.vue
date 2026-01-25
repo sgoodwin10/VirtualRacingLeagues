@@ -22,6 +22,7 @@ interface Emits {
   (e: 'view-driver', driver: LeagueDriver): void;
   (e: 'edit-driver', driver: LeagueDriver): void;
   (e: 'remove-driver', driver: LeagueDriver): void;
+  (e: 'restore-driver', driver: LeagueDriver): void;
 }
 
 const props = defineProps<Props>();
@@ -44,6 +45,12 @@ const statusFilterOptions = [
   { label: 'Banned Only', value: 'banned' },
 ];
 
+const deletedStatusFilterOptions = [
+  { label: 'Active Drivers', value: 'active' },
+  { label: 'Deleted Drivers', value: 'deleted' },
+  { label: 'All Drivers', value: 'all' },
+];
+
 function handleAddDriver(): void {
   emit('add-driver');
 }
@@ -63,6 +70,10 @@ function handleEditDriver(driver: LeagueDriver): void {
 function handleRemoveDriver(driver: LeagueDriver): void {
   emit('remove-driver', driver);
 }
+
+function handleRestoreDriver(driver: LeagueDriver): void {
+  emit('restore-driver', driver);
+}
 </script>
 
 <template>
@@ -78,6 +89,14 @@ function handleRemoveDriver(driver: LeagueDriver): void {
             </InputIcon>
             <InputText v-model="searchQuery" placeholder="Search drivers..." class="w-full !pl-8" />
           </IconField>
+          <Select
+            v-model="driverStore.deletedStatusFilter"
+            :options="deletedStatusFilterOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Filter by deleted status"
+            class="w-48"
+          />
           <Select
             v-model="driverStore.statusFilter"
             :options="statusFilterOptions"
@@ -114,6 +133,7 @@ function handleRemoveDriver(driver: LeagueDriver): void {
           @view="handleViewDriver"
           @edit="handleEditDriver"
           @remove="handleRemoveDriver"
+          @restore="handleRestoreDriver"
         />
       </div>
     </div>

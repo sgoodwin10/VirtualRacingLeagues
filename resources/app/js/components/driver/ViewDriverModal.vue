@@ -41,7 +41,7 @@ const seasonsError = ref<string | null>(null);
  * Get driver's full name
  */
 const driverName = computed(() => {
-  if (!props.driver?.driver) return 'Unknown Driver';
+  if (!props.driver?.driver) return '';
   return props.driver.driver.display_name;
 });
 

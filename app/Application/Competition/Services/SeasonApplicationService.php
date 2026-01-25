@@ -828,8 +828,9 @@ final class SeasonApplicationService
         bool $dropRoundEnabled,
         int $totalDropRounds
     ): array {
-        // Get season ID from first round
-        $seasonId = ! empty($rounds) ? $rounds[0]->seasonId() : 0;
+        // Get season ID from first round (use reset() since array_filter preserves keys)
+        $firstRound = reset($rounds);
+        $seasonId = $firstRound !== false ? $firstRound->seasonId() : 0;
 
         // Extract unique driver IDs for batch fetch
         $driverIds = [];
@@ -1022,8 +1023,9 @@ final class SeasonApplicationService
         bool $dropRoundEnabled,
         int $totalDropRounds
     ): array {
-        // Get season ID from first round
-        $seasonId = ! empty($rounds) ? $rounds[0]->seasonId() : 0;
+        // Get season ID from first round (use reset() since array_filter preserves keys)
+        $firstRound = reset($rounds);
+        $seasonId = $firstRound !== false ? $firstRound->seasonId() : 0;
 
         // Extract unique driver IDs and division IDs for batch fetch
         $driverIds = [];

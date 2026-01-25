@@ -263,7 +263,7 @@ const handleCSVImport = async (csvData: string) => {
  * Get driver's display name
  */
 const getDriverName = (leagueDriver: LeagueDriver): string => {
-  return leagueDriver.driver?.display_name || 'Unknown';
+  return leagueDriver.driver?.display_name || '';
 };
 
 // Load drivers on mount if visible

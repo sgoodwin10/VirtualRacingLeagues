@@ -126,8 +126,8 @@ function handleTeamSaved(): void {
 <template>
   <div>
     <!-- Disabled State -->
-    <div v-if="!teamChampionshipEnabled" class="text-center py-8">
-      <Message severity="info" :closable="false">
+    <div v-if="!teamChampionshipEnabled" class="text-center py-6">
+      <Message severity="info" :closable="false" class="w-full">
         <div class="flex flex-col items-center gap-2">
           <i class="pi pi-info-circle text-2xl"></i>
           <p class="font-semibold">Teams not enabled for this season</p>

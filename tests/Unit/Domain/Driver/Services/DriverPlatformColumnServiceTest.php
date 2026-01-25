@@ -27,7 +27,7 @@ class DriverPlatformColumnServiceTest extends TestCase
 
         $this->assertCount(1, $columns);
         $this->assertEquals([
-            ['field' => 'PsnId', 'label' => 'PSN ID', 'type' => 'text'],
+            ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
         ], $columns);
     }
 
@@ -37,8 +37,8 @@ class DriverPlatformColumnServiceTest extends TestCase
 
         $this->assertCount(2, $columns);
         $this->assertEquals([
-            ['field' => 'IracingId', 'label' => 'iRacing ID', 'type' => 'text'],
-            ['field' => 'IracingCustomerId', 'label' => 'iRacing Customer ID', 'type' => 'number'],
+            ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
+            ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
         ], $columns);
     }
 
@@ -48,9 +48,9 @@ class DriverPlatformColumnServiceTest extends TestCase
 
         $this->assertCount(3, $columns);
         $this->assertEquals([
-            ['field' => 'PsnId', 'label' => 'PSN ID', 'type' => 'text'],
-            ['field' => 'IracingId', 'label' => 'iRacing ID', 'type' => 'text'],
-            ['field' => 'IracingCustomerId', 'label' => 'iRacing Customer ID', 'type' => 'number'],
+            ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
+            ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
+            ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
         ], $columns);
     }
 
@@ -94,7 +94,7 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertEquals([
             'platform_id' => 1,
             'platform_name' => 'Gran Turismo 7',
-            'field' => 'PsnId',
+            'field' => 'psn_id',
             'label' => 'PSN ID',
             'type' => 'text',
         ], $csvHeaders[0]);
@@ -103,7 +103,7 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertEquals([
             'platform_id' => 2,
             'platform_name' => 'iRacing',
-            'field' => 'IracingId',
+            'field' => 'iracing_id',
             'label' => 'iRacing ID',
             'type' => 'text',
         ], $csvHeaders[1]);
@@ -111,7 +111,7 @@ class DriverPlatformColumnServiceTest extends TestCase
         $this->assertEquals([
             'platform_id' => 2,
             'platform_name' => 'iRacing',
-            'field' => 'IracingCustomerId',
+            'field' => 'iracing_customer_id',
             'label' => 'iRacing Customer ID',
             'type' => 'number',
         ], $csvHeaders[2]);

@@ -764,7 +764,7 @@ watch(
   font-size: 14px;
   font-weight: 600;
   text-align: center;
-  width: 48px;
+  min-width: 48px;
   font-family: var(--font-display);
 }
 
@@ -783,6 +783,7 @@ watch(
 /* Driver Cell */
 .td-driver {
   min-width: 160px;
+  width: 80%;
   font-size: 14px;
   font-weight: 500;
   text-align: left;
@@ -835,6 +836,7 @@ watch(
 
 /* Round Cells (P, FL, Pts) */
 .td-round {
+  min-width: 36px;
   text-align: center;
   padding: 10px 2px;
   font-size: 13px;

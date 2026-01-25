@@ -16,7 +16,7 @@ parameters:
         - bootstrap/cache
         - storage
         - vendor
-        - database/migrations.backup
+        - database/migrations.backup (?)
     ignoreErrors:
         # Laravel Eloquent relationship covariance issues - known false positives
         -

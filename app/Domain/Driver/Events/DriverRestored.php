@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Driver\Events;
 
-final readonly class DriverCreated
+final readonly class DriverRestored
 {
     public function __construct(
         public int $driverId,
-        public string $displayName,
-        public ?string $primaryPlatformId
+        public string $displayName
     ) {
     }
 }

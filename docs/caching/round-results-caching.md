@@ -1,54 +1,84 @@
-# Round Results Caching
+# Round Results and Season Detail Caching
 
-This document describes the caching strategy for round results data.
+This document describes the caching strategy for round results and public season detail data.
 
 ## Overview
 
-Round results are cached using Redis to:
+Round results and season detail data are cached using Redis to:
 1. Improve performance for frequently accessed data
 2. Enable cross-subdomain access (public, app, admin subdomains share the same cache)
 3. Reduce database load during high-traffic periods
 
 ## Architecture
 
-### Cache Service
+### Cache Services
 
-The caching is implemented in `app/Infrastructure/Cache/RoundResultsCacheService.php`.
+Two cache services handle different types of data:
+
+1. **RoundResultsCacheService** (`app/Infrastructure/Cache/RoundResultsCacheService.php`)
+   - Caches individual round results
+   - Key pattern: `round_results:{roundId}`
+   - TTL: 24 hours
+
+2. **SeasonDetailCacheService** (`app/Infrastructure/Cache/SeasonDetailCacheService.php`)
+   - Caches public season detail page data (standings, rounds, team championship)
+   - Key pattern: `public_season_detail:{seasonId}`
+   - TTL: 24 hours
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    RoundApplicationService                    │
-│                                                              │
-│  ┌─────────────┐     ┌─────────────────────────────┐        │
-│  │ getRound-   │────▶│ RoundResultsCacheService    │        │
-│  │ Results()   │     │                             │        │
-│  └─────────────┘     │  - get(roundId)             │        │
-│                      │  - put(roundId, data)       │        │
-│  ┌─────────────┐     │  - forget(roundId)          │        │
-│  │ complete-   │────▶│  - has(roundId)             │        │
-│  │ Round()     │     └─────────────────────────────┘        │
-│  └─────────────┘                 │                          │
-│                                  ▼                          │
-│  ┌─────────────┐     ┌─────────────────────────────┐        │
-│  │ uncomplete- │────▶│        Redis Cache          │        │
-│  │ Round()     │     └─────────────────────────────┘        │
-│  └─────────────┘                                            │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                    RoundApplicationService                        │
+│                                                                  │
+│  ┌──────────────┐     ┌──────────────────────────────────┐      │
+│  │ getRound-    │────▶│ RoundResultsCacheService         │      │
+│  │ Results()    │     │                                  │      │
+│  └──────────────┘     │  - get(roundId)                  │      │
+│                       │  - put(roundId, data)            │      │
+│  ┌──────────────┐     │  - forget(roundId)               │      │
+│  │ complete-    │────▶│  - has(roundId)                  │      │
+│  │ Round()      │     └──────────────────────────────────┘      │
+│  └──────────────┘                 │                              │
+│                                   ▼                              │
+│  ┌──────────────┐     ┌──────────────────────────────────┐      │
+│  │ uncomplete-  │────▶│ SeasonDetailCacheService         │      │
+│  │ Round()      │     │                                  │      │
+│  └──────────────┘     │  - get(seasonId)                 │      │
+│                       │  - put(seasonId, data)           │      │
+│                       │  - forget(seasonId)              │      │
+│                       │  - has(seasonId)                 │      │
+│                       └──────────────────────────────────┘      │
+│                                   │                              │
+│                                   ▼                              │
+│                       ┌──────────────────────────────────┐      │
+│                       │        Redis Cache               │      │
+│                       └──────────────────────────────────┘      │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│                    LeagueApplicationService                       │
+│                                                                  │
+│  ┌────────────────┐   ┌──────────────────────────────────┐      │
+│  │ getPublic-     │──▶│ SeasonDetailCacheService         │      │
+│  │ SeasonDetail() │   └──────────────────────────────────┘      │
+│  └────────────────┘                                              │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### Cache Key Structure
 
-- **Pattern**: `round_results:{roundId}`
-- **Example**: `round_results:123`
+| Cache Type | Pattern | Example |
+|------------|---------|---------|
+| Round Results | `round_results:{roundId}` | `round_results:123` |
+| Season Detail | `public_season_detail:{seasonId}` | `public_season_detail:456` |
 
 ### TTL (Time To Live)
 
 - **Duration**: 24 hours (86400 seconds)
-- **Rationale**: Round results only change when a round is completed or uncompleted, which triggers cache invalidation
+- **Rationale**: Data only changes when a round is completed or uncompleted, which triggers cache invalidation
 
 ## Data Cached
 
-The `RoundResultsData` DTO containing:
+### Round Results (`RoundResultsData`)
 
 ```php
 [
@@ -67,24 +97,101 @@ The `RoundResultsData` DTO containing:
 ]
 ```
 
+### Public Season Detail (`PublicSeasonDetailData`)
+
+```php
+[
+    'league' => [
+        'name' => string,
+        'slug' => string,
+        'logo_url' => string|null,
+        'header_image_url' => string|null,
+    ],
+    'competition' => [
+        'name' => string,
+        'slug' => string,
+    ],
+    'season' => [
+        'id' => int,
+        'name' => string,
+        'slug' => string,
+        'status' => string,
+        'stats' => [...],  // Driver/round/race counts
+    ],
+    'rounds' => [...],           // All rounds with races
+    'standings' => [...],        // Driver standings
+    'team_championship_results' => [...],  // Team standings
+    'qualifying_results' => [...],
+    'fastest_lap_results' => [...],
+    'race_time_results' => [...],
+]
+```
+
 ## Cache Invalidation
 
-Cache is automatically invalidated when:
+### Invalidation Triggers
 
-1. **Round is completed** (`completeRound()`)
-   - Cache is cleared before transaction starts
-   - Fresh data is fetched next time `getRoundResults()` is called
+Cache is automatically invalidated when a round is completed or uncompleted:
 
-2. **Round is uncompleted** (`uncompleteRound()`)
-   - Cache is cleared before transaction starts
-   - Fresh data is fetched next time `getRoundResults()` is called
+1. **Round Completed** (`RoundApplicationService::completeRound()`)
+   - Invalidates `round_results:{roundId}` (the completed round)
+   - Invalidates `public_season_detail:{seasonId}` (season standings are recalculated)
 
-### Why Pre-Invalidation?
+2. **Round Uncompleted** (`RoundApplicationService::uncompleteRound()`)
+   - Invalidates `round_results:{roundId}` (the uncompleted round)
+   - Invalidates `public_season_detail:{seasonId}` (season standings are recalculated)
 
-Cache is invalidated **before** the database transaction to ensure:
-- No stale data is served during the transaction
-- If transaction fails, cache remains empty (safe state)
-- Next read will fetch fresh data from database
+### Why Post-Transaction Invalidation?
+
+Cache is invalidated **AFTER** successful transaction commit to ensure:
+- Data integrity is maintained
+- If transaction fails, cache remains unchanged (next read will get correct data)
+- No stale reads during the transaction window
+
+### Flow Diagram
+
+```
+User Dashboard (app subdomain)          Public Site (public subdomain)
+        │                                         │
+        │  PUT /rounds/{id}/complete              │
+        ▼                                         │
+┌───────────────────┐                             │
+│ RoundsPanel.vue   │                             │
+│ toggleCompletion()│                             │
+└───────────────────┘                             │
+        │                                         │
+        ▼                                         │
+┌───────────────────┐                             │
+│ roundStore.       │                             │
+│ completeRound()   │                             │
+└───────────────────┘                             │
+        │                                         │
+        ▼                                         │
+┌───────────────────┐                             │
+│ RoundApplication  │                             │
+│ Service           │                             │
+│ .completeRound()  │                             │
+│   1. DB Transaction                             │
+│   2. Calculate results                          │
+│   3. Commit                                     │
+│   4. Invalidate round cache                     │
+│   5. Invalidate season cache  ─────────────────▶ Cache cleared
+└───────────────────┘                             │
+                                                  │
+                                    GET /public/leagues/{slug}/seasons/{slug}
+                                                  │
+                                                  ▼
+                                    ┌───────────────────┐
+                                    │ LeagueApplication │
+                                    │ Service           │
+                                    │ .getPublicSeason  │
+                                    │  Detail()         │
+                                    │   1. Check cache  │ ← Cache miss!
+                                    │   2. Fetch from DB│
+                                    │   3. Store in cache
+                                    │   4. Return data  │
+                                    └───────────────────┘
+```
 
 ## Configuration
 
@@ -100,7 +207,7 @@ REDIS_PORT=6379
 
 ### Redis Connection
 
-The cache service explicitly uses the `redis` store:
+Both cache services explicitly use the `redis` store for cross-subdomain access:
 
 ```php
 Cache::store('redis')->get($key);
@@ -110,7 +217,7 @@ Cache::store('redis')->forget($key);
 
 ## Error Handling
 
-The cache service is designed to be fault-tolerant:
+Cache services are designed to be fault-tolerant:
 
 - **Cache miss**: Returns `null`, application falls back to database
 - **Cache write failure**: Logs warning, continues without caching
@@ -126,28 +233,29 @@ try {
 }
 ```
 
-## Usage Example
+## Usage Examples
 
-### Fetching Round Results
+### Fetching Season Detail (Cached)
 
 ```php
-// In RoundApplicationService
-public function getRoundResults(int $roundId): RoundResultsData
-{
-    // Try cache first
-    $cached = $this->roundResultsCache->get($roundId);
-    if ($cached !== null) {
-        return $cached;
-    }
+// In LeagueApplicationService::getPublicSeasonDetail()
 
-    // Fetch from database
-    $results = $this->fetchFromDatabase($roundId);
+// 1. Lightweight query to get season ID
+$seasonId = $this->findSeasonIdBySlug($leagueSlug, $seasonSlug);
 
-    // Store in cache for next time
-    $this->roundResultsCache->put($roundId, $results);
-
-    return $results;
+// 2. Try cache first
+$cached = $this->seasonDetailCache->get($seasonId);
+if ($cached !== null) {
+    return $cached;  // Cache hit!
 }
+
+// 3. Cache miss - fetch from database
+$data = $this->fetchSeasonDetailFromDatabase($leagueSlug, $seasonSlug);
+
+// 4. Store in cache for next request
+$this->seasonDetailCache->put($seasonId, $data);
+
+return $data;
 ```
 
 ### Manual Cache Invalidation
@@ -155,18 +263,28 @@ public function getRoundResults(int $roundId): RoundResultsData
 If you need to manually invalidate cache (e.g., after data correction):
 
 ```php
-$cacheService = app(RoundResultsCacheService::class);
-$cacheService->forget($roundId);
+// Invalidate round results
+$roundCacheService = app(RoundResultsCacheService::class);
+$roundCacheService->forget($roundId);
+
+// Invalidate season detail
+$seasonCacheService = app(SeasonDetailCacheService::class);
+$seasonCacheService->forget($seasonId);
 ```
 
 ## Testing
 
-Unit tests are located at:
+### Unit Tests
+
+Round Results Cache:
 `tests/Unit/Infrastructure/Cache/RoundResultsCacheServiceTest.php`
+
+Season Detail Cache:
+`tests/Unit/Infrastructure/Cache/SeasonDetailCacheServiceTest.php` (to be created)
 
 Run tests:
 ```bash
-./vendor/bin/phpunit tests/Unit/Infrastructure/Cache/RoundResultsCacheServiceTest.php
+./vendor/bin/phpunit tests/Unit/Infrastructure/Cache/
 ```
 
 ## Cross-Subdomain Access
@@ -187,17 +305,23 @@ admin.virtualracingleagues.localhost┘
 # Connect to Redis
 docker-compose exec redis redis-cli
 
-# List all round results cache keys
+# List all cache keys
 KEYS round_results:*
+KEYS public_season_detail:*
 
 # Get TTL for a specific key
 TTL round_results:123
+TTL public_season_detail:456
 
 # Delete specific cache
 DEL round_results:123
+DEL public_season_detail:456
 
 # Clear all round results cache
 KEYS round_results:* | xargs redis-cli DEL
+
+# Clear all season detail cache
+KEYS public_season_detail:* | xargs redis-cli DEL
 ```
 
 ### Logs
@@ -208,7 +332,24 @@ Cache operations are logged at `warning` level when failures occur:
 [warning] Failed to retrieve round results from cache {"round_id": 123, "error": "..."}
 [warning] Failed to cache round results {"round_id": 123, "error": "..."}
 [warning] Failed to invalidate round results cache {"round_id": 123, "error": "..."}
+[warning] Failed to retrieve season detail from cache {"season_id": 456, "error": "..."}
+[warning] Failed to cache season detail {"season_id": 456, "error": "..."}
+[warning] Failed to invalidate season detail cache {"season_id": 456, "error": "..."}
 ```
+
+## Performance Impact
+
+### Before Caching
+
+- Public season detail page: 15-25 database queries per request
+- Round results: 10-15 database queries per request
+- High CPU usage for standings calculations
+
+### After Caching
+
+- First request: Same query count (populates cache)
+- Subsequent requests: 1 lightweight query (season ID lookup) + cache read
+- Estimated 90-95% reduction in database load for cached content
 
 ## Future Considerations
 
@@ -216,3 +357,4 @@ Cache operations are logged at `warning` level when failures occur:
 2. **Cache Tags**: Could use Laravel cache tags for bulk invalidation
 3. **Distributed Locking**: For high-concurrency scenarios, consider cache locks
 4. **Metrics**: Add cache hit/miss metrics for monitoring
+5. **Broader Invalidation**: Consider invalidating on driver/team changes that affect standings

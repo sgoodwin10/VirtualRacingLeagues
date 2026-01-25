@@ -28,19 +28,28 @@ final class PlatformIdentifiersTest extends TestCase
         $this->assertEquals(12345, $platformIds->iracingCustomerId());
     }
 
-    public function test_throws_exception_if_all_platform_ids_are_null(): void
+    public function test_allows_all_platform_ids_to_be_null(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('At least one platform identifier is required');
+        // PlatformIdentifiers now allows all IDs to be null to support drivers with only name (no platform IDs)
+        $platformIds = PlatformIdentifiers::from(null, null, null);
 
-        PlatformIdentifiers::from(null, null, null);
+        $this->assertNull($platformIds->psnId());
+        $this->assertNull($platformIds->iracingId());
+        $this->assertNull($platformIds->iracingCustomerId());
+        $this->assertNull($platformIds->discordId());
+        $this->assertNull($platformIds->primaryIdentifier());
     }
 
-    public function test_throws_exception_if_all_platform_ids_are_empty_strings(): void
+    public function test_allows_all_platform_ids_to_be_empty_strings(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        // PlatformIdentifiers now allows empty strings to support drivers with only name (no platform IDs)
+        $platformIds = PlatformIdentifiers::from('', '', null, '');
 
-        PlatformIdentifiers::from('', '', null);
+        $this->assertEquals('', $platformIds->psnId());
+        $this->assertEquals('', $platformIds->iracingId());
+        $this->assertNull($platformIds->iracingCustomerId());
+        $this->assertEquals('', $platformIds->discordId());
+        $this->assertNull($platformIds->primaryIdentifier());
     }
 
     public function test_throws_exception_if_psn_id_too_long(): void

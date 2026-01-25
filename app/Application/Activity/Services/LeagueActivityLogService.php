@@ -223,6 +223,36 @@ class LeagueActivityLogService
     }
 
     /**
+     * Log driver restored.
+     *
+     * @param UserEloquent $user
+     * @param int $leagueId
+     * @param string $leagueName
+     * @param Driver $driver
+     * @return Activity
+     */
+    public function logDriverRestored(
+        UserEloquent $user,
+        int $leagueId,
+        string $leagueName,
+        Driver $driver
+    ): Activity {
+        return $this->logActivity(
+            $user,
+            "Restored driver in league: {$driver->name}",
+            $driver,
+            [
+                'league_id' => $leagueId,
+                'league_name' => $leagueName,
+                'action' => 'restore',
+                'entity_type' => 'driver',
+                'entity_id' => $driver->id,
+                'entity_name' => $driver->name,
+            ]
+        );
+    }
+
+    /**
      * Log drivers imported to league.
      *
      * @param UserEloquent $user

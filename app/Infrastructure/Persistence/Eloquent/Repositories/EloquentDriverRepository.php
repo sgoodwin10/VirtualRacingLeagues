@@ -73,6 +73,11 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         ?int $iracingCustomerId,
         ?string $discordId = null
     ): ?DriverEntity {
+        // If no platform IDs provided, cannot find by platform ID - return null
+        if ($psnId === null && $iracingId === null && $iracingCustomerId === null && $discordId === null) {
+            return null;
+        }
+
         $query = DriverEloquent::query();
 
         // Build OR conditions for platform IDs - matches if ANY platform ID matches
@@ -151,6 +156,11 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         ?int $iracingCustomerId,
         ?string $discordId = null
     ): bool {
+        // If no platform IDs provided, cannot check for duplicates - return false
+        if ($psnId === null && $iracingId === null && $iracingCustomerId === null && $discordId === null) {
+            return false;
+        }
+
         $query = DriverEloquent::query()
             ->whereHas('leagues', function ($q) use ($leagueId) {
                 $q->where('leagues.id', $leagueId);
@@ -181,12 +191,20 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         ?string $search = null,
         ?string $status = null,
         int $page = 1,
-        int $perPage = 15
+        int $perPage = 15,
+        ?string $deletedStatus = 'active'
     ): array {
         $query = DB::table('league_drivers')
             ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
-            ->where('league_drivers.league_id', $leagueId)
-            ->whereNull('drivers.deleted_at');
+            ->where('league_drivers.league_id', $leagueId);
+
+        // Apply deleted status filter
+        if ($deletedStatus === 'active') {
+            $query->whereNull('drivers.deleted_at');
+        } elseif ($deletedStatus === 'deleted') {
+            $query->whereNotNull('drivers.deleted_at');
+        }
+        // 'all' - no filter applied
 
         // Apply search filter
         if ($search !== null && trim($search) !== '') {
@@ -285,7 +303,6 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
             ->where('league_drivers.league_id', $leagueId)
             ->where('league_drivers.driver_id', $driverId)
-            ->whereNull('drivers.deleted_at')
             ->select([
                 'league_drivers.id as pivot_id',
                 'league_drivers.league_id',
@@ -375,6 +392,19 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
             ->delete();
     }
 
+    public function softDeleteDriver(int $driverId): void
+    {
+        DriverEloquent::where('id', $driverId)
+            ->update(['deleted_at' => now()]);
+    }
+
+    public function restoreDriver(int $driverId): void
+    {
+        DriverEloquent::withTrashed()
+            ->where('id', $driverId)
+            ->update(['deleted_at' => null]);
+    }
+
     public function isDriverInLeague(int $leagueId, int $driverId): bool
     {
         return DB::table('league_drivers')
@@ -425,7 +455,8 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         string $orderBy = 'created_at',
         string $orderDirection = 'desc'
     ): array {
-        $query = DriverEloquent::query();
+        // Admin context: Include soft-deleted drivers
+        $query = DriverEloquent::withTrashed();
 
         // Apply search filter
         if ($search !== null && trim($search) !== '') {

@@ -7,6 +7,7 @@ import {
   updateDriver,
   removeDriverFromLeague,
   importDriversFromCSV,
+  restoreDriver,
 } from '../driverService';
 import type {
   CreateDriverRequest,
@@ -99,6 +100,55 @@ describe('driverService', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/leagues/1/drivers', { params });
       expect(result.data).toHaveLength(0);
       expect(result.meta.current_page).toBe(2);
+    });
+
+    it('should fetch league drivers with deleted_status filter', async () => {
+      const params: LeagueDriversQueryParams = {
+        deleted_status: 'deleted',
+      };
+
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          data: [],
+          meta: {
+            current_page: 1,
+            per_page: 15,
+            total: 0,
+            last_page: 1,
+            from: null,
+            to: null,
+          },
+        },
+      });
+
+      const result = await getLeagueDrivers(1, params);
+
+      expect(apiClient.get).toHaveBeenCalledWith('/leagues/1/drivers', { params });
+      expect(result.data).toHaveLength(0);
+    });
+
+    it('should fetch all drivers when deleted_status is all', async () => {
+      const params: LeagueDriversQueryParams = {
+        deleted_status: 'all',
+      };
+
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          data: [],
+          meta: {
+            current_page: 1,
+            per_page: 15,
+            total: 0,
+            last_page: 1,
+            from: null,
+            to: null,
+          },
+        },
+      });
+
+      await getLeagueDrivers(1, params);
+
+      expect(apiClient.get).toHaveBeenCalledWith('/leagues/1/drivers', { params });
     });
   });
 
@@ -251,6 +301,42 @@ describe('driverService', () => {
       await removeDriverFromLeague(1, 1);
 
       expect(apiClient.delete).toHaveBeenCalledWith('/leagues/1/drivers/1');
+    });
+  });
+
+  describe('restoreDriver', () => {
+    it('should restore a soft-deleted driver', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: null });
+
+      await restoreDriver(1, 1);
+
+      expect(apiClient.post).toHaveBeenCalledWith('/leagues/1/drivers/1/restore');
+    });
+
+    it('should handle network error on restore', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue({
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+      });
+
+      await expect(restoreDriver(1, 1)).rejects.toMatchObject({
+        code: 'ERR_NETWORK',
+      });
+    });
+
+    it('should handle 404 error when driver not found', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue({
+        response: {
+          status: 404,
+          data: { message: 'Driver not found' },
+        },
+      });
+
+      await expect(restoreDriver(1, 999)).rejects.toMatchObject({
+        response: {
+          status: 404,
+        },
+      });
     });
   });
 

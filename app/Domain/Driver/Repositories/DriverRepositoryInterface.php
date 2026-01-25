@@ -71,6 +71,7 @@ interface DriverRepositoryInterface
     /**
      * Get all drivers in a league with pagination and filtering.
      *
+     * @param string|null $deletedStatus Filter by deleted status: 'active' (not deleted), 'deleted', 'all'
      * @return array{
      *     data: array<LeagueDriver>,
      *     driver_data: array<int, Driver>,
@@ -85,7 +86,8 @@ interface DriverRepositoryInterface
         ?string $search = null,
         ?string $status = null,
         int $page = 1,
-        int $perPage = 15
+        int $perPage = 15,
+        ?string $deletedStatus = 'active'
     ): array;
 
     /**
@@ -110,6 +112,16 @@ interface DriverRepositoryInterface
      * Remove driver from league.
      */
     public function removeFromLeague(int $leagueId, int $driverId): void;
+
+    /**
+     * Soft delete a driver by ID.
+     */
+    public function softDeleteDriver(int $driverId): void;
+
+    /**
+     * Restore a soft-deleted driver by ID.
+     */
+    public function restoreDriver(int $driverId): void;
 
     /**
      * Check if driver is in league.

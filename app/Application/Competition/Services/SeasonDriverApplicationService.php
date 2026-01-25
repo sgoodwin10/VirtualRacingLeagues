@@ -569,6 +569,7 @@ final class SeasonDriverApplicationService
                 'team_name' => $teamName,
                 'division_id' => $divisionId,
                 'division_name' => $divisionName,
+                'deleted_at' => $leagueDriver->driver->deleted_at?->format('Y-m-d H:i:s'),
             ]
         );
     }

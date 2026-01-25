@@ -28,7 +28,7 @@ services:
       - npm_global:/home/laravel/.npm-global
       - playwright_browsers:/home/laravel/.cache/playwright
     ports:
-      - "5173:5173"  # Vite dev server
+      - "5174:5173"  # Vite dev server
     networks:
       - app-network
     depends_on:
@@ -48,7 +48,7 @@ services:
     container_name: ${DOCKER_CONTAINER_NAME}-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8000:80"
     volumes:
       - ./:/var/www:delegated
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
@@ -71,7 +71,7 @@ services:
       - mariadb_data:/var/lib/mysql
       - ./docker/mariadb/conf.d:/etc/mysql/conf.d:ro
     ports:
-      - "3307:3306"
+      - "3308:3306"
     networks:
       - app-network
     healthcheck:
@@ -119,8 +119,8 @@ services:
     container_name: ${DOCKER_CONTAINER_NAME}-mailpit
     restart: unless-stopped
     ports:
-      - "8025:8025"  # Web UI
-      - "1025:1025"  # SMTP server
+      - "8026:8025"  # Web UI
+      - "1026:1025"  # SMTP server
     networks:
       - app-network
 

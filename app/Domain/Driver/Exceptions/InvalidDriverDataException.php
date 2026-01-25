@@ -18,6 +18,11 @@ final class InvalidDriverDataException extends InvalidArgumentException
         return new self('At least one platform identifier is required');
     }
 
+    public static function missingNameAndPlatformId(): self
+    {
+        return new self('At least one name field (first name, last name, or nickname) OR at least one platform identifier is required');
+    }
+
     /**
      * @param array<int> $leaguePlatformIds
      */

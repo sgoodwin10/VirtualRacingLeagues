@@ -22,14 +22,14 @@ final class DriverPlatformColumnService
         1 => [ // Gran Turismo 7
             'name' => 'Gran Turismo 7',
             'fields' => [
-                ['field' => 'PsnId', 'label' => 'PSN ID', 'type' => 'text'],
+                ['field' => 'psn_id', 'label' => 'PSN ID', 'type' => 'text'],
             ],
         ],
         2 => [ // iRacing
             'name' => 'iRacing',
             'fields' => [
-                ['field' => 'IracingId', 'label' => 'iRacing ID', 'type' => 'text'],
-                ['field' => 'IracingCustomerId', 'label' => 'iRacing Customer ID', 'type' => 'number'],
+                ['field' => 'iracing_id', 'label' => 'iRacing ID', 'type' => 'text'],
+                ['field' => 'iracing_customer_id', 'label' => 'iRacing Customer ID', 'type' => 'number'],
             ],
         ],
         3 => [ // Assetto Corsa Competizione
@@ -138,9 +138,9 @@ final class DriverPlatformColumnService
 
             // Map field names to PlatformIdentifiers methods
             $value = match ($field) {
-                'PsnId' => $platformIdentifiers->psnId(),
-                'IracingId' => $platformIdentifiers->iracingId(),
-                'IracingCustomerId' => $platformIdentifiers->iracingCustomerId(),
+                'psn_id' => $platformIdentifiers->psnId(),
+                'iracing_id' => $platformIdentifiers->iracingId(),
+                'iracing_customer_id' => $platformIdentifiers->iracingCustomerId(),
                 default => null,
             };
 

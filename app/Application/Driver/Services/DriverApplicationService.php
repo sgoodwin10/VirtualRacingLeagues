@@ -20,6 +20,7 @@ use App\Domain\Driver\Entities\LeagueDriver;
 use App\Domain\Driver\Events\DriverAddedToLeague;
 use App\Domain\Driver\Events\DriverCreated;
 use App\Domain\Driver\Events\DriverRemovedFromLeague;
+use App\Domain\Driver\Events\DriverRestored;
 use App\Domain\Driver\Exceptions\DriverAlreadyInLeagueException;
 use App\Domain\Driver\Exceptions\InvalidDriverDataException;
 use App\Domain\Driver\Repositories\DriverRepositoryInterface;
@@ -59,12 +60,15 @@ final class DriverApplicationService
         // Authorization check
         $this->authorizeLeagueAccess($leagueId, $userId);
 
-        // Get effective nickname (auto-generated from Discord ID if needed)
+        // Get effective nickname (auto-populated if not provided)
         $effectiveNickname = $this->resolveNickname(
             $data->nickname,
             $data->first_name,
             $data->last_name,
-            $data->discord_id
+            $data->discord_id,
+            $data->psn_id,
+            $data->iracing_id,
+            $data->iracing_customer_id
         );
 
         // Validate at least one name field (including effective nickname)
@@ -72,33 +76,33 @@ final class DriverApplicationService
             || ($data->last_name !== null && trim($data->last_name) !== '')
             || ($effectiveNickname !== null && trim($effectiveNickname) !== '');
 
-        if (! $hasName) {
-            throw InvalidDriverDataException::missingNameFields();
-        }
-
         // Validate at least one platform ID
         $hasPlatformId = ($data->psn_id !== null && trim($data->psn_id) !== '')
             || ($data->iracing_id !== null && trim($data->iracing_id) !== '')
             || $data->iracing_customer_id !== null
             || ($data->discord_id !== null && trim($data->discord_id) !== '');
 
-        if (! $hasPlatformId) {
-            throw InvalidDriverDataException::missingPlatformIds();
+        // Require at least one name field OR at least one platform ID
+        if (! $hasName && ! $hasPlatformId) {
+            throw InvalidDriverDataException::missingNameAndPlatformId();
         }
 
         // Validate that at least one platform ID belongs to the league's platforms
-        $league = $this->leagueRepository->findById($leagueId);
-        $leaguePlatformIds = $league->platformIds();
+        // (only if driver has platform IDs)
+        if ($hasPlatformId) {
+            $league = $this->leagueRepository->findById($leagueId);
+            $leaguePlatformIds = $league->platformIds();
 
-        $driverData = [
-            'psn_id' => $data->psn_id,
-            'iracing_id' => $data->iracing_id,
-            'iracing_customer_id' => $data->iracing_customer_id,
-            'discord_id' => $data->discord_id,
-        ];
+            $driverData = [
+                'psn_id' => $data->psn_id,
+                'iracing_id' => $data->iracing_id,
+                'iracing_customer_id' => $data->iracing_customer_id,
+                'discord_id' => $data->discord_id,
+            ];
 
-        if (! PlatformMappingService::hasValidPlatformForLeague($leaguePlatformIds, $driverData)) {
-            throw InvalidDriverDataException::platformNotInLeague($leaguePlatformIds);
+            if (! PlatformMappingService::hasValidPlatformForLeague($leaguePlatformIds, $driverData)) {
+                throw InvalidDriverDataException::platformNotInLeague($leaguePlatformIds);
+            }
         }
 
         // Check if driver with these platform IDs already exists in this league
@@ -129,6 +133,7 @@ final class DriverApplicationService
     /**
      * Get paginated list of drivers in a league.
      *
+     * @param string|null $deletedStatus Filter by deleted status: 'active', 'deleted', 'all'
      * @throws UnauthorizedException If the user does not own the league
      */
     public function getLeagueDrivers(
@@ -137,12 +142,20 @@ final class DriverApplicationService
         ?string $search = null,
         ?string $status = null,
         int $page = 1,
-        int $perPage = 15
+        int $perPage = 15,
+        ?string $deletedStatus = 'active'
     ): PaginatedLeagueDriversData {
         // Authorization check
         $this->authorizeLeagueAccess($leagueId, $userId);
 
-        $result = $this->driverRepository->getLeagueDrivers($leagueId, $search, $status, $page, $perPage);
+        $result = $this->driverRepository->getLeagueDrivers(
+            $leagueId,
+            $search,
+            $status,
+            $page,
+            $perPage,
+            $deletedStatus
+        );
 
         // Map to DTOs
         $dtoData = array_map(
@@ -309,7 +322,36 @@ final class DriverApplicationService
     }
 
     /**
-     * Remove a driver from a league.
+     * Soft delete a driver (preserves league_drivers relationship).
+     *
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    public function deleteDriverFromLeague(int $leagueId, int $driverId, int $userId): void
+    {
+        // Authorization check
+        $this->authorizeLeagueAccess($leagueId, $userId);
+
+        DB::transaction(function () use ($leagueId, $driverId) {
+            // Get driver info before deletion
+            $result = $this->driverRepository->getLeagueDriver($leagueId, $driverId);
+            $driver = $result['driver'];
+
+            // Soft delete the driver (preserves league_drivers relationship)
+            $driver->delete();
+            $this->driverRepository->save($driver);
+
+            // Dispatch event
+            Event::dispatch(new DriverRemovedFromLeague(
+                leagueId: $leagueId,
+                driverId: $driverId,
+                displayName: $driver->name()->displayName()
+            ));
+        });
+    }
+
+    /**
+     * Remove a driver from a league (deletes league_drivers relationship).
+     * Kept for potential future use.
      *
      * @throws UnauthorizedException If the user does not own the league
      */
@@ -332,6 +374,68 @@ final class DriverApplicationService
                 displayName: $driver->name()->displayName()
             ));
         });
+    }
+
+    /**
+     * Restore a soft-deleted driver.
+     *
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    public function restoreDriver(int $leagueId, int $driverId, int $userId): void
+    {
+        $this->authorizeLeagueAccess($leagueId, $userId);
+
+        DB::transaction(function () use ($driverId) {
+            $driver = $this->driverRepository->findById($driverId);
+
+            if ($driver->deletedAt() === null) {
+                throw new \InvalidArgumentException('Driver is not deleted');
+            }
+
+            $driver->restore();
+            $this->driverRepository->save($driver);
+
+            Event::dispatch(new DriverRestored(
+                driverId: $driverId,
+                displayName: $driver->name()->displayName()
+            ));
+        });
+    }
+
+    /**
+     * Restore driver with activity logging.
+     *
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    public function restoreDriverWithActivityLog(int $leagueId, int $driverId, int $userId): void
+    {
+        $this->restoreDriver($leagueId, $driverId, $userId);
+
+        // Log activity
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $leagueDriver = LeagueDriverEloquent::with('league')
+                    ->where('league_id', $leagueId)
+                    ->where('driver_id', $driverId)
+                    ->firstOrFail();
+
+                $driverModel = DriverEloquent::findOrFail($driverId);
+
+                $this->activityLogService->logDriverRestored(
+                    $user,
+                    $leagueId,
+                    $leagueDriver->league->name,
+                    $driverModel
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log driver restore activity', [
+                'error' => $e->getMessage(),
+                'league_id' => $leagueId,
+                'driver_id' => $driverId,
+            ]);
+        }
     }
 
     /**
@@ -424,22 +528,21 @@ final class DriverApplicationService
                     );
                     $driverNumber = $driverNumber !== null ? (int) $driverNumber : null;
 
-                    // Resolve effective nickname (auto-generated from Discord ID if needed)
-                    $effectiveNickname = $this->resolveNickname($nickname, $firstName, $lastName, $discordId);
+                    // Resolve effective nickname (auto-populated if not provided)
+                    $effectiveNickname = $this->resolveNickname(
+                        $nickname,
+                        $firstName,
+                        $lastName,
+                        $discordId,
+                        $psnId,
+                        $iracingId,
+                        $iracingCustomerId
+                    );
 
                     // Validate: at least one name field (including effective nickname)
                     $hasName = ($firstName !== null && $firstName !== '')
                         || ($lastName !== null && $lastName !== '')
                         || ($effectiveNickname !== null && $effectiveNickname !== '');
-
-                    if (! $hasName) {
-                        $errors[] = [
-                            'row' => $rowNumber,
-                            'message' => "Row {$rowNumber}: At least one name field is required",
-                        ];
-
-                        continue;
-                    }
 
                     // Validate: at least one platform ID
                     $hasPlatformId = ($psnId !== null && $psnId !== '')
@@ -447,10 +550,12 @@ final class DriverApplicationService
                         || $iracingCustomerId !== null
                         || ($discordId !== null && $discordId !== '');
 
-                    if (! $hasPlatformId) {
+                    // Require at least one name field OR at least one platform ID
+                    if (! $hasName && ! $hasPlatformId) {
                         $errors[] = [
                             'row' => $rowNumber,
-                            'message' => "Row {$rowNumber}: At least one platform ID is required",
+                            'message' => "Row {$rowNumber}: At least one name field "
+                                . "OR at least one platform ID is required",
                         ];
 
                         continue;
@@ -613,8 +718,11 @@ final class DriverApplicationService
      *
      * @throws UnauthorizedException If the user does not own the league
      */
-    public function createDriverForLeagueWithActivityLog(CreateDriverData $data, int $leagueId, int $userId): LeagueDriverData
-    {
+    public function createDriverForLeagueWithActivityLog(
+        CreateDriverData $data,
+        int $leagueId,
+        int $userId
+    ): LeagueDriverData {
         $leagueDriverData = $this->createDriverForLeague($data, $leagueId, $userId);
 
         // Log activity
@@ -687,7 +795,42 @@ final class DriverApplicationService
     }
 
     /**
+     * Soft delete a driver with activity logging.
+     *
+     * @throws UnauthorizedException If the user does not own the league
+     */
+    public function deleteDriverFromLeagueWithActivityLog(int $leagueId, int $driverId, int $userId): void
+    {
+        // Capture driver data before deletion for logging
+        // Query by league_id and driver_id since $driverId is the driver.id, not league_drivers.id
+        $leagueDriver = LeagueDriverEloquent::with('driver', 'league')
+            ->where('league_id', $leagueId)
+            ->where('driver_id', $driverId)
+            ->firstOrFail();
+        /** @var DriverEloquent $driverModel */
+        $driverModel = $leagueDriver->driver;
+        $leagueName = $leagueDriver->league->name;
+
+        $this->deleteDriverFromLeague($leagueId, $driverId, $userId);
+
+        // Log activity
+        try {
+            $user = Auth::user();
+            if ($user instanceof UserEloquent) {
+                $this->activityLogService->logDriverRemoved($user, $leagueId, $leagueName, $driverModel);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to log driver deletion activity', [
+                'error' => $e->getMessage(),
+                'league_id' => $leagueId,
+                'driver_id' => $driverId,
+            ]);
+        }
+    }
+
+    /**
      * Remove a driver from a league with activity logging.
+     * Kept for potential future use.
      *
      * @throws UnauthorizedException If the user does not own the league
      */
@@ -725,8 +868,11 @@ final class DriverApplicationService
      *
      * @throws UnauthorizedException If the user does not own the league
      */
-    public function importDriversFromCSVWithActivityLog(ImportDriversData $data, int $leagueId, int $userId): ImportResultData
-    {
+    public function importDriversFromCSVWithActivityLog(
+        ImportDriversData $data,
+        int $leagueId,
+        int $userId
+    ): ImportResultData {
         $result = $this->importDriversFromCSV($data, $leagueId, $userId);
 
         // Log activity
@@ -839,12 +985,15 @@ final class DriverApplicationService
      */
     public function createDriver(AdminCreateDriverData $data): DriverData
     {
-        // Get effective nickname (auto-generated from Discord ID if needed)
+        // Get effective nickname (auto-populated if not provided)
         $effectiveNickname = $this->resolveNickname(
             $data->nickname,
             $data->first_name,
             $data->last_name,
-            $data->discord_id
+            $data->discord_id,
+            $data->psn_id,
+            $data->iracing_id,
+            $data->iracing_customer_id
         );
 
         // Validate at least one name field (including effective nickname)
@@ -852,18 +1001,15 @@ final class DriverApplicationService
             || ($data->last_name !== null && trim($data->last_name) !== '')
             || ($effectiveNickname !== null && trim($effectiveNickname) !== '');
 
-        if (! $hasName) {
-            throw InvalidDriverDataException::missingNameFields();
-        }
-
         // Validate at least one platform ID
         $hasPlatformId = ($data->psn_id !== null && trim($data->psn_id) !== '')
             || ($data->iracing_id !== null && trim($data->iracing_id) !== '')
             || $data->iracing_customer_id !== null
             || ($data->discord_id !== null && trim($data->discord_id) !== '');
 
-        if (! $hasPlatformId) {
-            throw InvalidDriverDataException::missingPlatformIds();
+        // Require at least one name field OR at least one platform ID
+        if (! $hasName && ! $hasPlatformId) {
+            throw InvalidDriverDataException::missingNameAndPlatformId();
         }
 
         // Check if driver with these platform IDs already exists
@@ -1181,33 +1327,58 @@ final class DriverApplicationService
 
     /**
      * Resolve the effective nickname for a driver.
-     * If nickname is provided and not empty, use it.
-     * If no nickname and no first/last name but Discord ID is present, use Discord ID as nickname.
+     * Auto-populates nickname when not explicitly provided using this priority:
+     * 1. If nickname is provided and not empty, use it
+     * 2. If no nickname, auto-populate using priority order:
+     *    - Discord ID (highest priority)
+     *    - Platform ID (PSN > iRacing > iRacing Customer ID)
+     *    - First Name (lowest priority)
      *
      * @param string|null $nickname
      * @param string|null $firstName
      * @param string|null $lastName
      * @param string|null $discordId
+     * @param string|null $psnId
+     * @param string|null $iracingId
+     * @param int|null $iracingCustomerId
      * @return string|null
      */
     private function resolveNickname(
         ?string $nickname,
         ?string $firstName,
         ?string $lastName,
-        ?string $discordId
+        ?string $discordId,
+        ?string $psnId = null,
+        ?string $iracingId = null,
+        ?int $iracingCustomerId = null
     ): ?string {
         // If nickname is provided and not empty, use it
         if ($nickname !== null && trim($nickname) !== '') {
             return $nickname;
         }
 
-        // If no nickname and no first/last name but Discord ID is present, generate from Discord ID
-        $hasFirstName = $firstName !== null && trim($firstName) !== '';
-        $hasLastName = $lastName !== null && trim($lastName) !== '';
-        $hasDiscordId = $discordId !== null && trim($discordId) !== '';
-
-        if (!$hasFirstName && !$hasLastName && $hasDiscordId) {
+        // Auto-populate nickname using priority order:
+        // 1. Discord ID (highest priority)
+        if ($discordId !== null && trim($discordId) !== '') {
             return $discordId;
+        }
+
+        // 2. Platform ID (PSN > iRacing > iRacing Customer ID)
+        if ($psnId !== null && trim($psnId) !== '') {
+            return $psnId;
+        }
+
+        if ($iracingId !== null && trim($iracingId) !== '') {
+            return $iracingId;
+        }
+
+        if ($iracingCustomerId !== null) {
+            return (string) $iracingCustomerId;
+        }
+
+        // 3. First Name (lowest priority)
+        if ($firstName !== null && trim($firstName) !== '') {
+            return $firstName;
         }
 
         return null;

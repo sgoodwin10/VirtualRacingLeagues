@@ -149,6 +149,7 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::get('/leagues/{league}/drivers/{driver}', [DriverController::class, 'show'])->name('leagues.drivers.show');
             Route::put('/leagues/{league}/drivers/{driver}', [DriverController::class, 'update'])->name('leagues.drivers.update');
             Route::delete('/leagues/{league}/drivers/{driver}', [DriverController::class, 'destroy'])->name('leagues.drivers.destroy');
+            Route::post('/leagues/{league}/drivers/{driver}/restore', [DriverController::class, 'restore'])->name('leagues.drivers.restore');
             Route::get('/leagues/{league}/drivers/{driver}/seasons', [DriverController::class, 'seasons'])->name('leagues.drivers.seasons');
             Route::post('/leagues/{league}/drivers/import-csv', [DriverController::class, 'importCsv'])
                 ->middleware('throttle:5,1')
@@ -168,7 +169,7 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::put('/competitions/{id}', [CompetitionController::class, 'update'])->name('competitions.update');
             Route::delete('/competitions/{id}', [CompetitionController::class, 'destroy'])->name('competitions.destroy');
             Route::post('/competitions/{id}/archive', [CompetitionController::class, 'archive'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('competitions.archive');
 
             // Competition Seasons
@@ -179,27 +180,27 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             // Seasons
             Route::get('/seasons/{id}', [SeasonController::class, 'show'])->name('seasons.show');
             Route::get('/seasons/{id}/standings', [SeasonController::class, 'standings'])
-                ->middleware('throttle:30,1')
+                ->middleware('throttle:60,1')
                 ->name('seasons.standings');
             Route::put('/seasons/{id}', [SeasonController::class, 'update'])->name('seasons.update');
             Route::delete('/seasons/{id}', [SeasonController::class, 'destroy'])->name('seasons.destroy');
             Route::post('/seasons/{id}/archive', [SeasonController::class, 'archive'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('seasons.archive');
             Route::post('/seasons/{id}/unarchive', [SeasonController::class, 'unarchive'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('seasons.unarchive');
             Route::post('/seasons/{id}/activate', [SeasonController::class, 'activate'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('seasons.activate');
             Route::post('/seasons/{id}/complete', [SeasonController::class, 'complete'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('seasons.complete');
             Route::post('/seasons/{id}/reactivate', [SeasonController::class, 'reactivate'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('seasons.reactivate');
             Route::post('/seasons/{id}/restore', [SeasonController::class, 'restore'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('seasons.restore');
             Route::post('/seasons/{id}/recalculate-results', [SeasonController::class, 'recalculateResults'])
                 ->middleware('throttle:5,1')
@@ -263,10 +264,10 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::put('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'update'])->name('rounds.update');
             Route::delete('/rounds/{roundId}', [\App\Http\Controllers\User\RoundController::class, 'destroy'])->name('rounds.destroy');
             Route::put('/rounds/{roundId}/complete', [\App\Http\Controllers\User\RoundController::class, 'complete'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('rounds.complete');
             Route::put('/rounds/{roundId}/uncomplete', [\App\Http\Controllers\User\RoundController::class, 'uncomplete'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('rounds.uncomplete');
 
             // Races
@@ -284,14 +285,14 @@ Route::domain($appDomain)->middleware('web')->group(function () {
                 ->name('races.update');
             Route::delete('/races/{raceId}', [RaceController::class, 'destroy'])
                 ->whereNumber('raceId')
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('races.destroy');
             Route::get('/races/{raceId}/orphaned-results', [RaceController::class, 'getOrphanedResults'])
                 ->whereNumber('raceId')
                 ->name('races.orphaned-results.index');
             Route::delete('/races/{raceId}/orphaned-results', [RaceController::class, 'removeOrphanedResults'])
                 ->whereNumber('raceId')
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('races.orphaned-results.destroy');
 
             // Qualifiers
@@ -391,7 +392,7 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
                 ->name('leagues.show');
             Route::get('/leagues/{slug}/seasons/{seasonSlug}', [PublicLeagueController::class, 'seasonDetail'])
                 ->where(['slug' => '[a-z0-9\-]+', 'seasonSlug' => '[a-z0-9\-]+'])
-                ->middleware('throttle:20,1')
+                ->middleware('throttle:60,1')
                 ->name('leagues.seasons.show');
             Route::get('/races/{raceId}/results', [PublicLeagueController::class, 'raceResults'])
                 ->whereNumber('raceId')

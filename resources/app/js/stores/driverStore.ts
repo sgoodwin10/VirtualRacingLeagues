@@ -10,6 +10,7 @@ import type {
   CreateDriverRequest,
   UpdateDriverRequest,
   DriverStatus,
+  DriverDeletedStatus,
   PaginatedDriversResponse,
   LeagueDriversQueryParams,
   DriverStats,
@@ -21,6 +22,7 @@ import {
   updateDriver as updateDriverService,
   removeDriverFromLeague,
   importDriversFromCSV,
+  restoreDriver as restoreDriverService,
 } from '@app/services/driverService';
 import { useCrudStore } from '@app/composables/useCrudStore';
 
@@ -57,6 +59,7 @@ export const useDriverStore = defineStore('driver', () => {
   // Filter state
   const searchQuery = ref('');
   const statusFilter = ref<DriverStatus | 'all'>('all');
+  const deletedStatusFilter = ref<DriverDeletedStatus>('active');
 
   // Getters
   const activeDrivers = computed(() => {
@@ -110,6 +113,7 @@ export const useDriverStore = defineStore('driver', () => {
         per_page: params?.per_page ?? perPage.value,
         search: params?.search ?? (searchQuery.value || undefined),
         status: params?.status ?? (statusFilter.value !== 'all' ? statusFilter.value : undefined),
+        deleted_status: params?.deleted_status ?? deletedStatusFilter.value,
       };
 
       const response: PaginatedDriversResponse = await getLeagueDrivers(
@@ -299,6 +303,38 @@ export const useDriverStore = defineStore('driver', () => {
   }
 
   /**
+   * Set deleted status filter and reset to first page
+   * @param status - Deleted status filter
+   */
+  function setDeletedStatusFilter(status: DriverDeletedStatus): void {
+    deletedStatusFilter.value = status;
+    currentPage.value = 1;
+  }
+
+  /**
+   * Restore a deleted driver
+   * @param leagueId - League ID
+   * @param driverId - Driver ID
+   */
+  async function restoreDriver(leagueId: number, driverId: number): Promise<void> {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await restoreDriverService(leagueId, driverId);
+
+      // Refresh the driver list after restore
+      await fetchLeagueDrivers(leagueId);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to restore driver';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /**
    * Go to next page
    */
   function nextPage(): void {
@@ -332,6 +368,7 @@ export const useDriverStore = defineStore('driver', () => {
   function resetFilters(): void {
     searchQuery.value = '';
     statusFilter.value = 'all';
+    deletedStatusFilter.value = 'active';
     currentPage.value = 1;
   }
 
@@ -346,6 +383,7 @@ export const useDriverStore = defineStore('driver', () => {
     lastPage.value = 1;
     searchQuery.value = '';
     statusFilter.value = 'all';
+    deletedStatusFilter.value = 'active';
   }
 
   return {
@@ -360,6 +398,7 @@ export const useDriverStore = defineStore('driver', () => {
     lastPage,
     searchQuery,
     statusFilter,
+    deletedStatusFilter,
 
     // Getters
     activeDrivers,
@@ -375,9 +414,11 @@ export const useDriverStore = defineStore('driver', () => {
     fetchLeagueDriver,
     updateDriver,
     removeDriver,
+    restoreDriver,
     importCSV,
     setSearchQuery,
     setStatusFilter,
+    setDeletedStatusFilter,
     nextPage,
     previousPage,
     goToPage,

@@ -7,6 +7,10 @@ import { Button } from '@app/components/common/buttons';
 import BaseBadge from '@app/components/common/indicators/BaseBadge.vue';
 import Skeleton from 'primevue/skeleton';
 import Toast from 'primevue/toast';
+import Accordion from 'primevue/accordion';
+import AccordionPanel from 'primevue/accordionpanel';
+import AccordionHeader from 'primevue/accordionheader';
+import AccordionContent from 'primevue/accordioncontent';
 import { getLeagueById } from '@app/services/leagueService';
 import { usePageTitle } from '@app/composables/usePageTitle';
 import { useCompetitionStore } from '@app/stores/competitionStore';
@@ -605,9 +609,21 @@ function getCompetitionStatusClass(competition: Competition): 'active' | 'idle' 
           </section>
 
           <!-- Recent Activity Section -->
-          <section class="mb-8">
-            <ListSectionHeader title="Activity Logs" class="mb-4" />
-            <ActivityLog :league-id="leagueIdNumber" :limit="10" :compact="true" />
+          <section class="mb-8 hidden">
+            <Accordion :value="null">
+              <AccordionPanel value="activity">
+                <AccordionHeader>
+                  <span
+                    class="font-mono text-sm font-semibold text-[var(--text-primary)] tracking-wide"
+                  >
+                    Activity Logs
+                  </span>
+                </AccordionHeader>
+                <AccordionContent>
+                  <ActivityLog :league-id="leagueIdNumber" :limit="10" :compact="true" />
+                </AccordionContent>
+              </AccordionPanel>
+            </Accordion>
           </section>
         </div>
       </main>

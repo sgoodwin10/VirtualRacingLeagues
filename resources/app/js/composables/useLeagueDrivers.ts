@@ -27,6 +27,14 @@ export function useLeagueDrivers(leagueId: Ref<number>, options: UseLeagueDriver
     },
   );
 
+  // Watch for deleted status filter changes
+  watch(
+    () => driverStore.deletedStatusFilter,
+    () => {
+      loadDrivers();
+    },
+  );
+
   // Watch for page changes
   watch(
     () => driverStore.currentPage,
@@ -72,9 +80,20 @@ export function useLeagueDrivers(leagueId: Ref<number>, options: UseLeagueDriver
   async function removeDriver(driverId: number): Promise<void> {
     try {
       await driverStore.removeDriver(leagueId.value, driverId);
-      options.onSuccess?.('Driver removed from league');
+      options.onSuccess?.('Driver deleted successfully');
     } catch (error) {
-      options.onError?.('Failed to remove driver');
+      options.onError?.('Failed to delete driver');
+      throw error;
+    }
+  }
+
+  async function restoreDriver(driverId: number): Promise<void> {
+    try {
+      await driverStore.restoreDriver(leagueId.value, driverId);
+      options.onSuccess?.('Driver restored successfully');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to restore driver';
+      options.onError?.(message);
       throw error;
     }
   }
@@ -107,6 +126,7 @@ export function useLeagueDrivers(leagueId: Ref<number>, options: UseLeagueDriver
     drivers: driverStore.drivers,
     searchQuery,
     selectedStatus: driverStore.statusFilter,
+    deletedStatusFilter: driverStore.deletedStatusFilter,
     isLoading,
     isSearching,
 
@@ -115,6 +135,7 @@ export function useLeagueDrivers(leagueId: Ref<number>, options: UseLeagueDriver
     addDriver,
     updateDriver,
     removeDriver,
+    restoreDriver,
     importFromCSV,
   };
 }

@@ -38,10 +38,12 @@ final class Driver
         ?Slug $slug = null
     ): self {
         // Generate slug from name if not provided
+        // Use primary platform identifier as fallback if no name exists
         $generatedSlug = $slug ?? Slug::generate(
             $name->firstName(),
             $name->lastName(),
-            $name->nickname()
+            $name->nickname(),
+            $platformIds->primaryIdentifier()
         );
 
         return new self(
@@ -193,6 +195,12 @@ final class Driver
     public function delete(): void
     {
         $this->deletedAt = new DateTimeImmutable();
+        $this->updatedAt = new DateTimeImmutable();
+    }
+
+    public function restore(): void
+    {
+        $this->deletedAt = null;
         $this->updatedAt = new DateTimeImmutable();
     }
 

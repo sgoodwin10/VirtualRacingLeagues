@@ -159,7 +159,7 @@ Bob Wilson,,DNF,01:35.000`;
  * Download example CSV file
  */
 function downloadExample(): void {
-  const blob = new Blob([exampleCsvContent.value], { type: 'text/csv;charset=utf-8;' });
+  const blob = new globalThis.Blob([exampleCsvContent.value], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

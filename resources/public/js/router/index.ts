@@ -3,6 +3,7 @@ import { useAuthStore } from '@public/stores/authStore';
 import HomeView from '@public/views/HomeView.vue';
 import LoginView from '@public/views/auth/LoginView.vue';
 import RegisterView from '@public/views/auth/RegisterView.vue';
+import RegisterSuccessView from '@public/views/auth/RegisterSuccessView.vue';
 import ForgotPasswordView from '@public/views/auth/ForgotPasswordView.vue';
 import ResetPasswordView from '@public/views/auth/ResetPasswordView.vue';
 
@@ -40,6 +41,15 @@ const router = createRouter({
       component: RegisterView,
       meta: {
         title: 'Register',
+        isAuthRoute: true,
+      },
+    },
+    {
+      path: '/register/success',
+      name: 'register-success',
+      component: RegisterSuccessView,
+      meta: {
+        title: 'Registration Successful',
         isAuthRoute: true,
       },
     },

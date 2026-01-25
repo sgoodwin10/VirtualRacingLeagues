@@ -131,24 +131,7 @@ final class DriverControllerTest extends TestCase
         ]);
     }
 
-    public function test_cannot_create_driver_without_name_fields(): void
-    {
-        $driverData = [
-            'first_name' => null,
-            'last_name' => null,
-            'nickname' => null,
-            'email' => 'john.doe@example.com',
-            'psn_id' => 'john_doe_psn',
-        ];
-
-        $response = $this->actingAs($this->admin, 'admin')
-            ->postJson('/api/admin/drivers', $driverData);
-
-        $response->assertStatus(422);
-        $response->assertJsonPath('message', 'At least one name field (first name, last name, or nickname) is required');
-    }
-
-    public function test_cannot_create_driver_without_platform_ids(): void
+    public function test_can_create_driver_with_only_name_fields(): void
     {
         $driverData = [
             'first_name' => 'John',
@@ -164,8 +147,53 @@ final class DriverControllerTest extends TestCase
         $response = $this->actingAs($this->admin, 'admin')
             ->postJson('/api/admin/drivers', $driverData);
 
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('drivers', [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+        ]);
+    }
+
+    public function test_can_create_driver_with_only_platform_id(): void
+    {
+        $driverData = [
+            'first_name' => null,
+            'last_name' => null,
+            'nickname' => null,
+            'email' => 'john.doe@example.com',
+            'psn_id' => 'john_doe_psn',
+            'iracing_id' => null,
+            'iracing_customer_id' => null,
+            'discord_id' => null,
+        ];
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->postJson('/api/admin/drivers', $driverData);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('drivers', [
+            'psn_id' => 'john_doe_psn',
+        ]);
+    }
+
+    public function test_cannot_create_driver_without_name_or_platform_id(): void
+    {
+        $driverData = [
+            'first_name' => null,
+            'last_name' => null,
+            'nickname' => null,
+            'email' => 'john.doe@example.com',
+            'psn_id' => null,
+            'iracing_id' => null,
+            'iracing_customer_id' => null,
+            'discord_id' => null,
+        ];
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->postJson('/api/admin/drivers', $driverData);
+
         $response->assertStatus(422);
-        $response->assertJsonPath('message', 'At least one platform identifier is required');
+        $response->assertJsonPath('message', 'At least one name field (first name, last name, or nickname) OR at least one platform identifier is required');
     }
 
     public function test_cannot_create_driver_with_duplicate_platform_id(): void

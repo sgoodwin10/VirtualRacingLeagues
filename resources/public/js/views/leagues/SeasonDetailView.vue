@@ -53,18 +53,29 @@
           >
             <!-- Standings Header -->
             <div
-              class="standings-header p-6 bg-[var(--bg-elevated)] border-b border-[var(--border)]"
+              class="standings-header p-6 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center justify-between"
             >
-              <div
-                class="page-title font-[var(--font-display)] text-md font-bold tracking-[2px] mb-1 text-[var(--text-secondary)]"
-              >
-                <span class="text-[var(--cyan)]">//</span>
-                {{ seasonData.competition.name.toUpperCase() }} -
-                {{ seasonData.season.name.toUpperCase() }}
+              <div>
+                <div
+                  class="page-title font-[var(--font-display)] text-md font-bold tracking-[2px] mb-1 text-[var(--text-secondary)]"
+                >
+                  <span class="text-[var(--cyan)]">//</span>
+                  Championship Standings
+                </div>
+                <h3 class="standings-title font-[var(--font-display)] font-semibold tracking-[0.5px]">
+                  {{ seasonData.competition.name.toUpperCase() }} -
+                  {{ seasonData.season.name.toUpperCase() }}
+                </h3>
               </div>
-              <h3 class="standings-title font-[var(--font-display)] font-semibold tracking-[0.5px]">
-                Championship Standings
-              </h3>
+
+              <!-- Season Logo (right-aligned) -->
+              <div v-if="seasonLogoUrl" class="season-logo-container">
+                <img
+                  :src="seasonLogoUrl"
+                  :alt="`${seasonData.season.name} logo`"
+                  class="w-full h-full object-contain"
+                />
+              </div>
             </div>
 
             <!-- Standings Table (handles its own loading, tabs, divisions, teams) -->
@@ -135,6 +146,14 @@ const breadcrumbItems = computed((): BreadcrumbItem[] => {
 const leagueLogoUrl = computed((): string | null => {
   if (!seasonData.value) return null;
   return seasonData.value.league.logo?.original || seasonData.value.league.logo_url || null;
+});
+
+/**
+ * Season logo URL (prefer new media object, fallback to old URL)
+ */
+const seasonLogoUrl = computed((): string | null => {
+  if (!seasonData.value) return null;
+  return seasonData.value.season.logo?.original || seasonData.value.season.logo_url || null;
 });
 
 /**
@@ -223,5 +242,20 @@ onMounted(() => {
 
 .league-name {
   letter-spacing: -0.5px;
+}
+
+/* ============================================
+   Season Logo in Standings Header
+   ============================================ */
+
+.season-logo-container {
+  width: 86px;
+  height: 86px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  padding: 0px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 </style>

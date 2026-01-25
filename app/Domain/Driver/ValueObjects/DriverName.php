@@ -23,16 +23,10 @@ final readonly class DriverName
 
     private function validate(): void
     {
-        // At least one name field is required
-        $hasFirstName = $this->firstName !== null && trim($this->firstName) !== '';
-        $hasLastName = $this->lastName !== null && trim($this->lastName) !== '';
-        $hasNickname = $this->nickname !== null && trim($this->nickname) !== '';
+        // Name fields are now optional - validation moved to application layer
+        // to allow drivers with only platform IDs (no name)
 
-        if (!$hasFirstName && !$hasLastName && !$hasNickname) {
-            throw new InvalidArgumentException('At least one name field (first name, last name, or nickname) is required');
-        }
-
-        // Validate lengths
+        // Validate lengths if provided
         if ($this->firstName !== null && mb_strlen($this->firstName) > 100) {
             throw new InvalidArgumentException('First name cannot exceed 100 characters');
         }

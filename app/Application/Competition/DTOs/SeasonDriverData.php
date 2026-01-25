@@ -34,6 +34,7 @@ class SeasonDriverData extends Data
         public ?string $notes,
         public string $added_at,
         public string $updated_at,
+        public ?string $deleted_at = null,
     ) {
     }
 
@@ -51,7 +52,8 @@ class SeasonDriverData extends Data
      *     discord_id: string|null,
      *     team_name: string|null,
      *     division_id: int|null,
-     *     division_name: string|null
+     *     division_name: string|null,
+     *     deleted_at: string|null
      * } $driverData
      */
     public static function fromEntity(
@@ -81,6 +83,7 @@ class SeasonDriverData extends Data
             notes: $seasonDriver->notes(),
             added_at: $seasonDriver->addedAt()->format('Y-m-d H:i:s'),
             updated_at: $seasonDriver->updatedAt()->format('Y-m-d H:i:s'),
+            deleted_at: $driverData['deleted_at'] ?? null,
         );
     }
 }

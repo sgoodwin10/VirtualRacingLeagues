@@ -35,12 +35,7 @@
     <!-- Avatar & Name Column -->
     <Column field="display_name" header="Driver" :sortable="true" style="min-width: 220px">
       <template #body="{ data }">
-        <div class="flex items-center gap-3">
-          <div
-            class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-sm"
-          >
-            {{ getDriverInitials(data) }}
-          </div>
+        <div class="flex items-center">
           <div>
             <p class="text-sm font-medium text-gray-900">{{ data.display_name }}</p>
             <p v-if="data.nickname" class="text-xs text-gray-500">{{ data.nickname }}</p>
@@ -145,7 +140,6 @@ import Badge from '@admin/components/common/Badge.vue';
 import EmptyState from '@admin/components/common/EmptyState.vue';
 import LoadingState from '@admin/components/common/LoadingState.vue';
 import { useDateFormatter } from '@admin/composables/useDateFormatter';
-import { useNameHelpers } from '@admin/composables/useNameHelpers';
 import type { Driver } from '@admin/types/driver';
 
 /**
@@ -227,7 +221,6 @@ const emit = defineEmits<DriverDataTableEmits>();
 
 // Composables
 const { formatDate } = useDateFormatter();
-const { getUserInitials } = useNameHelpers();
 
 /**
  * Computed first index for DataTable (0-based)
@@ -240,34 +233,6 @@ const first = computed(() => (props.currentPage - 1) * props.rows);
  */
 const onPage = (event: PageEvent): void => {
   emit('page', event);
-};
-
-/**
- * Get driver initials for avatar
- * Falls back to nickname or 'DR' if no name available
- */
-const getDriverInitials = (driver: Driver): string => {
-  // Convert Driver to NamedEntity format (null to undefined)
-  const namedEntity = {
-    first_name: driver.first_name ?? undefined,
-    last_name: driver.last_name ?? undefined,
-  };
-
-  // Try to get initials from first/last name using helper
-  const initials = getUserInitials(namedEntity);
-
-  // If we got a valid result (not 'U' fallback), return it
-  if (initials !== 'U') {
-    return initials;
-  }
-
-  // Otherwise, try nickname
-  if (driver.nickname) {
-    return driver.nickname.substring(0, 2).toUpperCase();
-  }
-
-  // Final fallback
-  return 'DR';
 };
 
 /**

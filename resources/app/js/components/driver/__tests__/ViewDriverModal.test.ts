@@ -642,7 +642,7 @@ describe('ViewDriverModal', () => {
       expect(component.driverName).toBe('John Smith');
     });
 
-    it('returns "Unknown Driver" when driver is null', () => {
+    it('returns empty string when driver is null', () => {
       const wrapper = mountWithStubs(ViewDriverModal, {
         props: {
           visible: true,
@@ -651,7 +651,7 @@ describe('ViewDriverModal', () => {
       });
 
       const component = wrapper.vm as any;
-      expect(component.driverName).toBe('Unknown Driver');
+      expect(component.driverName).toBe('');
     });
 
     it('computes driver initials correctly for full name', () => {
@@ -815,10 +815,10 @@ describe('ViewDriverModal', () => {
         },
       });
 
-      // Should render with "Unknown Driver" in the title
+      // Should render with empty driver name in the title
       const text = wrapper.text();
-      // The title should contain "Unknown Driver"
-      expect(text).toContain('Driver Details - Unknown Driver');
+      // The title should contain "Driver Details -" (with empty name)
+      expect(text).toContain('Driver Details - ');
     });
 
     it('handles driver with minimal data', () => {

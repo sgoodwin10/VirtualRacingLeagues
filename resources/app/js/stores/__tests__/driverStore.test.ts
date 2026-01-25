@@ -61,6 +61,7 @@ describe('driverStore', () => {
       expect(store.lastPage).toBe(1);
       expect(store.searchQuery).toBe('');
       expect(store.statusFilter).toBe('all');
+      expect(store.deletedStatusFilter).toBe('active');
     });
   });
 
@@ -756,7 +757,95 @@ describe('driverStore', () => {
 
       expect(store.searchQuery).toBe('');
       expect(store.statusFilter).toBe('all');
+      expect(store.deletedStatusFilter).toBe('active');
       expect(store.currentPage).toBe(1);
+    });
+  });
+
+  describe('setDeletedStatusFilter', () => {
+    it('should set deleted status filter and reset to first page', () => {
+      const store = useDriverStore();
+      store.currentPage = 3;
+
+      store.setDeletedStatusFilter('deleted');
+
+      expect(store.deletedStatusFilter).toBe('deleted');
+      expect(store.currentPage).toBe(1);
+    });
+
+    it('should set deleted status filter to all', () => {
+      const store = useDriverStore();
+
+      store.setDeletedStatusFilter('all');
+
+      expect(store.deletedStatusFilter).toBe('all');
+    });
+  });
+
+  describe('restoreDriver', () => {
+    it('should restore a deleted driver successfully', async () => {
+      const mockResponse: PaginatedDriversResponse = {
+        data: [createMockLeagueDriver({ id: 1 })],
+        meta: {
+          current_page: 1,
+          per_page: 10,
+          total: 1,
+          last_page: 1,
+          from: 1,
+          to: 1,
+        },
+      };
+
+      vi.mocked(driverService.restoreDriver).mockResolvedValue();
+      vi.mocked(driverService.getLeagueDrivers).mockResolvedValue(mockResponse);
+
+      const store = useDriverStore();
+      await store.restoreDriver(1, 1);
+
+      expect(driverService.restoreDriver).toHaveBeenCalledWith(1, 1);
+      expect(driverService.getLeagueDrivers).toHaveBeenCalled();
+      expect(store.loading).toBe(false);
+      expect(store.error).toBeNull();
+    });
+
+    it('should handle errors when restore fails', async () => {
+      const errorMessage = 'Failed to restore driver';
+      vi.mocked(driverService.restoreDriver).mockRejectedValue(new Error(errorMessage));
+
+      const store = useDriverStore();
+
+      await expect(store.restoreDriver(1, 1)).rejects.toThrow(errorMessage);
+
+      expect(store.error).toBe(errorMessage);
+      expect(store.loading).toBe(false);
+    });
+
+    it('should refetch drivers after successful restore', async () => {
+      const mockResponse: PaginatedDriversResponse = {
+        data: [createMockLeagueDriver({ id: 1 })],
+        meta: {
+          current_page: 1,
+          per_page: 10,
+          total: 1,
+          last_page: 1,
+          from: 1,
+          to: 1,
+        },
+      };
+
+      vi.mocked(driverService.restoreDriver).mockResolvedValue();
+      vi.mocked(driverService.getLeagueDrivers).mockResolvedValue(mockResponse);
+
+      const store = useDriverStore();
+      await store.restoreDriver(1, 1);
+
+      expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          deleted_status: 'active',
+        }),
+        undefined,
+      );
     });
   });
 
@@ -797,7 +886,66 @@ describe('driverStore', () => {
       expect(store.currentPage).toBe(1);
       expect(store.searchQuery).toBe('');
       expect(store.statusFilter).toBe('all');
+      expect(store.deletedStatusFilter).toBe('active');
       expect(store.totalDrivers).toBe(0);
+    });
+  });
+
+  describe('fetchLeagueDrivers with deleted_status', () => {
+    it('should include deleted_status in query params', async () => {
+      const mockResponse: PaginatedDriversResponse = {
+        data: [],
+        meta: {
+          current_page: 1,
+          per_page: 10,
+          total: 0,
+          last_page: 1,
+          from: null,
+          to: null,
+        },
+      };
+
+      vi.mocked(driverService.getLeagueDrivers).mockResolvedValue(mockResponse);
+
+      const store = useDriverStore();
+      store.setDeletedStatusFilter('deleted');
+      await store.fetchLeagueDrivers(1);
+
+      expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          deleted_status: 'deleted',
+        }),
+        undefined,
+      );
+    });
+
+    it('should fetch all drivers when deleted_status is all', async () => {
+      const mockResponse: PaginatedDriversResponse = {
+        data: [],
+        meta: {
+          current_page: 1,
+          per_page: 10,
+          total: 0,
+          last_page: 1,
+          from: null,
+          to: null,
+        },
+      };
+
+      vi.mocked(driverService.getLeagueDrivers).mockResolvedValue(mockResponse);
+
+      const store = useDriverStore();
+      store.setDeletedStatusFilter('all');
+      await store.fetchLeagueDrivers(1);
+
+      expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          deleted_status: 'all',
+        }),
+        undefined,
+      );
     });
   });
 });

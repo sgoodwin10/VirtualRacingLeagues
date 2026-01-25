@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@public/stores/authStore';
 import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/types/errors';
 import { usePasswordValidation } from '@public/composables/usePasswordValidation';
@@ -13,6 +14,7 @@ import VrlFormGroup from '@public/components/common/forms/VrlFormGroup.vue';
 import VrlFormLabel from '@public/components/common/forms/VrlFormLabel.vue';
 import VrlFormError from '@public/components/common/forms/VrlFormError.vue';
 
+const router = useRouter();
 const authStore = useAuthStore();
 
 // Form data
@@ -112,7 +114,7 @@ const handleSubmit = async (): Promise<void> => {
   isSubmitting.value = true;
 
   try {
-    await authStore.register({
+    const userEmail = await authStore.register({
       first_name: firstName.value.trim(),
       last_name: lastName.value.trim(),
       email: email.value.trim(),
@@ -120,23 +122,27 @@ const handleSubmit = async (): Promise<void> => {
       password_confirmation: passwordConfirmation.value,
     });
 
-    // Redirect is handled by authStore.register()
+    // Redirect to success page with email as query parameter
+    router.push({
+      name: 'register-success',
+      query: { email: userEmail },
+    });
   } catch (error: unknown) {
     if (isAxiosError(error)) {
       if (hasValidationErrors(error)) {
         const validationErrors = error.response?.data?.errors;
         if (validationErrors) {
           if (validationErrors.email && Array.isArray(validationErrors.email)) {
-            emailError.value = validationErrors.email[0];
+            emailError.value = validationErrors.email[0] ?? '';
           }
           if (validationErrors.password && Array.isArray(validationErrors.password)) {
-            passwordError.value = validationErrors.password[0];
+            passwordError.value = validationErrors.password[0] ?? '';
           }
           if (validationErrors.first_name && Array.isArray(validationErrors.first_name)) {
-            firstNameError.value = validationErrors.first_name[0];
+            firstNameError.value = validationErrors.first_name[0] ?? '';
           }
           if (validationErrors.last_name && Array.isArray(validationErrors.last_name)) {
-            lastNameError.value = validationErrors.last_name[0];
+            lastNameError.value = validationErrors.last_name[0] ?? '';
           }
         }
       } else if (error.response?.status && error.response.status >= 500) {

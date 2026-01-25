@@ -194,7 +194,7 @@ describe('DriverFormDialog', () => {
     expect(component.formData.driver_number).toBe(5);
   });
 
-  it('should validate that at least one of nickname or discord_id is required', async () => {
+  it('should validate that at least a name field OR a platform ID is required', async () => {
     const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
@@ -205,7 +205,7 @@ describe('DriverFormDialog', () => {
     });
 
     const component = wrapper.vm as any;
-    component.formData.psn_id = 'TestID';
+    // No name fields and no platform IDs
 
     const isValid = component.validateForm();
 
@@ -213,7 +213,50 @@ describe('DriverFormDialog', () => {
     expect(component.errors.identifier).toBeDefined();
   });
 
-  it('should pass validation with only nickname', async () => {
+  it('should pass validation with only nickname (no platform ID)', async () => {
+    const wrapper = mountWithStubs(DriverFormDialog, {
+      props: {
+        visible: true,
+        mode: 'create',
+        leagueId: 1,
+      },
+      ...getStubOptions(),
+    });
+
+    const component = wrapper.vm as any;
+    component.formData.nickname = 'JSmith';
+    // No platform IDs provided
+
+    const isValid = component.validateForm();
+
+    expect(isValid).toBe(true);
+    expect(component.errors.identifier).toBeUndefined();
+  });
+
+  it('should pass validation with only a platform ID (no name)', async () => {
+    // Set up platform fields in mock
+    mockPlatformFormFieldsValue = mockPlatformFormFields;
+
+    const wrapper = mountWithStubs(DriverFormDialog, {
+      props: {
+        visible: true,
+        mode: 'create',
+        leagueId: 1,
+      },
+      ...getStubOptions(),
+    });
+
+    const component = wrapper.vm as any;
+    // No name fields provided
+    component.formData.psn_id = 'TestID';
+
+    const isValid = component.validateForm();
+
+    expect(isValid).toBe(true);
+    expect(component.errors.identifier).toBeUndefined();
+  });
+
+  it('should pass validation with both name and platform ID', async () => {
     // Set up platform fields in mock
     mockPlatformFormFieldsValue = mockPlatformFormFields;
 
@@ -236,10 +279,47 @@ describe('DriverFormDialog', () => {
     expect(component.errors.identifier).toBeUndefined();
   });
 
-  it('should pass validation with only discord_id', async () => {
-    // Set up platform fields in mock
-    mockPlatformFormFieldsValue = mockPlatformFormFields;
+  it('should pass validation with only first name (no platform ID)', async () => {
+    const wrapper = mountWithStubs(DriverFormDialog, {
+      props: {
+        visible: true,
+        mode: 'create',
+        leagueId: 1,
+      },
+      ...getStubOptions(),
+    });
 
+    const component = wrapper.vm as any;
+    component.formData.first_name = 'John';
+    // No platform IDs provided
+
+    const isValid = component.validateForm();
+
+    expect(isValid).toBe(true);
+    expect(component.errors.identifier).toBeUndefined();
+  });
+
+  it('should pass validation with only last name (no platform ID)', async () => {
+    const wrapper = mountWithStubs(DriverFormDialog, {
+      props: {
+        visible: true,
+        mode: 'create',
+        leagueId: 1,
+      },
+      ...getStubOptions(),
+    });
+
+    const component = wrapper.vm as any;
+    component.formData.last_name = 'Smith';
+    // No platform IDs provided
+
+    const isValid = component.validateForm();
+
+    expect(isValid).toBe(true);
+    expect(component.errors.identifier).toBeUndefined();
+  });
+
+  it('should pass validation with only discord_id (no name)', async () => {
     const wrapper = mountWithStubs(DriverFormDialog, {
       props: {
         visible: true,
@@ -251,58 +331,12 @@ describe('DriverFormDialog', () => {
 
     const component = wrapper.vm as any;
     component.formData.discord_id = 'user#1234';
-    component.formData.psn_id = 'TestID';
+    // No name fields provided
 
     const isValid = component.validateForm();
 
     expect(isValid).toBe(true);
     expect(component.errors.identifier).toBeUndefined();
-  });
-
-  it('should pass validation with both nickname and discord_id', async () => {
-    // Set up platform fields in mock
-    mockPlatformFormFieldsValue = mockPlatformFormFields;
-
-    const wrapper = mountWithStubs(DriverFormDialog, {
-      props: {
-        visible: true,
-        mode: 'create',
-        leagueId: 1,
-      },
-      ...getStubOptions(),
-    });
-
-    const component = wrapper.vm as any;
-    component.formData.nickname = 'JSmith';
-    component.formData.discord_id = 'user#1234';
-    component.formData.psn_id = 'TestID';
-
-    const isValid = component.validateForm();
-
-    expect(isValid).toBe(true);
-    expect(component.errors.identifier).toBeUndefined();
-  });
-
-  it('should validate that at least one platform ID is required', async () => {
-    // Set up platform fields in mock
-    mockPlatformFormFieldsValue = mockPlatformFormFields;
-
-    const wrapper = mountWithStubs(DriverFormDialog, {
-      props: {
-        visible: true,
-        mode: 'create',
-        leagueId: 1,
-      },
-      ...getStubOptions(),
-    });
-
-    const component = wrapper.vm as any;
-    component.formData.nickname = 'JSmith';
-
-    const isValid = component.validateForm();
-
-    expect(isValid).toBe(false);
-    expect(component.errors.platform).toBeDefined();
   });
 
   it('should validate email format', async () => {
@@ -435,5 +469,271 @@ describe('DriverFormDialog', () => {
     });
 
     expect((editWrapper.vm as any).dialogTitle).toBe('Edit Driver');
+  });
+
+  describe('Nickname auto-population', () => {
+    it('should auto-populate nickname from discord_id (highest priority)', async () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Simulate user entering discord_id (goes through the handler)
+      component.handleDiscordIdUpdate('testuser#1234');
+
+      // Nickname should auto-populate from discord_id
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      const formData = component.getFormData();
+      expect(formData.nickname).toBe('testuser#1234');
+    });
+
+    it('should auto-populate nickname from platform ID when discord_id is empty', async () => {
+      // Set up platform fields in mock
+      mockPlatformFormFieldsValue = mockPlatformFormFields;
+
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Simulate user entering platform ID (goes through the handler)
+      component.handlePlatformFieldUpdate('psn_id', 'PSNUser123');
+
+      // Nickname should auto-populate from platform ID
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      const formData = component.getFormData();
+      expect(formData.nickname).toBe('PSNUser123');
+    });
+
+    it('should auto-populate nickname from first_name (lowest priority)', async () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Simulate user entering first_name (goes through the handler)
+      component.handleFirstNameUpdate('John');
+
+      // Nickname should auto-populate from first_name
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      const formData = component.getFormData();
+      expect(formData.nickname).toBe('John');
+    });
+
+    it('should prioritize discord_id over platform ID', async () => {
+      // Set up platform fields in mock
+      mockPlatformFormFieldsValue = mockPlatformFormFields;
+
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Set platform ID first
+      component.handlePlatformFieldUpdate('psn_id', 'PSNUser123');
+      expect(component.getFormData().nickname).toBe('PSNUser123');
+
+      // Now set discord_id - should override
+      component.handleDiscordIdUpdate('discord#5678');
+
+      // Nickname should now be from discord_id (higher priority)
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      expect(component.getFormData().nickname).toBe('discord#5678');
+    });
+
+    it('should prioritize platform ID over first_name', async () => {
+      // Set up platform fields in mock
+      mockPlatformFormFieldsValue = mockPlatformFormFields;
+
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Set first_name first
+      component.handleFirstNameUpdate('John');
+      expect(component.getFormData().nickname).toBe('John');
+
+      // Now set platform ID - should override
+      component.handlePlatformFieldUpdate('psn_id', 'PSNUser123');
+
+      // Nickname should now be from platform ID (higher priority)
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      expect(component.getFormData().nickname).toBe('PSNUser123');
+    });
+
+    it('should NOT auto-populate when user manually enters nickname', async () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // User manually enters nickname
+      component.handleNicknameUpdate('MyCustomNick');
+
+      expect(component.getFormData().nickname).toBe('MyCustomNick');
+
+      // Now set discord_id - should NOT override manual entry
+      component.handleDiscordIdUpdate('discord#1234');
+
+      // Nickname should remain the manual entry (proving manual entry flag is working)
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      expect(component.getFormData().nickname).toBe('MyCustomNick');
+    });
+
+    it('should NOT auto-populate in edit mode', async () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'edit',
+          driver: mockDriver,
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+      await wrapper.vm.$nextTick();
+
+      // Initial nickname from driver data
+      const initialNickname = component.formData.nickname;
+
+      // Change discord_id in edit mode
+      component.formData.discord_id = 'newdiscord#9999';
+      await wrapper.vm.$nextTick();
+
+      // Nickname should NOT auto-populate in edit mode
+      expect(component.formData.nickname).toBe(initialNickname);
+    });
+
+    it('should clear nickname when all source fields are empty', async () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Set discord_id
+      component.handleDiscordIdUpdate('testuser#1234');
+      expect(component.getFormData().nickname).toBe('testuser#1234');
+
+      // Clear discord_id
+      component.handleDiscordIdUpdate('');
+
+      // Nickname should be cleared
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      expect(component.getFormData().nickname).toBe('');
+    });
+
+    it('should update nickname when switching from lower to higher priority field', async () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Start with first_name
+      component.handleFirstNameUpdate('John');
+      expect(component.getFormData().nickname).toBe('John');
+
+      // Add discord_id (higher priority)
+      component.handleDiscordIdUpdate('johndoe#1234');
+
+      // Should switch to discord_id
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      expect(component.getFormData().nickname).toBe('johndoe#1234');
+    });
+
+    it('should reset userHasEnteredNickname flag when form is reset', async () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // User manually enters nickname
+      component.handleNicknameUpdate('CustomNick');
+      expect(component.getFormData().nickname).toBe('CustomNick');
+
+      // Reset form
+      component.resetForm();
+
+      // Auto-population should work again (proving flag was reset)
+      component.handleDiscordIdUpdate('testuser#5678');
+
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      expect(component.getFormData().nickname).toBe('testuser#5678');
+    });
+
+    it('should trim whitespace from auto-populated nickname', async () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Set discord_id with whitespace
+      component.handleDiscordIdUpdate('  testuser#1234  ');
+
+      // Nickname should be trimmed
+      // Note: Don't call $nextTick here as it causes the visible watcher to reset the form
+      expect(component.getFormData().nickname).toBe('testuser#1234');
+    });
   });
 });

@@ -2,6 +2,7 @@
 import { onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import Column from 'primevue/column';
+import Tag from 'primevue/tag';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import { TechDataTable, DriverCell } from '@app/components/common/tables';
 import { Button } from '@app/components/common/buttons';
@@ -10,7 +11,7 @@ import type { LeagueDriver, Driver } from '@app/types/driver';
 import type { DataTablePageEvent } from 'primevue/datatable';
 import { createLogger } from '@app/utils/logger';
 import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
-import { PhEye, PhPencil, PhTrash } from '@phosphor-icons/vue';
+import { PhEye, PhPencil, PhTrash, PhArrowCounterClockwise } from '@phosphor-icons/vue';
 
 interface Props {
   leagueId?: number;
@@ -20,6 +21,7 @@ interface Emits {
   (e: 'edit', driver: LeagueDriver): void;
   (e: 'remove', driver: LeagueDriver): void;
   (e: 'view', driver: LeagueDriver): void;
+  (e: 'restore', driver: LeagueDriver): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -42,7 +44,7 @@ const first = computed(() => (currentPage.value - 1) * perPage.value);
  * Get driver's display name from nested driver object
  */
 const getDriverName = (leagueDriver: LeagueDriver): string => {
-  return leagueDriver.driver?.display_name || 'Unknown';
+  return leagueDriver.driver?.display_name || '';
 };
 
 /**
@@ -63,7 +65,7 @@ const getDriverNickname = (leagueDriver: LeagueDriver): string | null => {
  * Get driver's Discord ID
  */
 const getDriverDiscordId = (leagueDriver: LeagueDriver): string => {
-  return leagueDriver.driver?.discord_id || '-';
+  return leagueDriver.driver?.discord_id || '';
 };
 
 /**
@@ -78,15 +80,15 @@ const isValidDriverKey = (key: string, obj: Driver): key is keyof Driver => {
  */
 const getPlatformValue = (leagueDriver: LeagueDriver, field: string): string => {
   const driver = leagueDriver.driver;
-  if (!driver) return '-';
+  if (!driver) return '';
 
   // Type-safe field access using runtime check
   if (isValidDriverKey(field, driver)) {
     const value = driver[field];
-    return value != null ? String(value) : '-';
+    return value != null ? String(value) : '';
   }
 
-  return '-';
+  return '';
 };
 
 /**
@@ -108,6 +110,20 @@ const handleView = (driver: LeagueDriver): void => {
  */
 const handleRemove = (driver: LeagueDriver): void => {
   emit('remove', driver);
+};
+
+/**
+ * Handle restore button click
+ */
+const handleRestore = (driver: LeagueDriver): void => {
+  emit('restore', driver);
+};
+
+/**
+ * Check if a driver is deleted
+ */
+const isDriverDeleted = (driver: LeagueDriver): boolean => {
+  return !!driver.driver?.deleted_at;
 };
 
 /**
@@ -195,6 +211,12 @@ onMounted(async () => {
       </template>
     </Column>
 
+    <Column field="status" header="Status" style="width: 120px">
+      <template #body="{ data }">
+        <Tag v-if="isDriverDeleted(data)" severity="danger" value="Deleted" />
+      </template>
+    </Column>
+
     <Column header="Actions" style="width: 200px">
       <template #body="{ data }">
         <div class="flex gap-2">
@@ -206,22 +228,34 @@ onMounted(async () => {
             aria-label="View driver details"
             @click="handleView(data)"
           />
-          <Button
-            :icon="PhPencil"
-            size="sm"
-            variant="warning"
-            aria-label="Edit driver"
-            :title="`Edit ${getDriverName(data)}`"
-            @click="handleEdit(data)"
-          />
-          <Button
-            :icon="PhTrash"
-            size="sm"
-            variant="danger"
-            aria-label="Remove driver"
-            :title="`Remove ${getDriverName(data)} from league`"
-            @click="handleRemove(data)"
-          />
+          <template v-if="!isDriverDeleted(data)">
+            <Button
+              :icon="PhPencil"
+              size="sm"
+              variant="warning"
+              aria-label="Edit driver"
+              :title="`Edit ${getDriverName(data)}`"
+              @click="handleEdit(data)"
+            />
+            <Button
+              :icon="PhTrash"
+              size="sm"
+              variant="danger"
+              aria-label="Delete driver"
+              :title="`Delete ${getDriverName(data)}`"
+              @click="handleRemove(data)"
+            />
+          </template>
+          <template v-else>
+            <Button
+              :icon="PhArrowCounterClockwise"
+              size="sm"
+              variant="success"
+              aria-label="Restore driver"
+              :title="`Restore ${getDriverName(data)}`"
+              @click="handleRestore(data)"
+            />
+          </template>
         </div>
       </template>
     </Column>

@@ -92,13 +92,13 @@ final class LeagueDriverEloquent extends Model
     }
 
     /**
-     * Get the driver.
+     * Get the driver (including soft-deleted drivers for historical data).
      *
      * @return BelongsTo<Driver, LeagueDriverEloquent>
      */
     public function driver(): BelongsTo
     {
-        return $this->belongsTo(Driver::class, 'driver_id');
+        return $this->belongsTo(Driver::class, 'driver_id')->withTrashed();
     }
 
     /**

@@ -52,6 +52,7 @@ final class DriverController extends Controller
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'in:active,inactive,banned'],
+            'deleted_status' => ['nullable', 'in:active,deleted,all'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
@@ -63,7 +64,8 @@ final class DriverController extends Controller
                 search: $validated['search'] ?? null,
                 status: $validated['status'] ?? null,
                 page: (int) ($validated['page'] ?? 1),
-                perPage: (int) ($validated['per_page'] ?? 15)
+                perPage: (int) ($validated['per_page'] ?? 15),
+                deletedStatus: $validated['deleted_status'] ?? 'active'
             );
 
             // Build pagination links
@@ -148,21 +150,42 @@ final class DriverController extends Controller
     }
 
     /**
-     * Remove the specified driver from the league.
+     * Soft delete the specified driver.
      */
     public function destroy(int $league, int $driver): JsonResponse
     {
         try {
-            $this->driverService->removeDriverFromLeagueWithActivityLog(
+            $this->driverService->deleteDriverFromLeagueWithActivityLog(
                 $league,
                 $driver,
                 $this->getAuthenticatedUserId()
             );
-            return ApiResponse::success(null, 'Driver removed from league successfully');
+            return ApiResponse::success(null, 'Driver deleted successfully');
         } catch (DriverNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
+        }
+    }
+
+    /**
+     * Restore a soft-deleted driver.
+     */
+    public function restore(int $league, int $driver): JsonResponse
+    {
+        try {
+            $this->driverService->restoreDriverWithActivityLog(
+                $league,
+                $driver,
+                $this->getAuthenticatedUserId()
+            );
+            return ApiResponse::success(null, 'Driver restored successfully');
+        } catch (DriverNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        } catch (\InvalidArgumentException $e) {
+            return ApiResponse::error($e->getMessage(), null, 422);
         }
     }
 
@@ -182,10 +205,12 @@ final class DriverController extends Controller
             // Build response message based on results
             $messageParts = [];
             if ($result->success_count > 0) {
-                $messageParts[] = "Imported {$result->success_count} driver" . ($result->success_count === 1 ? '' : 's');
+                $messageParts[] = "Imported {$result->success_count} driver"
+                    . ($result->success_count === 1 ? '' : 's');
             }
             if ($result->skipped_count > 0) {
-                $messageParts[] = "skipped {$result->skipped_count} duplicate" . ($result->skipped_count === 1 ? '' : 's');
+                $messageParts[] = "skipped {$result->skipped_count} duplicate"
+                    . ($result->skipped_count === 1 ? '' : 's');
             }
             if ($result->hasErrors()) {
                 $messageParts[] = "{$result->errorCount()} error" . ($result->errorCount() === 1 ? '' : 's');

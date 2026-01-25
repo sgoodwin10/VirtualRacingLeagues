@@ -29,12 +29,13 @@ export const useAuthStore = defineStore(
     };
 
     // Actions
-    async function register(data: RegisterData): Promise<void> {
+    async function register(data: RegisterData): Promise<string> {
       isLoading.value = true;
       try {
         await authService.register(data);
         // User is registered but not logged in yet (needs email verification)
-        // Redirect to verify email page
+        // Return the email so it can be used in the redirect
+        return data.email;
       } finally {
         isLoading.value = false;
       }

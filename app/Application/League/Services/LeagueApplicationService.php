@@ -42,6 +42,7 @@ use App\Helpers\FilterBuilder;
 use App\Helpers\PaginationHelper;
 use App\Http\Requests\Admin\IndexLeaguesRequest;
 use App\Infrastructure\Cache\RaceResultsCacheService;
+use App\Infrastructure\Cache\SeasonDetailCacheService;
 use App\Infrastructure\Persistence\Eloquent\Models\Competition;
 use App\Infrastructure\Persistence\Eloquent\Models\Driver;
 use App\Infrastructure\Persistence\Eloquent\Models\League as EloquentLeague;
@@ -71,6 +72,7 @@ final class LeagueApplicationService
         private readonly UserRepositoryInterface $userRepository,
         private readonly SeasonApplicationService $seasonApplicationService,
         private readonly RaceResultsCacheService $raceResultsCache,
+        private readonly SeasonDetailCacheService $seasonDetailCache,
         private readonly MediaServiceInterface $mediaService,
         private readonly MediaDataFactory $mediaDataFactory,
         private readonly LeagueActivityLogService $activityLogService,
@@ -1352,7 +1354,28 @@ final class LeagueApplicationService
             return null;
         }
 
-        // Find season by slug
+        // Lightweight query to get season ID for cache lookup
+        $seasonIdResult = SeasonEloquent::query()
+            ->select('seasons.id')
+            ->whereHas('competition', function ($query) use ($eloquentLeague) {
+                $query->where('league_id', $eloquentLeague->id);
+            })
+            ->where('slug', $seasonSlug)
+            ->first();
+
+        if ($seasonIdResult === null) {
+            return null;
+        }
+
+        $seasonId = $seasonIdResult->id;
+
+        // Try to get from cache first
+        $cached = $this->seasonDetailCache->get($seasonId);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        // Cache miss - fetch full data from database
         $eloquentSeason = SeasonEloquent::query()
             ->whereHas('competition', function ($query) use ($eloquentLeague) {
                 $query->where('league_id', $eloquentLeague->id);
@@ -1552,7 +1575,7 @@ final class LeagueApplicationService
             $eloquentSeason->race_divisions_enabled
         );
 
-        return new PublicSeasonDetailData(
+        $result = new PublicSeasonDetailData(
             league: $leagueData,
             competition: $competitionData,
             season: $seasonData,
@@ -1567,6 +1590,11 @@ final class LeagueApplicationService
             team_championship_results: $standingsData['team_championship_results'],
             teams_drop_rounds_enabled: $standingsData['teams_drop_rounds_enabled'],
         );
+
+        // Store in cache for next request (24-hour TTL)
+        $this->seasonDetailCache->put($seasonId, $result);
+
+        return $result;
     }
 
     /**

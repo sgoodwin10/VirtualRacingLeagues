@@ -29,6 +29,8 @@ export const API_ENDPOINTS = {
     drivers: (leagueId: number) => `/leagues/${leagueId}/drivers`,
     driverDetail: (leagueId: number, driverId: number) =>
       `/leagues/${leagueId}/drivers/${driverId}`,
+    driverRestore: (leagueId: number, driverId: number) =>
+      `/leagues/${leagueId}/drivers/${driverId}/restore`,
     driverSeasons: (leagueId: number, leagueDriverId: number) =>
       `/leagues/${leagueId}/drivers/${leagueDriverId}/seasons`,
     importDriversCsv: (leagueId: number) => `/leagues/${leagueId}/drivers/import-csv`,

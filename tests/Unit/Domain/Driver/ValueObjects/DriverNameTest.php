@@ -39,19 +39,26 @@ final class DriverNameTest extends TestCase
         $this->assertEquals('John', $name->displayName());
     }
 
-    public function test_throws_exception_if_all_names_are_null(): void
+    public function test_allows_all_names_to_be_null(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('At least one name field');
+        // DriverName now allows all names to be null to support drivers with only platform IDs
+        $name = DriverName::from(null, null, null);
 
-        DriverName::from(null, null, null);
+        $this->assertNull($name->firstName());
+        $this->assertNull($name->lastName());
+        $this->assertNull($name->nickname());
+        $this->assertEquals('', $name->displayName());
     }
 
-    public function test_throws_exception_if_all_names_are_empty_strings(): void
+    public function test_allows_all_names_to_be_empty_strings(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        // DriverName now allows empty strings to support drivers with only platform IDs
+        $name = DriverName::from('', '', '');
 
-        DriverName::from('', '', '');
+        $this->assertEquals('', $name->firstName());
+        $this->assertEquals('', $name->lastName());
+        $this->assertEquals('', $name->nickname());
+        $this->assertEquals('', $name->displayName());
     }
 
     public function test_throws_exception_if_first_name_too_long(): void

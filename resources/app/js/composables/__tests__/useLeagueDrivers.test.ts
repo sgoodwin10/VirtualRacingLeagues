@@ -192,7 +192,7 @@ describe('useLeagueDrivers', () => {
     await removeDriver(10);
 
     expect(driverService.removeDriverFromLeague).toHaveBeenCalledWith(1, 10);
-    expect(onSuccess).toHaveBeenCalledWith('Driver removed from league');
+    expect(onSuccess).toHaveBeenCalledWith('Driver deleted successfully');
   });
 
   it('calls onError callback when remove fails', async () => {
@@ -203,7 +203,7 @@ describe('useLeagueDrivers', () => {
     const { removeDriver } = useLeagueDrivers(leagueId, { onError });
 
     await expect(removeDriver(10)).rejects.toThrow('Remove failed');
-    expect(onError).toHaveBeenCalledWith('Failed to remove driver');
+    expect(onError).toHaveBeenCalledWith('Failed to delete driver');
   });
 
   it('imports drivers from CSV successfully', async () => {

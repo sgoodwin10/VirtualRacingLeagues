@@ -55,7 +55,7 @@ const standings = [
           </RouterLink>
         </div>
 
-        <div class="flex flex-wrap gap-12">
+        <div class="flex flex-wrap gap-12 hidden">
           <StatItem
             v-for="stat in stats"
             :key="stat.label"

@@ -33,11 +33,6 @@ defineProps<StandingsRowProps>();
 
     <!-- Driver Info -->
     <div class="flex items-center gap-3">
-      <div
-        class="w-8 h-8 hidden bg-[var(--bg-elevated)] rounded-[var(--radius)] flex items-center justify-center font-[var(--font-display)] text-[0.7rem] font-semibold border border-[var(--border)]"
-      >
-        {{ initials }}
-      </div>
       <div>
         <div class="font-medium text-[0.9rem]">{{ name }}</div>
         <div class="text-[0.75rem] text-[var(--text-muted)]">{{ team }}</div>

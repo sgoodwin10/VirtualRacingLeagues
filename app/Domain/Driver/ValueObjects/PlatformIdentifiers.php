@@ -28,17 +28,10 @@ final readonly class PlatformIdentifiers
 
     private function validate(): void
     {
-        // At least one platform ID is required
-        $hasPsn = $this->psnId !== null && trim($this->psnId) !== '';
-        $hasIracing = $this->iracingId !== null && trim($this->iracingId) !== '';
-        $hasIracingCustomer = $this->iracingCustomerId !== null;
-        $hasDiscord = $this->discordId !== null && trim($this->discordId) !== '';
+        // Platform IDs are now optional - validation moved to application layer
+        // to allow drivers with only name (no platform IDs)
 
-        if (!$hasPsn && !$hasIracing && !$hasIracingCustomer && !$hasDiscord) {
-            throw new InvalidArgumentException('At least one platform identifier is required');
-        }
-
-        // Validate lengths
+        // Validate lengths if provided
         if ($this->psnId !== null && mb_strlen($this->psnId) > 255) {
             throw new InvalidArgumentException('PSN ID cannot exceed 255 characters');
         }
@@ -79,8 +72,9 @@ final readonly class PlatformIdentifiers
 
     /**
      * Get the primary platform identifier for display purposes.
+     * Returns null if no platform identifiers exist.
      */
-    public function primaryIdentifier(): string
+    public function primaryIdentifier(): ?string
     {
         if ($this->psnId !== null && trim($this->psnId) !== '') {
             return 'PSN: ' . $this->psnId;
@@ -98,8 +92,8 @@ final readonly class PlatformIdentifiers
             return 'Discord: ' . $this->discordId;
         }
 
-        // Should never reach here due to validation
-        return '';
+        // No platform identifiers exist
+        return null;
     }
 
     /**

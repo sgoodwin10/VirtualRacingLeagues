@@ -137,12 +137,14 @@ final class SlugTest extends TestCase
         Slug::from('John Doe'); // spaces not allowed
     }
 
-    public function test_throws_exception_when_cannot_generate_slug(): void
+    public function test_generates_random_slug_when_no_name_or_platform_id_provided(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot generate slug: no name components provided');
+        // Slug::generate now auto-generates a random slug when no name components or platform ID exist
+        $slug = Slug::generate(null, null, null);
 
-        Slug::generate(null, null, null);
+        // Should start with "driver-" followed by random hex
+        $this->assertStringStartsWith('driver-', $slug->value());
+        $this->assertGreaterThan(7, mb_strlen($slug->value())); // "driver-" + at least 1 hex char
     }
 
     public function test_equals_returns_true_for_same_slug(): void

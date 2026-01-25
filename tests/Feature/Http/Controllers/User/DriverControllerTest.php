@@ -109,21 +109,7 @@ final class DriverControllerTest extends UserControllerTestCase
         ]);
     }
 
-    public function test_cannot_create_driver_without_name(): void
-    {
-        $response = $this->actingAs($this->user, 'web')
-            ->postJson("/api/leagues/{$this->league->id}/drivers", [
-                'psn_id' => 'SomeDriver',
-            ]);
-
-        $response->assertStatus(422)
-            ->assertJson([
-                'success' => false,
-                'message' => 'At least one name field (first name, last name, or nickname) is required',
-            ]);
-    }
-
-    public function test_cannot_create_driver_without_platform_id(): void
+    public function test_can_create_driver_with_only_name(): void
     {
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers", [
@@ -131,10 +117,45 @@ final class DriverControllerTest extends UserControllerTestCase
                 'last_name' => 'Doe',
             ]);
 
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertDatabaseHas('drivers', [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+        ]);
+    }
+
+    public function test_can_create_driver_with_only_platform_id(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'psn_id' => 'SomeDriver',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertDatabaseHas('drivers', [
+            'psn_id' => 'SomeDriver',
+        ]);
+    }
+
+    public function test_cannot_create_driver_without_name_or_platform_id(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'email' => 'test@example.com',
+            ]);
+
         $response->assertStatus(422)
             ->assertJson([
                 'success' => false,
-                'message' => 'At least one platform identifier is required',
+                'message' => 'At least one name field (first name, last name, or nickname) OR at least one platform identifier is required',
             ]);
     }
 
@@ -358,9 +379,9 @@ final class DriverControllerTest extends UserControllerTestCase
         ]);
     }
 
-    public function test_can_remove_driver_from_league(): void
+    public function test_can_soft_delete_driver(): void
     {
-        $driver = Driver::factory()->create(['psn_id' => 'RemoveTest']);
+        $driver = Driver::factory()->create(['psn_id' => 'DeleteTest']);
         DB::table('league_drivers')->insert([
             'league_id' => $this->league->id,
             'driver_id' => $driver->id,
@@ -375,13 +396,112 @@ final class DriverControllerTest extends UserControllerTestCase
         $response->assertOk()
             ->assertJson([
                 'success' => true,
-                'message' => 'Driver removed from league successfully',
+                'message' => 'Driver deleted successfully',
             ]);
 
-        $this->assertDatabaseMissing('league_drivers', [
+        // Verify driver is soft-deleted
+        $this->assertDatabaseHas('drivers', [
+            'id' => $driver->id,
+        ]);
+        $driver->refresh();
+        $this->assertNotNull($driver->deleted_at);
+
+        // Verify league_drivers relationship is preserved
+        $this->assertDatabaseHas('league_drivers', [
             'league_id' => $this->league->id,
             'driver_id' => $driver->id,
         ]);
+    }
+
+    public function test_can_restore_soft_deleted_driver(): void
+    {
+        $driver = Driver::factory()->create([
+            'psn_id' => 'RestoreTest',
+            'deleted_at' => now(),
+        ]);
+        DB::table('league_drivers')->insert([
+            'league_id' => $this->league->id,
+            'driver_id' => $driver->id,
+            'status' => 'active',
+            'added_to_league_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers/{$driver->id}/restore");
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'message' => 'Driver restored successfully',
+            ]);
+
+        // Verify driver is restored
+        $driver->refresh();
+        $this->assertNull($driver->deleted_at);
+
+        // Verify league_drivers relationship still exists
+        $this->assertDatabaseHas('league_drivers', [
+            'league_id' => $this->league->id,
+            'driver_id' => $driver->id,
+        ]);
+    }
+
+    public function test_cannot_restore_active_driver(): void
+    {
+        $driver = Driver::factory()->create(['psn_id' => 'ActiveTest']);
+        DB::table('league_drivers')->insert([
+            'league_id' => $this->league->id,
+            'driver_id' => $driver->id,
+            'status' => 'active',
+            'added_to_league_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers/{$driver->id}/restore");
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+            ]);
+    }
+
+    public function test_can_filter_drivers_by_deleted_status(): void
+    {
+        $activeDriver = Driver::factory()->create(['psn_id' => 'active_driver']);
+        $deletedDriver = Driver::factory()->create(['psn_id' => 'deleted_driver', 'deleted_at' => now()]);
+
+        foreach ([$activeDriver, $deletedDriver] as $driver) {
+            DB::table('league_drivers')->insert([
+                'league_id' => $this->league->id,
+                'driver_id' => $driver->id,
+                'status' => 'active',
+                'added_to_league_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Test active filter (default)
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$this->league->id}/drivers?deleted_status=active");
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data');
+
+        // Test deleted filter
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$this->league->id}/drivers?deleted_status=deleted");
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data');
+
+        // Test all filter
+        $response = $this->actingAs($this->user, 'web')
+            ->getJson("/api/leagues/{$this->league->id}/drivers?deleted_status=all");
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data');
     }
 
     public function test_can_search_drivers_by_name(): void
@@ -464,8 +584,8 @@ final class DriverControllerTest extends UserControllerTestCase
 
         $csvData = "FirstName,LastName,PSN_ID\n"
             . "Valid,Driver,ValidPSN\n"
-            . ",,\n" // Missing name and platform ID
-            . "NoID,Driver,\n" // Missing platform ID
+            . ",,\n" // Missing both name and platform ID - should error
+            . "NoID,Driver,\n" // Missing platform ID but has name - should succeed
             . "Duplicate,Driver,ExistingPSN"; // Already in league
 
         $response = $this->actingAs($this->user, 'web')
@@ -474,7 +594,7 @@ final class DriverControllerTest extends UserControllerTestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.success_count', 1);
+            ->assertJsonPath('data.success_count', 2); // Valid + NoID should succeed
 
         // Verify there are errors with correct structure
         $errors = $response->json('data.errors');
@@ -489,16 +609,16 @@ final class DriverControllerTest extends UserControllerTestCase
             $this->assertIsString($error['message']);
         }
 
-        // Verify at least one error mentions missing name field
+        // Verify at least one error mentions missing name AND platform ID
         $errorMessages = array_column($errors, 'message');
-        $hasNameError = false;
+        $hasNameAndPlatformError = false;
         foreach ($errorMessages as $message) {
-            if (str_contains($message, 'At least one name field is required')) {
-                $hasNameError = true;
+            if (str_contains($message, 'At least one name field OR at least one platform ID is required')) {
+                $hasNameAndPlatformError = true;
                 break;
             }
         }
-        $this->assertTrue($hasNameError, 'Expected to find error about missing name field');
+        $this->assertTrue($hasNameAndPlatformError, 'Expected to find error about missing both name and platform ID');
     }
 
     public function test_csv_import_accepts_lowercase_column_names(): void
@@ -610,7 +730,7 @@ final class DriverControllerTest extends UserControllerTestCase
         ]);
     }
 
-    public function test_does_not_auto_generate_nickname_when_first_name_exists(): void
+    public function test_auto_generates_nickname_from_discord_id_even_with_first_name(): void
     {
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers", [
@@ -629,15 +749,15 @@ final class DriverControllerTest extends UserControllerTestCase
                 'data' => [
                     'driver' => [
                         'first_name' => 'John',
-                        'nickname' => null,
-                        'display_name' => 'John',
+                        'nickname' => 'DiscordRacer789', // Auto-populated from Discord ID (highest priority)
+                        'display_name' => 'DiscordRacer789',
                     ],
                 ],
             ]);
 
         $this->assertDatabaseHas('drivers', [
             'first_name' => 'John',
-            'nickname' => null,
+            'nickname' => 'DiscordRacer789',
             'discord_id' => 'DiscordRacer789',
         ]);
     }
@@ -670,6 +790,121 @@ final class DriverControllerTest extends UserControllerTestCase
             'nickname' => 'ProRacer',
             'discord_id' => 'DiscordRacer999',
         ]);
+    }
+
+    public function test_auto_generates_nickname_from_psn_id_when_no_discord(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'first_name' => 'John',
+                'last_name' => null,
+                'nickname' => null,
+                'psn_id' => 'PSNRacer123',
+                'iracing_id' => 'iRacingRacer456',
+                'discord_id' => null,
+                'driver_number' => 50,
+                'status' => 'active',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'driver' => [
+                        'first_name' => 'John',
+                        'nickname' => 'PSNRacer123', // PSN ID has priority when no Discord ID
+                        'display_name' => 'PSNRacer123',
+                    ],
+                ],
+            ]);
+    }
+
+    public function test_auto_generates_nickname_from_iracing_id_when_no_discord_or_psn(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'first_name' => 'John',
+                'last_name' => null,
+                'nickname' => null,
+                'psn_id' => null,
+                'iracing_id' => 'iRacingRacer789',
+                'discord_id' => null,
+                'driver_number' => 51,
+                'status' => 'active',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'driver' => [
+                        'first_name' => 'John',
+                        'nickname' => 'iRacingRacer789', // iRacing ID when no Discord or PSN
+                        'display_name' => 'iRacingRacer789',
+                    ],
+                ],
+            ]);
+    }
+
+    public function test_auto_generates_nickname_from_iracing_customer_id_when_no_other_platform_ids(): void
+    {
+        $league = League::factory()->create([
+            'owner_user_id' => $this->user->id,
+            'platform_ids' => [2], // iRacing platform ID
+        ]);
+
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$league->id}/drivers", [
+                'first_name' => 'John',
+                'last_name' => null,
+                'nickname' => null,
+                'psn_id' => null,
+                'iracing_id' => null,
+                'iracing_customer_id' => 123456,
+                'discord_id' => null,
+                'driver_number' => 52,
+                'status' => 'active',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'driver' => [
+                        'first_name' => 'John',
+                        'nickname' => '123456', // iRacing Customer ID as string
+                        'display_name' => '123456',
+                    ],
+                ],
+            ]);
+    }
+
+    public function test_auto_generates_nickname_from_first_name_when_no_platform_ids(): void
+    {
+        $response = $this->actingAs($this->user, 'web')
+            ->postJson("/api/leagues/{$this->league->id}/drivers", [
+                'first_name' => 'Johnny',
+                'last_name' => 'Doe',
+                'nickname' => null,
+                'psn_id' => 'PSNRacer321', // Required for league platform validation
+                'iracing_id' => null,
+                'iracing_customer_id' => null,
+                'discord_id' => null,
+                'driver_number' => 53,
+                'status' => 'active',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'driver' => [
+                        'first_name' => 'Johnny',
+                        'nickname' => 'PSNRacer321', // PSN ID has priority over first name
+                        'display_name' => 'Johnny Doe', // Display name uses full name when both first and last are present
+                    ],
+                ],
+            ]);
     }
 
     public function test_csv_import_auto_generates_nickname_from_discord_id(): void

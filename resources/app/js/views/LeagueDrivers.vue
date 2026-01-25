@@ -52,14 +52,12 @@ const leagueIdNumber = computed(() => {
 });
 
 // Use the useLeagueDrivers composable for driver management
-const { loadDrivers, addDriver, updateDriver, removeDriver, importFromCSV } = useLeagueDrivers(
-  leagueIdNumber,
-  {
+const { loadDrivers, addDriver, updateDriver, removeDriver, restoreDriver, importFromCSV } =
+  useLeagueDrivers(leagueIdNumber, {
     onSuccess: (msg) =>
       toast.add({ severity: 'success', summary: 'Success', detail: msg, life: 3000 }),
     onError: (msg) => toast.add({ severity: 'error', summary: 'Error', detail: msg, life: 5000 }),
-  },
-);
+  });
 
 // Set dynamic page title based on league name
 const pageTitle = computed(() => (league.value ? `${league.value.name} - Drivers` : 'Drivers'));
@@ -194,14 +192,28 @@ async function handleSaveDriver(data: CreateDriverRequest): Promise<void> {
 
 function handleRemoveDriver(driver: LeagueDriver): void {
   confirm.require({
-    message: `Are you sure you want to remove ${getDriverName(driver)} from this league?`,
-    header: 'Confirm Removal',
+    message: `Are you sure you want to delete ${getDriverName(driver)}? The driver will be marked as deleted but will still appear in race results and standings.`,
+    header: 'Confirm Deletion',
     icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Remove',
+    acceptLabel: 'Delete',
     rejectLabel: 'Cancel',
     acceptClass: 'p-button-danger',
     accept: async () => {
       await removeDriver(driver.driver_id);
+    },
+  });
+}
+
+function handleRestoreDriver(driver: LeagueDriver): void {
+  confirm.require({
+    message: `Are you sure you want to restore ${getDriverName(driver)}? The driver will be marked as active.`,
+    header: 'Confirm Restore',
+    icon: 'pi pi-refresh',
+    acceptLabel: 'Restore',
+    rejectLabel: 'Cancel',
+    acceptClass: 'p-button-success',
+    accept: async () => {
+      await restoreDriver(driver.driver_id);
     },
   });
 }
@@ -228,7 +240,7 @@ async function handleCSVImport(csvData: string) {
 }
 
 function getDriverName(leagueDriver: LeagueDriver): string {
-  return leagueDriver.driver?.display_name || 'Unknown';
+  return leagueDriver.driver?.display_name || '';
 }
 </script>
 
@@ -285,6 +297,7 @@ function getDriverName(leagueDriver: LeagueDriver): string {
             @view-driver="handleViewDriver"
             @edit-driver="handleEditDriver"
             @remove-driver="handleRemoveDriver"
+            @restore-driver="handleRestoreDriver"
           />
         </div>
       </main>

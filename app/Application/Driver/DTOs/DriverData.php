@@ -22,7 +22,7 @@ final class DriverData extends Data
         public readonly ?string $iracing_id,
         public readonly ?int $iracing_customer_id,
         public readonly ?string $discord_id,
-        public readonly string $primary_platform_id,
+        public readonly ?string $primary_platform_id,
         public readonly string $created_at,
         public readonly string $updated_at,
         public readonly ?string $deleted_at

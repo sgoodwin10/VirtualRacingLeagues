@@ -70,7 +70,8 @@ final class CreateDriverData extends Data
     }
 
     /**
-     * Get the effective nickname (auto-generated from Discord ID if not provided).
+     * Get the effective nickname (auto-populated if not provided).
+     * Priority order: Discord ID > Platform ID > First Name
      */
     public function getEffectiveNickname(): ?string
     {
@@ -79,16 +80,30 @@ final class CreateDriverData extends Data
             return $this->nickname;
         }
 
-        // If no nickname and no first/last name but Discord ID is present, generate from Discord ID
-        $hasFirstName = $this->first_name !== null && trim($this->first_name) !== '';
-        $hasLastName = $this->last_name !== null && trim($this->last_name) !== '';
-        $hasDiscordId = $this->discord_id !== null && trim($this->discord_id) !== '';
-
-        if (!$hasFirstName && !$hasLastName && $hasDiscordId) {
+        // Auto-populate nickname using priority order:
+        // 1. Discord ID (highest priority)
+        if ($this->discord_id !== null && trim($this->discord_id) !== '') {
             return $this->discord_id;
         }
 
-        // Otherwise return the original nickname (null or empty)
-        return $this->nickname;
+        // 2. Platform ID (PSN > iRacing > iRacing Customer ID)
+        if ($this->psn_id !== null && trim($this->psn_id) !== '') {
+            return $this->psn_id;
+        }
+
+        if ($this->iracing_id !== null && trim($this->iracing_id) !== '') {
+            return $this->iracing_id;
+        }
+
+        if ($this->iracing_customer_id !== null) {
+            return (string) $this->iracing_customer_id;
+        }
+
+        // 3. First Name (lowest priority)
+        if ($this->first_name !== null && trim($this->first_name) !== '') {
+            return $this->first_name;
+        }
+
+        return null;
     }
 }

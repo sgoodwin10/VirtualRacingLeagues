@@ -344,7 +344,7 @@ describe('DriverTable', () => {
     } as LeagueDriver;
 
     const platform = component.getPlatformValue(driverNoPlatform, 'psn_id');
-    expect(platform).toBe('-');
+    expect(platform).toBe('');
   });
 
   it('should show loading state', () => {
@@ -388,7 +388,7 @@ describe('DriverTable', () => {
 
     // Test Discord ID absent
     const discordId2 = component.getDriverDiscordId(mockDrivers[1]);
-    expect(discordId2).toBe('-');
+    expect(discordId2).toBe('');
   });
 
   it('should handle driver with no Discord ID', () => {
@@ -409,6 +409,6 @@ describe('DriverTable', () => {
     } as LeagueDriver;
 
     const discordId = component.getDriverDiscordId(driverNoDiscord);
-    expect(discordId).toBe('-');
+    expect(discordId).toBe('');
   });
 });

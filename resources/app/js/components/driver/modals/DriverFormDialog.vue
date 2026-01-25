@@ -50,6 +50,9 @@ const saving = ref(false);
 // Active section for sidebar
 const activeSection = ref<SectionId>('basic');
 
+// Track if user has manually entered a nickname
+const userHasEnteredNickname = ref(false);
+
 // Computed visibility
 const isVisible = computed({
   get: () => props.visible,
@@ -105,6 +108,8 @@ watch(
       });
 
       formData.value = newFormData;
+      // If editing and nickname exists, mark as user-entered
+      userHasEnteredNickname.value = !!driver?.nickname;
     }
   },
   { immediate: true },
@@ -125,27 +130,71 @@ watch(
 );
 
 /**
+ * Auto-populate nickname based on priority:
+ * 1. Discord ID (highest priority)
+ * 2. First available platform ID field
+ * 3. First Name (lowest priority)
+ *
+ * This method is called whenever relevant fields change
+ */
+const autoPopulateNickname = (): void => {
+  // Skip if user has manually entered a nickname or we're in edit mode
+  if (userHasEnteredNickname.value || props.mode === 'edit') {
+    return;
+  }
+
+  // Priority 1: Discord ID
+  if (formData.value.discord_id?.trim()) {
+    formData.value.nickname = formData.value.discord_id.trim();
+    return;
+  }
+
+  // Priority 2: First available platform ID
+  for (const field of platformFormFields.value) {
+    const value = formData.value[field.field];
+    if (value && String(value).trim()) {
+      formData.value.nickname = String(value).trim();
+      return;
+    }
+  }
+
+  // Priority 3: First Name (lowest priority)
+  if (formData.value.first_name?.trim()) {
+    formData.value.nickname = formData.value.first_name.trim();
+    return;
+  }
+
+  // If none of the source fields have values, clear the nickname
+  formData.value.nickname = '';
+};
+
+// Note: Auto-population is now handled directly in event handlers
+// (handleDiscordIdUpdate, handleFirstNameUpdate, handlePlatformFieldUpdate)
+// rather than through a watcher for better testability and predictability
+
+/**
  * Validate form data
  */
 const validateForm = (): boolean => {
   errors.value = {};
 
-  // At least one of nickname or discord_id is required
-  const hasIdentifier = formData.value.nickname || formData.value.discord_id;
-  if (!hasIdentifier) {
-    errors.value.identifier = 'At least one of Nickname or Discord ID is required';
-  }
+  // Check if driver has any name field (nickname, first_name, or last_name)
+  const hasName = formData.value.nickname || formData.value.first_name || formData.value.last_name;
 
-  // At least one platform ID is required (check dynamic platform fields)
-  if (hasAnyPlatformField.value) {
-    const hasPlatformValue = platformFormFields.value.some((field) => {
+  // Check if driver has any platform ID (discord_id or any dynamic platform field)
+  let hasPlatformId = !!formData.value.discord_id;
+
+  if (!hasPlatformId && hasAnyPlatformField.value) {
+    hasPlatformId = platformFormFields.value.some((field) => {
       const value = formData.value[field.field];
       return value !== undefined && value !== null && value !== '';
     });
+  }
 
-    if (!hasPlatformValue) {
-      errors.value.platform = 'At least one platform ID is required for this league';
-    }
+  // Require at least one name field OR at least one platform ID
+  if (!hasName && !hasPlatformId) {
+    errors.value.identifier =
+      'Either a name field (Nickname, First Name, or Last Name) or a platform ID is required';
   }
 
   // Email validation
@@ -239,6 +288,7 @@ const resetForm = (): void => {
 
   formData.value = newFormData;
   errors.value = {};
+  userHasEnteredNickname.value = false; // Reset manual entry flag
 };
 
 /**
@@ -253,7 +303,49 @@ const handleSectionChange = (sectionId: SectionId): void => {
  */
 const handlePlatformFieldUpdate = (field: string, value: string | number | undefined): void => {
   formData.value[field] = value;
+  // Trigger auto-population after platform field update
+  autoPopulateNickname();
 };
+
+/**
+ * Handle field updates that might trigger auto-population
+ */
+const handleDiscordIdUpdate = (value: string): void => {
+  formData.value.discord_id = value;
+  autoPopulateNickname();
+};
+
+const handleFirstNameUpdate = (value: string): void => {
+  formData.value.first_name = value;
+  autoPopulateNickname();
+};
+
+/**
+ * Handle nickname manual input
+ * Marks the nickname as manually entered by the user
+ */
+const handleNicknameUpdate = (value: string): void => {
+  // If user enters any value (including empty string), mark as manually entered
+  userHasEnteredNickname.value = true;
+  formData.value.nickname = value;
+};
+
+// Expose methods and state for testing
+defineExpose({
+  getFormData: () => formData.value,
+  errors,
+  dialogTitle,
+  validateForm,
+  handleSubmit,
+  handleCancel,
+  resetForm,
+  autoPopulateNickname,
+  handleNicknameUpdate,
+  handleDiscordIdUpdate,
+  handleFirstNameUpdate,
+  handlePlatformFieldUpdate,
+  userHasEnteredNickname,
+});
 </script>
 
 <template>
@@ -290,10 +382,10 @@ const handlePlatformFieldUpdate = (field: string, value: string | number | undef
             platform: errors.platform,
           }"
           :disabled="saving"
-          @update:nickname="formData.nickname = $event"
-          @update:discord-id="formData.discord_id = $event"
+          @update:nickname="handleNicknameUpdate"
+          @update:discord-id="handleDiscordIdUpdate"
           @update:status="formData.status = $event as 'active' | 'inactive' | 'banned'"
-          @update:first-name="formData.first_name = $event"
+          @update:first-name="handleFirstNameUpdate"
           @update:last-name="formData.last_name = $event"
           @update:platform-field="handlePlatformFieldUpdate"
         />

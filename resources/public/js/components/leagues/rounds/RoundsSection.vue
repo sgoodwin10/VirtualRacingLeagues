@@ -56,24 +56,9 @@ interface Props {
 const props = defineProps<Props>();
 
 /**
- * Determine which round should be expanded by default
- * - If any round is completed, expand the most recent completed round
- * - Otherwise, expand the next upcoming round (first scheduled/pre_race/in_progress)
+ * All accordions start closed - user must click to expand
  */
 const expandedRound = computed((): string | undefined => {
-  const completedRounds = props.rounds.filter((r) => r.status === 'completed');
-
-  if (completedRounds.length > 0) {
-    // Get the most recent completed round (last in the completed array)
-    const mostRecentCompleted = completedRounds[completedRounds.length - 1];
-    return mostRecentCompleted ? String(mostRecentCompleted.id) : undefined;
-  }
-
-  // Find the next upcoming round
-  const upcomingRound = props.rounds.find(
-    (r) => r.status === 'scheduled' || r.status === 'pre_race' || r.status === 'in_progress',
-  );
-
-  return upcomingRound ? String(upcomingRound.id) : undefined;
+  return undefined;
 });
 </script>

@@ -47,6 +47,7 @@ class CreateSeasonRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'competition_id' => ['required', 'integer', 'exists:competitions,id'],
             'name' => ['required', 'string', 'min:3', 'max:100'],
             'slug' => ['nullable', 'string', 'min:3', 'max:100', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
             'car_class' => ['nullable', 'string', 'max:100'],

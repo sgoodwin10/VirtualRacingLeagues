@@ -573,8 +573,8 @@ function getAvailableDrivers(currentDriverId: number | null): DriverOption[] {
 }
 
 function getDriverName(driverId: number | null): string {
-  if (driverId === null) return '-';
-  return driverMap.value.get(driverId) ?? '-';
+  if (driverId === null) return '';
+  return driverMap.value.get(driverId) ?? '';
 }
 
 /**
