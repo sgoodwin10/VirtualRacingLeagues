@@ -43,11 +43,11 @@ class TrackController extends Controller
                 }
             },
         ])
-        ->where('is_active', true)
-        ->orderBy('sort_order');
+            ->where('is_active', true)
+            ->orderBy('sort_order');
 
         // Search by location name or track name if provided
-        if (!empty($validated['search'])) {
+        if (! empty($validated['search'])) {
             $searchTerm = $validated['search'];
             $query->where(function ($q) use ($searchTerm, $platformId, $validated) {
                 // Search in location name
@@ -111,7 +111,7 @@ class TrackController extends Controller
     {
         $track = PlatformTrack::with('location')->find($id);
 
-        if (!$track) {
+        if (! $track) {
             return ApiResponse::error('Track not found', null, 404);
         }
 

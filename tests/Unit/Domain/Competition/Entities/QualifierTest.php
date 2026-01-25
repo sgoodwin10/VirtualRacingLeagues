@@ -96,7 +96,6 @@ final class QualifierTest extends TestCase
         );
     }
 
-
     public function test_throws_exception_for_invalid_length(): void
     {
         $this->expectException(InvalidQualifierConfigurationException::class);

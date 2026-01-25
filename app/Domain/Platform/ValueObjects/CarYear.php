@@ -11,6 +11,7 @@ namespace App\Domain\Platform\ValueObjects;
 final readonly class CarYear
 {
     private const MIN_YEAR = 1886; // First car invented
+
     private const MAX_YEAR = 2100; // Future-proof
 
     private function __construct(

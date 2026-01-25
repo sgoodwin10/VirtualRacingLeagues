@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@public/stores/authStore';
+import { getAppSubdomainUrl } from '@public/utils/subdomain';
 import HomeView from '@public/views/HomeView.vue';
 import LoginView from '@public/views/auth/LoginView.vue';
 import RegisterView from '@public/views/auth/RegisterView.vue';
@@ -103,14 +104,6 @@ const router = createRouter({
     },
   ],
 });
-
-// Helper to get app subdomain URL
-const getAppSubdomainUrl = (): string => {
-  // VITE_APP_DOMAIN already includes 'app.' prefix
-  // Use dynamic protocol detection to support both HTTP and HTTPS
-  const protocol = window.location.protocol;
-  return `${protocol}//${import.meta.env.VITE_APP_DOMAIN}`;
-};
 
 // Navigation guard
 router.beforeEach(async (to, _from, next) => {

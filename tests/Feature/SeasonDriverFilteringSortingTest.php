@@ -25,12 +25,19 @@ class SeasonDriverFilteringSortingTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private League $league;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
+
     private Division $division1;
+
     private Division $division2;
+
     private Team $team1;
+
     private Team $team2;
 
     protected function setUp(): void
@@ -196,7 +203,7 @@ class SeasonDriverFilteringSortingTest extends TestCase
         // Sort by discord_id ascending
         $response = $this->getJson(
             "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/drivers" .
-            "?order_by=discord_id&order_direction=asc"
+            '?order_by=discord_id&order_direction=asc'
         );
 
         $response->assertOk();
@@ -218,7 +225,7 @@ class SeasonDriverFilteringSortingTest extends TestCase
         // Sort by driver_number ascending
         $response = $this->getJson(
             "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/drivers" .
-            "?order_by=driver_number&order_direction=asc"
+            '?order_by=driver_number&order_direction=asc'
         );
 
         $response->assertOk();
@@ -246,7 +253,7 @@ class SeasonDriverFilteringSortingTest extends TestCase
         // Sort by team_name ascending (NULL values should be last)
         $response = $this->getJson(
             "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/drivers" .
-            "?order_by=team_name&order_direction=asc"
+            '?order_by=team_name&order_direction=asc'
         );
 
         $response->assertOk();
@@ -274,7 +281,7 @@ class SeasonDriverFilteringSortingTest extends TestCase
         // Sort by division_name ascending (NULL values should be last)
         $response = $this->getJson(
             "http://app.virtualracingleagues.localhost/api/seasons/{$this->season->id}/drivers" .
-            "?order_by=division_name&order_direction=asc"
+            '?order_by=division_name&order_direction=asc'
         );
 
         $response->assertOk();
@@ -335,8 +342,8 @@ class SeasonDriverFilteringSortingTest extends TestCase
     /**
      * Helper method to create a driver and add them to the season.
      *
-     * @param array<string, mixed> $driverAttributes
-     * @param array<string, mixed> $seasonDriverAttributes
+     * @param  array<string, mixed>  $driverAttributes
+     * @param  array<string, mixed>  $seasonDriverAttributes
      * @return int Driver ID
      */
     private function createDriverInSeason(

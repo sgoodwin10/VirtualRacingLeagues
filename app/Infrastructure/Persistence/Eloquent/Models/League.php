@@ -45,6 +45,7 @@ use Spatie\MediaLibrary\HasMedia;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\Driver> $drivers
  * @property-read int|null $drivers_count
+ *
  * @method static \Database\Factories\LeagueFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|League newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|League newQuery()
@@ -135,10 +136,10 @@ class League extends Model implements HasMedia
     protected function platformIds(): Attribute
     {
         return Attribute::make(
-            get: fn(?string $value): array => $value
+            get: fn (?string $value): array => $value
                 ? array_map('intval', json_decode($value, true) ?: [])
                 : [],
-            set: fn(array $value): string => json_encode(array_map('intval', $value)),
+            set: fn (array $value): string => json_encode(array_map('intval', $value)),
         );
     }
 
@@ -202,8 +203,6 @@ class League extends Model implements HasMedia
     /**
      * Register media collections for League.
      * Defines single-file collections for logo, header image, and banner.
-     *
-     * @return void
      */
     public function registerMediaCollections(): void
     {

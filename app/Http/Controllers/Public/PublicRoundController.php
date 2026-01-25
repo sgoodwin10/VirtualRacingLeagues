@@ -29,6 +29,7 @@ final class PublicRoundController extends Controller
     {
         try {
             $results = $this->roundService->getRoundResults($request->getRoundId());
+
             return ApiResponse::success($results->toArray());
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error('Round not found', null, 404);

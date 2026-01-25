@@ -122,7 +122,7 @@ final class RoundTiebreakerRule
      */
     public function activate(): void
     {
-        if (!$this->isActive) {
+        if (! $this->isActive) {
             $this->isActive = true;
             $this->updatedAt = new DateTimeImmutable();
         }

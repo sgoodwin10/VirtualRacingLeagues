@@ -42,7 +42,7 @@ final class MediaConversionService implements MediaConversionServiceInterface
      * - Handles missing conversions gracefully with logging
      * - Generates responsive image srcset for web use
      *
-     * @param Media|null $media The media model to convert
+     * @param  Media|null  $media  The media model to convert
      * @return array{id: int, original: string, conversions: array<string, string>, srcset: string}|null
      */
     public function mediaToArray(?Media $media): ?array

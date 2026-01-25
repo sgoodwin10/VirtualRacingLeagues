@@ -28,14 +28,14 @@ class CreateCompetitionRequest extends FormRequest
         /** @phpstan-ignore-next-line */
         $leagueId = $this->route('leagueId');
 
-        if (!$leagueId) {
+        if (! $leagueId) {
             return false;
         }
 
         // Check if league exists and user owns it
         $league = League::find($leagueId);
 
-        if (!$league instanceof League) {
+        if (! $league instanceof League) {
             return false;
         }
 

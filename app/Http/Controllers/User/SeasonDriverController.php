@@ -43,8 +43,9 @@ final class SeasonDriverController extends Controller
             $result['meta']['current_page'],
             $result['meta']['last_page']
         );
+
         return ApiResponse::paginated(
-            array_map(fn($item) => $item->toArray(), $result['data']),
+            array_map(fn ($item) => $item->toArray(), $result['data']),
             $result['meta'],
             $links
         );
@@ -61,6 +62,7 @@ final class SeasonDriverController extends Controller
             $data,
             $this->getAuthenticatedUserId()
         );
+
         return ApiResponse::created($driverData->toArray(), 'Driver added to season successfully');
     }
 
@@ -76,6 +78,7 @@ final class SeasonDriverController extends Controller
             $data,
             $this->getAuthenticatedUserId()
         );
+
         return ApiResponse::success($driver->toArray(), 'Season driver updated successfully');
     }
 
@@ -89,6 +92,7 @@ final class SeasonDriverController extends Controller
             $leagueDriverId,
             $this->getAuthenticatedUserId()
         );
+
         return ApiResponse::success(null, 'Driver removed from season successfully');
     }
 
@@ -102,6 +106,7 @@ final class SeasonDriverController extends Controller
             $request->validated()['league_driver_ids'],
             $this->getAuthenticatedUserId()
         );
+
         return ApiResponse::success($drivers, 'Drivers added to season successfully');
     }
 
@@ -111,6 +116,7 @@ final class SeasonDriverController extends Controller
     public function stats(int $seasonId): JsonResponse
     {
         $stats = $this->seasonDriverService->getSeasonDriverStats($seasonId);
+
         return ApiResponse::success($stats);
     }
 
@@ -128,6 +134,7 @@ final class SeasonDriverController extends Controller
             $result['meta']['current_page'],
             $result['meta']['last_page']
         );
+
         return ApiResponse::paginated($result['data'], $result['meta'], $links);
     }
 
@@ -142,6 +149,7 @@ final class SeasonDriverController extends Controller
         if ($userId === null) {
             throw UnauthorizedException::notAuthenticated();
         }
+
         return (int) $userId;
     }
 }

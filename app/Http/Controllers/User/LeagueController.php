@@ -14,9 +14,9 @@ use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\CheckSlugRequest;
-use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use App\Http\Requests\User\CreateLeagueRequest;
 use App\Http\Requests\User\UpdateLeagueRequest;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,8 +29,6 @@ final class LeagueController extends Controller
 
     /**
      * Get the authenticated user.
-     *
-     * @return UserEloquent
      */
     private function authenticatedUser(): UserEloquent
     {
@@ -49,6 +47,7 @@ final class LeagueController extends Controller
         $user = $this->authenticatedUser();
 
         $leagues = $this->leagueService->getUserLeagues($user->id);
+
         return ApiResponse::success($leagues);
     }
 
@@ -64,6 +63,7 @@ final class LeagueController extends Controller
                 $this->authenticatedUser()->id,
                 $this->authenticatedUser()
             );
+
             return ApiResponse::created($leagueData->toArray(), 'League created successfully');
         } catch (LeagueLimitReachedException $e) {
             return ApiResponse::error($e->getMessage(), null, 422);
@@ -79,6 +79,7 @@ final class LeagueController extends Controller
 
         try {
             $league = $this->leagueService->getLeagueById($id, $user->id);
+
             return ApiResponse::success($league->toArray());
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
@@ -102,6 +103,7 @@ final class LeagueController extends Controller
                 $this->authenticatedUser(),
                 $validated
             );
+
             return ApiResponse::success($leagueData->toArray(), 'League updated successfully');
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
@@ -121,6 +123,7 @@ final class LeagueController extends Controller
 
         try {
             $this->leagueService->deleteLeague($id, $user->id);
+
             return ApiResponse::success(null, 'League deleted successfully');
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
@@ -139,6 +142,7 @@ final class LeagueController extends Controller
         $validated = $request->validated();
         $excludeLeagueId = isset($validated['league_id']) ? (int) $validated['league_id'] : null;
         $result = $this->leagueService->checkSlugAvailability($validated['name'], $excludeLeagueId);
+
         return ApiResponse::success($result);
     }
 
@@ -151,6 +155,7 @@ final class LeagueController extends Controller
 
         try {
             $platforms = $this->leagueService->getLeaguePlatforms($id, $user->id);
+
             return ApiResponse::success($platforms);
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
@@ -168,6 +173,7 @@ final class LeagueController extends Controller
 
         try {
             $columns = $this->leagueService->getDriverColumnsForLeague($id, $user->id);
+
             return ApiResponse::success($columns);
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
@@ -185,6 +191,7 @@ final class LeagueController extends Controller
 
         try {
             $formFields = $this->leagueService->getDriverFormFieldsForLeague($id, $user->id);
+
             return ApiResponse::success($formFields);
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
@@ -202,6 +209,7 @@ final class LeagueController extends Controller
 
         try {
             $csvHeaders = $this->leagueService->getDriverCsvHeadersForLeague($id, $user->id);
+
             return ApiResponse::success($csvHeaders);
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');

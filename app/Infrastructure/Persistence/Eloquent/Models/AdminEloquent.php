@@ -38,6 +38,7 @@ use Spatie\Activitylog\Models\Activity;
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int,
  *     \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
+ *
  * @method static \Database\Factories\AdminFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminEloquent newQuery()
@@ -167,7 +168,7 @@ class AdminEloquent extends Authenticatable
      * because Laravel's middleware works with Eloquent models, not domain entities.
      * This is an acceptable infrastructure concern to support Laravel's authentication system.
      *
-     * @param array<string> $roles
+     * @param  array<string>  $roles
      */
     public function hasAnyRole(array $roles): bool
     {

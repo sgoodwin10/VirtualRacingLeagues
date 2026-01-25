@@ -46,8 +46,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $status
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- * @method static Race firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  *
+ * @method static Race firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  * @method static \Illuminate\Database\Eloquent\Builder<Race> where($column, $operator = null, $value = null, $boolean = 'and')
  * @method static Race|null find(int $id, $columns = ['*'])
  * @method static Race findOrFail(int $id, $columns = ['*'])
@@ -60,8 +60,6 @@ final class Race extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return \Database\Factories\RaceFactory
      */
     protected static function newFactory(): \Database\Factories\RaceFactory
     {
@@ -154,7 +152,7 @@ final class Race extends Model
     /**
      * Scope to filter only qualifiers
      *
-     * @param \Illuminate\Database\Eloquent\Builder<Race> $query
+     * @param  \Illuminate\Database\Eloquent\Builder<Race>  $query
      * @return \Illuminate\Database\Eloquent\Builder<Race>
      */
     public function scopeQualifiers(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
@@ -165,7 +163,7 @@ final class Race extends Model
     /**
      * Scope to filter only races (not qualifiers)
      *
-     * @param \Illuminate\Database\Eloquent\Builder<Race> $query
+     * @param  \Illuminate\Database\Eloquent\Builder<Race>  $query
      * @return \Illuminate\Database\Eloquent\Builder<Race>
      */
     public function scopeRaces(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
@@ -176,8 +174,7 @@ final class Race extends Model
     /**
      * Scope to filter by round
      *
-     * @param \Illuminate\Database\Eloquent\Builder<Race> $query
-     * @param int $roundId
+     * @param  \Illuminate\Database\Eloquent\Builder<Race>  $query
      * @return \Illuminate\Database\Eloquent\Builder<Race>
      */
     public function scopeForRound(\Illuminate\Database\Eloquent\Builder $query, int $roundId): \Illuminate\Database\Eloquent\Builder

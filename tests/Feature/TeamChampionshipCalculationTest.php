@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Infrastructure\Persistence\Eloquent\Models\League;
+use App\Application\Competition\Services\RoundApplicationService;
 use App\Infrastructure\Persistence\Eloquent\Models\Competition;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\Round;
+use App\Infrastructure\Persistence\Eloquent\Models\Division;
+use App\Infrastructure\Persistence\Eloquent\Models\Driver;
+use App\Infrastructure\Persistence\Eloquent\Models\League;
+use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;
 use App\Infrastructure\Persistence\Eloquent\Models\RaceResult;
-use App\Infrastructure\Persistence\Eloquent\Models\Team;
+use App\Infrastructure\Persistence\Eloquent\Models\Round;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\Driver;
-use App\Infrastructure\Persistence\Eloquent\Models\Division;
-use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\Team;
 use App\Models\User;
-use App\Application\Competition\Services\RoundApplicationService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 /**
  * Test team championship calculation using total_points from round_results.
@@ -28,13 +28,21 @@ class TeamChampionshipCalculationTest extends TestCase
     use RefreshDatabase;
 
     private RoundApplicationService $roundService;
+
     private int $userId;
+
     private int $roundId;
+
     private int $team1Id;
+
     private int $team2Id;
+
     private int $seasonDriver1Id;
+
     private int $seasonDriver2Id;
+
     private int $seasonDriver3Id;
+
     private int $seasonDriver4Id;
 
     protected function setUp(): void

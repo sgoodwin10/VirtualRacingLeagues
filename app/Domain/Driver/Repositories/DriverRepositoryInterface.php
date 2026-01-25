@@ -23,10 +23,10 @@ interface DriverRepositoryInterface
      * This is correct behavior because a driver is considered the same person
      * if ANY of their platform IDs match (e.g., same PSN_ID = same driver).
      *
-     * @param string|null $psnId PlayStation Network ID to search for
-     * @param string|null $iracingId iRacing username to search for
-     * @param int|null $iracingCustomerId iRacing customer ID to search for
-     * @param string|null $discordId Discord ID to search for
+     * @param  string|null  $psnId  PlayStation Network ID to search for
+     * @param  string|null  $iracingId  iRacing username to search for
+     * @param  int|null  $iracingCustomerId  iRacing customer ID to search for
+     * @param  string|null  $discordId  Discord ID to search for
      * @return Driver|null Returns the driver if ANY platform ID matches, null if none match
      */
     public function findByPlatformId(
@@ -53,11 +53,11 @@ interface DriverRepositoryInterface
      * This is correct behavior because it prevents duplicate driver entries for the same person.
      * If ANY platform ID matches an existing league driver, they are already in the league.
      *
-     * @param int $leagueId The league ID to check within
-     * @param string|null $psnId PlayStation Network ID to check
-     * @param string|null $iracingId iRacing username to check
-     * @param int|null $iracingCustomerId iRacing customer ID to check
-     * @param string|null $discordId Discord ID to check
+     * @param  int  $leagueId  The league ID to check within
+     * @param  string|null  $psnId  PlayStation Network ID to check
+     * @param  string|null  $iracingId  iRacing username to check
+     * @param  int|null  $iracingCustomerId  iRacing customer ID to check
+     * @param  string|null  $discordId  Discord ID to check
      * @return bool True if a driver with ANY of these platform IDs exists in the league
      */
     public function existsInLeagueByPlatformId(
@@ -71,7 +71,7 @@ interface DriverRepositoryInterface
     /**
      * Get all drivers in a league with pagination and filtering.
      *
-     * @param string|null $deletedStatus Filter by deleted status: 'active' (not deleted), 'deleted', 'all'
+     * @param  string|null  $deletedStatus  Filter by deleted status: 'active' (not deleted), 'deleted', 'all'
      * @return array{
      *     data: array<LeagueDriver>,
      *     driver_data: array<int, Driver>,
@@ -94,6 +94,7 @@ interface DriverRepositoryInterface
      * Get a single league driver association.
      *
      * @return array{league_driver: LeagueDriver, driver: Driver}
+     *
      * @throws \App\Domain\Driver\Exceptions\DriverNotFoundException
      */
     public function getLeagueDriver(int $leagueId, int $driverId): array;

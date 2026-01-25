@@ -233,7 +233,8 @@ class RegistrationTest extends TestCase
             }
         );
 
-        // Assert it was sent only once (not twice)
-        Notification::assertCount(1);
+        // Assert EmailVerificationNotification was sent only once (not twice)
+        // Note: Other notifications (e.g., Discord) may also be sent during registration
+        Notification::assertSentToTimes($user, EmailVerificationNotification::class, 1);
     }
 }

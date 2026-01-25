@@ -62,7 +62,7 @@ return new class extends Migration
                     $updates['qualifying_pole_top_10'] = (bool) $bonusPoints['qualifying_pole_top_10'];
                 }
 
-                if (!empty($updates)) {
+                if (! empty($updates)) {
                     DB::table('races')
                         ->where('id', $race->id)
                         ->update($updates);
@@ -108,7 +108,7 @@ return new class extends Migration
 
                 // Only update if there are bonus points
                 $updates = [
-                    'bonus_points' => !empty($bonusPoints) ? json_encode($bonusPoints) : null,
+                    'bonus_points' => ! empty($bonusPoints) ? json_encode($bonusPoints) : null,
                 ];
 
                 DB::table('races')

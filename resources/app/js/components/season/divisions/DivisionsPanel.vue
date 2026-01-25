@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useDivisionStore } from '@app/stores/divisionStore';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
+import VrlConfirmDialog from '@app/components/common/dialogs/VrlConfirmDialog.vue';
 import type { Division } from '@app/types/division';
 
 import type { DataTableRowReorderEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
 import { Button, FooterAddButton } from '@app/components/common/buttons';
 import Message from 'primevue/message';
-import { PhPencil, PhTrash, PhTrophy } from '@phosphor-icons/vue';
+import { PhPencil, PhTrash, PhTrophy, PhWarning } from '@phosphor-icons/vue';
 
 import { TechDataTable } from '@app/components/common/tables';
 import DivisionFormModal from './DivisionFormModal.vue';
@@ -27,10 +28,19 @@ const props = withDefaults(defineProps<Props>(), {
   isSeasonCompleted: false,
 });
 
-const confirm = useConfirm();
 const toast = useToast();
 const divisionStore = useDivisionStore();
 const seasonDriverStore = useSeasonDriverStore();
+
+// VRL Confirmation dialog
+const {
+  isVisible: isDeleteDivisionVisible,
+  options: deleteDivisionOptions,
+  isLoading: isDeleteDivisionLoading,
+  showConfirmation: showDeleteDivisionConfirmation,
+  handleAccept: handleDeleteDivisionAccept,
+  handleReject: handleDeleteDivisionReject,
+} = useVrlConfirm();
 
 const showDivisionModal = ref(false);
 const modalMode = ref<'add' | 'edit'>('add');
@@ -88,14 +98,17 @@ function handleDeleteDivision(division: Division): void {
       ? `Delete ${division.name}? ${driverCount} driver${driverCount > 1 ? 's' : ''} will have no division.`
       : `Delete ${division.name}?`;
 
-  confirm.require({
-    message,
+  showDeleteDivisionConfirmation({
     header: 'Delete Division',
-    icon: 'pi pi-exclamation-triangle',
+    message,
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
     acceptLabel: 'Delete',
     rejectLabel: 'Cancel',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       try {
         await divisionStore.deleteDivision(props.seasonId, division.id);
 
@@ -297,6 +310,15 @@ function truncateDescription(description: string | null, maxLength: number = 30)
       :season-id="seasonId"
       :division="selectedDivision"
       @save="handleDivisionSaved"
+    />
+
+    <!-- Confirm Delete Division Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isDeleteDivisionVisible"
+      v-bind="deleteDivisionOptions"
+      :loading="isDeleteDivisionLoading"
+      @accept="handleDeleteDivisionAccept"
+      @reject="handleDeleteDivisionReject"
     />
   </div>
 </template>

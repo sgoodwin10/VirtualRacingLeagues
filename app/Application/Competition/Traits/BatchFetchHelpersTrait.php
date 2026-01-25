@@ -20,7 +20,7 @@ trait BatchFetchHelpersTrait
     /**
      * Batch fetch driver names for multiple season driver IDs to avoid N+1 queries.
      *
-     * @param array<int> $seasonDriverIds
+     * @param  array<int>  $seasonDriverIds
      * @return array<int, string> Map of season driver ID => driver name
      */
     private function batchFetchDriverNames(array $seasonDriverIds): array
@@ -31,7 +31,7 @@ trait BatchFetchHelpersTrait
     /**
      * Batch fetch division names for multiple division IDs to avoid N+1 queries.
      *
-     * @param array<int> $divisionIds
+     * @param  array<int>  $divisionIds
      * @return array<int, string> Map of division ID => division name
      */
     private function batchFetchDivisionNames(array $divisionIds): array
@@ -42,7 +42,7 @@ trait BatchFetchHelpersTrait
     /**
      * Batch fetch division data (name and order) for multiple division IDs to avoid N+1 queries.
      *
-     * @param array<int> $divisionIds
+     * @param  array<int>  $divisionIds
      * @return array<int, array{name: string, order: int}> Map of division ID => division data
      */
     private function batchFetchDivisionData(array $divisionIds): array
@@ -53,7 +53,7 @@ trait BatchFetchHelpersTrait
     /**
      * Batch fetch team data for multiple team IDs to avoid N+1 queries.
      *
-     * @param array<int> $teamIds
+     * @param  array<int>  $teamIds
      * @return array<int, array{name: string, logo_url: string|null}> Map of team ID => team data
      */
     private function batchFetchTeamData(array $teamIds): array
@@ -65,8 +65,7 @@ trait BatchFetchHelpersTrait
      * Batch fetch team IDs for drivers in a season.
      * Returns a map of driver_id => team_id|null.
      *
-     * @param int $seasonId
-     * @param array<int> $driverIds
+     * @param  array<int>  $driverIds
      * @return array<int, int|null> Map of driver ID => team ID (null if not on a team)
      */
     private function batchFetchDriverTeams(int $seasonId, array $driverIds): array

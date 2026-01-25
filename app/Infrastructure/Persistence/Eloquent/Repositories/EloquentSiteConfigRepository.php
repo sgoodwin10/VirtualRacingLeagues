@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Repositories;
 
+use App\Domain\Shared\ValueObjects\EmailAddress;
 use App\Domain\SiteConfig\Entities\ConfigurationFile;
 use App\Domain\SiteConfig\Entities\SiteConfig;
 use App\Domain\SiteConfig\Exceptions\InvalidConfigurationException;
 use App\Domain\SiteConfig\Repositories\SiteConfigRepositoryInterface;
-use App\Domain\Shared\ValueObjects\EmailAddress;
 use App\Domain\SiteConfig\ValueObjects\SiteName;
 use App\Domain\SiteConfig\ValueObjects\Timezone;
 use App\Domain\SiteConfig\ValueObjects\TrackingId;

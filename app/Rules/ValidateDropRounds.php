@@ -13,7 +13,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
  *
  * Business Rule: If drop_round=false, then total_drop_rounds MUST be 0.
  */
-class ValidateDropRounds implements ValidationRule, DataAwareRule
+class ValidateDropRounds implements DataAwareRule, ValidationRule
 {
     /**
      * All of the data under validation.
@@ -25,7 +25,7 @@ class ValidateDropRounds implements ValidationRule, DataAwareRule
     /**
      * Set the data under validation.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function setData(array $data): static
     {
@@ -37,7 +37,7 @@ class ValidateDropRounds implements ValidationRule, DataAwareRule
     /**
      * Run the validation rule.
      *
-     * @param \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString $fail
+     * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {

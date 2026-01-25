@@ -9,11 +9,7 @@ use Spatie\LaravelData\Data;
 final class PaginatedLeagueDriversData extends Data
 {
     /**
-     * @param array<LeagueDriverData> $data
-     * @param int $total
-     * @param int $per_page
-     * @param int $current_page
-     * @param int $last_page
+     * @param  array<LeagueDriverData>  $data
      */
     public function __construct(
         public readonly array $data,

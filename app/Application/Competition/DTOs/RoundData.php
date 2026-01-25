@@ -13,11 +13,11 @@ use Spatie\LaravelData\Data;
 final class RoundData extends Data
 {
     /**
-     * @param array<mixed>|null $round_results
-     * @param array<mixed>|null $qualifying_results
-     * @param array<mixed>|null $race_time_results
-     * @param array<mixed>|null $fastest_lap_results
-     * @param array<mixed>|null $tiebreaker_information
+     * @param  array<mixed>|null  $round_results
+     * @param  array<mixed>|null  $qualifying_results
+     * @param  array<mixed>|null  $race_time_results
+     * @param  array<mixed>|null  $fastest_lap_results
+     * @param  array<mixed>|null  $tiebreaker_information
      */
     public function __construct(
         public readonly int $id,

@@ -20,6 +20,7 @@ final class SeasonIsArchivedException extends RuntimeException
     {
         $exception = new self();
         $exception->message = "Cannot modify archived season with ID {$id}. Restore to completed status first.";
+
         return $exception;
     }
 }

@@ -37,7 +37,7 @@ final class UserRegisteredNotification extends Notification
     {
         $webhookUrl = config('notifications.discord.registrations_webhook');
 
-        if (!$webhookUrl) {
+        if (! $webhookUrl) {
             return null;
         }
 
@@ -46,7 +46,7 @@ final class UserRegisteredNotification extends Notification
         $message->username(config('app.name') . ' - Registrations');
 
         $message->title('New User Registration')
-            ->color(0x2ecc71) // Green
+            ->color(0x2ECC71) // Green
             ->field('Name', $this->user->fullName()->full(), true)
             ->field('Email', $this->user->email()->value(), true)
             ->timestamp(now()->toIso8601String());

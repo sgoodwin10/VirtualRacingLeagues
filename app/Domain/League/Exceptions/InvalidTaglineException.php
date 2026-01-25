@@ -15,6 +15,6 @@ class InvalidTaglineException extends DomainException
 
     public static function tooLong(string $tagline): self
     {
-        return new self("Tagline is too long. Maximum length is 150 characters");
+        return new self('Tagline is too long. Maximum length is 150 characters');
     }
 }

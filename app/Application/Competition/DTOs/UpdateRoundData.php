@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\DTOs;
 
-use Spatie\LaravelData\Attributes\Validation\IntegerType;
-use Spatie\LaravelData\Attributes\Validation\Min;
-use Spatie\LaravelData\Attributes\Validation\Max;
+use Spatie\LaravelData\Attributes\Validation\BooleanType;
 use Spatie\LaravelData\Attributes\Validation\DateFormat;
-use Spatie\LaravelData\Attributes\Validation\Url;
+use Spatie\LaravelData\Attributes\Validation\IntegerType;
+use Spatie\LaravelData\Attributes\Validation\Json;
+use Spatie\LaravelData\Attributes\Validation\Max;
+use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
 use Spatie\LaravelData\Attributes\Validation\Sometimes;
 use Spatie\LaravelData\Attributes\Validation\StringType;
-use Spatie\LaravelData\Attributes\Validation\BooleanType;
-use Spatie\LaravelData\Attributes\Validation\Json;
+use Spatie\LaravelData\Attributes\Validation\Url;
 use Spatie\LaravelData\Data;
 
 /**
@@ -58,7 +58,7 @@ final class UpdateRoundData extends Data
     /**
      * Normalize empty strings to null for nullable fields.
      *
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     public static function prepareForPipeline(array $payload): array

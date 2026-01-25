@@ -11,7 +11,7 @@ namespace App\Domain\Admin\ValueObjects;
 final readonly class AdminFilter
 {
     /**
-     * @param array<string> $excludeRoles
+     * @param  array<string>  $excludeRoles
      */
     private function __construct(
         public ?string $search,
@@ -25,7 +25,7 @@ final readonly class AdminFilter
     /**
      * Create a new AdminFilter with default values.
      *
-     * @param array<string> $excludeRoles
+     * @param  array<string>  $excludeRoles
      */
     public static function create(
         ?string $search = null,
@@ -46,7 +46,7 @@ final readonly class AdminFilter
     /**
      * Create filter from array (for backward compatibility with existing code).
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      */
     public static function fromArray(array $filters): self
     {

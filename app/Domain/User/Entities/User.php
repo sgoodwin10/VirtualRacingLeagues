@@ -205,13 +205,13 @@ final class User
         $changes = [];
         $emailChanged = false;
 
-        if ($fullName !== null && !$fullName->equals($this->fullName)) {
+        if ($fullName !== null && ! $fullName->equals($this->fullName)) {
             $this->fullName = $fullName;
             $changes['first_name'] = $fullName->firstName();
             $changes['last_name'] = $fullName->lastName();
         }
 
-        if ($email !== null && !$email->equals($this->email)) {
+        if ($email !== null && ! $email->equals($this->email)) {
             $this->email = $email;
             $changes['email'] = $email->value();
             $emailChanged = true;
@@ -223,15 +223,15 @@ final class User
 
         if (
             $alias !== null && (
-            $this->alias === null ||
-            !$alias->equals($this->alias)
+                $this->alias === null ||
+                ! $alias->equals($this->alias)
             )
         ) {
             $this->alias = $alias;
             $changes['alias'] = $alias->value();
         }
 
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             $this->updatedAt = new DateTimeImmutable();
             $this->recordEvent(new UserUpdated(
                 userId: $this->id ?? 0,
@@ -310,7 +310,7 @@ final class User
      */
     public function restore(): void
     {
-        if (!$this->isDeleted()) {
+        if (! $this->isDeleted()) {
             return; // Already restored, idempotent operation
         }
 
@@ -436,6 +436,6 @@ final class User
      */
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 }

@@ -19,7 +19,7 @@ return new class extends Migration
     public function up(): void
     {
         // Skip if column doesn't exist (already removed or never added)
-        if (!Schema::hasColumn('competitions', 'deleted_at')) {
+        if (! Schema::hasColumn('competitions', 'deleted_at')) {
             return;
         }
 
@@ -46,7 +46,7 @@ return new class extends Migration
             if ($competitionsWithMedia > 0) {
                 Log::warning(
                     "{$competitionsWithMedia} soft-deleted competitions have related media files. "
-                    . "These media files will be orphaned after deletion."
+                    . 'These media files will be orphaned after deletion.'
                 );
             }
 
@@ -64,7 +64,7 @@ return new class extends Migration
             if ($competitionsWithActivityLogs > 0) {
                 Log::warning(
                     "{$competitionsWithActivityLogs} soft-deleted competitions have related activity logs. "
-                    . "These activity logs will remain but reference deleted competitions."
+                    . 'These activity logs will remain but reference deleted competitions.'
                 );
             }
 
@@ -81,7 +81,7 @@ return new class extends Migration
             if ($competitionsWithSeasons > 0) {
                 throw new \RuntimeException(
                     "Cannot remove soft-deleted competitions: {$competitionsWithSeasons} soft-deleted "
-                    . "competitions have related seasons. Please manually resolve these relationships first."
+                    . 'competitions have related seasons. Please manually resolve these relationships first.'
                 );
             }
 

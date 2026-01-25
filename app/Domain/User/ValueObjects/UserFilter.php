@@ -44,7 +44,7 @@ final readonly class UserFilter
     /**
      * Create filter from array (for backward compatibility with existing code).
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      */
     public static function fromArray(array $filters): self
     {

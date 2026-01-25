@@ -83,7 +83,7 @@ describe('RegisterView', () => {
   it('calls register on valid form submission', async () => {
     const wrapper = createWrapper();
     const authStore = useAuthStore();
-    const registerSpy = vi.spyOn(authStore, 'register').mockResolvedValue(undefined);
+    const registerSpy = vi.spyOn(authStore, 'register').mockResolvedValue();
 
     const firstNameInput = wrapper.find('#first-name');
     const lastNameInput = wrapper.find('#last-name');

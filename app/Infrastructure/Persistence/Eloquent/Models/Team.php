@@ -25,6 +25,7 @@ use Spatie\MediaLibrary\HasMedia;
  * @property-read SeasonEloquent $season
  * @property-read \Illuminate\Database\Eloquent\Collection<int, SeasonDriverEloquent> $seasonDrivers
  * @property-read int|null $season_drivers_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Team newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Team newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Team query()
@@ -102,8 +103,6 @@ class Team extends Model implements HasMedia
 
     /**
      * Register media collections for the team.
-     *
-     * @return void
      */
     public function registerMediaCollections(): void
     {

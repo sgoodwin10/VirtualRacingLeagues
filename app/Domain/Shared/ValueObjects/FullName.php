@@ -57,11 +57,11 @@ final readonly class FullName
         // Basic validation: only letters, spaces, hyphens, apostrophes
         $pattern = "/^[a-zA-Z\s\-']+$/u";
 
-        if (!preg_match($pattern, $trimmedFirst)) {
+        if (! preg_match($pattern, $trimmedFirst)) {
             throw new InvalidArgumentException('First name contains invalid characters');
         }
 
-        if (!preg_match($pattern, $trimmedLast)) {
+        if (! preg_match($pattern, $trimmedLast)) {
             throw new InvalidArgumentException('Last name contains invalid characters');
         }
     }

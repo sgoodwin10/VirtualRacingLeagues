@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
 import Drawer from 'primevue/drawer';
 import { Button } from '@app/components/common/buttons';
-import { PhUpload, PhPlus } from '@phosphor-icons/vue';
+import { PhUpload, PhPlus, PhWarning } from '@phosphor-icons/vue';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Toast from 'primevue/toast';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
+import VrlConfirmDialog from '@app/components/common/dialogs/VrlConfirmDialog.vue';
 import DriverTable from './DriverTable.vue';
 import DriverFormDialog from './modals/DriverFormDialog.vue';
 import ViewDriverModal from './ViewDriverModal.vue';
@@ -38,8 +39,17 @@ const props = withDefaults(defineProps<Props>(), {
 const _emit = defineEmits<Emits>();
 
 const toast = useToast();
-const confirm = useConfirm();
 const driverStore = useDriverStore();
+
+// VRL Confirmation dialog
+const {
+  isVisible: isRemoveDriverVisible,
+  options: removeDriverOptions,
+  isLoading: isRemoveDriverLoading,
+  showConfirmation: showRemoveDriverConfirmation,
+  handleAccept: handleRemoveDriverAccept,
+  handleReject: handleRemoveDriverReject,
+} = useVrlConfirm();
 
 // Dialog states
 const showDriverForm = ref(false);
@@ -191,14 +201,17 @@ const handleSaveDriver = async (data: CreateDriverRequest): Promise<void> => {
  * Handle remove driver button click
  */
 const handleRemoveDriver = (driver: LeagueDriver): void => {
-  confirm.require({
+  showRemoveDriverConfirmation({
+    header: 'Remove Driver',
     message: `Are you sure you want to remove ${getDriverName(driver)} from this league?`,
-    header: 'Confirm Removal',
-    icon: 'pi pi-exclamation-triangle',
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
     acceptLabel: 'Remove',
     rejectLabel: 'Cancel',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       try {
         // Use driver_id (the actual driver ID), not id (the league_driver pivot ID)
         await driverStore.removeDriver(props.leagueId, driver.driver_id);
@@ -357,6 +370,15 @@ onMounted(() => {
 
     <!-- Toast for notifications -->
     <Toast />
+
+    <!-- Confirm Remove Driver Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isRemoveDriverVisible"
+      v-bind="removeDriverOptions"
+      :loading="isRemoveDriverLoading"
+      @accept="handleRemoveDriverAccept"
+      @reject="handleRemoveDriverReject"
+    />
   </div>
 </template>
 

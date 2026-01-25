@@ -22,7 +22,7 @@ final class PlatformData extends Data
     /**
      * Create from repository array data.
      *
-     * @param array{id: int, name: string, slug: string} $data
+     * @param  array{id: int, name: string, slug: string}  $data
      */
     public static function fromArray(array $data): self
     {

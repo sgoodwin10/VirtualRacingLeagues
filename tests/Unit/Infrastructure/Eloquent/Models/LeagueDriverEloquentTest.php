@@ -18,7 +18,7 @@ final class LeagueDriverEloquentTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testItCanBeInstantiated(): void
+    public function test_it_can_be_instantiated(): void
     {
         $model = new LeagueDriverEloquent();
 
@@ -26,7 +26,7 @@ final class LeagueDriverEloquentTest extends TestCase
         $this->assertEquals('league_drivers', $model->getTable());
     }
 
-    public function testItHasCorrectFillableAttributes(): void
+    public function test_it_has_correct_fillable_attributes(): void
     {
         $model = new LeagueDriverEloquent();
         $expected = [
@@ -42,7 +42,7 @@ final class LeagueDriverEloquentTest extends TestCase
         $this->assertEquals($expected, $model->getFillable());
     }
 
-    public function testItCastsStatusToDriverStatusEnum(): void
+    public function test_it_casts_status_to_driver_status_enum(): void
     {
         $model = new LeagueDriverEloquent([
             'status' => 'active',
@@ -52,7 +52,7 @@ final class LeagueDriverEloquentTest extends TestCase
         $this->assertEquals(DriverStatus::ACTIVE, $model->status);
     }
 
-    public function testItCastsDriverNumberToInteger(): void
+    public function test_it_casts_driver_number_to_integer(): void
     {
         $model = new LeagueDriverEloquent([
             'driver_number' => '42',
@@ -62,7 +62,7 @@ final class LeagueDriverEloquentTest extends TestCase
         $this->assertEquals(42, $model->driver_number);
     }
 
-    public function testItHasDriverRelationship(): void
+    public function test_it_has_driver_relationship(): void
     {
         $model = new LeagueDriverEloquent();
         $relation = $model->driver();
@@ -71,7 +71,7 @@ final class LeagueDriverEloquentTest extends TestCase
         $this->assertEquals('driver_id', $relation->getForeignKeyName());
     }
 
-    public function testItHasLeagueRelationship(): void
+    public function test_it_has_league_relationship(): void
     {
         $model = new LeagueDriverEloquent();
         $relation = $model->league();

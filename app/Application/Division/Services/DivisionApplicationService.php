@@ -13,12 +13,12 @@ use App\Domain\Competition\Entities\Season;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
-use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Division\Entities\Division;
 use App\Domain\Division\Exceptions\DivisionNotFoundException;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\Division\ValueObjects\DivisionDescription;
 use App\Domain\Division\ValueObjects\DivisionName;
+use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Infrastructure\Persistence\Eloquent\Models\Division as DivisionEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
@@ -65,10 +65,10 @@ final class DivisionApplicationService
     /**
      * Create a new division.
      *
-     * @param CreateDivisionData $data The division data
-     * @param int $seasonId The season ID
-     * @param int $userId The authenticated user ID
-     * @return DivisionData
+     * @param  CreateDivisionData  $data  The division data
+     * @param  int  $seasonId  The season ID
+     * @param  int  $userId  The authenticated user ID
+     *
      * @throws UnauthorizedException
      */
     public function createDivision(CreateDivisionData $data, int $seasonId, int $userId): DivisionData
@@ -87,7 +87,7 @@ final class DivisionApplicationService
             $logoPath = null;
             if ($data->logo) {
                 $logoPath = $data->logo->store("divisions/season-{$seasonId}", 'public');
-                if (!$logoPath) {
+                if (! $logoPath) {
                     throw new \RuntimeException('Failed to store division logo');
                 }
             }
@@ -123,10 +123,10 @@ final class DivisionApplicationService
     /**
      * Update an existing division.
      *
-     * @param int $divisionId The division ID
-     * @param UpdateDivisionData $data The division data
-     * @param int $userId The authenticated user ID
-     * @return DivisionData
+     * @param  int  $divisionId  The division ID
+     * @param  UpdateDivisionData  $data  The division data
+     * @param  int  $userId  The authenticated user ID
+     *
      * @throws UnauthorizedException
      */
     public function updateDivision(int $divisionId, UpdateDivisionData $data, int $userId): DivisionData
@@ -158,7 +158,7 @@ final class DivisionApplicationService
             $logoPath = null;
             if ($data->logo) {
                 $logoPath = $data->logo->store("divisions/season-{$division->seasonId()}", 'public');
-                if (!$logoPath) {
+                if (! $logoPath) {
                     throw new \RuntimeException('Failed to store division logo');
                 }
             }
@@ -200,7 +200,7 @@ final class DivisionApplicationService
                 $changes['logo'] = ['old' => $oldLogoPath, 'new' => $logoPath];
             }
 
-            if (!empty($changes)) {
+            if (! empty($changes)) {
                 $this->logDivisionUpdated($divisionId, ['old' => $changes, 'new' => []]);
             }
 
@@ -212,8 +212,9 @@ final class DivisionApplicationService
      * Delete a division.
      * This will cascade to set all season_drivers.division_id to NULL.
      *
-     * @param int $divisionId The division ID
-     * @param int $userId The authenticated user ID
+     * @param  int  $divisionId  The division ID
+     * @param  int  $userId  The authenticated user ID
+     *
      * @throws UnauthorizedException
      */
     public function deleteDivision(int $divisionId, int $userId): void
@@ -256,15 +257,17 @@ final class DivisionApplicationService
     public function getDivisionById(int $divisionId): DivisionData
     {
         $division = $this->divisionRepository->findById($divisionId);
+
         return DivisionData::fromEntity($division);
     }
 
     /**
      * Get all divisions for a specific season.
      *
-     * @param int $seasonId The season ID
-     * @param int $userId The authenticated user ID
+     * @param  int  $seasonId  The season ID
+     * @param  int  $userId  The authenticated user ID
      * @return array<DivisionData>
+     *
      * @throws UnauthorizedException
      */
     public function getDivisionsBySeasonId(int $seasonId, int $userId): array
@@ -276,7 +279,7 @@ final class DivisionApplicationService
         $divisions = $this->divisionRepository->findBySeasonId($seasonId);
 
         return array_map(
-            fn(Division $division) => DivisionData::fromEntity($division),
+            fn (Division $division) => DivisionData::fromEntity($division),
             $divisions
         );
     }
@@ -284,9 +287,9 @@ final class DivisionApplicationService
     /**
      * Get driver count for a specific division.
      *
-     * @param int $divisionId The division ID
-     * @param int $userId The authenticated user ID
-     * @return int
+     * @param  int  $divisionId  The division ID
+     * @param  int  $userId  The authenticated user ID
+     *
      * @throws UnauthorizedException
      */
     public function getDriverCount(int $divisionId, int $userId): int
@@ -304,9 +307,7 @@ final class DivisionApplicationService
     /**
      * Reorder divisions for a season.
      *
-     * @param int $seasonId
-     * @param ReorderDivisionsData $data
-     * @param int $userId The authenticated user ID
+     * @param  int  $userId  The authenticated user ID
      * @return array<DivisionData>
      */
     public function reorderDivisions(int $seasonId, ReorderDivisionsData $data, int $userId): array
@@ -350,9 +351,9 @@ final class DivisionApplicationService
             }
 
             // Validate that all divisions in the reorder request belong to this season
-            $divisionIds = array_map(fn(Division $division) => $division->id(), $divisions);
+            $divisionIds = array_map(fn (Division $division) => $division->id(), $divisions);
             foreach (array_keys($divisionOrders) as $divisionId) {
-                if (!in_array($divisionId, $divisionIds, true)) {
+                if (! in_array($divisionId, $divisionIds, true)) {
                     throw new \InvalidArgumentException(
                         "Division ID {$divisionId} does not belong to season {$seasonId}"
                     );
@@ -386,7 +387,7 @@ final class DivisionApplicationService
             $updatedDivisions = $this->divisionRepository->findBySeasonId($seasonId);
 
             return array_map(
-                fn(Division $division) => DivisionData::fromEntity($division),
+                fn (Division $division) => DivisionData::fromEntity($division),
                 $updatedDivisions
             );
         });
@@ -395,9 +396,9 @@ final class DivisionApplicationService
     /**
      * Assign a driver to a division (or remove division assignment).
      *
-     * @param int $seasonDriverId The season_driver ID (not driver ID)
-     * @param AssignDriverDivisionData $data Contains division_id or null to remove assignment
-     * @param int $userId The authenticated user ID
+     * @param  int  $seasonDriverId  The season_driver ID (not driver ID)
+     * @param  AssignDriverDivisionData  $data  Contains division_id or null to remove assignment
+     * @param  int  $userId  The authenticated user ID
      * @return array{
      *     id: int,
      *     season_id: int,
@@ -445,7 +446,6 @@ final class DivisionApplicationService
     /**
      * Convert SeasonDriverEloquent model to array format matching SeasonDriverData.
      *
-     * @param SeasonDriverEloquent $seasonDriverModel
      * @return array{
      *     id: int,
      *     season_id: int,
@@ -519,8 +519,9 @@ final class DivisionApplicationService
     /**
      * Authorize that the user is the owner of the league for the season.
      *
-     * @param Season $season The season entity
-     * @param int $userId The user ID to check
+     * @param  Season  $season  The season entity
+     * @param  int  $userId  The user ID to check
+     *
      * @throws UnauthorizedException
      */
     private function authorizeSeasonOwner(Season $season, int $userId): void
@@ -536,14 +537,15 @@ final class DivisionApplicationService
     /**
      * Validate logo file type and size.
      *
-     * @param \Illuminate\Http\UploadedFile $file The uploaded file to validate
+     * @param  \Illuminate\Http\UploadedFile  $file  The uploaded file to validate
+     *
      * @throws \InvalidArgumentException if file is invalid
      */
     private function validateLogoFile(\Illuminate\Http\UploadedFile $file): void
     {
         // Validate file MIME type
         $mimeType = $file->getMimeType();
-        if (!in_array($mimeType, self::ALLOWED_LOGO_MIME_TYPES, true)) {
+        if (! in_array($mimeType, self::ALLOWED_LOGO_MIME_TYPES, true)) {
             $allowedTypes = implode(', ', self::ALLOWED_LOGO_MIME_TYPES);
             throw new \InvalidArgumentException(
                 "Invalid logo file type. Allowed types: {$allowedTypes}. Got: {$mimeType}"
@@ -563,8 +565,6 @@ final class DivisionApplicationService
 
     /**
      * Log division created activity.
-     *
-     * @param int|null $divisionId
      */
     private function logDivisionCreated(?int $divisionId): void
     {
@@ -589,8 +589,7 @@ final class DivisionApplicationService
     /**
      * Log division updated activity.
      *
-     * @param int $divisionId
-     * @param array<string, mixed> $changes
+     * @param  array<string, mixed>  $changes
      */
     private function logDivisionUpdated(int $divisionId, array $changes): void
     {
@@ -610,8 +609,6 @@ final class DivisionApplicationService
 
     /**
      * Log division deleted activity.
-     *
-     * @param int $divisionId
      */
     private function logDivisionDeleted(int $divisionId): void
     {
@@ -631,8 +628,6 @@ final class DivisionApplicationService
 
     /**
      * Log divisions reordered activity.
-     *
-     * @param int $seasonId
      */
     private function logDivisionsReordered(int $seasonId): void
     {

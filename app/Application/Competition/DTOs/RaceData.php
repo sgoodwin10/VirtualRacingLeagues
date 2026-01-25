@@ -10,7 +10,7 @@ use Spatie\LaravelData\Data;
 final class RaceData extends Data
 {
     /**
-     * @param array<int, float> $points_system Points system array (position => points)
+     * @param  array<int, float>  $points_system  Points system array (position => points)
      */
     public function __construct(
         public readonly int $id,

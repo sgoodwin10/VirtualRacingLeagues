@@ -53,7 +53,7 @@ class CompetitionFactory extends Factory
      */
     public function archived(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'archived',
             'archived_at' => now()->subDays(rand(1, 30)),
         ]);
@@ -64,7 +64,7 @@ class CompetitionFactory extends Factory
      */
     public function forLeague(int $leagueId): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'league_id' => $leagueId,
         ]);
     }
@@ -74,7 +74,7 @@ class CompetitionFactory extends Factory
      */
     public function forPlatform(int $platformId): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'platform_id' => $platformId,
         ]);
     }

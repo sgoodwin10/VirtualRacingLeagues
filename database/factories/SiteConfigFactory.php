@@ -44,48 +44,40 @@ class SiteConfigFactory extends Factory
 
     /**
      * Indicate that the site is in maintenance mode.
-     *
-     * @return static
      */
     public function maintenanceMode(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'maintenance_mode' => true,
         ]);
     }
 
     /**
      * Indicate that user registration is disabled.
-     *
-     * @return static
      */
     public function registrationDisabled(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'user_registration_enabled' => false,
         ]);
     }
 
     /**
      * Indicate that the site config is inactive.
-     *
-     * @return static
      */
     public function inactive(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'is_active' => false,
         ]);
     }
 
     /**
      * Indicate that the site config is active (default).
-     *
-     * @return static
      */
     public function active(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'is_active' => true,
         ]);
     }

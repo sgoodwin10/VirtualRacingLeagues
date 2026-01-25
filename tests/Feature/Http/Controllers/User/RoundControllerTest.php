@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Http\Controllers\User;
 
-use App\Infrastructure\Persistence\Eloquent\Models\Round as RoundEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\Competition;
+use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\Race as RaceEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\RaceResult as RaceResultEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\League;
-use App\Infrastructure\Persistence\Eloquent\Models\Competition;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Models\User;
 use Database\Factories\RoundFactory;
 use Database\Factories\SeasonFactory;
-use Database\Factories\SeasonDriverFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -23,6 +21,7 @@ final class RoundControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private SeasonEloquent $season;
 
     protected function setUp(): void

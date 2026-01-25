@@ -22,6 +22,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
  *
  * This is a lightweight proxy that extends the infrastructure layer's
  * UserEloquent model without adding any additional behavior.
+ *
  * @property int $id
  * @property string $first_name
  * @property string $last_name
@@ -41,6 +42,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int,
  *     \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
+ *
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User filterByStatus(?string $status)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
@@ -63,6 +65,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class User extends UserEloquent

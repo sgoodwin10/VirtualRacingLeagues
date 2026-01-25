@@ -6,11 +6,7 @@ namespace Tests\Feature\Http\Controllers\User;
 
 use App\Infrastructure\Persistence\Eloquent\Models\Competition;
 use App\Infrastructure\Persistence\Eloquent\Models\League;
-use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Platform;
-use App\Infrastructure\Persistence\Eloquent\Models\Race;
-use App\Infrastructure\Persistence\Eloquent\Models\Round;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,8 +22,11 @@ class CompetitionStatsTest extends UserControllerTestCase
     use RefreshDatabase;
 
     private User $user;
+
     private League $league;
+
     private Platform $platform;
+
     private Competition $competition;
 
     protected function setUp(): void

@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Domain\Competition\Entities;
 
+use App\Domain\Competition\Events\RoundCreated;
+use App\Domain\Competition\Events\RoundDeleted;
+use App\Domain\Competition\Events\RoundResultsCalculated;
+use App\Domain\Competition\Events\RoundStatusChanged;
+use App\Domain\Competition\Events\RoundTiebreakerApplied;
+use App\Domain\Competition\Events\RoundUpdated;
+use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\RoundName;
 use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
-use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\TiebreakerInformation;
-use App\Domain\Competition\Events\RoundCreated;
-use App\Domain\Competition\Events\RoundUpdated;
-use App\Domain\Competition\Events\RoundDeleted;
-use App\Domain\Competition\Events\RoundStatusChanged;
-use App\Domain\Competition\Events\RoundResultsCalculated;
-use App\Domain\Competition\Events\RoundTiebreakerApplied;
 use DateTimeImmutable;
 
 /**
@@ -28,11 +28,11 @@ final class Round
     private array $events = [];
 
     /**
-     * @param array<mixed>|null $roundResults
-     * @param array<mixed>|null $qualifyingResults
-     * @param array<mixed>|null $raceTimeResults
-     * @param array<mixed>|null $fastestLapResults
-     * @param array<mixed>|null $teamChampionshipResults
+     * @param  array<mixed>|null  $roundResults
+     * @param  array<mixed>|null  $qualifyingResults
+     * @param  array<mixed>|null  $raceTimeResults
+     * @param  array<mixed>|null  $fastestLapResults
+     * @param  array<mixed>|null  $teamChampionshipResults
      */
     private function __construct(
         private ?int $id,
@@ -127,11 +127,11 @@ final class Round
     /**
      * Reconstitute round from persistence.
      *
-     * @param array<mixed>|null $roundResults
-     * @param array<mixed>|null $qualifyingResults
-     * @param array<mixed>|null $raceTimeResults
-     * @param array<mixed>|null $fastestLapResults
-     * @param array<mixed>|null $teamChampionshipResults
+     * @param  array<mixed>|null  $roundResults
+     * @param  array<mixed>|null  $qualifyingResults
+     * @param  array<mixed>|null  $raceTimeResults
+     * @param  array<mixed>|null  $fastestLapResults
+     * @param  array<mixed>|null  $teamChampionshipResults
      */
     public static function reconstitute(
         int $id,
@@ -220,21 +220,21 @@ final class Round
     ): void {
         $hasChanges = false;
 
-        if (!$this->roundNumber->equals($roundNumber)) {
+        if (! $this->roundNumber->equals($roundNumber)) {
             $this->roundNumber = $roundNumber;
             $hasChanges = true;
         }
 
         $nameChanged = ($this->name === null && $name !== null)
             || ($this->name !== null && $name === null)
-            || ($this->name !== null && $name !== null && !$this->name->equals($name));
+            || ($this->name !== null && $name !== null && ! $this->name->equals($name));
 
         if ($nameChanged) {
             $this->name = $name;
             $hasChanges = true;
         }
 
-        if (!$this->slug->equals($slug)) {
+        if (! $this->slug->equals($slug)) {
             $this->slug = $slug;
             $hasChanges = true;
         }
@@ -587,7 +587,7 @@ final class Round
     /**
      * Set round results after calculation.
      *
-     * @param array<mixed> $results
+     * @param  array<mixed>  $results
      */
     public function setRoundResults(array $results): void
     {
@@ -605,9 +605,9 @@ final class Round
     /**
      * Set cross-division results after calculation.
      *
-     * @param array<mixed> $qualifyingResults
-     * @param array<mixed> $raceTimeResults
-     * @param array<mixed> $fastestLapResults
+     * @param  array<mixed>  $qualifyingResults
+     * @param  array<mixed>  $raceTimeResults
+     * @param  array<mixed>  $fastestLapResults
      */
     public function setCrossDivisionResults(
         array $qualifyingResults,
@@ -630,7 +630,7 @@ final class Round
     /**
      * Set team championship results after calculation.
      *
-     * @param array<mixed> $results
+     * @param  array<mixed>  $results
      */
     public function setTeamChampionshipResults(array $results): void
     {
@@ -663,7 +663,7 @@ final class Round
      */
     public function hasEvents(): bool
     {
-        return !empty($this->events);
+        return ! empty($this->events);
     }
 
     /**

@@ -13,7 +13,7 @@ use Spatie\LaravelData\Data;
 final class PublicSeasonSummaryData extends Data
 {
     /**
-     * @param array{total_drivers: int, active_drivers: int, total_rounds: int, completed_rounds: int} $stats
+     * @param  array{total_drivers: int, active_drivers: int, total_rounds: int, completed_rounds: int}  $stats
      */
     public function __construct(
         public readonly int $id,

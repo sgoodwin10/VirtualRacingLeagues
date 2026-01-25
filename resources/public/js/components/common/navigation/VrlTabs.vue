@@ -40,13 +40,6 @@ const emit = defineEmits<Emits>();
 const focusedIndex = ref(0);
 
 /**
- * Get enabled tabs only
- */
-const _enabledTabs = computed(() => {
-  return props.tabs.filter((tab) => !tab.disabled);
-});
-
-/**
  * Handle tab click
  */
 const handleTabClick = (key: string) => {
@@ -67,7 +60,7 @@ const handleKeyDown = (event: KeyboardEvent, currentIndex: number) => {
       // Move to previous enabled tab
       do {
         newIndex = (newIndex - 1 + props.tabs.length) % props.tabs.length;
-      } while (props.tabs[newIndex].disabled);
+      } while (props.tabs[newIndex]?.disabled);
       focusedIndex.value = newIndex;
       break;
 
@@ -77,7 +70,7 @@ const handleKeyDown = (event: KeyboardEvent, currentIndex: number) => {
       // Move to next enabled tab
       do {
         newIndex = (newIndex + 1) % props.tabs.length;
-      } while (props.tabs[newIndex].disabled);
+      } while (props.tabs[newIndex]?.disabled);
       focusedIndex.value = newIndex;
       break;
 
@@ -94,7 +87,7 @@ const handleKeyDown = (event: KeyboardEvent, currentIndex: number) => {
       event.preventDefault();
       // Move to last enabled tab
       for (let i = props.tabs.length - 1; i >= 0; i--) {
-        if (!props.tabs[i].disabled) {
+        if (!props.tabs[i]?.disabled) {
           focusedIndex.value = i;
           break;
         }
@@ -104,8 +97,8 @@ const handleKeyDown = (event: KeyboardEvent, currentIndex: number) => {
     case 'Enter':
     case ' ':
       event.preventDefault();
-      if (!props.tabs[currentIndex].disabled) {
-        handleTabClick(props.tabs[currentIndex].key);
+      if (!props.tabs[currentIndex]?.disabled) {
+        handleTabClick(props.tabs[currentIndex]?.key ?? '');
       }
       break;
   }
@@ -146,7 +139,7 @@ const tabsClasses = computed(() => {
   <div
     :class="tabsClasses"
     role="tablist"
-    :aria-label="$attrs['aria-label'] || 'Tabs'"
+    :aria-label="($attrs['aria-label'] as string) || 'Tabs'"
     data-test="tabs"
   >
     <VrlTab

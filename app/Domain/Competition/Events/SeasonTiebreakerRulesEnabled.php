@@ -12,7 +12,7 @@ namespace App\Domain\Competition\Events;
 final readonly class SeasonTiebreakerRulesEnabled
 {
     /**
-     * @param array<string> $ruleSlugs
+     * @param  array<string>  $ruleSlugs
      */
     public function __construct(
         public int $seasonId,

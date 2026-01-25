@@ -14,11 +14,12 @@ final class InvalidPlatformException extends DomainException
     /**
      * Create exception for invalid platform IDs.
      *
-     * @param array<int> $invalidIds
+     * @param  array<int>  $invalidIds
      */
     public static function forInvalidIds(array $invalidIds): self
     {
         $ids = implode(', ', $invalidIds);
+
         return new self("Invalid or inactive platform ID(s): {$ids}");
     }
 

@@ -8,10 +8,10 @@ use App\Domain\Competition\Events\SeasonArchived;
 use App\Domain\Competition\Events\SeasonCreated;
 use App\Domain\Competition\Events\SeasonDeleted;
 use App\Domain\Competition\Events\SeasonStatusChanged;
-use App\Domain\Competition\Events\SeasonUpdated;
-use App\Domain\Competition\Events\SeasonTiebreakerRulesEnabled;
 use App\Domain\Competition\Events\SeasonTiebreakerRulesDisabled;
+use App\Domain\Competition\Events\SeasonTiebreakerRulesEnabled;
 use App\Domain\Competition\Events\SeasonTiebreakerRulesUpdated;
+use App\Domain\Competition\Events\SeasonUpdated;
 use App\Domain\Competition\Exceptions\SeasonIsArchivedException;
 use App\Domain\Competition\ValueObjects\SeasonName;
 use App\Domain\Competition\ValueObjects\SeasonSlug;
@@ -92,14 +92,14 @@ final class Season
         int $totalDropRounds = 0,
     ): self {
         // Validate business rule: cannot have totalDropRounds > 0 when dropRound is disabled
-        if (!$dropRound && $totalDropRounds > 0) {
+        if (! $dropRound && $totalDropRounds > 0) {
             throw new \InvalidArgumentException(
                 'Cannot set total drop rounds to a value greater than 0 when drop round feature is disabled'
             );
         }
 
         // Validate business rule: cannot have teamsTotalDropRounds > 0 when teamsDropRounds is disabled
-        if (!$teamsDropRounds && $teamsTotalDropRounds !== null && $teamsTotalDropRounds > 0) {
+        if (! $teamsDropRounds && $teamsTotalDropRounds !== null && $teamsTotalDropRounds > 0) {
             throw new \InvalidArgumentException(
                 'Cannot set teams total drop rounds to a value greater than 0 ' .
                 'when teams drop rounds feature is disabled'
@@ -347,7 +347,7 @@ final class Season
 
         $changes = [];
 
-        if (!$this->name->equals($name)) {
+        if (! $this->name->equals($name)) {
             $changes['name'] = [
                 'old' => $this->name->value(),
                 'new' => $name->value(),
@@ -379,7 +379,7 @@ final class Season
             $this->technicalSpecs = $technicalSpecs;
         }
 
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             $this->updatedAt = new DateTimeImmutable();
             $this->recordEvent(new SeasonUpdated(
                 seasonId: $this->id,
@@ -421,7 +421,7 @@ final class Season
             $this->bannerPath = $bannerPath;
         }
 
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             $this->updatedAt = new DateTimeImmutable();
             $this->recordEvent(new SeasonUpdated(
                 seasonId: $this->id,
@@ -445,7 +445,7 @@ final class Season
             throw SeasonIsArchivedException::withId($this->id);
         }
 
-        if (!$this->slug->equals($slug)) {
+        if (! $this->slug->equals($slug)) {
             $this->slug = $slug;
             $this->updatedAt = new DateTimeImmutable();
         }
@@ -464,7 +464,7 @@ final class Season
             throw SeasonIsArchivedException::withId($this->id);
         }
 
-        if (!$this->teamChampionshipEnabled) {
+        if (! $this->teamChampionshipEnabled) {
             $this->teamChampionshipEnabled = true;
             $this->updatedAt = new DateTimeImmutable();
 
@@ -516,7 +516,7 @@ final class Season
             throw SeasonIsArchivedException::withId($this->id);
         }
 
-        if (!$this->raceDivisionsEnabled) {
+        if (! $this->raceDivisionsEnabled) {
             $this->raceDivisionsEnabled = true;
             $this->updatedAt = new DateTimeImmutable();
 
@@ -568,7 +568,7 @@ final class Season
             throw SeasonIsArchivedException::withId($this->id);
         }
 
-        if (!$this->raceTimesRequired) {
+        if (! $this->raceTimesRequired) {
             $this->raceTimesRequired = true;
             $this->updatedAt = new DateTimeImmutable();
 
@@ -620,7 +620,7 @@ final class Season
             throw SeasonIsArchivedException::withId($this->id);
         }
 
-        if (!$this->dropRound) {
+        if (! $this->dropRound) {
             $this->dropRound = true;
             $this->updatedAt = new DateTimeImmutable();
 
@@ -684,7 +684,7 @@ final class Season
         }
 
         // Validate business rule: cannot set totalDropRounds > 0 when drop round is disabled
-        if (!$this->dropRound && $totalDropRounds > 0) {
+        if (! $this->dropRound && $totalDropRounds > 0) {
             throw new \InvalidArgumentException(
                 'Cannot set total drop rounds to a value greater than 0 when drop round feature is disabled. ' .
                 'Enable drop round first.'
@@ -745,7 +745,7 @@ final class Season
             throw SeasonIsArchivedException::withId($this->id);
         }
 
-        if (!$this->teamsDropRounds) {
+        if (! $this->teamsDropRounds) {
             $this->teamsDropRounds = true;
             $this->updatedAt = new DateTimeImmutable();
 
@@ -809,7 +809,7 @@ final class Season
         }
 
         // Validate business rule: cannot set teamsTotalDropRounds > 0 when teams drop rounds is disabled
-        if (!$this->teamsDropRounds && $totalDropRounds !== null && $totalDropRounds > 0) {
+        if (! $this->teamsDropRounds && $totalDropRounds !== null && $totalDropRounds > 0) {
             throw new \InvalidArgumentException(
                 'Cannot set teams total drop rounds to a value greater than 0 ' .
                 'when teams drop rounds feature is disabled. Enable teams drop rounds first.'
@@ -884,7 +884,7 @@ final class Season
      */
     public function reactivate(): void
     {
-        if (!$this->status->isCompleted()) {
+        if (! $this->status->isCompleted()) {
             throw new \InvalidArgumentException(
                 'Can only reactivate seasons with completed status. Current status: ' . $this->status->value
             );
@@ -918,11 +918,11 @@ final class Season
      * Restore from archived status.
      * By default restores to completed status, but can specify a target status.
      *
-     * @param SeasonStatus|null $targetStatus The status to restore to (default: COMPLETED)
+     * @param  SeasonStatus|null  $targetStatus  The status to restore to (default: COMPLETED)
      */
     public function restore(?SeasonStatus $targetStatus = null): void
     {
-        if (!$this->status->isArchived()) {
+        if (! $this->status->isArchived()) {
             return; // Not archived
         }
 
@@ -983,6 +983,7 @@ final class Season
      * Ensure the entity has been persisted and has an ID.
      *
      * @throws \LogicException if entity has no ID
+     *
      * @phpstan-assert !null $this->id
      */
     private function ensureHasId(): void
@@ -1029,7 +1030,7 @@ final class Season
      */
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 
     // Tiebreaker Rules Methods
@@ -1057,7 +1058,7 @@ final class Season
             throw SeasonIsArchivedException::withId($this->id);
         }
 
-        if (!$this->roundTotalsTiebreakerRulesEnabled) {
+        if (! $this->roundTotalsTiebreakerRulesEnabled) {
             $this->roundTotalsTiebreakerRulesEnabled = true;
             $this->tiebreakerRuleConfiguration = $configuration;
             $this->updatedAt = new DateTimeImmutable();

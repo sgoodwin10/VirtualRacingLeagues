@@ -171,11 +171,12 @@ final class LeagueDriver
     {
         $events = $this->domainEvents;
         $this->domainEvents = [];
+
         return $events;
     }
 
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 }

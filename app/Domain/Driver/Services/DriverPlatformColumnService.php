@@ -53,7 +53,7 @@ final class DriverPlatformColumnService
     /**
      * Get column configurations for a league's platforms.
      *
-     * @param array<int> $platformIds
+     * @param  array<int>  $platformIds
      * @return array<int, array{field: string, label: string, type: string}>
      */
     public function getColumnsForLeague(array $platformIds): array
@@ -72,7 +72,7 @@ final class DriverPlatformColumnService
     /**
      * Get form field configurations for a league's platforms.
      *
-     * @param array<int> $platformIds
+     * @param  array<int>  $platformIds
      * @return array<int, array{field: string, label: string, type: string}>
      */
     public function getFormFieldsForLeague(array $platformIds): array
@@ -86,7 +86,7 @@ final class DriverPlatformColumnService
      * Get CSV headers for a league's platforms.
      * Returns headers grouped by platform with platform information included.
      *
-     * @param array<int> $platformIds
+     * @param  array<int>  $platformIds
      * @return array<int, array{platform_id: int, platform_name: string, field: string, label: string, type: string}>
      */
     public function getCsvHeadersForLeague(array $platformIds): array
@@ -116,9 +116,7 @@ final class DriverPlatformColumnService
     /**
      * Validate that a driver has at least one platform ID matching the league's platforms.
      *
-     * @param Driver $driver
-     * @param array<int> $platformIds
-     * @return bool
+     * @param  array<int>  $platformIds
      */
     public function validateDriverPlatformCompatibility(Driver $driver, array $platformIds): bool
     {

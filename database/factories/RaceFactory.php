@@ -82,7 +82,7 @@ final class RaceFactory extends Factory
      */
     public function qualifier(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'is_qualifier' => true,
             'race_number' => 0,
             'race_type' => null,
@@ -96,7 +96,7 @@ final class RaceFactory extends Factory
      */
     public function sprint(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'race_type' => 'sprint',
             'length_type' => 'laps',
             'length_value' => $this->faker->numberBetween(10, 25),
@@ -108,7 +108,7 @@ final class RaceFactory extends Factory
      */
     public function feature(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'race_type' => 'feature',
             'length_type' => 'laps',
             'length_value' => $this->faker->numberBetween(30, 60),
@@ -120,7 +120,7 @@ final class RaceFactory extends Factory
      */
     public function endurance(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'race_type' => 'endurance',
             'length_type' => 'time',
             'length_value' => $this->faker->numberBetween(60, 240),
@@ -134,7 +134,7 @@ final class RaceFactory extends Factory
      */
     public function noQualifying(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'qualifying_format' => 'none',
             'qualifying_length' => null,
             'qualifying_tire' => null,
@@ -146,7 +146,7 @@ final class RaceFactory extends Factory
      */
     public function timeBased(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'length_type' => 'time',
             'length_value' => $this->faker->numberBetween(30, 120),
             'extra_lap_after_time' => true,
@@ -158,7 +158,7 @@ final class RaceFactory extends Factory
      */
     public function lapsBased(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'length_type' => 'laps',
             'length_value' => $this->faker->numberBetween(20, 80),
         ]);

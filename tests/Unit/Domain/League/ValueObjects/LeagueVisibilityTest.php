@@ -120,7 +120,7 @@ class LeagueVisibilityTest extends TestCase
     public function it_throws_exception_for_invalid_string(): void
     {
         $this->expectException(InvalidVisibilityException::class);
-        $this->expectExceptionMessage("Invalid visibility value: invalid. Must be one of: public, private, unlisted");
+        $this->expectExceptionMessage('Invalid visibility value: invalid. Must be one of: public, private, unlisted');
 
         LeagueVisibility::fromString('invalid');
     }
@@ -129,7 +129,7 @@ class LeagueVisibilityTest extends TestCase
     public function it_throws_exception_for_empty_string(): void
     {
         $this->expectException(InvalidVisibilityException::class);
-        $this->expectExceptionMessage("Invalid visibility value: . Must be one of: public, private, unlisted");
+        $this->expectExceptionMessage('Invalid visibility value: . Must be one of: public, private, unlisted');
 
         LeagueVisibility::fromString('');
     }

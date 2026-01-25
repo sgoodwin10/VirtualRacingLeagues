@@ -135,7 +135,7 @@ final class Team
     {
         $changes = [];
 
-        if (!$name->equals($this->name)) {
+        if (! $name->equals($this->name)) {
             $this->name = $name;
             $changes['name'] = $name->value();
         }
@@ -145,7 +145,7 @@ final class Team
             $changes['logo_url'] = $logoUrl;
         }
 
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             $this->updatedAt = new DateTimeImmutable();
             $this->recordEvent(new TeamUpdated(
                 teamId: $this->id ?? 0,
@@ -230,6 +230,6 @@ final class Team
      */
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 }

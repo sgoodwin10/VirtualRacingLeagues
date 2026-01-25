@@ -41,6 +41,7 @@ final class DriverController extends Controller
         if ($userId === null) {
             throw UnauthorizedException::notAuthenticated();
         }
+
         return (int) $userId;
     }
 
@@ -102,6 +103,7 @@ final class DriverController extends Controller
                 $league,
                 $this->getAuthenticatedUserId()
             );
+
             return ApiResponse::created($leagueDriverData->toArray(), 'Driver added to league successfully');
         } catch (InvalidDriverDataException | DriverAlreadyInLeagueException $e) {
             return ApiResponse::error($e->getMessage(), null, 422);
@@ -139,6 +141,7 @@ final class DriverController extends Controller
                 $driver,
                 $this->getAuthenticatedUserId()
             );
+
             return ApiResponse::success($leagueDriverData->toArray(), 'Driver updated successfully');
         } catch (DriverNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -160,6 +163,7 @@ final class DriverController extends Controller
                 $driver,
                 $this->getAuthenticatedUserId()
             );
+
             return ApiResponse::success(null, 'Driver deleted successfully');
         } catch (DriverNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -179,6 +183,7 @@ final class DriverController extends Controller
                 $driver,
                 $this->getAuthenticatedUserId()
             );
+
             return ApiResponse::success(null, 'Driver restored successfully');
         } catch (DriverNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -216,7 +221,7 @@ final class DriverController extends Controller
                 $messageParts[] = "{$result->errorCount()} error" . ($result->errorCount() === 1 ? '' : 's');
             }
 
-            $message = !empty($messageParts) ? ucfirst(implode(', ', $messageParts)) : 'No drivers imported';
+            $message = ! empty($messageParts) ? ucfirst(implode(', ', $messageParts)) : 'No drivers imported';
 
             if ($result->hasErrors()) {
                 return ApiResponse::success($result->toArray(), $message);

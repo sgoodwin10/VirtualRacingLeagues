@@ -27,6 +27,7 @@ class SeasonDriversBackupSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('SeasonDriversBackupSeeder cannot run in production environment!');
+
             return;
         }
 

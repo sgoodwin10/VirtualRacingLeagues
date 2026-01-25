@@ -2,13 +2,14 @@
 
 namespace App\Console\Commands;
 
-use App\Services\PSNService;
 use App\Services\GT7Service;
+use App\Services\PSNService;
 use Illuminate\Console\Command;
 
 class LookupGT7User extends Command
 {
     protected $signature = 'gt7:lookup {psn_id : The PSN ID to lookup in GT7}';
+
     protected $description = 'Look up a GT7 player profile by their PSN ID';
 
     public function handle(PSNService $psnService, GT7Service $gt7Service): int
@@ -20,11 +21,12 @@ class LookupGT7User extends Command
 
         try {
             // Step 1: Find PSN user
-            $this->line("Step 1: Searching PSN...");
+            $this->line('Step 1: Searching PSN...');
             $psnResult = $psnService->searchUserByPsnId($psnId);
 
-            if (!$psnResult['found']) {
+            if (! $psnResult['found']) {
                 $this->error('❌ PSN user not found!');
+
                 return self::FAILURE;
             }
 
@@ -40,18 +42,20 @@ class LookupGT7User extends Command
             $this->newLine();
 
             // Step 2: Get GT7 profile
-            $this->line("Step 2: Fetching GT7 profile...");
+            $this->line('Step 2: Fetching GT7 profile...');
             $gt7Profile = $gt7Service->getUserProfileByOnlineId($onlineId);
 
-            if (!$gt7Profile) {
+            if (! $gt7Profile) {
                 $this->error("❌ GT7 profile not found for {$onlineId}");
-                $this->warn("This user may not have played Gran Turismo 7 or their profile is private.");
+                $this->warn('This user may not have played Gran Turismo 7 or their profile is private.');
+
                 return self::FAILURE;
             }
 
-            if (!isset($gt7Profile['result'])) {
-                $this->error("❌ Unexpected GT7 API response format");
-                $this->line("Response: " . json_encode($gt7Profile, JSON_PRETTY_PRINT));
+            if (! isset($gt7Profile['result'])) {
+                $this->error('❌ Unexpected GT7 API response format');
+                $this->line('Response: ' . json_encode($gt7Profile, JSON_PRETTY_PRINT));
+
                 return self::FAILURE;
             }
 
@@ -59,7 +63,7 @@ class LookupGT7User extends Command
             $nickname = $gt7Profile['result']['nick_name'] ?? $onlineId;
             $country = $gt7Profile['result']['country_code'] ?? 'Unknown';
 
-            $this->info("✅ GT7 Profile Found!");
+            $this->info('✅ GT7 Profile Found!');
             $this->table(
                 ['Field', 'Value'],
                 [
@@ -71,7 +75,7 @@ class LookupGT7User extends Command
             );
 
             $this->newLine();
-            $this->info("Full GT7 Profile Data:");
+            $this->info('Full GT7 Profile Data:');
             $jsonOutput = json_encode($gt7Profile, JSON_PRETTY_PRINT);
             $this->line($jsonOutput !== false ? $jsonOutput : 'Failed to encode JSON');
 
@@ -79,6 +83,7 @@ class LookupGT7User extends Command
         } catch (\Exception $e) {
             $this->error("❌ An error occurred: {$e->getMessage()}");
             $this->line($e->getTraceAsString());
+
             return self::FAILURE;
         }
     }

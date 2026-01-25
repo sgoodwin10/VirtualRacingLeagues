@@ -18,10 +18,11 @@ interface MediaServiceInterface
     /**
      * Upload a file and attach it to a model
      *
-     * @param UploadedFile $file The uploaded file
-     * @param object $model The Eloquent model implementing HasMedia interface
-     * @param string $collection The media collection name (e.g., 'logo', 'banner', 'header')
+     * @param  UploadedFile  $file  The uploaded file
+     * @param  object  $model  The Eloquent model implementing HasMedia interface
+     * @param  string  $collection  The media collection name (e.g., 'logo', 'banner', 'header')
      * @return MediaReference The media reference containing ID and conversion URLs
+     *
      * @throws \Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded
      */
     public function upload(
@@ -33,7 +34,7 @@ interface MediaServiceInterface
     /**
      * Delete media by reference
      *
-     * @param MediaReference $reference The media reference
+     * @param  MediaReference  $reference  The media reference
      * @return bool True if deleted successfully
      */
     public function delete(MediaReference $reference): bool;
@@ -41,8 +42,8 @@ interface MediaServiceInterface
     /**
      * Get URL for a media file
      *
-     * @param MediaReference $reference The media reference
-     * @param string $conversion The conversion name (empty for original)
+     * @param  MediaReference  $reference  The media reference
+     * @param  string  $conversion  The conversion name (empty for original)
      * @return string The media URL
      */
     public function getUrl(
@@ -53,7 +54,7 @@ interface MediaServiceInterface
     /**
      * Get responsive URLs for all conversions
      *
-     * @param MediaReference $reference The media reference
+     * @param  MediaReference  $reference  The media reference
      * @return array{original: string, conversions: array<string, string>, srcset: string}
      */
     public function getResponsiveUrls(MediaReference $reference): array;

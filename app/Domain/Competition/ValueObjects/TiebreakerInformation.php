@@ -13,9 +13,9 @@ namespace App\Domain\Competition\ValueObjects;
 final readonly class TiebreakerInformation
 {
     /**
-     * @param array<TiebreakerResolution> $resolutions
-     * @param array<string> $appliedRules Slugs of rules that were actually used
-     * @param bool $hadUnresolvedTies Whether any ties couldn't be broken
+     * @param  array<TiebreakerResolution>  $resolutions
+     * @param  array<string>  $appliedRules  Slugs of rules that were actually used
+     * @param  bool  $hadUnresolvedTies  Whether any ties couldn't be broken
      */
     public function __construct(
         private array $resolutions,
@@ -59,7 +59,7 @@ final readonly class TiebreakerInformation
 
     public function hasResolutions(): bool
     {
-        return !empty($this->resolutions);
+        return ! empty($this->resolutions);
     }
 
     /**
@@ -70,7 +70,7 @@ final readonly class TiebreakerInformation
     public function toArray(): array
     {
         return [
-            'resolutions' => array_map(fn($r) => $r->toArray(), $this->resolutions),
+            'resolutions' => array_map(fn ($r) => $r->toArray(), $this->resolutions),
             'applied_rules' => $this->appliedRules,
             'had_unresolved_ties' => $this->hadUnresolvedTies,
         ];
@@ -79,7 +79,7 @@ final readonly class TiebreakerInformation
     /**
      * Create from array (for reconstitution from JSON).
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public static function fromArray(array $data): self
     {

@@ -2,7 +2,8 @@
 import { ref, reactive, computed, watch, onUnmounted } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
-import { PhTrophy } from '@phosphor-icons/vue';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
+import { PhTrophy, PhWarning } from '@phosphor-icons/vue';
 import { useCompetitionStore } from '@app/stores/competitionStore';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import { useLeaguePlatforms } from '@app/composables/useLeaguePlatforms';
@@ -31,6 +32,7 @@ import FormError from '@app/components/common/forms/FormError.vue';
 import FormInputGroup from '@app/components/common/forms/FormInputGroup.vue';
 import FormOptionalText from '@app/components/common/forms/FormOptionalText.vue';
 import ImageUpload from '@app/components/common/forms/ImageUpload.vue';
+import { VrlConfirmDialog } from '@app/components/common/dialogs';
 
 // Props
 interface Props {
@@ -49,12 +51,21 @@ const props = withDefaults(defineProps<Props>(), {
 interface Emits {
   (e: 'update:visible', value: boolean): void;
   (e: 'competition-saved', competition: Competition): void;
+  (e: 'competition-deleted', competitionId: number): void;
 }
 
 const emit = defineEmits<Emits>();
 
 // Composables
 const toast = useToast();
+const {
+  isVisible: confirmVisible,
+  options: confirmOptions,
+  isLoading: confirmLoading,
+  showConfirmation,
+  handleAccept: handleConfirmAccept,
+  handleReject: handleConfirmReject,
+} = useVrlConfirm();
 const competitionStore = useCompetitionStore();
 const leagueStore = useLeagueStore();
 const { platformOptions } = useLeaguePlatforms(() => props.leagueId);
@@ -73,6 +84,7 @@ const originalName = ref(''); // For tracking name changes
 const isSubmitting = ref(false);
 const isLoadingData = ref(false);
 const showNameChangeDialog = ref(false);
+const isDeleting = ref(false);
 
 // Slug preview state
 const slugPreview = ref('');
@@ -337,6 +349,63 @@ function cancelNameChange(): void {
 }
 
 /**
+ * Show delete confirmation dialog
+ */
+function confirmDelete(): void {
+  if (!props.competition) return;
+
+  showConfirmation({
+    message: `Are you sure you want to permanently delete "${props.competition.name}"? This action cannot be undone and will permanently remove all associated seasons, rounds, races, and race results.`,
+    header: 'Delete Competition',
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
+    acceptLabel: 'Delete Competition',
+    acceptVariant: 'danger',
+    rejectLabel: 'Cancel',
+    onAccept: async () => {
+      await handleDelete();
+    },
+  });
+}
+
+/**
+ * Delete the competition
+ */
+async function handleDelete(): Promise<void> {
+  if (!props.competition) return;
+
+  isDeleting.value = true;
+
+  try {
+    await competitionStore.deleteExistingCompetition(props.competition.id);
+
+    toast.add({
+      severity: 'success',
+      summary: 'Competition Deleted',
+      detail: 'Competition has been deleted successfully',
+      life: 3000,
+    });
+
+    emit('competition-deleted', props.competition.id);
+    localVisible.value = false;
+    resetForm();
+  } catch (error) {
+    logError('Failed to delete competition:', { context: 'CompetitionFormDrawer', data: error });
+
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete competition';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  } finally {
+    isDeleting.value = false;
+  }
+}
+
+/**
  * Clean up on unmount to prevent memory leaks
  */
 onUnmounted(() => {
@@ -518,15 +587,35 @@ onUnmounted(() => {
 
     <!-- Footer -->
     <template #footer>
-      <div class="flex justify-end gap-3">
-        <Button label="Cancel" variant="secondary" :disabled="isSubmitting" @click="handleCancel" />
+      <!-- Left: Delete Button (only in edit mode) -->
+      <div class="flex flex-grow justify-start">
         <Button
-          :label="isEditMode ? 'Update Competition' : 'Create Competition'"
-          :loading="isSubmitting"
-          :disabled="!canSubmit"
-          variant="success"
-          @click="handleSubmit"
+          v-if="isEditMode"
+          label="Delete Competition"
+          variant="danger"
+          :loading="isDeleting"
+          :disabled="isSubmitting || isDeleting"
+          @click="confirmDelete"
         />
+      </div>
+
+      <div class="flex justify-between items-center">
+        <!-- Right: Cancel & Submit Buttons -->
+        <div class="flex gap-3">
+          <Button
+            label="Cancel"
+            variant="secondary"
+            :disabled="isSubmitting || isDeleting"
+            @click="handleCancel"
+          />
+          <Button
+            :label="isEditMode ? 'Update Competition' : 'Create Competition'"
+            :loading="isSubmitting"
+            :disabled="!canSubmit || isDeleting"
+            variant="success"
+            @click="handleSubmit"
+          />
+        </div>
       </div>
     </template>
   </BaseModal>
@@ -582,4 +671,13 @@ onUnmounted(() => {
       </div>
     </template>
   </Dialog>
+
+  <!-- Delete Confirmation Dialog -->
+  <VrlConfirmDialog
+    v-model:visible="confirmVisible"
+    v-bind="confirmOptions"
+    :loading="confirmLoading"
+    @accept="handleConfirmAccept"
+    @reject="handleConfirmReject"
+  />
 </template>

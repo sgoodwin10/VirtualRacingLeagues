@@ -35,9 +35,7 @@ interface AdminRepositoryInterface
     /**
      * Get paginated admins
      *
-     * @param int $page
-     * @param int $perPage
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: Admin[], total: int, per_page: int, current_page: int}
      */
     public function getPaginated(int $page, int $perPage, array $filters = []): array;

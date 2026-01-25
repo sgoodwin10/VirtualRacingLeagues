@@ -27,6 +27,7 @@ final class RaceController extends Controller
     {
         try {
             $races = $this->raceService->getRacesByRound($roundId);
+
             return ApiResponse::success($races);
         } catch (\Exception $e) {
             return ApiResponse::error('Failed to retrieve races', null, 500);
@@ -39,6 +40,7 @@ final class RaceController extends Controller
             $data = CreateRaceData::from($request->validated());
             $userId = $request->user()->id;
             $raceData = $this->raceService->createRace($data, $roundId, $userId);
+
             return ApiResponse::created($raceData->toArray());
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
@@ -51,6 +53,7 @@ final class RaceController extends Controller
     {
         try {
             $race = $this->raceService->getRace($raceId);
+
             return ApiResponse::success($race->toArray());
         } catch (RaceNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -65,6 +68,7 @@ final class RaceController extends Controller
             $data = UpdateRaceData::from($request->validated());
             $userId = $request->user()->id;
             $raceData = $this->raceService->updateRace($raceId, $data, $userId);
+
             return ApiResponse::success($raceData->toArray());
         } catch (RaceNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -80,6 +84,7 @@ final class RaceController extends Controller
         try {
             $userId = $request->user()->id;
             $this->raceService->deleteRace($raceId, $userId);
+
             return ApiResponse::success(['message' => 'Race deleted successfully']);
         } catch (RaceNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -95,6 +100,7 @@ final class RaceController extends Controller
         try {
             $userId = $request->user()->id;
             $count = $this->raceService->removeOrphanedResults($raceId, $userId);
+
             return ApiResponse::success(
                 ['count' => $count],
                 $count === 1 ? '1 orphaned result removed' : "{$count} orphaned results removed"
@@ -115,6 +121,7 @@ final class RaceController extends Controller
         try {
             $userId = auth('web')->user()->id;
             $data = $this->raceService->getOrphanedResults($raceId, $userId);
+
             return ApiResponse::success($data);
         } catch (RaceNotFoundException $e) {
             return ApiResponse::notFound('Race not found');

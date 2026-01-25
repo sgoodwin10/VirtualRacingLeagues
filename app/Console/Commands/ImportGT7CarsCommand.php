@@ -52,7 +52,7 @@ final class ImportGT7CarsCommand extends Command
                 ]
             );
 
-            if (!empty($result->errors)) {
+            if (! empty($result->errors)) {
                 $this->newLine();
                 $this->warn('Errors encountered during import:');
                 foreach ($result->errors as $error) {

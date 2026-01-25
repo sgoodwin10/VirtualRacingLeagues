@@ -120,15 +120,17 @@ export function useModalRegistry(): UseModalRegistryReturn {
   };
 
   const closeModal = (id: string): void => {
-    if (modalRegistry.value[id]) {
-      modalRegistry.value[id]!.isOpen = false;
-      modalRegistry.value[id]!.data = undefined;
+    const modal = modalRegistry.value[id];
+    if (modal) {
+      modal.isOpen = false;
+      modal.data = undefined;
     }
   };
 
   const toggleModal = (id: string): void => {
-    if (modalRegistry.value[id]) {
-      modalRegistry.value[id].isOpen = !modalRegistry.value[id].isOpen;
+    const modal = modalRegistry.value[id];
+    if (modal) {
+      modal.isOpen = !modal.isOpen;
     } else {
       modalRegistry.value[id] = { isOpen: true };
     }
@@ -144,8 +146,11 @@ export function useModalRegistry(): UseModalRegistryReturn {
 
   const closeAllModals = (): void => {
     Object.keys(modalRegistry.value).forEach((id) => {
-      modalRegistry.value[id].isOpen = false;
-      modalRegistry.value[id].data = undefined;
+      const modal = modalRegistry.value[id];
+      if (modal) {
+        modal.isOpen = false;
+        modal.data = undefined;
+      }
     });
   };
 

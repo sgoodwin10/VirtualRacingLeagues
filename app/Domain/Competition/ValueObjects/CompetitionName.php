@@ -35,7 +35,7 @@ final readonly class CompetitionName
             throw InvalidCompetitionNameException::tooLong($this->value);
         }
 
-        if (!preg_match('/^[a-zA-Z0-9\s\-\']+$/', $trimmed)) {
+        if (! preg_match('/^[a-zA-Z0-9\s\-\']+$/', $trimmed)) {
             throw InvalidCompetitionNameException::invalidCharacters($this->value);
         }
     }

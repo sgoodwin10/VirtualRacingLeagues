@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Services\PSNService;
 use App\Services\GT7Service;
+use App\Services\PSNService;
 use Illuminate\Console\Command;
 
 class GT7CompletePlayerLookup extends Command
@@ -11,6 +11,7 @@ class GT7CompletePlayerLookup extends Command
     protected $signature = 'gt7:player
                             {psn_id : The PSN ID to lookup}
                             {--guid= : GT7 User GUID (bypasses profile lookup)}';
+
     protected $description = 'Complete player lookup: PSN → GT7 Profile → Stats';
 
     public function handle(PSNService $psnService, GT7Service $gt7Service): int
@@ -18,9 +19,9 @@ class GT7CompletePlayerLookup extends Command
         $psnId = $this->argument('psn_id');
         $providedGuid = $this->option('guid');
 
-        $this->info("╔═══════════════════════════════════════════════════════╗");
-        $this->info("║     GRAN TURISMO 7 - COMPLETE PLAYER LOOKUP          ║");
-        $this->info("╚═══════════════════════════════════════════════════════╝");
+        $this->info('╔═══════════════════════════════════════════════════════╗');
+        $this->info('║     GRAN TURISMO 7 - COMPLETE PLAYER LOOKUP          ║');
+        $this->info('╚═══════════════════════════════════════════════════════╝');
         $this->newLine();
         $this->line("Searching for: {$psnId}");
         if ($providedGuid) {
@@ -30,18 +31,19 @@ class GT7CompletePlayerLookup extends Command
 
         try {
             // Step 1: PSN Search
-            $this->info("🔍 [1/3] Searching PlayStation Network...");
+            $this->info('🔍 [1/3] Searching PlayStation Network...');
             $psnResult = $psnService->searchUserByPsnId($psnId);
 
-            if (!$psnResult['found']) {
+            if (! $psnResult['found']) {
                 $this->error('❌ Player not found on PSN');
+
                 return self::FAILURE;
             }
 
             $onlineId = $psnResult['users'][0]['online_id'];
             $accountId = $psnResult['users'][0]['account_id'];
 
-            $this->info("   ✅ PSN Account Located");
+            $this->info('   ✅ PSN Account Located');
             $this->line("   → Online ID: {$onlineId}");
             $this->line("   → Account ID: {$accountId}");
             $this->newLine();
@@ -53,16 +55,16 @@ class GT7CompletePlayerLookup extends Command
 
             if ($providedGuid) {
                 // Use provided GUID directly
-                $this->info("🎮 [2/3] Using provided GT7 GUID...");
+                $this->info('🎮 [2/3] Using provided GT7 GUID...');
                 $userId = $providedGuid;
-                $this->info("   ✅ GUID provided");
+                $this->info('   ✅ GUID provided');
                 $this->line("   → User ID: {$userId}");
             } else {
                 // Try to get GT7 Profile (will only work for token owner)
-                $this->info("🎮 [2/3] Fetching GT7 Profile...");
+                $this->info('🎮 [2/3] Fetching GT7 Profile...');
                 $gt7Profile = $gt7Service->getUserProfileByOnlineId($onlineId, $accountId);
 
-                if (!$gt7Profile || !isset($gt7Profile['result']['user_id'])) {
+                if (! $gt7Profile || ! isset($gt7Profile['result']['user_id'])) {
                     $this->error('❌ No GT7 profile found');
                     $this->warn('   The GT7 API only allows looking up your own profile.');
                     $this->warn('   To look up other players, provide their GT7 GUID:');
@@ -71,6 +73,7 @@ class GT7CompletePlayerLookup extends Command
                     $this->newLine();
                     $this->warn('   Find GUIDs from gran-turismo.com profile URLs:');
                     $this->warn('   https://www.gran-turismo.com/us/gt7/user/mymenu/<GUID>/profile');
+
                     return self::FAILURE;
                 }
 
@@ -78,36 +81,37 @@ class GT7CompletePlayerLookup extends Command
                 $nickname = $gt7Profile['result']['nick_name'] ?? $onlineId;
                 $country = $gt7Profile['result']['country_code'] ?? '??';
 
-                $this->info("   ✅ GT7 Profile Found");
+                $this->info('   ✅ GT7 Profile Found');
                 $this->line("   → User ID: {$userId}");
                 $this->line("   → Nickname: {$nickname}");
                 $this->line("   → Country: {$country}");
             }
             $this->newLine();
 
-            $this->info("   ✅ GT7 Profile Found");
+            $this->info('   ✅ GT7 Profile Found');
             $this->line("   → User ID: {$userId}");
             $this->line("   → Nickname: {$nickname}");
             $this->line("   → Country: {$country}");
             $this->newLine();
 
             // Step 3: Statistics
-            $this->info("📊 [3/3] Retrieving Statistics...");
+            $this->info('📊 [3/3] Retrieving Statistics...');
             $stats = $gt7Service->getUserStats($userId);
 
-            if (!$stats || !isset($stats['result'])) {
+            if (! $stats || ! isset($stats['result'])) {
                 $this->warn('⚠️  Statistics not available');
+
                 return self::SUCCESS;
             }
 
             $result = $stats['result'];
-            $this->info("   ✅ Statistics Retrieved");
+            $this->info('   ✅ Statistics Retrieved');
             $this->newLine();
 
             // Display Summary
-            $this->info("═══════════════════════════════════════════════════════");
-            $this->info("                    PLAYER SUMMARY                      ");
-            $this->info("═══════════════════════════════════════════════════════");
+            $this->info('═══════════════════════════════════════════════════════');
+            $this->info('                    PLAYER SUMMARY                      ');
+            $this->info('═══════════════════════════════════════════════════════');
             $this->newLine();
 
             $driverRating = $result['driver_rating'] ?? 0;
@@ -123,7 +127,7 @@ class GT7CompletePlayerLookup extends Command
                 [
                     ['Player', "{$nickname} ({$onlineId})"],
                     ['Country', $country],
-                    ['Driver Rating', "{$drLetter} (" . number_format($drPoints) . " points)"],
+                    ['Driver Rating', "{$drLetter} (" . number_format($drPoints) . ' points)'],
                     ['Safety Rating', $srLetter],
                     ['Total Races', $result['race_count'] ?? 0],
                     ['Wins', $result['race_win'] ?? 0],
@@ -134,11 +138,12 @@ class GT7CompletePlayerLookup extends Command
             );
 
             $this->newLine();
-            $this->info("✨ Lookup completed successfully!");
+            $this->info('✨ Lookup completed successfully!');
 
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
+
             return self::FAILURE;
         }
     }
@@ -153,6 +158,7 @@ class GT7CompletePlayerLookup extends Command
         }
 
         $rate = ($wins / $races) * 100;
+
         return number_format($rate, 2) . '%';
     }
 }

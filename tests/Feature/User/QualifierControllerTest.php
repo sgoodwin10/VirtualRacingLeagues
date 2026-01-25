@@ -16,6 +16,7 @@ final class QualifierControllerTest extends TestCase
     private const APP_URL = 'http://app.virtualracingleagues.localhost';
 
     private User $user;
+
     private Round $round;
 
     protected function setUp(): void
@@ -129,10 +130,9 @@ final class QualifierControllerTest extends TestCase
         $response->assertStatus(422);
         $response->assertJson([
             'message' => "A qualifier already exists for round {$this->round->id}. " .
-                "Only one qualifier is allowed per round.",
+                'Only one qualifier is allowed per round.',
         ]);
     }
-
 
     public function test_retrieves_qualifier_by_round(): void
     {
@@ -268,7 +268,7 @@ final class QualifierControllerTest extends TestCase
             'collision_penalties' => true,
             'assists_restrictions' => null,
             'qualifying_pole' => null,
-                'qualifying_pole_top_10' => false,
+            'qualifying_pole_top_10' => false,
             'race_notes' => null,
         ]);
 

@@ -12,7 +12,7 @@ use Spatie\LaravelData\Data;
 final class RaceEventResultData extends Data
 {
     /**
-     * @param array<int, RaceResultData> $results Array of RaceResultData instances
+     * @param  array<int, RaceResultData>  $results  Array of RaceResultData instances
      */
     public function __construct(
         public readonly int $id,

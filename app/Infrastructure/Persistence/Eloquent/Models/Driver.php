@@ -34,6 +34,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\League> $leagues
  * @property-read int|null $leagues_count
  * @property-read string $name
+ *
  * @method static \Database\Factories\DriverFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Driver newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Driver newQuery()

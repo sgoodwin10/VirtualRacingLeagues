@@ -11,7 +11,7 @@ interface RaceResultRepositoryInterface
     public function save(RaceResult $result): void;
 
     /**
-     * @param RaceResult[] $results
+     * @param  RaceResult[]  $results
      */
     public function saveMany(array $results): void;
 

@@ -350,7 +350,7 @@ describe('DriverTable', () => {
   it('should show loading state', () => {
     mockDriverState.loading = true;
     mockDriverState.drivers = [];
-    const _wrapper = mount(DriverTable, {
+    mount(DriverTable, {
       props: {
         leagueId: 1,
       },
@@ -362,7 +362,7 @@ describe('DriverTable', () => {
 
   it('should handle empty drivers array', () => {
     mockDriverState.drivers = [];
-    const _wrapper = mount(DriverTable, {
+    mount(DriverTable, {
       props: {
         leagueId: 1,
       },

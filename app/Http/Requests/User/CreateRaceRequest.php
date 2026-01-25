@@ -19,13 +19,14 @@ final class CreateRaceRequest extends FormRequest
 
         /** @var \App\Models\User|null $user */
         $user = auth('web')->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         $userId = $user->id;
 
         $roundRepository = app(RoundRepositoryInterface::class);
+
         return $roundRepository->isOwnedByUser($roundId, $userId);
     }
 

@@ -13,8 +13,8 @@ use Spatie\LaravelData\Data;
 final class TiebreakerInformationData extends Data
 {
     /**
-     * @param array<array<string, mixed>> $resolutions
-     * @param array<string> $applied_rules
+     * @param  array<array<string, mixed>>  $resolutions
+     * @param  array<string>  $applied_rules
      */
     public function __construct(
         public array $resolutions,
@@ -29,7 +29,7 @@ final class TiebreakerInformationData extends Data
     public static function fromValueObject(TiebreakerInformation $info): self
     {
         return new self(
-            resolutions: array_map(fn($r) => $r->toArray(), $info->resolutions()),
+            resolutions: array_map(fn ($r) => $r->toArray(), $info->resolutions()),
             applied_rules: $info->appliedRules(),
             had_unresolved_ties: $info->hadUnresolvedTies(),
         );

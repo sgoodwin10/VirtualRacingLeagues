@@ -96,7 +96,6 @@ final class CreateRaceData extends Data
     /**
      * Additional validation rules for cross-field validation.
      *
-     * @param ValidationContext $context
      * @return array<string, array<mixed>>
      */
     public static function rules(ValidationContext $context): array

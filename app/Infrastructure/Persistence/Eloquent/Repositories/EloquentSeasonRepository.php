@@ -34,7 +34,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
                 $this->setEntityId($season, $model->id);
 
                 // Sync tiebreaker rules if any
-                if ($season->hasTiebreakerRulesEnabled() && !$season->getTiebreakerRules()->isEmpty()) {
+                if ($season->hasTiebreakerRulesEnabled() && ! $season->getTiebreakerRules()->isEmpty()) {
                     $this->syncTiebreakerRules($model->id, $season->getTiebreakerRules());
                 }
             } else {
@@ -51,7 +51,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
     {
         $model = SeasonEloquent::with('tiebreakerRules')->find($id);
 
-        if (!$model) {
+        if (! $model) {
             throw SeasonNotFoundException::withId($id);
         }
 
@@ -62,7 +62,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
     {
         $model = SeasonEloquent::withTrashed()->with('tiebreakerRules')->find($id);
 
-        if (!$model) {
+        if (! $model) {
             throw SeasonNotFoundException::withId($id);
         }
 
@@ -75,7 +75,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             ->where('competition_id', $competitionId)
             ->first();
 
-        if (!$model) {
+        if (! $model) {
             throw SeasonNotFoundException::withSlug($slug, $competitionId);
         }
 
@@ -91,7 +91,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
 
     public function isSlugAvailable(string $slug, int $competitionId, ?int $excludeId = null): bool
     {
-        return !$this->slugExistsExcluding($slug, $competitionId, $excludeId);
+        return ! $this->slugExistsExcluding($slug, $competitionId, $excludeId);
     }
 
     /**
@@ -102,12 +102,12 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
         return SeasonEloquent::where('competition_id', $competitionId)
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(fn(SeasonEloquent $model) => $this->mapToEntity($model))
+            ->map(fn (SeasonEloquent $model) => $this->mapToEntity($model))
             ->all();
     }
 
     /**
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<Season>, total: int, per_page: int, current_page: int, last_page: int}
      */
     public function paginate(int $page, int $perPage, array $filters = []): array
@@ -127,7 +127,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
             $searchTerm = $filters['search'];
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('slug', 'like', '%' . $searchTerm . '%');
+                    ->orWhere('slug', 'like', '%' . $searchTerm . '%');
             });
         }
 
@@ -137,7 +137,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
 
         return [
             'data' => $result->items()
-                ? array_map(fn($model) => $this->mapToEntity($model), $result->items())
+                ? array_map(fn ($model) => $this->mapToEntity($model), $result->items())
                 : [],
             'total' => $result->total(),
             'per_page' => $result->perPage(),
@@ -162,7 +162,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
     {
         $model = SeasonEloquent::withTrashed()->find($id);
 
-        if (!$model) {
+        if (! $model) {
             throw SeasonNotFoundException::withId($id);
         }
 
@@ -175,7 +175,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
         $counter = 1;
 
         while ($this->slugExistsExcluding($slug, $competitionId, $excludeSeasonId)) {
-            $slug = $baseSlug . '-' . str_pad((string)$counter, 2, '0', STR_PAD_LEFT);
+            $slug = $baseSlug . '-' . str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
             $counter++;
 
             // Safety limit to prevent infinite loops
@@ -253,7 +253,7 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
      * Batch get all seasons with statistics for multiple competitions.
      * Returns seasons ordered by most recent first (latest created_at).
      *
-     * @param array<int> $competitionIds
+     * @param  array<int>  $competitionIds
      * @return array<int, array<array{
      *     season: Season,
      *     stats: array{driver_count: int, round_count: int, race_count: int}
@@ -430,9 +430,6 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
 
     /**
      * Sync tiebreaker rules for a season.
-     *
-     * @param int $seasonId
-     * @param TiebreakerRuleConfiguration $configuration
      */
     public function syncTiebreakerRules(int $seasonId, TiebreakerRuleConfiguration $configuration): void
     {
@@ -453,14 +450,13 @@ final class EloquentSeasonRepository implements SeasonRepositoryInterface
      * This is a helper method for the application layer to access Eloquent-specific
      * features like media operations. Not part of the domain repository interface.
      *
-     * @return SeasonEloquent
      * @throws SeasonNotFoundException
      */
     public function getEloquentModel(int $id): SeasonEloquent
     {
         $model = SeasonEloquent::with('media')->find($id);
 
-        if (!$model) {
+        if (! $model) {
             throw SeasonNotFoundException::withId($id);
         }
 

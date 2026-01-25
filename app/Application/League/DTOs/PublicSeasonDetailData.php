@@ -23,7 +23,7 @@ final class PublicSeasonDetailData extends Data
      *     logo_url: ?string,
      *     header_image_url: ?string
      * } $league
-     * @param array{name: string, slug: string} $competition
+     * @param  array{name: string, slug: string}  $competition
      * @param array{
      *     id: int,
      *     name: string,
@@ -71,15 +71,14 @@ final class PublicSeasonDetailData extends Data
      *     fastest_lap_results: array<int, mixed>,
      *     round_standings: array<int, mixed>
      * }> $rounds
-     * @param array<int, mixed> $standings
-     * @param bool $has_divisions
-     * @param array<int, mixed> $qualifying_results Results from qualifying sessions (is_qualifier = true)
-     * @param array<int, mixed> $fastest_lap_results Results sorted by fastest lap times
-     * @param array<int, mixed> $race_time_results Results sorted by race times
-     * @param bool $drop_round_enabled Whether drop rounds are enabled for driver standings
-     * @param bool $team_championship_enabled Whether team championship is enabled
-     * @param array<int, mixed> $team_championship_results Team championship standings
-     * @param bool $teams_drop_rounds_enabled Whether drop rounds are enabled for team standings
+     * @param  array<int, mixed>  $standings
+     * @param  array<int, mixed>  $qualifying_results  Results from qualifying sessions (is_qualifier = true)
+     * @param  array<int, mixed>  $fastest_lap_results  Results sorted by fastest lap times
+     * @param  array<int, mixed>  $race_time_results  Results sorted by race times
+     * @param  bool  $drop_round_enabled  Whether drop rounds are enabled for driver standings
+     * @param  bool  $team_championship_enabled  Whether team championship is enabled
+     * @param  array<int, mixed>  $team_championship_results  Team championship standings
+     * @param  bool  $teams_drop_rounds_enabled  Whether drop rounds are enabled for team standings
      */
     public function __construct(
         public readonly array $league,

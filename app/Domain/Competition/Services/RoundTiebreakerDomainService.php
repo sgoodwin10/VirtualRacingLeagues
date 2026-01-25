@@ -6,9 +6,9 @@ namespace App\Domain\Competition\Services;
 
 use App\Domain\Competition\Entities\Race;
 use App\Domain\Competition\Entities\RaceResult;
-use App\Domain\Competition\ValueObjects\TiebreakerRuleConfiguration;
-use App\Domain\Competition\ValueObjects\TiebreakerResolution;
 use App\Domain\Competition\ValueObjects\TiebreakerInformation;
+use App\Domain\Competition\ValueObjects\TiebreakerResolution;
+use App\Domain\Competition\ValueObjects\TiebreakerRuleConfiguration;
 
 /**
  * Round Tiebreaker Domain Service.
@@ -27,9 +27,9 @@ final class RoundTiebreakerDomainService
     /**
      * Resolve ties in standings using tiebreaker rules.
      *
-     * @param array<mixed> $standings Current standings with tied drivers
-     * @param TiebreakerRuleConfiguration $ruleConfig Ordered tiebreaker rules
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults All race results for context
+     * @param  array<mixed>  $standings  Current standings with tied drivers
+     * @param  TiebreakerRuleConfiguration  $ruleConfig  Ordered tiebreaker rules
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults  All race results for context
      * @return array{standings: array<mixed>, tiebreakerInfo: TiebreakerInformation}
      */
     public function resolveTies(
@@ -63,11 +63,11 @@ final class RoundTiebreakerDomainService
             $resolutions[] = $resolution;
 
             $ruleSlug = $resolution->ruleSlug();
-            if (!in_array($ruleSlug, $appliedRules, true)) {
+            if (! in_array($ruleSlug, $appliedRules, true)) {
                 $appliedRules[] = $ruleSlug;
             }
 
-            if (!$resolution->wasResolved()) {
+            if (! $resolution->wasResolved()) {
                 $hadUnresolvedTies = true;
             }
         }
@@ -90,7 +90,7 @@ final class RoundTiebreakerDomainService
     /**
      * Group drivers by their total points.
      *
-     * @param array<mixed> $standings
+     * @param  array<mixed>  $standings
      * @return array<int, array<mixed>>
      */
     private function groupDriversByPoints(array $standings): array
@@ -99,7 +99,7 @@ final class RoundTiebreakerDomainService
 
         foreach ($standings as $standing) {
             $points = $standing['total_points'] ?? 0;
-            if (!isset($groups[$points])) {
+            if (! isset($groups[$points])) {
                 $groups[$points] = [];
             }
             $groups[$points][] = $standing;
@@ -111,10 +111,8 @@ final class RoundTiebreakerDomainService
     /**
      * Attempt to resolve a single tie using rules in order.
      *
-     * @param array<mixed> $tiedDrivers
-     * @param TiebreakerRuleConfiguration $ruleConfig
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
-     * @return TiebreakerResolution
+     * @param  array<mixed>  $tiedDrivers
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults
      */
     private function resolveSingleTie(
         array $tiedDrivers,
@@ -168,8 +166,8 @@ final class RoundTiebreakerDomainService
      * Apply highest qualifying position rule.
      * Driver with the best (lowest) qualifying position wins.
      *
-     * @param array<int> $driverIds
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
+     * @param  array<int>  $driverIds
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults
      * @return array{winner: int|null, explanation: string}
      */
     private function applyHighestQualifyingRule(array $driverIds, array $allRaceResults): array
@@ -181,18 +179,18 @@ final class RoundTiebreakerDomainService
             $result = $item['result'];
 
             // Only consider qualifying races
-            if (!$race->isQualifier()) {
+            if (! $race->isQualifier()) {
                 continue;
             }
 
             $driverId = $result->driverId();
-            if (!in_array($driverId, $driverIds, true)) {
+            if (! in_array($driverId, $driverIds, true)) {
                 continue;
             }
 
             $position = $result->position();
             if ($position !== null) {
-                if (!isset($qualifyingPositions[$driverId]) || $position < $qualifyingPositions[$driverId]) {
+                if (! isset($qualifyingPositions[$driverId]) || $position < $qualifyingPositions[$driverId]) {
                     $qualifyingPositions[$driverId] = $position;
                 }
             }
@@ -226,8 +224,8 @@ final class RoundTiebreakerDomainService
      * Apply Race 1 best result rule.
      * Driver with the best finish in Race 1 wins.
      *
-     * @param array<int> $driverIds
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
+     * @param  array<int>  $driverIds
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults
      * @return array{winner: int|null, explanation: string}
      */
     private function applyRace1BestResultRule(array $driverIds, array $allRaceResults): array
@@ -244,7 +242,7 @@ final class RoundTiebreakerDomainService
             }
 
             $driverId = $result->driverId();
-            if (!in_array($driverId, $driverIds, true)) {
+            if (! in_array($driverId, $driverIds, true)) {
                 continue;
             }
 
@@ -283,8 +281,8 @@ final class RoundTiebreakerDomainService
      * Compare best finish, then second-best, etc. across all NON-QUALIFIER races.
      * IMPORTANT: Qualifying races are EXCLUDED from this rule.
      *
-     * @param array<int> $driverIds
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
+     * @param  array<int>  $driverIds
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults
      * @return array{winner: int|null, explanation: string}
      */
     private function applyBestResultAllRacesRule(array $driverIds, array $allRaceResults): array
@@ -301,13 +299,13 @@ final class RoundTiebreakerDomainService
             }
 
             $driverId = $result->driverId();
-            if (!in_array($driverId, $driverIds, true)) {
+            if (! in_array($driverId, $driverIds, true)) {
                 continue;
             }
 
             $position = $result->position();
             if ($position !== null) {
-                if (!isset($driverResults[$driverId])) {
+                if (! isset($driverResults[$driverId])) {
                     $driverResults[$driverId] = [];
                 }
                 $driverResults[$driverId][] = $position;
@@ -349,6 +347,7 @@ final class RoundTiebreakerDomainService
             if (count($winners) === 1) {
                 $place = $i + 1;
                 $ordinal = $this->getOrdinalSuffix($place);
+
                 return [
                     'winner' => $winners[0],
                     'explanation' => "Driver won on {$place}{$ordinal} best result (P{$bestPosition})",
@@ -386,8 +385,8 @@ final class RoundTiebreakerDomainService
      * Apply resolutions to standings (update positions).
      * When ties are broken, positions are updated accordingly.
      *
-     * @param array<mixed> $standings
-     * @param array<TiebreakerResolution> $resolutions
+     * @param  array<mixed>  $standings
+     * @param  array<TiebreakerResolution>  $resolutions
      * @return array<mixed>
      */
     private function applyResolutionsToStandings(array $standings, array $resolutions): array
@@ -419,10 +418,10 @@ final class RoundTiebreakerDomainService
             $isAWinner = isset($resolutionMap[$driverIdA]) && $resolutionMap[$driverIdA] === $driverIdA;
             $isBWinner = isset($resolutionMap[$driverIdB]) && $resolutionMap[$driverIdB] === $driverIdB;
 
-            if ($isAWinner && !$isBWinner) {
+            if ($isAWinner && ! $isBWinner) {
                 return -1;
             }
-            if (!$isAWinner && $isBWinner) {
+            if (! $isAWinner && $isBWinner) {
                 return 1;
             }
 

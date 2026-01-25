@@ -9,15 +9,17 @@ use App\Infrastructure\Persistence\Eloquent\Models\Platform;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
 class LeaguePlatformsControllerTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 
     private UserEloquent $user;
+
     private Platform $platform1;
+
     private Platform $platform2;
+
     private Platform $platform3;
 
     protected function setUp(): void
@@ -61,6 +63,7 @@ class LeaguePlatformsControllerTest extends UserControllerTestCase
     public function getJson($uri, array $headers = [], $options = 0)
     {
         $url = 'http://app.virtualracingleagues.localhost' . $uri;
+
         return parent::getJson($url, $headers, $options);
     }
 

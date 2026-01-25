@@ -18,7 +18,7 @@ final class PlatformSettingsController extends Controller
         // Load config file directly from subdirectory
         $configPath = config_path("race_settings/{$platformSlug}.php");
 
-        if (!file_exists($configPath)) {
+        if (! file_exists($configPath)) {
             return ApiResponse::error('Platform settings not found', null, 404);
         }
 
@@ -31,8 +31,6 @@ final class PlatformSettingsController extends Controller
     /**
      * Map platform IDs to configuration slugs.
      * TODO: Fetch from platforms table when available.
-     *
-     * @return string
      */
     private function getPlatformSlug(int $platformId): string
     {

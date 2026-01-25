@@ -51,7 +51,7 @@ final class TeamApplicationService
             $logoPath = null;
             if ($data->logo) {
                 $logoPath = $data->logo->store('teams/logos', 'public');
-                if (!$logoPath) {
+                if (! $logoPath) {
                     throw new \RuntimeException('Failed to store team logo');
                 }
             }
@@ -98,7 +98,7 @@ final class TeamApplicationService
                 }
 
                 $logoPath = $data->logo->store('teams/logos', 'public');
-                if (!$logoPath) {
+                if (! $logoPath) {
                     throw new \RuntimeException('Failed to store team logo');
                 }
             }
@@ -159,6 +159,7 @@ final class TeamApplicationService
     public function getTeamById(int $teamId): TeamData
     {
         $team = $this->teamRepository->findById($teamId);
+
         return TeamData::fromEntity($team);
     }
 
@@ -172,7 +173,7 @@ final class TeamApplicationService
         $teams = $this->teamRepository->findBySeasonId($seasonId);
 
         return array_map(
-            fn(Team $team) => TeamData::fromEntity($team),
+            fn (Team $team) => TeamData::fromEntity($team),
             $teams
         );
     }
@@ -180,8 +181,8 @@ final class TeamApplicationService
     /**
      * Assign a driver to a team (or make them Privateer).
      *
-     * @param int $seasonDriverId The season_driver ID (not driver ID)
-     * @param AssignDriverTeamData $data Contains team_id or null for Privateer
+     * @param  int  $seasonDriverId  The season_driver ID (not driver ID)
+     * @param  AssignDriverTeamData  $data  Contains team_id or null for Privateer
      * @return array{
      *     id: int,
      *     season_id: int,
@@ -203,6 +204,7 @@ final class TeamApplicationService
      *     added_at: string,
      *     updated_at: string
      * }
+     *
      * @throws UnauthorizedException
      */
     public function assignDriverToTeam(int $seasonDriverId, AssignDriverTeamData $data, int $userId): array
@@ -233,7 +235,6 @@ final class TeamApplicationService
     /**
      * Convert SeasonDriverEloquent model to array format matching SeasonDriverData.
      *
-     * @param SeasonDriverEloquent $seasonDriverModel
      * @return array{
      *     id: int,
      *     season_id: int,

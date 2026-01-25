@@ -8,6 +8,7 @@ use App\Application\Admin\Services\AdminUserImpersonationService;
 use App\Application\User\DTOs\UserData;
 use App\Domain\User\Exceptions\UserNotFoundException;
 use App\Helpers\ApiResponse;
+use App\Helpers\UrlHelper;
 use App\Http\Controllers\Controller;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use App\Models\Admin;
@@ -47,7 +48,7 @@ final class UserImpersonationController extends Controller
             // Get Eloquent model for authentication
             $eloquentUser = UserEloquent::find($user->id());
 
-            if (!$eloquentUser) {
+            if (! $eloquentUser) {
                 throw new \RuntimeException('User model not found');
             }
 
@@ -81,23 +82,22 @@ final class UserImpersonationController extends Controller
             }
 
             // Always redirect to app subdomain root
-            $appUrl = str_replace('//', '//app.', config('app.url'));
-            return redirect($appUrl)->with('success', 'Successfully logged in as ' . $eloquentUser->email);
+            return redirect(UrlHelper::appUrl())->with('success', 'Successfully logged in as ' . $eloquentUser->email);
         } catch (UserNotFoundException $e) {
             // Redirect to public login with error
-            return redirect(config('app.url') . '/login')
+            return redirect(UrlHelper::publicUrl() . '/login')
                 ->with('error', 'User not found');
         } catch (\DomainException $e) {
             // Redirect to public login with error
-            return redirect(config('app.url') . '/login')
+            return redirect(UrlHelper::publicUrl() . '/login')
                 ->with('error', $e->getMessage());
         } catch (\JsonException $e) {
             // Redirect to public login with error
-            return redirect(config('app.url') . '/login')
+            return redirect(UrlHelper::publicUrl() . '/login')
                 ->with('error', 'Invalid token data');
         } catch (\Exception $e) {
             // Catch any other errors and redirect with generic message
-            return redirect(config('app.url') . '/login')
+            return redirect(UrlHelper::publicUrl() . '/login')
                 ->with('error', 'An error occurred during login');
         }
     }
@@ -123,7 +123,7 @@ final class UserImpersonationController extends Controller
             // Get Eloquent model for authentication
             $eloquentUser = UserEloquent::find($user->id());
 
-            if (!$eloquentUser) {
+            if (! $eloquentUser) {
                 throw new \RuntimeException('User model not found');
             }
 

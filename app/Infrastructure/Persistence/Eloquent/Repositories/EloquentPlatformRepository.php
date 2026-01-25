@@ -19,13 +19,14 @@ final class EloquentPlatformRepository implements PlatformRepositoryInterface
      * Find platform by ID.
      *
      * @return array{id: int, name: string, slug: string}
+     *
      * @throws PlatformNotFoundException
      */
     public function findById(int $id): array
     {
         $platform = Platform::find($id);
 
-        if (!$platform) {
+        if (! $platform) {
             throw PlatformNotFoundException::withId($id);
         }
 
@@ -36,7 +37,7 @@ final class EloquentPlatformRepository implements PlatformRepositoryInterface
      * Find platforms by IDs (returns only existing platforms).
      * Returns array keyed by platform ID for efficient lookups.
      *
-     * @param array<int> $ids
+     * @param  array<int>  $ids
      * @return array<int, array{id: int, name: string, slug: string}>
      */
     public function findByIds(array $ids): array
@@ -50,7 +51,7 @@ final class EloquentPlatformRepository implements PlatformRepositoryInterface
             ->orderBy('sort_order')
             ->get(['id', 'name', 'slug']);
 
-        return $platforms->mapWithKeys(fn(Platform $platform) => [
+        return $platforms->mapWithKeys(fn (Platform $platform) => [
             $platform->id => $this->mapPlatformToArray($platform),
         ])->toArray();
     }
@@ -59,7 +60,7 @@ final class EloquentPlatformRepository implements PlatformRepositoryInterface
      * Find active platforms by IDs.
      * Returns sequential array for JSON serialization compatibility.
      *
-     * @param array<int> $ids
+     * @param  array<int>  $ids
      * @return array<array{id: int, name: string, slug: string}>
      */
     public function findActiveByIds(array $ids): array
@@ -74,8 +75,7 @@ final class EloquentPlatformRepository implements PlatformRepositoryInterface
             ->orderBy('sort_order')
             ->get(['id', 'name', 'slug']);
 
-        return $platforms->map(fn(Platform $platform) =>
-            $this->mapPlatformToArray($platform))->toArray();
+        return $platforms->map(fn (Platform $platform) => $this->mapPlatformToArray($platform))->toArray();
     }
 
     /**
@@ -98,8 +98,7 @@ final class EloquentPlatformRepository implements PlatformRepositoryInterface
             ->orderBy('sort_order')
             ->get(['id', 'name', 'slug']);
 
-        return $platforms->map(fn(Platform $platform) =>
-            $this->mapPlatformToArray($platform))->toArray();
+        return $platforms->map(fn (Platform $platform) => $this->mapPlatformToArray($platform))->toArray();
     }
 
     /**
@@ -111,7 +110,7 @@ final class EloquentPlatformRepository implements PlatformRepositoryInterface
     {
         $platform = Platform::where('name', $name)->first(['id']);
 
-        if (!$platform) {
+        if (! $platform) {
             throw PlatformNotFoundException::withName($name);
         }
 

@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Log;
 final class RaceResultsCacheService
 {
     private const CACHE_PREFIX = 'race_results:';
+
     private const LOCK_PREFIX = 'race_results_lock:';
 
     /**
@@ -50,13 +51,16 @@ final class RaceResultsCacheService
     private const MAX_CACHE_SIZE = 1048576; // 1MB
 
     private readonly CacheRepository $cache;
+
     private readonly int $cacheTtl;
+
     private readonly int $lockTimeout;
+
     private readonly int $maxCacheSize;
 
     /**
-     * @param string|null $store Cache store name (e.g., 'redis', 'database').
-     *                           Defaults to config('league.cache.store') or config('cache.default').
+     * @param  string|null  $store  Cache store name (e.g., 'redis', 'database').
+     *                              Defaults to config('league.cache.store') or config('cache.default').
      */
     public function __construct(?string $store = null)
     {
@@ -70,8 +74,9 @@ final class RaceResultsCacheService
     /**
      * Get cached race results or null if not cached.
      *
-     * @param int $raceId The race ID (must be positive)
+     * @param  int  $raceId  The race ID (must be positive)
      * @return PublicRaceResultsData|null The cached data or null if not found
+     *
      * @throws \InvalidArgumentException If race ID is not positive
      */
     public function get(int $raceId): ?PublicRaceResultsData
@@ -96,6 +101,7 @@ final class RaceResultsCacheService
                 'error' => $e->getMessage(),
                 'exception' => get_class($e),
             ]);
+
             return null;
         }
     }
@@ -103,9 +109,10 @@ final class RaceResultsCacheService
     /**
      * Store race results in cache with atomic locking and size validation.
      *
-     * @param int $raceId The race ID (must be positive)
-     * @param PublicRaceResultsData $data The race results data to cache
+     * @param  int  $raceId  The race ID (must be positive)
+     * @param  PublicRaceResultsData  $data  The race results data to cache
      * @return bool True if successfully cached, false otherwise
+     *
      * @throws \InvalidArgumentException If race ID is not positive
      */
     public function put(int $raceId, PublicRaceResultsData $data): bool
@@ -126,6 +133,7 @@ final class RaceResultsCacheService
                     'max_size' => $this->maxCacheSize,
                     'size_mb' => round($size / 1048576, 2),
                 ]);
+
                 return false;
             }
 
@@ -150,6 +158,7 @@ final class RaceResultsCacheService
                 'timeout' => $this->lockTimeout,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         } catch (\Throwable $e) {
             // Log error but don't fail - caching is optional
@@ -160,6 +169,7 @@ final class RaceResultsCacheService
                 'exception' => get_class($e),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
@@ -167,8 +177,9 @@ final class RaceResultsCacheService
     /**
      * Invalidate (forget) cached race results.
      *
-     * @param int $raceId The race ID (must be positive)
+     * @param  int  $raceId  The race ID (must be positive)
      * @return bool True if successfully invalidated or key didn't exist, false on error
+     *
      * @throws \InvalidArgumentException If race ID is not positive
      */
     public function forget(int $raceId): bool
@@ -195,6 +206,7 @@ final class RaceResultsCacheService
                 'error' => $e->getMessage(),
                 'exception' => get_class($e),
             ]);
+
             return false;
         }
     }
@@ -202,8 +214,9 @@ final class RaceResultsCacheService
     /**
      * Batch invalidate cached race results for multiple races.
      *
-     * @param array<int> $raceIds Array of race IDs (all must be positive)
+     * @param  array<int>  $raceIds  Array of race IDs (all must be positive)
      * @return array<int, bool> Array mapping race ID to success/failure
+     *
      * @throws \InvalidArgumentException If any race ID is not positive
      */
     public function forgetMany(array $raceIds): array
@@ -231,8 +244,9 @@ final class RaceResultsCacheService
     /**
      * Check if race results are cached.
      *
-     * @param int $raceId The race ID (must be positive)
+     * @param  int  $raceId  The race ID (must be positive)
      * @return bool True if cached, false otherwise
+     *
      * @throws \InvalidArgumentException If race ID is not positive
      */
     public function has(int $raceId): bool
@@ -248,6 +262,7 @@ final class RaceResultsCacheService
                 'key' => $key,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -255,29 +270,30 @@ final class RaceResultsCacheService
     /**
      * Generate cache key for race results.
      *
-     * @param int $raceId The race ID
+     * @param  int  $raceId  The race ID
      * @return string The cache key
      */
     private function getCacheKey(int $raceId): string
     {
-        return self::CACHE_PREFIX . $raceId;
+        return self::CACHE_PREFIX.$raceId;
     }
 
     /**
      * Generate lock key for race results cache operations.
      *
-     * @param int $raceId The race ID
+     * @param  int  $raceId  The race ID
      * @return string The lock key
      */
     private function getLockKey(int $raceId): string
     {
-        return self::LOCK_PREFIX . $raceId;
+        return self::LOCK_PREFIX.$raceId;
     }
 
     /**
      * Validate that race ID is positive.
      *
-     * @param int $raceId The race ID to validate
+     * @param  int  $raceId  The race ID to validate
+     *
      * @throws \InvalidArgumentException If race ID is not positive
      */
     private function validateRaceId(int $raceId): void
@@ -292,10 +308,10 @@ final class RaceResultsCacheService
     /**
      * Put data to cache and log the result.
      *
-     * @param string $key Cache key
-     * @param PublicRaceResultsData $data Data to cache
-     * @param int $raceId Race ID (for logging)
-     * @param int $size Data size in bytes (for logging)
+     * @param  string  $key  Cache key
+     * @param  PublicRaceResultsData  $data  Data to cache
+     * @param  int  $raceId  Race ID (for logging)
+     * @param  int  $size  Data size in bytes (for logging)
      * @return bool True if successfully cached
      */
     private function putToCache(string $key, PublicRaceResultsData $data, int $raceId, int $size): bool

@@ -44,6 +44,7 @@ final class SeasonController extends Controller
         if ($userId === null) {
             throw UnauthorizedException::notAuthenticated();
         }
+
         return (int) $userId;
     }
 
@@ -53,6 +54,7 @@ final class SeasonController extends Controller
     public function index(int $competitionId): JsonResponse
     {
         $seasons = $this->seasonService->getSeasonsByCompetition($competitionId);
+
         return ApiResponse::success($seasons);
     }
 
@@ -63,6 +65,7 @@ final class SeasonController extends Controller
     {
         $data = CreateSeasonData::from($request->validated());
         $seasonData = $this->seasonService->createSeason($data, $this->getAuthenticatedUserId());
+
         return ApiResponse::created($seasonData->toArray(), 'Season created successfully');
     }
 
@@ -72,6 +75,7 @@ final class SeasonController extends Controller
     public function show(int $id): JsonResponse
     {
         $season = $this->seasonService->getSeason($id);
+
         return ApiResponse::success($season->toArray());
     }
 
@@ -87,6 +91,7 @@ final class SeasonController extends Controller
             $this->getAuthenticatedUserId(),
             $request->validated()
         );
+
         return ApiResponse::success($seasonData->toArray(), 'Season updated successfully');
     }
 
@@ -96,6 +101,7 @@ final class SeasonController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $this->seasonService->deleteSeason($id, $this->getAuthenticatedUserId());
+
         return ApiResponse::success(null, 'Season deleted successfully');
     }
 
@@ -105,6 +111,7 @@ final class SeasonController extends Controller
     public function archive(ArchiveSeasonRequest $request, int $id): JsonResponse
     {
         $seasonData = $this->seasonService->archiveSeason($id, $this->getAuthenticatedUserId());
+
         return ApiResponse::success($seasonData->toArray(), 'Season archived successfully');
     }
 
@@ -114,6 +121,7 @@ final class SeasonController extends Controller
     public function unarchive(int $id): JsonResponse
     {
         $season = $this->seasonService->unarchiveSeason($id, $this->getAuthenticatedUserId());
+
         return ApiResponse::success($season->toArray(), 'Season unarchived successfully');
     }
 
@@ -123,6 +131,7 @@ final class SeasonController extends Controller
     public function activate(int $id): JsonResponse
     {
         $season = $this->seasonService->activateSeason($id, $this->getAuthenticatedUserId());
+
         return ApiResponse::success($season->toArray(), 'Season activated successfully');
     }
 
@@ -132,6 +141,7 @@ final class SeasonController extends Controller
     public function complete(CompleteSeasonRequest $request, int $id): JsonResponse
     {
         $seasonData = $this->seasonService->completeSeason($id, $this->getAuthenticatedUserId());
+
         return ApiResponse::success($seasonData->toArray(), 'Season completed successfully');
     }
 
@@ -141,6 +151,7 @@ final class SeasonController extends Controller
     public function reactivate(ReactivateSeasonRequest $request, int $id): JsonResponse
     {
         $seasonData = $this->seasonService->reactivateSeason($id, $this->getAuthenticatedUserId());
+
         return ApiResponse::success($seasonData->toArray(), 'Season reactivated successfully');
     }
 
@@ -150,6 +161,7 @@ final class SeasonController extends Controller
     public function restore(int $id): JsonResponse
     {
         $season = $this->seasonService->restoreSeason($id, $this->getAuthenticatedUserId());
+
         return ApiResponse::success($season->toArray(), 'Season restored successfully');
     }
 
@@ -178,6 +190,7 @@ final class SeasonController extends Controller
     public function standings(int $id): JsonResponse
     {
         $standings = $this->seasonService->getSeasonStandings($id);
+
         return ApiResponse::success($standings);
     }
 
@@ -187,6 +200,7 @@ final class SeasonController extends Controller
     public function recalculateResults(int $id): JsonResponse
     {
         $result = $this->roundService->recalculateAllCompletedRounds($id, $this->getAuthenticatedUserId());
+
         return ApiResponse::success($result, 'Results recalculated successfully');
     }
 }

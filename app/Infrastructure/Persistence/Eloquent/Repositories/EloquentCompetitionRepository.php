@@ -11,8 +11,8 @@ use App\Domain\Competition\ValueObjects\CompetitionName;
 use App\Domain\Competition\ValueObjects\CompetitionSlug;
 use App\Domain\Competition\ValueObjects\CompetitionStatus;
 use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionModel;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -58,24 +58,66 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
         DB::transaction(function () use ($competition): void {
             $competitionId = $competition->id();
 
-            // Get all season IDs first
+            // Step 1: Get all season IDs for this competition
             $seasonIds = SeasonEloquent::query()
                 ->where('competition_id', $competitionId)
                 ->pluck('id');
 
-            // Bulk delete rounds for all seasons (force delete to bypass soft deletes)
             if ($seasonIds->isNotEmpty()) {
+                // Step 2: Get all round IDs for these seasons
+                $roundIds = Round::query()
+                    ->whereIn('season_id', $seasonIds)
+                    ->pluck('id');
+
+                if ($roundIds->isNotEmpty()) {
+                    // Step 3: Get all race IDs for these rounds
+                    $raceIds = \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+                        ->whereIn('round_id', $roundIds)
+                        ->pluck('id');
+
+                    if ($raceIds->isNotEmpty()) {
+                        // Step 4: Delete all race results for these races (hard delete)
+                        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+                            ->whereIn('race_id', $raceIds)
+                            ->delete();
+                    }
+
+                    // Step 5: Delete all races for these rounds (hard delete)
+                    \App\Infrastructure\Persistence\Eloquent\Models\Race::query()
+                        ->whereIn('round_id', $roundIds)
+                        ->delete();
+                }
+
+                // Step 6: Delete all season drivers for these seasons (hard delete)
+                \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::query()
+                    ->whereIn('season_id', $seasonIds)
+                    ->delete();
+
+                // Step 7: Delete all season round tiebreaker rules for these seasons (if table exists)
+                if (DB::getSchemaBuilder()->hasTable('season_round_tiebreaker_rules')) {
+                    DB::table('season_round_tiebreaker_rules')
+                        ->whereIn('season_id', $seasonIds)
+                        ->delete();
+                }
+
+                // Step 8: Bulk delete rounds for all seasons (force delete to bypass soft deletes)
                 /** @var \Illuminate\Database\Eloquent\Builder<Round> $roundsQuery */
                 $roundsQuery = Round::query()->whereIn('season_id', $seasonIds);
                 $roundsQuery->forceDelete();
             }
 
-            // Bulk delete seasons (force delete to bypass soft deletes)
+            // Step 9: Bulk delete seasons (force delete to bypass soft deletes)
             /** @var \Illuminate\Database\Eloquent\Builder<SeasonEloquent> $seasonsQuery */
             $seasonsQuery = SeasonEloquent::query()->where('competition_id', $competitionId);
             $seasonsQuery->forceDelete();
 
-            // Delete the competition itself (regular delete as it doesn't use SoftDeletes)
+            // Step 10: Delete media files associated with the competition
+            $competitionModel = CompetitionModel::find($competitionId);
+            if ($competitionModel) {
+                $competitionModel->clearMediaCollection('logo');
+            }
+
+            // Step 11: Delete the competition itself (regular delete as it doesn't use SoftDeletes)
             CompetitionModel::where('id', $competitionId)->delete();
         });
     }
@@ -87,7 +129,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
         /** @var CompetitionModel|null $model */
         $model = $this->applyDefaultIncludes($query)->find($id);
 
-        if (!$model) {
+        if (! $model) {
             throw CompetitionNotFoundException::withId($id);
         }
 
@@ -101,7 +143,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
                 ->where('league_id', $leagueId)
         )->first();
 
-        if (!$model) {
+        if (! $model) {
             throw CompetitionNotFoundException::withSlug($slug, $leagueId);
         }
 
@@ -117,7 +159,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             CompetitionModel::where('league_id', $leagueId)
         )
             ->get()
-            ->map(fn(CompetitionModel $model) => $this->mapToEntity($model))
+            ->map(fn (CompetitionModel $model) => $this->mapToEntity($model))
             ->all();
     }
 
@@ -135,7 +177,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
 
     public function isSlugAvailable(string $slug, int $leagueId, ?int $excludeId = null): bool
     {
-        return !$this->existsBySlug($slug, $leagueId, $excludeId);
+        return ! $this->existsBySlug($slug, $leagueId, $excludeId);
     }
 
     public function countByLeagueId(int $leagueId): int
@@ -179,7 +221,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
             ])
             ->find($competitionId);
 
-        if (!$model) {
+        if (! $model) {
             return [
                 'total_seasons' => 0,
                 'active_seasons' => 0,
@@ -218,14 +260,14 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
     /**
      * Get stats for multiple competition entities.
      *
-     * @param array<Competition> $competitions
+     * @param  array<Competition>  $competitions
      * @return array<int, array<string, int|string|null>> Keyed by competition ID
      */
     public function getStatsForEntities(array $competitions): array
     {
         $competitionIds = array_filter(
-            array_map(fn(Competition $c) => $c->id(), $competitions),
-            fn($id) => $id !== null
+            array_map(fn (Competition $c) => $c->id(), $competitions),
+            fn ($id) => $id !== null
         );
 
         if (empty($competitionIds)) {
@@ -289,7 +331,7 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
     /**
      * Apply default includes (eager loading and counts) to a query builder.
      *
-     * @param Builder<CompetitionModel> $query
+     * @param  Builder<CompetitionModel>  $query
      * @return Builder<CompetitionModel>
      */
     private function applyDefaultIncludes(Builder $query): Builder
@@ -297,12 +339,12 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
         // Note: Platform relation is not eager loaded as it's not used in entity mapping
         // Platform data is fetched separately via PlatformRepository when needed
         return $query->withCount([
-                'seasons as total_seasons',
-                'seasons as active_seasons' => function ($query): void {
-                    $query->where('status', CompetitionStatus::ACTIVE->value);
-                },
-                'seasonDrivers as total_drivers',
-            ]);
+            'seasons as total_seasons',
+            'seasons as active_seasons' => function ($query): void {
+                $query->where('status', CompetitionStatus::ACTIVE->value);
+            },
+            'seasonDrivers as total_drivers',
+        ]);
     }
 
     /**
@@ -378,14 +420,13 @@ final class EloquentCompetitionRepository implements CompetitionRepositoryInterf
      * Get the Eloquent model for a competition by ID.
      * Used for media operations that require the Eloquent model.
      *
-     * @return CompetitionModel
      * @throws CompetitionNotFoundException
      */
     public function getEloquentModel(int $id): CompetitionModel
     {
         $model = CompetitionModel::with('media')->find($id);
 
-        if (!$model) {
+        if (! $model) {
             throw CompetitionNotFoundException::withId($id);
         }
 

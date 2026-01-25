@@ -21,6 +21,7 @@ final class InvalidQualifierConfigurationException extends DomainException
     public static function invalidBonusPoints(array $bonusPoints): self
     {
         $keys = implode(', ', array_keys($bonusPoints));
+
         return new self("Qualifiers can only have pole position bonus. Got: {$keys}");
     }
 }

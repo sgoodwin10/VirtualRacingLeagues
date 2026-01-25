@@ -13,6 +13,7 @@ use App\Domain\SiteConfig\Exceptions\InvalidConfigurationException;
 final readonly class TrackingId
 {
     private const GTM_PATTERN = '/^GTM-[A-Z0-9]+$/';
+
     private const GA_PATTERN = '/^G-[A-Z0-9]+$/';
 
     private function __construct(

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\League\Services;
 
+use App\Application\Activity\Services\LeagueActivityLogService;
+use App\Application\Competition\Services\SeasonApplicationService;
+use App\Application\Driver\DTOs\PublicDriverProfileData;
 use App\Application\League\DTOs\CompetitionSummaryData;
 use App\Application\League\DTOs\CreateLeagueData;
 use App\Application\League\DTOs\LeagueData;
@@ -18,10 +21,7 @@ use App\Application\League\DTOs\PublicRaceResultsData;
 use App\Application\League\DTOs\PublicSeasonDetailData;
 use App\Application\League\DTOs\PublicSeasonSummaryData;
 use App\Application\League\DTOs\UpdateLeagueData;
-use App\Application\Driver\DTOs\PublicDriverProfileData;
-use App\Application\Activity\Services\LeagueActivityLogService;
 use App\Application\Shared\Factories\MediaDataFactory;
-use App\Application\Competition\Services\SeasonApplicationService;
 use App\Application\Shared\Services\MediaServiceInterface;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Driver\Services\DriverPlatformColumnService;
@@ -104,7 +104,7 @@ final class LeagueApplicationService
             try {
                 // Store logo using old method for backward compatibility (dual-write during transition)
                 $logoPath = $data->logo->store('leagues/logos', 'public');
-                if (!$logoPath) {
+                if (! $logoPath) {
                     throw new \RuntimeException('Failed to store league logo');
                 }
 
@@ -112,7 +112,7 @@ final class LeagueApplicationService
                 $headerImagePath = null;
                 if ($data->header_image) {
                     $headerImagePath = $data->header_image->store('leagues/headers', 'public');
-                    if (!$headerImagePath) {
+                    if (! $headerImagePath) {
                         throw new \RuntimeException('Failed to store league header image');
                     }
                 }
@@ -121,7 +121,7 @@ final class LeagueApplicationService
                 $bannerPath = null;
                 if ($data->banner) {
                     $bannerPath = $data->banner->store('leagues/banners', 'public');
-                    if (!$bannerPath) {
+                    if (! $bannerPath) {
                         throw new \RuntimeException('Failed to store league banner');
                     }
                 }
@@ -232,8 +232,8 @@ final class LeagueApplicationService
     /**
      * Check slug availability (for blur validation).
      *
-     * @param string $name The league name to generate a slug from
-     * @param int|null $excludeLeagueId Optional league ID to exclude from the check (for updates)
+     * @param  string  $name  The league name to generate a slug from
+     * @param  int|null  $excludeLeagueId  Optional league ID to exclude from the check (for updates)
      * @return array{available: bool, slug: string, suggestion: string|null}
      */
     public function checkSlugAvailability(string $name, ?int $excludeLeagueId = null): array
@@ -258,7 +258,7 @@ final class LeagueApplicationService
         $leaguesWithCounts = $this->leagueRepository->findByUserIdWithCounts($userId);
 
         // Fix N+1: Batch load all Eloquent models with media BEFORE the loop
-        $leagueIds = array_map(fn(array $item) => $item['league']->id(), $leaguesWithCounts);
+        $leagueIds = array_map(fn (array $item) => $item['league']->id(), $leaguesWithCounts);
         $eloquentLeagues = EloquentLeague::query()
             ->whereIn('id', $leagueIds)
             ->with('media')
@@ -441,7 +441,7 @@ final class LeagueApplicationService
                 if ($data->logo !== null) {
                     // Store new logo using old method (dual-write)
                     $newLogoPath = $data->logo->store('leagues/logos', 'public');
-                    if (!$newLogoPath) {
+                    if (! $newLogoPath) {
                         throw new \RuntimeException('Failed to store league logo');
                     }
 
@@ -455,7 +455,7 @@ final class LeagueApplicationService
                 if ($data->header_image !== null) {
                     // Store new header image using old method (dual-write)
                     $newHeaderImagePath = $data->header_image->store('leagues/headers', 'public');
-                    if (!$newHeaderImagePath) {
+                    if (! $newHeaderImagePath) {
                         throw new \RuntimeException('Failed to store league header image');
                     }
 
@@ -469,7 +469,7 @@ final class LeagueApplicationService
                 if ($data->banner !== null) {
                     // Store new banner using old method (dual-write)
                     $newBannerPath = $data->banner->store('leagues/banners', 'public');
-                    if (!$newBannerPath) {
+                    if (! $newBannerPath) {
                         throw new \RuntimeException('Failed to store league banner');
                     }
 
@@ -541,12 +541,6 @@ final class LeagueApplicationService
 
     /**
      * Create a new league with activity logging.
-     *
-     * @param CreateLeagueData $data
-     * @param int $userId
-     * @param UserEloquent $user
-     * @param bool $isFreeTier
-     * @return LeagueData
      */
     public function createLeagueWithActivityLog(
         CreateLeagueData $data,
@@ -572,12 +566,6 @@ final class LeagueApplicationService
 
     /**
      * Update a league with activity logging and change tracking.
-     *
-     * @param int $leagueId
-     * @param UpdateLeagueData $data
-     * @param int $userId
-     * @param UserEloquent $user
-     * @return LeagueData
      */
     public function updateLeagueWithActivityLog(
         int $leagueId,
@@ -645,9 +633,8 @@ final class LeagueApplicationService
     /**
      * Get platforms associated with a league.
      *
-     * @param int $leagueId
-     * @param int $userId
      * @return array<int, LeaguePlatformData>
+     *
      * @throws LeagueNotFoundException
      * @throws UnauthorizedException
      */
@@ -664,7 +651,7 @@ final class LeagueApplicationService
 
         // Convert to DTOs
         return array_map(
-            fn(array $platformData) => LeaguePlatformData::fromArray($platformData),
+            fn (array $platformData) => LeaguePlatformData::fromArray($platformData),
             $platformsData
         );
     }
@@ -678,8 +665,9 @@ final class LeagueApplicationService
      * This method provides a best-effort attempt to generate a unique slug before hitting the
      * database constraint.
      *
-     * @param LeagueSlug $baseSlug The base slug to make unique
-     * @param int|null $excludeLeagueId Optional league ID to exclude from the check (for updates)
+     * @param  LeagueSlug  $baseSlug  The base slug to make unique
+     * @param  int|null  $excludeLeagueId  Optional league ID to exclude from the check (for updates)
+     *
      * @throws \RuntimeException If a unique slug cannot be generated after maximum attempts
      */
     private function generateUniqueSlug(LeagueSlug $baseSlug, ?int $excludeLeagueId = null): LeagueSlug
@@ -688,14 +676,14 @@ final class LeagueApplicationService
         $slug = $baseSlug;
         $counter = 1;
 
-        while (!$this->leagueRepository->isSlugAvailable($slug->value(), $excludeLeagueId)) {
+        while (! $this->leagueRepository->isSlugAvailable($slug->value(), $excludeLeagueId)) {
             if ($counter >= $maxAttempts) {
                 throw new \RuntimeException(
                     "Unable to generate unique slug for '{$baseSlug->value()}' after {$maxAttempts} attempts"
                 );
             }
 
-            $newSlug = $baseSlug->value() . '-' . str_pad((string)$counter, 2, '0', STR_PAD_LEFT);
+            $newSlug = $baseSlug->value() . '-' . str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
             $slug = LeagueSlug::from($newSlug);
             $counter++;
         }
@@ -706,7 +694,8 @@ final class LeagueApplicationService
     /**
      * Validate that all platform IDs exist and are active.
      *
-     * @param array<int> $platformIds
+     * @param  array<int>  $platformIds
+     *
      * @throws InvalidPlatformException
      */
     private function validatePlatformIds(array $platformIds): void
@@ -716,11 +705,11 @@ final class LeagueApplicationService
         }
 
         $validPlatforms = $this->platformRepository->findActiveByIds($platformIds);
-        $validPlatformIds = array_map(fn($platform) => $platform['id'], $validPlatforms);
+        $validPlatformIds = array_map(fn ($platform) => $platform['id'], $validPlatforms);
 
         $invalidIds = array_diff($platformIds, $validPlatformIds);
 
-        if (!empty($invalidIds)) {
+        if (! empty($invalidIds)) {
             throw InvalidPlatformException::forInvalidIds($invalidIds);
         }
     }
@@ -728,7 +717,7 @@ final class LeagueApplicationService
     /**
      * Fetch platform data for given platform IDs.
      *
-     * @param array<int> $platformIds
+     * @param  array<int>  $platformIds
      * @return array<array{id: int, name: string, slug: string}>
      */
     private function fetchPlatformData(array $platformIds): array
@@ -743,8 +732,7 @@ final class LeagueApplicationService
     /**
      * Check if any social media fields are present in the validated data.
      *
-     * @param array<string, mixed> $validatedData
-     * @return bool
+     * @param  array<string, mixed>  $validatedData
      */
     private function hasSocialMediaUpdatesInValidatedData(array $validatedData): bool
     {
@@ -759,9 +747,8 @@ final class LeagueApplicationService
     /**
      * Get driver columns for a league's platforms.
      *
-     * @param int $leagueId
-     * @param int $userId
      * @return array<int, array{field: string, label: string, type: string}>
+     *
      * @throws LeagueNotFoundException
      * @throws UnauthorizedException
      */
@@ -778,9 +765,8 @@ final class LeagueApplicationService
     /**
      * Get driver form fields for a league's platforms.
      *
-     * @param int $leagueId
-     * @param int $userId
      * @return array<int, array{field: string, label: string, type: string}>
+     *
      * @throws LeagueNotFoundException
      * @throws UnauthorizedException
      */
@@ -797,9 +783,8 @@ final class LeagueApplicationService
     /**
      * Get driver CSV headers for a league's platforms.
      *
-     * @param int $leagueId
-     * @param int $userId
      * @return array<int, array{field: string, label: string, type: string}>
+     *
      * @throws LeagueNotFoundException
      * @throws UnauthorizedException
      */
@@ -818,9 +803,7 @@ final class LeagueApplicationService
      *
      * Accepts either a FormRequest or individual parameters.
      *
-     * @param IndexLeaguesRequest|int $requestOrPage
-     * @param int|null $perPage
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
     public function getAllLeaguesForAdmin(
@@ -840,12 +823,12 @@ final class LeagueApplicationService
 
         // Fetch owner data for all leagues
         /** @var array<int, int> $ownerUserIds */
-        $ownerUserIds = array_map(fn(array $item) => $item['league']->ownerUserId(), $result['data']);
+        $ownerUserIds = array_map(fn (array $item) => $item['league']->ownerUserId(), $result['data']);
         $ownerUserIds = array_unique($ownerUserIds);
         $owners = $this->userRepository->findMultipleByIds($ownerUserIds);
 
         // Fix N+1: Batch load all Eloquent models with media BEFORE the loop
-        $leagueIds = array_map(fn(array $item) => $item['league']->id(), $result['data']);
+        $leagueIds = array_map(fn (array $item) => $item['league']->id(), $result['data']);
         $eloquentLeagues = EloquentLeague::query()
             ->whereIn('id', $leagueIds)
             ->with('media')
@@ -1086,12 +1069,12 @@ final class LeagueApplicationService
 
         // Fetch owner data for all leagues
         /** @var array<int, int> $ownerUserIds */
-        $ownerUserIds = array_map(fn(array $item) => $item['league']->ownerUserId(), $result['data']);
+        $ownerUserIds = array_map(fn (array $item) => $item['league']->ownerUserId(), $result['data']);
         $ownerUserIds = array_unique($ownerUserIds);
         $owners = $this->userRepository->findMultipleByIds($ownerUserIds);
 
         // Fix N+1: Batch load all Eloquent models with media BEFORE the loop
-        $leagueIds = array_map(fn(array $item) => $item['league']->id(), $result['data']);
+        $leagueIds = array_map(fn (array $item) => $item['league']->id(), $result['data']);
         $eloquentLeagues = EloquentLeague::query()
             ->whereIn('id', $leagueIds)
             ->with('media')
@@ -1134,7 +1117,7 @@ final class LeagueApplicationService
         $links = PaginationHelper::buildLinks($request, $result['current_page'], $result['last_page']);
 
         // Convert DTOs to arrays for response
-        $data = array_map(fn($item) => $item->toArray(), $leagueDTOs);
+        $data = array_map(fn ($item) => $item->toArray(), $leagueDTOs);
 
         return [
             'data' => $data,
@@ -1151,9 +1134,9 @@ final class LeagueApplicationService
     /**
      * Get paginated public leagues (no authentication required).
      *
-     * @param int $page Current page number
-     * @param int $perPage Number of items per page
-     * @param array<string, mixed> $filters Search and filter criteria
+     * @param  int  $page  Current page number
+     * @param  int  $perPage  Number of items per page
+     * @param  array<string, mixed>  $filters  Search and filter criteria
      * @return array{data: array<int, mixed>, meta: array<string, int>}
      */
     public function getPublicLeagues(int $page, int $perPage = 12, array $filters = []): array
@@ -1161,7 +1144,7 @@ final class LeagueApplicationService
         $result = $this->leagueRepository->getPaginatedPublic($page, $perPage, $filters);
 
         // Fix N+1: Batch load all Eloquent models with media BEFORE the loop
-        $leagueIds = array_map(fn(array $item) => $item['league']->id(), $result['data']);
+        $leagueIds = array_map(fn (array $item) => $item['league']->id(), $result['data']);
         $eloquentLeagues = EloquentLeague::query()
             ->whereIn('id', $leagueIds)
             ->with('media')
@@ -1197,7 +1180,7 @@ final class LeagueApplicationService
         );
 
         return [
-            'data' => array_map(fn($dto) => $dto->toArray(), $leagueDTOs),
+            'data' => array_map(fn ($dto) => $dto->toArray(), $leagueDTOs),
             'meta' => [
                 'total' => $result['total'],
                 'per_page' => $result['per_page'],
@@ -1211,8 +1194,7 @@ final class LeagueApplicationService
      * Get detailed league information for public viewing (no authentication required).
      * Returns null if league is not found or not public/unlisted.
      *
-     * @param string $slug The league slug
-     * @return PublicLeagueDetailData|null
+     * @param  string  $slug  The league slug
      */
     public function getPublicLeagueDetail(string $slug): ?PublicLeagueDetailData
     {
@@ -1230,7 +1212,7 @@ final class LeagueApplicationService
             $platforms = $this->fetchPlatformData($league->platformIds());
 
             // Fetch competitions with seasons (extracted to helper)
-            $competitions = $this->fetchCompetitionsWithSeasons((int)$league->id());
+            $competitions = $this->fetchCompetitionsWithSeasons((int) $league->id());
 
             // Calculate league statistics (extracted to helper)
             $stats = $this->calculateLeagueStats($competitions);
@@ -1298,9 +1280,6 @@ final class LeagueApplicationService
     /**
      * Compute logo URL from league entity.
      * Returns null if league has no logo path.
-     *
-     * @param League $league
-     * @return string|null
      */
     private function computeLogoUrl(League $league): ?string
     {
@@ -1312,9 +1291,6 @@ final class LeagueApplicationService
     /**
      * Compute header image URL from league entity.
      * Returns null if league has no header image path.
-     *
-     * @param League $league
-     * @return string|null
      */
     private function computeHeaderImageUrl(League $league): ?string
     {
@@ -1326,9 +1302,6 @@ final class LeagueApplicationService
     /**
      * Compute banner URL from league entity.
      * Returns null if league has no banner path.
-     *
-     * @param League $league
-     * @return string|null
      */
     private function computeBannerUrl(League $league): ?string
     {
@@ -1337,14 +1310,12 @@ final class LeagueApplicationService
             : null;
     }
 
-
     /**
      * Get detailed season information for public viewing by slug (no authentication required).
      * Returns null if season/league is not found or not public/unlisted.
      *
-     * @param string $leagueSlug The league slug
-     * @param string $seasonSlug The season slug
-     * @return PublicSeasonDetailData|null
+     * @param  string  $leagueSlug  The league slug
+     * @param  string  $seasonSlug  The season slug
      */
     public function getPublicSeasonDetail(string $leagueSlug, string $seasonSlug): ?PublicSeasonDetailData
     {
@@ -1602,8 +1573,6 @@ final class LeagueApplicationService
      * Fetch qualifying results for a season.
      * Returns results from qualifying sessions (is_qualifier = true).
      *
-     * @param int $seasonId
-     * @param bool $hasDivisions
      * @return array<int, mixed>
      */
     private function fetchQualifyingResults(int $seasonId, bool $hasDivisions): array
@@ -1655,7 +1624,7 @@ final class LeagueApplicationService
         foreach ($results as $result) {
             $roundKey = $result->round_number;
 
-            if (!isset($groupedResults[$roundKey])) {
+            if (! isset($groupedResults[$roundKey])) {
                 $groupedResults[$roundKey] = [
                     'round_number' => $result->round_number,
                     'round_name' => $result->round_name,
@@ -1682,8 +1651,6 @@ final class LeagueApplicationService
      * Returns results sorted by fastest lap time across all non-qualifying races.
      * Results are always returned as a flat array with division info included when divisions are enabled.
      *
-     * @param int $seasonId
-     * @param bool $hasDivisions
      * @return array<int, mixed>
      */
     private function fetchFastestLapResults(int $seasonId, bool $hasDivisions): array
@@ -1752,8 +1719,6 @@ final class LeagueApplicationService
      * Returns results sorted by race time across all non-qualifying races.
      * Results are always returned as a flat array with division info included when divisions are enabled.
      *
-     * @param int $seasonId
-     * @param bool $hasDivisions
      * @return array<int, mixed>
      */
     private function fetchRaceTimeResults(int $seasonId, bool $hasDivisions): array
@@ -1821,16 +1786,15 @@ final class LeagueApplicationService
      * Format driver name from database result.
      * Uses nickname if available, otherwise combines first/last name.
      *
-     * @param object $result Database result with first_name, last_name, nickname
-     * @return string
+     * @param  object  $result  Database result with first_name, last_name, nickname
      */
     private function formatDriverName(object $result): string
     {
-        if (!empty($result->nickname)) {
+        if (! empty($result->nickname)) {
             return $result->nickname;
         }
 
-        if (!empty($result->first_name) && !empty($result->last_name)) {
+        if (! empty($result->first_name) && ! empty($result->last_name)) {
             return "{$result->first_name} {$result->last_name}";
         }
 
@@ -1840,7 +1804,7 @@ final class LeagueApplicationService
     /**
      * Format a qualifying result.
      *
-     * @param mixed $result The qualifying result from database
+     * @param  mixed  $result  The qualifying result from database
      * @return array<string, mixed>
      */
     private function formatQualifyingResult($result): array
@@ -1858,8 +1822,8 @@ final class LeagueApplicationService
     /**
      * Format a fastest lap result.
      *
-     * @param mixed $result The fastest lap result from database
-     * @param int $position The position in the fastest lap standings
+     * @param  mixed  $result  The fastest lap result from database
+     * @param  int  $position  The position in the fastest lap standings
      * @return array<string, mixed>
      */
     private function formatFastestLapResult($result, int $position): array
@@ -1878,8 +1842,8 @@ final class LeagueApplicationService
     /**
      * Format a race time result.
      *
-     * @param mixed $result The race time result from database
-     * @param int $position The position in the race time standings
+     * @param  mixed  $result  The race time result from database
+     * @param  int  $position  The position in the race time standings
      * @return array<string, mixed>
      */
     private function formatRaceTimeResult($result, int $position): array
@@ -1900,8 +1864,8 @@ final class LeagueApplicationService
      * Takes the JSON stored results (position, race_result_id, time_ms) and enriches
      * them with driver_name, driver_number, division info, formatted time, and time_difference.
      *
-     * @param array<int, array<string, mixed>> $results The raw JSON results from Round model
-     * @param bool $hasDivisions Whether the season has divisions enabled
+     * @param  array<int, array<string, mixed>>  $results  The raw JSON results from Round model
+     * @param  bool  $hasDivisions  Whether the season has divisions enabled
      * @return array<int, array<string, mixed>> Enriched results with driver info
      */
     private function enrichCrossDivisionResults(array $results, bool $hasDivisions): array
@@ -1944,7 +1908,7 @@ final class LeagueApplicationService
             /** @var (RaceResult&object{race_result_id: int, driver_number: int|null, division_name: string|null, first_name: string, last_name: string, nickname: string|null})|null $driverData */
             $driverData = $raceResultsData->get($raceResultId);
 
-            if (!$driverData) {
+            if (! $driverData) {
                 // Skip if race result not found (shouldn't happen but be defensive)
                 continue;
             }
@@ -1986,7 +1950,7 @@ final class LeagueApplicationService
      * Format milliseconds to readable time format.
      * Converts time in milliseconds to format like "1:25.123" or "25.123" for sub-minute times.
      *
-     * @param int|null $milliseconds Time in milliseconds
+     * @param  int|null  $milliseconds  Time in milliseconds
      * @return string|null Formatted time string or null if input is null
      */
     private function formatMillisecondsToTime(?int $milliseconds): ?string
@@ -2013,7 +1977,7 @@ final class LeagueApplicationService
      * Format time difference in milliseconds to a human-readable string with '+' prefix.
      * Converts time difference to format like "+0.345" for sub-second gaps or "+1:23.456" for larger gaps.
      *
-     * @param int $milliseconds Time difference in milliseconds
+     * @param  int  $milliseconds  Time difference in milliseconds
      * @return string Formatted time difference string with '+' prefix
      */
     private function formatTimeDifference(int $milliseconds): string
@@ -2039,8 +2003,9 @@ final class LeagueApplicationService
     /**
      * Verify that a league belongs to the specified user.
      *
-     * @param League $league The league entity to check
-     * @param int $userId The user ID to verify ownership against
+     * @param  League  $league  The league entity to check
+     * @param  int  $userId  The user ID to verify ownership against
+     *
      * @throws UnauthorizedException If the user does not own the league
      */
     private function authorizeLeagueAccess(League $league, int $userId): void
@@ -2054,8 +2019,7 @@ final class LeagueApplicationService
      * Get public race results for a race (no authentication required).
      * Returns null if race not found or belongs to a private league.
      *
-     * @param int $raceId The race ID
-     * @return PublicRaceResultsData|null
+     * @param  int  $raceId  The race ID
      */
     public function getPublicRaceResults(int $raceId): ?PublicRaceResultsData
     {
@@ -2096,6 +2060,7 @@ final class LeagueApplicationService
             if ($this->raceResultsCache->has($raceId)) {
                 $this->raceResultsCache->forget($raceId);
             }
+
             return null;
         }
 
@@ -2187,7 +2152,7 @@ final class LeagueApplicationService
     /**
      * Format a single race result.
      *
-     * @param mixed $result The race result from database
+     * @param  mixed  $result  The race result from database
      * @return array<string, mixed>
      */
     private function formatRaceResult($result): array
@@ -2221,7 +2186,7 @@ final class LeagueApplicationService
      * Invalidate all race results caches for a league.
      * This is called when league visibility changes to private.
      *
-     * @param int $leagueId The league ID
+     * @param  int  $leagueId  The league ID
      */
     private function invalidateLeagueRaceResultsCache(int $leagueId): void
     {
@@ -2245,8 +2210,7 @@ final class LeagueApplicationService
      * Returns null if driver not found or belongs to a private league.
      * Results are cached for 1 hour.
      *
-     * @param int $seasonDriverId The season driver ID
-     * @return PublicDriverProfileData|null
+     * @param  int  $seasonDriverId  The season driver ID
      */
     public function getPublicDriverProfile(int $seasonDriverId): ?PublicDriverProfileData
     {
@@ -2394,7 +2358,6 @@ final class LeagueApplicationService
      * Find and validate a public league by slug.
      * Returns array with eloquent model and entity, or null if not found or private.
      *
-     * @param string $slug
      * @return array{eloquent: EloquentLeague, entity: League}|null
      */
     private function findPublicLeague(string $slug): ?array
@@ -2420,7 +2383,6 @@ final class LeagueApplicationService
     /**
      * Fetch competitions with their seasons for a league.
      *
-     * @param int $leagueId
      * @return \Illuminate\Support\Collection<int, mixed>
      */
     private function fetchCompetitionsWithSeasons(int $leagueId): \Illuminate\Support\Collection
@@ -2455,7 +2417,7 @@ final class LeagueApplicationService
     /**
      * Calculate league-wide statistics from competitions.
      *
-     * @param \Illuminate\Support\Collection<int, mixed> $competitions
+     * @param  \Illuminate\Support\Collection<int, mixed>  $competitions
      * @return array{total_competitions: int, active_seasons: int, total_drivers: int}
      */
     private function calculateLeagueStats(\Illuminate\Support\Collection $competitions): array
@@ -2475,7 +2437,7 @@ final class LeagueApplicationService
                 ->pluck('id')
                 ->toArray();
 
-            if (!empty($seasonIds)) {
+            if (! empty($seasonIds)) {
                 $totalDrivers = SeasonDriverEloquent::query()
                     ->whereIn('season_id', $seasonIds)
                     ->distinct()
@@ -2493,7 +2455,7 @@ final class LeagueApplicationService
     /**
      * Map competitions collection to PublicCompetitionDetailData DTOs.
      *
-     * @param \Illuminate\Support\Collection<int, mixed> $competitions
+     * @param  \Illuminate\Support\Collection<int, mixed>  $competitions
      * @return array<int, PublicCompetitionDetailData>
      */
     private function mapCompetitionsToDTOs(\Illuminate\Support\Collection $competitions): array

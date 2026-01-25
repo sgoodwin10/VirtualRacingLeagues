@@ -20,6 +20,6 @@ class InvalidLeagueNameException extends DomainException
 
     public static function tooLong(string $name): self
     {
-        return new self("League name is too long. Maximum length is 100 characters");
+        return new self('League name is too long. Maximum length is 100 characters');
     }
 }

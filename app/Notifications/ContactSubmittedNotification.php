@@ -62,7 +62,7 @@ final class ContactSubmittedNotification extends Notification
     {
         $webhookUrl = config('notifications.discord.contacts_webhook');
 
-        if (!$webhookUrl) {
+        if (! $webhookUrl) {
             return null;
         }
 
@@ -71,10 +71,10 @@ final class ContactSubmittedNotification extends Notification
         $message->username(config('app.name') . ' - Contact Form');
 
         $color = match ($this->contact->reason()->value) {
-            'error' => 0xe74c3c,    // Red
-            'help' => 0xf39c12,     // Orange
-            'question' => 0x3498db, // Blue
-            default => 0x95a5a6,    // Gray
+            'error' => 0xE74C3C,    // Red
+            'help' => 0xF39C12,     // Orange
+            'question' => 0x3498DB, // Blue
+            default => 0x95A5A6,    // Gray
         };
 
         $message->title("New Contact: {$this->contact->reason()->label()}")

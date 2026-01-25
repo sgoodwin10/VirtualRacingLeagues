@@ -28,7 +28,7 @@ abstract class UserControllerTestCase extends TestCase
     public function json($method, $uri, array $data = [], array $headers = [], $options = 0)
     {
         // Prepend the full URL if the URI doesn't already include a domain
-        if (!str_starts_with($uri, 'http')) {
+        if (! str_starts_with($uri, 'http')) {
             $uri = 'http://app.virtualracingleagues.localhost' . $uri;
         }
 

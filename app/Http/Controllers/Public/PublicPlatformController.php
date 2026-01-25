@@ -26,6 +26,7 @@ final class PublicPlatformController extends Controller
     public function index(): JsonResponse
     {
         $platforms = $this->platformService->getAllActivePlatforms();
+
         return ApiResponse::success($platforms);
     }
 }

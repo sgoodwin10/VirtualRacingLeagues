@@ -44,7 +44,7 @@ class LeagueDriverFactory extends Factory
      */
     public function active(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'active',
         ]);
     }
@@ -54,7 +54,7 @@ class LeagueDriverFactory extends Factory
      */
     public function inactive(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'inactive',
         ]);
     }
@@ -64,7 +64,7 @@ class LeagueDriverFactory extends Factory
      */
     public function banned(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'banned',
         ]);
     }

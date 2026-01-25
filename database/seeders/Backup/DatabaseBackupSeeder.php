@@ -39,6 +39,7 @@ class DatabaseBackupSeeder extends Seeder
         if (app()->environment('production')) {
             $this->command->error('DatabaseBackupSeeder cannot run in production environment!');
             $this->command->error('This would overwrite production data!');
+
             return;
         }
 

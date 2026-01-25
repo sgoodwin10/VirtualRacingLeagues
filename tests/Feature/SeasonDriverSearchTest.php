@@ -23,8 +23,11 @@ class SeasonDriverSearchTest extends TestCase
     use RefreshDatabase;
 
     private UserEloquent $user;
+
     private League $league;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
 
     /**
@@ -33,6 +36,7 @@ class SeasonDriverSearchTest extends TestCase
     protected function getAppUrl(string $path): string
     {
         $domain = config('app.vite_app_domain', 'app.virtualracingleagues.localhost');
+
         return "http://{$domain}{$path}";
     }
 
@@ -343,7 +347,7 @@ class SeasonDriverSearchTest extends TestCase
     /**
      * Helper method to create a driver and add them to the season.
      *
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed>  $attributes
      */
     private function createDriverInSeason(array $attributes): LeagueDriverEloquent
     {

@@ -46,14 +46,14 @@ final class EloquentRoundTiebreakerRuleRepository implements RoundTiebreakerRule
             ->orderBy('default_order')
             ->get();
 
-        return $models->map(fn($model) => $this->toDomainEntity($model))->all();
+        return $models->map(fn ($model) => $this->toDomainEntity($model))->all();
     }
 
     public function getAll(): array
     {
         $models = RoundTiebreakerRuleEloquent::orderBy('default_order')->get();
 
-        return $models->map(fn($model) => $this->toDomainEntity($model))->all();
+        return $models->map(fn ($model) => $this->toDomainEntity($model))->all();
     }
 
     public function save(RoundTiebreakerRule $rule): void

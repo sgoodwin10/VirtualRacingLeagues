@@ -15,10 +15,10 @@ use App\Helpers\ApiResponse;
 use App\Helpers\FilterBuilder;
 use App\Helpers\PaginationHelper;
 use App\Http\Controllers\Controller;
-use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
 use App\Http\Requests\Admin\CreateUserRequest;
 use App\Http\Requests\Admin\IndexUsersRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -53,7 +53,7 @@ final class UserController extends Controller
         $links = PaginationHelper::buildLinks($request, $result['current_page'], $result['last_page']);
 
         return ApiResponse::paginated(
-            data: array_map(fn($item) => $item->toArray(), $result['data']),
+            data: array_map(fn ($item) => $item->toArray(), $result['data']),
             meta: [
                 'total' => $result['total'],
                 'per_page' => $result['per_page'],
@@ -71,6 +71,7 @@ final class UserController extends Controller
     {
         try {
             $result = $this->userService->getUserWithActivities($id);
+
             return ApiResponse::success($result);
         } catch (UserNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -181,12 +182,12 @@ final class UserController extends Controller
             /** @var AdminEloquent|null $admin */
             $admin = Auth::guard('admin')->user();
 
-            if (!$admin) {
+            if (! $admin) {
                 return ApiResponse::error('Unauthorized', null, 401);
             }
 
             // Check role authorization - only super_admin and admin can impersonate
-            if (!in_array($admin->role, ['super_admin', 'admin'], true)) {
+            if (! in_array($admin->role, ['super_admin', 'admin'], true)) {
                 return ApiResponse::error('Insufficient permissions to impersonate users', null, 403);
             }
 

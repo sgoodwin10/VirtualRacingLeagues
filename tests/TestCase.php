@@ -33,6 +33,7 @@ abstract class TestCase extends BaseTestCase
     protected function onAppDomain(): static
     {
         $this->withServerVariables(['HTTP_HOST' => 'app.virtualracingleagues.localhost']);
+
         return $this;
     }
 
@@ -42,6 +43,7 @@ abstract class TestCase extends BaseTestCase
     protected function onAdminDomain(): static
     {
         $this->withServerVariables(['HTTP_HOST' => 'admin.virtualracingleagues.localhost']);
+
         return $this;
     }
 
@@ -51,6 +53,7 @@ abstract class TestCase extends BaseTestCase
     protected function onMainDomain(): static
     {
         $this->withServerVariables(['HTTP_HOST' => 'virtualracingleagues.localhost']);
+
         return $this;
     }
 

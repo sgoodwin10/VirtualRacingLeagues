@@ -50,7 +50,7 @@ final class LeagueFactory extends Factory
      */
     public function withoutContactInfo(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'contact_email' => null,
             'organizer_name' => null,
             'timezone' => null,
@@ -62,7 +62,7 @@ final class LeagueFactory extends Factory
      */
     public function minimal(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'tagline' => null,
             'description' => null,
             'header_image_path' => null,

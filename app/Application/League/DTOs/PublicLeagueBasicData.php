@@ -39,26 +39,13 @@ use Spatie\LaravelData\Data;
 final class PublicLeagueBasicData extends Data
 {
     /**
-     * @param int $id
-     * @param string $name
-     * @param string $slug
-     * @param string|null $tagline
-     * @param string|null $description
-     * @param string|null $logo_url [DEPRECATED] Backward compatibility (removed after migration)
-     * @param string|null $header_image_url [DEPRECATED] Backward compatibility (removed after migration)
-     * @param string|null $banner_url [DEPRECATED] Backward compatibility (removed after migration)
-     * @param MediaData|null $logo [RECOMMENDED] New format with responsive conversions
-     * @param MediaData|null $header_image [RECOMMENDED] New format with responsive conversions
-     * @param MediaData|null $banner [RECOMMENDED] New format with responsive conversions
-     * @param array<int, array{id: int, name: string, slug: string}> $platforms
-     * @param string $visibility
-     * @param string|null $discord_url
-     * @param string|null $website_url
-     * @param string|null $twitter_handle
-     * @param string|null $instagram_handle
-     * @param string|null $youtube_url
-     * @param string|null $twitch_url
-     * @param string $created_at
+     * @param  string|null  $logo_url  [DEPRECATED] Backward compatibility (removed after migration)
+     * @param  string|null  $header_image_url  [DEPRECATED] Backward compatibility (removed after migration)
+     * @param  string|null  $banner_url  [DEPRECATED] Backward compatibility (removed after migration)
+     * @param  MediaData|null  $logo  [RECOMMENDED] New format with responsive conversions
+     * @param  MediaData|null  $header_image  [RECOMMENDED] New format with responsive conversions
+     * @param  MediaData|null  $banner  [RECOMMENDED] New format with responsive conversions
+     * @param  array<int, array{id: int, name: string, slug: string}>  $platforms
      */
     public function __construct(
         public readonly int $id,

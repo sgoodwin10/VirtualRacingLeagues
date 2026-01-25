@@ -11,7 +11,6 @@ use App\Domain\Contact\ValueObjects\ContactSource;
 use App\Domain\Contact\ValueObjects\ContactStatus;
 use App\Domain\Shared\ValueObjects\EmailAddress;
 use App\Infrastructure\Persistence\Eloquent\Models\ContactEloquent;
-use DateTimeImmutable;
 
 /**
  * Eloquent implementation of Contact Repository.
@@ -49,7 +48,7 @@ final class EloquentContactRepository implements ContactRepositoryInterface
     }
 
     /**
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<Contact>, total: int, page: int, per_page: int, last_page: int}
      */
     public function findAll(array $filters = [], int $page = 1, int $perPage = 20): array
@@ -72,7 +71,7 @@ final class EloquentContactRepository implements ContactRepositoryInterface
         }
 
         // Search by name, email, or message
-        if (isset($filters['search']) && !empty($filters['search'])) {
+        if (isset($filters['search']) && ! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search): void {
                 $q->where('name', 'like', "%{$search}%")
@@ -94,7 +93,7 @@ final class EloquentContactRepository implements ContactRepositoryInterface
             ->get();
 
         $contacts = $eloquentContacts->map(
-            fn(ContactEloquent $eloquent) => $this->toDomainEntity($eloquent)
+            fn (ContactEloquent $eloquent) => $this->toDomainEntity($eloquent)
         )->all();
 
         return [

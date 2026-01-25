@@ -9,11 +9,12 @@ use Exception;
 class FileUploadException extends Exception
 {
     /**
-     * @param array<string> $allowedTypes
+     * @param  array<string>  $allowedTypes
      */
     public static function invalidFileType(string $fileType, array $allowedTypes): self
     {
         $allowed = implode(', ', $allowedTypes);
+
         return new self("Invalid file type '{$fileType}'. Allowed types: {$allowed}");
     }
 
@@ -21,6 +22,7 @@ class FileUploadException extends Exception
     {
         $fileSizeMB = round($fileSize / 1024 / 1024, 2);
         $maxSizeMB = round($maxSize / 1024 / 1024, 2);
+
         return new self("File size {$fileSizeMB}MB exceeds maximum allowed size of {$maxSizeMB}MB");
     }
 

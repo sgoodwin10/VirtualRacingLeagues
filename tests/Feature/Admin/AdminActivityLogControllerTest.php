@@ -15,7 +15,9 @@ class AdminActivityLogControllerTest extends TestCase
     use RefreshDatabase;
 
     private Admin $superAdmin;
+
     private Admin $regularAdmin;
+
     private ActivityLogService $activityLogService;
 
     protected function setUp(): void

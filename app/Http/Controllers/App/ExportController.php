@@ -28,6 +28,7 @@ final class ExportController extends Controller
     public function exportRaceResults(int $raceId): StreamedResponse
     {
         $data = $this->csvExportService->generateRaceResultsCsv($raceId);
+
         return $this->streamCsv($data['headers'], $data['rows'], $data['filename']);
     }
 
@@ -37,21 +38,23 @@ final class ExportController extends Controller
     public function exportRoundStandings(int $roundId): StreamedResponse
     {
         $data = $this->csvExportService->generateRoundStandingsCsv($roundId);
+
         return $this->streamCsv($data['headers'], $data['rows'], $data['filename']);
     }
 
     /**
      * Export cross-division results as CSV.
      *
-     * @param string $type One of: 'fastest-laps', 'race-times', 'qualifying-times'
+     * @param  string  $type  One of: 'fastest-laps', 'race-times', 'qualifying-times'
      */
     public function exportCrossDivisionResults(int $roundId, string $type): StreamedResponse|JsonResponse
     {
-        if (!in_array($type, ['fastest-laps', 'race-times', 'qualifying-times'])) {
+        if (! in_array($type, ['fastest-laps', 'race-times', 'qualifying-times'])) {
             return ApiResponse::error('Invalid type. Must be one of: fastest-laps, race-times, qualifying-times', null, 400);
         }
 
         $data = $this->csvExportService->generateCrossDivisionCsv($roundId, $type);
+
         return $this->streamCsv($data['headers'], $data['rows'], $data['filename']);
     }
 
@@ -61,14 +64,15 @@ final class ExportController extends Controller
     public function exportSeasonStandings(int $seasonId, ?int $divisionId = null): StreamedResponse
     {
         $data = $this->csvExportService->generateSeasonStandingsCsv($seasonId, $divisionId);
+
         return $this->streamCsv($data['headers'], $data['rows'], $data['filename']);
     }
 
     /**
      * Stream CSV data to the client.
      *
-     * @param array<string> $headers
-     * @param array<array<mixed>> $rows
+     * @param  array<string>  $headers
+     * @param  array<array<mixed>>  $rows
      */
     private function streamCsv(array $headers, array $rows, string $filename): StreamedResponse
     {

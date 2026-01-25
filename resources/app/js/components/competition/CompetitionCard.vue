@@ -2,7 +2,7 @@
 import { ref, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { useConfirmDialog } from '@app/composables/useConfirmDialog';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
 import type { Competition, CompetitionSeason } from '@app/types/competition';
 import type { Season } from '@app/types/season';
 import type { MenuItem } from 'primevue/menuitem';
@@ -15,6 +15,7 @@ import { Button, FooterAddButton } from '@app/components/common/buttons';
 import InfoItem from '@app/components/common/InfoItem.vue';
 import SeasonFormSplitModal from '@app/components/season/modals/SeasonFormSplitModal.vue';
 import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
+import { VrlConfirmDialog } from '@app/components/common/dialogs';
 import { useCompetitionStore } from '@app/stores/competitionStore';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import {
@@ -25,6 +26,9 @@ import {
   PhTrophy,
   PhPlus,
   PhImage,
+  PhWarning,
+  PhArchive,
+  PhInbox,
 } from '@phosphor-icons/vue';
 
 interface Props {
@@ -43,7 +47,14 @@ const emit = defineEmits<Emits>();
 
 const router = useRouter();
 const toast = useToast();
-const { showConfirmation } = useConfirmDialog();
+const {
+  isVisible: confirmVisible,
+  options: confirmOptions,
+  isLoading: confirmLoading,
+  showConfirmation,
+  handleAccept: handleConfirmAccept,
+  handleReject: handleConfirmReject,
+} = useVrlConfirm();
 const competitionStore = useCompetitionStore();
 const seasonStore = useSeasonStore();
 
@@ -235,9 +246,14 @@ function confirmArchiveSeason(season: CompetitionSeason): void {
   showConfirmation({
     message: `Are you sure you want to archive "${season.name}"? All associated rounds and races will also be archived.`,
     header: 'Archive Season',
-    icon: 'pi pi-box',
-    acceptClass: 'p-button-warning',
-    onAccept: () => archiveSeason(season.id),
+    icon: PhArchive,
+    iconColor: 'var(--orange)',
+    iconBgColor: 'var(--orange-dim)',
+    acceptLabel: 'Archive Season',
+    acceptVariant: 'warning',
+    onAccept: async () => {
+      await archiveSeason(season.id);
+    },
   });
 }
 
@@ -268,9 +284,14 @@ function confirmUnarchiveSeason(season: CompetitionSeason): void {
   showConfirmation({
     message: `Are you sure you want to unarchive "${season.name}"?`,
     header: 'Unarchive Season',
-    icon: 'pi pi-inbox',
-    acceptClass: 'p-button-success',
-    onAccept: () => unarchiveSeason(season.id),
+    icon: PhInbox,
+    iconColor: 'var(--green)',
+    iconBgColor: 'var(--green-dim)',
+    acceptLabel: 'Unarchive Season',
+    acceptVariant: 'success',
+    onAccept: async () => {
+      await unarchiveSeason(season.id);
+    },
   });
 }
 
@@ -301,9 +322,14 @@ function confirmDeleteSeason(season: CompetitionSeason): void {
   showConfirmation({
     message: `Are you sure you want to delete "${season.name}"? This action cannot be undone and will permanently remove all associated rounds, races, and results.`,
     header: 'Delete Season',
-    icon: 'pi pi-exclamation-triangle',
-    acceptClass: 'p-button-danger',
-    onAccept: () => deleteSeason(season.id),
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
+    acceptLabel: 'Delete Season',
+    acceptVariant: 'danger',
+    onAccept: async () => {
+      await deleteSeason(season.id);
+    },
   });
 }
 
@@ -339,9 +365,14 @@ function confirmDelete(): void {
   showConfirmation({
     message: `Are you sure you want to delete "${props.competition.name}"? \nThis action cannot be undone and will remove all associated seasons and data.`,
     header: 'Delete Competition',
-    icon: 'pi pi-exclamation-triangle',
-    acceptClass: 'p-button-danger',
-    onAccept: () => deleteCompetition(),
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
+    acceptLabel: 'Delete Competition',
+    acceptVariant: 'danger',
+    onAccept: async () => {
+      await deleteCompetition();
+    },
   });
 }
 
@@ -565,6 +596,15 @@ onUnmounted(() => {
       :is-edit-mode="!!editingSeasonId"
       @season-saved="handleSeasonSaved"
       @hide="handleDrawerHide"
+    />
+
+    <!-- Confirmation Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="confirmVisible"
+      v-bind="confirmOptions"
+      :loading="confirmLoading"
+      @accept="handleConfirmAccept"
+      @reject="handleConfirmReject"
     />
   </div>
 </template>

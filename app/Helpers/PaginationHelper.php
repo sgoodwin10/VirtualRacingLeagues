@@ -14,7 +14,7 @@ class PaginationHelper
      * @param  Request  $request  The current HTTP request
      * @param  int  $currentPage  Current page number
      * @param  int  $lastPage  Last page number
-     * @return array{first: string, last: string, prev: string|null, next: string|null}  Pagination links
+     * @return array{first: string, last: string, prev: string|null, next: string|null} Pagination links
      */
     public static function buildLinks(Request $request, int $currentPage, int $lastPage): array
     {

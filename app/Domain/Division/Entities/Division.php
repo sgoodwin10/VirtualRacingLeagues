@@ -179,12 +179,12 @@ final class Division
     ): void {
         $changes = [];
 
-        if (!$name->equals($this->name)) {
+        if (! $name->equals($this->name)) {
             $this->name = $name;
             $changes['name'] = $name->value();
         }
 
-        if (!$description->equals($this->description)) {
+        if (! $description->equals($this->description)) {
             $this->description = $description;
             $changes['description'] = $description->value();
         }
@@ -194,7 +194,7 @@ final class Division
             $changes['logo_url'] = $logoUrl;
         }
 
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             if ($this->id === null) {
                 throw new \LogicException('Cannot update details on unpersisted division');
             }
@@ -350,6 +350,6 @@ final class Division
      */
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 }

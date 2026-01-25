@@ -25,9 +25,9 @@ final class LogAdminActivity
     /**
      * Handle the event.
      *
-     * @param object $event One of: AdminCreated, AdminAuthenticated, AdminPasswordChanged,
-     *                     AdminProfileUpdated, AdminActivated, AdminDeactivated,
-     *                     AdminDeleted, AdminRestored, or AdminRoleChanged
+     * @param  object  $event  One of: AdminCreated, AdminAuthenticated, AdminPasswordChanged,
+     *                         AdminProfileUpdated, AdminActivated, AdminDeactivated,
+     *                         AdminDeleted, AdminRestored, or AdminRoleChanged
      */
     public function handle(object $event): void
     {
@@ -280,6 +280,7 @@ final class LogAdminActivity
     {
         /** @var AdminEloquent|null $admin */
         $admin = auth('admin')->user();
+
         return $admin;
     }
 
@@ -290,6 +291,7 @@ final class LogAdminActivity
     {
         /** @var AdminEloquent|null $admin */
         $admin = auth('admin')->user();
+
         return $admin ? "{$admin->first_name} {$admin->last_name}" : 'System';
     }
 }

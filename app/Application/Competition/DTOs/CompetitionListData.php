@@ -36,8 +36,8 @@ class CompetitionListData extends Data
     /**
      * Create from domain entity with platform data and logo URL.
      *
-     * @param array{id: int, name: string, slug: string} $platformData
-     * @param array{id: int, name: string, slug: string}|null $leagueData
+     * @param  array{id: int, name: string, slug: string}  $platformData
+     * @param  array{id: int, name: string, slug: string}|null  $leagueData
      */
     public static function fromEntity(
         Competition $competition,

@@ -19,6 +19,7 @@ final class InvalidTeamNameException extends DomainException
     public static function tooLong(string $name): self
     {
         $length = mb_strlen($name);
+
         return new self("Team name is too long ({$length} characters). Maximum 60 characters allowed.");
     }
 

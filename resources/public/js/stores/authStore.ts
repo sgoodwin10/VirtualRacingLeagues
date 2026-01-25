@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 import type { User } from '@public/types/user';
 import type { LoginCredentials, RegisterData } from '@public/types/auth';
 import { authService } from '@public/services/authService';
+import { getAppSubdomainUrl } from '@public/utils/subdomain';
 
 export const useAuthStore = defineStore(
   'auth',
@@ -19,14 +20,6 @@ export const useAuthStore = defineStore(
       if (!user.value) return 'Guest';
       return `${user.value.first_name} ${user.value.last_name}`.trim() || 'Guest';
     });
-
-    // Helper to get app subdomain URL
-    const getAppSubdomainUrl = (): string => {
-      // VITE_APP_DOMAIN already includes 'app.' prefix
-      // Use dynamic protocol detection to support both HTTP and HTTPS
-      const protocol = window.location.protocol;
-      return `${protocol}//${import.meta.env.VITE_APP_DOMAIN}`;
-    };
 
     // Actions
     async function register(data: RegisterData): Promise<string> {

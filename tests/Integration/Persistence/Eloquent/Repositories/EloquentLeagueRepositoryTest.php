@@ -23,7 +23,9 @@ class EloquentLeagueRepositoryTest extends TestCase
     use RefreshDatabase;
 
     private EloquentLeagueRepository $repository;
+
     private UserEloquent $user;
+
     private UserEloquent $otherUser;
 
     protected function setUp(): void

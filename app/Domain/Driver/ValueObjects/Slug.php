@@ -26,7 +26,7 @@ final readonly class Slug
      * Generate a slug from driver name components.
      * Priority: "firstname-lastname" > "nickname" > "firstname" or "lastname" > "driver-{platformId}" > random
      *
-     * @param string|null $platformIdFallback Platform ID to use if no name components exist
+     * @param  string|null  $platformIdFallback  Platform ID to use if no name components exist
      */
     public static function generate(
         ?string $firstName,
@@ -98,7 +98,7 @@ final readonly class Slug
         }
 
         // Validate slug format: lowercase alphanumeric and hyphens only
-        if (!preg_match('/^[\p{Ll}\p{N}\-]+$/u', $this->value)) {
+        if (! preg_match('/^[\p{Ll}\p{N}\-]+$/u', $this->value)) {
             throw new InvalidArgumentException('Slug must contain only lowercase letters, numbers, and hyphens');
         }
 

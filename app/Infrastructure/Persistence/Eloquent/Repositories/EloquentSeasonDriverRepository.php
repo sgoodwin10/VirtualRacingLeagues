@@ -8,9 +8,9 @@ use App\Domain\Competition\Entities\SeasonDriver;
 use App\Domain\Competition\Exceptions\SeasonDriverNotFoundException;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\ValueObjects\SeasonDriverStatus;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Driver;
+use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use DateTimeImmutable;
 
 /**
@@ -37,7 +37,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     {
         $model = SeasonDriverEloquent::with(['leagueDriver.driver', 'team', 'division'])->find($id);
 
-        if (!$model) {
+        if (! $model) {
             throw SeasonDriverNotFoundException::withId($id);
         }
 
@@ -50,7 +50,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
             ->where('season_id', $seasonId)
             ->first();
 
-        if (!$model) {
+        if (! $model) {
             throw SeasonDriverNotFoundException::withLeagueDriverAndSeason($leagueDriverId, $seasonId);
         }
 
@@ -72,12 +72,12 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
         return SeasonDriverEloquent::where('season_id', $seasonId)
             ->orderBy('added_at', 'desc')
             ->get()
-            ->map(fn(SeasonDriverEloquent $model) => $this->mapToEntity($model))
+            ->map(fn (SeasonDriverEloquent $model) => $this->mapToEntity($model))
             ->all();
     }
 
     /**
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array<SeasonDriver>
      */
     public function findBySeasonWithFilters(int $seasonId, array $filters = []): array
@@ -95,7 +95,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
         $query->orderBy($orderBy, $orderDir);
 
         return $query->get()
-            ->map(fn(SeasonDriverEloquent $model) => $this->mapToEntity($model))
+            ->map(fn (SeasonDriverEloquent $model) => $this->mapToEntity($model))
             ->all();
     }
 
@@ -122,7 +122,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     }
 
     /**
-     * @param int[] $leagueDriverIds
+     * @param  int[]  $leagueDriverIds
      */
     public function bulkAdd(int $seasonId, array $leagueDriverIds, string $status = 'active'): int
     {
@@ -157,7 +157,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     /**
      * Get paginated season drivers with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<SeasonDriver>, total: int, per_page: int, current_page: int}
      */
     public function findBySeasonPaginated(int $seasonId, int $page, int $perPage, array $filters = []): array
@@ -171,7 +171,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
 
         return [
             'data' => $paginator->items() ? array_map(
-                fn(SeasonDriverEloquent $model) => $this->mapToEntity($model),
+                fn (SeasonDriverEloquent $model) => $this->mapToEntity($model),
                 $paginator->items()
             ) : [],
             'total' => $paginator->total(),
@@ -183,8 +183,8 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     /**
      * Apply filters to the query.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<SeasonDriverEloquent> $query
-     * @param array<string, mixed> $filters
+     * @param  \Illuminate\Database\Eloquent\Builder<SeasonDriverEloquent>  $query
+     * @param  array<string, mixed>  $filters
      */
     private function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
@@ -233,7 +233,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
 
         // Handle special cases for ordering
         if ($orderBy === 'driver_name') {
-            $nameExpression = "COALESCE(drivers.nickname, " .
+            $nameExpression = 'COALESCE(drivers.nickname, ' .
                 "CONCAT(drivers.first_name, ' ', drivers.last_name), " .
                 "drivers.first_name, drivers.last_name, 'Unknown')";
 
@@ -257,19 +257,19 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
         } elseif ($orderBy === 'driver_number') {
             // Sort by driver number (with NULL values last)
             $query->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
-                ->orderByRaw("league_drivers.driver_number IS NULL")
+                ->orderByRaw('league_drivers.driver_number IS NULL')
                 ->orderBy('league_drivers.driver_number', $orderDirection)
                 ->select('season_drivers.*');
         } elseif ($orderBy === 'team_name') {
             // Sort by team name (with NULL values last)
             $query->leftJoin('teams', 'season_drivers.team_id', '=', 'teams.id')
-                ->orderByRaw("teams.name IS NULL")
+                ->orderByRaw('teams.name IS NULL')
                 ->orderBy('teams.name', $orderDirection)
                 ->select('season_drivers.*');
         } elseif ($orderBy === 'division_name') {
             // Sort by division name (with NULL values last)
             $query->leftJoin('divisions', 'season_drivers.division_id', '=', 'divisions.id')
-                ->orderByRaw("divisions.name IS NULL")
+                ->orderByRaw('divisions.name IS NULL')
                 ->orderBy('divisions.name', $orderDirection)
                 ->select('season_drivers.*');
         } else {
@@ -331,7 +331,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     {
         $model = SeasonDriverEloquent::with(['leagueDriver.driver', 'team', 'division'])->find($seasonDriverId);
 
-        if (!$model) {
+        if (! $model) {
             throw SeasonDriverNotFoundException::withId($seasonDriverId);
         }
 
@@ -390,7 +390,7 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
      * Batch fetch team IDs for drivers in a season.
      * Returns a map of driver_id => team_id|null.
      *
-     * @param array<int> $driverIds List of driver IDs (from league_drivers table)
+     * @param  array<int>  $driverIds  List of driver IDs (from league_drivers table)
      * @return array<int, int|null> Map of driver ID => team ID (null if not on a team)
      */
     public function findTeamIdsByDriverIds(int $seasonId, array $driverIds): array

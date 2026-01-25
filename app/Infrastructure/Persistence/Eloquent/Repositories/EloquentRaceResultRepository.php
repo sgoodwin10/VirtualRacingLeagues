@@ -46,7 +46,7 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
     }
 
     /**
-     * @param RaceResultEntity[] $results
+     * @param  RaceResultEntity[]  $results
      */
     public function saveMany(array $results): void
     {
@@ -68,7 +68,7 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
             }
 
             // Batch insert new results
-            if (!empty($newResults)) {
+            if (! empty($newResults)) {
                 $insertData = [];
                 $raceDriverPairs = []; // Track race_id/driver_id pairs for batch fetch
 
@@ -106,7 +106,7 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
                 foreach ($raceDriverPairs as $pair) {
                     $query->orWhere(function ($q) use ($pair) {
                         $q->where('race_id', $pair['race_id'])
-                          ->where('driver_id', $pair['driver_id']);
+                            ->where('driver_id', $pair['driver_id']);
                     });
                 }
 
@@ -139,6 +139,7 @@ final class EloquentRaceResultRepository implements RaceResultRepositoryInterfac
     public function findById(int $id): ?RaceResultEntity
     {
         $model = RaceResult::find($id);
+
         return $model ? $this->toEntity($model) : null;
     }
 

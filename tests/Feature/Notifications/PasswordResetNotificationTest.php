@@ -26,7 +26,8 @@ class PasswordResetNotificationTest extends TestCase
         $notification = new PasswordResetNotification($token);
 
         // Create a mock notifiable object
-        $notifiable = new class {
+        $notifiable = new class
+        {
             public string $email = 'test@example.com';
         };
 
@@ -58,7 +59,8 @@ class PasswordResetNotificationTest extends TestCase
         $notification = new PasswordResetNotification('token123');
 
         // Test with an email that needs URL encoding
-        $notifiable = new class {
+        $notifiable = new class
+        {
             public string $email = 'user+test@example.com';
         };
 
@@ -82,7 +84,8 @@ class PasswordResetNotificationTest extends TestCase
     {
         $notification = new PasswordResetNotification('any-token');
 
-        $notifiable = new class {
+        $notifiable = new class
+        {
             public string $email = 'test@example.com';
         };
 
@@ -106,7 +109,8 @@ class PasswordResetNotificationTest extends TestCase
     {
         $notification = new PasswordResetNotification('test-token');
 
-        $notifiable = new class {
+        $notifiable = new class
+        {
             public string $email = 'test@example.com';
         };
 
@@ -126,8 +130,8 @@ class PasswordResetNotificationTest extends TestCase
         $content = implode(' ', $allLines);
 
         // Assert the notification contains appropriate messaging
-        $this->assertStringContainsString('password reset request', $content);
+        $this->assertStringContainsString('request to reset the password', $content);
         $this->assertStringContainsString('expire', $content);
-        $this->assertStringContainsString('If you did not request', $content);
+        $this->assertStringContainsString("If you didn't request", $content);
     }
 }

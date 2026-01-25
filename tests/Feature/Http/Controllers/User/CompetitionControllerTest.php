@@ -17,8 +17,11 @@ class CompetitionControllerTest extends UserControllerTestCase
     use RefreshDatabase;
 
     private User $user;
+
     private User $otherUser;
+
     private League $league;
+
     private Platform $platform;
 
     protected function setUp(): void
@@ -524,6 +527,155 @@ class CompetitionControllerTest extends UserControllerTestCase
         $this->assertDatabaseMissing('rounds', ['id' => $round1->id]);
         $this->assertDatabaseMissing('rounds', ['id' => $round2->id]);
         $this->assertDatabaseMissing('rounds', ['id' => $round3->id]);
+    }
+
+    public function test_deleting_competition_cascades_to_all_related_data(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create competition with logo
+        $logo = UploadedFile::fake()->image('competition-logo.png', 500, 500);
+        $createResponse = $this->postJson("/api/leagues/{$this->league->id}/competitions", [
+            'name' => 'Test Competition',
+            'platform_id' => $this->platform->id,
+            'logo' => $logo,
+        ]);
+
+        $createResponse->assertStatus(201);
+        $competition = Competition::where('name', 'Test Competition')->first();
+        $logoPath = $competition->logo_path;
+
+        // Create season
+        $season = \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent::factory()->create([
+            'competition_id' => $competition->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Create drivers
+        $driver1 = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+        $driver2 = \App\Infrastructure\Persistence\Eloquent\Models\Driver::factory()->create();
+
+        $leagueDriver1 = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+            'league_id' => $this->league->id,
+            'driver_id' => $driver1->id,
+            'status' => 'active',
+        ]);
+
+        $leagueDriver2 = \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::create([
+            'league_id' => $this->league->id,
+            'driver_id' => $driver2->id,
+            'status' => 'active',
+        ]);
+
+        // Create season drivers
+        $seasonDriver1 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+            'season_id' => $season->id,
+            'league_driver_id' => $leagueDriver1->id,
+            'status' => 'active',
+        ]);
+
+        $seasonDriver2 = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::create([
+            'season_id' => $season->id,
+            'league_driver_id' => $leagueDriver2->id,
+            'status' => 'active',
+        ]);
+
+        // Create round
+        $platformTrack = \App\Infrastructure\Persistence\Eloquent\Models\PlatformTrack::factory()->create([
+            'platform_id' => $this->platform->id,
+        ]);
+
+        $round = \App\Infrastructure\Persistence\Eloquent\Models\Round::factory()->create([
+            'season_id' => $season->id,
+            'platform_track_id' => $platformTrack->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Create race
+        $race = \App\Infrastructure\Persistence\Eloquent\Models\Race::factory()->create([
+            'round_id' => $round->id,
+        ]);
+
+        // Create race results
+        $raceResult1 = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $race->id,
+            'driver_id' => $seasonDriver1->id,
+            'position' => 1,
+            'race_points' => 25,
+            'status' => 'confirmed',
+        ]);
+
+        $raceResult2 = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::create([
+            'race_id' => $race->id,
+            'driver_id' => $seasonDriver2->id,
+            'position' => 2,
+            'race_points' => 18,
+            'status' => 'confirmed',
+        ]);
+
+        // Verify all data exists before deletion
+        $this->assertDatabaseHas('competitions', ['id' => $competition->id]);
+        $this->assertDatabaseHas('seasons', ['id' => $season->id]);
+        $this->assertDatabaseHas('season_drivers', ['id' => $seasonDriver1->id]);
+        $this->assertDatabaseHas('season_drivers', ['id' => $seasonDriver2->id]);
+        $this->assertDatabaseHas('rounds', ['id' => $round->id]);
+        $this->assertDatabaseHas('races', ['id' => $race->id]);
+        $this->assertDatabaseHas('race_results', ['id' => $raceResult1->id]);
+        $this->assertDatabaseHas('race_results', ['id' => $raceResult2->id]);
+        Storage::disk('public')->assertExists($logoPath);
+
+        // Delete competition
+        $response = $this->deleteJson("/api/competitions/{$competition->id}");
+
+        $response->assertStatus(204);
+
+        // Assert ALL related data is deleted
+        $this->assertDatabaseMissing('competitions', ['id' => $competition->id]);
+        $this->assertDatabaseMissing('seasons', ['id' => $season->id]);
+        $this->assertDatabaseMissing('season_drivers', ['id' => $seasonDriver1->id]);
+        $this->assertDatabaseMissing('season_drivers', ['id' => $seasonDriver2->id]);
+        $this->assertDatabaseMissing('rounds', ['id' => $round->id]);
+        $this->assertDatabaseMissing('races', ['id' => $race->id]);
+        $this->assertDatabaseMissing('race_results', ['id' => $raceResult1->id]);
+        $this->assertDatabaseMissing('race_results', ['id' => $raceResult2->id]);
+
+        // Assert logo file is deleted
+        Storage::disk('public')->assertMissing($logoPath);
+
+        // Assert league drivers still exist (they should NOT be deleted)
+        $this->assertDatabaseHas('league_drivers', ['id' => $leagueDriver1->id]);
+        $this->assertDatabaseHas('league_drivers', ['id' => $leagueDriver2->id]);
+    }
+
+    public function test_deleting_competition_with_logo_removes_media_files(): void
+    {
+        $this->actingAs($this->user, 'web');
+
+        // Create competition with logo
+        $logo = UploadedFile::fake()->image('test-logo.png', 500, 500);
+        $competition = Competition::factory()->create([
+            'league_id' => $this->league->id,
+            'platform_id' => $this->platform->id,
+            'created_by_user_id' => $this->user->id,
+        ]);
+
+        // Upload logo
+        $this->putJson("/api/competitions/{$competition->id}", [
+            'logo' => $logo,
+        ]);
+
+        $competition->refresh();
+        $logoPath = $competition->logo_path;
+        $this->assertNotNull($logoPath);
+        Storage::disk('public')->assertExists($logoPath);
+
+        // Delete competition
+        $response = $this->deleteJson("/api/competitions/{$competition->id}");
+
+        $response->assertStatus(204);
+
+        // Assert logo is deleted
+        Storage::disk('public')->assertMissing($logoPath);
     }
 
     public function test_user_can_archive_competition(): void

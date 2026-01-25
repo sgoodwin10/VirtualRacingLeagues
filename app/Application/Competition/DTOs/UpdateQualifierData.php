@@ -63,7 +63,7 @@ final class UpdateQualifierData extends Data
     /**
      * Normalize empty strings to null for nullable fields and validate cross-field rules.
      *
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     public static function prepareForPipeline(array $payload): array

@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useTeamStore } from '@app/stores/teamStore';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
+import VrlConfirmDialog from '@app/components/common/dialogs/VrlConfirmDialog.vue';
 import type { Team } from '@app/types/team';
 
 import Column from 'primevue/column';
 import { Button, FooterAddButton } from '@app/components/common/buttons';
 import Message from 'primevue/message';
-import { PhPencil, PhTrash, PhUsersThree } from '@phosphor-icons/vue';
+import { PhPencil, PhTrash, PhUsersThree, PhWarning } from '@phosphor-icons/vue';
 
 import { TechDataTable, TeamCell } from '@app/components/common/tables';
 import TeamFormModal from './TeamFormModal.vue';
@@ -25,10 +26,19 @@ const props = withDefaults(defineProps<Props>(), {
   isSeasonCompleted: false,
 });
 
-const confirm = useConfirm();
 const toast = useToast();
 const teamStore = useTeamStore();
 const seasonDriverStore = useSeasonDriverStore();
+
+// VRL Confirmation dialog
+const {
+  isVisible: isDeleteTeamVisible,
+  options: deleteTeamOptions,
+  isLoading: isDeleteTeamLoading,
+  showConfirmation: showDeleteTeamConfirmation,
+  handleAccept: handleDeleteTeamAccept,
+  handleReject: handleDeleteTeamReject,
+} = useVrlConfirm();
 
 const showTeamModal = ref(false);
 const modalMode = ref<'add' | 'edit'>('add');
@@ -85,14 +95,17 @@ function handleDeleteTeam(team: Team): void {
       ? `Delete ${team.name}? ${driverCount} driver${driverCount > 1 ? 's' : ''} will become Privateer.`
       : `Delete ${team.name}?`;
 
-  confirm.require({
-    message,
+  showDeleteTeamConfirmation({
     header: 'Delete Team',
-    icon: 'pi pi-exclamation-triangle',
+    message,
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
     acceptLabel: 'Delete',
     rejectLabel: 'Cancel',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       try {
         await teamStore.deleteTeam(props.seasonId, team.id);
 
@@ -197,6 +210,15 @@ function handleTeamSaved(): void {
       :season-id="seasonId"
       :team="selectedTeam"
       @save="handleTeamSaved"
+    />
+
+    <!-- Confirm Delete Team Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isDeleteTeamVisible"
+      v-bind="deleteTeamOptions"
+      :loading="isDeleteTeamLoading"
+      @accept="handleDeleteTeamAccept"
+      @reject="handleDeleteTeamReject"
     />
   </div>
 </template>

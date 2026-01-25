@@ -19,6 +19,7 @@ class DivisionSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('DivisionSeeder cannot run in production environment!');
+
             return;
         }
 

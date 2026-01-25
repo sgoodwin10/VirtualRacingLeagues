@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Log;
 class GT7Service
 {
     private Client $client;
+
     private string $bearerToken;
+
     private string $baseUrl;
 
     public function __construct()
@@ -73,6 +75,7 @@ class GT7Service
                     'status' => $statusCode,
                     'error_code' => $errorCode,
                 ]);
+
                 return null;
             }
 
@@ -85,6 +88,7 @@ class GT7Service
                     'requested' => $onlineId,
                     'returned' => $returnedOnlineId,
                 ]);
+
                 return null;
             }
 
@@ -165,6 +169,7 @@ class GT7Service
                     'user_id' => $userId,
                     'status' => $response->getStatusCode(),
                 ]);
+
                 return null;
             }
 
@@ -194,7 +199,7 @@ class GT7Service
             6 => ['min' => 50000, 'max' => 75000], // A+
         ];
 
-        if (!isset($brackets[$driverRating])) {
+        if (! isset($brackets[$driverRating])) {
             return 0;
         }
 

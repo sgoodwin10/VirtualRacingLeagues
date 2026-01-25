@@ -43,6 +43,7 @@ final readonly class RoundName
         if ($other === null) {
             return false;
         }
+
         return $this->value === $other->value;
     }
 }

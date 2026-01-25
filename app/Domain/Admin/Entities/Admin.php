@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace App\Domain\Admin\Entities;
 
-use App\Domain\Shared\ValueObjects\EmailAddress;
-use App\Domain\Shared\ValueObjects\FullName;
-use App\Domain\Admin\ValueObjects\AdminRole;
-use App\Domain\Admin\ValueObjects\AdminStatus;
-use App\Domain\Admin\Events\AdminCreated;
-use App\Domain\Admin\Events\AdminPasswordChanged;
-use App\Domain\Admin\Events\AdminProfileUpdated;
 use App\Domain\Admin\Events\AdminActivated;
+use App\Domain\Admin\Events\AdminCreated;
 use App\Domain\Admin\Events\AdminDeactivated;
 use App\Domain\Admin\Events\AdminDeleted;
+use App\Domain\Admin\Events\AdminPasswordChanged;
+use App\Domain\Admin\Events\AdminProfileUpdated;
 use App\Domain\Admin\Events\AdminRestored;
 use App\Domain\Admin\Events\AdminRoleChanged;
 use App\Domain\Admin\Exceptions\AdminAlreadyDeletedException;
 use App\Domain\Admin\Exceptions\InsufficientPermissionsException;
+use App\Domain\Admin\ValueObjects\AdminRole;
+use App\Domain\Admin\ValueObjects\AdminStatus;
+use App\Domain\Shared\ValueObjects\EmailAddress;
+use App\Domain\Shared\ValueObjects\FullName;
 use DateTimeImmutable;
 use InvalidArgumentException;
 
@@ -25,6 +25,7 @@ final class Admin
 {
     /** @var array<object> */
     private array $domainEvents = [];
+
     private ?DateTimeImmutable $deletedAt = null;
 
     private function __construct(
@@ -102,7 +103,8 @@ final class Admin
     /**
      * Change the admin's password.
      *
-     * @param string $newHashedPassword The new hashed password
+     * @param  string  $newHashedPassword  The new hashed password
+     *
      * @throws AdminAlreadyDeletedException if admin is deleted
      */
     public function changePassword(string $newHashedPassword): void
@@ -123,8 +125,9 @@ final class Admin
      * - Only super admins can change roles of other super admins
      * - Admins can only assign roles below their own level
      *
-     * @param AdminRole $newRole The new role to assign
-     * @param Admin $performedBy The admin performing the role change
+     * @param  AdminRole  $newRole  The new role to assign
+     * @param  Admin  $performedBy  The admin performing the role change
+     *
      * @throws AdminAlreadyDeletedException if admin is deleted
      * @throws InsufficientPermissionsException if performer lacks permission
      */
@@ -135,12 +138,12 @@ final class Admin
         }
 
         // Business rule: Only super_admins can change roles of other super_admins
-        if ($this->role->isSuperAdmin() && !$performedBy->role->isSuperAdmin()) {
+        if ($this->role->isSuperAdmin() && ! $performedBy->role->isSuperAdmin()) {
             throw new InsufficientPermissionsException('Only super admins can modify super admin roles');
         }
 
         // Business rule: Admins can only assign roles below their own level
-        if (!$performedBy->canAssignRole($newRole)) {
+        if (! $performedBy->canAssignRole($newRole)) {
             throw new InsufficientPermissionsException('Forbidden. You do not have permission to assign this role.');
         }
 
@@ -214,7 +217,7 @@ final class Admin
      */
     public function restore(): void
     {
-        if (!$this->isDeleted()) {
+        if (! $this->isDeleted()) {
             throw new InvalidArgumentException('Admin is not deleted');
         }
 
@@ -227,8 +230,9 @@ final class Admin
     /**
      * Update the admin's profile information.
      *
-     * @param FullName $name The new full name
-     * @param EmailAddress $email The new email address
+     * @param  FullName  $name  The new full name
+     * @param  EmailAddress  $email  The new email address
+     *
      * @throws AdminAlreadyDeletedException if admin is deleted
      */
     public function updateProfile(FullName $name, EmailAddress $email): void
@@ -266,7 +270,7 @@ final class Admin
         $this->updatedAt = new DateTimeImmutable();
 
         // Only dispatch event if something actually changed
-        if (!empty($changedAttributes)) {
+        if (! empty($changedAttributes)) {
             $this->recordDomainEvent(new AdminProfileUpdated($this, $changedAttributes));
         }
     }
@@ -281,7 +285,7 @@ final class Admin
      * - Admins can manage other admins and moderators
      * - Moderators cannot manage anyone
      *
-     * @param Admin $targetAdmin The admin to check management permission for
+     * @param  Admin  $targetAdmin  The admin to check management permission for
      * @return bool True if this admin can manage the target admin
      */
     public function canManage(Admin $targetAdmin): bool
@@ -312,7 +316,7 @@ final class Admin
      * - Admins can assign admin or moderator roles (not super admin)
      * - Moderators cannot assign roles
      *
-     * @param AdminRole $role The role to check assignment permission for
+     * @param  AdminRole  $role  The role to check assignment permission for
      * @return bool True if this admin can assign the role
      */
     public function canAssignRole(AdminRole $role): bool
@@ -320,7 +324,7 @@ final class Admin
         // Can only assign roles below your own level
         return match (true) {
             $this->role->isSuperAdmin() => true, // Can assign any role
-            $this->role->isAdmin() => !$role->isSuperAdmin(), // Can assign admin or moderator
+            $this->role->isAdmin() => ! $role->isSuperAdmin(), // Can assign admin or moderator
             default => false, // Moderators cannot assign roles
         };
     }
@@ -329,7 +333,7 @@ final class Admin
 
     public function isActive(): bool
     {
-        return $this->status->isActive() && !$this->isDeleted();
+        return $this->status->isActive() && ! $this->isDeleted();
     }
 
     public function isInactive(): bool

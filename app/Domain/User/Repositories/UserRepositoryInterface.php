@@ -62,7 +62,7 @@ interface UserRepositoryInterface
     /**
      * Get all users with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array<int, User>
      */
     public function all(array $filters = []): array;
@@ -70,7 +70,7 @@ interface UserRepositoryInterface
     /**
      * Get paginated users with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<int, User>, total: int, per_page: int, current_page: int}
      */
     public function paginate(int $page = 1, int $perPage = 15, array $filters = []): array;
@@ -99,15 +99,13 @@ interface UserRepositoryInterface
     /**
      * Count users with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      */
     public function count(array $filters = []): int;
 
     /**
      * Get recent activity logs for a user.
      *
-     * @param int $userId
-     * @param int $limit
      * @return array<int, mixed> Array of activity log data
      */
     public function getRecentActivities(int $userId, int $limit = 50): array;
@@ -115,7 +113,7 @@ interface UserRepositoryInterface
     /**
      * Find multiple users by their IDs.
      *
-     * @param array<int> $ids
+     * @param  array<int>  $ids
      * @return array<int, array{id: int, first_name: string, last_name: string, email: string}> Keyed by user ID
      */
     public function findMultipleByIds(array $ids): array;

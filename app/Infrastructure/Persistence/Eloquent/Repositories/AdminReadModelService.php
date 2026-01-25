@@ -19,7 +19,7 @@ final class AdminReadModelService
      * Get last login timestamps for multiple admins.
      * Returns an associative array of admin_id => last_login_at (ISO string or null).
      *
-     * @param array<int> $adminIds
+     * @param  array<int>  $adminIds
      * @return array<int, string|null>
      */
     public function getLastLoginTimestamps(array $adminIds): array

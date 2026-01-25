@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Application\League\Services;
 
 use App\Application\League\Services\LeagueApplicationService;
+use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionClass;
 use Tests\TestCase;
 
@@ -15,9 +16,8 @@ final class LeagueApplicationServiceTest extends TestCase
 {
     /**
      * Test milliseconds to time formatting.
-     *
-     * @dataProvider millisecondsToTimeProvider
      */
+    #[DataProvider('millisecondsToTimeProvider')]
     public function test_format_milliseconds_to_time(
         ?int $milliseconds,
         ?string $expected
@@ -97,9 +97,8 @@ final class LeagueApplicationServiceTest extends TestCase
 
     /**
      * Test time difference formatting.
-     *
-     * @dataProvider timeDifferenceProvider
      */
+    #[DataProvider('timeDifferenceProvider')]
     public function test_format_time_difference(int $milliseconds, string $expected): void
     {
         // Create a mock service

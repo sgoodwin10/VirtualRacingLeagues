@@ -13,10 +13,10 @@ namespace App\Domain\Competition\ValueObjects;
 final readonly class TiebreakerResolution
 {
     /**
-     * @param array<int> $driverIds IDs of drivers involved in the tie
-     * @param string $ruleSlug Slug of the rule that resolved the tie
-     * @param int|null $winnerId ID of the driver who won the tiebreaker (null if unresolved)
-     * @param string $explanation Human-readable explanation
+     * @param  array<int>  $driverIds  IDs of drivers involved in the tie
+     * @param  string  $ruleSlug  Slug of the rule that resolved the tie
+     * @param  int|null  $winnerId  ID of the driver who won the tiebreaker (null if unresolved)
+     * @param  string  $explanation  Human-readable explanation
      */
     public function __construct(
         private array $driverIds,
@@ -73,7 +73,7 @@ final readonly class TiebreakerResolution
     /**
      * Create from array (for reconstitution from JSON).
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public static function fromArray(array $data): self
     {

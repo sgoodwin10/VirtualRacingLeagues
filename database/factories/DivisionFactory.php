@@ -42,7 +42,7 @@ class DivisionFactory extends Factory
      */
     public function withoutDescription(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'description' => null,
         ]);
     }
@@ -52,7 +52,7 @@ class DivisionFactory extends Factory
      */
     public function withLogo(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'logo_url' => 'divisions/logos/division-' . fake()->uuid() . '.png',
         ]);
     }

@@ -19,7 +19,7 @@ export interface UseGtm {
 function pushToDataLayer(eventData: GtmEvent): void {
   if (typeof window !== 'undefined') {
     window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push(eventData);
+    window.dataLayer.push(eventData as Record<string, unknown>);
   }
 }
 
@@ -69,11 +69,4 @@ export function useGtm(): UseGtm {
     trackFormSubmit,
     trackPageView,
   };
-}
-
-// Extend window interface for TypeScript
-declare global {
-  interface Window {
-    dataLayer: GtmEvent[];
-  }
 }

@@ -18,5 +18,6 @@ class TestMediaModel extends Model implements HasMedia
     use HasMediaCollections;
 
     protected $table = 'users'; // Use existing table for testing
+
     protected $guarded = [];
 }

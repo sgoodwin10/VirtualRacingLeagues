@@ -218,7 +218,7 @@ final class Car
     ): void {
         $changes = [];
 
-        if (!$name->equals($this->name)) {
+        if (! $name->equals($this->name)) {
             $this->name = $name;
             $changes['name'] = $name->value();
         }
@@ -228,12 +228,12 @@ final class Car
             $changes['car_brand_id'] = $carBrandId;
         }
 
-        if (!$carGroup->equals($this->carGroup)) {
+        if (! $carGroup->equals($this->carGroup)) {
             $this->carGroup = $carGroup;
             $changes['car_group'] = $carGroup->value();
         }
 
-        if (!$year->equals($this->year)) {
+        if (! $year->equals($this->year)) {
             $this->year = $year;
             $changes['year'] = $year->value();
         }
@@ -243,7 +243,7 @@ final class Car
             $changes['image_url'] = $imageUrl;
         }
 
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             if ($this->id === null) {
                 throw new \LogicException('Cannot update details on unpersisted car');
             }
@@ -283,7 +283,7 @@ final class Car
      */
     public function deactivate(): void
     {
-        if (!$this->isActive) {
+        if (! $this->isActive) {
             return;
         }
 
@@ -302,9 +302,6 @@ final class Car
 
     // Domain events management
 
-    /**
-     * @param object $event
-     */
     private function recordEvent(object $event): void
     {
         $this->domainEvents[] = $event;
@@ -323,6 +320,6 @@ final class Car
 
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 }

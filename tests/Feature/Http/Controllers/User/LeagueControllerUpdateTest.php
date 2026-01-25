@@ -13,7 +13,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\CoversMethod;
-use Tests\TestCase;
 
 #[CoversMethod(\App\Http\Controllers\User\LeagueController::class, 'update')]
 class LeagueControllerUpdateTest extends UserControllerTestCase
@@ -21,8 +20,11 @@ class LeagueControllerUpdateTest extends UserControllerTestCase
     use RefreshDatabase;
 
     private UserEloquent $user;
+
     private UserEloquent $otherUser;
+
     private League $league;
+
     private Platform $platform;
 
     protected function setUp(): void
@@ -138,7 +140,7 @@ class LeagueControllerUpdateTest extends UserControllerTestCase
 
     public function test_can_update_logo(): void
     {
-        if (!function_exists('imagejpeg')) {
+        if (! function_exists('imagejpeg')) {
             $this->markTestSkipped('GD extension not available');
         }
 
@@ -159,7 +161,7 @@ class LeagueControllerUpdateTest extends UserControllerTestCase
 
     public function test_can_update_header_image(): void
     {
-        if (!function_exists('imagejpeg')) {
+        if (! function_exists('imagejpeg')) {
             $this->markTestSkipped('GD extension not available');
         }
 
@@ -430,7 +432,7 @@ class LeagueControllerUpdateTest extends UserControllerTestCase
 
     public function test_can_update_all_fields_at_once(): void
     {
-        if (!function_exists('imagejpeg')) {
+        if (! function_exists('imagejpeg')) {
             $this->markTestSkipped('GD extension not available');
         }
 

@@ -84,14 +84,14 @@ final class UserAuthService
             $credentials->remember
         );
 
-        if (!$attempt) {
+        if (! $attempt) {
             throw InvalidCredentialsException::forLogin();
         }
 
         /** @var UserEloquent $eloquentUser */
         $eloquentUser = Auth::guard('web')->user();
 
-        if (!$eloquentUser) {
+        if (! $eloquentUser) {
             throw InvalidCredentialsException::forLogin();
         }
 
@@ -138,7 +138,7 @@ final class UserAuthService
         /** @var UserEloquent|null $eloquentUser */
         $eloquentUser = Auth::guard('web')->user();
 
-        if (!$eloquentUser) {
+        if (! $eloquentUser) {
             return null;
         }
 
@@ -152,7 +152,7 @@ final class UserAuthService
     {
         $user = $this->getCurrentUser();
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -167,7 +167,7 @@ final class UserAuthService
         return DB::transaction(function () use ($userId, $hash) {
             $user = $this->userRepository->findByIdOrNull($userId);
 
-            if (!$user) {
+            if (! $user) {
                 return false;
             }
 
@@ -176,7 +176,7 @@ final class UserAuthService
             }
 
             // Verify hash matches
-            if (!hash_equals($hash, sha1($user->email()->value()))) {
+            if (! hash_equals($hash, sha1($user->email()->value()))) {
                 return false;
             }
 
@@ -266,14 +266,14 @@ final class UserAuthService
 
             // Verify current password if changing password
             if ($data->password) {
-                if (!$data->current_password) {
+                if (! $data->current_password) {
                     throw new \InvalidArgumentException('Current password is required to change password');
                 }
 
                 /** @var UserEloquent $eloquentUser */
                 $eloquentUser = Auth::guard('web')->user();
 
-                if (!$eloquentUser || !Hash::check($data->current_password, $eloquentUser->password)) {
+                if (! $eloquentUser || ! Hash::check($data->current_password, $eloquentUser->password)) {
                     throw InvalidCredentialsException::forLogin();
                 }
             }

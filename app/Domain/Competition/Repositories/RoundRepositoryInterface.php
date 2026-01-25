@@ -28,6 +28,7 @@ interface RoundRepositoryInterface
      * Returns [Round entity, season data array].
      *
      * @return array{round: Round, season: array<string, mixed>}
+     *
      * @throws \App\Domain\Competition\Exceptions\RoundNotFoundException
      */
     public function findByIdWithRelations(int $id): array;

@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Redis;
 final class AdminUserImpersonationService
 {
     private const TOKEN_EXPIRY_SECONDS = 300; // 5 minutes
+
     private const REDIS_KEY_PREFIX = 'user_impersonation:';
 
     public function __construct(
@@ -33,9 +34,10 @@ final class AdminUserImpersonationService
     /**
      * Generate an impersonation token for a user.
      *
-     * @param int $userId The user to impersonate
-     * @param int $adminId The admin performing the impersonation
+     * @param  int  $userId  The user to impersonate
+     * @param  int  $adminId  The admin performing the impersonation
      * @return string The generated token
+     *
      * @throws UserNotFoundException If user not found
      * @throws DomainException If user is an admin or authorization fails
      */
@@ -45,7 +47,7 @@ final class AdminUserImpersonationService
         $admin = $this->adminRepository->findById($adminId);
 
         // Check admin authorization (only super_admin and admin can impersonate)
-        if (!$this->canImpersonate($admin)) {
+        if (! $this->canImpersonate($admin)) {
             throw new DomainException('Only super admins and admins can impersonate users');
         }
 
@@ -95,8 +97,9 @@ final class AdminUserImpersonationService
     /**
      * Consume an impersonation token and return the user to impersonate.
      *
-     * @param string $token The impersonation token
+     * @param  string  $token  The impersonation token
      * @return array{user: User, admin_id: int, admin_email: string} User and admin info
+     *
      * @throws DomainException If token is invalid or expired
      * @throws UserNotFoundException If user not found
      */
@@ -153,8 +156,7 @@ final class AdminUserImpersonationService
     /**
      * Revoke an impersonation token.
      *
-     * @param string $token The impersonation token to revoke
-     * @return void
+     * @param  string  $token  The impersonation token to revoke
      */
     public function revokeImpersonationToken(string $token): void
     {

@@ -23,6 +23,7 @@ class DivisionTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private SeasonEloquent $season;
 
     protected function setUp(): void

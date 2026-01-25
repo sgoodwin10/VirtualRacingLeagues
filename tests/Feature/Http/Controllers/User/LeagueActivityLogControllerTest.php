@@ -22,7 +22,9 @@ class LeagueActivityLogControllerTest extends UserControllerTestCase
     use RefreshDatabase;
 
     private UserEloquent $user;
+
     private League $league;
+
     private LeagueActivityLogService $activityLogService;
 
     protected function setUp(): void

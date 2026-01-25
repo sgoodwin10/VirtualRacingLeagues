@@ -14,12 +14,10 @@ use App\Application\Export\DTOs\SeasonStandingExportRow;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
-use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriver;
 
 /**
  * CSV Export Service.
@@ -58,15 +56,15 @@ final class CsvExportService
         $hasDivisions = $season->raceDivisionsEnabled();
 
         // Fetch driver, division, and team data
-        $driverIds = array_map(fn($result) => $result->driver_id, $results);
+        $driverIds = array_map(fn ($result) => $result->driver_id, $results);
         $drivers = $this->batchFetchDrivers($driverIds);
 
-        $divisionIds = array_filter(array_map(fn($result) => $result->division_id, $results));
+        $divisionIds = array_filter(array_map(fn ($result) => $result->division_id, $results));
         $divisions = $hasDivisions ? $this->batchFetchDivisions($divisionIds) : [];
 
         $driverTeams = $this->batchFetchDriverTeams($season->id() ?? 0, $driverIds);
         $teamIds = array_filter(array_values($driverTeams));
-        $teams = !empty($teamIds) ? $this->batchFetchTeams($teamIds) : [];
+        $teams = ! empty($teamIds) ? $this->batchFetchTeams($teamIds) : [];
 
         // Check if race is a qualifier
         $isQualifier = $race->isQualifier();
@@ -138,7 +136,7 @@ final class CsvExportService
         $competition = $this->competitionRepository->findById($season->competitionId());
 
         $roundResults = $round->roundResults();
-        if ($roundResults === null || !isset($roundResults['standings'])) {
+        if ($roundResults === null || ! isset($roundResults['standings'])) {
             return [
                 'headers' => RoundStandingExportRow::headers(),
                 'rows' => [],
@@ -207,7 +205,7 @@ final class CsvExportService
     /**
      * Generate CSV data for cross-division results.
      *
-     * @param string $type One of: 'fastest-laps', 'race-times', 'qualifying-times'
+     * @param  string  $type  One of: 'fastest-laps', 'race-times', 'qualifying-times'
      * @return array{headers: array<string>, rows: array<array<mixed>>, filename: string}
      */
     public function generateCrossDivisionCsv(int $roundId, string $type): array
@@ -309,8 +307,8 @@ final class CsvExportService
 
         // Get all completed rounds for headers
         $rounds = $this->roundRepository->findBySeasonId($seasonId);
-        $completedRounds = array_filter($rounds, fn($round) => $round->status()->isCompleted() && $round->roundResults() !== null);
-        usort($completedRounds, fn($a, $b) => $a->roundNumber()->value() <=> $b->roundNumber()->value());
+        $completedRounds = array_filter($rounds, fn ($round) => $round->status()->isCompleted() && $round->roundResults() !== null);
+        usort($completedRounds, fn ($a, $b) => $a->roundNumber()->value() <=> $b->roundNumber()->value());
 
         // Build round headers
         $roundHeaders = [];
@@ -329,7 +327,7 @@ final class CsvExportService
 
             // Filter by division if specified
             if ($divisionId !== null) {
-                $standings = array_filter($standings, fn($div) => $div['division_id'] === $divisionId);
+                $standings = array_filter($standings, fn ($div) => $div['division_id'] === $divisionId);
             }
 
             foreach ($standings as $divisionStanding) {
@@ -387,8 +385,8 @@ final class CsvExportService
     /**
      * Build round columns for season standings export.
      *
-     * @param array<mixed> $driverRounds Driver's round data
-     * @param array<\App\Domain\Competition\Entities\Round> $completedRounds All completed rounds
+     * @param  array<mixed>  $driverRounds  Driver's round data
+     * @param  array<\App\Domain\Competition\Entities\Round>  $completedRounds  All completed rounds
      * @return array<string|int|null>
      */
     private function buildRoundColumns(array $driverRounds, array $completedRounds): array
@@ -424,7 +422,7 @@ final class CsvExportService
     /**
      * Batch fetch drivers by IDs.
      *
-     * @param array<int> $driverIds
+     * @param  array<int>  $driverIds
      * @return array<int, string> Map of driver_id => driver_name
      */
     private function batchFetchDrivers(array $driverIds): array
@@ -449,7 +447,7 @@ final class CsvExportService
     /**
      * Batch fetch divisions by IDs.
      *
-     * @param array<int> $divisionIds
+     * @param  array<int>  $divisionIds
      * @return array<int, string> Map of division_id => division_name
      */
     private function batchFetchDivisions(array $divisionIds): array
@@ -474,7 +472,7 @@ final class CsvExportService
     /**
      * Batch fetch teams by IDs.
      *
-     * @param array<int> $teamIds
+     * @param  array<int>  $teamIds
      * @return array<int, string> Map of team_id => team_name
      */
     private function batchFetchTeams(array $teamIds): array
@@ -500,7 +498,7 @@ final class CsvExportService
      * Batch fetch driver teams for a season.
      * Note: $seasonDriverIds are the IDs from race_results.driver_id which reference season_drivers.id
      *
-     * @param array<int> $seasonDriverIds
+     * @param  array<int>  $seasonDriverIds
      * @return array<int, int|null> Map of season_driver_id => team_id
      */
     private function batchFetchDriverTeams(int $seasonId, array $seasonDriverIds): array
@@ -540,6 +538,7 @@ final class CsvExportService
     {
         try {
             $division = $this->divisionRepository->findById($divisionId);
+
             return $division->name()->value();
         } catch (\Exception $e) {
             return null;
@@ -582,7 +581,7 @@ final class CsvExportService
     /**
      * Fetch race results by their IDs.
      *
-     * @param array<int> $raceResultIds
+     * @param  array<int>  $raceResultIds
      * @return array<int, array{driver_id: int, division_id: int|null}>
      */
     private function fetchRaceResultsById(array $raceResultIds): array

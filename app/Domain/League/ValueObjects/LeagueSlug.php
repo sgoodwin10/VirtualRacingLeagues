@@ -44,7 +44,7 @@ final readonly class LeagueSlug
         }
 
         // Slug should only contain lowercase letters, numbers, and hyphens
-        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $trimmed)) {
+        if (! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $trimmed)) {
             throw new \InvalidArgumentException('League slug must contain only lowercase letters, numbers, and hyphens');
         }
     }

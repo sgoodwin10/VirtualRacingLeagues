@@ -17,13 +17,14 @@ final class BulkRaceResultsRequest extends FormRequest
 
         /** @var \App\Models\User|null $user */
         $user = auth('web')->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         $userId = $user->id;
 
         $raceRepository = app(RaceRepositoryInterface::class);
+
         return $raceRepository->isOwnedByUser($raceId, $userId);
     }
 
@@ -58,10 +59,8 @@ final class BulkRaceResultsRequest extends FormRequest
     {
         return [
             'results.*.original_race_time.regex' => 'Original race time must be in format hh:mm:ss.ms',
-            'results.*.original_race_time_difference.regex' =>
-                'Original race time difference must be in format hh:mm:ss.ms',
-            'results.*.final_race_time_difference.regex' =>
-                'Final race time difference must be in format hh:mm:ss.ms',
+            'results.*.original_race_time_difference.regex' => 'Original race time difference must be in format hh:mm:ss.ms',
+            'results.*.final_race_time_difference.regex' => 'Final race time difference must be in format hh:mm:ss.ms',
             'results.*.fastest_lap.regex' => 'Fastest lap must be in format hh:mm:ss.ms',
             'results.*.penalties.regex' => 'Penalties must be in format hh:mm:ss.ms',
         ];
@@ -77,7 +76,7 @@ final class BulkRaceResultsRequest extends FormRequest
             /** @var array<string, mixed> $data */
             $data = $validator->getData();
 
-            if (!isset($data['results']) || !is_array($data['results'])) {
+            if (! isset($data['results']) || ! is_array($data['results'])) {
                 return;
             }
 
@@ -86,7 +85,7 @@ final class BulkRaceResultsRequest extends FormRequest
             $driverIds = [];
 
             foreach ($data['results'] as $index => $result) {
-                if (!is_array($result)) {
+                if (! is_array($result)) {
                     continue;
                 }
 
@@ -95,7 +94,7 @@ final class BulkRaceResultsRequest extends FormRequest
                     $position = (int) $result['position'];
                     $divisionId = $result['division_id'] ?? 'no_division';
 
-                    if (!isset($positionsByDivision[$divisionId])) {
+                    if (! isset($positionsByDivision[$divisionId])) {
                         $positionsByDivision[$divisionId] = [];
                     }
 
@@ -104,7 +103,7 @@ final class BulkRaceResultsRequest extends FormRequest
                         $validator->errors()->add(
                             "results.{$index}.position",
                             "Position {$position} is duplicated in {$divisionLabel}. " .
-                            "Each position must be unique within the division."
+                            'Each position must be unique within the division.'
                         );
                     }
                     $positionsByDivision[$divisionId][$position] = true;
@@ -117,7 +116,7 @@ final class BulkRaceResultsRequest extends FormRequest
                         $validator->errors()->add(
                             "results.{$index}.driver_id",
                             "Driver ID {$driverId} appears multiple times. " .
-                            "Each driver can only have one result per race."
+                            'Each driver can only have one result per race.'
                         );
                     }
                     $driverIds[$driverId] = true;
@@ -125,11 +124,11 @@ final class BulkRaceResultsRequest extends FormRequest
 
                 // If not DNF, at least one of original_race_time or position must be provided
                 $isDnf = isset($result['dnf']) && $result['dnf'] === true;
-                if (!$isDnf) {
-                    $hasRaceTime = !empty($result['original_race_time']);
+                if (! $isDnf) {
+                    $hasRaceTime = ! empty($result['original_race_time']);
                     $hasPosition = isset($result['position']) && $result['position'] !== null;
 
-                    if (!$hasRaceTime && !$hasPosition) {
+                    if (! $hasRaceTime && ! $hasPosition) {
                         $validator->errors()->add(
                             "results.{$index}",
                             'At least one of original_race_time or position must be provided for non-DNF results.'

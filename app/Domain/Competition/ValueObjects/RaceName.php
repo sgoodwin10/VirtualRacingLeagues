@@ -39,6 +39,7 @@ final readonly class RaceName
         if ($other === null) {
             return false;
         }
+
         return $this->value === $other->value;
     }
 }

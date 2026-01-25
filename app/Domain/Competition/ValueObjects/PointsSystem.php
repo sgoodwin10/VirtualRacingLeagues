@@ -12,7 +12,7 @@ final readonly class PointsSystem
     private array $positions;
 
     /**
-     * @param array<int, int|float> $positions Position => Points mapping
+     * @param  array<int, int|float>  $positions  Position => Points mapping
      */
     private function __construct(array $positions)
     {
@@ -26,7 +26,7 @@ final readonly class PointsSystem
     }
 
     /**
-     * @param array<int, int|float> $positions
+     * @param  array<int, int|float>  $positions
      */
     public static function from(array $positions): self
     {
@@ -39,7 +39,7 @@ final readonly class PointsSystem
     public static function fromJson(string $json): self
     {
         $decoded = json_decode($json, true);
-        if (!is_array($decoded)) {
+        if (! is_array($decoded)) {
             throw new InvalidArgumentException('Invalid JSON for points system');
         }
 
@@ -54,6 +54,7 @@ final readonly class PointsSystem
         if ($json === null) {
             return null;
         }
+
         return self::fromJson($json);
     }
 

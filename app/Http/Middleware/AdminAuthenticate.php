@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Helpers\UrlHelper;
 use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
 use Closure;
 use Illuminate\Http\Request;
@@ -32,8 +33,7 @@ class AdminAuthenticate
             }
 
             // Redirect to admin subdomain login
-            $adminUrl = str_replace('//', '//admin.', config('app.url'));
-            return redirect($adminUrl . '/admin/login');
+            return redirect(UrlHelper::adminUrl() . '/admin/login');
         }
 
         // Check if admin account is active
@@ -48,8 +48,7 @@ class AdminAuthenticate
                 ], 403);
             }
 
-            $adminUrl = str_replace('//', '//admin.', config('app.url'));
-            return redirect($adminUrl . '/admin/login')
+            return redirect(UrlHelper::adminUrl() . '/admin/login')
                 ->with('error', 'Your account has been deactivated. Please contact support.');
         }
 

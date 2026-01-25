@@ -34,7 +34,7 @@ final readonly class PasswordResetToken
             throw new InvalidArgumentException('Password reset token must be exactly 64 characters');
         }
 
-        if (!ctype_xdigit($this->token)) {
+        if (! ctype_xdigit($this->token)) {
             throw new InvalidArgumentException('Password reset token must contain only hexadecimal characters');
         }
     }

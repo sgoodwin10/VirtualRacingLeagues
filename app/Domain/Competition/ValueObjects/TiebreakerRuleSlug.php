@@ -15,7 +15,9 @@ use App\Domain\Competition\Exceptions\InvalidTiebreakerRuleSlugException;
 final readonly class TiebreakerRuleSlug
 {
     private const HIGHEST_QUALIFYING_POSITION = 'highest-qualifying-position';
+
     private const RACE_1_BEST_RESULT = 'race-1-best-result';
+
     private const BEST_RESULT_ALL_RACES = 'best-result-all-races';
 
     private const VALID_SLUGS = [
@@ -88,7 +90,7 @@ final readonly class TiebreakerRuleSlug
      */
     private function validate(): void
     {
-        if (!in_array($this->slug, self::VALID_SLUGS, true)) {
+        if (! in_array($this->slug, self::VALID_SLUGS, true)) {
             throw InvalidTiebreakerRuleSlugException::invalidSlug($this->slug, self::VALID_SLUGS);
         }
     }

@@ -20,7 +20,7 @@ final class LeaguePlatformData extends Data
     /**
      * Create from array (typically from repository).
      *
-     * @param array{id: int, name: string, slug: string, description: ?string, logo_url: ?string} $data
+     * @param  array{id: int, name: string, slug: string, description: ?string, logo_url: ?string}  $data
      */
     public static function fromArray(array $data): self
     {

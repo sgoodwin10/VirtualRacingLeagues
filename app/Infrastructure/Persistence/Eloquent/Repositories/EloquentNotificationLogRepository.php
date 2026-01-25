@@ -48,7 +48,7 @@ final class EloquentNotificationLogRepository implements NotificationLogReposito
     }
 
     /**
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<NotificationLog>, total: int, page: int, per_page: int, last_page: int}
      */
     public function findAll(array $filters = [], int $page = 1, int $perPage = 20): array
@@ -80,7 +80,7 @@ final class EloquentNotificationLogRepository implements NotificationLogReposito
         }
 
         // Search by recipient, subject, or body
-        if (isset($filters['search']) && !empty($filters['search'])) {
+        if (isset($filters['search']) && ! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search): void {
                 $q->where('recipient', 'like', "%{$search}%")
@@ -102,7 +102,7 @@ final class EloquentNotificationLogRepository implements NotificationLogReposito
             ->get();
 
         $logs = $eloquentLogs->map(
-            fn(NotificationLogEloquent $eloquent) => $this->toDomainEntity($eloquent)
+            fn (NotificationLogEloquent $eloquent) => $this->toDomainEntity($eloquent)
         )->all();
 
         return [

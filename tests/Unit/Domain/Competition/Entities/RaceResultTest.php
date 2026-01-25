@@ -6,7 +6,6 @@ namespace Tests\Unit\Domain\Competition\Entities;
 
 use App\Domain\Competition\Entities\RaceResult;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
-use App\Domain\Competition\ValueObjects\RaceTime;
 use PHPUnit\Framework\TestCase;
 
 final class RaceResultTest extends TestCase

@@ -30,14 +30,16 @@ final class EmailVerificationController extends Controller
         try {
             $verified = $this->authService->verifyEmail($id, $hash);
 
-            if (!$verified) {
+            if (! $verified) {
                 $errorReason = urlencode('Invalid or expired verification link');
+
                 return redirect("/verify-email-result?status=error&reason={$errorReason}");
             }
 
             return redirect('/verify-email-result?status=success');
         } catch (\Exception $e) {
             $errorReason = urlencode('An error occurred during verification');
+
             return redirect("/verify-email-result?status=error&reason={$errorReason}");
         }
     }
@@ -49,7 +51,7 @@ final class EmailVerificationController extends Controller
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user) {
+        if (! $user) {
             return ApiResponse::error('Unauthenticated', null, 401);
         }
 

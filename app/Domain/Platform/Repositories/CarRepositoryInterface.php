@@ -40,7 +40,7 @@ interface CarRepositoryInterface
     /**
      * Deactivate cars not in the provided list of external IDs.
      *
-     * @param array<string> $externalIds
+     * @param  array<string>  $externalIds
      * @return int Number of cars deactivated
      */
     public function deactivateCarsNotInList(int $platformId, array $externalIds): int;

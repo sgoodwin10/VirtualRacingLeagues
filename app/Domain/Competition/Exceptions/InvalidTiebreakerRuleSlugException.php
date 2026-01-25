@@ -12,11 +12,12 @@ use DomainException;
 final class InvalidTiebreakerRuleSlugException extends DomainException
 {
     /**
-     * @param array<string> $validSlugs
+     * @param  array<string>  $validSlugs
      */
     public static function invalidSlug(string $slug, array $validSlugs): self
     {
         $valid = implode(', ', $validSlugs);
+
         return new self("Invalid tiebreaker rule slug '{$slug}'. Valid slugs are: {$valid}");
     }
 }

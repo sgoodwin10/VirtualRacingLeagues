@@ -13,7 +13,7 @@ use App\Domain\Admin\Entities\Admin;
 final readonly class AdminProfileUpdated
 {
     /**
-     * @param array<string, array{old: mixed, new: mixed}> $changedAttributes
+     * @param  array<string, array{old: mixed, new: mixed}>  $changedAttributes
      */
     public function __construct(
         public readonly Admin $admin,

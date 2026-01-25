@@ -45,7 +45,7 @@ class SeasonDriverFactory extends Factory
      */
     public function active(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'active',
         ]);
     }
@@ -55,7 +55,7 @@ class SeasonDriverFactory extends Factory
      */
     public function reserve(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'reserve',
         ]);
     }
@@ -65,7 +65,7 @@ class SeasonDriverFactory extends Factory
      */
     public function withdrawn(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'withdrawn',
         ]);
     }

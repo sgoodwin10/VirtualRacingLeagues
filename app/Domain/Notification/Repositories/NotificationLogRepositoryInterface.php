@@ -14,7 +14,7 @@ interface NotificationLogRepositoryInterface
     public function findById(int $id): ?NotificationLog;
 
     /**
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<NotificationLog>, total: int, page: int, per_page: int, last_page: int}
      */
     public function findAll(array $filters = [], int $page = 1, int $perPage = 20): array;

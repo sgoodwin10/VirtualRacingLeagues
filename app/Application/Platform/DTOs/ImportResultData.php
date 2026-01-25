@@ -12,7 +12,7 @@ use Spatie\LaravelData\Data;
 final class ImportResultData extends Data
 {
     /**
-     * @param array<string> $errors
+     * @param  array<string>  $errors
      */
     public function __construct(
         public int $brandsCreated,

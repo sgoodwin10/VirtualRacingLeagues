@@ -61,7 +61,7 @@ class AdminUserController extends Controller
         );
 
         return ApiResponse::paginated(
-            array_map(fn($item) => $item->toArray(), $result['data']),
+            array_map(fn ($item) => $item->toArray(), $result['data']),
             $result['meta'],
             $links
         );
@@ -104,6 +104,7 @@ class AdminUserController extends Controller
                     403
                 );
             }
+
             return ApiResponse::forbidden($e->getMessage());
         }
     }
@@ -130,6 +131,7 @@ class AdminUserController extends Controller
         Gate::forUser(\Auth::guard('admin')->user())->authorize('view', $eloquentAdmin);
 
         $detailedData = $this->adminService->toDetailedAdminData($admin);
+
         return ApiResponse::success($detailedData->toArray());
     }
 
@@ -169,6 +171,7 @@ class AdminUserController extends Controller
             if (str_contains($e->getMessage(), 'already in use')) {
                 return ApiResponse::validationError(['email' => [$e->getMessage()]]);
             }
+
             return ApiResponse::forbidden($e->getMessage());
         }
     }

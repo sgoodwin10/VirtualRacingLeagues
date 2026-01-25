@@ -29,7 +29,9 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 final readonly class CarImportService
 {
     private const KUDOSPRIME_API_URL = 'https://www.kudosprime.com/gt7/MiloAPI.php?export=y';
+
     private const GT7_PLATFORM_NAME = 'Gran Turismo 7';
+
     private const RATE_LIMIT_DELAY = 2; // seconds
 
     public function __construct(
@@ -99,7 +101,7 @@ final readonly class CarImportService
                 'export_type' => 'cars',
             ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \Exception(
                 'Failed to download car data from KudosPrime: ' . $response->status()
             );
@@ -122,6 +124,7 @@ final readonly class CarImportService
      * Parse Excel file and extract car data.
      *
      * @return array<array{external_id: string, group: string, maker: string, model: string, year: ?int}>
+     *
      * @throws \Exception
      */
     private function parseExcelFile(string $excelData): array
@@ -184,7 +187,7 @@ final readonly class CarImportService
     /**
      * Process the import within a transaction.
      *
-     * @param array<array{external_id: string, group: string, maker: string, model: string, year: ?int}> $rows
+     * @param  array<array{external_id: string, group: string, maker: string, model: string, year: ?int}>  $rows
      */
     private function processImport(int $platformId, array $rows): ImportResultData
     {

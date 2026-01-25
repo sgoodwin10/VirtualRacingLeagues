@@ -130,58 +130,72 @@ final class SiteConfig
     {
         return $this->id;
     }
+
     public function siteName(): SiteName
     {
         return $this->siteName;
     }
+
     public function googleTagManagerId(): ?TrackingId
     {
         return $this->googleTagManagerId;
     }
+
     public function googleAnalyticsId(): ?TrackingId
     {
         return $this->googleAnalyticsId;
     }
+
     public function googleSearchConsoleCode(): ?string
     {
         return $this->googleSearchConsoleCode;
     }
+
     public function discordLink(): ?string
     {
         return $this->discordLink;
     }
+
     public function supportEmail(): ?EmailAddress
     {
         return $this->supportEmail;
     }
+
     public function contactEmail(): ?EmailAddress
     {
         return $this->contactEmail;
     }
+
     public function adminEmail(): ?EmailAddress
     {
         return $this->adminEmail;
     }
+
     public function createdAt(): ?DateTimeImmutable
     {
         return $this->createdAt;
     }
+
     public function updatedAt(): ?DateTimeImmutable
     {
         return $this->updatedAt;
     }
+
     public function isMaintenanceMode(): bool
     {
         return $this->maintenanceMode;
     }
+
     public function timezone(): Timezone
     {
         return $this->timezone;
     }
+
     public function isUserRegistrationEnabled(): bool
     {
         return $this->userRegistrationEnabled;
     }
+
     public function isActive(): bool
     {
         return $this->isActive;
@@ -292,7 +306,7 @@ final class SiteConfig
      */
     public function disableMaintenanceMode(): void
     {
-        if (!$this->maintenanceMode) {
+        if (! $this->maintenanceMode) {
             return; // Already disabled
         }
 
@@ -366,7 +380,7 @@ final class SiteConfig
      */
     public function deactivate(): void
     {
-        if (!$this->isActive) {
+        if (! $this->isActive) {
             return; // Already inactive
         }
 
@@ -402,6 +416,6 @@ final class SiteConfig
      */
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 }

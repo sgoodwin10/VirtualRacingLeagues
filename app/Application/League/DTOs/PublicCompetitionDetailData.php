@@ -14,8 +14,8 @@ use Spatie\LaravelData\Data;
 final class PublicCompetitionDetailData extends Data
 {
     /**
-     * @param array{total_seasons: int, active_seasons: int, total_drivers: int} $stats
-     * @param array<int, PublicSeasonSummaryData> $seasons
+     * @param  array{total_seasons: int, active_seasons: int, total_drivers: int}  $stats
+     * @param  array<int, PublicSeasonSummaryData>  $seasons
      */
     public function __construct(
         public readonly int $id,

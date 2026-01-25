@@ -79,7 +79,7 @@ final class EloquentDivisionRepository implements DivisionRepositoryInterface
 
         return $eloquentDivisions->map(
             /** @param DivisionEloquent $eloquentDivision */
-            fn($eloquentDivision) => $this->toDomainEntity($eloquentDivision)
+            fn ($eloquentDivision) => $this->toDomainEntity($eloquentDivision)
         )->all();
     }
 
@@ -154,7 +154,8 @@ final class EloquentDivisionRepository implements DivisionRepositoryInterface
     /**
      * Bulk update division orders using a single CASE/WHEN query.
      *
-     * @param array<int, int> $divisionOrders Map of division ID => order
+     * @param  array<int, int>  $divisionOrders  Map of division ID => order
+     *
      * @throws \InvalidArgumentException if array contains non-integer values
      */
     public function bulkUpdateOrders(array $divisionOrders): void
@@ -168,7 +169,7 @@ final class EloquentDivisionRepository implements DivisionRepositoryInterface
         $bindings = [];
 
         foreach ($divisionOrders as $divisionId => $order) {
-            $cases[] = "WHEN id = ? THEN ?";
+            $cases[] = 'WHEN id = ? THEN ?';
             $bindings[] = $divisionId;
             $bindings[] = $order;
             $ids[] = $divisionId;

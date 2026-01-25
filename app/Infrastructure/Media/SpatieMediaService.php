@@ -25,13 +25,14 @@ class SpatieMediaService implements MediaServiceInterface
         private readonly MediaConversionServiceInterface $conversionService
     ) {
     }
+
     /**
      * Upload a file and attach it to a model
      *
-     * @param UploadedFile $file The uploaded file
-     * @param HasMedia $model The Eloquent model implementing HasMedia interface
-     * @param string $collection The media collection name
-     * @return MediaReference
+     * @param  UploadedFile  $file  The uploaded file
+     * @param  HasMedia  $model  The Eloquent model implementing HasMedia interface
+     * @param  string  $collection  The media collection name
+     *
      * @throws \Exception If upload fails
      */
     public function upload(
@@ -39,7 +40,7 @@ class SpatieMediaService implements MediaServiceInterface
         object $model,
         string $collection = 'default'
     ): MediaReference {
-        if (!$model instanceof HasMedia) {
+        if (! $model instanceof HasMedia) {
             throw new \InvalidArgumentException(
                 sprintf('Model %s must implement HasMedia interface', get_class($model))
             );
@@ -82,9 +83,6 @@ class SpatieMediaService implements MediaServiceInterface
 
     /**
      * Delete media by reference
-     *
-     * @param MediaReference $reference
-     * @return bool
      */
     public function delete(MediaReference $reference): bool
     {
@@ -111,10 +109,6 @@ class SpatieMediaService implements MediaServiceInterface
 
     /**
      * Get URL for a media file
-     *
-     * @param MediaReference $reference
-     * @param string $conversion
-     * @return string
      */
     public function getUrl(
         MediaReference $reference,
@@ -131,7 +125,6 @@ class SpatieMediaService implements MediaServiceInterface
     /**
      * Get responsive URLs for all conversions
      *
-     * @param MediaReference $reference
      * @return array{original: string, conversions: array<string, string>, srcset: string}
      */
     public function getResponsiveUrls(MediaReference $reference): array

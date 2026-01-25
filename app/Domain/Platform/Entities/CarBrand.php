@@ -159,7 +159,7 @@ final class CarBrand
     ): void {
         $changes = [];
 
-        if (!$name->equals($this->name)) {
+        if (! $name->equals($this->name)) {
             $this->name = $name;
             $changes['name'] = $name->value();
         }
@@ -169,7 +169,7 @@ final class CarBrand
             $changes['logo_url'] = $logoUrl;
         }
 
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             if ($this->id === null) {
                 throw new \LogicException('Cannot update details on unpersisted car brand');
             }
@@ -208,7 +208,7 @@ final class CarBrand
      */
     public function deactivate(): void
     {
-        if (!$this->isActive) {
+        if (! $this->isActive) {
             return;
         }
 
@@ -218,9 +218,6 @@ final class CarBrand
 
     // Domain events management
 
-    /**
-     * @param object $event
-     */
     private function recordEvent(object $event): void
     {
         $this->domainEvents[] = $event;
@@ -239,6 +236,6 @@ final class CarBrand
 
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 }

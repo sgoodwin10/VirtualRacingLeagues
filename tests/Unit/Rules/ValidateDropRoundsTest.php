@@ -250,7 +250,7 @@ class ValidateDropRoundsTest extends TestCase
     /**
      * Helper method to create a validator with the ValidateDropRounds rule.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      * @return ValidatorContract&\Illuminate\Validation\Validator
      */
     private function makeValidator(array $data): ValidatorContract

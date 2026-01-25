@@ -59,8 +59,8 @@ class SeasonData extends Data
     /**
      * Create from domain entity with competition data and URLs.
      *
-     * @param array<string, int> $aggregates
-     * @param SeasonEloquent|null $eloquentModel Optional eloquent model for media
+     * @param  array<string, int>  $aggregates
+     * @param  SeasonEloquent|null  $eloquentModel  Optional eloquent model for media
      */
     public static function fromEntity(
         Season $season,
@@ -108,6 +108,7 @@ class SeasonData extends Data
             tiebreaker_rules: array_map(
                 function ($rule) use ($eloquentModel) {
                     $eloquentRule = $eloquentModel?->tiebreakerRules->firstWhere('id', $rule->id());
+
                     return new SeasonTiebreakerRuleData(
                         id: $rule->id(),
                         name: $eloquentRule->name ?? '',
@@ -144,7 +145,6 @@ class SeasonData extends Data
     /**
      * Convert Spatie Media model to array representation
      *
-     * @param Media|null $media
      * @return array{id: int, original: string, conversions: array<string, string>, srcset: string}|null
      */
     public static function mediaToArray(?Media $media): ?array

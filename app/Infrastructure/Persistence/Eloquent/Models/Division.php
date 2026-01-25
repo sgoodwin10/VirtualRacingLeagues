@@ -26,6 +26,7 @@ use Spatie\MediaLibrary\HasMedia;
  * @property-read SeasonEloquent $season
  * @property-read \Illuminate\Database\Eloquent\Collection<int, SeasonDriverEloquent> $seasonDrivers
  * @property-read int|null $season_drivers_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Division query()
@@ -114,8 +115,6 @@ class Division extends Model implements HasMedia
 
     /**
      * Register media collections for the division.
-     *
-     * @return void
      */
     public function registerMediaCollections(): void
     {

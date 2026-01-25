@@ -33,11 +33,10 @@ class LeagueActivityLogService
     /**
      * Log a league activity.
      *
-     * @param UserEloquent $user The user performing the action
-     * @param string $description Human-readable description
-     * @param Model|null $subject The model being acted upon
-     * @param array<string, mixed> $properties Additional properties
-     * @return Activity
+     * @param  UserEloquent  $user  The user performing the action
+     * @param  string  $description  Human-readable description
+     * @param  Model|null  $subject  The model being acted upon
+     * @param  array<string, mixed>  $properties  Additional properties
      */
     private function logActivity(
         UserEloquent $user,
@@ -72,10 +71,6 @@ class LeagueActivityLogService
 
     /**
      * Log league created.
-     *
-     * @param UserEloquent $user
-     * @param League $league
-     * @return Activity
      */
     public function logLeagueCreated(UserEloquent $user, League $league): Activity
     {
@@ -97,10 +92,7 @@ class LeagueActivityLogService
     /**
      * Log league updated.
      *
-     * @param UserEloquent $user
-     * @param League $league
-     * @param array<string, mixed> $changes
-     * @return Activity
+     * @param  array<string, mixed>  $changes
      */
     public function logLeagueUpdated(
         UserEloquent $user,
@@ -129,11 +121,6 @@ class LeagueActivityLogService
 
     /**
      * Log driver added to league.
-     *
-     * @param UserEloquent $user
-     * @param int $leagueId
-     * @param LeagueDriverEloquent $leagueDriver
-     * @return Activity
      */
     public function logDriverAdded(
         UserEloquent $user,
@@ -161,11 +148,7 @@ class LeagueActivityLogService
     /**
      * Log driver updated in league.
      *
-     * @param UserEloquent $user
-     * @param int $leagueId
-     * @param LeagueDriverEloquent $leagueDriver
-     * @param array<string, mixed> $changes
-     * @return Activity
+     * @param  array<string, mixed>  $changes
      */
     public function logDriverUpdated(
         UserEloquent $user,
@@ -194,12 +177,6 @@ class LeagueActivityLogService
 
     /**
      * Log driver removed from league.
-     *
-     * @param UserEloquent $user
-     * @param int $leagueId
-     * @param string $leagueName
-     * @param Driver $driver
-     * @return Activity
      */
     public function logDriverRemoved(
         UserEloquent $user,
@@ -224,12 +201,6 @@ class LeagueActivityLogService
 
     /**
      * Log driver restored.
-     *
-     * @param UserEloquent $user
-     * @param int $leagueId
-     * @param string $leagueName
-     * @param Driver $driver
-     * @return Activity
      */
     public function logDriverRestored(
         UserEloquent $user,
@@ -254,12 +225,6 @@ class LeagueActivityLogService
 
     /**
      * Log drivers imported to league.
-     *
-     * @param UserEloquent $user
-     * @param int $leagueId
-     * @param string $leagueName
-     * @param int $count
-     * @return Activity
      */
     public function logDriversImported(
         UserEloquent $user,
@@ -289,10 +254,6 @@ class LeagueActivityLogService
 
     /**
      * Log competition created.
-     *
-     * @param UserEloquent $user
-     * @param Competition $competition
-     * @return Activity
      */
     public function logCompetitionCreated(
         UserEloquent $user,
@@ -318,10 +279,7 @@ class LeagueActivityLogService
     /**
      * Log competition updated.
      *
-     * @param UserEloquent $user
-     * @param Competition $competition
-     * @param array<string, mixed> $changes
-     * @return Activity
+     * @param  array<string, mixed>  $changes
      */
     public function logCompetitionUpdated(
         UserEloquent $user,
@@ -348,10 +306,6 @@ class LeagueActivityLogService
 
     /**
      * Log competition deleted.
-     *
-     * @param UserEloquent $user
-     * @param Competition $competition
-     * @return Activity
      */
     public function logCompetitionDeleted(
         UserEloquent $user,
@@ -380,10 +334,6 @@ class LeagueActivityLogService
 
     /**
      * Log season created.
-     *
-     * @param UserEloquent $user
-     * @param SeasonEloquent $season
-     * @return Activity
      */
     public function logSeasonCreated(
         UserEloquent $user,
@@ -423,10 +373,7 @@ class LeagueActivityLogService
     /**
      * Log season updated.
      *
-     * @param UserEloquent $user
-     * @param SeasonEloquent $season
-     * @param array<string, mixed> $changes
-     * @return Activity
+     * @param  array<string, mixed>  $changes
      */
     public function logSeasonUpdated(
         UserEloquent $user,
@@ -458,10 +405,6 @@ class LeagueActivityLogService
 
     /**
      * Log season completed.
-     *
-     * @param UserEloquent $user
-     * @param SeasonEloquent $season
-     * @return Activity
      */
     public function logSeasonCompleted(
         UserEloquent $user,
@@ -491,10 +434,6 @@ class LeagueActivityLogService
 
     /**
      * Log season archived.
-     *
-     * @param UserEloquent $user
-     * @param SeasonEloquent $season
-     * @return Activity
      */
     public function logSeasonArchived(
         UserEloquent $user,
@@ -524,10 +463,6 @@ class LeagueActivityLogService
 
     /**
      * Log season deleted.
-     *
-     * @param UserEloquent $user
-     * @param SeasonEloquent $season
-     * @return Activity
      */
     public function logSeasonDeleted(
         UserEloquent $user,
@@ -561,10 +496,6 @@ class LeagueActivityLogService
 
     /**
      * Log round created.
-     *
-     * @param UserEloquent $user
-     * @param Round $round
-     * @return Activity
      */
     public function logRoundCreated(
         UserEloquent $user,
@@ -598,10 +529,7 @@ class LeagueActivityLogService
     /**
      * Log round updated.
      *
-     * @param UserEloquent $user
-     * @param Round $round
-     * @param array<string, mixed> $changes
-     * @return Activity
+     * @param  array<string, mixed>  $changes
      */
     public function logRoundUpdated(
         UserEloquent $user,
@@ -636,10 +564,6 @@ class LeagueActivityLogService
 
     /**
      * Log round completed.
-     *
-     * @param UserEloquent $user
-     * @param Round $round
-     * @return Activity
      */
     public function logRoundCompleted(
         UserEloquent $user,
@@ -672,10 +596,6 @@ class LeagueActivityLogService
 
     /**
      * Log round deleted.
-     *
-     * @param UserEloquent $user
-     * @param Round $round
-     * @return Activity
      */
     public function logRoundDeleted(
         UserEloquent $user,
@@ -712,10 +632,6 @@ class LeagueActivityLogService
 
     /**
      * Log race created.
-     *
-     * @param UserEloquent $user
-     * @param Race $race
-     * @return Activity
      */
     public function logRaceCreated(
         UserEloquent $user,
@@ -756,10 +672,7 @@ class LeagueActivityLogService
     /**
      * Log race updated.
      *
-     * @param UserEloquent $user
-     * @param Race $race
-     * @param array<string, mixed> $changes
-     * @return Activity
+     * @param  array<string, mixed>  $changes
      */
     public function logRaceUpdated(
         UserEloquent $user,
@@ -799,10 +712,6 @@ class LeagueActivityLogService
 
     /**
      * Log race completed.
-     *
-     * @param UserEloquent $user
-     * @param Race $race
-     * @return Activity
      */
     public function logRaceCompleted(
         UserEloquent $user,
@@ -840,10 +749,6 @@ class LeagueActivityLogService
 
     /**
      * Log race deleted.
-     *
-     * @param UserEloquent $user
-     * @param Race $race
-     * @return Activity
      */
     public function logRaceDeleted(
         UserEloquent $user,
@@ -881,11 +786,6 @@ class LeagueActivityLogService
 
     /**
      * Log race results entered.
-     *
-     * @param UserEloquent $user
-     * @param Race $race
-     * @param int $resultCount
-     * @return Activity
      */
     public function logRaceResultsEntered(
         UserEloquent $user,
@@ -935,10 +835,6 @@ class LeagueActivityLogService
 
     /**
      * Log division created.
-     *
-     * @param UserEloquent $user
-     * @param Division $division
-     * @return Activity
      */
     public function logDivisionCreated(
         UserEloquent $user,
@@ -972,10 +868,7 @@ class LeagueActivityLogService
     /**
      * Log division updated.
      *
-     * @param UserEloquent $user
-     * @param Division $division
-     * @param array<string, mixed> $changes
-     * @return Activity
+     * @param  array<string, mixed>  $changes
      */
     public function logDivisionUpdated(
         UserEloquent $user,
@@ -1010,10 +903,6 @@ class LeagueActivityLogService
 
     /**
      * Log divisions reordered.
-     *
-     * @param UserEloquent $user
-     * @param SeasonEloquent $season
-     * @return Activity
      */
     public function logDivisionsReordered(
         UserEloquent $user,
@@ -1045,10 +934,6 @@ class LeagueActivityLogService
 
     /**
      * Log division deleted.
-     *
-     * @param UserEloquent $user
-     * @param Division $division
-     * @return Activity
      */
     public function logDivisionDeleted(
         UserEloquent $user,
@@ -1081,11 +966,6 @@ class LeagueActivityLogService
 
     /**
      * Log driver added to division.
-     *
-     * @param UserEloquent $user
-     * @param SeasonDriverEloquent $seasonDriver
-     * @param Division $division
-     * @return Activity
      */
     public function logDriverAddedToDivision(
         UserEloquent $user,
@@ -1121,11 +1001,6 @@ class LeagueActivityLogService
 
     /**
      * Log driver removed from division.
-     *
-     * @param UserEloquent $user
-     * @param SeasonDriverEloquent $seasonDriver
-     * @param Division $oldDivision
-     * @return Activity
      */
     public function logDriverRemovedFromDivision(
         UserEloquent $user,
@@ -1165,10 +1040,6 @@ class LeagueActivityLogService
 
     /**
      * Log team created.
-     *
-     * @param UserEloquent $user
-     * @param Team $team
-     * @return Activity
      */
     public function logTeamCreated(
         UserEloquent $user,
@@ -1202,10 +1073,7 @@ class LeagueActivityLogService
     /**
      * Log team updated.
      *
-     * @param UserEloquent $user
-     * @param Team $team
-     * @param array<string, mixed> $changes
-     * @return Activity
+     * @param  array<string, mixed>  $changes
      */
     public function logTeamUpdated(
         UserEloquent $user,
@@ -1240,10 +1108,6 @@ class LeagueActivityLogService
 
     /**
      * Log team deleted.
-     *
-     * @param UserEloquent $user
-     * @param Team $team
-     * @return Activity
      */
     public function logTeamDeleted(
         UserEloquent $user,
@@ -1276,11 +1140,6 @@ class LeagueActivityLogService
 
     /**
      * Log driver added to team.
-     *
-     * @param UserEloquent $user
-     * @param SeasonDriverEloquent $seasonDriver
-     * @param Team $team
-     * @return Activity
      */
     public function logDriverAddedToTeam(
         UserEloquent $user,
@@ -1316,11 +1175,6 @@ class LeagueActivityLogService
 
     /**
      * Log driver removed from team.
-     *
-     * @param UserEloquent $user
-     * @param SeasonDriverEloquent $seasonDriver
-     * @param Team $oldTeam
-     * @return Activity
      */
     public function logDriverRemovedFromTeam(
         UserEloquent $user,
@@ -1360,10 +1214,6 @@ class LeagueActivityLogService
 
     /**
      * Log season driver added.
-     *
-     * @param UserEloquent $user
-     * @param SeasonDriverEloquent $seasonDriver
-     * @return Activity
      */
     public function logSeasonDriverAdded(
         UserEloquent $user,
@@ -1397,10 +1247,6 @@ class LeagueActivityLogService
 
     /**
      * Log season driver removed.
-     *
-     * @param UserEloquent $user
-     * @param SeasonDriverEloquent $seasonDriver
-     * @return Activity
      */
     public function logSeasonDriverRemoved(
         UserEloquent $user,
@@ -1439,12 +1285,11 @@ class LeagueActivityLogService
     /**
      * Get activities for a specific league with optional filters.
      *
-     * @param int $leagueId
-     * @param int|null $limit Maximum number of activities to return
-     * @param string|null $entityType Filter by entity type
-     * @param string|null $action Filter by action
-     * @param Carbon|null $fromDate Filter from date
-     * @param Carbon|null $toDate Filter to date
+     * @param  int|null  $limit  Maximum number of activities to return
+     * @param  string|null  $entityType  Filter by entity type
+     * @param  string|null  $action  Filter by action
+     * @param  Carbon|null  $fromDate  Filter from date
+     * @param  Carbon|null  $toDate  Filter to date
      * @return Collection<int, LeagueActivityData>
      */
     public function getActivitiesForLeague(
@@ -1507,8 +1352,7 @@ class LeagueActivityLogService
     /**
      * Build base query for league activities with filters.
      *
-     * @param League $league
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return \Illuminate\Database\Eloquent\Builder<Activity>
      */
     private function buildActivityQuery(League $league, array $filters): \Illuminate\Database\Eloquent\Builder
@@ -1544,8 +1388,7 @@ class LeagueActivityLogService
     /**
      * Get paginated activities for a league.
      *
-     * @param League $league
-     * @param array<string, mixed> $filters Contains: entity_type, action, from_date, to_date, limit, offset
+     * @param  array<string, mixed>  $filters  Contains: entity_type, action, from_date, to_date, limit, offset
      * @return array<int, array<string, mixed>>
      */
     public function getActivities(League $league, array $filters): array
@@ -1578,9 +1421,7 @@ class LeagueActivityLogService
     /**
      * Count total activities for a league.
      *
-     * @param League $league
-     * @param array<string, mixed> $filters Contains: entity_type, action, from_date, to_date
-     * @return int
+     * @param  array<string, mixed>  $filters  Contains: entity_type, action, from_date, to_date
      */
     public function countActivities(League $league, array $filters): int
     {
@@ -1592,8 +1433,6 @@ class LeagueActivityLogService
     /**
      * Get a single activity by ID.
      *
-     * @param League $league
-     * @param int $activityId
      * @return array<string, mixed>|null
      */
     public function getActivityById(League $league, int $activityId): ?array
@@ -1618,7 +1457,6 @@ class LeagueActivityLogService
      *
      * Handles multiple causer types (User and Admin).
      *
-     * @param Activity $activity
      * @return array<string, mixed>
      */
     private function mapActivityToArray(Activity $activity): array

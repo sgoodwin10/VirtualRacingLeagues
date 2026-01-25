@@ -22,8 +22,9 @@ class PlatformTrackSeeder extends Seeder
         // Get Gran Turismo 7 platform ID
         $gt7Platform = DB::table('platforms')->where('slug', 'gran-turismo-7')->first();
 
-        if (!$gt7Platform) {
+        if (! $gt7Platform) {
             $this->command->error('Gran Turismo 7 platform not found. Please run PlatformSeeder first.');
+
             return;
         }
 
@@ -32,6 +33,7 @@ class PlatformTrackSeeder extends Seeder
         // Helper function to get location ID by slug
         $getLocationId = function ($slug) {
             $location = DB::table('platform_track_locations')->where('slug', $slug)->first();
+
             return $location ? $location->id : null;
         };
 
@@ -268,8 +270,9 @@ class PlatformTrackSeeder extends Seeder
         foreach ($tracks as $track) {
             $locationId = $getLocationId($track['location']);
 
-            if (!$locationId) {
+            if (! $locationId) {
                 $this->command->warn("Location '{$track['location']}' not found, skipping track '{$track['name']}'");
+
                 continue;
             }
 
@@ -288,6 +291,6 @@ class PlatformTrackSeeder extends Seeder
             ]);
         }
 
-        $this->command->info("Seeded " . count($tracks) . " Gran Turismo 7 tracks successfully!");
+        $this->command->info('Seeded ' . count($tracks) . ' Gran Turismo 7 tracks successfully!');
     }
 }

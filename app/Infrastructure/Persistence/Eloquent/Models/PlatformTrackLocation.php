@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\Platform $platform
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\PlatformTrack> $tracks
  * @property-read int|null $tracks_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrackLocation newQuery()
@@ -66,8 +67,6 @@ class PlatformTrackLocation extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return PlatformTrackLocationFactory
      */
     protected static function newFactory(): PlatformTrackLocationFactory
     {

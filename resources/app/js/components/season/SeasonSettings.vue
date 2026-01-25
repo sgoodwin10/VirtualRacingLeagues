@@ -2,7 +2,8 @@
 import { ref, computed } from 'vue';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
+import VrlConfirmDialog from '@app/components/common/dialogs/VrlConfirmDialog.vue';
 import type { Season } from '@app/types/season';
 
 import {
@@ -13,6 +14,7 @@ import {
   PhWarning,
   PhGear,
   PhArrowCounterClockwise,
+  PhCheckCircle,
 } from '@phosphor-icons/vue';
 import { Button } from '@app/components/common/buttons';
 import { CardHeader } from '@app/components/common/cards';
@@ -37,11 +39,27 @@ const emit = defineEmits<Emits>();
 
 const seasonStore = useSeasonStore();
 const toast = useToast();
-const confirm = useConfirm();
 
 const showDeleteDialog = ref(false);
-const isCompleting = ref(false);
-const isReactivating = ref(false);
+
+// VRL Confirmation dialogs
+const {
+  isVisible: isCompleteVisible,
+  options: completeOptions,
+  isLoading: isCompleting,
+  showConfirmation: showCompleteConfirmation,
+  handleAccept: handleCompleteAccept,
+  handleReject: handleCompleteReject,
+} = useVrlConfirm();
+
+const {
+  isVisible: isReactivateVisible,
+  options: reactivateOptions,
+  isLoading: isReactivating,
+  showConfirmation: showReactivateConfirmation,
+  handleAccept: handleReactivateAccept,
+  handleReject: handleReactivateReject,
+} = useVrlConfirm();
 
 // Computed properties for valid state transitions
 const canComplete = computed(() => props.season.status === 'active');
@@ -81,18 +99,18 @@ const statusConfig = computed(() => {
   return configs[props.season.status as keyof typeof configs];
 });
 
-async function handleComplete(): Promise<void> {
-  confirm.require({
-    message: 'Mark this season as completed? This indicates the season has finished.',
+function handleComplete(): void {
+  showCompleteConfirmation({
     header: 'Complete Season',
-    icon: 'pi pi-flag-fill',
-    rejectLabel: 'Cancel',
-    rejectClass: 'p-button-secondary p-button-outlined',
+    message: 'Mark this season as completed? This indicates the season has finished.',
+    icon: PhCheckCircle,
+    iconColor: 'var(--green)',
+    iconBgColor: 'var(--green-dim)',
     acceptLabel: 'Complete',
-    acceptClass: 'p-button-success',
-    accept: async () => {
-      isCompleting.value = true;
-
+    rejectLabel: 'Cancel',
+    acceptVariant: 'success',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       try {
         await seasonStore.completeExistingSeason(props.season.id);
 
@@ -113,25 +131,23 @@ async function handleComplete(): Promise<void> {
           detail: errorMessage,
           life: 5000,
         });
-      } finally {
-        isCompleting.value = false;
       }
     },
   });
 }
 
-async function handleReactivate(): Promise<void> {
-  confirm.require({
-    message: 'Reactivate this season? It will become active again.',
+function handleReactivate(): void {
+  showReactivateConfirmation({
     header: 'Reactivate Season',
-    icon: 'pi pi-refresh',
-    rejectLabel: 'Cancel',
-    rejectClass: 'p-button-secondary p-button-outlined',
+    message: 'Reactivate this season? It will become active again.',
+    icon: PhArrowCounterClockwise,
+    iconColor: 'var(--cyan)',
+    iconBgColor: 'var(--cyan-dim)',
     acceptLabel: 'Reactivate',
-    acceptClass: 'p-button-success',
-    accept: async () => {
-      isReactivating.value = true;
-
+    rejectLabel: 'Cancel',
+    acceptVariant: 'success',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       try {
         await seasonStore.reactivateExistingSeason(props.season.id);
 
@@ -153,8 +169,6 @@ async function handleReactivate(): Promise<void> {
           detail: errorMessage,
           life: 5000,
         });
-      } finally {
-        isReactivating.value = false;
       }
     },
   });
@@ -333,6 +347,24 @@ function handleSeasonDeleted(): void {
       v-model:visible="showDeleteDialog"
       :season="season"
       @confirmed="handleSeasonDeleted"
+    />
+
+    <!-- Confirm Complete Season Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isCompleteVisible"
+      v-bind="completeOptions"
+      :loading="isCompleting"
+      @accept="handleCompleteAccept"
+      @reject="handleCompleteReject"
+    />
+
+    <!-- Confirm Reactivate Season Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isReactivateVisible"
+      v-bind="reactivateOptions"
+      :loading="isReactivating"
+      @accept="handleReactivateAccept"
+      @reject="handleReactivateReject"
     />
   </div>
 </template>

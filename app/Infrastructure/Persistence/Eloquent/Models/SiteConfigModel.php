@@ -33,6 +33,7 @@ use Spatie\MediaLibrary\HasMedia;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\SiteConfigFileModel> $files
  * @property-read int|null $files_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SiteConfigModel newQuery()
@@ -128,8 +129,6 @@ class SiteConfigModel extends Model implements HasMedia
 
     /**
      * Register media collections for site configuration.
-     *
-     * @return void
      */
     public function registerMediaCollections(): void
     {

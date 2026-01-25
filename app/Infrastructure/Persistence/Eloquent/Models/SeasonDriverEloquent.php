@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon $updated_at
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent $leagueDriver
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent $season
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SeasonDriverEloquent newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SeasonDriverEloquent newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SeasonDriverEloquent query()

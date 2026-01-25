@@ -20,7 +20,7 @@ final class LogSiteConfigActivity
     /**
      * Handle the event.
      *
-     * @param SiteConfigIdentityUpdated|SiteConfigTrackingUpdated|SiteConfigApplicationSettingsUpdated $event
+     * @param  SiteConfigIdentityUpdated|SiteConfigTrackingUpdated|SiteConfigApplicationSettingsUpdated  $event
      */
     public function handle(object $event): void
     {
@@ -103,6 +103,7 @@ final class LogSiteConfigActivity
     {
         /** @var AdminEloquent|null $admin */
         $admin = auth('admin')->user();
+
         return $admin;
     }
 
@@ -113,6 +114,7 @@ final class LogSiteConfigActivity
     {
         /** @var AdminEloquent|null $admin */
         $admin = auth('admin')->user();
+
         return $admin ? "{$admin->first_name} {$admin->last_name}" : 'System';
     }
 }

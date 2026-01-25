@@ -16,9 +16,9 @@ namespace App\Domain\Shared\ValueObjects;
 final readonly class MediaReference
 {
     /**
-     * @param int $id The media table primary key
-     * @param string $collection The media collection name (e.g., 'logo', 'banner')
-     * @param array<string, string> $conversions URLs for each image conversion (thumb, small, medium, large, og)
+     * @param  int  $id  The media table primary key
+     * @param  string  $collection  The media collection name (e.g., 'logo', 'banner')
+     * @param  array<string, string>  $conversions  URLs for each image conversion (thumb, small, medium, large, og)
      */
     public function __construct(
         public int $id,
@@ -44,8 +44,7 @@ final readonly class MediaReference
     /**
      * Create from array representation
      *
-     * @param array{id: int, collection: string, conversions?: array<string, string>} $data
-     * @return self
+     * @param  array{id: int, collection: string, conversions?: array<string, string>}  $data
      */
     public static function fromArray(array $data): self
     {

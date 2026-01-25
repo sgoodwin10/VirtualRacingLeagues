@@ -27,6 +27,7 @@ class SeasonsBackupSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('SeasonsBackupSeeder cannot run in production environment!');
+
             return;
         }
 
@@ -59,7 +60,7 @@ class SeasonsBackupSeeder extends Seeder
                 'created_at' => '2025-11-27 11:32:10',
                 'updated_at' => '2026-01-07 01:50:05',
                 'deleted_at' => null,
-            ]
+            ],
         ];
 
         foreach ($seasons as $seasonsData) {

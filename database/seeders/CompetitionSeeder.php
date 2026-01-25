@@ -19,6 +19,7 @@ class CompetitionSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('CompetitionSeeder cannot run in production environment!');
+
             return;
         }
 

@@ -47,7 +47,7 @@ final readonly class EmailAddress
             throw new InvalidArgumentException("Email address{$fieldContext} cannot exceed 255 characters");
         }
 
-        if (!filter_var($trimmed, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($trimmed, FILTER_VALIDATE_EMAIL)) {
             $fieldContext = $this->fieldName ? " for field '{$this->fieldName}'" : '';
             throw new InvalidArgumentException("Invalid email address{$fieldContext}: {$trimmed}");
         }
@@ -66,6 +66,7 @@ final readonly class EmailAddress
     public function domain(): string
     {
         $atPosition = strrchr($this->value, '@');
+
         return $atPosition !== false ? substr($atPosition, 1) : '';
     }
 

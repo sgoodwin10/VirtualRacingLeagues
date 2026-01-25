@@ -44,6 +44,7 @@ use Spatie\Activitylog\Models\Activity;
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int,
  *     \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
+ *
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static Builder<static>|UserEloquent filterByStatus(?string $status)
  * @method static Builder<static>|UserEloquent newModelQuery()
@@ -136,12 +137,12 @@ class UserEloquent extends Authenticatable implements MustVerifyEmail
     /**
      * Scope a query to search across user fields.
      *
-     * @param Builder<UserEloquent> $query
+     * @param  Builder<UserEloquent>  $query
      * @return Builder<UserEloquent>
      */
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
-        if (!$search) {
+        if (! $search) {
             return $query;
         }
 
@@ -156,12 +157,12 @@ class UserEloquent extends Authenticatable implements MustVerifyEmail
     /**
      * Scope a query to filter by status.
      *
-     * @param Builder<UserEloquent> $query
+     * @param  Builder<UserEloquent>  $query
      * @return Builder<UserEloquent>
      */
     public function scopeFilterByStatus(Builder $query, ?string $status): Builder
     {
-        if (!$status) {
+        if (! $status) {
             return $query;
         }
 
@@ -211,7 +212,7 @@ class UserEloquent extends Authenticatable implements MustVerifyEmail
     /**
      * Send the password reset notification.
      *
-     * @param string $token
+     * @param  string  $token
      */
     public function sendPasswordResetNotification($token): void
     {

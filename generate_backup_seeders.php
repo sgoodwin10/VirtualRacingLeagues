@@ -24,26 +24,28 @@ function formatValue($value, $key = null): string
         'race_times_required', 'drop_round', 'fastest_lap_top_10', 'qualifying_pole_top_10',
         'round_points', 'is_qualifier', 'extra_lap_after_time', 'track_limits_enforced',
         'false_start_detection', 'collision_penalties', 'mandatory_pit_stop', 'race_points',
-        'has_fastest_lap', 'has_pole', 'dnf'
+        'has_fastest_lap', 'has_pole', 'dnf',
     ]))) {
         return $value ? 'true' : 'false';
     }
 
     if (is_numeric($value)) {
-        return (string)$value;
+        return (string) $value;
     }
 
     // For JSON fields, use json_encode()
     if (in_array($key, ['points_system', 'round_results', 'qualifying_results', 'race_time_results', 'fastest_lap_results'])) {
         if ($value) {
-            return "json_encode(" . var_export(json_decode($value, true), true) . ")";
+            return 'json_encode('.var_export(json_decode($value, true), true).')';
         }
+
         return 'null';
     }
 
     // Escape single quotes in strings
     $escaped = str_replace("'", "\\'", $value);
-    return "'" . $escaped . "'";
+
+    return "'".$escaped."'";
 }
 
 function generateSeeder(string $tableName, string $modelClass, array $columns, string $outputFile, string $dependencies = ''): void
@@ -54,7 +56,7 @@ function generateSeeder(string $tableName, string $modelClass, array $columns, s
         return (array) $record;
     })->toArray();
 
-    $className = str_replace('BackupSeeder', '', basename($outputFile, '.php')) . 'BackupSeeder';
+    $className = str_replace('BackupSeeder', '', basename($outputFile, '.php')).'BackupSeeder';
     $generatedDate = date('Y-m-d');
     $recordCount = count($records);
 
@@ -110,7 +112,7 @@ PHP;
     }
 
     $modelVar = str_replace('_', '', ucwords($tableName, '_'));
-    $modelVar = lcfirst($modelVar) . 'Data';
+    $modelVar = lcfirst($modelVar).'Data';
     $modelShortClass = class_basename($modelClass);
 
     $seederContent .= <<<PHP
@@ -137,8 +139,8 @@ PHP;
 }
 
 echo "DATABASE BACKUP SEEDER GENERATION\n";
-echo "Generated: " . date('Y-m-d H:i:s') . "\n";
-echo str_repeat('=', 80) . "\n\n";
+echo 'Generated: '.date('Y-m-d H:i:s')."\n";
+echo str_repeat('=', 80)."\n\n";
 
 // Generate each seeder
 generateSeeder(
@@ -149,9 +151,9 @@ generateSeeder(
         'logo_path', 'banner_path', 'team_championship_enabled', 'teams_drivers_for_calculation',
         'teams_drop_rounds', 'teams_total_drop_rounds', 'race_divisions_enabled',
         'race_times_required', 'drop_round', 'total_drop_rounds', 'status',
-        'created_by_user_id', 'created_at', 'updated_at', 'deleted_at'
+        'created_by_user_id', 'created_at', 'updated_at', 'deleted_at',
     ],
-    __DIR__ . '/database/seeders/Backup/SeasonsBackupSeeder.php',
+    __DIR__.'/database/seeders/Backup/SeasonsBackupSeeder.php',
     "\n * Dependencies: competitions, users tables must have required records"
 );
 
@@ -159,7 +161,7 @@ generateSeeder(
     'teams',
     'App\Infrastructure\Persistence\Eloquent\Models\Team',
     ['id', 'season_id', 'name', 'logo_url', 'created_at', 'updated_at'],
-    __DIR__ . '/database/seeders/Backup/TeamsBackupSeeder.php',
+    __DIR__.'/database/seeders/Backup/TeamsBackupSeeder.php',
     "\n * Dependencies: SeasonsBackupSeeder must run first"
 );
 
@@ -167,7 +169,7 @@ generateSeeder(
     'divisions',
     'App\Infrastructure\Persistence\Eloquent\Models\Division',
     ['id', 'season_id', 'order', 'name', 'description', 'logo_url', 'created_at', 'updated_at'],
-    __DIR__ . '/database/seeders/Backup/DivisionsBackupSeeder.php',
+    __DIR__.'/database/seeders/Backup/DivisionsBackupSeeder.php',
     "\n * Dependencies: SeasonsBackupSeeder must run first"
 );
 
@@ -175,7 +177,7 @@ generateSeeder(
     'season_drivers',
     'App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent',
     ['id', 'season_id', 'league_driver_id', 'team_id', 'division_id', 'status', 'notes', 'added_at', 'updated_at'],
-    __DIR__ . '/database/seeders/Backup/SeasonDriversBackupSeeder.php',
+    __DIR__.'/database/seeders/Backup/SeasonDriversBackupSeeder.php',
     "\n * Dependencies: SeasonsBackupSeeder, TeamsBackupSeeder, DivisionsBackupSeeder must run first"
 );
 
@@ -188,9 +190,9 @@ generateSeeder(
         'stream_url', 'internal_notes', 'fastest_lap', 'fastest_lap_top_10',
         'qualifying_pole', 'qualifying_pole_top_10', 'points_system', 'round_points',
         'status', 'round_results', 'qualifying_results', 'race_time_results',
-        'fastest_lap_results', 'created_by_user_id', 'created_at', 'updated_at', 'deleted_at'
+        'fastest_lap_results', 'created_by_user_id', 'created_at', 'updated_at', 'deleted_at',
     ],
-    __DIR__ . '/database/seeders/Backup/RoundsBackupSeeder.php',
+    __DIR__.'/database/seeders/Backup/RoundsBackupSeeder.php',
     "\n * Dependencies: SeasonsBackupSeeder must run first\n *\n * Note: JSON result fields (round_results, qualifying_results, race_time_results, fastest_lap_results)\n * are not included in this backup as they are dynamically generated from race_results table."
 );
 
@@ -206,9 +208,9 @@ generateSeeder(
         'mandatory_pit_stop', 'minimum_pit_time', 'assists_restrictions',
         'fastest_lap', 'fastest_lap_top_10', 'qualifying_pole', 'qualifying_pole_top_10',
         'race_points', 'points_system', 'dnf_points', 'dns_points', 'race_notes',
-        'status', 'created_at', 'updated_at'
+        'status', 'created_at', 'updated_at',
     ],
-    __DIR__ . '/database/seeders/Backup/RacesBackupSeeder.php',
+    __DIR__.'/database/seeders/Backup/RacesBackupSeeder.php',
     "\n * Dependencies: RoundsBackupSeeder must run first"
 );
 
@@ -219,13 +221,13 @@ generateSeeder(
         'id', 'race_id', 'driver_id', 'division_id', 'position', 'original_race_time',
         'original_race_time_difference', 'final_race_time_difference', 'fastest_lap',
         'penalties', 'has_fastest_lap', 'has_pole', 'dnf', 'status', 'race_points',
-        'positions_gained', 'created_at', 'updated_at'
+        'positions_gained', 'created_at', 'updated_at',
     ],
-    __DIR__ . '/database/seeders/Backup/RaceResultsBackupSeeder.php',
+    __DIR__.'/database/seeders/Backup/RaceResultsBackupSeeder.php',
     "\n * Dependencies: RacesBackupSeeder, SeasonDriversBackupSeeder, DivisionsBackupSeeder must run first"
 );
 
-echo "\n" . str_repeat('=', 80) . "\n";
+echo "\n".str_repeat('=', 80)."\n";
 echo "✓ All backup seeders generated successfully!\n";
 echo "\nNow updating README.md...\n";
 
@@ -416,6 +418,6 @@ For issues or questions about these backup seeders, please contact the developme
 
 MD;
 
-file_put_contents(__DIR__ . '/database/seeders/Backup/README.md', $readmeContent);
+file_put_contents(__DIR__.'/database/seeders/Backup/README.md', $readmeContent);
 echo "✓ README.md updated successfully!\n";
 echo "\n✓ All done!\n";

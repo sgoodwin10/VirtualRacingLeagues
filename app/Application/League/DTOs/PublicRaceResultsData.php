@@ -18,8 +18,7 @@ final class PublicRaceResultsData extends Data
      *     is_qualifier: bool,
      *     race_points: bool
      * } $race
-     * @param array<int, array<string, mixed>> $results
-     * @param bool $has_divisions
+     * @param  array<int, array<string, mixed>>  $results
      */
     public function __construct(
         public array $race,

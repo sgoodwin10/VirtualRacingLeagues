@@ -302,13 +302,13 @@ final class RaceResult
         }
 
         $newOriginalRaceTime = RaceTime::fromString($originalRaceTime);
-        if (!$this->originalRaceTime->equals($newOriginalRaceTime)) {
+        if (! $this->originalRaceTime->equals($newOriginalRaceTime)) {
             $changes['original_race_time'] = ['old' => $this->originalRaceTime->value(), 'new' => $originalRaceTime];
             $this->originalRaceTime = $newOriginalRaceTime;
         }
 
         $newOriginalRaceTimeDifference = RaceTime::fromString($originalRaceTimeDifference);
-        if (!$this->originalRaceTimeDifference->equals($newOriginalRaceTimeDifference)) {
+        if (! $this->originalRaceTimeDifference->equals($newOriginalRaceTimeDifference)) {
             $changes['original_race_time_difference'] = [
                 'old' => $this->originalRaceTimeDifference->value(),
                 'new' => $originalRaceTimeDifference,
@@ -318,13 +318,13 @@ final class RaceResult
         }
 
         $newFastestLap = RaceTime::fromString($fastestLap);
-        if (!$this->fastestLap->equals($newFastestLap)) {
+        if (! $this->fastestLap->equals($newFastestLap)) {
             $changes['fastest_lap'] = ['old' => $this->fastestLap->value(), 'new' => $fastestLap];
             $this->fastestLap = $newFastestLap;
         }
 
         $newPenalties = RaceTime::fromString($penalties);
-        if (!$this->penalties->equals($newPenalties)) {
+        if (! $this->penalties->equals($newPenalties)) {
             $changes['penalties'] = ['old' => $this->penalties->value(), 'new' => $penalties];
             $this->penalties = $newPenalties;
             $needsRecalculation = true;
@@ -350,7 +350,7 @@ final class RaceResult
             ];
         }
 
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             $this->updatedAt = new DateTimeImmutable();
             $this->recordEvent(new RaceResultUpdated(
                 raceResultId: $this->id ?? 0,
@@ -397,7 +397,7 @@ final class RaceResult
 
     public function markAsFastestLap(): void
     {
-        if (!$this->hasFastestLap) {
+        if (! $this->hasFastestLap) {
             $this->hasFastestLap = true;
             $this->updatedAt = new DateTimeImmutable();
         }
@@ -419,12 +419,14 @@ final class RaceResult
         // If original race time difference is null, final is also null
         if ($this->originalRaceTimeDifference->isNull()) {
             $this->finalRaceTimeDifference = $this->originalRaceTimeDifference;
+
             return;
         }
 
         // If penalties are null or zero, final equals original
         if ($this->penalties->isNull()) {
             $this->finalRaceTimeDifference = $this->originalRaceTimeDifference;
+
             return;
         }
 
@@ -445,6 +447,7 @@ final class RaceResult
     {
         $events = $this->domainEvents;
         $this->domainEvents = [];
+
         return $events;
     }
 

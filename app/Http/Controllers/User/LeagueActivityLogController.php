@@ -32,10 +32,6 @@ class LeagueActivityLogController
      * - action (string): Filter by action type
      * - from_date (string): Filter from date (ISO 8601)
      * - to_date (string): Filter to date (ISO 8601)
-     *
-     * @param ListActivityLogsRequest $request
-     * @param League $league
-     * @return JsonResponse
      */
     public function index(ListActivityLogsRequest $request, League $league): JsonResponse
     {
@@ -48,10 +44,6 @@ class LeagueActivityLogController
 
     /**
      * Get a single activity by ID.
-     *
-     * @param League $league
-     * @param int $activityId
-     * @return JsonResponse
      */
     public function show(League $league, int $activityId): JsonResponse
     {
@@ -71,12 +63,7 @@ class LeagueActivityLogController
     /**
      * Build paginated response for activities.
      *
-     * @param League $league
-     * @param array<int, array<string, mixed>> $data
-     * @param int $total
-     * @param int $limit
-     * @param int $page
-     * @return JsonResponse
+     * @param  array<int, array<string, mixed>>  $data
      */
     private function buildPaginatedResponse(
         League $league,

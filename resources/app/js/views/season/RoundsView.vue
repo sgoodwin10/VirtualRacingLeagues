@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { useSeasonStore } from '@app/stores/seasonStore';
 import { useToastError } from '@app/composables/useToastError';
 import { useToast } from 'primevue/usetoast';
-import { PhCalendar, PhDownload } from '@phosphor-icons/vue';
+import { PhCalendar, PhArrowClockwise } from '@phosphor-icons/vue';
 import RoundsPanel from '@app/components/round/RoundsPanel.vue';
 import { Card, CardHeader } from '@app/components/common/cards';
 import { Button } from '@app/components/common/buttons';
@@ -69,7 +69,7 @@ onMounted(async () => {
               title="Recalculate Results"
               variant="secondary"
               outline
-              :icon="PhDownload"
+              :icon="PhArrowClockwise"
               :loading="isRecalculating"
               @click="handleRecalculateResults"
             />

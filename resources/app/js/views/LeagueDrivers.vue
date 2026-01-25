@@ -2,14 +2,16 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
 import Skeleton from 'primevue/skeleton';
 import Toast from 'primevue/toast';
+import { PhWarning, PhArrowClockwise } from '@phosphor-icons/vue';
 import { getLeagueById } from '@app/services/leagueService';
 import { useLeagueDrivers } from '@app/composables/useLeagueDrivers';
 import { usePageTitle } from '@app/composables/usePageTitle';
 import { useCompetitionStore } from '@app/stores/competitionStore';
 import { useSeasonStore } from '@app/stores/seasonStore';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
+import VrlConfirmDialog from '@app/components/common/dialogs/VrlConfirmDialog.vue';
 import DriverFormDialog from '@app/components/driver/modals/DriverFormDialog.vue';
 import ViewDriverModal from '@app/components/driver/ViewDriverModal.vue';
 import CSVImportDialog from '@app/components/driver/modals/CSVImportDialog.vue';
@@ -21,9 +23,27 @@ import type { LeagueDriver, CreateDriverRequest } from '@app/types/driver';
 
 const route = useRoute();
 const toast = useToast();
-const confirm = useConfirm();
 const competitionStore = useCompetitionStore();
 const seasonStore = useSeasonStore();
+
+// VRL Confirmation dialogs
+const {
+  isVisible: isRemoveDriverVisible,
+  options: removeDriverOptions,
+  isLoading: isRemoveDriverLoading,
+  showConfirmation: showRemoveDriverConfirmation,
+  handleAccept: handleRemoveDriverAccept,
+  handleReject: handleRemoveDriverReject,
+} = useVrlConfirm();
+
+const {
+  isVisible: isRestoreDriverVisible,
+  options: restoreDriverOptions,
+  isLoading: isRestoreDriverLoading,
+  showConfirmation: showRestoreDriverConfirmation,
+  handleAccept: handleRestoreDriverAccept,
+  handleReject: handleRestoreDriverReject,
+} = useVrlConfirm();
 
 const league = ref<League | null>(null);
 const isLoading = ref(true);
@@ -191,28 +211,34 @@ async function handleSaveDriver(data: CreateDriverRequest): Promise<void> {
 }
 
 function handleRemoveDriver(driver: LeagueDriver): void {
-  confirm.require({
+  showRemoveDriverConfirmation({
+    header: 'Delete Driver',
     message: `Are you sure you want to delete ${getDriverName(driver)}? The driver will be marked as deleted but will still appear in race results and standings.`,
-    header: 'Confirm Deletion',
-    icon: 'pi pi-exclamation-triangle',
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
     acceptLabel: 'Delete',
     rejectLabel: 'Cancel',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       await removeDriver(driver.driver_id);
     },
   });
 }
 
 function handleRestoreDriver(driver: LeagueDriver): void {
-  confirm.require({
+  showRestoreDriverConfirmation({
+    header: 'Restore Driver',
     message: `Are you sure you want to restore ${getDriverName(driver)}? The driver will be marked as active.`,
-    header: 'Confirm Restore',
-    icon: 'pi pi-refresh',
+    icon: PhArrowClockwise,
+    iconColor: 'var(--green)',
+    iconBgColor: 'var(--green-dim)',
     acceptLabel: 'Restore',
     rejectLabel: 'Cancel',
-    acceptClass: 'p-button-success',
-    accept: async () => {
+    acceptVariant: 'success',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       await restoreDriver(driver.driver_id);
     },
   });
@@ -351,6 +377,24 @@ function getDriverName(leagueDriver: LeagueDriver): string {
 
     <!-- Toast for notifications -->
     <Toast />
+
+    <!-- Confirm Remove Driver Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isRemoveDriverVisible"
+      v-bind="removeDriverOptions"
+      :loading="isRemoveDriverLoading"
+      @accept="handleRemoveDriverAccept"
+      @reject="handleRemoveDriverReject"
+    />
+
+    <!-- Confirm Restore Driver Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isRestoreDriverVisible"
+      v-bind="restoreDriverOptions"
+      :loading="isRestoreDriverLoading"
+      @accept="handleRestoreDriverAccept"
+      @reject="handleRestoreDriverReject"
+    />
   </div>
 </template>
 

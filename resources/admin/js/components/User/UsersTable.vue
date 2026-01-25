@@ -151,6 +151,7 @@ import { useStatusHelpers } from '@admin/composables/useStatusHelpers';
 import { useNameHelpers } from '@admin/composables/useNameHelpers';
 import userService from '@admin/services/userService';
 import { logger } from '@admin/utils/logger';
+import { buildLoginAsUrl } from '@admin/utils/url';
 import type { User } from '@admin/types/user';
 
 /**
@@ -251,24 +252,10 @@ const handleReactivate = (user: User): void => {
 const handleLoginAsUser = async (user: User): Promise<void> => {
   loggingInAsUser.value.set(user.id, true);
   try {
-    // Validate environment variable
-    const appDomain = import.meta.env.VITE_APP_DOMAIN;
-    if (!appDomain) {
-      logger.error('VITE_APP_DOMAIN is not configured');
-      toast.add({
-        severity: 'error',
-        summary: 'Configuration Error',
-        detail: 'Application domain is not configured',
-        life: 5000,
-      });
-      return;
-    }
-
     const { token } = await userService.loginAsUser(user.id);
 
-    // Get app domain from environment
-    const protocol = window.location.protocol;
-    const loginUrl = `${protocol}//${appDomain}/login-as?token=${token}`;
+    // Build login URL with proper port handling
+    const loginUrl = buildLoginAsUrl(token);
 
     // Open in new tab
     window.open(loginUrl, '_blank');

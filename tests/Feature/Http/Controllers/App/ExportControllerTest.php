@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Http\Controllers\App;
 
 use App\Infrastructure\Persistence\Eloquent\Models\Competition;
+use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Platform;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;
@@ -12,7 +13,6 @@ use App\Infrastructure\Persistence\Eloquent\Models\RaceResult;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -25,12 +25,19 @@ final class ExportControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private League $league;
+
     private Platform $platform;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
+
     private Round $round;
+
     private Race $race;
+
     private SeasonDriverEloquent $seasonDriver;
 
     protected function setUp(): void
@@ -220,7 +227,7 @@ final class ExportControllerTest extends TestCase
         $this->actingAs($this->user, 'web');
 
         $response = $this->get(
-            "http://app.virtualracingleagues.localhost/api/export/races/99999/csv"
+            'http://app.virtualracingleagues.localhost/api/export/races/99999/csv'
         );
 
         $response->assertStatus(404);

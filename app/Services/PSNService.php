@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 class PSNService
 {
     private Client $client;
+
     private string $npssoToken;
 
     /**
@@ -156,7 +157,7 @@ class PSNService
 
         $data = json_decode($response->getBody(), true);
 
-        if (!isset($data['access_token'])) {
+        if (! isset($data['access_token'])) {
             throw new \Exception('No access token in response');
         }
 
@@ -245,14 +246,14 @@ class PSNService
     /**
      * Extract user data from GraphQL response
      *
-     * @param array<string, mixed>|null $data
+     * @param  array<string, mixed>|null  $data
      * @return array<int, array<string, mixed>>
      */
     private function extractUsersFromGraphQLResponse(?array $data): array
     {
         $results = [];
 
-        if (!$data) {
+        if (! $data) {
             return $results;
         }
 

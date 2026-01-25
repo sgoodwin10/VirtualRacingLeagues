@@ -58,7 +58,7 @@ class AdminPolicy
         }
 
         // Use domain logic for permission check
-        if (!$admin->canManage($targetAdmin)) {
+        if (! $admin->canManage($targetAdmin)) {
             return Response::deny('Forbidden. You do not have permission to view this admin user.');
         }
 
@@ -94,7 +94,7 @@ class AdminPolicy
         }
 
         // Use domain logic for permission check
-        if (!$admin->canManage($targetAdmin)) {
+        if (! $admin->canManage($targetAdmin)) {
             return Response::deny('Forbidden. You do not have permission to update this admin user.');
         }
 
@@ -121,7 +121,7 @@ class AdminPolicy
         }
 
         // Use domain logic for permission check
-        if (!$admin->canManage($targetAdmin)) {
+        if (! $admin->canManage($targetAdmin)) {
             return Response::deny('Forbidden. You do not have permission to delete this admin user.');
         }
 
@@ -142,7 +142,7 @@ class AdminPolicy
         }
 
         // Use domain logic for permission check
-        if (!$admin->canManage($targetAdmin)) {
+        if (! $admin->canManage($targetAdmin)) {
             return Response::deny('Forbidden. You do not have permission to restore this admin user.');
         }
 
@@ -163,7 +163,7 @@ class AdminPolicy
         }
 
         // Use domain logic for permission check
-        if (!$admin->canManage($targetAdmin)) {
+        if (! $admin->canManage($targetAdmin)) {
             return Response::deny('Forbidden. You do not have permission to permanently delete this admin user.');
         }
 

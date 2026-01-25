@@ -10,8 +10,8 @@ use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;
 use App\Infrastructure\Persistence\Eloquent\Models\RaceResult;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent as Season;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent as Season;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -21,14 +21,23 @@ final class RacePointsCalculationTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private League $league;
+
     private Competition $competition;
+
     private Season $season;
+
     private Round $round;
+
     private Race $race;
+
     private SeasonDriverEloquent $driver1;
+
     private SeasonDriverEloquent $driver2;
+
     private SeasonDriverEloquent $driver3;
+
     private SeasonDriverEloquent $driver4;
 
     protected function setUp(): void

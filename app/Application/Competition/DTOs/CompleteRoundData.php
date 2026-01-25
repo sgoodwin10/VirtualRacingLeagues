@@ -14,9 +14,9 @@ use Spatie\LaravelData\Data;
 final class CompleteRoundData extends Data
 {
     /**
-     * @param array<array{position: int, race_result_id: int, time_ms: int}>|null $qualifying_results
-     * @param array<array{position: int, race_result_id: int, time_ms: int}>|null $race_time_results
-     * @param array<array{position: int, race_result_id: int, time_ms: int}>|null $fastest_lap_results
+     * @param  array<array{position: int, race_result_id: int, time_ms: int}>|null  $qualifying_results
+     * @param  array<array{position: int, race_result_id: int, time_ms: int}>|null  $race_time_results
+     * @param  array<array{position: int, race_result_id: int, time_ms: int}>|null  $fastest_lap_results
      */
     public function __construct(
         public readonly ?array $qualifying_results = null,

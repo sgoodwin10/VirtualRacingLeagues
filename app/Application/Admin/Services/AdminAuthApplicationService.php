@@ -38,17 +38,17 @@ final class AdminAuthApplicationService
     {
         $admin = $this->adminRepository->findByEmail(EmailAddress::from($email));
 
-        if (!$admin) {
+        if (! $admin) {
             throw new InvalidCredentialsException();
         }
 
         // Verify password
-        if (!Hash::check($password, $admin->hashedPassword())) {
+        if (! Hash::check($password, $admin->hashedPassword())) {
             throw new InvalidCredentialsException();
         }
 
         // Check if admin is active
-        if (!$admin->isActive()) {
+        if (! $admin->isActive()) {
             throw new InvalidCredentialsException();
         }
 
@@ -86,13 +86,13 @@ final class AdminAuthApplicationService
         /** @var AdminEloquent|null $eloquentAdmin */
         $eloquentAdmin = Auth::guard('admin')->user();
 
-        if (!$eloquentAdmin) {
+        if (! $eloquentAdmin) {
             throw new AdminNotFoundException('No authenticated admin');
         }
 
         $admin = $this->adminRepository->findById($eloquentAdmin->id);
 
-        if (!$admin) {
+        if (! $admin) {
             throw AdminNotFoundException::withId($eloquentAdmin->id);
         }
 
@@ -107,12 +107,12 @@ final class AdminAuthApplicationService
         return DB::transaction(function () use ($adminId, $currentPassword, $newPassword) {
             $admin = $this->adminRepository->findById($adminId);
 
-            if (!$admin) {
+            if (! $admin) {
                 throw AdminNotFoundException::withId($adminId);
             }
 
             // Verify current password
-            if (!Hash::check($currentPassword, $admin->hashedPassword())) {
+            if (! Hash::check($currentPassword, $admin->hashedPassword())) {
                 throw new InvalidCredentialsException();
             }
 
@@ -137,7 +137,7 @@ final class AdminAuthApplicationService
         return DB::transaction(function () use ($adminId, $firstName, $lastName, $email) {
             $admin = $this->adminRepository->findById($adminId);
 
-            if (!$admin) {
+            if (! $admin) {
                 throw AdminNotFoundException::withId($adminId);
             }
 
@@ -174,7 +174,7 @@ final class AdminAuthApplicationService
         // This will be replaced when we have EloquentAdminRepository
         $eloquentModel = AdminEloquent::find($admin->id());
 
-        if (!$eloquentModel) {
+        if (! $eloquentModel) {
             throw new \RuntimeException('Could not find Eloquent admin model');
         }
 

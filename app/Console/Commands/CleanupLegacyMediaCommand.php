@@ -37,7 +37,9 @@ class CleanupLegacyMediaCommand extends Command
      * Cleanup statistics.
      */
     private int $totalCleaned = 0;
+
     private int $totalSkipped = 0;
+
     private int $totalFilesDeleted = 0;
 
     /**
@@ -54,7 +56,7 @@ class CleanupLegacyMediaCommand extends Command
             $this->newLine();
         }
 
-        if (!$this->option('force') && !$dryRun) {
+        if (! $this->option('force') && ! $dryRun) {
             $this->warn('WARNING: This command will remove legacy file path data from the database.');
 
             if ($deleteFiles) {
@@ -63,13 +65,15 @@ class CleanupLegacyMediaCommand extends Command
 
             $this->newLine();
 
-            if (!$this->confirm('Have you verified all media was migrated successfully?')) {
+            if (! $this->confirm('Have you verified all media was migrated successfully?')) {
                 $this->info('Cleanup cancelled.');
+
                 return Command::FAILURE;
             }
 
-            if (!$this->confirm('Are you absolutely sure you want to continue?')) {
+            if (! $this->confirm('Are you absolutely sure you want to continue?')) {
                 $this->info('Cleanup cancelled.');
+
                 return Command::FAILURE;
             }
         }
@@ -92,6 +96,7 @@ class CleanupLegacyMediaCommand extends Command
         );
 
         $this->info('Cleanup complete!');
+
         return Command::SUCCESS;
     }
 
@@ -141,6 +146,7 @@ class CleanupLegacyMediaCommand extends Command
 
         if ($leagues->isEmpty()) {
             $this->info('  No leagues with legacy paths found.');
+
             return;
         }
 
@@ -152,19 +158,20 @@ class CleanupLegacyMediaCommand extends Command
             $shouldClean = true;
 
             // Only clean if media exists in new system
-            if ($league->logo_path && !$league->hasMedia('logo')) {
+            if ($league->logo_path && ! $league->hasMedia('logo')) {
                 $shouldClean = false;
             }
-            if ($league->header_image_path && !$league->hasMedia('header_image')) {
+            if ($league->header_image_path && ! $league->hasMedia('header_image')) {
                 $shouldClean = false;
             }
-            if ($league->banner_path && !$league->hasMedia('banner')) {
+            if ($league->banner_path && ! $league->hasMedia('banner')) {
                 $shouldClean = false;
             }
 
-            if (!$shouldClean) {
+            if (! $shouldClean) {
                 $this->totalSkipped++;
                 $bar->advance();
+
                 continue;
             }
 
@@ -207,6 +214,7 @@ class CleanupLegacyMediaCommand extends Command
 
         if ($competitions->isEmpty()) {
             $this->info('  No competitions with legacy paths found.');
+
             return;
         }
 
@@ -215,9 +223,10 @@ class CleanupLegacyMediaCommand extends Command
 
         /** @var Competition $competition */
         foreach ($competitions as $competition) {
-            if (!$competition->hasMedia('logo')) {
+            if (! $competition->hasMedia('logo')) {
                 $this->totalSkipped++;
                 $bar->advance();
+
                 continue;
             }
 
@@ -254,6 +263,7 @@ class CleanupLegacyMediaCommand extends Command
 
         if ($seasons->isEmpty()) {
             $this->info('  No seasons with legacy paths found.');
+
             return;
         }
 
@@ -264,16 +274,17 @@ class CleanupLegacyMediaCommand extends Command
         foreach ($seasons as $season) {
             $shouldClean = true;
 
-            if ($season->logo_path && !$season->hasMedia('logo')) {
+            if ($season->logo_path && ! $season->hasMedia('logo')) {
                 $shouldClean = false;
             }
-            if ($season->banner_path && !$season->hasMedia('banner')) {
+            if ($season->banner_path && ! $season->hasMedia('banner')) {
                 $shouldClean = false;
             }
 
-            if (!$shouldClean) {
+            if (! $shouldClean) {
                 $this->totalSkipped++;
                 $bar->advance();
+
                 continue;
             }
 
@@ -311,6 +322,7 @@ class CleanupLegacyMediaCommand extends Command
 
         if ($teams->isEmpty()) {
             $this->info('  No teams with legacy paths found.');
+
             return;
         }
 
@@ -319,9 +331,10 @@ class CleanupLegacyMediaCommand extends Command
 
         /** @var Team $team */
         foreach ($teams as $team) {
-            if (!$team->hasMedia('logo')) {
+            if (! $team->hasMedia('logo')) {
                 $this->totalSkipped++;
                 $bar->advance();
+
                 continue;
             }
 
@@ -354,6 +367,7 @@ class CleanupLegacyMediaCommand extends Command
 
         if ($divisions->isEmpty()) {
             $this->info('  No divisions with legacy paths found.');
+
             return;
         }
 
@@ -362,9 +376,10 @@ class CleanupLegacyMediaCommand extends Command
 
         /** @var Division $division */
         foreach ($divisions as $division) {
-            if (!$division->hasMedia('logo')) {
+            if (! $division->hasMedia('logo')) {
                 $this->totalSkipped++;
                 $bar->advance();
+
                 continue;
             }
 
@@ -396,6 +411,7 @@ class CleanupLegacyMediaCommand extends Command
 
         if ($files->isEmpty()) {
             $this->info('  No site configuration files found.');
+
             return;
         }
 
@@ -405,9 +421,10 @@ class CleanupLegacyMediaCommand extends Command
         foreach ($files as $file) {
             $collection = $this->mapFileTypeToCollection($file->file_type);
 
-            if (!$collection || !$file->siteConfig->hasMedia($collection)) {
+            if (! $collection || ! $file->siteConfig->hasMedia($collection)) {
                 $this->totalSkipped++;
                 $bar->advance();
+
                 continue;
             }
 
@@ -452,7 +469,7 @@ class CleanupLegacyMediaCommand extends Command
      */
     private function deleteFileIfExists(?string $path): void
     {
-        if (!$path) {
+        if (! $path) {
             return;
         }
 

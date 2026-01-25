@@ -37,7 +37,7 @@ final class TiebreakerRuleController extends Controller
         $rules = $this->tiebreakerRuleRepository->getAllActive();
 
         $data = array_map(
-            fn($rule) => TiebreakerRuleData::fromEntity($rule)->toArray(),
+            fn ($rule) => TiebreakerRuleData::fromEntity($rule)->toArray(),
             $rules
         );
 
@@ -59,7 +59,7 @@ final class TiebreakerRuleController extends Controller
             $data = [
                 'enabled' => $season->hasTiebreakerRulesEnabled(),
                 'rules' => array_map(
-                    fn($rule) => [
+                    fn ($rule) => [
                         'id' => $rule->id(),
                         'slug' => $rule->slug()->value(),
                         'order' => $rule->order(),

@@ -12,7 +12,7 @@ use Spatie\LaravelData\Data;
 final class ReorderDivisionsData extends Data
 {
     /**
-     * @param array<int, array{id: int, order: int}> $divisions
+     * @param  array<int, array{id: int, order: int}>  $divisions
      */
     public function __construct(
         public readonly array $divisions,

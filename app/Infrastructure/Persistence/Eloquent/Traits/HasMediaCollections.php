@@ -27,8 +27,6 @@ trait HasMediaCollections
 
     /**
      * Boot the trait - handles cascade deletion of media
-     *
-     * @return void
      */
     public static function bootHasMediaCollections(): void
     {
@@ -49,9 +47,6 @@ trait HasMediaCollections
      * - og: 1200x630 (for Open Graph social sharing)
      *
      * All conversions output WebP format for optimal file size.
-     *
-     * @param Media|null $media
-     * @return void
      */
     public function registerMediaConversions(?Media $media = null): void
     {

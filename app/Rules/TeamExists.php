@@ -17,8 +17,6 @@ class TeamExists implements ValidationRule
     /**
      * Run the validation rule.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
      * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
@@ -30,7 +28,7 @@ class TeamExists implements ValidationRule
         }
 
         $exists = DB::table('teams')->where('id', $intValue)->exists();
-        if (!$exists) {
+        if (! $exists) {
             $fail('The selected team id is invalid.');
         }
     }

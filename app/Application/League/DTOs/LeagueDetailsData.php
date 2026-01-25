@@ -58,11 +58,11 @@ final class LeagueDetailsData extends Data
     /**
      * Create from domain entity with all related data.
      *
-     * @param array<array{id: int, name: string, slug: string}> $platforms
-     * @param array{id: int, first_name: string, last_name: string, email: string}|null $owner
-     * @param array<int, CompetitionSummaryData> $competitions
-     * @param array{total: int, active: int, completed: int} $seasonsSummary
-     * @param array{total_drivers: int, total_races: int, total_competitions: int} $stats
+     * @param  array<array{id: int, name: string, slug: string}>  $platforms
+     * @param  array{id: int, first_name: string, last_name: string, email: string}|null  $owner
+     * @param  array<int, CompetitionSummaryData>  $competitions
+     * @param  array{total: int, active: int, completed: int}  $seasonsSummary
+     * @param  array{total_drivers: int, total_races: int, total_competitions: int}  $stats
      */
     public static function fromEntity(
         League $league,

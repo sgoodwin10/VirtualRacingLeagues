@@ -108,6 +108,7 @@ class ConfigurationFile
     public function isWithinSizeLimit(): bool
     {
         $maxSize = self::MAX_SIZES[$this->fileType] ?? 2 * 1024 * 1024;
+
         return $this->fileSize <= $maxSize;
     }
 

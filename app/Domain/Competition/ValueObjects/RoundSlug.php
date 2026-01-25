@@ -42,7 +42,7 @@ final readonly class RoundSlug
             throw new InvalidArgumentException('Slug cannot be empty');
         }
 
-        if (!preg_match('/^[a-z0-9-]+$/', $this->value)) {
+        if (! preg_match('/^[a-z0-9-]+$/', $this->value)) {
             throw new InvalidArgumentException('Slug must contain only lowercase letters, numbers, and hyphens');
         }
     }

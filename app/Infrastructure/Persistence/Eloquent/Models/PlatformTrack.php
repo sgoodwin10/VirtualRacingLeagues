@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\PlatformTrackLocation $location
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\Platform $platform
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack forLocation(int $locationId)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlatformTrack forPlatform(int $platformId)
@@ -78,8 +79,6 @@ class PlatformTrack extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return PlatformTrackFactory
      */
     protected static function newFactory(): PlatformTrackFactory
     {
@@ -132,7 +131,6 @@ class PlatformTrack extends Model
      * Scope query to filter by platform.
      *
      * @param  Builder<PlatformTrack>  $query
-     * @param  int  $platformId
      * @return Builder<PlatformTrack>
      */
     public function scopeForPlatform(Builder $query, int $platformId): Builder
@@ -144,7 +142,6 @@ class PlatformTrack extends Model
      * Scope query to filter by location.
      *
      * @param  Builder<PlatformTrack>  $query
-     * @param  int  $locationId
      * @return Builder<PlatformTrack>
      */
     public function scopeForLocation(Builder $query, int $locationId): Builder

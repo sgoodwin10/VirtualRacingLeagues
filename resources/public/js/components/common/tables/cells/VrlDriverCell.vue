@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-
 /**
  * VrlDriverCell - Display driver information with avatar and team
  *
- * Shows driver name with optional avatar (image or initials) and team/subtitle.
+ * Shows driver name with optional team/subtitle.
  * Follows VRL Velocity design system styling.
  *
  * @example
@@ -12,7 +10,6 @@ import { computed } from 'vue';
  * <VrlDriverCell
  *   name="Max Velocity"
  *   team="Red Storm Racing"
- *   avatar-url="https://example.com/avatar.jpg"
  * />
  * ```
  */
@@ -22,38 +19,9 @@ interface VrlDriverCellProps {
 
   /** Team name or subtitle */
   team?: string;
-
-  /** Custom initials (auto-generated if not provided) */
-  initials?: string;
-
-  /** Avatar image URL */
-  avatarUrl?: string;
-
-  /** Show/hide avatar */
-  showAvatar?: boolean;
 }
 
-const props = withDefaults(defineProps<VrlDriverCellProps>(), {
-  team: undefined,
-  initials: undefined,
-  avatarUrl: undefined,
-  showAvatar: true,
-});
-
-/**
- * Generate initials from driver name
- */
-const generatedInitials = computed(() => {
-  if (props.initials) return props.initials;
-
-  const parts = props.name.trim().split(' ');
-  if (parts.length === 1) {
-    return parts[0]?.substring(0, 2).toUpperCase() ?? '';
-  }
-  const firstInitial = parts[0]?.[0] ?? '';
-  const lastInitial = parts[parts.length - 1]?.[0] ?? '';
-  return (firstInitial + lastInitial).toUpperCase();
-});
+defineProps<VrlDriverCellProps>();
 </script>
 
 <template>

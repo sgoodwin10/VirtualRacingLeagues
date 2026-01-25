@@ -39,7 +39,8 @@ final class AdminApplicationService
     /**
      * Create a new admin.
      *
-     * @param Admin|null $performedBy Admin performing the action (for permission checks)
+     * @param  Admin|null  $performedBy  Admin performing the action (for permission checks)
+     *
      * @throws DomainException
      */
     public function createAdmin(CreateAdminData $data, ?Admin $performedBy = null): AdminData
@@ -55,12 +56,12 @@ final class AdminApplicationService
             $role = AdminRole::from($data->role);
 
             // Permission check: only super_admins can create other super_admins
-            if ($performedBy && $role->isSuperAdmin() && !$performedBy->isSuperAdmin()) {
+            if ($performedBy && $role->isSuperAdmin() && ! $performedBy->isSuperAdmin()) {
                 throw new DomainException('Only super admins can create super admin accounts');
             }
 
             // Permission check: admins can only create roles below their level
-            if ($performedBy && !$performedBy->canAssignRole($role)) {
+            if ($performedBy && ! $performedBy->canAssignRole($role)) {
                 throw new DomainException('Forbidden. You do not have permission to assign this role.');
             }
 
@@ -87,7 +88,7 @@ final class AdminApplicationService
     /**
      * Update an existing admin.
      *
-     * @param Admin|null $performedBy Admin performing the action (for permission checks)
+     * @param  Admin|null  $performedBy  Admin performing the action (for permission checks)
      */
     public function updateAdmin(int $adminId, UpdateAdminData $data, ?Admin $performedBy = null): AdminData
     {
@@ -98,7 +99,7 @@ final class AdminApplicationService
             $this->ensureCanManage($admin, $performedBy);
 
             // Check email uniqueness if being changed
-            if (!$data->email instanceof Optional && $data->email !== (string) $admin->email()) {
+            if (! $data->email instanceof Optional && $data->email !== (string) $admin->email()) {
                 $newEmail = EmailAddress::from($data->email);
                 if ($this->adminRepository->emailExists($newEmail, $adminId)) {
                     throw new DomainException("Email '{$data->email}' is already in use");
@@ -106,20 +107,20 @@ final class AdminApplicationService
             }
 
             // Update profile
-            $hasProfileUpdate = !$data->first_name instanceof Optional
-                || !$data->last_name instanceof Optional
-                || !$data->email instanceof Optional;
+            $hasProfileUpdate = ! $data->first_name instanceof Optional
+                || ! $data->last_name instanceof Optional
+                || ! $data->email instanceof Optional;
 
             if ($hasProfileUpdate) {
-                $firstName = !$data->first_name instanceof Optional
+                $firstName = ! $data->first_name instanceof Optional
                     ? $data->first_name
                     : $admin->name()->firstName();
 
-                $lastName = !$data->last_name instanceof Optional
+                $lastName = ! $data->last_name instanceof Optional
                     ? $data->last_name
                     : $admin->name()->lastName();
 
-                $email = !$data->email instanceof Optional
+                $email = ! $data->email instanceof Optional
                     ? EmailAddress::from($data->email)
                     : $admin->email();
 
@@ -130,12 +131,12 @@ final class AdminApplicationService
             }
 
             // Update password
-            if (!$data->password instanceof Optional) {
+            if (! $data->password instanceof Optional) {
                 $admin->changePassword(Hash::make($data->password));
             }
 
             // Update role
-            if (!$data->role instanceof Optional && $data->role !== $admin->role()->value) {
+            if (! $data->role instanceof Optional && $data->role !== $admin->role()->value) {
                 $newRole = AdminRole::from($data->role);
                 if ($performedBy) {
                     $admin->changeRole($newRole, $performedBy);
@@ -146,7 +147,7 @@ final class AdminApplicationService
             }
 
             // Update status
-            if (!$data->status instanceof Optional && $data->status !== $admin->status()->value) {
+            if (! $data->status instanceof Optional && $data->status !== $admin->status()->value) {
                 $newStatus = AdminStatus::from($data->status);
                 if ($newStatus->isActive()) {
                     $admin->activate();
@@ -183,6 +184,7 @@ final class AdminApplicationService
     public function getAdminById(int $adminId): AdminData
     {
         $admin = $this->adminRepository->findById($adminId);
+
         return AdminData::fromEntity($admin);
     }
 
@@ -195,7 +197,7 @@ final class AdminApplicationService
     {
         $admin = $this->adminRepository->findByEmail(EmailAddress::from($email));
 
-        if (!$admin) {
+        if (! $admin) {
             throw AdminNotFoundException::withEmail($email);
         }
 
@@ -205,7 +207,7 @@ final class AdminApplicationService
     /**
      * Get paginated admins with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<int, AdminData>, total: int, per_page: int, current_page: int}
      */
     public function getPaginatedAdmins(int $page = 1, int $perPage = 15, array $filters = []): array
@@ -214,7 +216,7 @@ final class AdminApplicationService
 
         return [
             'data' => array_map(
-                fn(Admin $admin) => AdminData::fromEntity($admin),
+                fn (Admin $admin) => AdminData::fromEntity($admin),
                 $result['data']
             ),
             'total' => $result['total'],
@@ -227,7 +229,7 @@ final class AdminApplicationService
      * Get paginated admins with metadata for API responses.
      * Includes DetailedAdminData with last_login_at and pagination metadata.
      *
-     * @param array<string, mixed> $queryParams
+     * @param  array<string, mixed>  $queryParams
      * @return array{data: array<int, DetailedAdminData>, meta: array<string, mixed>}
      */
     public function getPaginatedAdminsWithMetadata(Admin $currentAdmin, array $queryParams): array
@@ -266,9 +268,9 @@ final class AdminApplicationService
         $result = $this->getPaginatedAdmins($page, $perPage, $filters);
 
         // Fetch infrastructure fields (last_login_at) using read model service
-        $adminIds = array_map(fn($adminData) => $adminData->id, $result['data']);
+        $adminIds = array_map(fn ($adminData) => $adminData->id, $result['data']);
         /** @var array<int> $cleanAdminIds */
-        $cleanAdminIds = array_filter($adminIds, fn($id) => $id !== null);
+        $cleanAdminIds = array_filter($adminIds, fn ($id) => $id !== null);
         /** @var array<int, string|null> $lastLoginTimestamps */
         $lastLoginTimestamps = $this->readModelService->getLastLoginTimestamps(array_values($cleanAdminIds));
 
@@ -327,7 +329,7 @@ final class AdminApplicationService
     /**
      * Activate an admin.
      *
-     * @param Admin|null $performedBy Admin performing the action
+     * @param  Admin|null  $performedBy  Admin performing the action
      */
     public function activateAdmin(int $adminId, ?Admin $performedBy = null): AdminData
     {
@@ -349,7 +351,7 @@ final class AdminApplicationService
     /**
      * Deactivate an admin.
      *
-     * @param Admin|null $performedBy Admin performing the action
+     * @param  Admin|null  $performedBy  Admin performing the action
      */
     public function deactivateAdmin(int $adminId, ?Admin $performedBy = null): AdminData
     {
@@ -371,7 +373,7 @@ final class AdminApplicationService
     /**
      * Delete an admin (soft delete).
      *
-     * @param Admin|null $performedBy Admin performing the action
+     * @param  Admin|null  $performedBy  Admin performing the action
      */
     public function deleteAdmin(int $adminId, ?Admin $performedBy = null): void
     {
@@ -396,7 +398,7 @@ final class AdminApplicationService
     /**
      * Restore a soft-deleted admin.
      *
-     * @param Admin|null $performedBy Admin performing the action
+     * @param  Admin|null  $performedBy  Admin performing the action
      */
     public function restoreAdmin(int $adminId, ?Admin $performedBy = null): AdminData
     {
@@ -418,7 +420,7 @@ final class AdminApplicationService
     /**
      * Change an admin's role.
      *
-     * @param Admin $performedBy Admin performing the action (required)
+     * @param  Admin  $performedBy  Admin performing the action (required)
      */
     public function changeAdminRole(int $adminId, string $newRole, Admin $performedBy): AdminData
     {
@@ -446,7 +448,7 @@ final class AdminApplicationService
         /** @var AdminEloquent|null $eloquentAdmin */
         $eloquentAdmin = \Illuminate\Support\Facades\Auth::guard('admin')->user();
 
-        if (!$eloquentAdmin) {
+        if (! $eloquentAdmin) {
             throw new AdminNotFoundException('No authenticated admin');
         }
 
@@ -492,7 +494,7 @@ final class AdminApplicationService
      */
     private function ensureCanManage(Admin $admin, ?Admin $performedBy): void
     {
-        if ($performedBy && !$performedBy->canManage($admin)) {
+        if ($performedBy && ! $performedBy->canManage($admin)) {
             throw new DomainException('Insufficient permissions to manage this admin');
         }
     }

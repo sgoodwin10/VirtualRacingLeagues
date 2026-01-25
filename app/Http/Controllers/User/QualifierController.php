@@ -26,6 +26,7 @@ final class QualifierController extends Controller
     {
         try {
             $qualifier = $this->qualifierService->getQualifierByRound($roundId);
+
             return ApiResponse::success($qualifier === null ? null : $qualifier->toArray());
         } catch (\Exception $e) {
             return ApiResponse::error('Failed to retrieve qualifier', null, 500);
@@ -38,6 +39,7 @@ final class QualifierController extends Controller
             $data = CreateQualifierData::from($request->validated());
             $userId = $request->user()->id;
             $qualifierData = $this->qualifierService->createQualifier($data, $roundId, $userId);
+
             return ApiResponse::created($qualifierData->toArray());
         } catch (QualifierAlreadyExistsException $e) {
             return ApiResponse::error($e->getMessage(), null, 422);
@@ -52,6 +54,7 @@ final class QualifierController extends Controller
             $data = UpdateQualifierData::from($request->validated());
             $userId = $request->user()->id;
             $qualifierData = $this->qualifierService->updateQualifier($qualifierId, $data, $userId);
+
             return ApiResponse::success($qualifierData->toArray());
         } catch (QualifierNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -64,6 +67,7 @@ final class QualifierController extends Controller
     {
         try {
             $this->qualifierService->deleteQualifier($qualifierId);
+
             return ApiResponse::success(['message' => 'Qualifier deleted successfully']);
         } catch (QualifierNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);

@@ -25,7 +25,7 @@ final readonly class RaceTime
         // Validate format: hh:mm:ss.ms (ms can be 1-3 digits)
         $pattern = '/^(\d{1,2}):(\d{2}):(\d{2})\.(\d{1,3})$/';
 
-        if (!preg_match($pattern, $normalizedValue, $matches)) {
+        if (! preg_match($pattern, $normalizedValue, $matches)) {
             throw InvalidRaceTimeException::invalidFormat($value);
         }
 

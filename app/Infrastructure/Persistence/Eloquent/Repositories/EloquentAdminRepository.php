@@ -112,7 +112,7 @@ final class EloquentAdminRepository implements AdminRepositoryInterface
 
         return [
             'data' => $paginator->items() ? array_map(
-                fn($eloquentAdmin) => $this->toDomainEntity($eloquentAdmin),
+                fn ($eloquentAdmin) => $this->toDomainEntity($eloquentAdmin),
                 $paginator->items()
             ) : [],
             'total' => $paginator->total(),
@@ -134,8 +134,8 @@ final class EloquentAdminRepository implements AdminRepositoryInterface
     /**
      * Apply filters to query.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<AdminEloquent> $query
-     * @param array<string, mixed> $filters
+     * @param  \Illuminate\Database\Eloquent\Builder<AdminEloquent>  $query
+     * @param  array<string, mixed>  $filters
      */
     private function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
@@ -143,8 +143,8 @@ final class EloquentAdminRepository implements AdminRepositoryInterface
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -169,7 +169,7 @@ final class EloquentAdminRepository implements AdminRepositoryInterface
         }
 
         // Default ordering
-        if (!isset($filters['order_by'])) {
+        if (! isset($filters['order_by'])) {
             $query->orderBy('created_at', 'desc');
         } else {
             $direction = $filters['order_direction'] ?? 'asc';
@@ -212,7 +212,7 @@ final class EloquentAdminRepository implements AdminRepositoryInterface
         // Handle soft deletes
         if ($admin->isDeleted() && $admin->deletedAt()) {
             $eloquentAdmin->deleted_at = \Carbon\Carbon::instance($admin->deletedAt());
-        } elseif (!$admin->isDeleted()) {
+        } elseif (! $admin->isDeleted()) {
             $eloquentAdmin->deleted_at = null;
         }
     }

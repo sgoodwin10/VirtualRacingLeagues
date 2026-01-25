@@ -29,7 +29,7 @@ final class ProfileController extends Controller
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user) {
+        if (! $user) {
             return ApiResponse::error('Unauthenticated', null, 401);
         }
 

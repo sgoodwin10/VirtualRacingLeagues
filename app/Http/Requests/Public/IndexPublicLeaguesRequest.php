@@ -71,7 +71,7 @@ final class IndexPublicLeaguesRequest extends FormRequest
                 'search' => $validated['search'] ?? null,
                 'platform_id' => $validated['platform_id'] ?? null,
             ],
-            fn($value): bool => $value !== null
+            fn ($value): bool => $value !== null
         );
     }
 

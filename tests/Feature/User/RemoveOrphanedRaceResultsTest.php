@@ -26,10 +26,15 @@ final class RemoveOrphanedRaceResultsTest extends TestCase
     private const APP_URL = 'http://app.virtualracingleagues.localhost';
 
     private User $user;
+
     private League $league;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
+
     private Round $round;
+
     private Race $race;
 
     protected function setUp(): void
@@ -226,16 +231,12 @@ final class RemoveOrphanedRaceResultsTest extends TestCase
     public function test_returns_404_when_race_not_found(): void
     {
         // Act - trying to access a non-existent race
-        // Note: The application checks authorization in the form request BEFORE checking if race exists,
-        // so this will return 403 (Forbidden) rather than 404, which is correct security behavior
-        // (don't leak information about resource existence to unauthorized users)
         $response = $this->actingAs($this->user)->deleteJson(
             self::APP_URL . '/api/races/99999/orphaned-results'
         );
 
-        // Assert - returns 403 because authorization is checked before resource existence
-        // This prevents information leakage about what resources exist in the system
-        $response->assertStatus(403);
+        // Assert - returns 404 because the race doesn't exist
+        $response->assertStatus(404);
     }
 
     public function test_returns_zero_count_when_no_orphaned_results(): void

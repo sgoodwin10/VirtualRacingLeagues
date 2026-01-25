@@ -31,6 +31,7 @@ final class TeamController extends Controller
     public function index(int $seasonId): JsonResponse
     {
         $teams = $this->teamService->getTeamsBySeasonId($seasonId);
+
         return ApiResponse::success($teams);
     }
 
@@ -42,6 +43,7 @@ final class TeamController extends Controller
         try {
             $data = $request->toDTO();
             $teamData = $this->teamService->createTeam($data, $seasonId, $request->user()->id);
+
             return ApiResponse::created($teamData->toArray(), 'Team created successfully');
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
@@ -56,6 +58,7 @@ final class TeamController extends Controller
         try {
             $data = $request->toDTO();
             $teamData = $this->teamService->updateTeam($teamId, $data, $request->user()->id);
+
             return ApiResponse::success($teamData->toArray(), 'Team updated successfully');
         } catch (TeamNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -72,6 +75,7 @@ final class TeamController extends Controller
         try {
             $userId = (int) auth()->id();
             $this->teamService->deleteTeam($teamId, $userId);
+
             return ApiResponse::success(null, 'Team deleted successfully');
         } catch (TeamNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -95,6 +99,7 @@ final class TeamController extends Controller
                 $data,
                 $request->user()->id
             );
+
             return ApiResponse::success($updatedDriver, 'Driver assigned to team successfully');
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);

@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $positions_gained
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
+ *
  * @method static RaceResult|null find(int $id, $columns = ['*'])
  * @method static RaceResult findOrFail(int $id, $columns = ['*'])
  * @method static bool insert(array<int, array<string, mixed>> $values)

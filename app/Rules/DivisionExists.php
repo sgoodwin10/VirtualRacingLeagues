@@ -17,8 +17,6 @@ class DivisionExists implements ValidationRule
     /**
      * Run the validation rule.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
      * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
@@ -30,7 +28,7 @@ class DivisionExists implements ValidationRule
         }
 
         $exists = DB::table('divisions')->where('id', $intValue)->exists();
-        if (!$exists) {
+        if (! $exists) {
             $fail('The selected division id is invalid.');
         }
     }

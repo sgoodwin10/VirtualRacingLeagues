@@ -51,7 +51,7 @@ interface SeasonDriverRepositoryInterface
     /**
      * Get drivers for a season with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array<SeasonDriver>
      */
     public function findBySeasonWithFilters(int $seasonId, array $filters = []): array;
@@ -80,7 +80,7 @@ interface SeasonDriverRepositoryInterface
     /**
      * Bulk add league drivers to a season.
      *
-     * @param int[] $leagueDriverIds
+     * @param  int[]  $leagueDriverIds
      * @return int Number of drivers added
      */
     public function bulkAdd(int $seasonId, array $leagueDriverIds, string $status = 'active'): int;
@@ -88,11 +88,8 @@ interface SeasonDriverRepositoryInterface
     /**
      * Get paginated season drivers with optional filters.
      *
-     * @param int $seasonId
-     * @param int $page
-     * @param int $perPage
-     * @param array<string, mixed> $filters Optional filters (search, status,
-     *     division_id, team_id, order_by, order_direction)
+     * @param  array<string, mixed>  $filters  Optional filters (search, status,
+     *                                         division_id, team_id, order_by, order_direction)
      * @return array{data: array<SeasonDriver>, total: int, per_page: int, current_page: int}
      */
     public function findBySeasonPaginated(int $seasonId, int $page, int $perPage, array $filters = []): array;
@@ -101,8 +98,7 @@ interface SeasonDriverRepositoryInterface
      * Update the team_id for a season driver.
      * Used when assigning/unassigning drivers to teams.
      *
-     * @param int $seasonDriverId
-     * @param int|null $teamId Null for "Privateer" (no team)
+     * @param  int|null  $teamId  Null for "Privateer" (no team)
      */
     public function updateTeamId(int $seasonDriverId, ?int $teamId): void;
 
@@ -110,8 +106,7 @@ interface SeasonDriverRepositoryInterface
      * Update the division_id for a season driver.
      * Used when assigning/unassigning drivers to divisions.
      *
-     * @param int $seasonDriverId
-     * @param int|null $divisionId Null to remove division assignment
+     * @param  int|null  $divisionId  Null to remove division assignment
      */
     public function updateDivisionId(int $seasonDriverId, ?int $divisionId): void;
 
@@ -127,7 +122,7 @@ interface SeasonDriverRepositoryInterface
      * Batch fetch driver names for multiple season driver IDs.
      * Used to avoid N+1 queries when fetching driver names.
      *
-     * @param array<int> $seasonDriverIds
+     * @param  array<int>  $seasonDriverIds
      * @return array<int, string> Map of season driver ID => driver name
      */
     public function findDriverNamesByIds(array $seasonDriverIds): array;
@@ -136,7 +131,6 @@ interface SeasonDriverRepositoryInterface
      * Get mapping of league_driver_id to driver_id for all drivers in a season.
      * Used to avoid N+1 queries when mapping league drivers to actual drivers.
      *
-     * @param int $seasonId
      * @return array<int, int> Map of league_driver_id => driver_id
      */
     public function getLeagueDriverToDriverIdMap(int $seasonId): array;
@@ -145,8 +139,7 @@ interface SeasonDriverRepositoryInterface
      * Batch fetch team IDs for drivers in a season.
      * Returns a map of driver_id => team_id|null.
      *
-     * @param int $seasonId
-     * @param array<int> $driverIds List of driver IDs (from league_drivers table)
+     * @param  array<int>  $driverIds  List of driver IDs (from league_drivers table)
      * @return array<int, int|null> Map of driver ID => team ID (null if not on a team)
      */
     public function findTeamIdsByDriverIds(int $seasonId, array $driverIds): array;

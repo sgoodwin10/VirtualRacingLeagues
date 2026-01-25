@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Helpers\UrlHelper;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Closure;
 use Illuminate\Http\Request;
@@ -35,8 +36,7 @@ class UserAuthenticate
             $host = $request->getHost();
             if (str_contains($host, 'app.')) {
                 // Already on app subdomain, redirect to login on main domain
-                $publicUrl = str_replace('//app.', '//', config('app.url'));
-                return redirect($publicUrl . '/login');
+                return redirect(UrlHelper::publicUrl() . '/login');
             } else {
                 // On main domain, redirect to login
                 return redirect()->route('login');
@@ -55,8 +55,7 @@ class UserAuthenticate
                 ], 403);
             }
 
-            $publicUrl = str_replace('//app.', '//', config('app.url'));
-            return redirect($publicUrl . '/login')
+            return redirect(UrlHelper::publicUrl() . '/login')
                 ->with('error', 'Your account has been deactivated. Please contact support.');
         }
 

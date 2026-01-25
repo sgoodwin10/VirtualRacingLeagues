@@ -19,7 +19,9 @@ use Illuminate\Support\Carbon;
 class ListActivityLogsRequest extends FormRequest
 {
     private const DEFAULT_LIMIT = 50;
+
     private const MAX_LIMIT = 100;
+
     private const DEFAULT_PAGE = 1;
 
     /**
@@ -36,7 +38,6 @@ class ListActivityLogsRequest extends FormRequest
     /**
      * Handle a failed authorization attempt.
      *
-     * @return void
      *
      * @throws \Illuminate\Http\Exceptions\HttpResponseException
      */
@@ -50,8 +51,6 @@ class ListActivityLogsRequest extends FormRequest
     /**
      * Handle a failed validation attempt.
      *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
-     * @return void
      *
      * @throws \Illuminate\Http\Exceptions\HttpResponseException
      */

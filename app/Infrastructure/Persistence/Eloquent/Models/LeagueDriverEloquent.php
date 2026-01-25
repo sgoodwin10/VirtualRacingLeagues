@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read int|null $number
  * @property-read null|null $team_name
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\League $league
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LeagueDriverEloquent newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LeagueDriverEloquent newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LeagueDriverEloquent query()

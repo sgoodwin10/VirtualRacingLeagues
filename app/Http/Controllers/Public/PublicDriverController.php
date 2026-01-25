@@ -23,8 +23,7 @@ final class PublicDriverController extends Controller
     /**
      * Get driver profile by season_driver_id.
      *
-     * @param int $seasonDriverId The season driver ID
-     * @return JsonResponse
+     * @param  int  $seasonDriverId  The season driver ID
      */
     public function show(int $seasonDriverId): JsonResponse
     {

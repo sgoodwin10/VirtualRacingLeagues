@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Eloquent\Repositories;
 
 use App\Domain\Competition\Entities\Round;
+use App\Domain\Competition\Exceptions\RoundNotFoundException;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
+use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\RoundName;
 use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
-use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\TiebreakerInformation;
-use App\Domain\Competition\Exceptions\RoundNotFoundException;
 use App\Infrastructure\Persistence\Eloquent\Models\Round as RoundEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use DateTimeImmutable;
@@ -66,6 +66,7 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
      * Find a round by ID with eager-loaded relationships for results display.
      *
      * @return array{round: Round, season: array<string, mixed>}
+     *
      * @throws RoundNotFoundException
      */
     public function findByIdWithRelations(int $id): array
@@ -106,7 +107,7 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
             ->orderBy('round_number')
             ->get();
 
-        return $eloquentModels->map(fn(RoundEloquent $model) => $this->toDomainEntity($model))->all();
+        return $eloquentModels->map(fn (RoundEloquent $model) => $this->toDomainEntity($model))->all();
     }
 
     /**
@@ -135,7 +136,7 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
         $counter = 1;
 
         while ($this->slugExists($slug, $seasonId, $excludeId)) {
-            $slug = $baseSlug . '-' . str_pad((string)$counter, 2, '0', STR_PAD_LEFT);
+            $slug = $baseSlug . '-' . str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
             $counter++;
         }
 
@@ -149,6 +150,7 @@ final class EloquentRoundRepository implements RoundRepositoryInterface
     {
         /** @var int|null $maxRound */
         $maxRound = RoundEloquent::where('season_id', $seasonId)->max('round_number');
+
         return ($maxRound ?? 0) + 1;
     }
 

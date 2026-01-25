@@ -9,13 +9,11 @@ use App\Application\Competition\DTOs\RaceData;
 use App\Application\Competition\DTOs\UpdateRaceData;
 use App\Domain\Competition\Entities\Race;
 use App\Domain\Competition\Exceptions\RaceNotFoundException;
+use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
 use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
-use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
-use App\Domain\League\Repositories\LeagueRepositoryInterface;
-use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Domain\Competition\ValueObjects\GridSource;
 use App\Domain\Competition\ValueObjects\PointsSystem;
 use App\Domain\Competition\ValueObjects\QualifyingFormat;
@@ -24,6 +22,8 @@ use App\Domain\Competition\ValueObjects\RaceName;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
 use App\Domain\Competition\ValueObjects\RaceStatus;
 use App\Domain\Competition\ValueObjects\RaceType;
+use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Infrastructure\Cache\RaceResultsCacheService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -169,7 +169,7 @@ final class RaceApplicationService
             $oldStatus = $race->status();
             $newStatus = null;
 
-            if (!($data->status instanceof Optional) && $data->status !== null) {
+            if (! ($data->status instanceof Optional) && $data->status !== null) {
                 $newStatus = RaceStatus::from($data->status);
                 if ($oldStatus !== $newStatus) {
                     $statusChanged = true;
@@ -186,55 +186,55 @@ final class RaceApplicationService
             // Check if this is a qualifier
             if ($race->isQualifier()) {
                 // Use qualifier-specific update method
-                $name = !($data->name instanceof Optional)
+                $name = ! ($data->name instanceof Optional)
                     ? ($data->name !== null ? RaceName::from($data->name) : null)
                     : $race->name();
 
-                $qualifyingFormat = !($data->qualifying_format instanceof Optional)
+                $qualifyingFormat = ! ($data->qualifying_format instanceof Optional)
                     ? ($data->qualifying_format !== null
                         ? QualifyingFormat::from($data->qualifying_format)
                         : $race->qualifyingFormat())
                     : $race->qualifyingFormat();
 
-                $qualifyingLength = !($data->qualifying_length instanceof Optional)
+                $qualifyingLength = ! ($data->qualifying_length instanceof Optional)
                     ? ($data->qualifying_length ?? $race->qualifyingLength())
                     : $race->qualifyingLength();
 
-                $qualifyingTire = !($data->qualifying_tire instanceof Optional)
+                $qualifyingTire = ! ($data->qualifying_tire instanceof Optional)
                     ? $data->qualifying_tire
                     : $race->qualifyingTire();
 
-                $weather = !($data->weather instanceof Optional)
+                $weather = ! ($data->weather instanceof Optional)
                     ? $data->weather
                     : $race->weather();
 
-                $tireRestrictions = !($data->tire_restrictions instanceof Optional)
+                $tireRestrictions = ! ($data->tire_restrictions instanceof Optional)
                     ? $data->tire_restrictions
                     : $race->tireRestrictions();
 
-                $fuelUsage = !($data->fuel_usage instanceof Optional)
+                $fuelUsage = ! ($data->fuel_usage instanceof Optional)
                     ? $data->fuel_usage
                     : $race->fuelUsage();
 
-                $damageModel = !($data->damage_model instanceof Optional)
+                $damageModel = ! ($data->damage_model instanceof Optional)
                     ? $data->damage_model
                     : $race->damageModel();
 
                 // Penalty fields are not editable for qualifiers - they are ignored
 
-                $assistsRestrictions = !($data->assists_restrictions instanceof Optional)
+                $assistsRestrictions = ! ($data->assists_restrictions instanceof Optional)
                     ? $data->assists_restrictions
                     : $race->assistsRestrictions();
 
-                $qualifyingPole = !($data->qualifying_pole instanceof Optional)
+                $qualifyingPole = ! ($data->qualifying_pole instanceof Optional)
                     ? $data->qualifying_pole
                     : $race->qualifyingPole();
 
-                $qualifyingPoleTop10 = !($data->qualifying_pole_top_10 instanceof Optional)
+                $qualifyingPoleTop10 = ! ($data->qualifying_pole_top_10 instanceof Optional)
                     ? ($data->qualifying_pole_top_10 ?? $race->qualifyingPoleTop10())
                     : $race->qualifyingPoleTop10();
 
-                $raceNotes = !($data->race_notes instanceof Optional)
+                $raceNotes = ! ($data->race_notes instanceof Optional)
                     ? $data->race_notes
                     : $race->raceNotes();
 
@@ -257,121 +257,121 @@ final class RaceApplicationService
                 );
             } else {
                 // Use regular race update method
-                $name = !($data->name instanceof Optional)
+                $name = ! ($data->name instanceof Optional)
                     ? ($data->name !== null ? RaceName::from($data->name) : null)
                     : $race->name();
 
-                $type = !($data->race_type instanceof Optional)
+                $type = ! ($data->race_type instanceof Optional)
                     ? ($data->race_type !== null ? RaceType::from($data->race_type) : null)
                     : $race->type();
 
-                $qualifyingFormat = !($data->qualifying_format instanceof Optional)
+                $qualifyingFormat = ! ($data->qualifying_format instanceof Optional)
                     ? ($data->qualifying_format !== null
                         ? QualifyingFormat::from($data->qualifying_format)
                         : $race->qualifyingFormat())
                     : $race->qualifyingFormat();
 
-                $qualifyingLength = !($data->qualifying_length instanceof Optional)
+                $qualifyingLength = ! ($data->qualifying_length instanceof Optional)
                     ? $data->qualifying_length
                     : $race->qualifyingLength();
 
-                $qualifyingTire = !($data->qualifying_tire instanceof Optional)
+                $qualifyingTire = ! ($data->qualifying_tire instanceof Optional)
                     ? $data->qualifying_tire
                     : $race->qualifyingTire();
 
-                $gridSource = !($data->grid_source instanceof Optional)
+                $gridSource = ! ($data->grid_source instanceof Optional)
                     ? ($data->grid_source !== null ? GridSource::from($data->grid_source) : $race->gridSource())
                     : $race->gridSource();
 
-                $gridSourceRaceId = !($data->grid_source_race_id instanceof Optional)
+                $gridSourceRaceId = ! ($data->grid_source_race_id instanceof Optional)
                     ? $data->grid_source_race_id
                     : $race->gridSourceRaceId();
 
-                $lengthType = !($data->length_type instanceof Optional)
+                $lengthType = ! ($data->length_type instanceof Optional)
                     ? ($data->length_type !== null ? RaceLengthType::from($data->length_type) : $race->lengthType())
                     : $race->lengthType();
 
-                $lengthValue = !($data->length_value instanceof Optional)
+                $lengthValue = ! ($data->length_value instanceof Optional)
                     ? ($data->length_value ?? $race->lengthValue())
                     : $race->lengthValue();
 
-                $extraLapAfterTime = !($data->extra_lap_after_time instanceof Optional)
+                $extraLapAfterTime = ! ($data->extra_lap_after_time instanceof Optional)
                     ? ($data->extra_lap_after_time ?? $race->extraLapAfterTime())
                     : $race->extraLapAfterTime();
 
-                $weather = !($data->weather instanceof Optional)
+                $weather = ! ($data->weather instanceof Optional)
                     ? $data->weather
                     : $race->weather();
 
-                $tireRestrictions = !($data->tire_restrictions instanceof Optional)
+                $tireRestrictions = ! ($data->tire_restrictions instanceof Optional)
                     ? $data->tire_restrictions
                     : $race->tireRestrictions();
 
-                $fuelUsage = !($data->fuel_usage instanceof Optional)
+                $fuelUsage = ! ($data->fuel_usage instanceof Optional)
                     ? $data->fuel_usage
                     : $race->fuelUsage();
 
-                $damageModel = !($data->damage_model instanceof Optional)
+                $damageModel = ! ($data->damage_model instanceof Optional)
                     ? $data->damage_model
                     : $race->damageModel();
 
-                $trackLimitsEnforced = !($data->track_limits_enforced instanceof Optional)
+                $trackLimitsEnforced = ! ($data->track_limits_enforced instanceof Optional)
                     ? ($data->track_limits_enforced ?? $race->trackLimitsEnforced())
                     : $race->trackLimitsEnforced();
 
-                $falseStartDetection = !($data->false_start_detection instanceof Optional)
+                $falseStartDetection = ! ($data->false_start_detection instanceof Optional)
                     ? ($data->false_start_detection ?? $race->falseStartDetection())
                     : $race->falseStartDetection();
 
-                $collisionPenalties = !($data->collision_penalties instanceof Optional)
+                $collisionPenalties = ! ($data->collision_penalties instanceof Optional)
                     ? ($data->collision_penalties ?? $race->collisionPenalties())
                     : $race->collisionPenalties();
 
-                $mandatoryPitStop = !($data->mandatory_pit_stop instanceof Optional)
+                $mandatoryPitStop = ! ($data->mandatory_pit_stop instanceof Optional)
                     ? ($data->mandatory_pit_stop ?? $race->mandatoryPitStop())
                     : $race->mandatoryPitStop();
 
-                $minimumPitTime = !($data->minimum_pit_time instanceof Optional)
+                $minimumPitTime = ! ($data->minimum_pit_time instanceof Optional)
                     ? $data->minimum_pit_time
                     : $race->minimumPitTime();
 
-                $assistsRestrictions = !($data->assists_restrictions instanceof Optional)
+                $assistsRestrictions = ! ($data->assists_restrictions instanceof Optional)
                     ? $data->assists_restrictions
                     : $race->assistsRestrictions();
 
-                $fastestLap = !($data->fastest_lap instanceof Optional)
+                $fastestLap = ! ($data->fastest_lap instanceof Optional)
                     ? $data->fastest_lap
                     : $race->fastestLap();
 
-                $fastestLapTop10 = !($data->fastest_lap_top_10 instanceof Optional)
+                $fastestLapTop10 = ! ($data->fastest_lap_top_10 instanceof Optional)
                     ? ($data->fastest_lap_top_10 ?? $race->fastestLapTop10())
                     : $race->fastestLapTop10();
 
-                $qualifyingPole = !($data->qualifying_pole instanceof Optional)
+                $qualifyingPole = ! ($data->qualifying_pole instanceof Optional)
                     ? $data->qualifying_pole
                     : $race->qualifyingPole();
 
-                $qualifyingPoleTop10 = !($data->qualifying_pole_top_10 instanceof Optional)
+                $qualifyingPoleTop10 = ! ($data->qualifying_pole_top_10 instanceof Optional)
                     ? ($data->qualifying_pole_top_10 ?? $race->qualifyingPoleTop10())
                     : $race->qualifyingPoleTop10();
 
-                $pointsSystem = !($data->points_system instanceof Optional)
+                $pointsSystem = ! ($data->points_system instanceof Optional)
                     ? ($data->points_system !== null ? PointsSystem::from($data->points_system) : $race->pointsSystem())
                     : $race->pointsSystem();
 
-                $dnfPoints = !($data->dnf_points instanceof Optional)
+                $dnfPoints = ! ($data->dnf_points instanceof Optional)
                     ? ($data->dnf_points ?? $race->dnfPoints())
                     : $race->dnfPoints();
 
-                $dnsPoints = !($data->dns_points instanceof Optional)
+                $dnsPoints = ! ($data->dns_points instanceof Optional)
                     ? ($data->dns_points ?? $race->dnsPoints())
                     : $race->dnsPoints();
 
-                $racePoints = !($data->race_points instanceof Optional)
+                $racePoints = ! ($data->race_points instanceof Optional)
                     ? ($data->race_points ?? $race->racePoints())
                     : $race->racePoints();
 
-                $raceNotes = !($data->race_notes instanceof Optional)
+                $raceNotes = ! ($data->race_notes instanceof Optional)
                     ? $data->race_notes
                     : $race->raceNotes();
 
@@ -507,10 +507,11 @@ final class RaceApplicationService
      * Remove all orphaned results for a race.
      * Orphaned results are results where the driver has no division assignment.
      *
+     * @return int Number of orphaned results removed
+     *
      * @throws RaceNotFoundException if race not found
      * @throws UnauthorizedException if user does not own the league
      * @throws \DomainException if divisions are not enabled for the season
-     * @return int Number of orphaned results removed
      */
     public function removeOrphanedResults(int $raceId, int $userId): int
     {
@@ -526,7 +527,7 @@ final class RaceApplicationService
             $season = $this->seasonRepository->findById($round->seasonId());
 
             // Check if divisions are enabled for the season
-            if (!$season->raceDivisionsEnabled()) {
+            if (! $season->raceDivisionsEnabled()) {
                 throw new \DomainException('Divisions are not enabled for this season');
             }
 
@@ -544,9 +545,10 @@ final class RaceApplicationService
      * Get all orphaned results for a race with driver information.
      * Orphaned results are results where the driver has no division assignment.
      *
+     * @return array{drivers: array<int, array{id: int, name: string}>, count: int}
+     *
      * @throws RaceNotFoundException if race not found
      * @throws UnauthorizedException if user does not own the league
-     * @return array{drivers: array<int, array{id: int, name: string}>, count: int}
      */
     public function getOrphanedResults(int $raceId, int $userId): array
     {
@@ -620,7 +622,7 @@ final class RaceApplicationService
             $resultsByDivision = [];
             foreach ($raceResults as $result) {
                 $divisionId = $result->divisionId() ?? 0; // Use 0 for null division
-                if (!isset($resultsByDivision[$divisionId])) {
+                if (! isset($resultsByDivision[$divisionId])) {
                     $resultsByDivision[$divisionId] = [];
                 }
                 $resultsByDivision[$divisionId][] = $result;
@@ -639,7 +641,7 @@ final class RaceApplicationService
     /**
      * Calculate and assign points for a set of race results.
      *
-     * @param array<\App\Domain\Competition\Entities\RaceResult> $results
+     * @param  array<\App\Domain\Competition\Entities\RaceResult>  $results
      */
     private function calculatePointsForResultSet(Race $race, array $results): void
     {
@@ -763,7 +765,7 @@ final class RaceApplicationService
             $positionsGained = null;
 
             // Only calculate if we have a grid source
-            if (!empty($gridSourceResults)) {
+            if (! empty($gridSourceResults)) {
                 $driverId = $result->driverId();
                 $finishPosition = $result->position();
                 $startingPosition = $gridSourceResults[$driverId] ?? null;
@@ -787,7 +789,7 @@ final class RaceApplicationService
     /**
      * Assign fastest lap bonus to the eligible driver with the fastest lap time.
      *
-     * @param array<\App\Domain\Competition\Entities\RaceResult> $finishers
+     * @param  array<\App\Domain\Competition\Entities\RaceResult>  $finishers
      */
     private function assignFastestLapBonus(Race $race, array $finishers): void
     {
@@ -844,7 +846,7 @@ final class RaceApplicationService
      * This method is called per division when divisions are enabled, so each division
      * gets its own pole position winner.
      *
-     * @param array<\App\Domain\Competition\Entities\RaceResult> $finishers
+     * @param  array<\App\Domain\Competition\Entities\RaceResult>  $finishers
      */
     private function assignPolePosition(Race $race, array $finishers): void
     {
@@ -976,8 +978,8 @@ final class RaceApplicationService
     /**
      * Log race update activity.
      *
-     * @param array<string, mixed> $originalData
-     * @param array<string, mixed> $newData
+     * @param  array<string, mixed>  $originalData
+     * @param  array<string, mixed>  $newData
      */
     private function logRaceUpdated(int $raceId, int $userId, array $originalData, array $newData): void
     {

@@ -8,7 +8,6 @@ import HeaderBar from './HeaderBar.vue';
 import ProfileSettingsModal from '@app/components/profile/ProfileSettingsModal.vue';
 import ContactFloatingButton from '@app/components/contact/ContactFloatingButton.vue';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 
 const navigationStore = useNavigationStore();
 const breadcrumbs = useBreadcrumbs();
@@ -36,7 +35,6 @@ const showProfile = computed({
 
     <!-- Global components -->
     <Toast />
-    <ConfirmDialog />
     <ProfileSettingsModal v-model:visible="showProfile" />
     <ContactFloatingButton />
   </div>

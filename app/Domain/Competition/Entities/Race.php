@@ -272,7 +272,7 @@ final class Race
     ): void {
         $hasChanges = false;
 
-        if ($name !== null && !$this->name?->equals($name)) {
+        if ($name !== null && ! $this->name?->equals($name)) {
             $this->name = $name;
             $hasChanges = true;
         }
@@ -518,7 +518,7 @@ final class Race
         bool $qualifyingPoleTop10,
         ?string $raceNotes,
     ): void {
-        if (!$this->isQualifier) {
+        if (! $this->isQualifier) {
             throw new \DomainException('Cannot update race as qualifier');
         }
 
@@ -533,7 +533,7 @@ final class Race
 
         $hasChanges = false;
 
-        if ($name !== null && !$this->name?->equals($name)) {
+        if ($name !== null && ! $this->name?->equals($name)) {
             $this->name = $name;
             $hasChanges = true;
         }
@@ -818,7 +818,7 @@ final class Race
         // Update event IDs if this is a new entity
         foreach ($this->events as $event) {
             if ($event instanceof RaceCreated && $event->raceId === 0) {
-                $this->events = array_filter($this->events, fn($e) => $e !== $event);
+                $this->events = array_filter($this->events, fn ($e) => $e !== $event);
                 $this->events[] = new RaceCreated(
                     raceId: $id,
                     roundId: $event->roundId,
@@ -828,7 +828,7 @@ final class Race
                     occurredAt: $event->occurredAt,
                 );
             } elseif ($event instanceof QualifierCreated && $event->qualifierId === 0) {
-                $this->events = array_filter($this->events, fn($e) => $e !== $event);
+                $this->events = array_filter($this->events, fn ($e) => $e !== $event);
                 $this->events[] = new QualifierCreated(
                     qualifierId: $id,
                     roundId: $event->roundId,
@@ -846,6 +846,7 @@ final class Race
     {
         $events = $this->events;
         $this->events = [];
+
         return $events;
     }
 

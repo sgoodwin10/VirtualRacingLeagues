@@ -14,6 +14,7 @@ final class InvalidDivisionDescriptionException extends DomainException
     public static function tooShort(string $description): self
     {
         $length = mb_strlen($description);
+
         return new self(
             sprintf(
                 'Division description must be at least 10 characters long when provided. Got %d characters: "%s"',
@@ -26,6 +27,7 @@ final class InvalidDivisionDescriptionException extends DomainException
     public static function tooLong(string $description): self
     {
         $length = mb_strlen($description);
+
         return new self(
             sprintf('Division description must not exceed 500 characters. Got %d characters', $length)
         );

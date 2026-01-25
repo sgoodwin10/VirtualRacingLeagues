@@ -477,7 +477,7 @@ final class EloquentDriverRepository implements DriverRepositoryInterface
         $total = $query->count();
 
         // Apply sorting with validation
-        if (!in_array($orderBy, self::ALLOWED_SORT_FIELDS, true)) {
+        if (! in_array($orderBy, self::ALLOWED_SORT_FIELDS, true)) {
             $orderBy = self::DEFAULT_SORT_FIELD;
         }
 

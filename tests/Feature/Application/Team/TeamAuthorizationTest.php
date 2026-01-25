@@ -6,7 +6,6 @@ namespace Tests\Feature\Application\Team;
 
 use App\Application\Team\DTOs\CreateTeamData;
 use App\Application\Team\DTOs\UpdateTeamData;
-use App\Application\Team\DTOs\AssignDriverTeamData;
 use App\Application\Team\Services\TeamApplicationService;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Infrastructure\Persistence\Eloquent\Models\Competition;
@@ -27,10 +26,15 @@ class TeamAuthorizationTest extends TestCase
     use RefreshDatabase;
 
     private TeamApplicationService $teamService;
+
     private UserEloquent $owner;
+
     private UserEloquent $otherUser;
+
     private League $league;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
 
     protected function setUp(): void

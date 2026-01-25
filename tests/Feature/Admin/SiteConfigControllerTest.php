@@ -17,7 +17,9 @@ class SiteConfigControllerTest extends TestCase
     use RefreshDatabase;
 
     private Admin $superAdmin;
+
     private Admin $regularAdmin;
+
     private SiteConfigModel $config;
 
     protected function setUp(): void
@@ -202,7 +204,7 @@ class SiteConfigControllerTest extends TestCase
 
     public function test_can_upload_logo_file(): void
     {
-        if (!function_exists('imagejpeg')) {
+        if (! function_exists('imagejpeg')) {
             $this->markTestSkipped('GD extension not available');
         }
 
@@ -250,7 +252,7 @@ class SiteConfigControllerTest extends TestCase
 
     public function test_validation_fails_for_file_too_large(): void
     {
-        if (!function_exists('imagejpeg')) {
+        if (! function_exists('imagejpeg')) {
             $this->markTestSkipped('GD extension not available');
         }
 

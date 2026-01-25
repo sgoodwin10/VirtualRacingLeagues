@@ -17,6 +17,7 @@ class SiteConfigSeeder extends Seeder
         // Check if active configuration already exists
         if (SiteConfigModel::where('is_active', true)->exists()) {
             $this->command->info('Active site configuration already exists. Skipping seeder.');
+
             return;
         }
 

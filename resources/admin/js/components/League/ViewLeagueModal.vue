@@ -360,6 +360,7 @@ import { useAdminStore } from '@admin/stores/adminStore';
 import { leagueService } from '@admin/services/leagueService';
 import { userService } from '@admin/services/userService';
 import { logger } from '@admin/utils/logger';
+import { buildLoginAsUrl } from '@admin/utils/url';
 
 /**
  * Props interface for ViewLeagueModal component
@@ -456,9 +457,8 @@ const handleLoginAsUser = async (): Promise<void> => {
   try {
     const { token } = await userService.loginAsUser(detailedLeague.value.owner.id.toString());
 
-    // Get app domain from environment
-    const protocol = window.location.protocol;
-    const loginUrl = `${protocol}//${import.meta.env.VITE_APP_DOMAIN}/login-as?token=${token}`;
+    // Build login URL with proper port handling
+    const loginUrl = buildLoginAsUrl(token);
 
     // Open in new tab
     window.open(loginUrl, '_blank');

@@ -14,20 +14,18 @@ final class DiscordChannel
     /**
      * Send the notification via Discord webhook.
      *
-     * @param object $notifiable
-     * @param Notification $notification
      * @throws Exception
      */
     public function send(object $notifiable, Notification $notification): void
     {
-        if (!method_exists($notification, 'toDiscord')) {
+        if (! method_exists($notification, 'toDiscord')) {
             return;
         }
 
         /** @var DiscordMessage|null $message */
         $message = $notification->toDiscord($notifiable);
 
-        if (!$message || !$message->webhookUrl) {
+        if (! $message || ! $message->webhookUrl) {
             return;
         }
 
@@ -41,7 +39,7 @@ final class DiscordChannel
 
         if ($response->failed()) {
             throw new Exception(
-                "Discord webhook failed: " . $response->body()
+                'Discord webhook failed: ' . $response->body()
             );
         }
     }

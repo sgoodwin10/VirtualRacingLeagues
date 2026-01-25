@@ -85,28 +85,28 @@ final class UserApplicationService
             $user = $this->userRepository->findById($userId);
 
             // Check email uniqueness if being changed
-            if (!$data->email instanceof Optional && $data->email !== $user->email()->value()) {
+            if (! $data->email instanceof Optional && $data->email !== $user->email()->value()) {
                 if ($this->userRepository->existsByEmail($data->email)) {
                     throw UserAlreadyExistsException::withEmail($data->email);
                 }
             }
 
             // Update profile
-            if (!$data->first_name instanceof Optional || !$data->last_name instanceof Optional) {
-                $firstName = !$data->first_name instanceof Optional
+            if (! $data->first_name instanceof Optional || ! $data->last_name instanceof Optional) {
+                $firstName = ! $data->first_name instanceof Optional
                     ? $data->first_name
                     : $user->fullName()->firstName();
 
-                $lastName = !$data->last_name instanceof Optional
+                $lastName = ! $data->last_name instanceof Optional
                     ? $data->last_name
                     : $user->fullName()->lastName();
 
                 $fullName = FullName::from($firstName, $lastName);
-                $email = !$data->email instanceof Optional
+                $email = ! $data->email instanceof Optional
                     ? EmailAddress::from($data->email)
                     : null;
 
-                $alias = !$data->alias instanceof Optional
+                $alias = ! $data->alias instanceof Optional
                     ? UserAlias::fromNullable($data->alias)
                     : null;
 
@@ -115,18 +115,18 @@ final class UserApplicationService
                     email: $email,
                     alias: $alias,
                 );
-            } elseif (!$data->email instanceof Optional) {
+            } elseif (! $data->email instanceof Optional) {
                 $user->updateProfile(
                     email: EmailAddress::from($data->email),
                 );
-            } elseif (!$data->alias instanceof Optional) {
+            } elseif (! $data->alias instanceof Optional) {
                 $user->updateProfile(
                     alias: UserAlias::fromNullable($data->alias),
                 );
             }
 
             // Update status
-            if (!$data->status instanceof Optional && $data->status !== $user->status()->value) {
+            if (! $data->status instanceof Optional && $data->status !== $user->status()->value) {
                 $newStatus = UserStatus::from($data->status);
                 if ($newStatus->isActive()) {
                     $user->activate();
@@ -136,7 +136,7 @@ final class UserApplicationService
             }
 
             // Update password if provided
-            if (!$data->password instanceof Optional) {
+            if (! $data->password instanceof Optional) {
                 $user->updatePassword(Hash::make($data->password));
             }
 
@@ -176,8 +176,9 @@ final class UserApplicationService
      * Get a user with activity logs.
      * Returns user data and activity logs for admin display.
      *
-     * @throws UserNotFoundException
      * @return array{user: array<string, mixed>, activities: array<int, mixed>}
+     *
+     * @throws UserNotFoundException
      */
     public function getUserWithActivities(int $userId): array
     {
@@ -219,7 +220,7 @@ final class UserApplicationService
     /**
      * Get all users with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array<int, UserData>
      */
     public function getAllUsers(array $filters = []): array
@@ -227,7 +228,7 @@ final class UserApplicationService
         $users = $this->userRepository->all($filters);
 
         return array_map(
-            fn(User $user) => UserData::fromEntity($user),
+            fn (User $user) => UserData::fromEntity($user),
             $users
         );
     }
@@ -235,7 +236,7 @@ final class UserApplicationService
     /**
      * Get paginated users with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<int, UserData>, total: int, per_page: int, current_page: int, last_page: int}
      */
     public function getPaginatedUsers(int $page = 1, int $perPage = 15, array $filters = []): array
@@ -244,7 +245,7 @@ final class UserApplicationService
 
         return [
             'data' => array_map(
-                fn(User $user) => UserData::fromEntity($user),
+                fn (User $user) => UserData::fromEntity($user),
                 $result['data']
             ),
             'total' => $result['total'],
@@ -321,7 +322,7 @@ final class UserApplicationService
             $user = $this->userRepository->findById($userId);
 
             // Check if user is actually deleted before restoring
-            if (!$user->isDeleted()) {
+            if (! $user->isDeleted()) {
                 throw UserNotDeletedException::withId($userId);
             }
 
@@ -351,7 +352,7 @@ final class UserApplicationService
     /**
      * Count users with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      */
     public function countUsers(array $filters = []): int
     {

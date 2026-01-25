@@ -16,7 +16,9 @@ class TrackControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Platform $platform;
+
     private PlatformTrackLocation $location;
 
     protected function setUp(): void

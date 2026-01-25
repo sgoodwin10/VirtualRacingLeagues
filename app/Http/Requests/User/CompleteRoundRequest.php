@@ -39,7 +39,7 @@ class CompleteRoundRequest extends FormRequest
     public function toDTO(): ?CompleteRoundData
     {
         // Only create DTO if any cross-division results are provided
-        if (!$this->hasAny(['qualifying_results', 'race_time_results', 'fastest_lap_results'])) {
+        if (! $this->hasAny(['qualifying_results', 'race_time_results', 'fastest_lap_results'])) {
             return null;
         }
 

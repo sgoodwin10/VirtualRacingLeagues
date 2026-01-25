@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Infrastructure\Notifications\Channels\DiscordChannel;
-use App\Infrastructure\Notifications\Messages\DiscordMessage;
 use Illuminate\Console\Command;
-use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 class TestNotification extends Command
 {
@@ -23,8 +19,23 @@ class TestNotification extends Command
 
     public function handle(): int
     {
+        /** @var string|null $channel */
         $channel = $this->argument('channel');
+
+        /** @var string|null $type */
         $type = $this->option('type');
+
+        // Ensure channel is a string
+        if (! is_string($channel)) {
+            $this->error('Invalid channel argument');
+
+            return self::FAILURE;
+        }
+
+        // Ensure type is a string (it can be null from option())
+        if (! is_string($type)) {
+            $type = 'contact';
+        }
 
         return match ($channel) {
             'discord' => $this->testDiscord($type),
@@ -42,7 +53,7 @@ class TestNotification extends Command
             default => null,
         };
 
-        if (!$webhookUrl) {
+        if (! $webhookUrl) {
             $this->error("No webhook URL configured for type: {$type}");
             $this->line('');
             $this->info('Add the following to your .env file:');
@@ -52,11 +63,12 @@ class TestNotification extends Command
                 'system' => 'DISCORD_WEBHOOK_SYSTEM=https://discord.com/api/webhooks/...',
                 default => 'DISCORD_WEBHOOK_<TYPE>=https://discord.com/api/webhooks/...',
             });
+
             return self::FAILURE;
         }
 
         $this->info("Sending test {$type} notification to Discord...");
-        $this->line("Webhook URL: " . substr($webhookUrl, 0, 50) . '...');
+        $this->line('Webhook URL: ' . substr($webhookUrl, 0, 50) . '...');
 
         $message = $this->buildDiscordMessage($type);
 
@@ -70,15 +82,18 @@ class TestNotification extends Command
             if ($response->successful()) {
                 $this->info('✓ Discord notification sent successfully!');
                 $this->line('Check your Discord channel for the test message.');
+
                 return self::SUCCESS;
             }
 
             $this->error('✗ Discord API returned an error:');
             $this->line($response->body());
+
             return self::FAILURE;
         } catch (\Exception $e) {
             $this->error('✗ Failed to send Discord notification:');
             $this->line($e->getMessage());
+
             return self::FAILURE;
         }
     }
@@ -87,9 +102,10 @@ class TestNotification extends Command
     {
         $email = $this->option('email') ?? config('notifications.admin_email');
 
-        if (!$email) {
+        if (! $email) {
             $this->error('No email address provided.');
             $this->line('Use --email=your@email.com or set ADMIN_EMAIL in .env');
+
             return self::FAILURE;
         }
 
@@ -103,14 +119,21 @@ class TestNotification extends Command
 
             $this->info('✓ Test email sent successfully!');
             $this->line('Check your inbox (or Mailpit at http://localhost:8025)');
+
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error('✗ Failed to send email:');
             $this->line($e->getMessage());
+
             return self::FAILURE;
         }
     }
 
+    /**
+     * Build Discord message payload.
+     *
+     * @return array<string, mixed>
+     */
     private function buildDiscordMessage(string $type): array
     {
         $timestamp = now()->toIso8601String();
@@ -120,7 +143,7 @@ class TestNotification extends Command
                 'embeds' => [[
                     'title' => '🧪 Test Contact Notification',
                     'description' => 'This is a test notification to verify your Discord webhook is configured correctly.',
-                    'color' => 0x3498db, // Blue
+                    'color' => 0x3498DB, // Blue
                     'fields' => [
                         ['name' => 'From', 'value' => 'Test User', 'inline' => true],
                         ['name' => 'Email', 'value' => 'test@example.com', 'inline' => true],
@@ -136,7 +159,7 @@ class TestNotification extends Command
                 'embeds' => [[
                     'title' => '🧪 Test Registration Notification',
                     'description' => 'This is a test notification to verify your Discord webhook is configured correctly.',
-                    'color' => 0x2ecc71, // Green
+                    'color' => 0x2ECC71, // Green
                     'fields' => [
                         ['name' => 'Name', 'value' => 'Test User', 'inline' => true],
                         ['name' => 'Email', 'value' => 'test@example.com', 'inline' => true],
@@ -149,7 +172,7 @@ class TestNotification extends Command
                 'embeds' => [[
                     'title' => '🧪 Test System Notification',
                     'description' => 'This is a test notification to verify your Discord webhook is configured correctly.',
-                    'color' => 0xe74c3c, // Red
+                    'color' => 0xE74C3C, // Red
                     'fields' => [
                         ['name' => 'Type', 'value' => 'System Alert', 'inline' => true],
                         ['name' => 'Status', 'value' => 'Test', 'inline' => true],
@@ -211,6 +234,7 @@ class TestNotification extends Command
     {
         $this->error("Invalid channel: {$channel}");
         $this->line('Available channels: discord, email');
+
         return self::FAILURE;
     }
 }

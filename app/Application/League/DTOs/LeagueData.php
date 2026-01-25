@@ -60,17 +60,17 @@ final class LeagueData extends Data
     /**
      * Create from domain entity with platform data.
      *
-     * @param League $league Domain entity
-     * @param array<array{id: int, name: string, slug: string}> $platforms Platform data
-     * @param array{id: int, first_name: string, last_name: string, email: string}|null $owner Owner data
-     * @param int $competitionsCount Competitions count
-     * @param int $driversCount Drivers count
-     * @param int $activeSeasonsCount Active seasons count
-     * @param int $totalRacesCount Total races count
-     * @param string|null $logoUrl Optional pre-computed logo URL (infrastructure concern - DEPRECATED)
-     * @param string|null $headerImageUrl Optional pre-computed header image URL (infrastructure concern - DEPRECATED)
-     * @param string|null $bannerUrl Optional pre-computed banner URL (infrastructure concern - DEPRECATED)
-     * @param LeagueEloquent|null $eloquentModel Optional eloquent model for media
+     * @param  League  $league  Domain entity
+     * @param  array<array{id: int, name: string, slug: string}>  $platforms  Platform data
+     * @param  array{id: int, first_name: string, last_name: string, email: string}|null  $owner  Owner data
+     * @param  int  $competitionsCount  Competitions count
+     * @param  int  $driversCount  Drivers count
+     * @param  int  $activeSeasonsCount  Active seasons count
+     * @param  int  $totalRacesCount  Total races count
+     * @param  string|null  $logoUrl  Optional pre-computed logo URL (infrastructure concern - DEPRECATED)
+     * @param  string|null  $headerImageUrl  Optional pre-computed header image URL (infrastructure concern - DEPRECATED)
+     * @param  string|null  $bannerUrl  Optional pre-computed banner URL (infrastructure concern - DEPRECATED)
+     * @param  LeagueEloquent|null  $eloquentModel  Optional eloquent model for media
      */
     public static function fromEntity(
         League $league,

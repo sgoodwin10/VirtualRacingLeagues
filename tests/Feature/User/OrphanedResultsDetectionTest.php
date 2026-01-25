@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\User;
 
 use App\Infrastructure\Persistence\Eloquent\Models\Competition;
-use App\Infrastructure\Persistence\Eloquent\Models\Driver;
 use App\Infrastructure\Persistence\Eloquent\Models\Division;
+use App\Infrastructure\Persistence\Eloquent\Models\Driver;
 use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;

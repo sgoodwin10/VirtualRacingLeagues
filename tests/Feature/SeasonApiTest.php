@@ -16,7 +16,6 @@ use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SeasonApiTest extends TestCase

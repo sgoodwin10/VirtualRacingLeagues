@@ -14,8 +14,9 @@ interface PlatformRepositoryInterface
     /**
      * Find platform by ID.
      *
-     * @throws \App\Domain\Platform\Exceptions\PlatformNotFoundException if platform not found
      * @return array{id: int, name: string, slug: string}
+     *
+     * @throws \App\Domain\Platform\Exceptions\PlatformNotFoundException if platform not found
      */
     public function findById(int $id): array;
 
@@ -23,7 +24,7 @@ interface PlatformRepositoryInterface
      * Find platforms by IDs (returns only existing platforms).
      * Returns array keyed by platform ID for efficient lookups.
      *
-     * @param array<int> $ids
+     * @param  array<int>  $ids
      * @return array<int, array{id: int, name: string, slug: string}>
      */
     public function findByIds(array $ids): array;
@@ -32,7 +33,7 @@ interface PlatformRepositoryInterface
      * Find active platforms by IDs.
      * Returns sequential array for JSON serialization compatibility.
      *
-     * @param array<int> $ids
+     * @param  array<int>  $ids
      * @return array<array{id: int, name: string, slug: string}>
      */
     public function findActiveByIds(array $ids): array;

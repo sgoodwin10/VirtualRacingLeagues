@@ -105,7 +105,7 @@ final class EloquentUserRepository implements UserRepositoryInterface
 
         $eloquentUsers = $query->get();
 
-        return $eloquentUsers->map(fn($eloquentUser) => $this->toDomainEntity($eloquentUser))->all();
+        return $eloquentUsers->map(fn ($eloquentUser) => $this->toDomainEntity($eloquentUser))->all();
     }
 
     public function paginate(int $page = 1, int $perPage = 15, array $filters = []): array
@@ -118,7 +118,7 @@ final class EloquentUserRepository implements UserRepositoryInterface
 
         return [
             'data' => $paginator->items() ? array_map(
-                fn($eloquentUser) => $this->toDomainEntity($eloquentUser),
+                fn ($eloquentUser) => $this->toDomainEntity($eloquentUser),
                 $paginator->items()
             ) : [],
             'total' => $paginator->total(),
@@ -245,8 +245,8 @@ final class EloquentUserRepository implements UserRepositoryInterface
     /**
      * Apply filters to query.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<UserEloquent> $query
-     * @param array<string, mixed> $filters
+     * @param  \Illuminate\Database\Eloquent\Builder<UserEloquent>  $query
+     * @param  array<string, mixed>  $filters
      */
     private function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
@@ -267,7 +267,7 @@ final class EloquentUserRepository implements UserRepositoryInterface
         }
 
         // Default ordering
-        if (!isset($filters['order_by'])) {
+        if (! isset($filters['order_by'])) {
             $query->orderBy('created_at', 'desc');
         } else {
             $direction = $filters['order_direction'] ?? 'asc';

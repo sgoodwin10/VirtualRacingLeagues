@@ -45,7 +45,7 @@ final readonly class UserAlias
         }
 
         // Basic validation: alphanumeric, spaces, underscores, hyphens, dots
-        if (!preg_match('/^[a-zA-Z0-9\s_.-]+$/', $trimmed)) {
+        if (! preg_match('/^[a-zA-Z0-9\s_.-]+$/', $trimmed)) {
             throw new InvalidArgumentException('User alias contains invalid characters');
         }
     }

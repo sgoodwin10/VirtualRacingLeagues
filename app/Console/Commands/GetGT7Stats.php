@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Services\PSNService;
 use App\Services\GT7Service;
+use App\Services\PSNService;
 use Illuminate\Console\Command;
 
 class GetGT7Stats extends Command
@@ -28,11 +28,12 @@ class GetGT7Stats extends Command
 
         try {
             // Step 1: Get PSN user
-            $this->line("Step 1: Finding PSN user...");
+            $this->line('Step 1: Finding PSN user...');
             $psnResult = $psnService->searchUserByPsnId($psnId);
 
-            if (!$psnResult['found']) {
+            if (! $psnResult['found']) {
                 $this->error('❌ PSN user not found!');
+
                 return self::FAILURE;
             }
 
@@ -40,11 +41,12 @@ class GetGT7Stats extends Command
             $this->info("✅ Found: {$onlineId}");
 
             // Step 2: Get GT7 profile
-            $this->line("Step 2: Fetching GT7 profile...");
+            $this->line('Step 2: Fetching GT7 profile...');
             $gt7Profile = $gt7Service->getUserProfileByOnlineId($onlineId);
 
-            if (!$gt7Profile || !isset($gt7Profile['result']['user_id'])) {
-                $this->error("❌ GT7 profile not found");
+            if (! $gt7Profile || ! isset($gt7Profile['result']['user_id'])) {
+                $this->error('❌ GT7 profile not found');
+
                 return self::FAILURE;
             }
 
@@ -53,20 +55,21 @@ class GetGT7Stats extends Command
             $this->newLine();
 
             // Step 3: Get stats
-            $this->line("Step 3: Fetching statistics...");
+            $this->line('Step 3: Fetching statistics...');
             $stats = $gt7Service->getUserStats($userId, $year, $month);
 
-            if (!$stats || !isset($stats['result'])) {
-                $this->error("❌ Could not fetch statistics");
+            if (! $stats || ! isset($stats['result'])) {
+                $this->error('❌ Could not fetch statistics');
+
                 return self::FAILURE;
             }
 
             $result = $stats['result'];
 
             // Display Driver Rating
-            $this->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            $this->info("📊 DRIVER STATISTICS");
-            $this->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            $this->info('📊 DRIVER STATISTICS');
+            $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             $this->newLine();
 
             $driverRating = $result['driver_rating'] ?? 0;
@@ -85,20 +88,20 @@ class GetGT7Stats extends Command
                         'Driver Rating (DR)',
                         $drLetter,
                         number_format($drPoints),
-                        number_format($drPointRatio * 100, 2) . '%'
+                        number_format($drPointRatio * 100, 2) . '%',
                     ],
                     [
                         'Safety Rating (SR)',
                         $srLetter,
                         '-',
-                        number_format($srPointRatio * 100, 2) . '%'
+                        number_format($srPointRatio * 100, 2) . '%',
                     ],
                 ]
             );
 
             // Display race statistics
             $this->newLine();
-            $this->info("🏆 RACE STATISTICS");
+            $this->info('🏆 RACE STATISTICS');
             $this->table(
                 ['Metric', 'Value'],
                 [
@@ -113,16 +116,17 @@ class GetGT7Stats extends Command
             // Full data dump
             $this->newLine();
             if ($this->option('verbose')) {
-                $this->info("Full Stats Data:");
+                $this->info('Full Stats Data:');
                 $jsonOutput = json_encode($stats, JSON_PRETTY_PRINT);
                 $this->line($jsonOutput !== false ? $jsonOutput : 'Failed to encode JSON');
             } else {
-                $this->comment("💡 Tip: Use -v flag to see full stats data");
+                $this->comment('💡 Tip: Use -v flag to see full stats data');
             }
 
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error("❌ An error occurred: {$e->getMessage()}");
+
             return self::FAILURE;
         }
     }

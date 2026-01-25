@@ -51,11 +51,11 @@ class CompetitionData extends Data
     /**
      * Create from domain entity with platform data and logo URL.
      *
-     * @param array{id: int, name: string, slug: string} $platformData
-     * @param array{id: int, name: string, slug: string}|null $leagueData
-     * @param array<string, int|string|null> $aggregates
-     * @param array<CompetitionSeasonData> $seasons
-     * @param CompetitionEloquent|null $eloquentModel
+     * @param  array{id: int, name: string, slug: string}  $platformData
+     * @param  array{id: int, name: string, slug: string}|null  $leagueData
+     * @param  array<string, int|string|null>  $aggregates
+     * @param  array<CompetitionSeasonData>  $seasons
+     *
      * @throws \InvalidArgumentException If competition has not been persisted yet (ID is null)
      */
     public static function fromEntity(

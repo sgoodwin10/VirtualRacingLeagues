@@ -32,8 +32,8 @@ final class AdminData extends Data
     /**
      * Create from domain entity.
      *
-     * @param Admin $admin Domain entity
-     * @param string|null $lastLoginAt Optional last login timestamp (infrastructure concern)
+     * @param  Admin  $admin  Domain entity
+     * @param  string|null  $lastLoginAt  Optional last login timestamp (infrastructure concern)
      */
     public static function fromEntity(Admin $admin, ?string $lastLoginAt = null): self
     {

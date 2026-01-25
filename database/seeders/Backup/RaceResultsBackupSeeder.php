@@ -33,6 +33,7 @@ class RaceResultsBackupSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('RaceResultsBackupSeeder cannot run in production environment!');
+
             return;
         }
 

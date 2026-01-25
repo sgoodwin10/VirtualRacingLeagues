@@ -93,7 +93,7 @@ final class SeasonDriverApplicationService
     /**
      * Bulk add drivers to a season.
      *
-     * @param int[] $leagueDriverIds
+     * @param  int[]  $leagueDriverIds
      * @return array<SeasonDriverData>
      */
     public function addDriversToSeason(int $seasonId, array $leagueDriverIds, int $userId): array
@@ -187,7 +187,7 @@ final class SeasonDriverApplicationService
         $seasonDrivers = $this->seasonDriverRepository->findBySeason($seasonId);
 
         // Eager load all league drivers to prevent N+1 queries
-        $leagueDriverIds = array_map(fn(SeasonDriver $sd) => $sd->leagueDriverId(), $seasonDrivers);
+        $leagueDriverIds = array_map(fn (SeasonDriver $sd) => $sd->leagueDriverId(), $seasonDrivers);
         /** @var \Illuminate\Support\Collection<int, LeagueDriverEloquent> $leagueDrivers */
         $leagueDrivers = LeagueDriverEloquent::with('driver')
             ->whereIn('id', $leagueDriverIds)
@@ -195,7 +195,7 @@ final class SeasonDriverApplicationService
             ->keyBy('id');
 
         // Eager load SeasonDriverEloquent models to get team and division information
-        $seasonDriverIds = array_map(fn(SeasonDriver $sd) => $sd->id(), $seasonDrivers);
+        $seasonDriverIds = array_map(fn (SeasonDriver $sd) => $sd->id(), $seasonDrivers);
         /** @var \Illuminate\Support\Collection<int, SeasonDriverEloquent> $seasonDriverModels */
         $seasonDriverModels = SeasonDriverEloquent::with(['team', 'division'])
             ->whereIn('id', $seasonDriverIds)
@@ -203,7 +203,7 @@ final class SeasonDriverApplicationService
             ->keyBy('id');
 
         return array_map(
-            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData(
+            fn (SeasonDriver $seasonDriver) => $this->toSeasonDriverData(
                 $seasonDriver,
                 $leagueDrivers,
                 $seasonDriverModels
@@ -215,9 +215,9 @@ final class SeasonDriverApplicationService
     /**
      * Get paginated season drivers with optional filters.
      *
-     * @param array<string, mixed> $queryParams Query parameters
-     *     (page, per_page, search, status, division_id, team_id,
-     *      order_by, order_direction)
+     * @param  array<string, mixed>  $queryParams  Query parameters
+     *                                             (page, per_page, search, status, division_id, team_id,
+     *                                             order_by, order_direction)
      * @return array{
      *     data: array<SeasonDriverData>,
      *     meta: array{
@@ -268,7 +268,7 @@ final class SeasonDriverApplicationService
         $result = $this->seasonDriverRepository->findBySeasonPaginated($seasonId, $page, $perPage, $filters);
 
         // Eager load all league drivers for the current page to prevent N+1 queries
-        $leagueDriverIds = array_map(fn(SeasonDriver $sd) => $sd->leagueDriverId(), $result['data']);
+        $leagueDriverIds = array_map(fn (SeasonDriver $sd) => $sd->leagueDriverId(), $result['data']);
         /** @var \Illuminate\Support\Collection<int, LeagueDriverEloquent> $leagueDrivers */
         $leagueDrivers = LeagueDriverEloquent::with('driver')
             ->whereIn('id', $leagueDriverIds)
@@ -276,7 +276,7 @@ final class SeasonDriverApplicationService
             ->keyBy('id');
 
         // Eager load SeasonDriverEloquent models to get team and division information
-        $seasonDriverIds = array_map(fn(SeasonDriver $sd) => $sd->id(), $result['data']);
+        $seasonDriverIds = array_map(fn (SeasonDriver $sd) => $sd->id(), $result['data']);
         /** @var \Illuminate\Support\Collection<int, SeasonDriverEloquent> $seasonDriverModels */
         $seasonDriverModels = SeasonDriverEloquent::with(['team', 'division'])
             ->whereIn('id', $seasonDriverIds)
@@ -285,7 +285,7 @@ final class SeasonDriverApplicationService
 
         // Convert entities to DTOs
         $data = array_map(
-            fn(SeasonDriver $seasonDriver) => $this->toSeasonDriverData(
+            fn (SeasonDriver $seasonDriver) => $this->toSeasonDriverData(
                 $seasonDriver,
                 $leagueDrivers,
                 $seasonDriverModels
@@ -331,7 +331,7 @@ final class SeasonDriverApplicationService
         // Filter out drivers already in season
         $availableDrivers = [];
         foreach ($leagueDrivers as $leagueDriver) {
-            if (!$this->seasonDriverRepository->existsInSeason($leagueDriver->id, $seasonId)) {
+            if (! $this->seasonDriverRepository->existsInSeason($leagueDriver->id, $seasonId)) {
                 $availableDrivers[] = [
                     'id' => $leagueDriver->id,
                     'driver_id' => $leagueDriver->driver_id,
@@ -348,8 +348,8 @@ final class SeasonDriverApplicationService
     /**
      * Get paginated available drivers (league drivers not yet in season).
      *
-     * @param array<string, mixed> $queryParams Query parameters
-     *     (page, per_page, search, league_id)
+     * @param  array<string, mixed>  $queryParams  Query parameters
+     *                                             (page, per_page, search, league_id)
      * @return array{
      *     data: array<array{
      *         id: int,
@@ -410,7 +410,7 @@ final class SeasonDriverApplicationService
         }
 
         // Order by driver name
-        $nameExpression = "COALESCE(drivers.nickname, " .
+        $nameExpression = 'COALESCE(drivers.nickname, ' .
             "CONCAT(drivers.first_name, ' ', drivers.last_name), " .
             "drivers.first_name, drivers.last_name, 'Unknown')";
 
@@ -489,7 +489,7 @@ final class SeasonDriverApplicationService
     {
         $leagueDriver = LeagueDriverEloquent::with('driver')->find($leagueDriverId);
 
-        if (!$leagueDriver) {
+        if (! $leagueDriver) {
             throw LeagueDriverNotInLeagueException::withId($leagueDriverId, $leagueId);
         }
 
@@ -503,8 +503,8 @@ final class SeasonDriverApplicationService
     /**
      * Convert SeasonDriver entity to SeasonDriverData DTO.
      *
-     * @param \Illuminate\Support\Collection<int, LeagueDriverEloquent>|null $leagueDrivers
-     * @param \Illuminate\Support\Collection<int, SeasonDriverEloquent>|null $seasonDriverModels
+     * @param  \Illuminate\Support\Collection<int, LeagueDriverEloquent>|null  $leagueDrivers
+     * @param  \Illuminate\Support\Collection<int, SeasonDriverEloquent>|null  $seasonDriverModels
      */
     private function toSeasonDriverData(
         SeasonDriver $seasonDriver,
@@ -519,8 +519,8 @@ final class SeasonDriverApplicationService
             $leagueDriver = LeagueDriverEloquent::with('driver')->find($seasonDriver->leagueDriverId());
         }
 
-        if (!$leagueDriver) {
-            throw new \RuntimeException("League driver not found");
+        if (! $leagueDriver) {
+            throw new \RuntimeException('League driver not found');
         }
 
         // Get team name, division id and division name from season driver's relationships if assigned

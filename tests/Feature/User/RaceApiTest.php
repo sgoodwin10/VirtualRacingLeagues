@@ -18,6 +18,7 @@ final class RaceApiTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Round $round;
 
     protected function setUp(): void

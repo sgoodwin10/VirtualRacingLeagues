@@ -30,6 +30,7 @@ final class RaceResultController extends Controller
     public function index(int $raceId): JsonResponse
     {
         $results = $this->raceResultService->getResultsForRace($raceId);
+
         return ApiResponse::success($results);
     }
 
@@ -65,6 +66,7 @@ final class RaceResultController extends Controller
     public function destroy(int $raceId): JsonResponse
     {
         $this->raceResultService->deleteResults($raceId);
+
         return ApiResponse::noContent();
     }
 }

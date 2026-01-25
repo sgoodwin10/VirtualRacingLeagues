@@ -13,10 +13,10 @@ use Spatie\LaravelData\Data;
 final class MediaData extends Data
 {
     /**
-     * @param int $id Media ID
-     * @param string $original Original image URL
-     * @param array<string, string> $conversions Conversion URLs (thumb, small, medium, large, og)
-     * @param string $srcset Responsive srcset string for <img> tags
+     * @param  int  $id  Media ID
+     * @param  string  $original  Original image URL
+     * @param  array<string, string>  $conversions  Conversion URLs (thumb, small, medium, large, og)
+     * @param  string  $srcset  Responsive srcset string for <img> tags
      */
     public function __construct(
         public readonly int $id,
@@ -30,7 +30,7 @@ final class MediaData extends Data
      * Create from array data.
      * Useful when you have media data already converted to array format.
      *
-     * @param array{id: int, original: string, conversions: array<string, string>, srcset: string} $data
+     * @param  array{id: int, original: string, conversions: array<string, string>, srcset: string}  $data
      */
     public static function fromArray(array $data): self
     {

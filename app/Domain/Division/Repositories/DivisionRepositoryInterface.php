@@ -63,7 +63,7 @@ interface DivisionRepositoryInterface
     /**
      * Bulk update division orders.
      *
-     * @param array<int, int> $divisionOrders Map of division ID to new order number
+     * @param  array<int, int>  $divisionOrders  Map of division ID to new order number
      */
     public function bulkUpdateOrders(array $divisionOrders): void;
 
@@ -71,7 +71,7 @@ interface DivisionRepositoryInterface
      * Batch fetch division names for multiple division IDs.
      * Used to avoid N+1 queries when fetching division names.
      *
-     * @param array<int> $divisionIds
+     * @param  array<int>  $divisionIds
      * @return array<int, string> Map of division ID => division name
      */
     public function findNamesByIds(array $divisionIds): array;
@@ -80,7 +80,7 @@ interface DivisionRepositoryInterface
      * Batch fetch division data (name and order) for multiple division IDs.
      * Used to avoid N+1 queries when fetching division data.
      *
-     * @param array<int> $divisionIds
+     * @param  array<int>  $divisionIds
      * @return array<int, array{name: string, order: int}> Map of division ID => division data
      */
     public function findDataByIds(array $divisionIds): array;

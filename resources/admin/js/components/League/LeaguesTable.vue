@@ -168,6 +168,7 @@ import ResponsiveImage from '@admin/components/common/ResponsiveImage.vue';
 import { useNameHelpers } from '@admin/composables/useNameHelpers';
 import userService from '@admin/services/userService';
 import { logger } from '@admin/utils/logger';
+import { buildLoginAsUrl } from '@admin/utils/url';
 import type { League, LeagueVisibility, LeagueStatus } from '@admin/types/league';
 
 /**
@@ -311,9 +312,8 @@ const handleLoginAsManager = async (league: League): Promise<void> => {
   try {
     const { token } = await userService.loginAsUser(String(league.owner_user_id));
 
-    // Get app domain from environment
-    const protocol = window.location.protocol;
-    const loginUrl = `${protocol}//${import.meta.env.VITE_APP_DOMAIN}/login-as?token=${token}`;
+    // Build login URL with proper port handling
+    const loginUrl = buildLoginAsUrl(token);
 
     // Open in new tab
     window.open(loginUrl, '_blank');

@@ -27,18 +27,16 @@ class CaseInsensitiveUnique implements ValidationRule
     /**
      * Run the validation rule.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
      * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return;
         }
 
         // Validate column name to prevent SQL injection
-        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $this->column)) {
+        if (! preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $this->column)) {
             throw new \InvalidArgumentException('Invalid column name');
         }
 

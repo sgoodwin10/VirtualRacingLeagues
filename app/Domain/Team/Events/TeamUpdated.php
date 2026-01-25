@@ -10,8 +10,7 @@ namespace App\Domain\Team\Events;
 final readonly class TeamUpdated
 {
     /**
-     * @param int $teamId
-     * @param array<string, mixed> $changes
+     * @param  array<string, mixed>  $changes
      */
     public function __construct(
         public int $teamId,

@@ -27,6 +27,7 @@ class DivisionsBackupSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('DivisionsBackupSeeder cannot run in production environment!');
+
             return;
         }
 

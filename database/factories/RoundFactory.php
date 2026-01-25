@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Infrastructure\Persistence\Eloquent\Models\PlatformTrack;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\PlatformTrack;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

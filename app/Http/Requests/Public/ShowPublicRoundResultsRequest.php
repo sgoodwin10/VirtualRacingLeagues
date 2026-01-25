@@ -54,7 +54,10 @@ final class ShowPublicRoundResultsRequest extends FormRequest
      */
     public function validationData(): array
     {
-        return array_merge($this->all(), [
+        /** @var array<string, mixed> $allData */
+        $allData = $this->all();
+
+        return array_merge($allData, [
             'roundId' => $this->route('roundId'),
         ]);
     }
@@ -64,6 +67,9 @@ final class ShowPublicRoundResultsRequest extends FormRequest
      */
     public function getRoundId(): int
     {
-        return (int) $this->route('roundId');
+        /** @var int|string|null $roundId */
+        $roundId = $this->route('roundId');
+
+        return (int) $roundId;
     }
 }

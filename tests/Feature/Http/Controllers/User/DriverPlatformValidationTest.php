@@ -8,7 +8,6 @@ use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\Platform;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
 /**
  * Test driver platform validation against league platforms.
@@ -18,10 +17,15 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
     use RefreshDatabase;
 
     private UserEloquent $user;
+
     private Platform $gt7Platform;
+
     private Platform $iracingPlatform;
+
     private Platform $accPlatform;
+
     private League $gt7League;
+
     private League $iracingLeague;
 
     protected function setUp(): void
@@ -74,6 +78,7 @@ final class DriverPlatformValidationTest extends UserControllerTestCase
     public function postJson($uri, array $data = [], array $headers = [], $options = 0)
     {
         $url = 'http://app.virtualracingleagues.localhost' . $uri;
+
         return parent::postJson($url, $data, $headers, $options);
     }
 

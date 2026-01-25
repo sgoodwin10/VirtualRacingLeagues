@@ -12,7 +12,7 @@ namespace App\Domain\Competition\Events;
 final readonly class SeasonTiebreakerRulesUpdated
 {
     /**
-     * @param array<array<string, mixed>> $changes
+     * @param  array<array<string, mixed>>  $changes
      */
     public function __construct(
         public int $seasonId,

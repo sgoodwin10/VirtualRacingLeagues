@@ -16,7 +16,7 @@ class InvalidCompetitionNameException extends \DomainException
 
     public static function tooLong(string $name): self
     {
-        return new self("Competition name is too long. Maximum length is 100 characters.");
+        return new self('Competition name is too long. Maximum length is 100 characters.');
     }
 
     public static function invalidCharacters(string $name): self

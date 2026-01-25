@@ -63,7 +63,7 @@ interface SeasonRepositoryInterface
     /**
      * Get paginated seasons for a competition.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<Season>, total: int, per_page: int, current_page: int, last_page: int}
      */
     public function paginate(int $page, int $perPage, array $filters = []): array;
@@ -101,7 +101,7 @@ interface SeasonRepositoryInterface
      * Batch get all seasons with statistics for multiple competitions.
      * Returns seasons ordered by most recent first (latest created_at).
      *
-     * @param array<int> $competitionIds
+     * @param  array<int>  $competitionIds
      * @return array<int, array<array{
      *     season: Season,
      *     stats: array{driver_count: int, round_count: int, race_count: int}

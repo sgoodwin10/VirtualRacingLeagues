@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
 import { IconButton } from '@app/components/common/buttons';
 import ResponsiveImage from '@app/components/common/ResponsiveImage.vue';
 import { useLeagueStore } from '@app/stores/leagueStore';
 import { useUserStore } from '@app/stores/userStore';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
+import VrlConfirmDialog from '@app/components/common/dialogs/VrlConfirmDialog.vue';
 import type { League } from '@app/types/league';
-import { PhClock, PhPencil, PhTrash, PhArrowRight } from '@phosphor-icons/vue';
+import { PhClock, PhPencil, PhTrash, PhArrowRight, PhWarning } from '@phosphor-icons/vue';
 
 interface Props {
   league: League;
@@ -23,9 +24,18 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const toast = useToast();
-const confirm = useConfirm();
 const leagueStore = useLeagueStore();
 const userStore = useUserStore();
+
+// VRL Confirmation dialog
+const {
+  isVisible: isDeleteLeagueVisible,
+  options: deleteLeagueOptions,
+  isLoading: isDeleteLeagueLoading,
+  showConfirmation: showDeleteLeagueConfirmation,
+  handleAccept: handleDeleteLeagueAccept,
+  handleReject: handleDeleteLeagueReject,
+} = useVrlConfirm();
 
 const isOwner = computed(() => {
   return userStore.user?.id === props.league.owner_user_id;
@@ -53,33 +63,36 @@ function handleEdit(): void {
 }
 
 function confirmDelete(): void {
-  confirm.require({
-    message: `Are you sure you want to delete "${props.league.name}"? This action cannot be undone.`,
+  showDeleteLeagueConfirmation({
     header: 'Delete League',
-    icon: 'pi pi-exclamation-triangle',
-    acceptClass: 'p-button-danger',
-    accept: () => deleteLeague(),
+    message: `Are you sure you want to delete "${props.league.name}"? This action cannot be undone.`,
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
+    acceptLabel: 'Delete',
+    rejectLabel: 'Cancel',
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
+      try {
+        await leagueStore.removeLeague(props.league.id);
+        toast.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'League deleted successfully',
+          life: 3000,
+        });
+        emit('delete', props.league.id);
+      } catch {
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to delete league',
+          life: 5000,
+        });
+      }
+    },
   });
-}
-
-async function deleteLeague(): Promise<void> {
-  try {
-    await leagueStore.removeLeague(props.league.id);
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'League deleted successfully',
-      life: 3000,
-    });
-    emit('delete', props.league.id);
-  } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to delete league',
-      life: 5000,
-    });
-  }
 }
 </script>
 
@@ -203,6 +216,15 @@ async function deleteLeague(): Promise<void> {
         <PhArrowRight :size="12" />
       </button>
     </div>
+
+    <!-- Confirm Delete League Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isDeleteLeagueVisible"
+      v-bind="deleteLeagueOptions"
+      :loading="isDeleteLeagueLoading"
+      @accept="handleDeleteLeagueAccept"
+      @reject="handleDeleteLeagueReject"
+    />
   </article>
 </template>
 

@@ -673,13 +673,14 @@ final class RaceResultsCacheServiceTest extends TestCase
     private function trackRaceId(int $raceId): int
     {
         $this->testRaceIds[] = $raceId;
+
         return $raceId;
     }
 
     /**
      * Create sample PublicRaceResultsData for testing.
      *
-     * @param array<int, mixed> $results
+     * @param  array<int, mixed>  $results
      */
     private function createSampleRaceResultsData(
         int $raceId = 1,

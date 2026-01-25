@@ -49,7 +49,7 @@ interface CompetitionRepositoryInterface
     /**
      * Get stats for multiple competition entities.
      *
-     * @param array<Competition> $competitions
+     * @param  array<Competition>  $competitions
      * @return array<int, array<string, int|string|null>> Keyed by competition ID
      */
     public function getStatsForEntities(array $competitions): array;

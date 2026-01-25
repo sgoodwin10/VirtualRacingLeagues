@@ -9,13 +9,13 @@ use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Tests\TestCase;
 
 final class DriverControllerTest extends UserControllerTestCase
 {
     use RefreshDatabase;
 
     private UserEloquent $user;
+
     private League $league;
 
     protected function setUp(): void
@@ -549,7 +549,7 @@ final class DriverControllerTest extends UserControllerTestCase
         $csvData = "FirstName,LastName,PSN_ID,DriverNumber\n"
             . "Alice,Brown,AliceBrown,11\n"
             . "Charlie,Davis,CharlieDavis,22\n"
-            . "Eve,White,EveWhite,33";
+            . 'Eve,White,EveWhite,33';
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
@@ -586,7 +586,7 @@ final class DriverControllerTest extends UserControllerTestCase
             . "Valid,Driver,ValidPSN\n"
             . ",,\n" // Missing both name and platform ID - should error
             . "NoID,Driver,\n" // Missing platform ID but has name - should succeed
-            . "Duplicate,Driver,ExistingPSN"; // Already in league
+            . 'Duplicate,Driver,ExistingPSN'; // Already in league
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
@@ -626,7 +626,7 @@ final class DriverControllerTest extends UserControllerTestCase
         // Test with lowercase column names (nickname, psn_id, iracing_id)
         $csvData = "nickname,psn_id,iracing_id\n"
             . "btwong,btwong10,btwong\n"
-            . "racer42,racer42psn,racer42ir";
+            . 'racer42,racer42psn,racer42ir';
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
@@ -650,7 +650,7 @@ final class DriverControllerTest extends UserControllerTestCase
     {
         // Test with PascalCase and lowercase mixed
         $csvData = "Nickname,psn_id,iRacing_ID\n"
-            . "speedster,speedster99,speed99";
+            . 'speedster,speedster99,speed99';
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
@@ -910,7 +910,7 @@ final class DriverControllerTest extends UserControllerTestCase
     public function test_csv_import_auto_generates_nickname_from_discord_id(): void
     {
         $csvData = "FirstName,LastName,Nickname,PSN_ID,iRacing_ID,Discord_ID,Email,Phone,DriverNumber\n";
-        $csvData .= ",,,PSNAutoUser,,AutoDiscord123,autoimport@example.com,,15";
+        $csvData .= ',,,PSNAutoUser,,AutoDiscord123,autoimport@example.com,,15';
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
@@ -1104,7 +1104,7 @@ final class DriverControllerTest extends UserControllerTestCase
 
         // Try to import the same driver - should be skipped as duplicate
         $csvData = "FirstName,LastName,PSN_ID\n"
-            . "Test,User,Player_100%Win";
+            . 'Test,User,Player_100%Win';
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
@@ -1193,7 +1193,7 @@ final class DriverControllerTest extends UserControllerTestCase
         $csvData = "FirstName,LastName,PSN_ID\n"
             . "Valid1,Driver1,ValidPSN1\n"
             . "Valid2,Driver2,ValidPSN2\n"
-            . "Conflict,Driver,ConflictPSN";  // This will be skipped - already exists
+            . 'Conflict,Driver,ConflictPSN';  // This will be skipped - already exists
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [
@@ -1255,7 +1255,7 @@ final class DriverControllerTest extends UserControllerTestCase
             . "Existing,One,ExistingPSN1,\n"          // Duplicate - skip
             . "New2,Driver2,,NewIRacing2\n"          // New driver
             . "Existing,Two,,ExistingIRacing2\n"     // Duplicate - skip
-            . "New3,Driver3,NewPSN3,";               // New driver
+            . 'New3,Driver3,NewPSN3,';               // New driver
 
         $initialDriverCount = Driver::count();
         $initialLeagueDriverCount = DB::table('league_drivers')
@@ -1312,7 +1312,7 @@ final class DriverControllerTest extends UserControllerTestCase
         // CSV with formula injection attempts (leading =, +, -, @)
         $csvData = "FirstName,LastName,PSN_ID\n"
             . "=cmd,+calc,Normal123\n"  // Leading = and + should be stripped
-            . "-system,@admin,Valid456";  // Leading - and @ should be stripped
+            . '-system,@admin,Valid456';  // Leading - and @ should be stripped
 
         $response = $this->actingAs($this->user, 'web')
             ->postJson("/api/leagues/{$this->league->id}/drivers/import-csv", [

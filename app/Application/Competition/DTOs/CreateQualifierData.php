@@ -40,7 +40,6 @@ final class CreateQualifierData extends Data
     /**
      * Validation rules including cross-field validation.
      *
-     * @param ValidationContext|null $context
      * @return array<string, array<mixed>>
      */
     public static function rules(?ValidationContext $context = null): array
@@ -76,7 +75,7 @@ final class CreateQualifierData extends Data
     /**
      * Normalize empty strings to null for nullable fields.
      *
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     public static function prepareForPipeline(array $payload): array

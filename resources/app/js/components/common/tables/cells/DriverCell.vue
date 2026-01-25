@@ -18,17 +18,6 @@ withDefaults(defineProps<Props>(), {
   teamColor: undefined,
   showAvatar: true,
 });
-
-/**
- * Get initials from name
- * Currently unused but kept for future avatar support
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getInitials(name: string): string {
-  const parts = name.trim().split(' ');
-  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 </script>
 
 <template>

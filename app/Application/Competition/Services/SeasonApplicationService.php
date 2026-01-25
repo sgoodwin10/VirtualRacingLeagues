@@ -72,7 +72,8 @@ final class SeasonApplicationService
         private readonly RaceResultsCacheService $raceResultsCacheService,
         private readonly MediaServiceInterface $mediaService,
         private readonly RoundTiebreakerRuleRepositoryInterface $tiebreakerRuleRepository,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a new season.

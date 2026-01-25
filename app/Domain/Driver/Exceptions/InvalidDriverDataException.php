@@ -24,13 +24,14 @@ final class InvalidDriverDataException extends InvalidArgumentException
     }
 
     /**
-     * @param array<int> $leaguePlatformIds
+     * @param  array<int>  $leaguePlatformIds
      */
     public static function platformNotInLeague(array $leaguePlatformIds): self
     {
         $platformIdsList = implode(', ', $leaguePlatformIds);
+
         return new self(
-            "Driver must have at least one platform identifier that matches " .
+            'Driver must have at least one platform identifier that matches ' .
             "the league's platforms (Platform IDs: {$platformIdsList})"
         );
     }

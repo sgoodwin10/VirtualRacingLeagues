@@ -12,7 +12,6 @@ use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Team;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
@@ -30,7 +29,9 @@ class LeagueActivityLogServiceTest extends TestCase
     use RefreshDatabase;
 
     private LeagueActivityLogService $service;
+
     private UserEloquent $user;
+
     private League $league;
 
     protected function setUp(): void

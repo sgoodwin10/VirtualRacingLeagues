@@ -22,7 +22,7 @@ final class EloquentTeamRepository implements TeamRepositoryInterface
     {
         if ($team->id() === null) {
             // Create new
-            $eloquentTeam = new TeamEloquent;
+            $eloquentTeam = new TeamEloquent();
             $this->fillEloquentModel($eloquentTeam, $team);
 
             $eloquentTeam->save();

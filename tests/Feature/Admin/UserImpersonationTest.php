@@ -20,8 +20,11 @@ class UserImpersonationTest extends TestCase
     use RefreshDatabase;
 
     private Admin $superAdmin;
+
     private Admin $admin;
+
     private Admin $moderator;
+
     private User $user;
 
     protected function setUp(): void

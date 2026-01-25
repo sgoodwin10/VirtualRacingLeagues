@@ -42,8 +42,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $created_by_user_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- * @method static Round firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  *
+ * @method static Round firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  * @method static \Illuminate\Database\Eloquent\Builder<Round> where($column, $operator = null, $value = null)
  * @method static Round|null find(int $id, $columns = ['*'])
  * @method static Round findOrFail(int $id, $columns = ['*'])
@@ -57,8 +57,6 @@ final class Round extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return \Database\Factories\RoundFactory
      */
     protected static function newFactory(): \Database\Factories\RoundFactory
     {

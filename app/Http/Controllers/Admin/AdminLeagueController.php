@@ -42,6 +42,7 @@ final class AdminLeagueController extends Controller
     {
         try {
             $leagueData = $this->leagueService->getLeagueForAdmin($id);
+
             return ApiResponse::success($leagueData->toArray());
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -56,6 +57,7 @@ final class AdminLeagueController extends Controller
     {
         try {
             $leagueDetails = $this->leagueService->getLeagueDetailsForAdmin($id);
+
             return ApiResponse::success($leagueDetails->toArray());
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -69,6 +71,7 @@ final class AdminLeagueController extends Controller
     {
         try {
             $leagueData = $this->leagueService->archiveLeague($id);
+
             return ApiResponse::success($leagueData->toArray(), 'League archived successfully');
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);

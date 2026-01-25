@@ -286,6 +286,6 @@ final class SeasonDriver
      */
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 }

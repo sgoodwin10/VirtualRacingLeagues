@@ -45,7 +45,7 @@ interface VrlButtonProps {
   ariaLabel?: string | null;
 
   /** PrimeVue passthrough props for customization */
-  pt?: Record<string, unknown> | null;
+  pt?: Record<string, unknown>;
 }
 
 interface VrlButtonEmits {
@@ -62,7 +62,6 @@ const props = withDefaults(defineProps<VrlButtonProps>(), {
   loading: false,
   type: 'button',
   ariaLabel: null,
-  pt: null,
 });
 
 const emit = defineEmits<VrlButtonEmits>();

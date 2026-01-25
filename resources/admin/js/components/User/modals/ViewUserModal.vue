@@ -238,6 +238,7 @@ import { useAdminStore } from '@admin/stores/adminStore';
 import type { User } from '@admin/types/user';
 import { userService } from '@admin/services/userService';
 import { logger } from '@admin/utils/logger';
+import { buildLoginAsUrl } from '@admin/utils/url';
 
 const props = defineProps<{
   visible: boolean;
@@ -351,9 +352,8 @@ const handleLoginAsUser = async (): Promise<void> => {
   try {
     const { token } = await userService.loginAsUser(props.user.id);
 
-    // Get app domain from environment
-    const protocol = window.location.protocol;
-    const loginUrl = `${protocol}//${import.meta.env.VITE_APP_DOMAIN}/login-as?token=${token}`;
+    // Build login URL with proper port handling
+    const loginUrl = buildLoginAsUrl(token);
 
     // Open in new tab
     window.open(loginUrl, '_blank');

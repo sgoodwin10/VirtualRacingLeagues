@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Infrastructure\Persistence\Eloquent\Models\Competition;
-use App\Infrastructure\Persistence\Eloquent\Models\Driver;
 use App\Infrastructure\Persistence\Eloquent\Models\Division;
+use App\Infrastructure\Persistence\Eloquent\Models\Driver;
 use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;
@@ -25,8 +25,11 @@ final class RoundPointsCalculationTest extends TestCase
     private const APP_URL = 'http://app.virtualracingleagues.localhost';
 
     private User $user;
+
     private League $league;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
 
     protected function setUp(): void
@@ -668,7 +671,7 @@ final class RoundPointsCalculationTest extends TestCase
                 'race_id' => $race->id,
                 'driver_id' => $driver->id,
                 'position' => $position,
-            'original_race_time' => '00:30:00.000',
+                'original_race_time' => '00:30:00.000',
                 'fastest_lap' => $position === 11 ? '01:09:00.000' : '01:10:00.000', // Position 11 has fastest
                 'dnf' => false,
                 'status' => 'pending',
@@ -888,7 +891,7 @@ final class RoundPointsCalculationTest extends TestCase
                 'race_id' => $race->id,
                 'driver_id' => $driver->id,
                 'position' => $position,
-            'original_race_time' => '00:30:00.000',
+                'original_race_time' => '00:30:00.000',
                 'fastest_lap' => '01:10:00.000',
                 'dnf' => false,
                 'status' => 'pending',
@@ -1503,7 +1506,7 @@ final class RoundPointsCalculationTest extends TestCase
      * Helper: Create a race without race-level bonuses (tests round-level bonuses)
      * Also disables automatic race point calculation since tests set race_points manually
      *
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed>  $attributes
      */
     private function createRace(array $attributes = []): Race
     {
@@ -1529,8 +1532,8 @@ final class RoundPointsCalculationTest extends TestCase
         for ($i = 0; $i < $count; $i++) {
             /** @var Driver $driver */
             $driver = Driver::factory()->create([
-                'first_name' => "Driver",
-                'last_name' => "Number " . ($i + 1),
+                'first_name' => 'Driver',
+                'last_name' => 'Number ' . ($i + 1),
                 'nickname' => null,
             ]);
 
@@ -1565,7 +1568,7 @@ final class RoundPointsCalculationTest extends TestCase
         for ($i = 0; $i < $count; $i++) {
             /** @var Driver $driver */
             $driver = Driver::factory()->create([
-                'first_name' => "Driver",
+                'first_name' => 'Driver',
                 'last_name' => "Div{$divisionId} " . ($i + 1),
                 'nickname' => null,
             ]);

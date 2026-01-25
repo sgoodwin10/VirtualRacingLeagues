@@ -58,7 +58,7 @@ final class LoginController extends Controller
     {
         $userData = $this->authService->getCurrentUserData();
 
-        if (!$userData) {
+        if (! $userData) {
             return ApiResponse::error('Unauthenticated', null, 401);
         }
 

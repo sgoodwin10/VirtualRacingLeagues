@@ -22,8 +22,9 @@ class PlatformTrackLocationSeeder extends Seeder
         // Get Gran Turismo 7 platform ID
         $gt7Platform = DB::table('platforms')->where('slug', 'gran-turismo-7')->first();
 
-        if (!$gt7Platform) {
+        if (! $gt7Platform) {
             $this->command->error('Gran Turismo 7 platform not found. Please run PlatformSeeder first.');
+
             return;
         }
 

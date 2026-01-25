@@ -25,7 +25,6 @@ final class AdminPlatformCarController extends Controller
     /**
      * Import GT7 cars from KudosPrime.
      *
-     * @return JsonResponse
      * @throws \JsonException
      */
     public function import(): JsonResponse

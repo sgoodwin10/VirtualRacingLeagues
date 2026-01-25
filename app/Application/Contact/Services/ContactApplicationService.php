@@ -46,7 +46,7 @@ final class ContactApplicationService
     }
 
     /**
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<ContactData>, total: int, page: int, per_page: int, last_page: int}
      */
     public function getContacts(array $filters, int $page, int $perPage): array
@@ -55,7 +55,7 @@ final class ContactApplicationService
 
         return [
             'data' => array_map(
-                fn(Contact $contact) => ContactData::fromEntity($contact),
+                fn (Contact $contact) => ContactData::fromEntity($contact),
                 $result['data']
             ),
             'total' => $result['total'],

@@ -22,6 +22,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
  *
  * This is a lightweight proxy that extends the infrastructure layer's
  * AdminEloquent model without adding any additional behavior.
+ *
  * @property int $id
  * @property string $first_name
  * @property string $last_name
@@ -40,6 +41,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int,
  *     \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
+ *
  * @method static \Database\Factories\AdminFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin newQuery()
@@ -59,6 +61,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Admin extends AdminEloquent

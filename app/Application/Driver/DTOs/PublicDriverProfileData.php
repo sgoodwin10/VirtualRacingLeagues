@@ -14,8 +14,8 @@ use Spatie\LaravelData\Data;
 final class PublicDriverProfileData extends Data
 {
     /**
-     * @param string $nickname Driver's nickname
-     * @param int|null $driver_number Driver's league number
+     * @param  string  $nickname  Driver's nickname
+     * @param  int|null  $driver_number  Driver's league number
      * @param array{
      *     psn_id?: string,
      *     discord_id?: string,

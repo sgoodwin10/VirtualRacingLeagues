@@ -30,7 +30,6 @@ final class PlatformMappingService
     /**
      * Get driver field names for a platform ID.
      *
-     * @param int $platformId
      * @return array<string>
      */
     public static function getFieldsForPlatform(int $platformId): array
@@ -49,14 +48,15 @@ final class PlatformMappingService
         foreach (self::PLATFORM_FIELD_MAP as $platformFields) {
             $fields = array_merge($fields, $platformFields);
         }
+
         return array_unique($fields);
     }
 
     /**
      * Check if driver data has at least one platform ID for the given league platforms.
      *
-     * @param array<int> $leaguePlatformIds Platform IDs associated with the league
-     * @param array<string, mixed> $driverData Driver data with platform fields
+     * @param  array<int>  $leaguePlatformIds  Platform IDs associated with the league
+     * @param  array<string, mixed>  $driverData  Driver data with platform fields
      * @return bool True if driver has at least one platform ID for the league
      */
     public static function hasValidPlatformForLeague(array $leaguePlatformIds, array $driverData): bool
@@ -67,7 +67,7 @@ final class PlatformMappingService
             foreach ($fields as $field) {
                 if (
                     isset($driverData[$field])
-                    && trim((string)$driverData[$field]) !== ''
+                    && trim((string) $driverData[$field]) !== ''
                 ) {
                     return true;
                 }
@@ -80,7 +80,7 @@ final class PlatformMappingService
     /**
      * Get a list of platform names that the driver has IDs for.
      *
-     * @param array<string, mixed> $driverData Driver data with platform fields
+     * @param  array<string, mixed>  $driverData  Driver data with platform fields
      * @return array<string> Platform field names that are populated
      */
     public static function getProvidedPlatformFields(array $driverData): array
@@ -90,7 +90,7 @@ final class PlatformMappingService
         foreach (self::getAllPlatformFields() as $field) {
             if (
                 isset($driverData[$field])
-                && trim((string)$driverData[$field]) !== ''
+                && trim((string) $driverData[$field]) !== ''
             ) {
                 $providedFields[] = $field;
             }

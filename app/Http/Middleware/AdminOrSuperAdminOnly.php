@@ -27,7 +27,7 @@ class AdminOrSuperAdminOnly
         $admin = Auth::guard('admin')->user();
 
         // Check if admin is authenticated
-        if (!$admin) {
+        if (! $admin) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthenticated.',
@@ -35,7 +35,7 @@ class AdminOrSuperAdminOnly
         }
 
         // Check if admin account is active
-        if (!$admin->isActive()) {
+        if (! $admin->isActive()) {
             // Log authorization failure
             activity()
                 ->causedBy($admin)
@@ -57,7 +57,7 @@ class AdminOrSuperAdminOnly
         }
 
         // Check if admin has required role (admin or super_admin)
-        if (!$admin->isAdmin() && !$admin->isSuperAdmin()) {
+        if (! $admin->isAdmin() && ! $admin->isSuperAdmin()) {
             // Log authorization failure
             activity()
                 ->causedBy($admin)

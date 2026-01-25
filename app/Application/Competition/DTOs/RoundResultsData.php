@@ -24,9 +24,9 @@ final class RoundResultsData extends Data
      *     race_time_results: array<mixed>|null,
      *     fastest_lap_results: array<mixed>|null
      * } $round
-     * @param DataCollection<int, DivisionData> $divisions
-     * @param DataCollection<int, RaceEventResultData> $race_events
-     * @param bool $has_orphaned_results Whether the round has results with NULL division_id
+     * @param  DataCollection<int, DivisionData>  $divisions
+     * @param  DataCollection<int, RaceEventResultData>  $race_events
+     * @param  bool  $has_orphaned_results  Whether the round has results with NULL division_id
      */
     public function __construct(
         public readonly array $round,

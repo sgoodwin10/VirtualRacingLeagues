@@ -85,11 +85,11 @@ final class QualifierApplicationService
             $newStatus = null;
 
             // Get current values for fields not being updated
-            $name = !($data->name instanceof Optional)
+            $name = ! ($data->name instanceof Optional)
                 ? ($data->name !== null ? RaceName::from($data->name) : null)
                 : $qualifier->name();
 
-            $qualifyingFormat = !($data->qualifying_format instanceof Optional)
+            $qualifyingFormat = ! ($data->qualifying_format instanceof Optional)
                 ? (
                     $data->qualifying_format !== null
                         ? QualifyingFormat::from($data->qualifying_format)
@@ -97,45 +97,45 @@ final class QualifierApplicationService
                 )
                 : $qualifier->qualifyingFormat();
 
-            $qualifyingLength = !($data->qualifying_length instanceof Optional)
+            $qualifyingLength = ! ($data->qualifying_length instanceof Optional)
                 ? ($data->qualifying_length ?? $qualifier->qualifyingLength())
                 : $qualifier->qualifyingLength();
 
-            $qualifyingTire = !($data->qualifying_tire instanceof Optional)
+            $qualifyingTire = ! ($data->qualifying_tire instanceof Optional)
                 ? $data->qualifying_tire
                 : $qualifier->qualifyingTire();
 
-            $weather = !($data->weather instanceof Optional)
+            $weather = ! ($data->weather instanceof Optional)
                 ? $data->weather
                 : $qualifier->weather();
 
-            $tireRestrictions = !($data->tire_restrictions instanceof Optional)
+            $tireRestrictions = ! ($data->tire_restrictions instanceof Optional)
                 ? $data->tire_restrictions
                 : $qualifier->tireRestrictions();
 
-            $fuelUsage = !($data->fuel_usage instanceof Optional)
+            $fuelUsage = ! ($data->fuel_usage instanceof Optional)
                 ? $data->fuel_usage
                 : $qualifier->fuelUsage();
 
-            $damageModel = !($data->damage_model instanceof Optional)
+            $damageModel = ! ($data->damage_model instanceof Optional)
                 ? $data->damage_model
                 : $qualifier->damageModel();
 
             // Penalty fields are not editable for qualifiers - they are ignored
 
-            $assistsRestrictions = !($data->assists_restrictions instanceof Optional)
+            $assistsRestrictions = ! ($data->assists_restrictions instanceof Optional)
                 ? $data->assists_restrictions
                 : $qualifier->assistsRestrictions();
 
-            $qualifyingPole = !($data->qualifying_pole instanceof Optional)
+            $qualifyingPole = ! ($data->qualifying_pole instanceof Optional)
                 ? $data->qualifying_pole
                 : $qualifier->qualifyingPole();
 
-            $qualifyingPoleTop10 = !($data->qualifying_pole_top_10 instanceof Optional)
+            $qualifyingPoleTop10 = ! ($data->qualifying_pole_top_10 instanceof Optional)
                 ? ($data->qualifying_pole_top_10 ?? $qualifier->qualifyingPoleTop10())
                 : $qualifier->qualifyingPoleTop10();
 
-            $raceNotes = !($data->race_notes instanceof Optional)
+            $raceNotes = ! ($data->race_notes instanceof Optional)
                 ? $data->race_notes
                 : $qualifier->raceNotes();
 
@@ -155,7 +155,7 @@ final class QualifierApplicationService
             );
 
             // Handle status update if provided
-            if (!($data->status instanceof Optional) && $data->status !== null) {
+            if (! ($data->status instanceof Optional) && $data->status !== null) {
                 $newStatus = RaceStatus::from($data->status);
                 if ($oldStatus !== $newStatus) {
                     $statusChanged = true;
@@ -300,7 +300,7 @@ final class QualifierApplicationService
             $resultsByDivision = [];
             foreach ($raceResults as $result) {
                 $divisionId = $result->divisionId() ?? 0; // Use 0 for null division
-                if (!isset($resultsByDivision[$divisionId])) {
+                if (! isset($resultsByDivision[$divisionId])) {
                     $resultsByDivision[$divisionId] = [];
                 }
                 $resultsByDivision[$divisionId][] = $result;
@@ -320,14 +320,14 @@ final class QualifierApplicationService
      * Calculate pole position for a set of qualifier results.
      * This method is called per division when divisions are enabled.
      *
-     * @param array<\App\Domain\Competition\Entities\RaceResult> $results
+     * @param  array<\App\Domain\Competition\Entities\RaceResult>  $results
      */
     private function calculatePolePositionForResultSet(Race $qualifier, array $results): void
     {
         // Check if ALL results have no fastest_lap data (fallback to submission order)
         $allResultsHaveNoTime = true;
         foreach ($results as $result) {
-            if (!$result->fastestLap()->isNull() && !$result->dnf()) {
+            if (! $result->fastestLap()->isNull() && ! $result->dnf()) {
                 $allResultsHaveNoTime = false;
                 break;
             }
@@ -336,6 +336,7 @@ final class QualifierApplicationService
         // If all results have no time, use submission order (database order by ID)
         if ($allResultsHaveNoTime) {
             $this->calculatePolePositionBySubmissionOrder($qualifier, $results);
+
             return;
         }
 
@@ -384,7 +385,7 @@ final class QualifierApplicationService
             //   (they will be awarded when the race completes if driver finishes top 10)
             // - If qualifying_pole_top_10 is false, award points immediately
             $points = 0;
-            if ($hasPole && $polePoints > 0 && !$poleTop10Only) {
+            if ($hasPole && $polePoints > 0 && ! $poleTop10Only) {
                 $points = $polePoints;
             }
 
@@ -432,7 +433,7 @@ final class QualifierApplicationService
      * Calculate pole position based on submission order when all results have no fastest_lap data.
      * This is a fallback mechanism - the first driver submitted gets P1 (pole position).
      *
-     * @param array<\App\Domain\Competition\Entities\RaceResult> $results
+     * @param  array<\App\Domain\Competition\Entities\RaceResult>  $results
      */
     private function calculatePolePositionBySubmissionOrder(Race $qualifier, array $results): void
     {
@@ -456,7 +457,7 @@ final class QualifierApplicationService
             //   (they will be awarded when the race completes if driver finishes top 10)
             // - If qualifying_pole_top_10 is false, award points immediately
             $points = 0;
-            if ($hasPole && $polePoints > 0 && !$poleTop10Only) {
+            if ($hasPole && $polePoints > 0 && ! $poleTop10Only) {
                 $points = $polePoints;
             }
 
@@ -506,8 +507,8 @@ final class QualifierApplicationService
     /**
      * Log qualifier update activity.
      *
-     * @param array<string, mixed> $originalData
-     * @param array<string, mixed> $newData
+     * @param  array<string, mixed>  $originalData
+     * @param  array<string, mixed>  $newData
      */
     private function logQualifierUpdated(int $qualifierId, int $userId, array $originalData, array $newData): void
     {

@@ -34,7 +34,7 @@ final readonly class EmailVerificationToken
             throw new InvalidArgumentException('Email verification token must be exactly 64 characters');
         }
 
-        if (!ctype_xdigit($this->token)) {
+        if (! ctype_xdigit($this->token)) {
             throw new InvalidArgumentException('Email verification token must contain only hexadecimal characters');
         }
     }

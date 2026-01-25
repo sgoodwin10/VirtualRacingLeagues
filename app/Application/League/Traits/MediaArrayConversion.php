@@ -17,7 +17,6 @@ trait MediaArrayConversion
     /**
      * Convert Spatie Media model to array representation with conversions and srcset.
      *
-     * @param Media|null $media
      * @return array{id: int, original: string, conversions: array<string, string>, srcset: string}|null
      */
     protected static function mediaToArray(?Media $media): ?array

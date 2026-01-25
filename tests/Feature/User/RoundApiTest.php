@@ -19,7 +19,9 @@ final class RoundApiTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private int $seasonId;
+
     private int $platformTrackId;
 
     protected function setUp(): void

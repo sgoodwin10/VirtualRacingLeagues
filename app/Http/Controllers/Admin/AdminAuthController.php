@@ -102,7 +102,7 @@ class AdminAuthController extends Controller
 
             $admin = $this->adminService->getAdminEntityById($adminData->id);
 
-            if (!$admin->isActive()) {
+            if (! $admin->isActive()) {
                 return ApiResponse::success([
                     'authenticated' => false,
                 ]);

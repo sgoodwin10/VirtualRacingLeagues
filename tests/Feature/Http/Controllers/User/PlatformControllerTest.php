@@ -8,7 +8,6 @@ use App\Infrastructure\Persistence\Eloquent\Models\Platform;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
 class PlatformControllerTest extends UserControllerTestCase
 {

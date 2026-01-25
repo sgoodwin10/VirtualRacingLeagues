@@ -16,7 +16,7 @@ use App\Domain\Competition\Exceptions\InvalidTiebreakerConfigurationException;
 final readonly class TiebreakerRuleConfiguration
 {
     /**
-     * @param array<TiebreakerRuleReference> $rules
+     * @param  array<TiebreakerRuleReference>  $rules
      */
     private function __construct(private array $rules)
     {
@@ -26,12 +26,12 @@ final readonly class TiebreakerRuleConfiguration
     /**
      * Create from array of rule references.
      *
-     * @param array<TiebreakerRuleReference> $rules
+     * @param  array<TiebreakerRuleReference>  $rules
      */
     public static function from(array $rules): self
     {
         // Sort by order
-        usort($rules, fn($a, $b) => $a->order() <=> $b->order());
+        usort($rules, fn ($a, $b) => $a->order() <=> $b->order());
 
         return new self($rules);
     }
@@ -72,6 +72,7 @@ final readonly class TiebreakerRuleConfiguration
                 return $rule;
             }
         }
+
         return null;
     }
 
@@ -85,6 +86,7 @@ final readonly class TiebreakerRuleConfiguration
                 return true;
             }
         }
+
         return false;
     }
 
@@ -95,7 +97,7 @@ final readonly class TiebreakerRuleConfiguration
      */
     public function getSlugsInOrder(): array
     {
-        return array_map(fn($rule) => $rule->slug()->value(), $this->rules);
+        return array_map(fn ($rule) => $rule->slug()->value(), $this->rules);
     }
 
     /**
@@ -105,7 +107,7 @@ final readonly class TiebreakerRuleConfiguration
      */
     public function toArray(): array
     {
-        return array_map(fn($rule) => $rule->toArray(), $this->rules);
+        return array_map(fn ($rule) => $rule->toArray(), $this->rules);
     }
 
     /**
@@ -117,20 +119,20 @@ final readonly class TiebreakerRuleConfiguration
     private function validate(): void
     {
         // Check for duplicate rule IDs
-        $ruleIds = array_map(fn($rule) => $rule->id(), $this->rules);
+        $ruleIds = array_map(fn ($rule) => $rule->id(), $this->rules);
         if (count($ruleIds) !== count(array_unique($ruleIds))) {
             throw DuplicateTiebreakerRuleException::duplicateRule();
         }
 
         // Check for duplicate rule slugs
-        $ruleSlugs = array_map(fn($rule) => $rule->slug()->value(), $this->rules);
+        $ruleSlugs = array_map(fn ($rule) => $rule->slug()->value(), $this->rules);
         if (count($ruleSlugs) !== count(array_unique($ruleSlugs))) {
             throw DuplicateTiebreakerRuleException::duplicateRule();
         }
 
         // Check that orders are sequential starting from 1
-        if (!empty($this->rules)) {
-            $orders = array_map(fn($rule) => $rule->order(), $this->rules);
+        if (! empty($this->rules)) {
+            $orders = array_map(fn ($rule) => $rule->order(), $this->rules);
             $expectedOrders = range(1, count($this->rules));
             if ($orders !== $expectedOrders) {
                 throw InvalidTiebreakerConfigurationException::invalidOrdering();

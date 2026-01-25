@@ -279,16 +279,27 @@
   />
 
   <!-- Confirm Delete Dialogs -->
-  <ConfirmDialog group="round-delete" />
-  <ConfirmDialog group="race-delete" />
+  <VrlConfirmDialog
+    v-model:visible="isRoundDeleteVisible"
+    v-bind="roundDeleteOptions"
+    :loading="isRoundDeleteLoading"
+    @accept="handleRoundDeleteAccept"
+    @reject="handleRoundDeleteReject"
+  />
+  <VrlConfirmDialog
+    v-model:visible="isRaceDeleteVisible"
+    v-bind="raceDeleteOptions"
+    :loading="isRaceDeleteLoading"
+    @accept="handleRaceDeleteAccept"
+    @reject="handleRaceDeleteReject"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { format, parseISO } from 'date-fns';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
-import { PhPlus, PhCalculator, PhTrophy, PhPencil, PhTrash } from '@phosphor-icons/vue';
+import { PhPlus, PhCalculator, PhTrophy, PhPencil, PhTrash, PhWarning } from '@phosphor-icons/vue';
 import BasePanel from '@app/components/common/panels/BasePanel.vue';
 import { Button, FooterAddButton } from '@app/components/common/buttons';
 import RoundFormModal from '@app/components/round/modals/RoundFormModal.vue';
@@ -305,7 +316,8 @@ import {
 } from '@app/components/common/accordions';
 import type { AccordionStatus } from '@app/components/common/accordions';
 import Skeleton from 'primevue/skeleton';
-import ConfirmDialog from 'primevue/confirmdialog';
+import VrlConfirmDialog from '@app/components/common/dialogs/VrlConfirmDialog.vue';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
 import { BaseToggleSwitch } from '@app/components/common/inputs';
 import { useRoundStore } from '@app/stores/roundStore';
 import { useRaceStore } from '@app/stores/raceStore';
@@ -333,7 +345,25 @@ const roundStore = useRoundStore();
 const raceStore = useRaceStore();
 const trackStore = useTrackStore();
 const toast = useToast();
-const confirm = useConfirm();
+
+// VRL Confirmation dialogs
+const {
+  isVisible: isRoundDeleteVisible,
+  options: roundDeleteOptions,
+  isLoading: isRoundDeleteLoading,
+  showConfirmation: showRoundDeleteConfirmation,
+  handleAccept: handleRoundDeleteAccept,
+  handleReject: handleRoundDeleteReject,
+} = useVrlConfirm();
+
+const {
+  isVisible: isRaceDeleteVisible,
+  options: raceDeleteOptions,
+  isLoading: isRaceDeleteLoading,
+  showConfirmation: showRaceDeleteConfirmation,
+  handleAccept: handleRaceDeleteAccept,
+  handleReject: handleRaceDeleteReject,
+} = useVrlConfirm();
 
 // Orphaned results management
 const {
@@ -603,16 +633,17 @@ function handleEditRound(round: Round): void {
 }
 
 function handleDeleteRound(round: Round): void {
-  confirm.require({
-    group: 'round-delete',
+  showRoundDeleteConfirmation({
+    header: 'Delete Round',
     message: `Are you sure you want to delete Round ${round.round_number}${round.name ? ` - ${round.name}` : ''}?`,
-    header: 'Confirm Delete',
-    icon: 'pi pi-exclamation-triangle',
-    rejectClass: 'p-button-secondary p-button-outlined',
-    rejectLabel: 'Cancel',
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
     acceptLabel: 'Delete',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
+    rejectLabel: 'Cancel',
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       try {
         await roundStore.deleteExistingRound(round.id);
         toast.add({
@@ -749,16 +780,17 @@ async function handleEditQualifier(qualifier: Race): Promise<void> {
 }
 
 function handleDeleteQualifier(qualifier: Race): void {
-  confirm.require({
-    group: 'race-delete',
+  showRaceDeleteConfirmation({
+    header: 'Delete Qualifying Session',
     message: `Are you sure you want to delete the qualifying session${qualifier.name ? ` - ${qualifier.name}` : ''}?`,
-    header: 'Confirm Delete',
-    icon: 'pi pi-exclamation-triangle',
-    rejectClass: 'p-button-secondary p-button-outlined',
-    rejectLabel: 'Cancel',
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
     acceptLabel: 'Delete',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
+    rejectLabel: 'Cancel',
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       try {
         await raceStore.deleteExistingRace(qualifier.id, true);
         toast.add({
@@ -801,16 +833,17 @@ async function handleEditRace(race: Race): Promise<void> {
 }
 
 function handleDeleteRace(race: Race): void {
-  confirm.require({
-    group: 'race-delete',
+  showRaceDeleteConfirmation({
+    header: 'Delete Race',
     message: `Are you sure you want to delete Race ${race.race_number}${race.name ? ` - ${race.name}` : ''}?`,
-    header: 'Confirm Delete',
-    icon: 'pi pi-exclamation-triangle',
-    rejectClass: 'p-button-secondary p-button-outlined',
-    rejectLabel: 'Cancel',
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
     acceptLabel: 'Delete',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
+    rejectLabel: 'Cancel',
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       try {
         await raceStore.deleteExistingRace(race.id);
         toast.add({

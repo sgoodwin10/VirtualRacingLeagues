@@ -21,9 +21,13 @@ class PublicRoundControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private League $league;
+
     private Platform $platform;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
 
     protected function setUp(): void
@@ -164,7 +168,6 @@ class PublicRoundControllerTest extends TestCase
                 'message' => 'Round not found',
             ]);
     }
-
 
     public function test_results_rejects_negative_round_id(): void
     {

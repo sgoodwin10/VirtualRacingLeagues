@@ -16,9 +16,13 @@ class SeasonControllerTest extends UserControllerTestCase
     use RefreshDatabase;
 
     private User $user;
+
     private User $otherUser;
+
     private League $league;
+
     private Platform $platform;
+
     private Competition $competition;
 
     protected function setUp(): void

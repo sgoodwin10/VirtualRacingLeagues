@@ -17,7 +17,7 @@ final class NotificationApplicationService
     }
 
     /**
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<NotificationLogData>, total: int, page: int, per_page: int, last_page: int}
      */
     public function getNotificationLogs(array $filters, int $page, int $perPage): array
@@ -26,7 +26,7 @@ final class NotificationApplicationService
 
         return [
             'data' => array_map(
-                fn(NotificationLog $log) => NotificationLogData::fromEntity($log),
+                fn (NotificationLog $log) => NotificationLogData::fromEntity($log),
                 $result['data']
             ),
             'total' => $result['total'],
@@ -50,6 +50,7 @@ final class NotificationApplicationService
     public function cleanupOldNotifications(int $daysToKeep): int
     {
         $cutoffDate = (new DateTimeImmutable())->modify("-{$daysToKeep} days");
+
         return $this->notificationLogRepository->deleteOlderThan($cutoffDate);
     }
 }

@@ -10,7 +10,7 @@ namespace App\Domain\Platform\Events;
 final readonly class CarBrandUpdated
 {
     /**
-     * @param array<string, mixed> $changes
+     * @param  array<string, mixed>  $changes
      */
     public function __construct(
         public int $brandId,

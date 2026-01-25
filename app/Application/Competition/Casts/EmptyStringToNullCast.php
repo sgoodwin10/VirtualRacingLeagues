@@ -18,8 +18,8 @@ use Spatie\LaravelData\Support\DataProperty;
 class EmptyStringToNullCast implements Cast
 {
     /**
-     * @param array<string, mixed> $properties
-     * @param CreationContext<TData> $context
+     * @param  array<string, mixed>  $properties
+     * @param  CreationContext<TData>  $context
      */
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): mixed
     {

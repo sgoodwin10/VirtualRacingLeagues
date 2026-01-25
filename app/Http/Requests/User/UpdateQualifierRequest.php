@@ -19,13 +19,14 @@ final class UpdateQualifierRequest extends FormRequest
 
         /** @var \App\Models\User|null $user */
         $user = auth('web')->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         $userId = $user->id;
 
         $raceRepository = app(RaceRepositoryInterface::class);
+
         return $raceRepository->isOwnedByUser($qualifierId, $userId);
     }
 

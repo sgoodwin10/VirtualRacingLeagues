@@ -29,6 +29,7 @@ interface LeagueRepositoryInterface
      * Get a league by ID with counts.
      *
      * @return array{league: League, competitions_count: int, drivers_count: int, active_seasons_count: int, total_races_count: int}
+     *
      * @throws LeagueNotFoundException
      */
     public function findByIdWithCounts(int $id): array;
@@ -48,8 +49,8 @@ interface LeagueRepositoryInterface
     /**
      * Check if a slug is available.
      *
-     * @param string $slug The slug to check
-     * @param int|null $excludeLeagueId Optional league ID to exclude from the check (for updates)
+     * @param  string  $slug  The slug to check
+     * @param  int|null  $excludeLeagueId  Optional league ID to exclude from the check (for updates)
      */
     public function isSlugAvailable(string $slug, ?int $excludeLeagueId = null): bool;
 
@@ -75,7 +76,7 @@ interface LeagueRepositoryInterface
     /**
      * Get all leagues with optional filters.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array<int, League>
      */
     public function all(array $filters = []): array;
@@ -108,8 +109,8 @@ interface LeagueRepositoryInterface
     /**
      * Get platforms associated with a league.
      *
-     * @param int $leagueId
      * @return array<int, array{id: int, name: string, slug: string, description: ?string, logo_url: ?string}>
+     *
      * @throws LeagueNotFoundException
      */
     public function getPlatformsByLeagueId(int $leagueId): array;
@@ -117,10 +118,9 @@ interface LeagueRepositoryInterface
     /**
      * Get paginated leagues for admin with filters.
      *
-     * @param int $page
-     * @param int $perPage
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int, active_seasons_count: int, total_races_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
+     *
      * @throws LeagueNotFoundException
      */
     public function getPaginatedForAdmin(int $page, int $perPage, array $filters = []): array;
@@ -128,7 +128,6 @@ interface LeagueRepositoryInterface
     /**
      * Get league statistics (total drivers, races, competitions, and season summaries).
      *
-     * @param int $leagueId
      * @return array{
      *     total_drivers: int,
      *     total_races: int,
@@ -163,9 +162,9 @@ interface LeagueRepositoryInterface
     /**
      * Get paginated public leagues (visibility = public, status = active).
      *
-     * @param int $page Current page number
-     * @param int $perPage Number of items per page
-     * @param array<string, mixed> $filters Search and filter criteria
+     * @param  int  $page  Current page number
+     * @param  int  $perPage  Number of items per page
+     * @param  array<string, mixed>  $filters  Search and filter criteria
      * @return array{data: array<int, array{league: League, competitions_count: int, drivers_count: int, active_seasons_count: int, total_races_count: int}>, total: int, per_page: int, current_page: int, last_page: int}
      */
     public function getPaginatedPublic(int $page, int $perPage = 12, array $filters = []): array;

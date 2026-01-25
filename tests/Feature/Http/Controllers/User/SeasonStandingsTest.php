@@ -22,9 +22,13 @@ class SeasonStandingsTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private League $league;
+
     private Platform $platform;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
 
     protected function setUp(): void
@@ -614,7 +618,7 @@ class SeasonStandingsTest extends TestCase
     /**
      * Helper: Create drivers and return their season driver IDs.
      *
-     * @param array<string> $names
+     * @param  array<string>  $names
      * @return array<int>
      */
     private function createDrivers(array $names): array
@@ -649,8 +653,7 @@ class SeasonStandingsTest extends TestCase
     /**
      * Helper: Create a completed round with standings (without divisions).
      *
-     * @param int $roundNumber
-     * @param array<array{driver_id: int, driver_name: string, total_points: int}> $standings
+     * @param  array<array{driver_id: int, driver_name: string, total_points: int}>  $standings
      */
     private function createRoundWithStandings(int $roundNumber, array $standings): Round
     {
@@ -684,8 +687,7 @@ class SeasonStandingsTest extends TestCase
     /**
      * Helper: Create a completed round with division standings.
      *
-     * @param int $roundNumber
-     * @param array<array{division_id: int, division_name: string, results: array}> $divisionStandings
+     * @param  array<array{division_id: int, division_name: string, results: array}>  $divisionStandings
      */
     private function createRoundWithDivisionStandings(int $roundNumber, array $divisionStandings): Round
     {

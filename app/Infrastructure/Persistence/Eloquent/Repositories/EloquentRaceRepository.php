@@ -56,7 +56,7 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
             ->orderBy('race_number')
             ->get();
 
-        return $eloquentModels->map(fn(RaceEloquent $model) => $this->toDomainEntity($model))
+        return $eloquentModels->map(fn (RaceEloquent $model) => $this->toDomainEntity($model))
             ->all();
     }
 
@@ -71,7 +71,7 @@ final class EloquentRaceRepository implements RaceRepositoryInterface
             ->orderBy('race_number')
             ->get();
 
-        return $eloquentModels->map(fn(RaceEloquent $model) => $this->toDomainEntity($model))
+        return $eloquentModels->map(fn (RaceEloquent $model) => $this->toDomainEntity($model))
             ->all();
     }
 

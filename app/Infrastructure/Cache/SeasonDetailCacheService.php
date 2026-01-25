@@ -51,6 +51,7 @@ final class SeasonDetailCacheService
                 'season_id' => $seasonId,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -110,6 +111,6 @@ final class SeasonDetailCacheService
      */
     private function getCacheKey(int $seasonId): string
     {
-        return self::CACHE_PREFIX . $seasonId;
+        return self::CACHE_PREFIX.$seasonId;
     }
 }

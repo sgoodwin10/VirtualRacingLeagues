@@ -12,10 +12,7 @@ namespace App\Domain\Competition\Events;
 final readonly class SeasonUpdated
 {
     /**
-     * @param int $seasonId
-     * @param int $competitionId
-     * @param array<string, array{old: mixed, new: mixed}> $changes
-     * @param string $occurredAt
+     * @param  array<string, array{old: mixed, new: mixed}>  $changes
      */
     public function __construct(
         public int $seasonId,

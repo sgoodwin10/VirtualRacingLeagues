@@ -9,8 +9,8 @@ use App\Infrastructure\Persistence\Eloquent\Models\Division;
 use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -20,13 +20,21 @@ class RaceResultControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private League $league;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
+
     private Division $division;
+
     private Round $round;
+
     private Race $race;
+
     private SeasonDriverEloquent $driver1;
+
     private SeasonDriverEloquent $driver2;
 
     protected string $appDomain = 'http://app.virtualracingleagues.localhost';

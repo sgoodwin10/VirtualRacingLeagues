@@ -41,7 +41,7 @@ final class QualifierData extends Data
 
     public static function fromEntity(Race $qualifier): self
     {
-        if (!$qualifier->isQualifier()) {
+        if (! $qualifier->isQualifier()) {
             throw new InvalidArgumentException('Entity must be a qualifier');
         }
 

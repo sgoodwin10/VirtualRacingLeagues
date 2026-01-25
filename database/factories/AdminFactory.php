@@ -42,8 +42,6 @@ class AdminFactory extends Factory
 
     /**
      * Indicate that the admin is a super admin.
-     *
-     * @return static
      */
     public function superAdmin(): static
     {
@@ -54,8 +52,6 @@ class AdminFactory extends Factory
 
     /**
      * Indicate that the admin is an admin.
-     *
-     * @return static
      */
     public function admin(): static
     {
@@ -66,8 +62,6 @@ class AdminFactory extends Factory
 
     /**
      * Indicate that the admin is a moderator.
-     *
-     * @return static
      */
     public function moderator(): static
     {
@@ -78,8 +72,6 @@ class AdminFactory extends Factory
 
     /**
      * Indicate that the admin account is inactive.
-     *
-     * @return static
      */
     public function inactive(): static
     {
@@ -90,8 +82,6 @@ class AdminFactory extends Factory
 
     /**
      * Indicate that the admin account is active.
-     *
-     * @return static
      */
     public function active(): static
     {

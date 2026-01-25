@@ -10,8 +10,7 @@ namespace App\Domain\Division\Events;
 final readonly class DivisionUpdated
 {
     /**
-     * @param int $divisionId
-     * @param array<string, mixed> $changes
+     * @param  array<string, mixed>  $changes
      */
     public function __construct(
         public int $divisionId,

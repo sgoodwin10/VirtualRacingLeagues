@@ -34,6 +34,15 @@
         </TabPanel>
       </TabPanels>
     </Tabs>
+
+    <!-- Confirm Reset All Results Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isResetAllVisible"
+      v-bind="resetAllOptions"
+      :loading="isResetAllLoading"
+      @accept="handleResetAllAccept"
+      @reject="handleResetAllReject"
+    />
   </div>
 </template>
 
@@ -45,11 +54,12 @@ import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import { Button } from '@app/components/common/buttons';
-import { useConfirm } from 'primevue/useconfirm';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
+import VrlConfirmDialog from '@app/components/common/dialogs/VrlConfirmDialog.vue';
 import ResultEntryTable from './ResultEntryTable.vue';
 import type { RaceResultFormData, DriverOption } from '@app/types/raceResult';
 import type { Division } from '@app/types/division';
-import { PhArrowClockwise } from '@phosphor-icons/vue';
+import { PhArrowClockwise, PhWarning } from '@phosphor-icons/vue';
 
 interface Props {
   results: RaceResultFormData[];
@@ -73,7 +83,15 @@ const props = withDefaults(defineProps<Props>(), {
 });
 const emit = defineEmits<Emits>();
 
-const confirm = useConfirm();
+// VRL Confirmation dialog
+const {
+  isVisible: isResetAllVisible,
+  options: resetAllOptions,
+  isLoading: isResetAllLoading,
+  showConfirmation: showResetAllConfirmation,
+  handleAccept: handleResetAllAccept,
+  handleReject: handleResetAllReject,
+} = useVrlConfirm();
 
 // Active tab value (division ID) - defaults to -1, will be set to first division when available
 const activeTab = ref<number>(-1);
@@ -151,21 +169,18 @@ function handleDivisionUpdate(divisionId: number, updatedResults: RaceResultForm
 }
 
 function handleResetAllClick(): void {
-  confirm.require({
+  showResetAllConfirmation({
+    header: 'Reset All Results',
     message:
       'Are you sure you want to reset all results? This will permanently delete all results from the database and cannot be undone.',
-    header: 'Reset All Results',
-    icon: 'pi pi-exclamation-triangle',
-    rejectProps: {
-      label: 'Cancel',
-      severity: 'secondary',
-      outlined: true,
-    },
-    acceptProps: {
-      label: 'Reset All',
-      severity: 'danger',
-    },
-    accept: () => {
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
+    acceptLabel: 'Reset All',
+    rejectLabel: 'Cancel',
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: () => {
       emit('reset-all');
     },
   });

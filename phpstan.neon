@@ -30,10 +30,6 @@ parameters:
         -
             message: '#Undefined variable: \$this#'
             path: routes/console.php
-        # Object property access in seeders (Laravel factory returns)
-        -
-            message: '#Access to an undefined property object::\$id#'
-            path: database/seeders/*
         # Unused methods in domain entities (used via events/reflection)
         -
             message: '#Method .+::recordEvent\(\) is unused#'
@@ -84,9 +80,6 @@ parameters:
             message: '#Parameter \#1 \$object of static method DateTimeImmutable::createFromMutable\(\) expects DateTime, Illuminate\\Support\\Carbon\|null given#'
         -
             message: '#does not accept Carbon\\Carbon\|null#'
-        # Object property access (stdClass from queries)
-        -
-            message: '#Access to an undefined property object::\$.+#'
         # Carbon null check issues
         -
             message: '#Cannot call method toDateTimeString\(\) on Illuminate\\Support\\Carbon\|null#'
@@ -149,3 +142,7 @@ parameters:
         -
             message: '#Call to an undefined method .+Request::(user|toDTO)\(\)#'
             path: app/Http/Controllers/*
+        # FormRequest all() and route() methods (Laravel magic)
+        -
+            message: '#Call to an undefined method .+Request::(all|route)\(\)#'
+            path: app/Http/Requests/*

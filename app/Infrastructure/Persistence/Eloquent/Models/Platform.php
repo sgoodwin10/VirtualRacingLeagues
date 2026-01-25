@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\PlatformTrack> $tracks
  * @property-read int|null $tracks_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform newQuery()
@@ -85,8 +86,6 @@ class Platform extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return PlatformFactory
      */
     protected static function newFactory(): PlatformFactory
     {

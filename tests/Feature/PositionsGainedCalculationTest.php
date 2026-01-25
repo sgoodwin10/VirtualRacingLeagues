@@ -24,8 +24,11 @@ final class PositionsGainedCalculationTest extends TestCase
     private const APP_URL = 'http://app.virtualracingleagues.localhost';
 
     private User $user;
+
     private League $league;
+
     private Competition $competition;
+
     private SeasonEloquent $season;
 
     protected function setUp(): void
@@ -529,8 +532,8 @@ final class PositionsGainedCalculationTest extends TestCase
 
         for ($i = 0; $i < $count; $i++) {
             $driver = Driver::factory()->create([
-                'first_name' => "Driver",
-                'last_name' => "Number " . ($i + 1),
+                'first_name' => 'Driver',
+                'last_name' => 'Number ' . ($i + 1),
                 'nickname' => null,
             ]);
 

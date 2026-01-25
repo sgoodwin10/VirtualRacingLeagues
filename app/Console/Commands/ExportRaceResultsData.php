@@ -54,12 +54,14 @@ class ExportRaceResultsData extends Command
             if ($seasonId !== null) {
                 if ($seasonId <= 0) {
                     $this->error('Season ID must be a positive integer.');
+
                     return Command::FAILURE;
                 }
 
                 $seasonExists = SeasonEloquent::where('id', $seasonId)->exists();
-                if (!$seasonExists) {
+                if (! $seasonExists) {
                     $this->error("Season with ID {$seasonId} does not exist.");
+
                     return Command::FAILURE;
                 }
 
@@ -69,6 +71,7 @@ class ExportRaceResultsData extends Command
             // Validate chunk size
             if ($chunkSize <= 0) {
                 $this->error('Chunk size must be a positive integer.');
+
                 return Command::FAILURE;
             }
 
@@ -95,6 +98,7 @@ class ExportRaceResultsData extends Command
 
             if ($totalRecords === 0) {
                 $this->warn('No race results found to export.');
+
                 return Command::FAILURE;
             }
 
@@ -171,7 +175,7 @@ class ExportRaceResultsData extends Command
 
             // Ensure exports directory exists
             $directory = dirname($outputPath);
-            if (!Storage::exists($directory)) {
+            if (! Storage::exists($directory)) {
                 Storage::makeDirectory($directory);
             }
 
@@ -180,27 +184,30 @@ class ExportRaceResultsData extends Command
 
             if ($jsonData === false) {
                 $this->error('Failed to encode data to JSON: ' . json_last_error_msg());
+
                 return Command::FAILURE;
             }
 
             $written = Storage::put($outputPath, $jsonData);
 
-            if (!$written) {
+            if (! $written) {
                 $this->error('Failed to write file to storage.');
+
                 return Command::FAILURE;
             }
 
             $fullPath = Storage::path($outputPath);
             $fileSize = Storage::size($outputPath);
 
-            $this->info("Successfully exported " . count($raceResults) . " race results.");
+            $this->info('Successfully exported ' . count($raceResults) . ' race results.');
             $this->info("File: {$fullPath}");
-            $this->info("Size: " . number_format($fileSize / 1024, 2) . " KB");
+            $this->info('Size: ' . number_format($fileSize / 1024, 2) . ' KB');
 
             return Command::SUCCESS;
         } catch (Exception $e) {
             $this->error('Export failed: ' . $e->getMessage());
             $this->error($e->getTraceAsString());
+
             return Command::FAILURE;
         }
     }

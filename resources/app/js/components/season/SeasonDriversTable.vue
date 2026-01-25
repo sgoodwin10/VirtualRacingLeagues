@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useRoute } from 'vue-router';
 import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
@@ -8,6 +7,8 @@ import { useDriverStore } from '@app/stores/driverStore';
 import { useTeamStore } from '@app/stores/teamStore';
 import { useDivisionStore } from '@app/stores/divisionStore';
 import { useDebouncedSearch } from '@app/composables/useDebouncedSearch';
+import { useVrlConfirm } from '@app/composables/useVrlConfirm';
+import VrlConfirmDialog from '@app/components/common/dialogs/VrlConfirmDialog.vue';
 import type { SeasonDriver } from '@app/types/seasonDriver';
 import type { LeagueDriver } from '@app/types/driver';
 import type { Team } from '@app/types/team';
@@ -31,6 +32,7 @@ import {
   PhTrash,
   PhMagnifyingGlass,
   PhSpinner,
+  PhWarning,
 } from '@phosphor-icons/vue';
 
 import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
@@ -67,12 +69,21 @@ const emit = defineEmits<{
 }>();
 
 const route = useRoute();
-const confirm = useConfirm();
 const toast = useToast();
 const seasonDriverStore = useSeasonDriverStore();
 const driverStore = useDriverStore();
 const teamStore = useTeamStore();
 const divisionStore = useDivisionStore();
+
+// VRL Confirmation dialog
+const {
+  isVisible: isRemoveDriverVisible,
+  options: removeDriverOptions,
+  isLoading: isRemoveDriverLoading,
+  showConfirmation: showRemoveDriverConfirmation,
+  handleAccept: handleRemoveDriverAccept,
+  handleReject: handleRemoveDriverReject,
+} = useVrlConfirm();
 
 // Modal state
 const showViewDriverModal = ref(false);
@@ -213,13 +224,17 @@ function handleEditDriver(): void {
 function handleRemove(driver: SeasonDriver): void {
   const driverName = getDriverDisplayName(driver);
 
-  confirm.require({
-    message: `Remove ${driverName} from this season?`,
+  showRemoveDriverConfirmation({
     header: 'Remove Driver',
-    icon: 'pi pi-exclamation-triangle',
+    message: `Remove ${driverName} from this season?`,
+    icon: PhWarning,
+    iconColor: 'var(--red)',
+    iconBgColor: 'var(--red-dim)',
     acceptLabel: 'Remove',
     rejectLabel: 'Cancel',
-    accept: async () => {
+    acceptVariant: 'danger',
+    rejectVariant: 'secondary',
+    onAccept: async () => {
       try {
         await seasonDriverStore.removeDriver(props.seasonId, driver.league_driver_id);
 
@@ -814,6 +829,15 @@ async function handleRefresh(): Promise<void> {
         </template>
       </Column>
     </TechDataTable>
+
+    <!-- Confirm Remove Driver Dialog -->
+    <VrlConfirmDialog
+      v-model:visible="isRemoveDriverVisible"
+      v-bind="removeDriverOptions"
+      :loading="isRemoveDriverLoading"
+      @accept="handleRemoveDriverAccept"
+      @reject="handleRemoveDriverReject"
+    />
   </div>
 </template>
 

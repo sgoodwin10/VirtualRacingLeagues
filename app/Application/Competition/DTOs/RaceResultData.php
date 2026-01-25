@@ -10,7 +10,7 @@ use Spatie\LaravelData\Data;
 final class RaceResultData extends Data
 {
     /**
-     * @param array<string, mixed>|null $driver
+     * @param  array<string, mixed>|null  $driver
      */
     public function __construct(
         public int $id,
@@ -37,7 +37,7 @@ final class RaceResultData extends Data
     }
 
     /**
-     * @param array<string, mixed>|null $driverData
+     * @param  array<string, mixed>|null  $driverData
      *
      * @throws \LogicException If entity ID is null
      */

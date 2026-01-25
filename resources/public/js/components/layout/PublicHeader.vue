@@ -2,6 +2,7 @@
 import { useAuthStore } from '@public/stores/authStore';
 
 const authStore = useAuthStore();
+const appName = import.meta.env.VITE_APP_NAME || 'App';
 </script>
 
 <template>
@@ -14,7 +15,7 @@ const authStore = useAuthStore();
             to="/"
             class="text-xl font-semibold text-[var(--text-primary)] font-[var(--font-display)] hover:text-[var(--cyan)] transition-colors"
           >
-            {{ $appName || 'App' }}
+            {{ appName }}
           </router-link>
         </div>
 

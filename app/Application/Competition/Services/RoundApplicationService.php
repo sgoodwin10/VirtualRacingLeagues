@@ -4,43 +4,43 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\Services;
 
-use App\Application\Competition\DTOs\CreateRoundData;
-use App\Application\Competition\DTOs\UpdateRoundData;
 use App\Application\Competition\DTOs\CompleteRoundData;
-use App\Application\Competition\DTOs\RoundData;
-use App\Application\Competition\DTOs\RoundResultsData;
+use App\Application\Competition\DTOs\CreateRoundData;
+use App\Application\Competition\DTOs\DivisionData;
 use App\Application\Competition\DTOs\RaceEventResultData;
 use App\Application\Competition\DTOs\RaceResultData;
-use App\Application\Competition\DTOs\DivisionData;
-use Spatie\LaravelData\DataCollection;
-use App\Domain\Competition\Entities\Round;
+use App\Application\Competition\DTOs\RoundData;
+use App\Application\Competition\DTOs\RoundResultsData;
+use App\Application\Competition\DTOs\UpdateRoundData;
+use App\Application\Competition\Traits\BatchFetchHelpersTrait;
 use App\Domain\Competition\Entities\Race;
 use App\Domain\Competition\Entities\RaceResult;
+use App\Domain\Competition\Entities\Round;
 use App\Domain\Competition\Entities\Season;
-use App\Domain\Competition\Repositories\RoundRepositoryInterface;
+use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
-use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
+use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
-use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
-use App\Domain\Division\Repositories\DivisionRepositoryInterface;
-use App\Domain\League\Repositories\LeagueRepositoryInterface;
-use App\Domain\Team\Repositories\TeamRepositoryInterface;
-use App\Domain\Shared\Exceptions\UnauthorizedException;
+use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
+use App\Domain\Competition\Services\RoundTiebreakerDomainService;
+use App\Domain\Competition\ValueObjects\PointsSystem;
+use App\Domain\Competition\ValueObjects\RaceResultStatus;
 use App\Domain\Competition\ValueObjects\RoundName;
 use App\Domain\Competition\ValueObjects\RoundNumber;
 use App\Domain\Competition\ValueObjects\RoundSlug;
 use App\Domain\Competition\ValueObjects\RoundStatus;
-use App\Domain\Competition\ValueObjects\PointsSystem;
-use App\Domain\Competition\ValueObjects\RaceResultStatus;
-use App\Application\Competition\Traits\BatchFetchHelpersTrait;
+use App\Domain\Division\Repositories\DivisionRepositoryInterface;
+use App\Domain\League\Repositories\LeagueRepositoryInterface;
+use App\Domain\Shared\Exceptions\UnauthorizedException;
+use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use App\Infrastructure\Cache\RoundResultsCacheService;
 use App\Infrastructure\Cache\SeasonDetailCacheService;
-use App\Domain\Competition\Services\RoundTiebreakerDomainService;
+use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use DateTimeImmutable;
+use Spatie\LaravelData\DataCollection;
 
 /**
  * Application service for Round use cases.
@@ -140,7 +140,8 @@ final class RoundApplicationService
     /**
      * Update an existing round.
      *
-     * @param array<string, mixed> $requestData Raw request data to check field presence
+     * @param  array<string, mixed>  $requestData  Raw request data to check field presence
+     *
      * @throws UnauthorizedException
      */
     public function updateRound(
@@ -288,6 +289,7 @@ final class RoundApplicationService
     public function getRound(int $roundId): RoundData
     {
         $round = $this->roundRepository->findById($roundId);
+
         return RoundData::fromEntity($round);
     }
 
@@ -302,8 +304,9 @@ final class RoundApplicationService
     public function getRoundsBySeason(int $seasonId): array
     {
         $rounds = $this->roundRepository->findBySeasonId($seasonId);
+
         return array_map(
-            fn(Round $round) => RoundData::fromEntity($round),
+            fn (Round $round) => RoundData::fromEntity($round),
             $rounds
         );
     }
@@ -356,6 +359,7 @@ final class RoundApplicationService
             $round->changeStatus(RoundStatus::from($status));
             $this->roundRepository->save($round);
             $this->dispatchEvents($round);
+
             return RoundData::fromEntity($round);
         });
     }
@@ -431,14 +435,14 @@ final class RoundApplicationService
      * Cascade completion to all races (including qualifiers).
      * Uses batch fetching to avoid N+1 queries.
      *
-     * @param array<Race> $races
-     * @param int $roundId Round ID for batch fetching results
+     * @param  array<Race>  $races
+     * @param  int  $roundId  Round ID for batch fetching results
      */
     private function cascadeRaceCompletion(array $races, int $roundId): void
     {
         // Sort races by race_number to ensure qualifiers are processed first
         // This is important because non-qualifier races may depend on qualifier positions for grid_source
-        usort($races, fn($a, $b) => $a->raceNumber() <=> $b->raceNumber());
+        usort($races, fn ($a, $b) => $a->raceNumber() <=> $b->raceNumber());
 
         // Batch fetch all race results for the round to avoid N+1 queries
         $allRaceResults = $this->raceResultRepository->findByRoundId($roundId);
@@ -447,7 +451,7 @@ final class RoundApplicationService
         $resultsByRaceId = [];
         foreach ($allRaceResults as $result) {
             $raceId = $result->raceId();
-            if (!isset($resultsByRaceId[$raceId])) {
+            if (! isset($resultsByRaceId[$raceId])) {
                 $resultsByRaceId[$raceId] = [];
             }
             $resultsByRaceId[$raceId][] = $result;
@@ -482,10 +486,8 @@ final class RoundApplicationService
     /**
      * Calculate and store round results with cross-division results.
      *
-     * @param Round $round
-     * @param array<Race> $races
-     * @param bool $hasDivisions
-     * @param CompleteRoundData|null $data Optional data from frontend
+     * @param  array<Race>  $races
+     * @param  CompleteRoundData|null  $data  Optional data from frontend
      */
     private function calculateAndStoreRoundResults(
         Round $round,
@@ -560,6 +562,7 @@ final class RoundApplicationService
             $round->uncomplete();
             $this->roundRepository->save($round);
             $this->dispatchEvents($round);
+
             return RoundData::fromEntity($round);
         });
 
@@ -601,14 +604,14 @@ final class RoundApplicationService
         $resultsByRaceId = [];
         foreach ($allRaceResults as $result) {
             $raceId = $result->raceId();
-            if (!isset($resultsByRaceId[$raceId])) {
+            if (! isset($resultsByRaceId[$raceId])) {
                 $resultsByRaceId[$raceId] = [];
             }
             $resultsByRaceId[$raceId][] = $result;
         }
 
         // Batch fetch driver names
-        $driverIds = array_unique(array_map(fn($r) => $r->driverId(), $allRaceResults));
+        $driverIds = array_unique(array_map(fn ($r) => $r->driverId(), $allRaceResults));
         $driverNames = $this->batchFetchDriverNames($driverIds);
 
         // Fetch divisions for the season using repository
@@ -656,6 +659,7 @@ final class RoundApplicationService
             usort($raceResults, function ($a, $b) {
                 $posA = $a->position() ?? PHP_INT_MAX;
                 $posB = $b->position() ?? PHP_INT_MAX;
+
                 return $posA <=> $posB;
             });
 
@@ -720,13 +724,10 @@ final class RoundApplicationService
     /**
      * Calculate round results by aggregating race points.
      *
-     * @param Round $round
      * @param array<array{
      *     race: Race,
      *     result: RaceResult
      * }> $allRaceResults
-     * @param bool $hasDivisions
-     * @param Season $season
      * @return array<mixed>
      */
     private function calculateRoundResults(
@@ -759,12 +760,10 @@ final class RoundApplicationService
      * - round_points: 0
      * - total_points: Same as race_points
      *
-     * @param Round $round
      * @param array<array{
      *     race: Race,
      *     result: RaceResult
      * }> $allRaceResults
-     * @param Season $season
      * @return array<mixed>
      */
     private function calculateRoundResultsWithoutDivisions(Round $round, array $allRaceResults, Season $season): array
@@ -779,7 +778,7 @@ final class RoundApplicationService
 
         // Check if we should use race positions instead of points
         // This happens when round_points is enabled and all race_points are 0
-        $allZeroPoints = !empty($aggregatedData['driverPoints']) && array_sum($aggregatedData['driverPoints']) === 0.0;
+        $allZeroPoints = ! empty($aggregatedData['driverPoints']) && array_sum($aggregatedData['driverPoints']) === 0.0;
         $useRacePositions = $roundPointsEnabled && $allZeroPoints;
 
         if ($useRacePositions) {
@@ -836,7 +835,7 @@ final class RoundApplicationService
     /**
      * Extract and batch fetch driver names from race results.
      *
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults
      * @return array<int, string>
      */
     private function fetchDriverNamesFromResults(array $allRaceResults): array
@@ -852,8 +851,8 @@ final class RoundApplicationService
     /**
      * Aggregate driver points, positions gained, and race results.
      *
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
-     * @param array<int, string> $driverNames
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults
+     * @param  array<int, string>  $driverNames
      * @return array{
      *     driverPoints: array<int, float>,
      *     driverData: array<int, array<string, mixed>>,
@@ -883,7 +882,7 @@ final class RoundApplicationService
             // No participation check needed - only drivers who competed have records.
 
             // Initialize driver data if not already set
-            if (!isset($driverPoints[$driverId])) {
+            if (! isset($driverPoints[$driverId])) {
                 $driverPoints[$driverId] = 0;
                 $driverData[$driverId] = [
                     'driver_id' => $driverId,
@@ -911,6 +910,7 @@ final class RoundApplicationService
                     'is_dnf' => true,
                     'is_dns' => false,
                 ];
+
                 continue;
             }
 
@@ -994,12 +994,11 @@ final class RoundApplicationService
      * - When all drivers have 0 points (no round_points configured),
      *   sort by time-based ordering
      *
-     * @param array<int, float> $driverPoints
-     * @param array<int, array<mixed>> $raceResultsByDriver
-     * @param array<int, array<string, int|null>> $driverBestTimes
-     * @param array<int, bool> $driverHasDnfOrDns
-     * @param Season $season
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
+     * @param  array<int, float>  $driverPoints
+     * @param  array<int, array<mixed>>  $raceResultsByDriver
+     * @param  array<int, array<string, int|null>>  $driverBestTimes
+     * @param  array<int, bool>  $driverHasDnfOrDns
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults
      * @return array{
      *     sortedDriverPoints: array<int, float>,
      *     tiebreakerInfo: \App\Domain\Competition\ValueObjects\TiebreakerInformation|null
@@ -1029,13 +1028,13 @@ final class RoundApplicationService
         }
 
         // Check if all drivers have 0 points (no round_points on races)
-        $allZeroPoints = !empty($driverPoints) && array_sum($driverPoints) === 0.0;
+        $allZeroPoints = ! empty($driverPoints) && array_sum($driverPoints) === 0.0;
 
         // Check if tiebreaker is enabled
         $tiebreakerEnabled = $season !== null && $season->hasTiebreakerRulesEnabled();
         $tiebreakerInfo = null;
 
-        if ($tiebreakerEnabled && !empty($allRaceResults)) {
+        if ($tiebreakerEnabled && ! empty($allRaceResults)) {
             // MODE 2: Tiebreaker ENABLED - Apply tiebreaker rules to resolve ties
             // First, sort by points to create initial standings
             uasort($sortableDrivers, function ($driverA, $driverB) {
@@ -1084,6 +1083,7 @@ final class RoundApplicationService
             uasort($sortableDrivers, function ($driverA, $driverB) use ($positionMap) {
                 $posA = $positionMap[$driverA['driver_id']] ?? PHP_INT_MAX;
                 $posB = $positionMap[$driverB['driver_id']] ?? PHP_INT_MAX;
+
                 return $posA <=> $posB;
             });
         } else {
@@ -1099,7 +1099,7 @@ final class RoundApplicationService
                     $driverBestTimes,
                     $allZeroPoints
                 ) {
-                // First: Drivers with only DNF/DNS go to the bottom
+                    // First: Drivers with only DNF/DNS go to the bottom
                     $aOnlyDnfDns = $driverA['has_only_dnf_or_dns'];
                     $bOnlyDnfDns = $driverB['has_only_dnf_or_dns'];
 
@@ -1111,17 +1111,17 @@ final class RoundApplicationService
                         return 0;
                     }
 
-                // Primary sort: by points (descending)
+                    // Primary sort: by points (descending)
                     if ($driverA['points'] !== $driverB['points']) {
                         return $driverB['points'] <=> $driverA['points'];
                     }
 
-                // IMPORTANT: When tiebreaker is DISABLED, tied drivers should share position
-                // We return 0 to indicate they are equal (will be handled in position assignment)
-                // However, we still need a stable sort order for display purposes
+                    // IMPORTANT: When tiebreaker is DISABLED, tied drivers should share position
+                    // We return 0 to indicate they are equal (will be handled in position assignment)
+                    // However, we still need a stable sort order for display purposes
 
-                // When all drivers have 0 points, sort by time for stable ordering
-                    if ($allZeroPoints && !empty($driverBestTimes)) {
+                    // When all drivers have 0 points, sort by time for stable ordering
+                    if ($allZeroPoints && ! empty($driverBestTimes)) {
                         return $this->compareDriversByTime(
                             $driverA['driver_id'],
                             $driverB['driver_id'],
@@ -1129,19 +1129,19 @@ final class RoundApplicationService
                         );
                     }
 
-                // For non-zero points ties, use best race result for stable ordering (but they'll share position)
+                    // For non-zero points ties, use best race result for stable ordering (but they'll share position)
                     $racePointsA = array_column($raceResultsByDriver[$driverA['driver_id']], 'race_points');
                     $racePointsB = array_column($raceResultsByDriver[$driverB['driver_id']], 'race_points');
 
-                    $bestA = !empty($racePointsA) ? max($racePointsA) : 0;
-                    $bestB = !empty($racePointsB) ? max($racePointsB) : 0;
+                    $bestA = ! empty($racePointsA) ? max($racePointsA) : 0;
+                    $bestB = ! empty($racePointsB) ? max($racePointsB) : 0;
 
                     if ($bestA !== $bestB) {
                         return $bestB <=> $bestA;
                     }
 
-                // Final stable sort: compare by time if available
-                    if (!empty($driverBestTimes)) {
+                    // Final stable sort: compare by time if available
+                    if (! empty($driverBestTimes)) {
                         return $this->compareDriversByTime(
                             $driverA['driver_id'],
                             $driverB['driver_id'],
@@ -1174,9 +1174,7 @@ final class RoundApplicationService
      * 2. Qualifier time (if no race time)
      * 3. Fastest lap (if no race or qualifier time)
      *
-     * @param int $driverAId
-     * @param int $driverBId
-     * @param array<int, array<string, int|null>> $driverBestTimes
+     * @param  array<int, array<string, int|null>>  $driverBestTimes
      * @return int Comparison result (-1, 0, or 1)
      */
     private function compareDriversByTime(int $driverAId, int $driverBId, array $driverBestTimes): int
@@ -1253,13 +1251,11 @@ final class RoundApplicationService
      * When tiebreaker is ENABLED, positions are always sequential since the sorting
      * algorithm already determined a winner among tied drivers.
      *
-     * @param array<int, float> $sortedDriverPoints
-     * @param array<int, array<string, mixed>> $driverData
-     * @param array<int, int> $driverPositionsGained
-     * @param array<int, bool> $driverHasDnfOrDns
-     * @param bool $roundPointsEnabled
-     * @param bool $tiebreakerEnabled
-     * @param array<int, int> $driverTotalPenalties Total penalties in milliseconds per driver
+     * @param  array<int, float>  $sortedDriverPoints
+     * @param  array<int, array<string, mixed>>  $driverData
+     * @param  array<int, int>  $driverPositionsGained
+     * @param  array<int, bool>  $driverHasDnfOrDns
+     * @param  array<int, int>  $driverTotalPenalties  Total penalties in milliseconds per driver
      * @return array<mixed>
      */
     private function buildStandingsFromSortedPoints(
@@ -1356,11 +1352,11 @@ final class RoundApplicationService
      * - In MULTI-RACE rounds: DNF drivers in one race can still score points if they finished another race
      * - All drivers start with race_points = 0 (will be filled later by applyRoundPoints)
      *
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
-     * @param array<int, array<string, mixed>> $driverData
-     * @param array<int, int> $driverPositionsGained
-     * @param array<int, bool> $driverHasDnfOrDns
-     * @param array<int, int> $driverTotalPenalties Total penalties in milliseconds per driver
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults
+     * @param  array<int, array<string, mixed>>  $driverData
+     * @param  array<int, int>  $driverPositionsGained
+     * @param  array<int, bool>  $driverHasDnfOrDns
+     * @param  array<int, int>  $driverTotalPenalties  Total penalties in milliseconds per driver
      * @return array<mixed>
      */
     private function buildStandingsFromRacePositions(
@@ -1387,6 +1383,7 @@ final class RoundApplicationService
                 if ($raceNumber > $totalRaceCount) {
                     $totalRaceCount = $raceNumber;
                 }
+
                 continue;
             }
 
@@ -1423,7 +1420,7 @@ final class RoundApplicationService
         $mainRaceIds = [];
         foreach ($allRaceResults as $item) {
             $race = $item['race'];
-            if (!$race->isQualifier()) {
+            if (! $race->isQualifier()) {
                 $raceId = $race->id();
                 if ($raceId !== null) {
                     $mainRaceIds[$raceId] = true;
@@ -1451,6 +1448,7 @@ final class RoundApplicationService
             usort($finishers, function ($a, $b) {
                 $posA = $a['position'] ?? PHP_INT_MAX;
                 $posB = $b['position'] ?? PHP_INT_MAX;
+
                 return $posA <=> $posB;
             });
 
@@ -1458,6 +1456,7 @@ final class RoundApplicationService
             usort($dnfDrivers, function ($a, $b) {
                 $posA = $a['position'] ?? PHP_INT_MAX;
                 $posB = $b['position'] ?? PHP_INT_MAX;
+
                 return $posA <=> $posB;
             });
 
@@ -1518,6 +1517,7 @@ final class RoundApplicationService
             usort($mainRaceResults, function ($a, $b) {
                 $posA = $a['position'] ?? PHP_INT_MAX;
                 $posB = $b['position'] ?? PHP_INT_MAX;
+
                 return $posA <=> $posB;
             });
 
@@ -1556,10 +1556,8 @@ final class RoundApplicationService
     /**
      * Apply bonus points based on round configuration.
      *
-     * @param Round $round
-     * @param array<array{race: Race, result: RaceResult}> $allRaceResults
-     * @param array<mixed> $standings
-     * @param bool $roundPointsEnabled
+     * @param  array<array{race: Race, result: RaceResult}>  $allRaceResults
+     * @param  array<mixed>  $standings
      * @return array<mixed>
      */
     private function applyBonusPoints(
@@ -1595,12 +1593,10 @@ final class RoundApplicationService
     /**
      * Calculate round results with divisions.
      *
-     * @param Round $round
      * @param array<array{
      *     race: Race,
      *     result: RaceResult
      * }> $allRaceResults
-     * @param Season $season
      * @return array<mixed>
      */
     private function calculateRoundResultsWithDivisions(Round $round, array $allRaceResults, Season $season): array
@@ -1625,7 +1621,7 @@ final class RoundApplicationService
             $result = $item['result'];
             $divisionId = $result->divisionId() ?? 0;
 
-            if (!isset($resultsByDivision[$divisionId])) {
+            if (! isset($resultsByDivision[$divisionId])) {
                 $resultsByDivision[$divisionId] = [];
             }
 
@@ -1658,13 +1654,12 @@ final class RoundApplicationService
      * - Positions are NOT re-sorted (they're fixed by race_points)
      * - Check top 10 restriction based on existing position
      *
-     * @param Round $round
      * @param array<array{
      *     race: Race,
      *     result: RaceResult
      * }> $allRaceResults
-     * @param array<mixed> $standings
-     * @param bool $roundPointsEnabled Whether round points mode is enabled
+     * @param  array<mixed>  $standings
+     * @param  bool  $roundPointsEnabled  Whether round points mode is enabled
      * @return array<mixed>
      */
     private function applyFastestLapBonus(
@@ -1692,7 +1687,7 @@ final class RoundApplicationService
             }
 
             $lapTime = $result->fastestLap();
-            if (!$lapTime->isNull()) {
+            if (! $lapTime->isNull()) {
                 $lapTimeMs = $lapTime->toMilliseconds();
                 if ($lapTimeMs !== null && ($fastestLapTime === null || $lapTimeMs < $fastestLapTime)) {
                     $fastestLapTime = $lapTimeMs;
@@ -1741,13 +1736,12 @@ final class RoundApplicationService
      * - Positions are NOT re-sorted (they're fixed by race_points)
      * - Check top 10 restriction based on existing position
      *
-     * @param Round $round
      * @param array<array{
      *     race: Race,
      *     result: RaceResult
      * }> $allRaceResults
-     * @param array<mixed> $standings
-     * @param bool $roundPointsEnabled Whether round points mode is enabled
+     * @param  array<mixed>  $standings
+     * @param  bool  $roundPointsEnabled  Whether round points mode is enabled
      * @return array<mixed>
      */
     private function applyPolePositionBonus(
@@ -1770,12 +1764,12 @@ final class RoundApplicationService
             $result = $item['result'];
 
             // Only consider qualifiers
-            if (!$race->isQualifier()) {
+            if (! $race->isQualifier()) {
                 continue;
             }
 
             $lapTime = $result->fastestLap();
-            if (!$lapTime->isNull()) {
+            if (! $lapTime->isNull()) {
                 $lapTimeMs = $lapTime->toMilliseconds();
                 if ($lapTimeMs !== null && ($fastestQualifyingTime === null || $lapTimeMs < $fastestQualifyingTime)) {
                     $fastestQualifyingTime = $lapTimeMs;
@@ -1827,8 +1821,7 @@ final class RoundApplicationService
      * However, in single-race rounds, drivers with DNF receive 0 round_points
      * (flagged by should_receive_zero_points).
      *
-     * @param Round $round
-     * @param array<mixed> $standings
+     * @param  array<mixed>  $standings
      * @return array<mixed>
      */
     private function applyRoundPoints(Round $round, array $standings): array
@@ -1844,6 +1837,7 @@ final class RoundApplicationService
             // Check if this driver should receive zero points (DNF in single-race round)
             if (isset($standing['should_receive_zero_points']) && $standing['should_receive_zero_points'] === true) {
                 $standing['round_points'] = 0;
+
                 continue;
             }
 
@@ -1868,7 +1862,7 @@ final class RoundApplicationService
      *     race: Race,
      *     result: RaceResult
      * }> $allRaceResults
-     * @param array<mixed> $standings
+     * @param  array<mixed>  $standings
      * @return array<mixed>
      */
     private function tallyRaceLevelBonuses(array $allRaceResults, array $standings): array
@@ -1883,8 +1877,8 @@ final class RoundApplicationService
             $driverId = $result->driverId();
 
             // Tally fastest lap bonuses (from non-qualifier races)
-            if (!$race->isQualifier() && $result->hasFastestLap()) {
-                if (!isset($driverFastestLapPoints[$driverId])) {
+            if (! $race->isQualifier() && $result->hasFastestLap()) {
+                if (! isset($driverFastestLapPoints[$driverId])) {
                     $driverFastestLapPoints[$driverId] = 0;
                 }
                 $driverFastestLapPoints[$driverId] += ($race->fastestLap() ?? 0);
@@ -1892,7 +1886,7 @@ final class RoundApplicationService
 
             // Tally pole bonuses (from qualifier races)
             if ($race->isQualifier() && $result->hasPole()) {
-                if (!isset($driverPolePoints[$driverId])) {
+                if (! isset($driverPolePoints[$driverId])) {
                     $driverPolePoints[$driverId] = 0;
                 }
                 $driverPolePoints[$driverId] += ($race->qualifyingPole() ?? 0);
@@ -1940,14 +1934,14 @@ final class RoundApplicationService
             // 1. Qualifying results: best fastest_lap per driver from qualifiers
             if ($race->isQualifier()) {
                 $lapTime = $result->fastestLap();
-                if (!$lapTime->isNull()) {
+                if (! $lapTime->isNull()) {
                     $lapTimeMs = $lapTime->toMilliseconds();
                     if ($lapTimeMs !== null && $lapTimeMs > 0) {
                         $driverId = $result->driverId();
 
                         // Keep only the best (fastest) qualifying time per driver
                         if (
-                            !isset($qualifyingByDriver[$driverId]) ||
+                            ! isset($qualifyingByDriver[$driverId]) ||
                             $lapTimeMs < $qualifyingByDriver[$driverId]['time_ms']
                         ) {
                             $qualifyingByDriver[$driverId] = [
@@ -1960,16 +1954,16 @@ final class RoundApplicationService
             } else {
                 // 2. Race time results: best final race_time per driver from non-qualifiers
                 // Skip DNF entries (they may have null or empty race_time)
-                if (!$result->dnf()) {
+                if (! $result->dnf()) {
                     $raceTime = $result->finalRaceTime();
-                    if (!$raceTime->isNull()) {
+                    if (! $raceTime->isNull()) {
                         $raceTimeMs = $raceTime->toMilliseconds();
                         if ($raceTimeMs !== null && $raceTimeMs > 0) {
                             $driverId = $result->driverId();
 
                             // Keep only the best (fastest) time per driver
                             if (
-                                !isset($raceTimeByDriver[$driverId]) ||
+                                ! isset($raceTimeByDriver[$driverId]) ||
                                 $raceTimeMs < $raceTimeByDriver[$driverId]['time_ms']
                             ) {
                                 $raceTimeByDriver[$driverId] = [
@@ -1983,14 +1977,14 @@ final class RoundApplicationService
 
                 // 3. Fastest lap results: best fastest_lap per driver from non-qualifiers
                 $lapTime = $result->fastestLap();
-                if (!$lapTime->isNull()) {
+                if (! $lapTime->isNull()) {
                     $lapTimeMs = $lapTime->toMilliseconds();
                     if ($lapTimeMs !== null && $lapTimeMs > 0) {
                         $driverId = $result->driverId();
 
                         // Keep only the best (fastest) lap per driver
                         if (
-                            !isset($fastestLapByDriver[$driverId]) ||
+                            ! isset($fastestLapByDriver[$driverId]) ||
                             $lapTimeMs < $fastestLapByDriver[$driverId]['time_ms']
                         ) {
                             $fastestLapByDriver[$driverId] = [
@@ -2005,7 +1999,7 @@ final class RoundApplicationService
 
         // Convert qualifying by driver to array and sort by time (fastest first)
         $qualifyingResults = array_values($qualifyingByDriver);
-        usort($qualifyingResults, fn($a, $b) => $a['time_ms'] <=> $b['time_ms']);
+        usort($qualifyingResults, fn ($a, $b) => $a['time_ms'] <=> $b['time_ms']);
 
         // Add positions to qualifying results
         $position = 1;
@@ -2015,7 +2009,7 @@ final class RoundApplicationService
 
         // Convert race time by driver to array and sort
         $raceTimeResults = array_values($raceTimeByDriver);
-        usort($raceTimeResults, fn($a, $b) => $a['time_ms'] <=> $b['time_ms']);
+        usort($raceTimeResults, fn ($a, $b) => $a['time_ms'] <=> $b['time_ms']);
 
         // Add positions to race time results
         $position = 1;
@@ -2025,7 +2019,7 @@ final class RoundApplicationService
 
         // Convert fastest lap by driver to array and sort by time (fastest first)
         $fastestLapResults = array_values($fastestLapByDriver);
-        usort($fastestLapResults, fn($a, $b) => $a['time_ms'] <=> $b['time_ms']);
+        usort($fastestLapResults, fn ($a, $b) => $a['time_ms'] <=> $b['time_ms']);
 
         // Add positions to fastest lap results
         $position = 1;
@@ -2071,16 +2065,17 @@ final class RoundApplicationService
         $season = $this->seasonRepository->findById($round->seasonId());
 
         // Early return if team championship is not enabled
-        if (!$season->teamChampionshipEnabled()) {
+        if (! $season->teamChampionshipEnabled()) {
             return;
         }
 
         // Get round results which contain the final driver standings
         $roundResults = $round->roundResults();
-        if ($roundResults === null || !isset($roundResults['standings']) || empty($roundResults['standings'])) {
+        if ($roundResults === null || ! isset($roundResults['standings']) || empty($roundResults['standings'])) {
             Log::warning('Team championship calculation skipped: no round results available', [
                 'round_id' => $round->id(),
             ]);
+
             return;
         }
 
@@ -2090,6 +2085,7 @@ final class RoundApplicationService
             Log::warning('Team championship calculation skipped: season ID is null', [
                 'round_id' => $round->id(),
             ]);
+
             return;
         }
 
@@ -2146,7 +2142,7 @@ final class RoundApplicationService
             }
 
             // Initialize team data if not exists
-            if (!isset($teamDriverPoints[$teamId])) {
+            if (! isset($teamDriverPoints[$teamId])) {
                 $teamDriverPoints[$teamId] = [];
             }
 
@@ -2163,7 +2159,7 @@ final class RoundApplicationService
 
         foreach ($teams as $team) {
             $teamId = $team->id();
-            if ($teamId === null || !isset($teamDriverPoints[$teamId])) {
+            if ($teamId === null || ! isset($teamDriverPoints[$teamId])) {
                 // Skip teams with no results
                 continue;
             }
@@ -2171,7 +2167,7 @@ final class RoundApplicationService
             $driverPoints = $teamDriverPoints[$teamId];
 
             // Sort drivers by points descending
-            usort($driverPoints, fn($a, $b) => $b['points'] <=> $a['points']);
+            usort($driverPoints, fn ($a, $b) => $b['points'] <=> $a['points']);
 
             // Apply teams_drivers_for_calculation limit if set
             if ($driversForCalculation !== null && $driversForCalculation > 0) {
@@ -2195,6 +2191,7 @@ final class RoundApplicationService
             if ($a['total_points'] !== $b['total_points']) {
                 return $b['total_points'] <=> $a['total_points'];
             }
+
             return strcmp($a['team_name'], $b['team_name']);
         });
 
@@ -2234,8 +2231,9 @@ final class RoundApplicationService
      * Recalculate results for all completed rounds in a season.
      * This re-runs the calculation logic for each completed round.
      *
-     * @throws UnauthorizedException
      * @return array{recalculated_count: int, round_ids: array<int>}
+     *
+     * @throws UnauthorizedException
      */
     public function recalculateAllCompletedRounds(int $seasonId, int $userId): array
     {
@@ -2253,7 +2251,7 @@ final class RoundApplicationService
         // Filter to only completed rounds
         $completedRounds = array_filter(
             $rounds,
-            fn(Round $round) => $round->status() === RoundStatus::COMPLETED
+            fn (Round $round) => $round->status() === RoundStatus::COMPLETED
         );
 
         // Fetch season to check divisions

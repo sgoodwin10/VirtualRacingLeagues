@@ -11,7 +11,7 @@ use Spatie\LaravelData\DataCollection;
 final class BulkRaceResultsData extends Data
 {
     /**
-     * @param DataCollection<int, CreateRaceResultData> $results
+     * @param  DataCollection<int, CreateRaceResultData>  $results
      */
     public function __construct(
         #[DataCollectionOf(CreateRaceResultData::class)]

@@ -33,7 +33,7 @@ final readonly class SeasonSlug
      * Generate slug from season name.
      * Converts to lowercase, replaces spaces with hyphens.
      *
-     * @param string $name Season name to slugify
+     * @param  string  $name  Season name to slugify
      */
     public static function generate(string $name): self
     {
@@ -48,7 +48,7 @@ final readonly class SeasonSlug
     /**
      * Alias for generate() to match CompetitionSlug pattern.
      *
-     * @param string $name Season name to slugify
+     * @param  string  $name  Season name to slugify
      */
     public static function fromName(string $name): self
     {
@@ -71,7 +71,7 @@ final readonly class SeasonSlug
         }
 
         // Slug must be lowercase alphanumeric with hyphens
-        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $this->value)) {
+        if (! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $this->value)) {
             throw InvalidSeasonSlugException::withValue($this->value);
         }
     }
@@ -95,11 +95,12 @@ final readonly class SeasonSlug
     /**
      * Append a suffix to create a new slug (for conflict resolution).
      *
-     * @param int $suffix Numeric suffix (e.g., 1 for "winter-2025-01")
+     * @param  int  $suffix  Numeric suffix (e.g., 1 for "winter-2025-01")
      */
     public function withSuffix(int $suffix): self
     {
         $formattedSuffix = str_pad((string) $suffix, 2, '0', STR_PAD_LEFT);
+
         return new self($this->value . '-' . $formattedSuffix);
     }
 

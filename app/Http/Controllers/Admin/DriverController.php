@@ -63,6 +63,7 @@ final class DriverController extends Controller
         try {
             $data = AdminCreateDriverData::from($request->validated());
             $driver = $this->driverService->createDriver($data);
+
             return ApiResponse::created($driver->toArray(), 'Driver created successfully');
         } catch (InvalidDriverDataException $e) {
             return ApiResponse::error($e->getMessage(), null, 422);
@@ -105,6 +106,7 @@ final class DriverController extends Controller
         try {
             $data = AdminUpdateDriverData::from($request->validated());
             $driver = $this->driverService->updateDriver($id, $data);
+
             return ApiResponse::success($driver->toArray(), 'Driver updated successfully');
         } catch (DriverNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);

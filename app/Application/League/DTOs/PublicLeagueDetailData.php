@@ -14,12 +14,12 @@ use Spatie\LaravelData\Data;
 final class PublicLeagueDetailData extends Data
 {
     /**
-     * @param PublicLeagueBasicData $league League basic information
-     * @param LeagueStatsData $stats League statistics (counts)
-     * @param array<int, PublicCompetitionDetailData> $competitions Competitions with seasons
-     * @param array<int, mixed> $recent_activity Recent activity (to be typed later)
-     * @param array<int, mixed> $upcoming_races Upcoming races (to be typed later)
-     * @param array<int, mixed> $championship_leaders Championship leaders (to be typed later)
+     * @param  PublicLeagueBasicData  $league  League basic information
+     * @param  LeagueStatsData  $stats  League statistics (counts)
+     * @param  array<int, PublicCompetitionDetailData>  $competitions  Competitions with seasons
+     * @param  array<int, mixed>  $recent_activity  Recent activity (to be typed later)
+     * @param  array<int, mixed>  $upcoming_races  Upcoming races (to be typed later)
+     * @param  array<int, mixed>  $championship_leaders  Championship leaders (to be typed later)
      */
     public function __construct(
         public readonly PublicLeagueBasicData $league,

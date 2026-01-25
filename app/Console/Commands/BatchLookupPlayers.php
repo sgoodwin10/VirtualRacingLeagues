@@ -2,27 +2,30 @@
 
 namespace App\Console\Commands;
 
-use App\Services\PSNService;
 use App\Services\GT7Service;
+use App\Services\PSNService;
 use Illuminate\Console\Command;
 
 class BatchLookupPlayers extends Command
 {
     protected $signature = 'gt7:batch {file : Path to file with PSN IDs (one per line)}';
+
     protected $description = 'Batch lookup multiple players from a file';
 
     public function handle(PSNService $psnService, GT7Service $gt7Service): int
     {
         $filePath = $this->argument('file');
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             $this->error("File not found: {$filePath}");
+
             return self::FAILURE;
         }
 
         $fileContents = file($filePath);
         if ($fileContents === false) {
             $this->error("Failed to read file: {$filePath}");
+
             return self::FAILURE;
         }
         $psnIds = array_filter(array_map('trim', $fileContents));

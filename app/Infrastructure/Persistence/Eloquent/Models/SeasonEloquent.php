@@ -43,13 +43,14 @@ use Spatie\MediaLibrary\HasMedia;
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ *
  * @method static SeasonEloquent firstOrCreate(array<string, mixed> $attributes, array<string, mixed> $values = [])
  */
 final class SeasonEloquent extends Model implements HasMedia
 {
     use HasFactory;
-    use SoftDeletes;
     use HasMediaCollections;
+    use SoftDeletes;
 
     /**
      * The table associated with the model.

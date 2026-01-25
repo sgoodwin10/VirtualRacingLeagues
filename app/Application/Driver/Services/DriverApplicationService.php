@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Driver\Services;
 
+use App\Application\Activity\Services\LeagueActivityLogService;
 use App\Application\Driver\DTOs\AdminCreateDriverData;
 use App\Application\Driver\DTOs\AdminUpdateDriverData;
 use App\Application\Driver\DTOs\CreateDriverData;
@@ -27,7 +28,6 @@ use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\Driver\Services\PlatformMappingService;
 use App\Domain\Driver\ValueObjects\DriverName;
 use App\Domain\Driver\ValueObjects\DriverStatus;
-use App\Application\Activity\Services\LeagueActivityLogService;
 use App\Domain\Driver\ValueObjects\PlatformIdentifiers;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
@@ -133,7 +133,8 @@ final class DriverApplicationService
     /**
      * Get paginated list of drivers in a league.
      *
-     * @param string|null $deletedStatus Filter by deleted status: 'active', 'deleted', 'all'
+     * @param  string|null  $deletedStatus  Filter by deleted status: 'active', 'deleted', 'all'
+     *
      * @throws UnauthorizedException If the user does not own the league
      */
     public function getLeagueDrivers(
@@ -555,7 +556,7 @@ final class DriverApplicationService
                         $errors[] = [
                             'row' => $rowNumber,
                             'message' => "Row {$rowNumber}: At least one name field "
-                                . "OR at least one platform ID is required",
+                                . 'OR at least one platform ID is required',
                         ];
 
                         continue;
@@ -573,6 +574,7 @@ final class DriverApplicationService
                     ) {
                         // Skip this driver silently - they're already in the league
                         $skippedCount++;
+
                         continue;
                     }
 
@@ -621,8 +623,8 @@ final class DriverApplicationService
     /**
      * Get value from row data using case-insensitive column name matching.
      *
-     * @param array<string, mixed> $rowData
-     * @param array<int, string> $possibleKeys
+     * @param  array<string, mixed>  $rowData
+     * @param  array<int, string>  $possibleKeys
      */
     private function getCaseInsensitiveValue(array $rowData, array $possibleKeys): ?string
     {
@@ -652,7 +654,7 @@ final class DriverApplicationService
      * exact match queries (=). LIKE wildcards are escaped separately in repository
      * search methods where LIKE queries are used.
      *
-     * @param string|null $value The CSV value to sanitize
+     * @param  string|null  $value  The CSV value to sanitize
      * @return string|null The sanitized value
      */
     private function sanitizeCsvValue(?string $value): ?string
@@ -664,7 +666,7 @@ final class DriverApplicationService
         // Remove leading dangerous characters that could trigger formula injection
         $dangerousChars = ['=', '+', '-', '@', "\t", "\r"];
 
-        while (!empty($value) && in_array($value[0], $dangerousChars, true)) {
+        while (! empty($value) && in_array($value[0], $dangerousChars, true)) {
             $value = substr($value, 1);
         }
 
@@ -674,9 +676,10 @@ final class DriverApplicationService
     /**
      * Get all seasons a league driver is participating in.
      *
+     * @return array<LeagueDriverSeasonData>
+     *
      * @throws UnauthorizedException If the user does not own the league
      * @throws \App\Domain\Driver\Exceptions\DriverNotFoundException If the driver is not found in the league
-     * @return array<LeagueDriverSeasonData>
      */
     public function getLeagueDriverSeasons(int $leagueId, int $driverId, int $userId): array
     {
@@ -1158,10 +1161,9 @@ final class DriverApplicationService
      * - createDriverForLeague (which wraps in its own transaction)
      * - importDriversFromCSV (which has a single outer transaction for all rows)
      *
-     * @param CreateDriverData $data The driver creation data
-     * @param int $leagueId The league ID
-     * @param string|null $effectiveNickname The resolved nickname (may be auto-generated from Discord ID)
-     * @return LeagueDriverData
+     * @param  CreateDriverData  $data  The driver creation data
+     * @param  int  $leagueId  The league ID
+     * @param  string|null  $effectiveNickname  The resolved nickname (may be auto-generated from Discord ID)
      */
     private function createDriverForLeagueCore(
         CreateDriverData $data,
@@ -1243,8 +1245,9 @@ final class DriverApplicationService
     /**
      * Verify that a league belongs to the specified user.
      *
-     * @param int $leagueId The league ID to check
-     * @param int $userId The user ID to verify ownership against
+     * @param  int  $leagueId  The league ID to check
+     * @param  int  $userId  The user ID to verify ownership against
+     *
      * @throws UnauthorizedException If the user does not own the league
      */
     private function authorizeLeagueAccess(int $leagueId, int $userId): void
@@ -1259,11 +1262,8 @@ final class DriverApplicationService
      * Validate that platform IDs don't conflict with another driver.
      * Checks if any of the provided platform IDs already exist for a different driver.
      *
-     * @param int $currentDriverId The driver being updated (to exclude from conflict check)
-     * @param string|null $psnId
-     * @param string|null $iracingId
-     * @param int|null $iracingCustomerId
-     * @param string|null $discordId
+     * @param  int  $currentDriverId  The driver being updated (to exclude from conflict check)
+     *
      * @throws InvalidDriverDataException If platform IDs conflict with another driver
      */
     private function validatePlatformIdConflict(
@@ -1296,11 +1296,8 @@ final class DriverApplicationService
      * Validate that driver's platform IDs match league's supported platforms.
      * At least one of the driver's platform IDs must belong to the league's platforms.
      *
-     * @param int $leagueId The league ID
-     * @param string|null $psnId
-     * @param string|null $iracingId
-     * @param int|null $iracingCustomerId
-     * @param string|null $discordId
+     * @param  int  $leagueId  The league ID
+     *
      * @throws InvalidDriverDataException If no platform ID matches league's platforms
      */
     private function validateLeaguePlatformMatch(
@@ -1333,15 +1330,6 @@ final class DriverApplicationService
      *    - Discord ID (highest priority)
      *    - Platform ID (PSN > iRacing > iRacing Customer ID)
      *    - First Name (lowest priority)
-     *
-     * @param string|null $nickname
-     * @param string|null $firstName
-     * @param string|null $lastName
-     * @param string|null $discordId
-     * @param string|null $psnId
-     * @param string|null $iracingId
-     * @param int|null $iracingCustomerId
-     * @return string|null
      */
     private function resolveNickname(
         ?string $nickname,
@@ -1388,12 +1376,6 @@ final class DriverApplicationService
      * Get the primary platform ID for display/error messages.
      * Returns the first non-null platform ID in priority order:
      * PSN > iRacing > iRacing Customer ID > Discord ID
-     *
-     * @param string|null $psnId
-     * @param string|null $iracingId
-     * @param int|null $iracingCustomerId
-     * @param string|null $discordId
-     * @return string
      */
     private function getPrimaryPlatformId(
         ?string $psnId,
@@ -1410,12 +1392,6 @@ final class DriverApplicationService
     /**
      * Update driver name if any name fields are provided.
      * Returns true if name was updated, false otherwise.
-     *
-     * @param Driver $driver
-     * @param string|null $firstName
-     * @param string|null $lastName
-     * @param string|null $nickname
-     * @return bool
      */
     private function updateDriverNameIfProvided(
         Driver $driver,
@@ -1433,6 +1409,7 @@ final class DriverApplicationService
                     $nickname ?? $driver->name()->nickname()
                 )
             );
+
             return true;
         }
 

@@ -38,6 +38,7 @@ use Spatie\MediaLibrary\HasMedia;
  * @property-read string|null $logo_url
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\League $league
  * @property-read \App\Infrastructure\Persistence\Eloquent\Models\Platform $platform
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competition archived()
  * @method static \Database\Factories\CompetitionFactory factory($count = null, $state = [])
@@ -137,7 +138,7 @@ class Competition extends Model implements HasMedia
     // Scopes
 
     /**
-     * @param Builder<Competition> $query
+     * @param  Builder<Competition>  $query
      * @return Builder<Competition>
      */
     public function scopeActive(Builder $query): Builder
@@ -146,7 +147,7 @@ class Competition extends Model implements HasMedia
     }
 
     /**
-     * @param Builder<Competition> $query
+     * @param  Builder<Competition>  $query
      * @return Builder<Competition>
      */
     public function scopeArchived(Builder $query): Builder
@@ -155,7 +156,7 @@ class Competition extends Model implements HasMedia
     }
 
     /**
-     * @param Builder<Competition> $query
+     * @param  Builder<Competition>  $query
      * @return Builder<Competition>
      */
     public function scopeForLeague(
@@ -169,12 +170,10 @@ class Competition extends Model implements HasMedia
 
     /**
      * Get the competition's logo URL.
-     *
-     * @return string|null
      */
     public function getLogoUrlAttribute(): ?string
     {
-        if (!$this->logo_path) {
+        if (! $this->logo_path) {
             return null;
         }
 

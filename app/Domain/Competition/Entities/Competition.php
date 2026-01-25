@@ -229,7 +229,7 @@ final class Competition
 
         $changes = [];
 
-        if (!$this->name->equals($name)) {
+        if (! $this->name->equals($name)) {
             $changes['name'] = [
                 'old' => $this->name->value(),
                 'new' => $name->value(),
@@ -245,7 +245,7 @@ final class Competition
             $this->description = $description;
         }
 
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             $this->updatedAt = new \DateTimeImmutable();
             $this->recordEvent(new CompetitionUpdated(
                 competitionId: $this->id,
@@ -340,7 +340,7 @@ final class Competition
             throw new CompetitionIsArchivedException();
         }
 
-        if (!$this->slug->equals($slug)) {
+        if (! $this->slug->equals($slug)) {
             $changes = [
                 'slug' => [
                     'old' => $this->slug->value(),
@@ -381,7 +381,7 @@ final class Competition
             throw new CompetitionIsArchivedException();
         }
 
-        if (!$this->slug->equals($slug)) {
+        if (! $this->slug->equals($slug)) {
             $this->slug = $slug;
             $this->updatedAt = new \DateTimeImmutable();
         }
@@ -480,6 +480,7 @@ final class Competition
      * Ensure the entity has been persisted and has an ID.
      *
      * @throws \LogicException if entity has no ID
+     *
      * @phpstan-assert !null $this->id
      */
     private function ensureHasId(): void
@@ -526,6 +527,6 @@ final class Competition
      */
     public function hasEvents(): bool
     {
-        return !empty($this->domainEvents);
+        return ! empty($this->domainEvents);
     }
 }

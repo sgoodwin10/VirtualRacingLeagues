@@ -10,7 +10,7 @@ namespace App\Domain\Competition\Events;
 final readonly class CompetitionUpdated
 {
     /**
-     * @param array<string, array{old: mixed, new: mixed}> $changes
+     * @param  array<string, array{old: mixed, new: mixed}>  $changes
      */
     public function __construct(
         public int $competitionId,

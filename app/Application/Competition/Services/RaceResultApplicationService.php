@@ -33,7 +33,7 @@ final class RaceResultApplicationService
         $results = $this->raceResultRepository->findByRaceId($raceId);
 
         return array_map(
-            fn(RaceResult $result) => RaceResultData::fromEntity($result),
+            fn (RaceResult $result) => RaceResultData::fromEntity($result),
             $results
         );
     }
@@ -43,12 +43,13 @@ final class RaceResultApplicationService
      * Replaces all existing results for the race.
      *
      * @return RaceResultData[]
+     *
      * @throws RaceResultException if race not found or validation fails
      */
     public function saveResults(int $raceId, BulkRaceResultsData $data): array
     {
         // Verify race exists
-        if (!$this->raceRepository->exists($raceId)) {
+        if (! $this->raceRepository->exists($raceId)) {
             throw RaceResultException::raceNotFound($raceId);
         }
 
@@ -84,7 +85,7 @@ final class RaceResultApplicationService
             }
 
             // Calculate fastest lap BEFORE saving (only for non-qualifier races)
-            if (!$race->isQualifier()) {
+            if (! $race->isQualifier()) {
                 $this->calculateFastestLaps($entities);
             }
 
@@ -97,7 +98,7 @@ final class RaceResultApplicationService
             }
 
             return array_map(
-                fn(RaceResult $result) => RaceResultData::fromEntity($result),
+                fn (RaceResult $result) => RaceResultData::fromEntity($result),
                 $entities
             );
         });
@@ -107,7 +108,7 @@ final class RaceResultApplicationService
      * Calculate and mark fastest lap for each division group.
      * Handles ties - multiple drivers can have fastest lap.
      *
-     * @param RaceResult[] $results
+     * @param  RaceResult[]  $results
      */
     private function calculateFastestLaps(array $results): void
     {
@@ -121,14 +122,14 @@ final class RaceResultApplicationService
                 $hasDivisions = true;
             }
             $groupKey = $divisionId ?? 'no_division';
-            if (!isset($groups[$groupKey])) {
+            if (! isset($groups[$groupKey])) {
                 $groups[$groupKey] = [];
             }
             $groups[$groupKey][] = $result;
         }
 
         // If no divisions exist, treat all results as one group
-        if (!$hasDivisions) {
+        if (! $hasDivisions) {
             $groups = ['all' => $results];
         }
 
@@ -142,7 +143,7 @@ final class RaceResultApplicationService
      * Find and mark the fastest lap(s) in a group of results.
      * Handles ties by marking all results with the minimum time.
      *
-     * @param RaceResult[] $groupResults
+     * @param  RaceResult[]  $groupResults
      */
     private function markFastestLapInGroup(array $groupResults): void
     {

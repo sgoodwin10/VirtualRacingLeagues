@@ -10,11 +10,6 @@ class ApiResponse
 {
     /**
      * Create a successful JSON response.
-     *
-     * @param  mixed  $data
-     * @param  string|null  $message
-     * @param  int  $status
-     * @return JsonResponse
      */
     public static function success(
         mixed $data = null,
@@ -38,11 +33,6 @@ class ApiResponse
 
     /**
      * Create an error JSON response.
-     *
-     * @param  string  $message
-     * @param  mixed  $errors
-     * @param  int  $status
-     * @return JsonResponse
      */
     public static function error(
         string $message,
@@ -63,10 +53,6 @@ class ApiResponse
 
     /**
      * Create a created response.
-     *
-     * @param  mixed  $data
-     * @param  string|null  $message
-     * @return JsonResponse
      */
     public static function created(
         mixed $data = null,
@@ -77,8 +63,6 @@ class ApiResponse
 
     /**
      * Create a no content response.
-     *
-     * @return JsonResponse
      */
     public static function noContent(): JsonResponse
     {
@@ -87,9 +71,6 @@ class ApiResponse
 
     /**
      * Create a not found response.
-     *
-     * @param  string|null  $message
-     * @return JsonResponse
      */
     public static function notFound(?string $message = null): JsonResponse
     {
@@ -98,9 +79,6 @@ class ApiResponse
 
     /**
      * Create an unauthorized response.
-     *
-     * @param  string|null  $message
-     * @return JsonResponse
      */
     public static function unauthorized(?string $message = null): JsonResponse
     {
@@ -109,9 +87,6 @@ class ApiResponse
 
     /**
      * Create a forbidden response.
-     *
-     * @param  string|null  $message
-     * @return JsonResponse
      */
     public static function forbidden(?string $message = null): JsonResponse
     {
@@ -120,10 +95,6 @@ class ApiResponse
 
     /**
      * Create a validation error response.
-     *
-     * @param  mixed  $errors
-     * @param  string|null  $message
-     * @return JsonResponse
      */
     public static function validationError(
         mixed $errors,
@@ -144,7 +115,6 @@ class ApiResponse
      * @param  array|null  $links  Pagination links (first, last, prev, next)
      * @param  string|null  $message  Optional success message
      * @param  int  $status  HTTP status code (default: 200)
-     * @return JsonResponse
      */
     public static function paginated(
         array $data,

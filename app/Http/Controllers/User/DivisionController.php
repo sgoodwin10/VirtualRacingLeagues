@@ -41,6 +41,7 @@ final class DivisionController extends Controller
         if ($userId === null) {
             throw UnauthorizedException::notAuthenticated();
         }
+
         return (int) $userId;
     }
 
@@ -51,6 +52,7 @@ final class DivisionController extends Controller
     {
         try {
             $divisions = $this->divisionService->getDivisionsBySeasonId($seasonId, $this->getAuthenticatedUserId());
+
             return ApiResponse::success($divisions);
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
@@ -65,6 +67,7 @@ final class DivisionController extends Controller
         try {
             $data = CreateDivisionData::from($request->validated());
             $divisionData = $this->divisionService->createDivision($data, $seasonId, $this->getAuthenticatedUserId());
+
             return ApiResponse::created($divisionData->toArray(), 'Division created successfully');
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
@@ -79,6 +82,7 @@ final class DivisionController extends Controller
         try {
             $data = UpdateDivisionData::from($request->validated());
             $divisionData = $this->divisionService->updateDivision($divisionId, $data, $this->getAuthenticatedUserId());
+
             return ApiResponse::success($divisionData->toArray(), 'Division updated successfully');
         } catch (DivisionNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -94,6 +98,7 @@ final class DivisionController extends Controller
     {
         try {
             $this->divisionService->deleteDivision($divisionId, $this->getAuthenticatedUserId());
+
             return ApiResponse::success(null, 'Division deleted successfully');
         } catch (DivisionNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -109,6 +114,7 @@ final class DivisionController extends Controller
     {
         try {
             $count = $this->divisionService->getDriverCount($divisionId, $this->getAuthenticatedUserId());
+
             return ApiResponse::success(['count' => $count]);
         } catch (DivisionNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -128,6 +134,7 @@ final class DivisionController extends Controller
                 $data,
                 $this->getAuthenticatedUserId()
             );
+
             return ApiResponse::success($updatedDriver, 'Driver assigned to division successfully');
         } catch (UnauthorizedException $e) {
             return ApiResponse::error($e->getMessage(), null, 403);
@@ -142,6 +149,7 @@ final class DivisionController extends Controller
         try {
             $data = ReorderDivisionsData::from($request->validated());
             $divisions = $this->divisionService->reorderDivisions($seasonId, $data, $this->getAuthenticatedUserId());
+
             return ApiResponse::success($divisions, 'Divisions reordered successfully');
         } catch (\InvalidArgumentException $e) {
             return ApiResponse::error($e->getMessage(), null, 422);

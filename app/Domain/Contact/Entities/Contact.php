@@ -116,9 +116,6 @@ final class Contact
         $this->updatedAt = new DateTimeImmutable();
     }
 
-    /**
-     * @param object $event
-     */
     private function recordDomainEvent(object $event): void
     {
         $this->domainEvents[] = $event;
@@ -131,6 +128,7 @@ final class Contact
     {
         $events = $this->domainEvents;
         $this->domainEvents = [];
+
         return $events;
     }
 

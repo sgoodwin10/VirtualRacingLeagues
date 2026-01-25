@@ -36,12 +36,10 @@ class TeamFactory extends Factory
 
     /**
      * Indicate that the team has a logo.
-     *
-     * @return static
      */
     public function withLogo(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'logo_url' => 'teams/' . $this->faker->uuid() . '.jpg',
         ]);
     }

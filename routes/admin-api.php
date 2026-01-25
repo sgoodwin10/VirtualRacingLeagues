@@ -23,7 +23,6 @@ use App\Http\Controllers\Admin\NotificationLogController;
 use App\Http\Controllers\Admin\SiteConfigController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\AdminOrSuperAdminOnly;
-use App\Http\Middleware\AdminSessionMiddleware;
 use App\Http\Middleware\SuperAdminOnly;
 use Illuminate\Support\Facades\Route;
 

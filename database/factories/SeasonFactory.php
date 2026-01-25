@@ -56,7 +56,7 @@ class SeasonFactory extends Factory
      */
     public function withTeamChampionship(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'team_championship_enabled' => true,
         ]);
     }
@@ -66,7 +66,7 @@ class SeasonFactory extends Factory
      */
     public function withDivisions(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'race_divisions_enabled' => true,
         ]);
     }

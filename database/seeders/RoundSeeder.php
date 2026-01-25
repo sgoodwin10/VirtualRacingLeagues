@@ -19,6 +19,7 @@ class RoundSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('RoundSeeder cannot run in production environment!');
+
             return;
         }
 

@@ -10,9 +10,9 @@ use App\Domain\Competition\Exceptions\RoundNotFoundException;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\CompleteRoundRequest;
 use App\Http\Requests\User\CreateRoundRequest;
 use App\Http\Requests\User\UpdateRoundRequest;
-use App\Http\Requests\User\CompleteRoundRequest;
 use App\Infrastructure\Persistence\Eloquent\Models\Round;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +37,7 @@ final class RoundController extends Controller
     public function index(int $seasonId): JsonResponse
     {
         $rounds = $this->roundService->getRoundsBySeason($seasonId);
+
         return ApiResponse::success($rounds);
     }
 
@@ -62,6 +63,7 @@ final class RoundController extends Controller
     public function show(int $roundId): JsonResponse
     {
         $round = $this->roundService->getRound($roundId);
+
         return ApiResponse::success($round->toArray());
     }
 
@@ -108,6 +110,7 @@ final class RoundController extends Controller
     public function nextRoundNumber(int $seasonId): JsonResponse
     {
         $nextNumber = $this->roundService->getNextRoundNumber($seasonId);
+
         return ApiResponse::success(['next_round_number' => $nextNumber]);
     }
 
@@ -138,6 +141,7 @@ final class RoundController extends Controller
     {
         try {
             $round = $this->roundService->uncompleteRound($roundId, $this->getUserId());
+
             return ApiResponse::success($round->toArray(), 'Round marked as not completed');
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -151,6 +155,7 @@ final class RoundController extends Controller
     {
         try {
             $results = $this->roundService->getRoundResults($roundId);
+
             return ApiResponse::success($results->toArray());
         } catch (RoundNotFoundException $e) {
             return ApiResponse::error($e->getMessage(), null, 404);
@@ -180,6 +185,7 @@ final class RoundController extends Controller
     private function captureOriginalRoundData(int $roundId): array
     {
         $round = Round::findOrFail($roundId);
+
         return $round->only(['name', 'circuit_id', 'start_date', 'end_date']);
     }
 
@@ -205,7 +211,7 @@ final class RoundController extends Controller
     /**
      * Log round updated activity.
      *
-     * @param array<string, mixed> $originalData
+     * @param  array<string, mixed>  $originalData
      */
     private function logRoundUpdated(int $roundId, array $originalData): void
     {

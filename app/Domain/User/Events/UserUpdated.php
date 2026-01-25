@@ -11,7 +11,7 @@ namespace App\Domain\User\Events;
 final readonly class UserUpdated
 {
     /**
-     * @param array<string, mixed> $changedAttributes
+     * @param  array<string, mixed>  $changedAttributes
      */
     public function __construct(
         public readonly int $userId,

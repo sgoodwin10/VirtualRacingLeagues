@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Admin\ContactController as AdminContactController;
-use App\Http\Controllers\Admin\NotificationLogController;
+use App\Http\Controllers\App\ExportController;
+use App\Http\Controllers\App\TiebreakerRuleController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -31,8 +31,6 @@ use App\Http\Controllers\User\SiteConfigController as UserSiteConfigController;
 use App\Http\Controllers\User\TeamController;
 use App\Http\Controllers\User\TimezoneController;
 use App\Http\Controllers\User\TrackController;
-use App\Http\Controllers\App\TiebreakerRuleController;
-use App\Http\Controllers\App\ExportController;
 use App\Http\Middleware\AdminSessionMiddleware;
 use Illuminate\Support\Facades\Route;
 

@@ -10,17 +10,17 @@ use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        commands: __DIR__ . '/../routes/console.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
             // Load subdomain routes FIRST (primary routing)
-            require __DIR__ . '/../routes/subdomain.php';
+            require __DIR__.'/../routes/subdomain.php';
 
             // Load API routes (deprecated, kept for reference)
-            require __DIR__ . '/../routes/api.php';
+            require __DIR__.'/../routes/api.php';
 
             // Load web routes LAST (fallback only)
-            require __DIR__ . '/../routes/web.php';
+            require __DIR__.'/../routes/web.php';
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {

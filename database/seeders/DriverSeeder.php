@@ -25,8 +25,9 @@ class DriverSeeder extends Seeder
         // Get the default league
         $league = League::where('slug', 'race-on-oz')->first();
 
-        if (!$league) {
+        if (! $league) {
             $this->command->error('League not found. Please run LeagueSeeder first.');
+
             return;
         }
 

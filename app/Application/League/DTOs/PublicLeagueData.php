@@ -18,7 +18,7 @@ final class PublicLeagueData extends Data
     use MediaArrayConversion;
 
     /**
-     * @param array<int, array{id: int, name: string, slug: string}> $platforms
+     * @param  array<int, array{id: int, name: string, slug: string}>  $platforms
      */
     public function __construct(
         public readonly ?int $id,
@@ -51,17 +51,16 @@ final class PublicLeagueData extends Data
     /**
      * Create from domain entity with platform data and counts.
      *
-     * @param League $league Domain entity
-     * @param array<int, array{id: int, name: string, slug: string}> $platforms Platform data
-     * @param int $competitionsCount Competitions count
-     * @param int $driversCount Drivers count
-     * @param int $activeSeasonsCount Active seasons count
-     * @param int $totalRacesCount Total races count
-     * @param string|null $logoUrl Optional pre-computed logo URL (infrastructure concern - DEPRECATED)
-     * @param string|null $headerImageUrl Optional pre-computed header image URL (infrastructure concern - DEPRECATED)
-     * @param string|null $bannerUrl Optional pre-computed banner URL (infrastructure concern - DEPRECATED)
-     * @param LeagueEloquent|null $eloquentModel Optional eloquent model for media
-     * @return self
+     * @param  League  $league  Domain entity
+     * @param  array<int, array{id: int, name: string, slug: string}>  $platforms  Platform data
+     * @param  int  $competitionsCount  Competitions count
+     * @param  int  $driversCount  Drivers count
+     * @param  int  $activeSeasonsCount  Active seasons count
+     * @param  int  $totalRacesCount  Total races count
+     * @param  string|null  $logoUrl  Optional pre-computed logo URL (infrastructure concern - DEPRECATED)
+     * @param  string|null  $headerImageUrl  Optional pre-computed header image URL (infrastructure concern - DEPRECATED)
+     * @param  string|null  $bannerUrl  Optional pre-computed banner URL (infrastructure concern - DEPRECATED)
+     * @param  LeagueEloquent|null  $eloquentModel  Optional eloquent model for media
      */
     public static function fromEntity(
         League $league,

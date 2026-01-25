@@ -12,13 +12,13 @@ use App\Domain\League\ValueObjects\LeagueSlug;
 use App\Domain\League\ValueObjects\LeagueVisibility;
 use App\Domain\League\ValueObjects\Tagline;
 use App\Domain\Shared\ValueObjects\EmailAddress;
+use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionModel;
 use App\Infrastructure\Persistence\Eloquent\Models\League as LeagueEloquent;
 use App\Infrastructure\Persistence\Eloquent\Models\Platform;
-use App\Infrastructure\Persistence\Eloquent\Models\Competition as CompetitionModel;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
-use App\Infrastructure\Persistence\Eloquent\Models\Round;
 use App\Infrastructure\Persistence\Eloquent\Models\Race;
+use App\Infrastructure\Persistence\Eloquent\Models\Round;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -79,7 +79,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             $query->where('id', '!=', $excludeLeagueId);
         }
 
-        return !$query->exists();
+        return ! $query->exists();
     }
 
     public function findByUserId(int $userId): array
@@ -88,7 +88,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return $eloquentLeagues->map(fn($eloquentLeague) => $this->toDomainEntity($eloquentLeague))->all();
+        return $eloquentLeagues->map(fn ($eloquentLeague) => $this->toDomainEntity($eloquentLeague))->all();
     }
 
     public function findByIdWithCounts(int $id): array
@@ -116,7 +116,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         $activeSeasonsCount = 0;
         $totalRacesCount = 0;
 
-        if (!empty($competitionIds)) {
+        if (! empty($competitionIds)) {
             // Active seasons count
             $activeSeasonsCount = SeasonEloquent::whereIn('competition_id', $competitionIds)
                 ->where('status', 'active')
@@ -127,12 +127,12 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
                 ->pluck('id')
                 ->toArray();
 
-            if (!empty($seasonIds)) {
+            if (! empty($seasonIds)) {
                 $roundIds = Round::whereIn('season_id', $seasonIds)
                     ->pluck('id')
                     ->toArray();
 
-                if (!empty($roundIds)) {
+                if (! empty($roundIds)) {
                     $totalRacesCount = Race::whereIn('round_id', $roundIds)->count();
                 }
             }
@@ -197,7 +197,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
         $eloquentLeagues = $query->get();
 
-        return $eloquentLeagues->map(fn($eloquentLeague) => $this->toDomainEntity($eloquentLeague))->all();
+        return $eloquentLeagues->map(fn ($eloquentLeague) => $this->toDomainEntity($eloquentLeague))->all();
     }
 
     public function save(League $league): void
@@ -308,8 +308,8 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
     /**
      * Apply filters to query.
      *
-     * @param Builder<LeagueEloquent> $query
-     * @param array<string, mixed> $filters
+     * @param  Builder<LeagueEloquent>  $query
+     * @param  array<string, mixed>  $filters
      */
     private function applyFilters(Builder $query, array $filters): void
     {
@@ -334,19 +334,19 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         }
 
         // Default ordering
-        if (!isset($filters['order_by'])) {
+        if (! isset($filters['order_by'])) {
             $query->orderBy('created_at', 'desc');
         } else {
             // Validate order_by to prevent SQL injection
             $allowedOrderFields = ['id', 'name', 'slug', 'visibility', 'status', 'created_at', 'updated_at'];
             $orderBy = $filters['order_by'];
-            if (!in_array($orderBy, $allowedOrderFields, true)) {
+            if (! in_array($orderBy, $allowedOrderFields, true)) {
                 $orderBy = 'created_at';
             }
 
             // Validate order_direction to prevent SQL injection
             $direction = strtolower($filters['order_direction'] ?? 'asc');
-            if (!in_array($direction, ['asc', 'desc'], true)) {
+            if (! in_array($direction, ['asc', 'desc'], true)) {
                 $direction = 'asc';
             }
 
@@ -452,7 +452,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             ]);
 
         // Apply search filter (search in name and slug)
-        if (isset($filters['search']) && !empty($filters['search'])) {
+        if (isset($filters['search']) && ! empty($filters['search'])) {
             // Escape LIKE wildcards to prevent injection
             $search = str_replace(['%', '_'], ['\\%', '\\_'], trim($filters['search']));
             $query->where(function ($q) use ($search) {
@@ -462,17 +462,17 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         }
 
         // Apply visibility filter (exact match)
-        if (isset($filters['visibility']) && !empty($filters['visibility'])) {
+        if (isset($filters['visibility']) && ! empty($filters['visibility'])) {
             $query->where('visibility', $filters['visibility']);
         }
 
         // Apply status filter (exact match)
-        if (isset($filters['status']) && !empty($filters['status'])) {
+        if (isset($filters['status']) && ! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // Apply platform filter (whereJsonContains for any of the selected platforms)
-        if (isset($filters['platform_ids']) && !empty($filters['platform_ids'])) {
+        if (isset($filters['platform_ids']) && ! empty($filters['platform_ids'])) {
             $platformIds = $filters['platform_ids'];
             $query->where(function ($q) use ($platformIds) {
                 foreach ($platformIds as $platformId) {
@@ -487,12 +487,12 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
         // Validate sort_by to prevent SQL injection
         $allowedSortFields = ['id', 'name', 'visibility', 'status', 'created_at', 'updated_at'];
-        if (!in_array($sortBy, $allowedSortFields, true)) {
+        if (! in_array($sortBy, $allowedSortFields, true)) {
             $sortBy = 'id';
         }
 
         // Validate sort_direction to prevent SQL injection
-        if (!in_array($sortDirection, ['asc', 'desc'], true)) {
+        if (! in_array($sortDirection, ['asc', 'desc'], true)) {
             $sortDirection = 'desc';
         }
 
@@ -611,7 +611,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         // Calculate stats
         // Total drivers across all seasons
         $totalDrivers = 0;
-        if (!empty($competitionIds)) {
+        if (! empty($competitionIds)) {
             $seasonIds = SeasonEloquent::query()
                 ->whereIn('competition_id', $competitionIds)
                 ->pluck('id')
@@ -625,19 +625,19 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
         // Total races run
         $totalRaces = 0;
-        if (!empty($competitionIds)) {
+        if (! empty($competitionIds)) {
             $seasonIds = SeasonEloquent::query()
                 ->whereIn('competition_id', $competitionIds)
                 ->pluck('id')
                 ->toArray();
 
-            if (!empty($seasonIds)) {
+            if (! empty($seasonIds)) {
                 $roundIds = Round::query()
                     ->whereIn('season_id', $seasonIds)
                     ->pluck('id')
                     ->toArray();
 
-                if (!empty($roundIds)) {
+                if (! empty($roundIds)) {
                     $totalRaces = Race::query()
                         ->whereIn('round_id', $roundIds)
                         ->count();
@@ -666,14 +666,14 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             ->where('status', 'active');
 
         // Apply search filter
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             // Escape LIKE wildcards to prevent injection
             $search = str_replace(['%', '_'], ['\\%', '\\_'], trim($filters['search']));
             $query->where('name', 'like', "%{$search}%");
         }
 
         // Apply platform filter
-        if (!empty($filters['platform_id'])) {
+        if (! empty($filters['platform_id'])) {
             $platformId = (int) $filters['platform_id'];
             $query->whereJsonContains('platform_ids', $platformId);
         }
@@ -731,7 +731,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
      * Batch calculate active seasons count and total races count for multiple leagues.
      * Returns associative array keyed by league_id with active_seasons_count and total_races_count.
      *
-     * @param array<int> $leagueIds
+     * @param  array<int>  $leagueIds
      * @return array<int, array{active_seasons_count: int, total_races_count: int}>
      */
     private function calculateSeasonsAndRacesCounts(array $leagueIds): array
@@ -761,6 +761,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
                     'total_races_count' => 0,
                 ];
             }
+
             return $result;
         }
 
@@ -790,7 +791,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
         // Get races count grouped by season_id
         $racesData = [];
-        if (!empty($allSeasonIds)) {
+        if (! empty($allSeasonIds)) {
             $roundsData = Round::whereIn('season_id', $allSeasonIds)
                 ->select('id', 'season_id')
                 ->get();
@@ -802,7 +803,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
 
             $allRoundIds = $roundsData->pluck('id')->toArray();
 
-            if (!empty($allRoundIds)) {
+            if (! empty($allRoundIds)) {
                 /** @var \Illuminate\Support\Collection<int, int> $racesCounts */
                 $racesCounts = Race::whereIn('round_id', $allRoundIds)
                     ->join('rounds', 'races.round_id', '=', 'rounds.id')

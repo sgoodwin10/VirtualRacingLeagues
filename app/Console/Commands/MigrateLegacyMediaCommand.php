@@ -37,7 +37,9 @@ class MigrateLegacyMediaCommand extends Command
      * Migration statistics.
      */
     private int $totalMigrated = 0;
+
     private int $totalSkipped = 0;
+
     private int $totalFailed = 0;
 
     /**
@@ -53,9 +55,10 @@ class MigrateLegacyMediaCommand extends Command
             $this->newLine();
         }
 
-        if (!$this->option('force') && !$dryRun) {
-            if (!$this->confirm('This will migrate legacy images to Media Library. Continue?')) {
+        if (! $this->option('force') && ! $dryRun) {
+            if (! $this->confirm('This will migrate legacy images to Media Library. Continue?')) {
                 $this->info('Migration cancelled.');
+
                 return Command::SUCCESS;
             }
         }
@@ -78,6 +81,7 @@ class MigrateLegacyMediaCommand extends Command
         );
 
         $this->info('Migration complete!');
+
         return Command::SUCCESS;
     }
 
@@ -127,6 +131,7 @@ class MigrateLegacyMediaCommand extends Command
 
         if ($leagues->isEmpty()) {
             $this->warn('  No leagues with legacy media found.');
+
             return;
         }
 
@@ -135,19 +140,19 @@ class MigrateLegacyMediaCommand extends Command
 
         foreach ($leagues as $league) {
             // Migrate logo
-            if ($league->logo_path && !$league->hasMedia('logo')) {
+            if ($league->logo_path && ! $league->hasMedia('logo')) {
                 $this->migrateFile($league, 'logo', $league->logo_path, $dryRun);
             } else {
                 $this->totalSkipped++;
             }
 
             // Migrate header_image
-            if ($league->header_image_path && !$league->hasMedia('header_image')) {
+            if ($league->header_image_path && ! $league->hasMedia('header_image')) {
                 $this->migrateFile($league, 'header_image', $league->header_image_path, $dryRun);
             }
 
             // Migrate banner
-            if ($league->banner_path && !$league->hasMedia('banner')) {
+            if ($league->banner_path && ! $league->hasMedia('banner')) {
                 $this->migrateFile($league, 'banner', $league->banner_path, $dryRun);
             }
 
@@ -169,6 +174,7 @@ class MigrateLegacyMediaCommand extends Command
 
         if ($competitions->isEmpty()) {
             $this->warn('  No competitions with legacy media found.');
+
             return;
         }
 
@@ -177,7 +183,7 @@ class MigrateLegacyMediaCommand extends Command
 
         /** @var Competition $competition */
         foreach ($competitions as $competition) {
-            if ($competition->logo_path && !$competition->hasMedia('logo')) {
+            if ($competition->logo_path && ! $competition->hasMedia('logo')) {
                 $this->migrateFile($competition, 'logo', $competition->logo_path, $dryRun);
             } else {
                 $this->totalSkipped++;
@@ -204,6 +210,7 @@ class MigrateLegacyMediaCommand extends Command
 
         if ($seasons->isEmpty()) {
             $this->warn('  No seasons with legacy media found.');
+
             return;
         }
 
@@ -212,14 +219,14 @@ class MigrateLegacyMediaCommand extends Command
 
         foreach ($seasons as $season) {
             // Migrate logo
-            if ($season->logo_path && !$season->hasMedia('logo')) {
+            if ($season->logo_path && ! $season->hasMedia('logo')) {
                 $this->migrateFile($season, 'logo', $season->logo_path, $dryRun);
             } else {
                 $this->totalSkipped++;
             }
 
             // Migrate banner
-            if ($season->banner_path && !$season->hasMedia('banner')) {
+            if ($season->banner_path && ! $season->hasMedia('banner')) {
                 $this->migrateFile($season, 'banner', $season->banner_path, $dryRun);
             }
 
@@ -240,6 +247,7 @@ class MigrateLegacyMediaCommand extends Command
 
         if ($teams->isEmpty()) {
             $this->warn('  No teams with legacy media found.');
+
             return;
         }
 
@@ -247,7 +255,7 @@ class MigrateLegacyMediaCommand extends Command
         $bar->start();
 
         foreach ($teams as $team) {
-            if ($team->logo_url && !$team->hasMedia('logo')) {
+            if ($team->logo_url && ! $team->hasMedia('logo')) {
                 $this->migrateFile($team, 'logo', $team->logo_url, $dryRun);
             } else {
                 $this->totalSkipped++;
@@ -270,6 +278,7 @@ class MigrateLegacyMediaCommand extends Command
 
         if ($divisions->isEmpty()) {
             $this->warn('  No divisions with legacy media found.');
+
             return;
         }
 
@@ -277,7 +286,7 @@ class MigrateLegacyMediaCommand extends Command
         $bar->start();
 
         foreach ($divisions as $division) {
-            if ($division->logo_url && !$division->hasMedia('logo')) {
+            if ($division->logo_url && ! $division->hasMedia('logo')) {
                 $this->migrateFile($division, 'logo', $division->logo_url, $dryRun);
             } else {
                 $this->totalSkipped++;
@@ -299,6 +308,7 @@ class MigrateLegacyMediaCommand extends Command
 
         if ($siteConfigs->isEmpty()) {
             $this->warn('  No site configurations found.');
+
             return;
         }
 
@@ -308,6 +318,7 @@ class MigrateLegacyMediaCommand extends Command
 
         if ($totalFiles === 0) {
             $this->warn('  No site configuration files found.');
+
             return;
         }
 
@@ -320,14 +331,15 @@ class MigrateLegacyMediaCommand extends Command
             foreach ($siteConfig->files as $file) {
                 $collection = $this->mapFileTypeToCollection($file->file_type);
 
-                if (!$collection) {
+                if (! $collection) {
                     $this->warn("\n  Unknown file type: {$file->file_type}, skipping.");
                     $this->totalSkipped++;
                     $bar->advance();
+
                     continue;
                 }
 
-                if (!$siteConfig->hasMedia($collection)) {
+                if (! $siteConfig->hasMedia($collection)) {
                     $this->migrateFileFromConfigFile($siteConfig, $collection, $file, $dryRun);
                 } else {
                     $this->totalSkipped++;
@@ -356,11 +368,6 @@ class MigrateLegacyMediaCommand extends Command
 
     /**
      * Migrate a file from SiteConfigFileModel to Media Library.
-     *
-     * @param SiteConfigModel $model
-     * @param string $collection
-     * @param SiteConfigFileModel $file
-     * @param bool $dryRun
      */
     private function migrateFileFromConfigFile(
         SiteConfigModel $model,
@@ -370,15 +377,17 @@ class MigrateLegacyMediaCommand extends Command
     ): void {
         $disk = Storage::disk($file->storage_disk ?? 'public');
 
-        if (!$disk->exists($file->file_path)) {
+        if (! $disk->exists($file->file_path)) {
             $this->warn("\n  File not found: {$file->file_path}");
             $this->totalFailed++;
+
             return;
         }
 
         if ($dryRun) {
             $this->line("\n  Would migrate: {$file->file_path} -> {$collection}");
             $this->totalMigrated++;
+
             return;
         }
 
@@ -397,24 +406,23 @@ class MigrateLegacyMediaCommand extends Command
     /**
      * Migrate a file to Media Library.
      *
-     * @param \Spatie\MediaLibrary\HasMedia $model
-     * @param string $collection
-     * @param string $path
-     * @param bool $dryRun
+     * @param  \Spatie\MediaLibrary\HasMedia  $model
      */
     private function migrateFile($model, string $collection, string $path, bool $dryRun): void
     {
         $disk = Storage::disk('public');
 
-        if (!$disk->exists($path)) {
+        if (! $disk->exists($path)) {
             $this->warn("\n  File not found: {$path}");
             $this->totalFailed++;
+
             return;
         }
 
         if ($dryRun) {
             $this->line("\n  Would migrate: {$path} -> {$collection}");
             $this->totalMigrated++;
+
             return;
         }
 

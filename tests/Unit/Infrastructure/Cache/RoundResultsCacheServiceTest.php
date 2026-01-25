@@ -20,7 +20,7 @@ final class RoundResultsCacheServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new RoundResultsCacheService();
+        $this->service = new RoundResultsCacheService;
 
         // Clear any existing cache for tests
         Cache::store('redis')->flush();
@@ -167,8 +167,8 @@ final class RoundResultsCacheServiceTest extends TestCase
     /**
      * Create sample RoundResultsData for testing.
      *
-     * @param array<DivisionData>|null $divisions
-     * @param array<RaceEventResultData>|null $raceEvents
+     * @param  array<DivisionData>|null  $divisions
+     * @param  array<RaceEventResultData>|null  $raceEvents
      */
     private function createSampleRoundResultsData(
         int $roundId = 1,

@@ -53,7 +53,7 @@ interface Props {
   raceTimesRequired: boolean;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 /**
  * All accordions start closed - user must click to expand
