@@ -261,6 +261,7 @@
                 <thead>
                   <tr>
                     <th class="th-position">#</th>
+                    <th class="th-team-logo">Logo</th>
                     <th class="th-driver">Team</th>
                     <th
                       v-for="roundNum in getTeamRoundNumbers(teamChampionshipResults)"
@@ -281,6 +282,14 @@
                   >
                     <td :class="['td-position', getPositionClass(team.position)]">
                       {{ team.position }}
+                    </td>
+                    <td class="td-team-logo">
+                      <img
+                        v-if="team.team_logo"
+                        :src="team.team_logo"
+                        :alt="team.team_name"
+                        class="team-championship-logo"
+                      />
                     </td>
                     <td class="td-driver">
                       <span class="driver-name">{{ team.team_name }}</span>
@@ -508,6 +517,7 @@ async function fetchStandings(): Promise<void> {
   error.value = null;
   try {
     standingsData.value = await leagueService.getSeasonDetail(props.leagueSlug, props.seasonSlug);
+
     if (standingsData.value.has_divisions && divisionsWithStandings.value.length > 0) {
       const firstDivision = divisionsWithStandings.value[0];
       if (firstDivision) {
@@ -670,6 +680,7 @@ watch(
 /* Podiums Column Header */
 .standings-table th.th-podiums {
   width: 64px;
+  font-size: 10px;
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
 }
@@ -807,6 +818,7 @@ watch(
 
 .team-logo {
   margin-left: auto;
+  padding-right: 4px;
 }
 
 .team-logo img {
@@ -875,6 +887,7 @@ watch(
   font-size: 16px !important;
   font-weight: 800;
   text-align: center;
+  min-width: 64px;
   background-color: var(--bg-elevated);
   /* font-family: var(--font-display); */
   color: var(--text-primary) !important;
@@ -887,6 +900,7 @@ watch(
   /* font-family: var(--font-display); */
   font-weight: 600;
   text-align: center;
+  min-width: 64px;
   color: var(--cyan) !important;
   background-color: var(--bg-cyan);
   padding: 10px 10px;
@@ -909,6 +923,11 @@ watch(
 
 .teams-table th.th-position {
   width: 48px;
+  text-align: center;
+}
+
+.teams-table th.th-team-logo {
+  width: 80px;
   text-align: center;
 }
 
@@ -947,6 +966,35 @@ watch(
   font-weight: 600;
   text-align: center;
   width: 48px;
+  font-family: var(--font-display);
+}
+
+/* Team Championship Position Colors */
+.teams-table .td-position.pos-1 {
+  color: #d29922;
+}
+
+.teams-table .td-position.pos-2 {
+  color: #6e7681;
+}
+
+.teams-table .td-position.pos-3 {
+  color: #f0883e;
+}
+
+.teams-table .td-team-logo {
+  width: 80px;
+  text-align: center;
+  padding: 8px 4px;
+}
+
+.team-championship-logo {
+  height: 28px;
+  width: auto;
+  max-width: 70px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
 }
 
 .teams-table .td-total {

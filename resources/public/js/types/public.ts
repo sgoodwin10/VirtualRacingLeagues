@@ -5,6 +5,9 @@
 
 import type { MediaObject } from './media';
 
+// Re-export media types for convenience
+export type { MediaObject, MediaConversions } from './media';
+
 /**
  * Platform reference
  */
@@ -224,6 +227,7 @@ export interface TeamRoundPoints {
 export interface TeamChampionshipStanding {
   team_id: number;
   team_name: string;
+  team_logo?: string | null;
   total_points: number;
   drop_total?: number;
   position: number;
@@ -312,6 +316,7 @@ export interface PublicLeagueInfo {
   discord_url: string | null;
   website_url: string | null;
   twitter_handle: string | null;
+  instagram_handle: string | null;
   youtube_url: string | null;
   twitch_url: string | null;
   created_at: string;

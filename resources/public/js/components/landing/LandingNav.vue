@@ -76,15 +76,6 @@ const handleSmoothScroll = (event: MouseEvent, target: string) => {
           </a>
         </li>
         <li>
-          <a
-            href="#pricing"
-            class="text-[var(--text-secondary)] no-underline font-medium text-[0.9rem] tracking-[0.5px] transition-colors duration-300 relative hover:text-[var(--text-primary)] after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-[var(--cyan)] after:transition-all after:duration-300 hover:after:w-full"
-            @click="handleSmoothScroll($event, '#pricing')"
-          >
-            Pricing
-          </a>
-        </li>
-        <li>
           <RouterLink
             to="/leagues"
             class="text-[var(--text-secondary)] no-underline font-medium text-[0.9rem] tracking-[0.5px] transition-colors duration-300 relative hover:text-[var(--text-primary)] after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-[var(--cyan)] after:transition-all after:duration-300 hover:after:w-full"

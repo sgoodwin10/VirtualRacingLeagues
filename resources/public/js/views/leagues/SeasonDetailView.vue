@@ -62,7 +62,9 @@
                   <span class="text-[var(--cyan)]">//</span>
                   Championship Standings
                 </div>
-                <h3 class="standings-title font-[var(--font-display)] font-semibold tracking-[0.5px]">
+                <h3
+                  class="standings-title font-[var(--font-display)] font-semibold tracking-[0.5px]"
+                >
                   {{ seasonData.competition.name.toUpperCase() }} -
                   {{ seasonData.season.name.toUpperCase() }}
                 </h3>
@@ -214,8 +216,6 @@ onMounted(() => {
   position: relative;
   width: 64px;
   height: 64px;
-  border-radius: 8px;
-  border: 2px solid var(--border);
   background: var(--bg-elevated);
   display: flex;
   align-items: center;
@@ -230,7 +230,6 @@ onMounted(() => {
   inset: 0;
   width: 100%;
   height: 100%;
-  padding: 8px;
 }
 
 .league-logo-initials {

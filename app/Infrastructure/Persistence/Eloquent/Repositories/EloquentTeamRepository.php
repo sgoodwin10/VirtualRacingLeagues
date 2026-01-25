@@ -22,7 +22,7 @@ final class EloquentTeamRepository implements TeamRepositoryInterface
     {
         if ($team->id() === null) {
             // Create new
-            $eloquentTeam = new TeamEloquent();
+            $eloquentTeam = new TeamEloquent;
             $this->fillEloquentModel($eloquentTeam, $team);
 
             $eloquentTeam->save();
@@ -57,7 +57,7 @@ final class EloquentTeamRepository implements TeamRepositoryInterface
 
         return $eloquentTeams->map(
             /** @param TeamEloquent $eloquentTeam */
-            fn($eloquentTeam) => $this->toDomainEntity($eloquentTeam)
+            fn ($eloquentTeam) => $this->toDomainEntity($eloquentTeam)
         )->all();
     }
 
@@ -88,7 +88,7 @@ final class EloquentTeamRepository implements TeamRepositoryInterface
     /**
      * Batch fetch team data for multiple team IDs to avoid N+1 queries.
      *
-     * @param array<int> $teamIds
+     * @param  array<int>  $teamIds
      * @return array<int, array{name: string, logo_url: string|null}> Map of team ID => team data
      */
     public function findDataByIds(array $teamIds): array
@@ -105,12 +105,12 @@ final class EloquentTeamRepository implements TeamRepositoryInterface
         $map = [];
         foreach ($teams as $team) {
             // If logo_url is already a full URL (http/https), use it as-is
-            // Otherwise, generate storage URL from relative path
+            // Otherwise, generate storage URL from relative path using public disk
             $logoUrl = null;
             if ($team->logo_url !== null) {
                 $logoUrl = str_starts_with($team->logo_url, 'http://') || str_starts_with($team->logo_url, 'https://')
                     ? $team->logo_url
-                    : Storage::url($team->logo_url);
+                    : Storage::disk('public')->url($team->logo_url);
             }
 
             $map[$team->id] = [

@@ -177,7 +177,7 @@
               </div>
 
               <!-- Race Events Section (Qualifying + Races) -->
-              <div class="pt-4">
+              <div class="pt-4 pb-2">
                 <div v-if="loadingRaces" class="space-y-2">
                   <Skeleton height="4rem" />
                   <Skeleton height="4rem" />

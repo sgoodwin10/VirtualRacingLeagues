@@ -55,6 +55,7 @@ final class PublicLeagueBasicData extends Data
      * @param string|null $discord_url
      * @param string|null $website_url
      * @param string|null $twitter_handle
+     * @param string|null $instagram_handle
      * @param string|null $youtube_url
      * @param string|null $twitch_url
      * @param string $created_at
@@ -78,6 +79,7 @@ final class PublicLeagueBasicData extends Data
         public readonly ?string $discord_url,
         public readonly ?string $website_url,
         public readonly ?string $twitter_handle,
+        public readonly ?string $instagram_handle,
         public readonly ?string $youtube_url,
         public readonly ?string $twitch_url,
         public readonly string $created_at,

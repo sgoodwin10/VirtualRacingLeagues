@@ -72,8 +72,7 @@ final class SeasonApplicationService
         private readonly RaceResultsCacheService $raceResultsCacheService,
         private readonly MediaServiceInterface $mediaService,
         private readonly RoundTiebreakerRuleRepositoryInterface $tiebreakerRuleRepository,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a new season.
@@ -1365,21 +1364,19 @@ final class SeasonApplicationService
             }
         }
 
-        // Batch fetch team names
+        // Batch fetch team names and logos using repository (properly formats URLs)
         $teamIds = array_keys($teamIds);
-        $teams = \App\Infrastructure\Persistence\Eloquent\Models\Team::query()
-            ->whereIn('id', $teamIds)
-            ->get(['id', 'name'])
-            ->keyBy('id');
+        $teamData = $this->batchFetchTeamData($teamIds);
 
-        // Build final standings with team names
+        // Build final standings with team names and logos
         $standings = [];
         foreach ($teamTotals as $teamId => $data) {
-            $team = $teams->get($teamId);
+            $team = $teamData[$teamId] ?? null;
 
             $standing = [
                 'team_id' => $data['team_id'],
-                'team_name' => $team !== null ? $team->name : 'Unknown Team',
+                'team_name' => $team !== null ? $team['name'] : 'Unknown Team',
+                'team_logo' => $team !== null ? $team['logo_url'] : null,
                 'total_points' => $data['total_points'],
                 'rounds' => $teamRoundData[$teamId],
             ];

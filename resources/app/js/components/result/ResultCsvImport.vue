@@ -2,23 +2,6 @@
   <div
     class="border border-[var(--color-border-muted)] rounded-lg p-4 w-full bg-[var(--bg-highlight)]"
   >
-    <div class="flex items-center gap-2 mb-3">
-      <PhFileCsv :size="20" class="text-gray-600" />
-      <div class="font-medium font-mono">Import from CSV</div>
-    </div>
-
-    <Textarea
-      v-model="csvText"
-      :rows="5"
-      :placeholder="placeholderText"
-      class="w-full"
-      :invalid="!!parseError"
-    />
-
-    <div v-if="parseError" class="mt-2 text-sm text-red-600">
-      {{ parseError }}
-    </div>
-
     <div class="mt-3 space-y-3">
       <div class="space-y-2">
         <p class="font-medium">Minimum Required Headers:</p>
@@ -32,6 +15,23 @@
           </div>
           <Button label="Add Headers" size="lg" variant="outline" @click="addHeaders" />
         </div>
+      </div>
+
+      <div class="flex items-center gap-2 mb-3">
+        <PhFileCsv :size="20" class="text-gray-600" />
+        <div class="font-medium font-mono">Import from CSV</div>
+      </div>
+
+      <Textarea
+        v-model="csvText"
+        :rows="5"
+        :placeholder="placeholderText"
+        class="w-full"
+        :invalid="!!parseError"
+      />
+
+      <div v-if="parseError" class="mt-2 text-sm text-red-600">
+        {{ parseError }}
       </div>
 
       <div class="flex items-center justify-end gap-2">

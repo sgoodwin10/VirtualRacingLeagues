@@ -1271,6 +1271,7 @@ final class LeagueApplicationService
                 discord_url: $league->discordUrl(),
                 website_url: $league->websiteUrl(),
                 twitter_handle: $league->twitterHandle(),
+                instagram_handle: $league->instagramHandle(),
                 youtube_url: $league->youtubeUrl(),
                 twitch_url: $league->twitchUrl(),
                 created_at: $eloquentLeague->created_at?->format('Y-m-d H:i:s') ?? '',

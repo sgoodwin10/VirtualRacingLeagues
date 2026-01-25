@@ -33,7 +33,11 @@
         <!-- Content -->
         <template v-else-if="leagueData">
           <!-- League Header -->
-          <LeagueHeader :league="leagueData.league" :stats="leagueData.stats" />
+          <LeagueHeader
+            :league="leagueData.league"
+            :stats="leagueData.stats"
+            @open-about="showAboutModal = true"
+          />
 
           <!-- Competitions Section -->
           <div class="competitions-section mb-8">
@@ -62,6 +66,9 @@
               />
             </div>
           </div>
+
+          <!-- League Info Modal -->
+          <LeagueInfoModal v-model:visible="showAboutModal" :league="leagueData.league" />
         </template>
       </div>
     </main>
@@ -78,6 +85,7 @@ import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
 import SpeedLines from '@public/components/landing/SpeedLines.vue';
 import LeagueHeader from '@public/components/leagues/LeagueHeader.vue';
 import CompetitionCard from '@public/components/leagues/CompetitionCard.vue';
+import LeagueInfoModal from '@public/components/leagues/LeagueInfoModal.vue';
 import VrlAlert from '@public/components/common/alerts/VrlAlert.vue';
 import VrlSkeleton from '@public/components/common/loading/VrlSkeleton.vue';
 
@@ -88,6 +96,7 @@ const toast = useToast();
 const leagueData = ref<PublicLeagueDetailResponse | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const showAboutModal = ref(false);
 
 /**
  * Fetch league detail
