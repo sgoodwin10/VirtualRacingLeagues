@@ -49,7 +49,7 @@ describe('VrlMetricCard', () => {
       },
     });
     const card = wrapper.find('[data-test="metric-card"]');
-    expect(card.classes()).toContain('metric-card-cyan');
+    expect(card.attributes('data-accent')).toBe('cyan');
   });
 
   it('applies green accent color', () => {
@@ -61,7 +61,7 @@ describe('VrlMetricCard', () => {
       },
     });
     const card = wrapper.find('[data-test="metric-card"]');
-    expect(card.classes()).toContain('metric-card-green');
+    expect(card.attributes('data-accent')).toBe('green');
   });
 
   it('applies orange accent color', () => {
@@ -73,7 +73,7 @@ describe('VrlMetricCard', () => {
       },
     });
     const card = wrapper.find('[data-test="metric-card"]');
-    expect(card.classes()).toContain('metric-card-orange');
+    expect(card.attributes('data-accent')).toBe('orange');
   });
 
   it('applies purple accent color', () => {
@@ -85,7 +85,7 @@ describe('VrlMetricCard', () => {
       },
     });
     const card = wrapper.find('[data-test="metric-card"]');
-    expect(card.classes()).toContain('metric-card-purple');
+    expect(card.attributes('data-accent')).toBe('purple');
   });
 
   it('applies text color class based on accent color', () => {
@@ -97,7 +97,7 @@ describe('VrlMetricCard', () => {
       },
     });
     const value = wrapper.find('[data-test="metric-value"]');
-    expect(value.classes()).toContain('text-green');
+    expect(value.classes()).toContain('text-[var(--green)]');
   });
 
   it('renders change indicator', () => {

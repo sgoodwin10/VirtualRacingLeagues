@@ -21,6 +21,7 @@ describe('VrlModal', () => {
           Dialog: Dialog,
         },
       },
+      attachTo: document.body,
     });
   };
 
@@ -28,6 +29,8 @@ describe('VrlModal', () => {
     if (wrapper) {
       wrapper.unmount();
     }
+    // Clear the document body for teleported content
+    document.body.innerHTML = '';
   });
 
   describe('Rendering', () => {
@@ -52,66 +55,93 @@ describe('VrlModal', () => {
       expect(dialog.props('header')).toBe('Test Modal Title');
     });
 
-    it('should render default slot content', () => {
+    it('should render default slot content', async () => {
       wrapper = createWrapper(
         { visible: true },
         { default: '<p class="test-content">Modal content</p>' },
       );
-      expect(wrapper.html()).toContain('Modal content');
+      await nextTick();
+      await nextTick(); // Extra tick for teleport
+      // Content is teleported to body, check via document
+      const modalContent = document.querySelector('.vrl-modal-body');
+      expect(modalContent).toBeTruthy();
+      expect(modalContent?.textContent).toContain('Modal content');
     });
 
-    it('should render footer slot content', () => {
+    it('should render footer slot content', async () => {
       wrapper = createWrapper(
         { visible: true },
         { footer: '<div class="test-footer">Footer content</div>' },
       );
-      expect(wrapper.html()).toContain('Footer content');
+      await nextTick();
+      await nextTick(); // Extra tick for teleport
+      // Footer is teleported to body, check via document
+      const modalFooter = document.querySelector('.vrl-modal-footer');
+      expect(modalFooter).toBeTruthy();
+      expect(modalFooter?.textContent).toContain('Footer content');
     });
 
-    it('should render header slot content', () => {
+    it('should render header slot content', async () => {
       wrapper = createWrapper(
         { visible: true },
         { header: '<h2 class="test-header">Custom Header</h2>' },
       );
-      expect(wrapper.html()).toContain('Custom Header');
+      await nextTick();
+      await nextTick(); // Extra tick for teleport
+      // Header is teleported to body, check via document
+      const modalHeader = document.querySelector('.vrl-modal-header');
+      expect(modalHeader).toBeTruthy();
+      expect(modalHeader?.textContent).toContain('Custom Header');
     });
   });
 
   describe('Props', () => {
-    it('should apply custom width class', () => {
+    it('should apply custom width class', async () => {
       wrapper = createWrapper({
         visible: true,
         width: 'xl',
       });
-      const dialog = wrapper.findComponent(Dialog);
-      expect(dialog.attributes('class')).toMatch('max-w-xl');
+      await nextTick();
+      await nextTick();
+      // Check in the DOM for the modal with the width class
+      const modalElement = document.querySelector('.p-dialog');
+      expect(modalElement?.classList.contains('max-w-xl')).toBe(true);
     });
 
-    it('should apply sm width class', () => {
+    it('should apply sm width class', async () => {
       wrapper = createWrapper({
         visible: true,
         width: 'sm',
       });
-      const dialog = wrapper.findComponent(Dialog);
-      expect(dialog.attributes('class')).toMatch('max-w-sm');
+      await nextTick();
+      await nextTick();
+      // Check in the DOM for the modal with the width class
+      const modalElement = document.querySelector('.p-dialog');
+      expect(modalElement?.classList.contains('max-w-sm')).toBe(true);
     });
 
-    it('should apply 2xl width class', () => {
+    it('should apply 2xl width class', async () => {
       wrapper = createWrapper({
         visible: true,
         width: '2xl',
       });
-      const dialog = wrapper.findComponent(Dialog);
-      expect(dialog.attributes('class')).toMatch('max-w-2xl');
+      await nextTick();
+      await nextTick();
+      // Check in the DOM for the modal with the width class
+      const modalElement = document.querySelector('.p-dialog');
+      expect(modalElement?.classList.contains('max-w-2xl')).toBe(true);
     });
 
-    it('should apply custom CSS class', () => {
+    it('should apply custom CSS class', async () => {
       wrapper = createWrapper({
         visible: true,
         class: 'custom-modal-class',
       });
-      const dialog = wrapper.findComponent(Dialog);
-      expect(dialog.attributes('class')).toMatch('custom-modal-class');
+      await nextTick();
+      await nextTick();
+      // Check in the DOM for the modal with the custom class
+      const modalElement = document.querySelector('.p-dialog');
+      expect(modalElement?.classList.contains('custom-modal-class')).toBe(true);
     });
 
     it('should set closable prop', () => {
@@ -168,13 +198,16 @@ describe('VrlModal', () => {
       expect(dialog.props('position')).toBe('top');
     });
 
-    it('should set ariaLabel prop', () => {
+    it('should set ariaLabel prop', async () => {
       wrapper = createWrapper({
         visible: true,
         ariaLabel: 'Custom modal label',
       });
-      const dialog = wrapper.findComponent(Dialog);
-      expect(dialog.attributes('aria-label')).toBe('Custom modal label');
+      await nextTick();
+      await nextTick();
+      // Check aria-label in the DOM
+      const modalElement = document.querySelector('.p-dialog');
+      expect(modalElement?.getAttribute('aria-label')).toBe('Custom modal label');
     });
   });
 
@@ -237,10 +270,13 @@ describe('VrlModal', () => {
   });
 
   describe('Default Props', () => {
-    it('should have default width of lg', () => {
+    it('should have default width of lg', async () => {
       wrapper = createWrapper({ visible: true });
-      const dialog = wrapper.findComponent(Dialog);
-      expect(dialog.attributes('class')).toMatch('max-w-lg');
+      await nextTick();
+      await nextTick();
+      // Check in the DOM for the modal with the default width class
+      const modalElement = document.querySelector('.p-dialog');
+      expect(modalElement?.classList.contains('max-w-lg')).toBe(true);
     });
 
     it('should have closable default to true', () => {

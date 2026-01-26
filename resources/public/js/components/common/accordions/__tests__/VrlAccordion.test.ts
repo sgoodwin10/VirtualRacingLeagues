@@ -38,10 +38,10 @@ describe('VrlAccordion', () => {
     });
 
     const items = wrapper.findAll('[data-test="vrl-accordion-item"]');
-    // Check if first item has border-cyan class (active state)
-    expect(items[0].classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(true);
-    // Check if second item does not have border-cyan class
-    expect(items[1].classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(false);
+    // Check if first item has elevated background (active state)
+    expect(items[0].classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(true);
+    // Check if second item does not have elevated background
+    expect(items[1].classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(false);
   });
 
   it('opens multiple items in multiple mode', async () => {

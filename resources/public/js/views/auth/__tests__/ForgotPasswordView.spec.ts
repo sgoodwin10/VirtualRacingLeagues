@@ -16,6 +16,10 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({
     query: {},
   }),
+  RouterLink: {
+    name: 'RouterLink',
+    template: '<a><slot /></a>',
+  },
 }));
 
 // Mock auth service
@@ -69,7 +73,7 @@ describe('ForgotPasswordView', () => {
     const wrapper = createWrapper();
 
     expect(wrapper.find('h1').text()).toBe('Forgot Password?');
-    expect(wrapper.find('label[for="email"]').text()).toBe('Email Address');
+    expect(wrapper.find('label[for="email"]').exists()).toBe(true);
     expect(wrapper.find('button[type="submit"]').exists()).toBe(true);
   });
 

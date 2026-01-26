@@ -15,6 +15,10 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({
     query: {},
   }),
+  RouterLink: {
+    name: 'RouterLink',
+    template: '<a><slot /></a>',
+  },
 }));
 
 describe('LoginView', () => {
@@ -59,7 +63,7 @@ describe('LoginView', () => {
   it('renders the login form', () => {
     const wrapper = createWrapper();
 
-    expect(wrapper.find('h1').text()).toBe('Welcome Back');
+    expect(wrapper.find('h1').text()).toBe('Sign In');
     expect(wrapper.find('button[type="submit"]').exists()).toBe(true);
   });
 
@@ -80,7 +84,7 @@ describe('LoginView', () => {
     const loginSpy = vi.spyOn(authStore, 'login').mockResolvedValue(undefined);
 
     const emailInput = wrapper.find('#email');
-    const passwordInput = wrapper.find('#password input');
+    const passwordInput = wrapper.find('#password');
 
     await emailInput.setValue('test@example.com');
     await passwordInput.setValue('password123');
@@ -106,7 +110,7 @@ describe('LoginView', () => {
     });
 
     const emailInput = wrapper.find('#email');
-    const passwordInput = wrapper.find('#password input');
+    const passwordInput = wrapper.find('#password');
 
     await emailInput.setValue('test@example.com');
     await passwordInput.setValue('wrongpassword');

@@ -19,7 +19,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    expect(wrapper.findAll('.tab')).toHaveLength(4);
+    expect(wrapper.findAll('[data-test="tab"]')).toHaveLength(4);
     expect(wrapper.text()).toContain('Standings');
     expect(wrapper.text()).toContain('Drivers');
     expect(wrapper.text()).toContain('Teams');
@@ -39,7 +39,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    expect(wrapper.findAll('.tab')).toHaveLength(2);
+    expect(wrapper.findAll('[data-test="tab"]')).toHaveLength(2);
   });
 
   it('renders with 10 tabs', () => {
@@ -55,7 +55,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    expect(wrapper.findAll('.tab')).toHaveLength(10);
+    expect(wrapper.findAll('[data-test="tab"]')).toHaveLength(10);
   });
 
   it('marks active tab with aria-selected', () => {
@@ -66,7 +66,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
     expect(tabs[0].attributes('aria-selected')).toBe('false');
     expect(tabs[1].attributes('aria-selected')).toBe('true');
     expect(tabs[2].attributes('aria-selected')).toBe('false');
@@ -80,11 +80,11 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
-    expect(tabs[0].classes()).not.toContain('active');
-    expect(tabs[1].classes()).not.toContain('active');
-    expect(tabs[2].classes()).toContain('active');
-    expect(tabs[3].classes()).not.toContain('active');
+    const tabs = wrapper.findAll('[data-test="tab"]');
+    expect(tabs[0].classes()).not.toContain('bg-[var(--cyan)]');
+    expect(tabs[1].classes()).not.toContain('bg-[var(--cyan)]');
+    expect(tabs[2].classes()).toContain('bg-[var(--cyan)]');
+    expect(tabs[3].classes()).not.toContain('bg-[var(--cyan)]');
   });
 
   it('emits update:modelValue on tab click', async () => {
@@ -95,7 +95,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
     await tabs[1].trigger('click');
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy();
@@ -110,7 +110,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
     await tabs[2].trigger('click');
 
     expect(wrapper.emitted('change')).toBeTruthy();
@@ -131,7 +131,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabElements = wrapper.findAll('.tab');
+    const tabElements = wrapper.findAll('[data-test="tab"]');
     await tabElements[1].trigger('click');
 
     // Should not emit events for disabled tab
@@ -153,8 +153,9 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabElements = wrapper.findAll('.tab');
-    expect(tabElements[1].classes()).toContain('disabled');
+    const tabElements = wrapper.findAll('[data-test="tab"]');
+    expect(tabElements[1].classes()).toContain('opacity-50');
+    expect(tabElements[1].classes()).toContain('cursor-not-allowed');
     expect(tabElements[1].attributes('disabled')).toBeDefined();
     expect(tabElements[1].attributes('aria-disabled')).toBe('true');
   });
@@ -167,7 +168,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
 
     // ArrowRight should move focus
     await tabs[0].trigger('keydown', { key: 'ArrowRight' });
@@ -187,7 +188,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
 
     // Home key should focus first tab
     await tabs[2].trigger('keydown', { key: 'Home' });
@@ -203,7 +204,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
 
     // End key should focus last tab
     await tabs[0].trigger('keydown', { key: 'End' });
@@ -219,7 +220,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
 
     // Space key should activate the tab
     await tabs[2].trigger('keydown', { key: ' ' });
@@ -260,7 +261,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const badges = wrapper.findAll('.tab-badge');
+    const badges = wrapper.findAll('[data-test="tab-badge"]');
     expect(badges).toHaveLength(2);
     expect(badges[0].text()).toBe('5');
     expect(badges[1].text()).toBe('New');
@@ -289,7 +290,8 @@ describe('VrlTabs', () => {
       },
     });
 
-    expect(wrapper.find('.tabs--default').exists()).toBe(true);
+    const tabsContainer = wrapper.find('[data-test="tabs"]');
+    expect(tabsContainer.classes()).toContain('bg-[var(--bg-elevated)]');
   });
 
   it('applies minimal variant class', () => {
@@ -301,8 +303,9 @@ describe('VrlTabs', () => {
       },
     });
 
-    expect(wrapper.find('.tabs--minimal').exists()).toBe(true);
-    expect(wrapper.find('.tabs--default').exists()).toBe(false);
+    const tabsContainer = wrapper.find('[data-test="tabs"]');
+    expect(tabsContainer.classes()).toContain('bg-transparent');
+    expect(tabsContainer.classes()).not.toContain('bg-[var(--bg-elevated)]');
   });
 
   it('has proper ARIA attributes', () => {
@@ -313,10 +316,10 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabsContainer = wrapper.find('.tabs');
+    const tabsContainer = wrapper.find('[data-test="tabs"]');
     expect(tabsContainer.attributes('role')).toBe('tablist');
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
     tabs.forEach((tab) => {
       expect(tab.attributes('role')).toBe('tab');
       expect(tab.attributes('aria-selected')).toBeDefined();
@@ -331,7 +334,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
     expect(tabs[0].attributes('id')).toBe('tab-standings');
     expect(tabs[1].attributes('id')).toBe('tab-drivers');
     expect(tabs[2].attributes('id')).toBe('tab-teams');
@@ -346,7 +349,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
     // First non-disabled tab should have tabindex="0"
     expect(tabs[0].attributes('tabindex')).toBe('0');
     // Others should have tabindex="-1"
@@ -368,7 +371,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabElements = wrapper.findAll('.tab');
+    const tabElements = wrapper.findAll('[data-test="tab"]');
 
     // ArrowRight from tab1 should skip disabled tab2 and go to tab3
     await tabElements[0].trigger('keydown', { key: 'ArrowRight' });
@@ -383,7 +386,7 @@ describe('VrlTabs', () => {
       },
     });
 
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('[data-test="tab"]');
     const event = new KeyboardEvent('keydown', { key: 'ArrowRight' });
     const _preventDefaultSpy = vi.spyOn(event, 'preventDefault');
 

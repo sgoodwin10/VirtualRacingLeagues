@@ -10,7 +10,7 @@ describe('VrlInputGroup', () => {
           default: '<div>Child 1</div><div>Child 2</div>',
         },
       });
-      expect(wrapper.find('.input-group').exists()).toBe(true);
+      expect(wrapper.find('.grid').exists()).toBe(true);
     });
 
     it('renders slot content', () => {
@@ -51,7 +51,7 @@ describe('VrlInputGroup', () => {
   describe('Grid Layout - Columns', () => {
     it('applies 2 columns class by default', () => {
       const wrapper = mount(VrlInputGroup);
-      expect(wrapper.find('.input-group').classes()).toContain('columns-2');
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-2');
     });
 
     it('applies 2 columns class explicitly', () => {
@@ -60,7 +60,7 @@ describe('VrlInputGroup', () => {
           columns: 2,
         },
       });
-      expect(wrapper.find('.input-group').classes()).toContain('columns-2');
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-2');
     });
 
     it('applies 3 columns class', () => {
@@ -69,7 +69,7 @@ describe('VrlInputGroup', () => {
           columns: 3,
         },
       });
-      expect(wrapper.find('.input-group').classes()).toContain('columns-3');
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-3');
     });
 
     it('applies 4 columns class', () => {
@@ -78,7 +78,7 @@ describe('VrlInputGroup', () => {
           columns: 4,
         },
       });
-      expect(wrapper.find('.input-group').classes()).toContain('columns-4');
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-4');
     });
 
     it('changes column class when prop changes', async () => {
@@ -88,22 +88,24 @@ describe('VrlInputGroup', () => {
         },
       });
 
-      expect(wrapper.find('.input-group').classes()).toContain('columns-2');
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-2');
 
       await wrapper.setProps({ columns: 3 });
-      expect(wrapper.find('.input-group').classes()).toContain('columns-3');
-      expect(wrapper.find('.input-group').classes()).not.toContain('columns-2');
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-3');
+      expect(wrapper.find('.grid').classes()).not.toContain('grid-cols-2');
 
       await wrapper.setProps({ columns: 4 });
-      expect(wrapper.find('.input-group').classes()).toContain('columns-4');
-      expect(wrapper.find('.input-group').classes()).not.toContain('columns-3');
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-4');
+      expect(wrapper.find('.grid').classes()).not.toContain('grid-cols-3');
     });
   });
 
   describe('Grid Layout - Gap', () => {
-    it('does not apply inline style when using default gap', () => {
+    it('applies default gap of 1rem', () => {
       const wrapper = mount(VrlInputGroup);
-      expect(wrapper.find('.input-group').attributes('style')).toBeUndefined();
+      const style = wrapper.find('.grid').attributes('style');
+      expect(style).toBeDefined();
+      expect(style).toContain('gap: 1rem');
     });
 
     it('applies custom gap as inline style', () => {
@@ -112,7 +114,7 @@ describe('VrlInputGroup', () => {
           gap: '2rem',
         },
       });
-      const style = wrapper.find('.input-group').attributes('style');
+      const style = wrapper.find('.grid').attributes('style');
       expect(style).toBeDefined();
       expect(style).toContain('gap: 2rem');
     });
@@ -126,7 +128,7 @@ describe('VrlInputGroup', () => {
             gap,
           },
         });
-        const style = wrapper.find('.input-group').attributes('style');
+        const style = wrapper.find('.grid').attributes('style');
         expect(style).toContain(`gap: ${gap}`);
       });
     });
@@ -138,14 +140,14 @@ describe('VrlInputGroup', () => {
         },
       });
 
-      // Default gap should not apply inline style
-      expect(wrapper.find('.input-group').attributes('style')).toBeUndefined();
+      // Default gap of 1rem
+      expect(wrapper.find('.grid').attributes('style')).toContain('gap: 1rem');
 
       await wrapper.setProps({ gap: '2rem' });
-      expect(wrapper.find('.input-group').attributes('style')).toContain('gap: 2rem');
+      expect(wrapper.find('.grid').attributes('style')).toContain('gap: 2rem');
 
-      await wrapper.setProps({ gap: '1rem' });
-      expect(wrapper.find('.input-group').attributes('style')).toBeUndefined();
+      await wrapper.setProps({ gap: '0.5rem' });
+      expect(wrapper.find('.grid').attributes('style')).toContain('gap: 0.5rem');
     });
   });
 
@@ -159,7 +161,7 @@ describe('VrlInputGroup', () => {
 
       // The responsive behavior is handled by CSS (@media queries)
       // We verify the correct classes are applied
-      expect(wrapper.find('.input-group').classes()).toContain('columns-3');
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-3');
     });
 
     it('maintains column class across all breakpoints', () => {
@@ -171,7 +173,7 @@ describe('VrlInputGroup', () => {
         },
       });
 
-      expect(wrapper.find('.input-group').classes()).toContain('columns-4');
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-4');
     });
   });
 
@@ -191,9 +193,11 @@ describe('VrlInputGroup', () => {
         },
       });
 
-      // Find all child divs with input- class, excluding the wrapper
-      const children = wrapper.findAll('.input-group > [class^="input-"]');
-      expect(children.length).toBeGreaterThanOrEqual(4);
+      // Verify all child inputs are present
+      expect(wrapper.find('.input-1').exists()).toBe(true);
+      expect(wrapper.find('.input-2').exists()).toBe(true);
+      expect(wrapper.find('.input-3').exists()).toBe(true);
+      expect(wrapper.find('.input-4').exists()).toBe(true);
     });
 
     it('preserves child component props and structure', () => {
@@ -218,7 +222,7 @@ describe('VrlInputGroup', () => {
   describe('Edge Cases', () => {
     it('renders with no children', () => {
       const wrapper = mount(VrlInputGroup);
-      expect(wrapper.find('.input-group').exists()).toBe(true);
+      expect(wrapper.find('.grid').exists()).toBe(true);
       expect(wrapper.text()).toBe('');
     });
 
@@ -232,7 +236,7 @@ describe('VrlInputGroup', () => {
         },
       });
 
-      expect(wrapper.find('.input-group').exists()).toBe(true);
+      expect(wrapper.find('.grid').exists()).toBe(true);
       expect(wrapper.text()).toBe('Single Child');
     });
 
@@ -244,8 +248,8 @@ describe('VrlInputGroup', () => {
         },
       });
 
-      const classes = wrapper.find('.input-group').classes();
-      expect(classes).toContain('columns-3');
+      const classes = wrapper.find('.grid').classes();
+      expect(classes).toContain('grid-cols-3');
       expect(classes).toContain('my-custom-class');
       expect(classes).toContain('another-class');
     });
@@ -282,8 +286,8 @@ describe('VrlInputGroup', () => {
         },
       });
 
-      expect(wrapper.find('.input-group').exists()).toBe(true);
-      expect(wrapper.find('.input-group').classes()).toContain('columns-3');
+      expect(wrapper.find('.grid').exists()).toBe(true);
+      expect(wrapper.find('.grid').classes()).toContain('grid-cols-3');
     });
   });
 
@@ -296,7 +300,7 @@ describe('VrlInputGroup', () => {
       });
 
       // Input group is a simple container div with no interactive elements
-      expect(wrapper.find('.input-group').element.tagName).toBe('DIV');
+      expect(wrapper.find('.grid').element.tagName).toBe('DIV');
     });
 
     it('preserves child accessibility attributes', () => {
@@ -327,7 +331,7 @@ describe('VrlInputGroup', () => {
             columns,
           },
         });
-        expect(wrapper.find('.input-group').classes()).toContain(`columns-${columns}`);
+        expect(wrapper.find('.grid').classes()).toContain(`grid-cols-${columns}`);
       });
     });
 
@@ -342,7 +346,7 @@ describe('VrlInputGroup', () => {
         });
 
         if (gap !== '1rem') {
-          expect(wrapper.find('.input-group').attributes('style')).toContain(`gap: ${gap}`);
+          expect(wrapper.find('.grid').attributes('style')).toContain(`gap: ${gap}`);
         }
       });
     });

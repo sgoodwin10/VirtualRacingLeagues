@@ -47,7 +47,7 @@ describe('VrlNavLink', () => {
       },
     });
 
-    const link = wrapper.find('a.nav-link');
+    const link = wrapper.find('[data-test="nav-router-link"]');
     expect(link.exists()).toBe(true);
     expect(link.text()).toBe('About');
   });
@@ -59,7 +59,7 @@ describe('VrlNavLink', () => {
       },
     });
 
-    const span = wrapper.find('span.nav-link');
+    const span = wrapper.find('[data-test="nav-span"]');
     expect(span.exists()).toBe(true);
     expect(span.text()).toBe('Just Text');
   });
@@ -75,7 +75,7 @@ describe('VrlNavLink', () => {
       },
     });
 
-    expect(wrapper.find('.nav-link').classes()).toContain('active');
+    expect(wrapper.find('[data-test="nav-link"]').classes()).toContain('text-[var(--text-primary)]');
   });
 
   it('does not apply active class when active prop is false', () => {
@@ -89,7 +89,7 @@ describe('VrlNavLink', () => {
       },
     });
 
-    expect(wrapper.find('.nav-link').classes()).not.toContain('active');
+    expect(wrapper.find('[data-test="nav-link"]').classes()).toContain('text-[var(--text-secondary)]');
   });
 
   it('applies aria-current="page" when active', () => {
@@ -103,7 +103,7 @@ describe('VrlNavLink', () => {
       },
     });
 
-    expect(wrapper.find('.nav-link').attributes('aria-current')).toBe('page');
+    expect(wrapper.find('[data-test="nav-link"]').attributes('aria-current')).toBe('page');
   });
 
   it('does not apply aria-current when inactive', () => {
@@ -117,7 +117,7 @@ describe('VrlNavLink', () => {
       },
     });
 
-    expect(wrapper.find('.nav-link').attributes('aria-current')).toBeUndefined();
+    expect(wrapper.find('[data-test="nav-link"]').attributes('aria-current')).toBeUndefined();
   });
 
   it('opens external links in new tab', () => {
@@ -177,7 +177,7 @@ describe('VrlNavLink', () => {
       },
     });
 
-    expect(wrapper.find('.nav-link').exists()).toBe(true);
+    expect(wrapper.find('[data-test="nav-link"]').exists()).toBe(true);
   });
 
   it('renders slot content correctly', () => {
@@ -207,9 +207,9 @@ describe('VrlNavLink', () => {
       },
     });
 
-    const link = wrapper.find('.nav-link');
+    const link = wrapper.find('[data-test="nav-router-link"]');
     expect(link.exists()).toBe(true);
-    expect(link.classes()).toContain('active');
+    expect(link.classes()).toContain('text-[var(--text-primary)]');
     expect(link.attributes('aria-current')).toBe('page');
   });
 
@@ -244,7 +244,7 @@ describe('VrlNavLink', () => {
         plugins: [router],
       },
     });
-    expect(wrapper1.find('.nav-link').exists()).toBe(true);
+    expect(wrapper1.find('[data-test="nav-router-link"]').exists()).toBe(true);
 
     // Test with route path
     const wrapper2 = mount(VrlNavLink, {
@@ -258,7 +258,7 @@ describe('VrlNavLink', () => {
         plugins: [router],
       },
     });
-    expect(wrapper2.find('.nav-link').exists()).toBe(true);
+    expect(wrapper2.find('[data-test="nav-router-link"]').exists()).toBe(true);
   });
 
   it('has animated underline styles', () => {
@@ -271,9 +271,10 @@ describe('VrlNavLink', () => {
       },
     });
 
-    const link = wrapper.find('.nav-link');
+    const link = wrapper.find('[data-test="nav-link"]');
     expect(link.exists()).toBe(true);
-    // The ::after pseudo-element for underline is defined in scoped styles
+    // The ::after pseudo-element for underline is defined in inline classes
+    expect(link.classes()).toContain('after:content-[\'\']');
   });
 
   it('maintains accessibility with keyboard navigation', () => {
@@ -286,7 +287,7 @@ describe('VrlNavLink', () => {
       },
     });
 
-    const link = wrapper.find('.nav-link');
+    const link = wrapper.find('[data-test="nav-link"]');
     // Links should be focusable by default
     expect(link.element.tagName).toBe('A');
   });
@@ -304,7 +305,7 @@ describe('VrlNavLink', () => {
       },
     });
 
-    expect(wrapper.find('.nav-link').text()).toBe('Home');
+    expect(wrapper.find('[data-test="nav-router-link"]').text()).toBe('Home');
   });
 
   it('works in footer navigation context', () => {
@@ -327,6 +328,6 @@ describe('VrlNavLink', () => {
       },
     });
 
-    expect(wrapper.find('.nav-link').exists()).toBe(true);
+    expect(wrapper.find('[data-test="nav-link"]').exists()).toBe(true);
   });
 });

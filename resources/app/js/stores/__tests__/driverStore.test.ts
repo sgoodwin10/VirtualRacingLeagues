@@ -280,6 +280,7 @@ describe('driverStore', () => {
       expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(
         1,
         {
+          deleted_status: 'active',
           page: 2,
           per_page: 20,
           search: 'John',
@@ -313,6 +314,7 @@ describe('driverStore', () => {
       expect(driverService.getLeagueDrivers).toHaveBeenCalledWith(
         1,
         {
+          deleted_status: 'active',
           page: 1,
           per_page: 10,
           search: 'test',

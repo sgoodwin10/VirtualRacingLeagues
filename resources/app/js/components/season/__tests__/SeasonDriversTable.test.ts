@@ -673,7 +673,7 @@ describe('SeasonDriversTable', () => {
 
     const searchInput = wrapper.find('input');
     expect(searchInput.exists()).toBe(true);
-    expect(searchInput.attributes('placeholder')).toBe('Search drivers by name...');
+    expect(searchInput.attributes('placeholder')).toBe('Search drivers...');
   });
 
   it('updates searchQuery when user types in search field', async () => {

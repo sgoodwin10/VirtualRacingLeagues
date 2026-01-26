@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
+import { ref } from 'vue';
+import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
 import ResultDivisionTabs from '../ResultDivisionTabs.vue';
 import type { RaceResultFormData, DriverOption } from '@app/types/raceResult';
 import type { Division } from '@app/types/division';
@@ -47,13 +50,22 @@ vi.mock('primevue/button', () => ({
   },
 }));
 
-// Mock useConfirm
-const mockConfirmRequire = vi.fn();
-vi.mock('primevue/useconfirm', () => ({
-  useConfirm: () => ({
-    require: mockConfirmRequire,
-  }),
-}));
+// Mock useVrlConfirm
+const mockShowConfirmation = vi.fn();
+vi.mock('@app/composables/useVrlConfirm', async () => {
+  const { ref } = await import('vue');
+  return {
+    useVrlConfirm: () => ({
+      isVisible: ref(false),
+      options: ref(null),
+      isLoading: ref(false),
+      showConfirmation: mockShowConfirmation,
+      close: vi.fn(),
+      handleAccept: vi.fn(),
+      handleReject: vi.fn(),
+    }),
+  };
+});
 
 // Mock ResultEntryTable component
 vi.mock('../ResultEntryTable.vue', () => ({
@@ -169,7 +181,7 @@ describe('ResultDivisionTabs', () => {
   ];
 
   beforeEach(() => {
-    mockConfirmRequire.mockClear();
+    mockShowConfirmation.mockClear();
   });
 
   const createWrapper = (props = {}) => {
@@ -182,6 +194,18 @@ describe('ResultDivisionTabs', () => {
         selectedDriverIds: new Set([1, 2, 3]),
         readOnly: false,
         ...props,
+      },
+      global: {
+        plugins: [
+          [
+            PrimeVue,
+            {
+              theme: {
+                preset: Aura,
+              },
+            },
+          ],
+        ],
       },
     });
   };
@@ -205,29 +229,27 @@ describe('ResultDivisionTabs', () => {
 
       await button.trigger('click');
 
-      expect(mockConfirmRequire).toHaveBeenCalledTimes(1);
-      expect(mockConfirmRequire).toHaveBeenCalledWith(
+      expect(mockShowConfirmation).toHaveBeenCalledTimes(1);
+      expect(mockShowConfirmation).toHaveBeenCalledWith(
         expect.objectContaining({
           message: expect.stringContaining('Are you sure you want to reset all results?'),
           header: 'Reset All Results',
-          icon: 'pi pi-exclamation-triangle',
         }),
       );
     });
 
     it('should emit reset-all event when confirmation is accepted', async () => {
+      // Mock the confirmation to accept BEFORE creating wrapper
+      mockShowConfirmation.mockImplementation((options: any) => {
+        if (options.onAccept) {
+          options.onAccept();
+        }
+      });
+
       wrapper = createWrapper();
       const button = wrapper.find('button');
 
       await button.trigger('click');
-
-      // Get the accept callback from the confirm.require call
-      const confirmCall = mockConfirmRequire.mock.calls[0]?.[0];
-      expect(confirmCall).toBeDefined();
-      expect(confirmCall?.accept).toBeDefined();
-
-      // Execute the accept callback
-      confirmCall?.accept();
 
       // Verify the event was emitted
       expect(wrapper.emitted('reset-all')).toBeTruthy();

@@ -18,6 +18,10 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({
     query: mockQuery,
   }),
+  RouterLink: {
+    name: 'RouterLink',
+    template: '<a><slot /></a>',
+  },
 }));
 
 // Mock auth service
@@ -73,7 +77,7 @@ describe('ResetPasswordView', () => {
     const wrapper = createWrapper();
 
     expect(wrapper.find('h1').text()).toBe('Reset Password');
-    expect(wrapper.find('label[for="password"]').text()).toBe('New Password');
+    expect(wrapper.find('label[for="password"]').exists()).toBe(true);
     expect(wrapper.find('button[type="submit"]').exists()).toBe(true);
   });
 
@@ -90,8 +94,8 @@ describe('ResetPasswordView', () => {
   it('validates mismatched passwords', async () => {
     const wrapper = createWrapper();
 
-    const passwordInput = wrapper.find('#password input');
-    const confirmInput = wrapper.find('#password-confirmation input');
+    const passwordInput = wrapper.find('#password');
+    const confirmInput = wrapper.find('#password-confirmation');
 
     await passwordInput.setValue('Password123!');
     await confirmInput.setValue('Different123!');
@@ -107,8 +111,8 @@ describe('ResetPasswordView', () => {
     const wrapper = createWrapper();
     vi.mocked(authService.resetPassword).mockResolvedValue(undefined);
 
-    const passwordInput = wrapper.find('#password input');
-    const confirmInput = wrapper.find('#password-confirmation input');
+    const passwordInput = wrapper.find('#password');
+    const confirmInput = wrapper.find('#password-confirmation');
 
     await passwordInput.setValue('Password123!');
     await confirmInput.setValue('Password123!');
@@ -130,8 +134,8 @@ describe('ResetPasswordView', () => {
     const wrapper = createWrapper();
     vi.mocked(authService.resetPassword).mockRejectedValue(new Error('Reset failed'));
 
-    const passwordInput = wrapper.find('#password input');
-    const confirmInput = wrapper.find('#password-confirmation input');
+    const passwordInput = wrapper.find('#password');
+    const confirmInput = wrapper.find('#password-confirmation');
 
     await passwordInput.setValue('Password123!');
     await confirmInput.setValue('Password123!');

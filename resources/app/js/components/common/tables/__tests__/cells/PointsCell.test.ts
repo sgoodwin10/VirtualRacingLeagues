@@ -94,6 +94,7 @@ describe('PointsCell', () => {
       },
     });
 
-    expect(wrapper.find('.points-cell').exists()).toBe(true);
+    // Component uses Tailwind classes instead of points-cell class
+    expect(wrapper.find('.font-mono').exists()).toBe(true);
   });
 });

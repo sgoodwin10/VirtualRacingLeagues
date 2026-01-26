@@ -83,7 +83,7 @@ describe('PointsSystemEditor', () => {
 
       const buttons = wrapper.findAllComponents(Button);
       const copyButton = buttons.find((btn) => btn.text().includes('Copy'));
-      expect(copyButton?.exists()).toBe(false);
+      expect(copyButton).toBeUndefined();
     });
 
     it('renders copy button when showCopyButton is true', () => {

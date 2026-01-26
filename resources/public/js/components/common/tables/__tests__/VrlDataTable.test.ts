@@ -30,24 +30,29 @@ describe('VrlDataTable', () => {
   describe('Rendering', () => {
     it('renders with empty data', () => {
       const wrapper = mountTable();
-      expect(wrapper.find('.vrl-datatable').exists()).toBe(true);
+      expect(wrapper.find('.p-datatable').exists()).toBe(true);
     });
 
     it('applies custom table class', () => {
       const wrapper = mountTable({ tableClass: 'custom-table' });
-      expect(wrapper.find('.custom-table').exists()).toBe(true);
+      const table = wrapper.find('.p-datatable');
+      expect(table.classes()).toContain('custom-table');
     });
 
     it('applies hoverable class when hoverable is true', () => {
       const wrapper = mountTable({ hoverable: true });
-      // Check the computed tableClasses includes the hoverable modifier
-      expect(wrapper.vm.tableClasses).toContain('vrl-datatable--hoverable');
+      const table = wrapper.find('.p-datatable');
+      // Check that hoverable classes are applied
+      expect(table.classes().some((c) => c.includes('[&_tbody_tr:hover_td]'))).toBe(true);
     });
 
     it('applies striped class when striped is true', () => {
       const wrapper = mountTable({ striped: true });
-      // Check the computed tableClasses includes the striped modifier
-      expect(wrapper.vm.tableClasses).toContain('vrl-datatable--striped');
+      const table = wrapper.find('.p-datatable');
+      // Check that striped classes are applied
+      expect(table.classes().some((c) => c.includes('[&_tbody_tr:nth-child(even)_td]'))).toBe(
+        true,
+      );
     });
   });
 

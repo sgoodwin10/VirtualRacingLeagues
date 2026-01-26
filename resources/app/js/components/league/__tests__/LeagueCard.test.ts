@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
+import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
 import LeagueCard from '../LeagueCard.vue';
 import type { League } from '@app/types/league';
 import { useUserStore } from '@app/stores/userStore';
@@ -92,7 +94,17 @@ describe('LeagueCard', () => {
         league,
       },
       global: {
-        plugins: [router],
+        plugins: [
+          router,
+          [
+            PrimeVue,
+            {
+              theme: {
+                preset: Aura,
+              },
+            },
+          ],
+        ],
       },
     });
   };

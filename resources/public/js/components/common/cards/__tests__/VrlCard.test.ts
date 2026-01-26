@@ -17,22 +17,29 @@ describe('VrlCard', () => {
     expect(wrapper.html()).toContain('Card content');
   });
 
-  it('renders title when provided', () => {
+  it('renders title when provided', async () => {
     const wrapper = mount(VrlCard, {
       props: {
         title: 'Test Card Title',
+        showHeader: true, // Explicitly enable header
       },
     });
-    expect(wrapper.find('[data-test="card-title"]').text()).toBe('Test Card Title');
+    await wrapper.vm.$nextTick();
+    const cardTitle = wrapper.find('[data-test="card-title"]');
+    expect(cardTitle.exists()).toBe(true);
+    expect(cardTitle.text()).toBe('Test Card Title');
   });
 
-  it('shows header when title is provided', () => {
+  it('shows header when title is provided', async () => {
     const wrapper = mount(VrlCard, {
       props: {
         title: 'Test Title',
+        showHeader: true, // Explicitly set showHeader
       },
     });
-    expect(wrapper.find('[data-test="card-header"]').exists()).toBe(true);
+    await wrapper.vm.$nextTick();
+    const header = wrapper.find('[data-test="card-header"]');
+    expect(header.exists()).toBe(true);
   });
 
   it('hides header when showHeader is false', () => {

@@ -69,11 +69,23 @@ vi.mock('primevue/column', () => ({
   },
 }));
 
+// Mock PrimeVue Toast
+vi.mock('primevue/usetoast', () => ({
+  useToast: () => ({
+    add: vi.fn(),
+  }),
+}));
+
 // Mock Phosphor Icons
 vi.mock('@phosphor-icons/vue', () => ({
   PhCheck: {
     name: 'PhCheck',
     template: '<i class="ph-check" />',
+    props: ['size', 'weight'],
+  },
+  PhDownload: {
+    name: 'PhDownload',
+    template: '<i class="ph-download" />',
     props: ['size', 'weight'],
   },
 }));

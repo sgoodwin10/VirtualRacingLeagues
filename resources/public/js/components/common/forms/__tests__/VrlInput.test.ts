@@ -10,8 +10,8 @@ describe('VrlInput', () => {
           modelValue: '',
         },
       });
-      expect(wrapper.find('.form-input').exists()).toBe(true);
       expect(wrapper.find('input').exists()).toBe(true);
+      expect(wrapper.find('input').classes()).toContain('w-full');
     });
 
     it('renders with all input types', () => {
@@ -86,7 +86,7 @@ describe('VrlInput', () => {
           error: 'Error message',
         },
       });
-      expect(wrapper.find('.error').exists()).toBe(true);
+      expect(wrapper.find('input').classes()).toContain('border-[var(--red)]');
     });
 
     it('applies error class when error prop is array with errors', () => {
@@ -96,7 +96,7 @@ describe('VrlInput', () => {
           error: ['Error 1', 'Error 2'],
         },
       });
-      expect(wrapper.find('.error').exists()).toBe(true);
+      expect(wrapper.find('input').classes()).toContain('border-[var(--red)]');
     });
 
     it('does not apply error class when error is empty string', () => {

@@ -11,8 +11,8 @@ describe('VrlTextarea', () => {
           modelValue: '',
         },
       });
-      expect(wrapper.find('.form-textarea').exists()).toBe(true);
       expect(wrapper.find('textarea').exists()).toBe(true);
+      expect(wrapper.find('textarea').classes()).toContain('w-full');
     });
 
     it('renders with placeholder', () => {
@@ -152,7 +152,7 @@ describe('VrlTextarea', () => {
           error: 'Error message',
         },
       });
-      expect(wrapper.find('.error').exists()).toBe(true);
+      expect(wrapper.find('textarea').classes()).toContain('border-[var(--red)]');
     });
 
     it('applies error class when error prop is array with errors', () => {
@@ -162,7 +162,7 @@ describe('VrlTextarea', () => {
           error: ['Error 1', 'Error 2'],
         },
       });
-      expect(wrapper.find('.error').exists()).toBe(true);
+      expect(wrapper.find('textarea').classes()).toContain('border-[var(--red)]');
     });
 
     it('does not apply error class when error is empty', () => {

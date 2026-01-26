@@ -17,8 +17,8 @@ describe('VrlSelect', () => {
           options: mockOptions,
         },
       });
-      expect(wrapper.find('.form-select').exists()).toBe(true);
       expect(wrapper.find('select').exists()).toBe(true);
+      expect(wrapper.find('select').classes()).toContain('w-full');
     });
 
     it('renders all options', () => {
@@ -139,7 +139,7 @@ describe('VrlSelect', () => {
           error: 'Error message',
         },
       });
-      expect(wrapper.find('.error').exists()).toBe(true);
+      expect(wrapper.find('select').classes()).toContain('border-[var(--red)]');
     });
 
     it('applies error class when error prop is array with errors', () => {
@@ -150,7 +150,7 @@ describe('VrlSelect', () => {
           error: ['Error 1', 'Error 2'],
         },
       });
-      expect(wrapper.find('.error').exists()).toBe(true);
+      expect(wrapper.find('select').classes()).toContain('border-[var(--red)]');
     });
 
     it('does not apply error class when error is empty', () => {

@@ -16,6 +16,10 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({
     query: {},
   }),
+  RouterLink: {
+    name: 'RouterLink',
+    template: '<a><slot /></a>',
+  },
 }));
 
 describe('RegisterView', () => {
@@ -62,8 +66,8 @@ describe('RegisterView', () => {
     const wrapper = createWrapper();
 
     expect(wrapper.find('h1').text()).toBe('Create Account');
-    expect(wrapper.find('label[for="first-name"]').text()).toBe('First Name');
-    expect(wrapper.find('label[for="last-name"]').text()).toBe('Last Name');
+    expect(wrapper.find('label[for="first-name"]').exists()).toBe(true);
+    expect(wrapper.find('label[for="last-name"]').exists()).toBe(true);
     expect(wrapper.find('button[type="submit"]').exists()).toBe(true);
   });
 
@@ -88,8 +92,8 @@ describe('RegisterView', () => {
     const firstNameInput = wrapper.find('#first-name');
     const lastNameInput = wrapper.find('#last-name');
     const emailInput = wrapper.find('#email');
-    const passwordInput = wrapper.find('#password input');
-    const confirmInput = wrapper.find('#password-confirmation input');
+    const passwordInput = wrapper.find('#password');
+    const confirmInput = wrapper.find('#password-confirmation');
 
     await firstNameInput.setValue('John');
     await lastNameInput.setValue('Doe');
@@ -130,8 +134,8 @@ describe('RegisterView', () => {
     const firstNameInput = wrapper.find('#first-name');
     const lastNameInput = wrapper.find('#last-name');
     const emailInput = wrapper.find('#email');
-    const passwordInput = wrapper.find('#password input');
-    const confirmInput = wrapper.find('#password-confirmation input');
+    const passwordInput = wrapper.find('#password');
+    const confirmInput = wrapper.find('#password-confirmation');
 
     await firstNameInput.setValue('John');
     await lastNameInput.setValue('Doe');

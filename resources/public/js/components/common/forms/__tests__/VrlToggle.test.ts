@@ -11,9 +11,9 @@ describe('VrlToggle', () => {
           label: 'Test Label',
         },
       });
-      expect(wrapper.find('.toggle-wrapper').exists()).toBe(true);
+      expect(wrapper.find('label').exists()).toBe(true);
       expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true);
-      expect(wrapper.find('.toggle-label').text()).toBe('Test Label');
+      expect(wrapper.text()).toContain('Test Label');
     });
 
     it('renders with custom id', () => {
@@ -81,7 +81,8 @@ describe('VrlToggle', () => {
         },
       });
       expect(wrapper.find('input').element.checked).toBe(false);
-      expect(wrapper.find('.toggle.active').exists()).toBe(false);
+      const toggle = wrapper.findAll('span').find((w) => w.classes().includes('w-11'));
+      expect(toggle?.classes()).toContain('bg-[var(--bg-elevated)]');
     });
 
     it('renders active state', () => {
@@ -92,7 +93,8 @@ describe('VrlToggle', () => {
         },
       });
       expect(wrapper.find('input').element.checked).toBe(true);
-      expect(wrapper.find('.toggle.active').exists()).toBe(true);
+      const toggle = wrapper.findAll('span').find((w) => w.classes().includes('w-11'));
+      expect(toggle?.classes()).toContain('bg-[var(--green-dim)]');
     });
 
     it('toggles active state visually', async () => {
@@ -103,13 +105,16 @@ describe('VrlToggle', () => {
         },
       });
 
-      expect(wrapper.find('.toggle.active').exists()).toBe(false);
+      let toggle = wrapper.findAll('span').find((w) => w.classes().includes('w-11'));
+      expect(toggle?.classes()).toContain('bg-[var(--bg-elevated)]');
 
       await wrapper.setProps({ modelValue: true });
-      expect(wrapper.find('.toggle.active').exists()).toBe(true);
+      toggle = wrapper.findAll('span').find((w) => w.classes().includes('w-11'));
+      expect(toggle?.classes()).toContain('bg-[var(--green-dim)]');
 
       await wrapper.setProps({ modelValue: false });
-      expect(wrapper.find('.toggle.active').exists()).toBe(false);
+      toggle = wrapper.findAll('span').find((w) => w.classes().includes('w-11'));
+      expect(toggle?.classes()).toContain('bg-[var(--bg-elevated)]');
     });
 
     it('shows green color class when active', () => {
@@ -120,9 +125,8 @@ describe('VrlToggle', () => {
         },
       });
 
-      const toggle = wrapper.find('.toggle.active');
-      expect(toggle.exists()).toBe(true);
-      expect(toggle.classes()).toContain('active');
+      const toggle = wrapper.findAll('span').find((w) => w.classes().includes('w-11'));
+      expect(toggle?.classes()).toContain('bg-[var(--green-dim)]');
     });
   });
 
@@ -341,7 +345,8 @@ describe('VrlToggle', () => {
           label: 'Test',
         },
       });
-      expect(wrapper.find('input').classes()).toContain('sr-only');
+      expect(wrapper.find('input').classes()).toContain('absolute');
+      expect(wrapper.find('input').classes()).toContain('w-px');
     });
 
     it('sets aria-hidden on visual toggle element', () => {
@@ -351,7 +356,8 @@ describe('VrlToggle', () => {
           label: 'Test',
         },
       });
-      expect(wrapper.find('.toggle').attributes('aria-hidden')).toBe('true');
+      const toggle = wrapper.findAll('span').find((w) => w.classes().includes('w-11'));
+      expect(toggle?.attributes('aria-hidden')).toBe('true');
     });
 
     it('associates label with input via for/id', () => {
@@ -434,7 +440,7 @@ describe('VrlToggle', () => {
       });
 
       await wrapper.setProps({ label: 'Updated Label' });
-      expect(wrapper.find('.toggle-label').text()).toBe('Updated Label');
+      expect(wrapper.text()).toContain('Updated Label');
 
       await wrapper.setProps({ modelValue: true });
       expect(wrapper.find('input').element.checked).toBe(true);

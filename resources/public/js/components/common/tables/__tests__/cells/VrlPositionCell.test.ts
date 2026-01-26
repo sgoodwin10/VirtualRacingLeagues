@@ -17,7 +17,7 @@ describe('VrlPositionCell', () => {
         props: { position: 5 },
       });
 
-      expect(wrapper.find('.position-indicator').exists()).toBe(true);
+      expect(wrapper.find('[data-test="position-cell"]').exists()).toBe(true);
     });
   });
 
@@ -27,7 +27,7 @@ describe('VrlPositionCell', () => {
         props: { position: 1 },
       });
 
-      expect(wrapper.find('.position-1').exists()).toBe(true);
+      expect(wrapper.classes()).toContain('text-[var(--yellow)]');
     });
 
     it('applies silver class for 2nd place', () => {
@@ -35,7 +35,7 @@ describe('VrlPositionCell', () => {
         props: { position: 2 },
       });
 
-      expect(wrapper.find('.position-2').exists()).toBe(true);
+      expect(wrapper.classes()).toContain('text-[var(--text-secondary)]');
     });
 
     it('applies bronze class for 3rd place', () => {
@@ -43,7 +43,7 @@ describe('VrlPositionCell', () => {
         props: { position: 3 },
       });
 
-      expect(wrapper.find('.position-3').exists()).toBe(true);
+      expect(wrapper.classes()).toContain('text-[var(--orange)]');
     });
 
     it('does not apply podium class for positions > 3', () => {
@@ -51,10 +51,10 @@ describe('VrlPositionCell', () => {
         props: { position: 4 },
       });
 
-      expect(wrapper.find('.position-1').exists()).toBe(false);
-      expect(wrapper.find('.position-2').exists()).toBe(false);
-      expect(wrapper.find('.position-3').exists()).toBe(false);
-      expect(wrapper.find('.position-indicator').exists()).toBe(true);
+      expect(wrapper.classes()).not.toContain('text-[var(--yellow)]');
+      expect(wrapper.classes()).not.toContain('text-[var(--orange)]');
+      expect(wrapper.classes()).toContain('text-[var(--text-secondary)]');
+      expect(wrapper.find('[data-test="position-cell"]').exists()).toBe(true);
     });
   });
 
@@ -65,8 +65,8 @@ describe('VrlPositionCell', () => {
       });
 
       const classes = wrapper.classes();
-      expect(classes).toContain('position-indicator');
-      expect(classes).toContain('position-1');
+      expect(classes).toContain('inline-flex');
+      expect(classes).toContain('text-[var(--yellow)]');
     });
 
     it('applies correct classes for 2nd', () => {
@@ -75,8 +75,8 @@ describe('VrlPositionCell', () => {
       });
 
       const classes = wrapper.classes();
-      expect(classes).toContain('position-indicator');
-      expect(classes).toContain('position-2');
+      expect(classes).toContain('inline-flex');
+      expect(classes).toContain('text-[var(--text-secondary)]');
     });
 
     it('applies correct classes for 3rd', () => {
@@ -85,8 +85,8 @@ describe('VrlPositionCell', () => {
       });
 
       const classes = wrapper.classes();
-      expect(classes).toContain('position-indicator');
-      expect(classes).toContain('position-3');
+      expect(classes).toContain('inline-flex');
+      expect(classes).toContain('text-[var(--orange)]');
     });
 
     it('applies correct classes for non-podium', () => {
@@ -95,10 +95,10 @@ describe('VrlPositionCell', () => {
       });
 
       const classes = wrapper.classes();
-      expect(classes).toContain('position-indicator');
-      expect(classes).not.toContain('position-1');
-      expect(classes).not.toContain('position-2');
-      expect(classes).not.toContain('position-3');
+      expect(classes).toContain('inline-flex');
+      expect(classes).toContain('text-[var(--text-secondary)]');
+      expect(classes).not.toContain('text-[var(--yellow)]');
+      expect(classes).not.toContain('text-[var(--orange)]');
     });
   });
 
@@ -109,7 +109,7 @@ describe('VrlPositionCell', () => {
       });
 
       expect(wrapper.text()).toBe('1');
-      expect(wrapper.classes()).toContain('position-1');
+      expect(wrapper.classes()).toContain('text-[var(--yellow)]');
     });
 
     it('renders position 10 correctly', () => {

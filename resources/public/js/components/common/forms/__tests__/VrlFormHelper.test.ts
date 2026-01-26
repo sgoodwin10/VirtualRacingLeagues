@@ -9,7 +9,8 @@ describe('VrlFormHelper', () => {
         default: 'Helper text',
       },
     });
-    expect(wrapper.classes()).toContain('form-helper');
+    expect(wrapper.classes()).toContain('text-xs');
+    expect(wrapper.classes()).toContain('text-[var(--text-muted)]');
   });
 
   it('renders slot content', () => {
@@ -30,7 +31,7 @@ describe('VrlFormHelper', () => {
         default: 'Helper text',
       },
     });
-    expect(wrapper.classes()).toContain('form-helper');
+    expect(wrapper.classes()).toContain('text-xs');
     expect(wrapper.classes()).toContain('custom-helper');
   });
 
@@ -60,6 +61,6 @@ describe('VrlFormHelper', () => {
       },
     });
     expect(wrapper.text()).toBe('');
-    expect(wrapper.classes()).toContain('form-helper');
+    expect(wrapper.classes()).toContain('text-xs');
   });
 });

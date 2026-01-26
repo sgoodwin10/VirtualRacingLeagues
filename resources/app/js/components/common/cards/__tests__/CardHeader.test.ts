@@ -39,7 +39,7 @@ describe('CardHeader', () => {
     expect(wrapper.text()).toContain('Test Title');
     expect(wrapper.text()).toContain('Test description text');
     expect(wrapper.find('p').exists()).toBe(true);
-    expect(wrapper.find('p').classes()).toContain('text-xs');
+    expect(wrapper.find('p').classes()).toContain('text-md');
   });
 
   it('does not render description element when not provided', () => {
@@ -179,7 +179,7 @@ describe('CardHeader', () => {
     const wrapper = mount(CardHeader, {
       props: { title: 'Test Title' },
     });
-    const title = wrapper.find('.font-mono');
+    const title = wrapper.find('h2');
     expect(title.exists()).toBe(true);
     expect(title.classes()).toContain('font-semibold');
   });

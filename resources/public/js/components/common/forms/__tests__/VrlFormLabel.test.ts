@@ -9,7 +9,8 @@ describe('VrlFormLabel', () => {
         default: 'Username',
       },
     });
-    expect(wrapper.classes()).toContain('form-label');
+    expect(wrapper.classes()).toContain('block');
+    expect(wrapper.classes()).toContain('font-display');
   });
 
   it('renders slot content', () => {
@@ -27,7 +28,7 @@ describe('VrlFormLabel', () => {
         default: 'Field',
       },
     });
-    expect(wrapper.find('.required').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('*');
   });
 
   it('shows required indicator when required prop is true', () => {
@@ -39,9 +40,10 @@ describe('VrlFormLabel', () => {
         default: 'Required Field',
       },
     });
-    const requiredSpan = wrapper.find('.required');
+    const requiredSpan = wrapper.find('span');
     expect(requiredSpan.exists()).toBe(true);
     expect(requiredSpan.text()).toBe('*');
+    expect(requiredSpan.classes()).toContain('text-[var(--red)]');
   });
 
   it('applies for attribute when provided', () => {
@@ -74,7 +76,7 @@ describe('VrlFormLabel', () => {
         default: 'Field',
       },
     });
-    expect(wrapper.classes()).toContain('form-label');
+    expect(wrapper.classes()).toContain('block');
     expect(wrapper.classes()).toContain('custom-label');
   });
 

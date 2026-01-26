@@ -5,7 +5,7 @@ import VrlFormGroup from '../VrlFormGroup.vue';
 describe('VrlFormGroup', () => {
   it('renders with default classes', () => {
     const wrapper = mount(VrlFormGroup);
-    expect(wrapper.classes()).toContain('form-group');
+    expect(wrapper.classes()).toContain('mb-6');
   });
 
   it('renders slot content', () => {
@@ -23,7 +23,7 @@ describe('VrlFormGroup', () => {
         class: 'custom-class another-class',
       },
     });
-    expect(wrapper.classes()).toContain('form-group');
+    expect(wrapper.classes()).toContain('mb-6');
     expect(wrapper.classes()).toContain('custom-class');
     expect(wrapper.classes()).toContain('another-class');
   });

@@ -11,9 +11,9 @@ describe('VrlCheckbox', () => {
           label: 'Test Label',
         },
       });
-      expect(wrapper.find('.checkbox-wrapper').exists()).toBe(true);
+      expect(wrapper.find('label').exists()).toBe(true);
       expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true);
-      expect(wrapper.find('.checkbox-label').text()).toBe('Test Label');
+      expect(wrapper.text()).toContain('Test Label');
     });
 
     it('renders with custom id', () => {
@@ -81,7 +81,8 @@ describe('VrlCheckbox', () => {
         },
       });
       expect(wrapper.find('input').element.checked).toBe(false);
-      expect(wrapper.find('.checkbox.checked').exists()).toBe(false);
+      const checkbox = wrapper.findAll('span').find((w) => w.classes().includes('w-[18px]'));
+      expect(checkbox?.classes()).toContain('border-[var(--border)]');
     });
 
     it('renders checked state', () => {
@@ -92,7 +93,8 @@ describe('VrlCheckbox', () => {
         },
       });
       expect(wrapper.find('input').element.checked).toBe(true);
-      expect(wrapper.find('.checkbox.checked').exists()).toBe(true);
+      const checkbox = wrapper.findAll('span').find((w) => w.classes().includes('w-[18px]'));
+      expect(checkbox?.classes()).toContain('bg-[var(--cyan)]');
     });
 
     it('toggles checked state visually', async () => {
@@ -103,13 +105,16 @@ describe('VrlCheckbox', () => {
         },
       });
 
-      expect(wrapper.find('.checkbox.checked').exists()).toBe(false);
+      let checkbox = wrapper.findAll('span').find((w) => w.classes().includes('w-[18px]'));
+      expect(checkbox?.classes()).toContain('border-[var(--border)]');
 
       await wrapper.setProps({ modelValue: true });
-      expect(wrapper.find('.checkbox.checked').exists()).toBe(true);
+      checkbox = wrapper.findAll('span').find((w) => w.classes().includes('w-[18px]'));
+      expect(checkbox?.classes()).toContain('bg-[var(--cyan)]');
 
       await wrapper.setProps({ modelValue: false });
-      expect(wrapper.find('.checkbox.checked').exists()).toBe(false);
+      checkbox = wrapper.findAll('span').find((w) => w.classes().includes('w-[18px]'));
+      expect(checkbox?.classes()).toContain('border-[var(--border)]');
     });
 
     it('displays checkmark when checked', async () => {
@@ -120,10 +125,10 @@ describe('VrlCheckbox', () => {
         },
       });
 
-      const checkbox = wrapper.find('.checkbox.checked');
-      expect(checkbox.exists()).toBe(true);
-      // The checkmark is rendered via ::after pseudo-element in CSS
-      expect(checkbox.classes()).toContain('checked');
+      const checkbox = wrapper.findAll('span').find((w) => w.classes().includes('w-[18px]'));
+      expect(checkbox?.classes()).toContain('bg-[var(--cyan)]');
+      // The checkmark is rendered in a nested span
+      expect(wrapper.text()).toContain('✓');
     });
   });
 
@@ -271,7 +276,7 @@ describe('VrlCheckbox', () => {
         },
       });
 
-      await wrapper.find('.checkbox-wrapper').trigger('click');
+      await wrapper.find('label').trigger('click');
 
       // The browser handles the label click -> input toggle
       // We just verify the structure is correct for this to work
@@ -394,7 +399,8 @@ describe('VrlCheckbox', () => {
           label: 'Test',
         },
       });
-      expect(wrapper.find('input').classes()).toContain('sr-only');
+      expect(wrapper.find('input').classes()).toContain('absolute');
+      expect(wrapper.find('input').classes()).toContain('w-px');
     });
 
     it('sets aria-hidden on visual checkbox element', () => {
@@ -404,7 +410,8 @@ describe('VrlCheckbox', () => {
           label: 'Test',
         },
       });
-      expect(wrapper.find('.checkbox').attributes('aria-hidden')).toBe('true');
+      const checkbox = wrapper.findAll('span').find((w) => w.classes().includes('w-[18px]'));
+      expect(checkbox?.attributes('aria-hidden')).toBe('true');
     });
 
     it('associates label with input via for/id', () => {
@@ -507,7 +514,7 @@ describe('VrlCheckbox', () => {
       });
 
       await wrapper.setProps({ label: 'Updated Label' });
-      expect(wrapper.find('.checkbox-label').text()).toBe('Updated Label');
+      expect(wrapper.text()).toContain('Updated Label');
 
       await wrapper.setProps({ modelValue: true });
       expect(wrapper.find('input').element.checked).toBe(true);

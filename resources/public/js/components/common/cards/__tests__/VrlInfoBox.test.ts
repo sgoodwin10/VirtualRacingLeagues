@@ -212,14 +212,15 @@ describe('VrlInfoBox', () => {
         class: 'custom-class',
       },
     });
-    expect(wrapper.find('[data-test="info-box"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="info-box"][data-type="warning"]').exists()).toBe(true);
+    const infoBox = wrapper.find('[data-test="info-box"]');
+    expect(infoBox.exists()).toBe(true);
+    expect(infoBox.attributes('data-type')).toBe('warning');
     expect(wrapper.find('[data-test="info-box-title"]').text()).toBe('Important Note');
-    expect(wrapper.find('.info-box-title.text-orange').exists()).toBe(true);
+    expect(wrapper.find('[data-test="info-box-title"]').classes()).toContain('text-[var(--orange)]');
     expect(wrapper.find('[data-test="info-box-message"]').text()).toBe(
       'This is an important warning message',
     );
-    expect(wrapper.classes()).toContain('custom-class');
+    expect(infoBox.classes()).toContain('custom-class');
   });
 
   it('maintains correct structure', () => {

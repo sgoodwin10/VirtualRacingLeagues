@@ -449,7 +449,7 @@ describe('VrlConfirmDialog', () => {
       });
 
       const iconContainer = wrapper.find('.flex.items-center.justify-center');
-      expect(iconContainer.attributes('style')).toContain('border-color: rgb(255, 0, 0)');
+      expect(iconContainer.attributes('style')).toContain('border-color: #ff0000');
     });
 
     it('applies custom icon background color', () => {
@@ -463,7 +463,7 @@ describe('VrlConfirmDialog', () => {
       });
 
       const iconContainer = wrapper.find('.flex.items-center.justify-center');
-      expect(iconContainer.attributes('style')).toContain('background-color: rgb(0, 255, 0)');
+      expect(iconContainer.attributes('style')).toContain('background-color: #00ff00');
     });
 
     it('uses default icon colors when not provided', () => {

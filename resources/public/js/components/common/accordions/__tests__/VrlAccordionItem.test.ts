@@ -61,8 +61,8 @@ describe('VrlAccordionItem', () => {
       },
     });
 
-    // Check for active state via border-cyan class
-    expect(wrapper.classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(true);
+    // Check for active state via elevated background
+    expect(wrapper.classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(true);
   });
 
   it('is not active when value does not match', () => {
@@ -82,8 +82,8 @@ describe('VrlAccordionItem', () => {
       },
     });
 
-    // Check for inactive state (should not have border-cyan)
-    expect(wrapper.classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(false);
+    // Check for inactive state (should not have elevated background)
+    expect(wrapper.classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(false);
   });
 
   it('is active in multiple mode when value is in array', () => {
@@ -103,7 +103,7 @@ describe('VrlAccordionItem', () => {
       },
     });
 
-    expect(wrapper.classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(true);
+    expect(wrapper.classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(true);
   });
 
   it('is not active in multiple mode when value is not in array', () => {
@@ -123,7 +123,7 @@ describe('VrlAccordionItem', () => {
       },
     });
 
-    expect(wrapper.classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(false);
+    expect(wrapper.classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(false);
   });
 
   it('calls toggleItem when clicked', async () => {

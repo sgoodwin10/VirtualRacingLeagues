@@ -12,7 +12,7 @@ describe('VrlCharacterCount', () => {
         },
       });
       expect(wrapper.text()).toContain('75 / 500');
-      expect(wrapper.find('.form-char-count').exists()).toBe(true);
+      expect(wrapper.find('small').exists()).toBe(true);
     });
 
     it('displays correct count format', () => {
@@ -66,8 +66,8 @@ describe('VrlCharacterCount', () => {
           max: 100,
         },
       });
-      expect(wrapper.find('.warning').exists()).toBe(true);
-      expect(wrapper.find('.error').exists()).toBe(false);
+      expect(wrapper.find('small').classes()).toContain('text-[var(--orange)]');
+      expect(wrapper.find('small').classes()).not.toContain('text-[var(--red)]');
     });
 
     it('applies warning class between 90% and 99%', () => {
@@ -77,8 +77,8 @@ describe('VrlCharacterCount', () => {
           max: 100,
         },
       });
-      expect(wrapper.find('.warning').exists()).toBe(true);
-      expect(wrapper.find('.error').exists()).toBe(false);
+      expect(wrapper.find('small').classes()).toContain('text-[var(--orange)]');
+      expect(wrapper.find('small').classes()).not.toContain('text-[var(--red)]');
     });
 
     it('applies error class at exactly 100% threshold', () => {
@@ -88,8 +88,8 @@ describe('VrlCharacterCount', () => {
           max: 100,
         },
       });
-      expect(wrapper.find('.error').exists()).toBe(true);
-      expect(wrapper.find('.warning').exists()).toBe(false);
+      expect(wrapper.find('small').classes()).toContain('text-[var(--red)]');
+      expect(wrapper.find('small').classes()).toContain('font-semibold');
     });
 
     it('applies error class when over 100%', () => {
@@ -99,8 +99,8 @@ describe('VrlCharacterCount', () => {
           max: 100,
         },
       });
-      expect(wrapper.find('.error').exists()).toBe(true);
-      expect(wrapper.find('.warning').exists()).toBe(false);
+      expect(wrapper.find('small').classes()).toContain('text-[var(--red)]');
+      expect(wrapper.find('small').classes()).toContain('font-semibold');
     });
   });
 
@@ -157,13 +157,13 @@ describe('VrlCharacterCount', () => {
           max: 100,
         },
       });
-      expect(wrapper.find('.warning').exists()).toBe(false);
+      expect(wrapper.find('small').classes()).not.toContain('text-[var(--orange)]');
 
       await wrapper.setProps({ current: 90 });
-      expect(wrapper.find('.warning').exists()).toBe(true);
+      expect(wrapper.find('small').classes()).toContain('text-[var(--orange)]');
 
       await wrapper.setProps({ current: 100 });
-      expect(wrapper.find('.error').exists()).toBe(true);
+      expect(wrapper.find('small').classes()).toContain('text-[var(--red)]');
     });
 
     it('updates max correctly', async () => {
@@ -211,7 +211,7 @@ describe('VrlCharacterCount', () => {
         },
       });
       expect(wrapper.text()).toContain('500 / 100');
-      expect(wrapper.find('.error').exists()).toBe(true);
+      expect(wrapper.find('small').classes()).toContain('text-[var(--red)]');
     });
 
     it('handles exactly at 90% with decimal calculation', () => {
@@ -222,7 +222,7 @@ describe('VrlCharacterCount', () => {
         },
       });
       expect(wrapper.vm.percentage).toBe(90);
-      expect(wrapper.find('.warning').exists()).toBe(true);
+      expect(wrapper.find('small').classes()).toContain('text-[var(--orange)]');
     });
   });
 });

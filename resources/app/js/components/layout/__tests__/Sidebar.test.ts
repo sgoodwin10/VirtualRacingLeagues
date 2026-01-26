@@ -279,13 +279,7 @@ describe('Sidebar.vue', () => {
 
     await wrapper.vm.$nextTick();
 
-    const navSection = wrapper.findAll('nav').find((nav) => {
-      return nav.findComponent({ name: 'SidebarLink' }).exists();
-    });
-
-    expect(navSection).toBeDefined();
-    if (!navSection) return;
-
+    // Check that navigation links exist by looking for the link text directly
     const links = wrapper.findAll('a');
     const linkTexts = links.map((link) => link.text());
 

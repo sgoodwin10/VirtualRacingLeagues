@@ -17,7 +17,7 @@ describe('VrlPointsCell', () => {
         props: { value: 100 },
       });
 
-      expect(wrapper.find('.points-cell').exists()).toBe(true);
+      expect(wrapper.find('[data-test="points-cell"]').exists()).toBe(true);
     });
   });
 
@@ -77,7 +77,8 @@ describe('VrlPointsCell', () => {
         props: { value: 100 },
       });
 
-      expect(wrapper.classes()).toContain('points-cell');
+      expect(wrapper.find('[data-test="points-cell"]').exists()).toBe(true);
+      expect(wrapper.classes()).toContain('font-[family-name:var(--font-mono)]');
     });
   });
 });

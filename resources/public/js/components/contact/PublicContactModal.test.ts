@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import PrimeVue from 'primevue/config';
@@ -28,6 +28,21 @@ vi.mock('@public/composables/useGtm', () => ({
 }));
 
 describe('PublicContactModal', () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Create a container element for the modal to attach to
+    container = document.createElement('div');
+    container.id = 'app';
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    // Clean up the container
+    document.body.removeChild(container);
+  });
+
   const createWrapper = (props = {}) => {
     return mount(PublicContactModal, {
       props: {
@@ -45,65 +60,84 @@ describe('PublicContactModal', () => {
             },
           ],
         ],
-        stubs: {
-          teleport: true,
-        },
       },
+      attachTo: container,
     });
   };
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+  it('should render when visible is true', async () => {
+    const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
+
+    expect(document.querySelector('form')).toBeTruthy();
   });
 
-  it('should render when visible is true', () => {
+  it('should have all required form fields', async () => {
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    expect(wrapper.find('form').exists()).toBe(true);
+    expect(document.querySelector('#name')).toBeTruthy();
+    expect(document.querySelector('#email')).toBeTruthy();
+    expect(document.querySelector('#reason')).toBeTruthy();
+    expect(document.querySelector('#message')).toBeTruthy();
   });
 
-  it('should have all required form fields', () => {
+  it('should render reason options', async () => {
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    expect(wrapper.find('#name').exists()).toBe(true);
-    expect(wrapper.find('#email').exists()).toBe(true);
-    expect(wrapper.find('#reason').exists()).toBe(true);
-    expect(wrapper.find('#message').exists()).toBe(true);
+    const select = document.querySelector('#reason');
+    expect(select).toBeTruthy();
   });
 
-  it('should render reason options', () => {
+  it('should show character count for message field', async () => {
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    const select = wrapper.find('#reason');
-    expect(select.exists()).toBe(true);
+    const textarea = document.querySelector('#message') as HTMLTextAreaElement;
+    expect(textarea?.maxLength).toBe(2000);
   });
 
-  it('should show character count for message field', () => {
+  it('should disable submit button when form is invalid', async () => {
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    const textarea = wrapper.find('#message');
-    expect(textarea.attributes('maxlength')).toBe('2000');
-  });
-
-  it('should disable submit button when form is invalid', () => {
-    const wrapper = createWrapper({ visible: true });
-
-    const submitButton = wrapper.findAll('button').find((btn) => btn.text() === 'Send Message');
-    expect(submitButton?.attributes('disabled')).toBeDefined();
+    const submitButton = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.includes('Send Message')
+    );
+    expect(submitButton?.hasAttribute('disabled')).toBe(true);
   });
 
   it('should enable submit button when form is valid', async () => {
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    // Fill in the form
-    await wrapper.find('#name').setValue('John Doe');
-    await wrapper.find('#email').setValue('john@example.com');
-    await wrapper.find('#reason').setValue('question');
-    await wrapper.find('#message').setValue('This is a test message');
+    // Fill in the form using document queries
+    const nameInput = document.querySelector('#name') as HTMLInputElement;
+    const emailInput = document.querySelector('#email') as HTMLInputElement;
+    const reasonSelect = document.querySelector('#reason') as HTMLSelectElement;
+    const messageTextarea = document.querySelector('#message') as HTMLTextAreaElement;
+
+    nameInput.value = 'John Doe';
+    nameInput.dispatchEvent(new Event('input'));
+    emailInput.value = 'john@example.com';
+    emailInput.dispatchEvent(new Event('input'));
+    reasonSelect.value = 'question';
+    reasonSelect.dispatchEvent(new Event('change'));
+    messageTextarea.value = 'This is a test message';
+    messageTextarea.dispatchEvent(new Event('input'));
     await nextTick();
 
-    const submitButton = wrapper.findAll('button').find((btn) => btn.text() === 'Send Message');
-    expect(submitButton?.attributes('disabled')).toBeUndefined();
+    const submitButton = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.includes('Send Message')
+    );
+    expect(submitButton?.hasAttribute('disabled')).toBe(false);
   });
 
   it('should call contactService.submit when form is submitted', async () => {
@@ -111,16 +145,28 @@ describe('PublicContactModal', () => {
     mockSubmit.mockResolvedValue({ id: 1, message: 'Success' });
 
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    // Fill in the form
-    await wrapper.find('#name').setValue('John Doe');
-    await wrapper.find('#email').setValue('john@example.com');
-    await wrapper.find('#reason').setValue('question');
-    await wrapper.find('#message').setValue('This is a test message');
+    // Fill in the form using document queries
+    const nameInput = document.querySelector('#name') as HTMLInputElement;
+    const emailInput = document.querySelector('#email') as HTMLInputElement;
+    const reasonSelect = document.querySelector('#reason') as HTMLSelectElement;
+    const messageTextarea = document.querySelector('#message') as HTMLTextAreaElement;
+
+    nameInput.value = 'John Doe';
+    nameInput.dispatchEvent(new Event('input'));
+    emailInput.value = 'john@example.com';
+    emailInput.dispatchEvent(new Event('input'));
+    reasonSelect.value = 'question';
+    reasonSelect.dispatchEvent(new Event('change'));
+    messageTextarea.value = 'This is a test message';
+    messageTextarea.dispatchEvent(new Event('input'));
     await nextTick();
 
     // Submit the form
-    await wrapper.find('form').trigger('submit.prevent');
+    const form = document.querySelector('form');
+    form?.dispatchEvent(new Event('submit'));
     await nextTick();
 
     expect(mockSubmit).toHaveBeenCalledWith({
@@ -137,16 +183,28 @@ describe('PublicContactModal', () => {
     mockSubmit.mockResolvedValue({ id: 1, message: 'Success' });
 
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    // Fill in the form
-    await wrapper.find('#name').setValue('John Doe');
-    await wrapper.find('#email').setValue('john@example.com');
-    await wrapper.find('#reason').setValue('question');
-    await wrapper.find('#message').setValue('This is a test message');
+    // Fill in the form using document queries
+    const nameInput = document.querySelector('#name') as HTMLInputElement;
+    const emailInput = document.querySelector('#email') as HTMLInputElement;
+    const reasonSelect = document.querySelector('#reason') as HTMLSelectElement;
+    const messageTextarea = document.querySelector('#message') as HTMLTextAreaElement;
+
+    nameInput.value = 'John Doe';
+    nameInput.dispatchEvent(new Event('input'));
+    emailInput.value = 'john@example.com';
+    emailInput.dispatchEvent(new Event('input'));
+    reasonSelect.value = 'question';
+    reasonSelect.dispatchEvent(new Event('change'));
+    messageTextarea.value = 'This is a test message';
+    messageTextarea.dispatchEvent(new Event('input'));
     await nextTick();
 
     // Submit the form
-    await wrapper.find('form').trigger('submit.prevent');
+    const form = document.querySelector('form');
+    form?.dispatchEvent(new Event('submit'));
     await nextTick();
 
     expect(wrapper.emitted('success')).toBeTruthy();
@@ -157,16 +215,28 @@ describe('PublicContactModal', () => {
     mockSubmit.mockResolvedValue({ id: 1, message: 'Success' });
 
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    // Fill in the form
-    await wrapper.find('#name').setValue('John Doe');
-    await wrapper.find('#email').setValue('john@example.com');
-    await wrapper.find('#reason').setValue('question');
-    await wrapper.find('#message').setValue('This is a test message');
+    // Fill in the form using document queries
+    const nameInput = document.querySelector('#name') as HTMLInputElement;
+    const emailInput = document.querySelector('#email') as HTMLInputElement;
+    const reasonSelect = document.querySelector('#reason') as HTMLSelectElement;
+    const messageTextarea = document.querySelector('#message') as HTMLTextAreaElement;
+
+    nameInput.value = 'John Doe';
+    nameInput.dispatchEvent(new Event('input'));
+    emailInput.value = 'john@example.com';
+    emailInput.dispatchEvent(new Event('input'));
+    reasonSelect.value = 'question';
+    reasonSelect.dispatchEvent(new Event('change'));
+    messageTextarea.value = 'This is a test message';
+    messageTextarea.dispatchEvent(new Event('input'));
     await nextTick();
 
     // Submit the form
-    await wrapper.find('form').trigger('submit.prevent');
+    const form = document.querySelector('form');
+    form?.dispatchEvent(new Event('submit'));
     await nextTick();
 
     const updateVisibleEvents = wrapper.emitted('update:visible');
@@ -179,17 +249,26 @@ describe('PublicContactModal', () => {
     mockSubmit.mockRejectedValue(new Error('Network error'));
 
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    // Fill in the form
-    await wrapper.find('#name').setValue('John Doe');
-    await wrapper.find('#email').setValue('john@example.com');
-    await wrapper.find('#reason').setValue('question');
-    await wrapper.find('#message').setValue('This is a test message');
+    // Fill in the form using wrapper
+    const nameInput = wrapper.find('#name');
+    const emailInput = wrapper.find('#email');
+    const reasonSelect = wrapper.find('#reason');
+    const messageTextarea = wrapper.find('#message');
+
+    await nameInput.setValue('John Doe');
+    await emailInput.setValue('john@example.com');
+    await reasonSelect.setValue('question');
+    await messageTextarea.setValue('This is a test message');
     await nextTick();
 
-    // Submit the form
-    await wrapper.find('form').trigger('submit.prevent');
+    // Submit the form via wrapper
+    const form = wrapper.find('form');
+    await form.trigger('submit.prevent');
     await nextTick();
+    await nextTick(); // Extra tick for error to appear
 
     expect(wrapper.text()).toContain('Network error');
   });
@@ -200,11 +279,21 @@ describe('PublicContactModal', () => {
     // Open modal and fill form
     await wrapper.setProps({ visible: true });
     await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    await wrapper.find('#name').setValue('John Doe');
-    await wrapper.find('#email').setValue('john@example.com');
-    await wrapper.find('#reason').setValue('question');
-    await wrapper.find('#message').setValue('This is a test message');
+    const nameInput = document.querySelector('#name') as HTMLInputElement;
+    const emailInput = document.querySelector('#email') as HTMLInputElement;
+    const reasonSelect = document.querySelector('#reason') as HTMLSelectElement;
+    const messageTextarea = document.querySelector('#message') as HTMLTextAreaElement;
+
+    nameInput.value = 'John Doe';
+    nameInput.dispatchEvent(new Event('input'));
+    emailInput.value = 'john@example.com';
+    emailInput.dispatchEvent(new Event('input'));
+    reasonSelect.value = 'question';
+    reasonSelect.dispatchEvent(new Event('change'));
+    messageTextarea.value = 'This is a test message';
+    messageTextarea.dispatchEvent(new Event('input'));
     await nextTick();
 
     // Close and reopen modal
@@ -212,44 +301,62 @@ describe('PublicContactModal', () => {
     await nextTick();
     await wrapper.setProps({ visible: true });
     await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
     // Form should be reset
-    expect((wrapper.find('#name').element as HTMLInputElement).value).toBe('');
-    expect((wrapper.find('#email').element as HTMLInputElement).value).toBe('');
-    expect((wrapper.find('#reason').element as HTMLSelectElement).value).toBe('');
-    expect((wrapper.find('#message').element as HTMLTextAreaElement).value).toBe('');
+    const nameInputAfter = document.querySelector('#name') as HTMLInputElement;
+    const emailInputAfter = document.querySelector('#email') as HTMLInputElement;
+    const reasonSelectAfter = document.querySelector('#reason') as HTMLSelectElement;
+    const messageTextareaAfter = document.querySelector('#message') as HTMLTextAreaElement;
+
+    expect(nameInputAfter?.value).toBe('');
+    expect(emailInputAfter?.value).toBe('');
+    expect(reasonSelectAfter?.value).toBe('');
+    expect(messageTextareaAfter?.value).toBe('');
   });
 
   it('should show validation errors when submitting empty form', async () => {
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
     // Try to submit empty form (this would be prevented by disabled button, but test validation)
-    const submitButton = wrapper.findAll('button').find((btn) => btn.text() === 'Send Message');
-    expect(submitButton?.attributes('disabled')).toBeDefined();
+    const submitButton = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.includes('Send Message')
+    );
+    expect(submitButton?.hasAttribute('disabled')).toBe(true);
   });
 
   it('should clear individual field errors on input', async () => {
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
     // Manually trigger validation by trying to submit
-    await wrapper.find('form').trigger('submit.prevent');
+    const form = document.querySelector('form');
+    form?.dispatchEvent(new Event('submit'));
     await nextTick();
 
     // Now fill in name field
-    await wrapper.find('#name').setValue('John Doe');
-    await wrapper.find('#name').trigger('input');
+    const nameInput = document.querySelector('#name') as HTMLInputElement;
+    nameInput.value = 'John Doe';
+    nameInput.dispatchEvent(new Event('input'));
     await nextTick();
 
     // Name error should be cleared
-    const nameError = wrapper.text();
+    const nameError = document.body.textContent || '';
     expect(nameError).not.toContain('Name is required');
   });
 
   it('should emit update:visible when cancel button is clicked', async () => {
     const wrapper = createWrapper({ visible: true });
+    await nextTick();
+    await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    const cancelButton = wrapper.findAll('button').find((btn) => btn.text() === 'Cancel');
-    await cancelButton?.trigger('click');
+    const cancelButton = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.includes('Cancel')
+    );
+    cancelButton?.click();
     await nextTick();
 
     const updateVisibleEvents = wrapper.emitted('update:visible');

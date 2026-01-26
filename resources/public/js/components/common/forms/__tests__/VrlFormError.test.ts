@@ -50,7 +50,8 @@ describe('VrlFormError', () => {
         error: 'Error message',
       },
     });
-    expect(wrapper.classes()).toContain('form-error');
+    expect(wrapper.classes()).toContain('text-xs');
+    expect(wrapper.classes()).toContain('text-[var(--red)]');
   });
 
   it('applies additional classes from class prop', () => {
@@ -60,7 +61,7 @@ describe('VrlFormError', () => {
         class: 'custom-error',
       },
     });
-    expect(wrapper.classes()).toContain('form-error');
+    expect(wrapper.classes()).toContain('text-xs');
     expect(wrapper.classes()).toContain('custom-error');
   });
 

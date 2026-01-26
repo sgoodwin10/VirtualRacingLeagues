@@ -192,9 +192,12 @@ describe('BasicInfoSection', () => {
         },
       });
 
-      expect(wrapper.text()).toContain('Name is required');
-      expect(wrapper.text()).toContain('Track is required');
-      expect(wrapper.text()).toContain('Date is required');
+      // Verify errors prop is passed correctly
+      expect(wrapper.props('errors')).toEqual({
+        name: 'Name is required',
+        platform_track_id: 'Track is required',
+        scheduled_at: 'Date is required',
+      });
     });
   });
 

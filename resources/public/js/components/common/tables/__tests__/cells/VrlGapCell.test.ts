@@ -17,7 +17,7 @@ describe('VrlGapCell', () => {
         props: { value: -5 },
       });
 
-      expect(wrapper.find('.gap-cell').exists()).toBe(true);
+      expect(wrapper.find('[data-test="gap-cell"]').exists()).toBe(true);
     });
   });
 
@@ -147,7 +147,8 @@ describe('VrlGapCell', () => {
         props: { value: -5 },
       });
 
-      expect(wrapper.classes()).toContain('gap-cell');
+      expect(wrapper.find('[data-test="gap-cell"]').exists()).toBe(true);
+      expect(wrapper.classes()).toContain('font-[family-name:var(--font-display)]');
     });
   });
 });
