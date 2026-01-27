@@ -1,6 +1,7 @@
 <template>
-  <div
-    class="competition-card bg-[var(--bg-card)] border border-[var(--border)] rounded-[8px] p-5 mb-4 transition-all hover:border-[var(--cyan)]"
+  <router-link
+    :to="primarySeasonUrl"
+    class="competition-card block bg-[var(--bg-card)] border border-[var(--border)] rounded-[8px] p-5 mb-4 transition-all hover:border-[var(--cyan)] cursor-pointer"
   >
     <!-- Header -->
     <div class="competition-header flex justify-between items-center mb-4">
@@ -9,24 +10,37 @@
       >
         {{ competition.name }}
       </h3>
-
-      <VrlBadge :variant="statusVariant">
-        {{ statusLabel }}
-      </VrlBadge>
     </div>
 
-    <!-- Seasons List -->
-    <div class="seasons-list flex flex-wrap gap-2">
+    <!-- Seasons List - Single Line -->
+    <div class="seasons-list flex flex-wrap items-center gap-2" @click.stop>
+      <!-- Active Seasons -->
       <SeasonChip
-        v-for="season in seasonsForDisplay"
+        v-for="season in activeSeasons"
         :key="season.id"
         :season="season"
-        :is-current="season.status === 'active'"
+        :is-current="true"
+        :league-slug="leagueSlug"
+        :competition-slug="competition.slug"
+      />
+
+      <!-- Vertical Separator -->
+      <div
+        v-if="activeSeasons.length > 0 && completedSeasons.length > 0"
+        class="h-6 w-px bg-gradient-to-b from-transparent via-[var(--border)] to-transparent mx-2"
+      ></div>
+
+      <!-- Completed Seasons -->
+      <SeasonChip
+        v-for="season in completedSeasons"
+        :key="season.id"
+        :season="season"
+        :is-current="false"
         :league-slug="leagueSlug"
         :competition-slug="competition.slug"
       />
     </div>
-  </div>
+  </router-link>
 </template>
 
 <script setup lang="ts">
@@ -62,28 +76,53 @@ const statusLabel = computed(() => {
 });
 
 /**
- * Convert PublicSeasonSummary to PublicSeason for SeasonChip
+ * Convert PublicSeasonSummary to PublicSeason format
  */
-const seasonsForDisplay = computed((): PublicSeason[] => {
-  return props.competition.seasons.map(
-    (season: PublicSeasonSummary): PublicSeason => ({
-      id: season.id,
-      name: season.name,
-      slug: season.slug,
-      car_class: season.car_class,
-      description: null,
-      logo_url: '',
-      banner_url: null,
-      status: season.status,
-      is_active: season.status === 'active',
-      is_completed: season.status === 'completed',
-      race_divisions_enabled: false,
-      stats: {
-        ...season.stats,
-        total_races: 0,
-        completed_races: 0,
-      },
-    }),
-  );
+const mapSeason = (season: PublicSeasonSummary): PublicSeason => ({
+  id: season.id,
+  name: season.name,
+  slug: season.slug,
+  car_class: season.car_class,
+  description: null,
+  logo_url: '',
+  banner_url: null,
+  status: season.status,
+  is_active: season.status === 'active',
+  is_completed: season.status === 'completed',
+  race_divisions_enabled: false,
+  stats: {
+    ...season.stats,
+    total_races: 0,
+    completed_races: 0,
+  },
+});
+
+/**
+ * Active seasons - sorted by ID descending (most recent first)
+ */
+const activeSeasons = computed((): PublicSeason[] => {
+  return props.competition.seasons
+    .filter((s) => s.status === 'active')
+    .map(mapSeason)
+    .sort((a, b) => b.id - a.id);
+});
+
+/**
+ * Completed seasons - sorted by ID descending (most recent first)
+ */
+const completedSeasons = computed((): PublicSeason[] => {
+  return props.competition.seasons
+    .filter((s) => s.status === 'completed')
+    .map(mapSeason)
+    .sort((a, b) => b.id - a.id);
+});
+
+/**
+ * URL for the primary season (first active, or first completed if no active)
+ */
+const primarySeasonUrl = computed((): string => {
+  const primarySeason = activeSeasons.value[0] || completedSeasons.value[0];
+  if (!primarySeason) return '#';
+  return `/leagues/${props.leagueSlug}/${props.competition.slug}/${primarySeason.slug}`;
 });
 </script>

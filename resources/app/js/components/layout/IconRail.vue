@@ -174,10 +174,10 @@ onMounted(async () => {
 }
 
 .rail-logo {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--cyan), var(--green));
-  border-radius: var(--p-content-border-radius, 6px);
+  width: 48px;
+  height: 48px;
+  /* background: linear-gradient(135deg, var(--cyan), var(--green));
+  border-radius: var(--p-content-border-radius, 6px); */
   display: flex;
   align-items: center;
   justify-content: center;

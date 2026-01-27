@@ -14,11 +14,12 @@
   --font-mono: 'PT IBM Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-display: 'Orbitron', sans-serif;
+  --font-logo: 'Audiowide', sans-serif;
 
   /* Font family utilities for Tailwind v4 */
   --font-family-mono: var(--font-mono);
   --font-family-sans: var(--font-sans);
-
+  --font-family-logo: var(--font-logo);
   /* Font size scale - Tailwind v4 @theme directive */
   /* Note: --text-* variables generate corresponding text-* utility classes */
   --text-base: 0.875rem; /* 14px */
@@ -172,7 +173,7 @@
   --font-display: 'Orbitron', sans-serif;
   --font-mono: 'PT IBM Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
+  --font-logo: 'Audiowide', sans-serif;
   /* Background Colors */
   --bg-dark: #0d1117;
   --bg-panel: #161b22;

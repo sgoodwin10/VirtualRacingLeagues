@@ -795,7 +795,7 @@ watch(
 .td-driver {
   min-width: 160px;
   width: 80%;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   text-align: left;
 }
@@ -809,7 +809,7 @@ watch(
 }
 
 .driver-name {
-  font-size: 14px;
+  font-size: 15px;
   /* font-weight: 500; */
   text-align: left;
   color: var(--text-primary);

@@ -91,7 +91,7 @@ const router = createRouter({
     {
       path: '/leagues/:leagueSlug/:competitionSlug/:seasonSlug',
       name: 'season-detail',
-      component: () => import('@public/views/leagues/SeasonDetailView.vue'),
+      component: () => import('@public/views/leagues/SeasonDetailWrapper.vue'),
       meta: {
         title: 'Season Standings',
       },

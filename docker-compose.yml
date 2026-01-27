@@ -122,7 +122,7 @@ services:
     container_name: ${DOCKER_CONTAINER_NAME}-mailpit
     restart: unless-stopped
     environment:
-      MP_LABEL: ${APP_NAME:-VRL}
+      MP_LABEL: ${APP_NAME:-SGM}
     ports:
       - "8026:8025"  # Web UI
       - "1026:1025"  # SMTP server

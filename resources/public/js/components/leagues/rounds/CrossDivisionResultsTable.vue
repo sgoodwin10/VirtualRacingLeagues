@@ -20,9 +20,7 @@
       <!-- Driver Name Column -->
       <Column field="driverName" header="Driver" class="min-w-[200px]">
         <template #body="{ data }">
-          <span
-            class="font-[family-name:var(--font-display)] font-medium text-[var(--text-primary)]"
-          >
+          <span class="font-body font-medium text-[var(--text-primary)] text-lg">
             {{ data.driverName }}
           </span>
         </template>

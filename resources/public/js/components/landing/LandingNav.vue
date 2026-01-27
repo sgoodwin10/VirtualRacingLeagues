@@ -47,12 +47,11 @@ const handleSmoothScroll = (event: MouseEvent, target: string) => {
         to="/"
         class="font-[var(--font-display)] text-xl font-semibold text-[var(--text-primary)] no-underline tracking-[2px] flex items-center gap-2"
       >
-        <div
-          class="w-10 h-10 bg-gradient-to-br from-[var(--cyan)] to-[var(--purple)] rounded-lg flex items-center justify-center font-black text-xl -skew-x-6"
-        >
-          VR
+        <img src="images/logo/64.png" alt="SimGrid Logo" class="w-10 h-10 mr-1" />
+        <div class="font-logo text-2xl flex items-center">
+          <span class="text-cyan">SimGrid</span>
+          <span class="text-[var(--text-secondary)]">Manager</span>
         </div>
-        Virtual Racing Leagues
       </RouterLink>
 
       <!-- Nav Links (hidden on mobile) -->

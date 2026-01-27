@@ -45,7 +45,7 @@
         <!-- Driver Name Column -->
         <Column field="driver_name" header="Driver">
           <template #body="{ data }">
-            <div class="font-medium text-[var(--text-primary)]">
+            <div class="font-body font-medium text-[var(--text-primary)] text-lg">
               {{ data.driver_name }}
             </div>
           </template>

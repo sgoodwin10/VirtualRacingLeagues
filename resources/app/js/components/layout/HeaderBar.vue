@@ -34,6 +34,12 @@ const showBreadcrumbs = computed(() => props.breadcrumbs && props.breadcrumbs.le
     <!-- Right side - Action buttons slot -->
     <div class="header-right">
       <slot name="actions" />
+
+      <div class="font-logo text-xl flex items-center">
+        <img src="/images/logo/64.png" alt="SimGrid Logo" class="w-6 h-6 mr-1" />
+        <span class="text-cyan">SimGrid</span>
+        <span class="text-gray-400">Manager</span>
+      </div>
     </div>
   </header>
 </template>
@@ -44,7 +50,7 @@ const showBreadcrumbs = computed(() => props.breadcrumbs && props.breadcrumbs.le
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px;
+  padding: 12px 24px;
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border);
   min-height: 60px;

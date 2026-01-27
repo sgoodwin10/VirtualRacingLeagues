@@ -66,11 +66,11 @@
      ============================================ */
   --font-display: 'Orbitron', sans-serif;
   --font-body: 'Inter', sans-serif;
-
+  --font-logo: 'Audiowide', sans-serif;
   /* Map to Tailwind font utilities */
   --font-family-display: var(--font-display);
   --font-family-sans: var(--font-body);
-
+  --font-family-logo: var(--font-logo);
   /* ============================================
      Color Scales
      ============================================ */

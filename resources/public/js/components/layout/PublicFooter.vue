@@ -15,6 +15,7 @@ import { useGtm } from '@public/composables/useGtm';
  */
 
 const currentYear = new Date().getFullYear();
+const appName = import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
 const isContactOpen = ref(false);
 const { trackEvent } = useGtm();
 
@@ -35,7 +36,7 @@ function handleSuccess() {
       <div class="hidden md:grid md:grid-cols-3 md:items-center md:gap-8">
         <!-- Left: Copyright -->
         <div class="text-[var(--text-muted)] text-[0.85rem]">
-          &copy; {{ currentYear }} Virtual Racing Leagues. All rights reserved.
+          &copy; {{ currentYear }} {{ appName }}. All rights reserved.
         </div>
 
         <!-- Middle: Social Links -->
@@ -78,7 +79,7 @@ function handleSuccess() {
       <div class="md:hidden flex flex-col items-center gap-6">
         <!-- Copyright -->
         <div class="text-[var(--text-muted)] text-[0.85rem] text-center">
-          &copy; {{ currentYear }} Virtual Racing Leagues. All rights reserved.
+          &copy; {{ currentYear }} {{ appName }}. All rights reserved.
         </div>
 
         <!-- Social Links -->

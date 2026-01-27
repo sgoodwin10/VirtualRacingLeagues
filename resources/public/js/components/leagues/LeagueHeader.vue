@@ -9,7 +9,7 @@
 
       <!-- Content -->
       <div
-        class="league-header-content flex flex-col sm:flex-row items-start sm:items-end gap-6 px-6 pb-6 -mt-12 sm:-mt-[50px] relative z-[2]"
+        class="league-header-content flex flex-col sm:flex-row items-start sm:items-end gap-6 px-6 pb-4 -mt-12 sm:-mt-[50px] relative z-[2]"
       >
         <!-- Logo -->
         <div
@@ -47,7 +47,8 @@
               <span>{{ stats.competitions_count }} Competitions</span>
               <span v-if="stats.active_seasons_count > 0" class="hidden sm:inline">•</span>
               <span v-if="stats.active_seasons_count > 0">
-                {{ stats.active_seasons_count }} Active Seasons
+                {{ stats.active_seasons_count }}
+                {{ stats.active_seasons_count > 1 ? 'Active Seasons' : 'Active Season' }}
               </span>
             </div>
             <div>
