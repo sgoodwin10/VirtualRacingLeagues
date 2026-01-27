@@ -631,6 +631,9 @@ class SeasonStandingsTest extends TestCase
                 'first_name' => $name,
                 'last_name' => null,
                 'nickname' => null,
+                'psn_id' => null,
+                'iracing_id' => null,
+                'discord_id' => null,
             ]);
 
             $leagueDriver = LeagueDriverEloquent::create([

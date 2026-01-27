@@ -1608,6 +1608,9 @@ final class LeagueApplicationService
                 'drivers.first_name',
                 'drivers.last_name',
                 'drivers.nickname',
+                'drivers.psn_id',
+                'drivers.iracing_id',
+                'drivers.discord_id',
                 'league_drivers.driver_number',
                 'divisions.name as division_name',
                 'rounds.round_number',
@@ -1686,6 +1689,9 @@ final class LeagueApplicationService
                 'drivers.first_name',
                 'drivers.last_name',
                 'drivers.nickname',
+                'drivers.psn_id',
+                'drivers.iracing_id',
+                'drivers.discord_id',
                 'league_drivers.driver_number',
                 'divisions.name as division_name',
                 'rounds.round_number',
@@ -1754,6 +1760,9 @@ final class LeagueApplicationService
                 'drivers.first_name',
                 'drivers.last_name',
                 'drivers.nickname',
+                'drivers.psn_id',
+                'drivers.iracing_id',
+                'drivers.discord_id',
                 'league_drivers.driver_number',
                 'divisions.name as division_name',
                 'rounds.round_number',
@@ -1784,9 +1793,17 @@ final class LeagueApplicationService
 
     /**
      * Format driver name from database result.
-     * Uses nickname if available, otherwise combines first/last name.
      *
-     * @param  object  $result  Database result with first_name, last_name, nickname
+     * Priority order:
+     * 1. Nickname (if exists)
+     * 2. PSN ID (if exists)
+     * 3. iRacing ID (if exists)
+     * 4. Discord ID (if exists)
+     * 5. First name + last name (if both exist)
+     * 6. First name only (if exists)
+     * 7. "Unknown" (fallback)
+     *
+     * @param  object  $result  Database result with driver fields
      */
     private function formatDriverName(object $result): string
     {
@@ -1794,11 +1811,23 @@ final class LeagueApplicationService
             return $result->nickname;
         }
 
+        if (! empty($result->psn_id)) {
+            return $result->psn_id;
+        }
+
+        if (! empty($result->iracing_id)) {
+            return $result->iracing_id;
+        }
+
+        if (! empty($result->discord_id)) {
+            return $result->discord_id;
+        }
+
         if (! empty($result->first_name) && ! empty($result->last_name)) {
             return "{$result->first_name} {$result->last_name}";
         }
 
-        return $result->first_name ?? $result->last_name ?? 'Unknown';
+        return $result->first_name ?? 'Unknown';
     }
 
     /**
@@ -1891,6 +1920,9 @@ final class LeagueApplicationService
                 'drivers.first_name',
                 'drivers.last_name',
                 'drivers.nickname',
+                'drivers.psn_id',
+                'drivers.iracing_id',
+                'drivers.discord_id',
                 'league_drivers.driver_number',
                 'divisions.name as division_name',
             ])
@@ -2106,6 +2138,9 @@ final class LeagueApplicationService
                 'drivers.first_name',
                 'drivers.last_name',
                 'drivers.nickname',
+                'drivers.psn_id',
+                'drivers.iracing_id',
+                'drivers.discord_id',
                 'league_drivers.driver_number',
                 'divisions.name as division_name',
             ])

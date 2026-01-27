@@ -107,8 +107,8 @@ describe('PublicContactModal', () => {
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    const submitButton = Array.from(document.querySelectorAll('button')).find(
-      (btn) => btn.textContent?.includes('Send Message')
+    const submitButton = Array.from(document.querySelectorAll('button')).find((btn) =>
+      btn.textContent?.includes('Send Message'),
     );
     expect(submitButton?.hasAttribute('disabled')).toBe(true);
   });
@@ -134,8 +134,8 @@ describe('PublicContactModal', () => {
     messageTextarea.dispatchEvent(new Event('input'));
     await nextTick();
 
-    const submitButton = Array.from(document.querySelectorAll('button')).find(
-      (btn) => btn.textContent?.includes('Send Message')
+    const submitButton = Array.from(document.querySelectorAll('button')).find((btn) =>
+      btn.textContent?.includes('Send Message'),
     );
     expect(submitButton?.hasAttribute('disabled')).toBe(false);
   });
@@ -321,8 +321,8 @@ describe('PublicContactModal', () => {
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
     // Try to submit empty form (this would be prevented by disabled button, but test validation)
-    const submitButton = Array.from(document.querySelectorAll('button')).find(
-      (btn) => btn.textContent?.includes('Send Message')
+    const submitButton = Array.from(document.querySelectorAll('button')).find((btn) =>
+      btn.textContent?.includes('Send Message'),
     );
     expect(submitButton?.hasAttribute('disabled')).toBe(true);
   });
@@ -353,8 +353,8 @@ describe('PublicContactModal', () => {
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
-    const cancelButton = Array.from(document.querySelectorAll('button')).find(
-      (btn) => btn.textContent?.includes('Cancel')
+    const cancelButton = Array.from(document.querySelectorAll('button')).find((btn) =>
+      btn.textContent?.includes('Cancel'),
     );
     cancelButton?.click();
     await nextTick();

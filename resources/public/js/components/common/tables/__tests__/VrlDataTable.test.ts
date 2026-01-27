@@ -50,9 +50,7 @@ describe('VrlDataTable', () => {
       const wrapper = mountTable({ striped: true });
       const table = wrapper.find('.p-datatable');
       // Check that striped classes are applied
-      expect(table.classes().some((c) => c.includes('[&_tbody_tr:nth-child(even)_td]'))).toBe(
-        true,
-      );
+      expect(table.classes().some((c) => c.includes('[&_tbody_tr:nth-child(even)_td]'))).toBe(true);
     });
   });
 

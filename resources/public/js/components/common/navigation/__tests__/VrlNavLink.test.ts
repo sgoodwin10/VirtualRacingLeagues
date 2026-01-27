@@ -75,7 +75,9 @@ describe('VrlNavLink', () => {
       },
     });
 
-    expect(wrapper.find('[data-test="nav-link"]').classes()).toContain('text-[var(--text-primary)]');
+    expect(wrapper.find('[data-test="nav-link"]').classes()).toContain(
+      'text-[var(--text-primary)]',
+    );
   });
 
   it('does not apply active class when active prop is false', () => {
@@ -89,7 +91,9 @@ describe('VrlNavLink', () => {
       },
     });
 
-    expect(wrapper.find('[data-test="nav-link"]').classes()).toContain('text-[var(--text-secondary)]');
+    expect(wrapper.find('[data-test="nav-link"]').classes()).toContain(
+      'text-[var(--text-secondary)]',
+    );
   });
 
   it('applies aria-current="page" when active', () => {
@@ -274,7 +278,7 @@ describe('VrlNavLink', () => {
     const link = wrapper.find('[data-test="nav-link"]');
     expect(link.exists()).toBe(true);
     // The ::after pseudo-element for underline is defined in inline classes
-    expect(link.classes()).toContain('after:content-[\'\']');
+    expect(link.classes()).toContain("after:content-['']");
   });
 
   it('maintains accessibility with keyboard navigation', () => {

@@ -62,16 +62,22 @@ final class RoundResultsTest extends TestCase
             'name' => 'Division 1',
         ]);
 
-        // Create drivers
+        // Create drivers (set all platform IDs to null to ensure name accessor uses first_name + last_name)
         $driver1 = Driver::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Doe',
             'nickname' => null,
+            'psn_id' => null,
+            'iracing_id' => null,
+            'discord_id' => null,
         ]);
         $driver2 = Driver::factory()->create([
             'first_name' => 'Jane',
             'last_name' => 'Smith',
             'nickname' => null,
+            'psn_id' => null,
+            'iracing_id' => null,
+            'discord_id' => null,
         ]);
 
         $leagueDriver1 = LeagueDriverEloquent::factory()->create([

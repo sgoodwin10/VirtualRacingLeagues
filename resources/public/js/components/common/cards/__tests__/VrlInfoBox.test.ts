@@ -216,7 +216,9 @@ describe('VrlInfoBox', () => {
     expect(infoBox.exists()).toBe(true);
     expect(infoBox.attributes('data-type')).toBe('warning');
     expect(wrapper.find('[data-test="info-box-title"]').text()).toBe('Important Note');
-    expect(wrapper.find('[data-test="info-box-title"]').classes()).toContain('text-[var(--orange)]');
+    expect(wrapper.find('[data-test="info-box-title"]').classes()).toContain(
+      'text-[var(--orange)]',
+    );
     expect(wrapper.find('[data-test="info-box-message"]').text()).toBe(
       'This is an important warning message',
     );

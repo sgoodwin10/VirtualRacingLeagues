@@ -47,16 +47,14 @@ describe('VrlTablePagination', () => {
   describe('Page Buttons', () => {
     it('shows correct number of page buttons (max 5)', () => {
       const wrapper = mountPagination({ totalPages: 5 });
-      const pageButtons = wrapper
-        .findAll('[data-test^="pagination-page-"]');
+      const pageButtons = wrapper.findAll('[data-test^="pagination-page-"]');
 
       expect(pageButtons.length).toBe(5);
     });
 
     it('limits page buttons to 5 when total pages > 5', () => {
       const wrapper = mountPagination({ totalPages: 10 });
-      const pageButtons = wrapper
-        .findAll('[data-test^="pagination-page-"]');
+      const pageButtons = wrapper.findAll('[data-test^="pagination-page-"]');
 
       expect(pageButtons.length).toBeLessThanOrEqual(5);
     });

@@ -14,6 +14,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\Round;
 use App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class PublicRoundControllerTest extends TestCase
@@ -33,6 +34,14 @@ class PublicRoundControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Clear Redis cache to prevent stale cached data from affecting tests
+        // The RoundResultsCacheService uses Cache::store('redis') explicitly
+        try {
+            Cache::store('redis')->flush();
+        } catch (\Throwable) {
+            // Ignore if Redis is not available
+        }
 
         // Create user for league ownership
         /** @var User $user */

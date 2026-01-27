@@ -234,8 +234,11 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
         // Handle special cases for ordering
         if ($orderBy === 'driver_name') {
             $nameExpression = 'COALESCE(drivers.nickname, ' .
+                'drivers.psn_id, ' .
+                'drivers.iracing_id, ' .
+                'drivers.discord_id, ' .
                 "CONCAT(drivers.first_name, ' ', drivers.last_name), " .
-                "drivers.first_name, drivers.last_name, 'Unknown')";
+                "drivers.first_name, 'Unknown')";
 
             $query->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
                 ->join('drivers', 'league_drivers.driver_id', '=', 'drivers.id')
@@ -387,25 +390,27 @@ final class EloquentSeasonDriverRepository implements SeasonDriverRepositoryInte
     }
 
     /**
-     * Batch fetch team IDs for drivers in a season.
-     * Returns a map of driver_id => team_id|null.
+     * Batch fetch team IDs for season drivers.
+     * Returns a map of season_driver_id => team_id|null.
      *
-     * @param  array<int>  $driverIds  List of driver IDs (from league_drivers table)
-     * @return array<int, int|null> Map of driver ID => team ID (null if not on a team)
+     * Note: The $seasonDriverIds parameter contains season_drivers.id values,
+     * which is what's stored in round_results JSON. This matches how
+     * findDriverNamesByIds() works.
+     *
+     * @param  array<int>  $seasonDriverIds  List of season driver IDs (season_drivers.id)
+     * @return array<int, int|null> Map of season driver ID => team ID (null if not on a team)
      */
-    public function findTeamIdsByDriverIds(int $seasonId, array $driverIds): array
+    public function findTeamIdsByDriverIds(int $seasonId, array $seasonDriverIds): array
     {
-        if (empty($driverIds)) {
+        if (empty($seasonDriverIds)) {
             return [];
         }
 
-        // Query to get team IDs for drivers in the season
-        // We need to join with league_drivers to map driver_id to team_id
+        // Query by season_drivers.id directly (matches how round_results stores driver_id)
         $results = SeasonDriverEloquent::query()
-            ->join('league_drivers', 'season_drivers.league_driver_id', '=', 'league_drivers.id')
-            ->where('season_drivers.season_id', $seasonId)
-            ->whereIn('league_drivers.driver_id', $driverIds)
-            ->select('league_drivers.driver_id as driver_id', 'season_drivers.team_id as team_id')
+            ->where('season_id', $seasonId)
+            ->whereIn('id', $seasonDriverIds)
+            ->select('id as driver_id', 'team_id')
             ->get();
 
         $map = [];

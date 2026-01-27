@@ -1,0 +1,292 @@
+Frontend Test Status - Visual Overview
+Generated: 2026-01-26
+
+Legend:
+✅ = Has comprehensive tests
+❌ = Missing tests
+📁 = Category header
+
+════════════════════════════════════════════════════════════════════
+
+📁 VIEWS (5 total, 4 tested, 1 missing)
+
+  Authentication Views:
+    ❌ LoginView.vue                    [HIGH PRIORITY]
+    ❌ RegisterView.vue                 [HIGH PRIORITY]
+    ❌ ForgotPasswordView.vue           [HIGH PRIORITY]
+    ❌ ResetPasswordView.vue            [HIGH PRIORITY]
+    ✅ RegisterSuccessView.vue
+
+  Main Views:
+    ❌ HomeView.vue                     [HIGH PRIORITY]
+
+  League Views:
+    ✅ LeaguesView.vue
+    ✅ LeagueDetailView.vue
+    ✅ SeasonDetailView.vue
+
+════════════════════════════════════════════════════════════════════
+
+📁 LAYOUT COMPONENTS (2 total, 2 tested, 0 missing)
+
+  ✅ PublicHeader.vue
+  ✅ PublicFooter.vue
+
+════════════════════════════════════════════════════════════════════
+
+📁 COMMON COMPONENTS (67 total, 60 tested, 7 missing)
+
+  Buttons (3/3):
+    ✅ VrlButton.vue
+    ✅ VrlIconButton.vue
+    ✅ VrlCloseButton.vue
+
+  Cards (7/7):
+    ✅ VrlCard.vue
+    ✅ VrlCardHeader.vue
+    ✅ VrlCardBody.vue
+    ✅ VrlCardFooter.vue
+    ✅ VrlFeatureCard.vue
+    ✅ VrlInfoBox.vue
+    ✅ VrlMetricCard.vue
+
+  Forms (11/12):
+    ✅ VrlInput.vue
+    ✅ VrlSelect.vue
+    ✅ VrlTextarea.vue
+    ✅ VrlToggle.vue
+    ✅ VrlCheckbox.vue
+    ✅ VrlFormGroup.vue
+    ✅ VrlFormLabel.vue
+    ✅ VrlFormError.vue
+    ✅ VrlFormHelper.vue
+    ✅ VrlInputGroup.vue
+    ✅ VrlCharacterCount.vue
+    ❌ VrlPasswordInput.vue             [HIGH PRIORITY]
+
+  Modals (4/4):
+    ✅ VrlModal.vue
+    ✅ VrlModalHeader.vue
+    ✅ VrlModalBody.vue
+    ✅ VrlModalFooter.vue
+
+  Drawers (3/3):
+    ✅ VrlDrawer.vue
+    ✅ VrlDrawerHeader.vue
+    ✅ VrlDrawerBody.vue
+
+  Accordions (4/2):
+    ✅ VrlAccordion.vue
+    ✅ VrlAccordionItem.vue
+    ❌ VrlAccordionHeader.vue           [MEDIUM PRIORITY]
+    ❌ VrlAccordionContent.vue          [MEDIUM PRIORITY]
+
+  Navigation (5/3):
+    ✅ VrlNavLink.vue
+    ✅ VrlBreadcrumbs.vue
+    ✅ VrlTabs.vue
+    ❌ VrlTab.vue                       [MEDIUM PRIORITY]
+    ❌ VrlBreadcrumbItem.vue            [LOW PRIORITY]
+
+  Panels (3/1):
+    ✅ VrlPanel.vue
+    ❌ VrlPanelHeader.vue               [LOW PRIORITY]
+    ❌ VrlPanelContent.vue              [LOW PRIORITY]
+
+  Tables (7/7):
+    ✅ VrlDataTable.vue
+    ✅ VrlTablePagination.vue
+    ✅ VrlDriverCell.vue
+    ✅ VrlTeamCell.vue
+    ✅ VrlGapCell.vue
+    ✅ VrlPointsCell.vue
+    ✅ VrlPositionCell.vue
+
+  Lists (8/8):
+    ✅ VrlListContainer.vue
+    ✅ VrlListRow.vue
+    ✅ VrlListRowAction.vue
+    ✅ VrlListRowContent.vue
+    ✅ VrlListRowIndicator.vue
+    ✅ VrlListRowStat.vue
+    ✅ VrlListRowStats.vue
+    ✅ VrlListSectionHeader.vue
+
+  Loading (6/6):
+    ✅ VrlSpinner.vue
+    ✅ VrlSkeleton.vue
+    ✅ VrlSkeletonText.vue
+    ✅ VrlSkeletonAvatar.vue
+    ✅ VrlSkeletonCard.vue
+    ✅ VrlLoadingOverlay.vue
+
+  Indicators (2/2):
+    ✅ VrlStatusIndicator.vue
+    ✅ VrlPositionIndicator.vue
+
+  Badges & Tags (2/2):
+    ✅ VrlBadge.vue
+    ✅ VrlTag.vue
+
+  Alerts (1/1):
+    ✅ VrlAlert.vue
+
+════════════════════════════════════════════════════════════════════
+
+📁 LANDING PAGE COMPONENTS (18 total, 17 tested, 1 missing)
+
+  Landing Components:
+    ✅ BackgroundGrid.vue
+    ✅ SpeedLines.vue
+    ✅ HeroStandingsCard.vue
+    ✅ StandingsRow.vue
+    ✅ StatItem.vue
+    ✅ StepCard.vue
+    ✅ PlatformCard.vue
+    ✅ PricingCard.vue
+    ✅ ComingSoonItem.vue
+    ✅ SectionHeader.vue
+    ❌ LandingNav.vue                   [HIGH PRIORITY]
+
+  Landing Sections:
+    ✅ HeroSection.vue
+    ✅ FeaturesSection.vue
+    ✅ PlatformsSection.vue
+    ✅ HowItWorksSection.vue
+    ✅ PricingSection.vue
+    ✅ ComingSoonSection.vue
+    ✅ CtaSection.vue
+
+════════════════════════════════════════════════════════════════════
+
+📁 LEAGUE COMPONENTS (14 total, 10 tested, 4 missing)
+
+  League Components:
+    ✅ LeagueCard.vue
+    ✅ CompetitionCard.vue
+    ✅ SeasonChip.vue
+    ✅ LeagueSearchBar.vue
+    ✅ DivisionTabs.vue
+    ✅ StandingsTable.vue
+    ✅ TeamsStandingsTable.vue
+    ✅ LeagueHeader.vue
+    ✅ LeagueInfoModal.vue
+
+  Round Components:
+    ✅ RoundsSection.vue
+    ✅ RaceResultsTable.vue
+    ❌ RoundAccordion.vue               [MEDIUM PRIORITY]
+    ❌ RaceEventAccordion.vue           [MEDIUM PRIORITY]
+    ❌ RoundStandingsTable.vue          [MEDIUM PRIORITY]
+    ❌ CrossDivisionResultsTable.vue    [MEDIUM PRIORITY]
+
+════════════════════════════════════════════════════════════════════
+
+📁 OTHER COMPONENTS (2 total, 1 tested, 1 missing)
+
+  Contact:
+    ✅ PublicContactModal.vue
+
+  Root:
+    ❌ App.vue                          [HIGH PRIORITY]
+
+════════════════════════════════════════════════════════════════════
+
+📁 COMPOSABLES (8 total, 8 tested, 0 missing)
+
+  ✅ useModal.ts
+  ✅ useLoadingState.ts
+  ✅ useContactForm.ts
+  ✅ useGtm.ts
+  ✅ usePageTitle.ts
+  ✅ usePasswordValidation.ts
+  ✅ useTimeFormat.ts
+  ✅ useToast.ts
+
+════════════════════════════════════════════════════════════════════
+
+📁 SERVICES (4 total, 4 tested, 0 missing)
+
+  ✅ api.ts
+  ✅ authService.ts
+  ✅ contactService.ts
+  ✅ leagueService.ts
+
+════════════════════════════════════════════════════════════════════
+
+📁 STORES (1 total, 1 tested, 0 missing)
+
+  ✅ authStore.ts
+
+════════════════════════════════════════════════════════════════════
+
+📁 UTILITIES (1 total, 0 tested, 1 missing)
+
+  ❌ subdomain.ts                      [MEDIUM PRIORITY]
+
+════════════════════════════════════════════════════════════════════
+
+SUMMARY BY PRIORITY:
+
+HIGH PRIORITY (9 missing tests):
+  ❌ LoginView.vue
+  ❌ RegisterView.vue
+  ❌ ForgotPasswordView.vue
+  ❌ ResetPasswordView.vue
+  ❌ HomeView.vue
+  ❌ VrlPasswordInput.vue
+  ❌ App.vue
+  ❌ LandingNav.vue
+
+MEDIUM PRIORITY (7 missing tests):
+  ❌ VrlAccordionHeader.vue
+  ❌ VrlAccordionContent.vue
+  ❌ VrlTab.vue
+  ❌ RoundAccordion.vue
+  ❌ RaceEventAccordion.vue
+  ❌ RoundStandingsTable.vue
+  ❌ CrossDivisionResultsTable.vue
+  ❌ subdomain.ts
+
+LOW PRIORITY (3 missing tests):
+  ❌ VrlBreadcrumbItem.vue
+  ❌ VrlPanelHeader.vue
+  ❌ VrlPanelContent.vue
+
+════════════════════════════════════════════════════════════════════
+
+TOTAL STATISTICS:
+
+  Total Files:        119 Vue components + 14 other files = 133 files
+  Tested Files:       91 Vue components + 13 other files = 104 files
+  Missing Tests:      28 Vue components + 1 utility file = 29 files
+  Overall Coverage:   78.2%
+
+  Breakdown:
+    Vue Components:   76.5% (91/119)
+    Composables:      100% (8/8)
+    Services:         100% (4/4)
+    Stores:           100% (1/1)
+    Utils:            0% (0/1)
+
+════════════════════════════════════════════════════════════════════
+
+RECOMMENDATION:
+
+Implement tests in 3 phases:
+
+  Phase 1 (Week 1-2): Authentication & Core Views
+    - 7 files (24-40 hours)
+    - Will bring coverage to ~85%
+
+  Phase 2 (Week 3): League Features & Navigation
+    - 6 files (16-24 hours)
+    - Will bring coverage to ~90%
+
+  Phase 3 (Week 4): Supporting Components
+    - 6 files (8-16 hours)
+    - Will bring coverage to ~95%
+
+  Total: 19 files, 48-80 hours of work
+
+════════════════════════════════════════════════════════════════════

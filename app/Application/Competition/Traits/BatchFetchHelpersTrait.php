@@ -62,14 +62,16 @@ trait BatchFetchHelpersTrait
     }
 
     /**
-     * Batch fetch team IDs for drivers in a season.
-     * Returns a map of driver_id => team_id|null.
+     * Batch fetch team IDs for season drivers.
+     * Returns a map of season_driver_id => team_id|null.
      *
-     * @param  array<int>  $driverIds
-     * @return array<int, int|null> Map of driver ID => team ID (null if not on a team)
+     * Note: The $seasonDriverIds are season_drivers.id values (from round_results JSON).
+     *
+     * @param  array<int>  $seasonDriverIds  List of season driver IDs (season_drivers.id)
+     * @return array<int, int|null> Map of season driver ID => team ID (null if not on a team)
      */
-    private function batchFetchDriverTeams(int $seasonId, array $driverIds): array
+    private function batchFetchDriverTeams(int $seasonId, array $seasonDriverIds): array
     {
-        return $this->seasonDriverRepository->findTeamIdsByDriverIds($seasonId, $driverIds);
+        return $this->seasonDriverRepository->findTeamIdsByDriverIds($seasonId, $seasonDriverIds);
     }
 }

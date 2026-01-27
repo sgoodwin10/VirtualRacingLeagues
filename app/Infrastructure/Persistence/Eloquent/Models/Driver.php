@@ -109,10 +109,12 @@ final class Driver extends Model
      *
      * Returns driver's name in priority order:
      * 1. Nickname (if exists)
-     * 2. First name + last name (if both exist)
-     * 3. First name only (if exists)
-     * 4. Last name only (if exists)
-     * 5. "Unknown" (fallback)
+     * 2. PSN ID (if exists)
+     * 3. iRacing ID (if exists)
+     * 4. Discord ID (if exists)
+     * 5. First name + last name (if both exist)
+     * 6. First name only (if exists)
+     * 7. "Unknown" (fallback)
      *
      * @return Attribute<string, never>
      */
@@ -124,16 +126,24 @@ final class Driver extends Model
                     return $this->nickname;
                 }
 
+                if ($this->psn_id) {
+                    return $this->psn_id;
+                }
+
+                if ($this->iracing_id) {
+                    return $this->iracing_id;
+                }
+
+                if ($this->discord_id) {
+                    return $this->discord_id;
+                }
+
                 if ($this->first_name && $this->last_name) {
                     return "{$this->first_name} {$this->last_name}";
                 }
 
                 if ($this->first_name) {
                     return $this->first_name;
-                }
-
-                if ($this->last_name) {
-                    return $this->last_name;
                 }
 
                 return 'Unknown';
