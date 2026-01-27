@@ -7,8 +7,9 @@ import { defineConfig, devices } from '@playwright/test';
  * 1. Host machine: Subdomain URLs resolve via /etc/hosts (use port 8000)
  * 2. Docker container: Subdomain URLs resolve via /etc/hosts (use port 80)
  */
-const TEST_DOMAIN = process.env.TEST_DOMAIN || 'virtualracingleagues.localhost';
+const TEST_DOMAIN = process.env.TEST_DOMAIN || 'localhost';
 const TEST_PORT = process.env.TEST_PORT || '80';
+const NGINX_IP = process.env.NGINX_CONTAINER_IP || '172.19.0.7';
 const BASE_URL = `http://${TEST_DOMAIN}:${TEST_PORT}`;
 
 /**
@@ -49,7 +50,7 @@ export default defineConfig({
             '--no-sandbox',  // Required in Docker
             '--disable-setuid-sandbox',
             // Fix DNS resolution in Docker - map subdomains to nginx container IP
-            '--host-resolver-rules=MAP *.virtualracingleagues.localhost 172.19.0.7,MAP virtualracingleagues.localhost 172.19.0.7',
+            `--host-resolver-rules=MAP *.${TEST_DOMAIN} ${NGINX_IP},MAP ${TEST_DOMAIN} ${NGINX_IP}`,
           ],
         },
       },

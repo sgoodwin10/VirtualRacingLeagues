@@ -49,9 +49,12 @@ services:
     restart: unless-stopped
     ports:
       - "8000:80"
+    environment:
+      - APP_ROOT_DOMAIN=${APP_ROOT_DOMAIN:-localhost}
+      - NGINX_ENVSUBST_FILTER=APP_ROOT_DOMAIN
     volumes:
       - ./:/var/www:delegated
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/conf.d/default.conf.template:/etc/nginx/templates/default.conf.template:ro
     networks:
       - app-network
     depends_on:
@@ -118,6 +121,8 @@ services:
     image: axllent/mailpit:latest
     container_name: ${DOCKER_CONTAINER_NAME}-mailpit
     restart: unless-stopped
+    environment:
+      MP_LABEL: ${APP_NAME:-VRL}
     ports:
       - "8026:8025"  # Web UI
       - "1026:1025"  # SMTP server

@@ -2,6 +2,8 @@
 
 use Laravel\Sanctum\Sanctum;
 
+$domain = env('APP_ROOT_DOMAIN', 'localhost');
+
 return [
 
     /*
@@ -17,8 +19,7 @@ return [
 
     'stateful' => explode(',', (string) env('SANCTUM_STATEFUL_DOMAINS', sprintf(
         '%s%s',
-        'localhost,localhost:3000,localhost:5173,127.0.0.1,127.0.0.1,::1,' .
-        'virtualracingleagues.localhost,admin.virtualracingleagues.localhost,app.virtualracingleagues.localhost',
+        "localhost,localhost:3000,localhost:5173,127.0.0.1,127.0.0.1,::1,{$domain},admin.{$domain},app.{$domain}",
         Sanctum::currentApplicationUrlWithPort(),
         // Sanctum::currentRequestHost(),
     ))),

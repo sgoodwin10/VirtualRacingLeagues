@@ -1,5 +1,8 @@
 <?php
 
+$domain = env('APP_ROOT_DOMAIN', 'localhost');
+$scheme = env('APP_ENV') === 'production' ? 'https' : 'http';
+
 return [
 
     /*
@@ -21,9 +24,9 @@ return [
 
     'allowed_origins' => [
         'http://localhost:5173',
-        'http://virtualracingleagues.localhost',
-        'http://admin.virtualracingleagues.localhost',
-        'http://app.virtualracingleagues.localhost',
+        "{$scheme}://{$domain}",
+        "{$scheme}://admin.{$domain}",
+        "{$scheme}://app.{$domain}",
         'http://localhost',
     ],
 

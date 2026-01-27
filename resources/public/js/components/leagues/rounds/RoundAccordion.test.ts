@@ -378,9 +378,7 @@ describe('RoundAccordion', () => {
         ...mockRoundResults,
         round: {
           ...mockRoundResults.round,
-          qualifying_results: [
-            { id: 1, position: 1, driver_name: 'Driver 1', time: '01:25.456' },
-          ],
+          qualifying_results: [{ id: 1, position: 1, driver_name: 'Driver 1', time: '01:25.456' }],
         },
       };
       leagueService.getRoundResults.mockResolvedValue(resultsWithQualifying);

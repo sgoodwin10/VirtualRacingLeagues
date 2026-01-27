@@ -156,7 +156,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN', '.virtualracingleagues.localhost'),
+    'domain' => env('SESSION_DOMAIN', '.' . env('APP_ROOT_DOMAIN', 'localhost')),
 
     /*
     |--------------------------------------------------------------------------
