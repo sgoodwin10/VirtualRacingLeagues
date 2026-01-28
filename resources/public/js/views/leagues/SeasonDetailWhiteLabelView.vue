@@ -70,7 +70,7 @@
               <tr>
                 <th class="th-position">#</th>
                 <th class="th-driver">Driver</th>
-                <th v-if="hasTeamsInDivision(division)" class="th-team">Team</th>
+        
                 <th
                   v-for="roundNum in getRoundNumbers(division.drivers)"
                   :key="`header-${roundNum}`"
@@ -91,15 +91,20 @@
                 <td :class="['td-position', getPodiumClass(driver.position)]">
                   {{ driver.position }}
                 </td>
-                <td class="td-driver">{{ driver.driver_name }}</td>
-                <td v-if="hasTeamsInDivision(division)" class="td-team">
-                  <img
+                <td class="td-driver">
+                  <div class="flex flex-row items-center gap-2">
+                  <div class="w-full">{{ driver.driver_name }}</div>
+                  <div>
+                    <img
                     v-if="driver.team_logo"
                     :src="driver.team_logo"
                     :alt="driver.team_name || 'Team'"
-                    class="team-logo-img"
+                    class="team-logo-img right-0"
                   />
                   <span v-else-if="driver.team_name">{{ driver.team_name }}</span>
+                  </div>
+                  
+                  </div>
                 </td>
                 <td
                   v-for="roundNum in getRoundNumbers(division.drivers)"
@@ -145,7 +150,7 @@
               <tr>
                 <th class="th-position">#</th>
                 <th class="th-driver">Driver</th>
-                <th v-if="hasTeamsInFlat" class="th-team">Team</th>
+                
                 <th
                   v-for="roundNum in getRoundNumbers(flatDriverStandings)"
                   :key="`header-${roundNum}`"
@@ -166,8 +171,8 @@
                 <td :class="['td-position', getPodiumClass(driver.position)]">
                   {{ driver.position }}
                 </td>
-                <td class="td-driver">{{ driver.driver_name }}</td>
-                <td v-if="hasTeamsInFlat" class="td-team">
+                <td class="td-driver">
+                  {{ driver.driver_name }}
                   <img
                     v-if="driver.team_logo"
                     :src="driver.team_logo"
@@ -221,7 +226,6 @@
               <tr>
                 <th class="th-position">#</th>
                 <th class="th-driver">Driver</th>
-                <th v-if="hasTeamsInFlat" class="th-team">Team</th>
                 <th
                   v-for="roundNum in getRoundNumbers(flatDriverStandings)"
                   :key="`header-${roundNum}`"
@@ -242,8 +246,8 @@
                 <td :class="['td-position', getPodiumClass(driver.position)]">
                   {{ driver.position }}
                 </td>
-                <td class="td-driver">{{ driver.driver_name }}</td>
-                <td v-if="hasTeamsInFlat" class="td-team">
+                <td class="td-driver">
+                  {{ driver.driver_name }}
                   <img
                     v-if="driver.team_logo"
                     :src="driver.team_logo"
@@ -452,10 +456,11 @@
                       class="race-event"
                     >
                       <h4 class="race-event-title">
-                        {{ raceEvent.name || `Race ${raceEvent.race_number}` }}
+                        
                         <span v-if="raceEvent.is_qualifier" class="race-type-badge qualifier"
                           >Qualifying</span
                         >
+                        <span v-else class="race-type-badge race">{{ raceEvent.name || `Race ${raceEvent.race_number}` }}</span>
                       </h4>
 
                       <table
@@ -526,7 +531,7 @@
                                 v-if="
                                   result.has_fastest_lap &&
                                   !raceEvent.is_qualifier &&
-                                  !raceTimesRequired
+                                  raceTimesRequired
                                 "
                                 class="badge badge-fl ml-1"
                                 >FL</span
@@ -555,9 +560,7 @@
                                 }"
                               >
                                 {{ formatRaceTime(result.fastest_lap) }}
-                                <span v-if="result.has_fastest_lap" class="badge badge-fl ml-1"
-                                  >FL</span
-                                >
+                                
                               </td>
                               <td class="td-penalties" :class="{ 'has-penalty': result.penalties }">
                                 {{ formatRaceTime(result.penalties) }}
@@ -1789,9 +1792,11 @@ onMounted(() => {
 
 .division-title {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--wl-text-primary);
-  margin: 0 0 1rem 0;
+  padding: 10px 12px;
+  /* font-family: var(--font-body); */
+  /* text-transform: uppercase; */
 }
 
 .standings-table {
@@ -2014,7 +2019,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
+  padding: 8px 12px;
   background: var(--wl-bg-secondary);
   border: none;
   cursor: pointer;
@@ -2055,7 +2060,7 @@ onMounted(() => {
   font-size: 1rem;
   font-weight: 700;
   color: var(--wl-text-primary);
-  margin-bottom: 0.25rem;
+  /* margin-bottom: 0.25rem; */
 }
 
 .round-circuit {
