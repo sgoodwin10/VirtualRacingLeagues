@@ -258,6 +258,24 @@
 }
 
 /* ============================================
+   ICON AND LABEL ELEMENTS
+   ============================================ */
+
+/* Icon element within button */
+.vrl-btn__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Label element within button */
+.vrl-btn__label {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ============================================
    ICON BUTTON SPECIFIC STYLES
    ============================================ */
 

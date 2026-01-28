@@ -70,7 +70,7 @@
               <tr>
                 <th class="th-position">#</th>
                 <th class="th-driver">Driver</th>
-        
+
                 <th
                   v-for="roundNum in getRoundNumbers(division.drivers)"
                   :key="`header-${roundNum}`"
@@ -93,17 +93,16 @@
                 </td>
                 <td class="td-driver">
                   <div class="flex flex-row items-center gap-2">
-                  <div class="w-full">{{ driver.driver_name }}</div>
-                  <div>
-                    <img
-                    v-if="driver.team_logo"
-                    :src="driver.team_logo"
-                    :alt="driver.team_name || 'Team'"
-                    class="team-logo-img right-0"
-                  />
-                  <span v-else-if="driver.team_name">{{ driver.team_name }}</span>
-                  </div>
-                  
+                    <div class="w-full">{{ driver.driver_name }}</div>
+                    <div>
+                      <img
+                        v-if="driver.team_logo"
+                        :src="driver.team_logo"
+                        :alt="driver.team_name || 'Team'"
+                        class="team-logo-img right-0"
+                      />
+                      <span v-else-if="driver.team_name">{{ driver.team_name }}</span>
+                    </div>
                   </div>
                 </td>
                 <td
@@ -150,7 +149,7 @@
               <tr>
                 <th class="th-position">#</th>
                 <th class="th-driver">Driver</th>
-                
+
                 <th
                   v-for="roundNum in getRoundNumbers(flatDriverStandings)"
                   :key="`header-${roundNum}`"
@@ -348,7 +347,10 @@
       </section>
 
       <!-- Rounds Section -->
-      <section v-if="seasonData.rounds.length > 0" class="rounds-section container mx-auto max-w-5xl">
+      <section
+        v-if="seasonData.rounds.length > 0"
+        class="rounds-section container mx-auto max-w-5xl"
+      >
         <h3 class="section-title">Race Rounds</h3>
 
         <div class="rounds-list">
@@ -456,11 +458,12 @@
                       class="race-event"
                     >
                       <h4 class="race-event-title">
-                        
                         <span v-if="raceEvent.is_qualifier" class="race-type-badge qualifier"
                           >Qualifying</span
                         >
-                        <span v-else class="race-type-badge race">{{ raceEvent.name || `Race ${raceEvent.race_number}` }}</span>
+                        <span v-else class="race-type-badge race">{{
+                          raceEvent.name || `Race ${raceEvent.race_number}`
+                        }}</span>
                       </h4>
 
                       <table
@@ -560,7 +563,6 @@
                                 }"
                               >
                                 {{ formatRaceTime(result.fastest_lap) }}
-                                
                               </td>
                               <td class="td-penalties" :class="{ 'has-penalty': result.penalties }">
                                 {{ formatRaceTime(result.penalties) }}
@@ -616,163 +618,80 @@
                   </div>
                 </div>
 
-                <!-- Qualifying Times Tab -->
+                <!-- All Times Tab -->
                 <div
-                  v-if="raceTimesRequired && getActiveMainTab(round.id) === 'qualifying-times'"
+                  v-if="raceTimesRequired && getActiveMainTab(round.id) === 'all-times'"
                   class="tab-content"
                 >
                   <div
-                    v-if="
-                      getEnrichedCrossDivisionResults(
-                        round.id,
-                        getRoundResultsData(round.id)?.round.qualifying_results ?? null,
-                      ).length > 0
-                    "
+                    v-if="getSortedCombinedTimes(round.id).length > 0"
                     class="cross-division-table-wrapper"
                   >
-                    <table class="cross-division-table">
+                    <table class="cross-division-table all-times-table">
                       <thead>
                         <tr>
                           <th class="th-pos">#</th>
                           <th class="th-driver">Driver</th>
                           <th v-if="seasonData.has_divisions" class="th-division">Division</th>
-                          <th class="th-time">Time</th>
+                          <th
+                            class="th-time sortable"
+                            :class="{ 'is-sorted': isColumnSorted(round.id, 'qualifying') }"
+                            @click="handleAllTimesSort(round.id, 'qualifying')"
+                          >
+                            Qualifying Time
+                            <span v-if="isColumnSorted(round.id, 'qualifying')" class="sort-arrow"
+                              >▲</span
+                            >
+                          </th>
+                          <th
+                            class="th-time sortable"
+                            :class="{ 'is-sorted': isColumnSorted(round.id, 'race') }"
+                            @click="handleAllTimesSort(round.id, 'race')"
+                          >
+                            Race Time
+                            <span v-if="isColumnSorted(round.id, 'race')" class="sort-arrow"
+                              >▲</span
+                            >
+                          </th>
+                          <th
+                            class="th-time sortable"
+                            :class="{ 'is-sorted': isColumnSorted(round.id, 'fastest') }"
+                            @click="handleAllTimesSort(round.id, 'fastest')"
+                          >
+                            Fastest Lap
+                            <span v-if="isColumnSorted(round.id, 'fastest')" class="sort-arrow"
+                              >▲</span
+                            >
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr
-                          v-for="result in getEnrichedCrossDivisionResults(
-                            round.id,
-                            getRoundResultsData(round.id)?.round.qualifying_results ?? null,
-                          )"
-                          :key="result.position"
-                          :class="getPodiumClass(result.position)"
+                          v-for="(entry, index) in getSortedCombinedTimes(round.id)"
+                          :key="`${entry.driverName}-${entry.divisionId}`"
+                          :class="getPodiumClass(index + 1)"
                         >
-                          <td :class="['td-pos', getPodiumClass(result.position)]">
-                            {{ result.position }}
+                          <td :class="['td-pos', getPodiumClass(index + 1)]">
+                            {{ index + 1 }}
                           </td>
-                          <td class="td-driver">{{ result.driverName }}</td>
+                          <td class="td-driver">{{ entry.driverName }}</td>
                           <td v-if="seasonData.has_divisions" class="td-division">
                             <span
-                              v-if="result.divisionName"
-                              :class="['division-badge', getDivisionBadgeClass(result.divisionId)]"
+                              v-if="entry.divisionName"
+                              :class="['division-badge', getDivisionBadgeClass(entry.divisionId)]"
                             >
-                              {{ result.divisionName }}
+                              {{ entry.divisionName }}
                             </span>
                             <span v-else>-</span>
                           </td>
-                          <td class="td-time">{{ result.formattedTime }}</td>
+                          <td class="td-time">{{ entry.qualifyingFormatted }}</td>
+                          <td class="td-time">{{ entry.raceFormatted }}</td>
+                          <td class="td-time">{{ entry.fastestLapFormatted }}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                  <div v-else class="empty-races">No qualifying times available</div>
-                </div>
-
-                <!-- Race Times Tab -->
-                <div
-                  v-if="raceTimesRequired && getActiveMainTab(round.id) === 'race-times'"
-                  class="tab-content"
-                >
-                  <div
-                    v-if="
-                      getEnrichedCrossDivisionResults(
-                        round.id,
-                        getRoundResultsData(round.id)?.round.race_time_results ?? null,
-                      ).length > 0
-                    "
-                    class="cross-division-table-wrapper"
-                  >
-                    <table class="cross-division-table">
-                      <thead>
-                        <tr>
-                          <th class="th-pos">#</th>
-                          <th class="th-driver">Driver</th>
-                          <th v-if="seasonData.has_divisions" class="th-division">Division</th>
-                          <th class="th-time">Time</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr
-                          v-for="result in getEnrichedCrossDivisionResults(
-                            round.id,
-                            getRoundResultsData(round.id)?.round.race_time_results ?? null,
-                          )"
-                          :key="result.position"
-                          :class="getPodiumClass(result.position)"
-                        >
-                          <td :class="['td-pos', getPodiumClass(result.position)]">
-                            {{ result.position }}
-                          </td>
-                          <td class="td-driver">{{ result.driverName }}</td>
-                          <td v-if="seasonData.has_divisions" class="td-division">
-                            <span
-                              v-if="result.divisionName"
-                              :class="['division-badge', getDivisionBadgeClass(result.divisionId)]"
-                            >
-                              {{ result.divisionName }}
-                            </span>
-                            <span v-else>-</span>
-                          </td>
-                          <td class="td-time">{{ result.formattedTime }}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div v-else class="empty-races">No race times available</div>
-                </div>
-
-                <!-- Fastest Laps Tab -->
-                <div
-                  v-if="raceTimesRequired && getActiveMainTab(round.id) === 'fastest-laps'"
-                  class="tab-content"
-                >
-                  <div
-                    v-if="
-                      getEnrichedCrossDivisionResults(
-                        round.id,
-                        getRoundResultsData(round.id)?.round.fastest_lap_results ?? null,
-                      ).length > 0
-                    "
-                    class="cross-division-table-wrapper"
-                  >
-                    <table class="cross-division-table">
-                      <thead>
-                        <tr>
-                          <th class="th-pos">#</th>
-                          <th class="th-driver">Driver</th>
-                          <th v-if="seasonData.has_divisions" class="th-division">Division</th>
-                          <th class="th-time">Time</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr
-                          v-for="result in getEnrichedCrossDivisionResults(
-                            round.id,
-                            getRoundResultsData(round.id)?.round.fastest_lap_results ?? null,
-                          )"
-                          :key="result.position"
-                          :class="getPodiumClass(result.position)"
-                        >
-                          <td :class="['td-pos', getPodiumClass(result.position)]">
-                            {{ result.position }}
-                          </td>
-                          <td class="td-driver">{{ result.driverName }}</td>
-                          <td v-if="seasonData.has_divisions" class="td-division">
-                            <span
-                              v-if="result.divisionName"
-                              :class="['division-badge', getDivisionBadgeClass(result.divisionId)]"
-                            >
-                              {{ result.divisionName }}
-                            </span>
-                            <span v-else>-</span>
-                          </td>
-                          <td class="td-time">{{ result.formattedTime }}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div v-else class="empty-races">No fastest lap times available</div>
+                  <div v-else class="empty-races">No times available</div>
                 </div>
               </template>
 
@@ -789,6 +708,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useTitle } from '@vueuse/core';
 import { leagueService } from '@public/services/leagueService';
 import type {
   PublicSeasonDetailResponse,
@@ -820,6 +740,19 @@ const roundResults = ref<Record<number, RoundResultsResponse>>({});
 const loadingRounds = ref<number[]>([]);
 const activeMainTabs = ref<Record<number, string>>({});
 const activeDivisionTabs = ref<Record<number, string>>({});
+const allTimesSortColumn = ref<Record<number, 'qualifying' | 'race' | 'fastest'>>({});
+const allTimesSortDirection = ref<Record<number, 'asc'>>({});
+
+/**
+ * Page title for browser tab
+ */
+const pageTitle = computed(() => {
+  if (!seasonData.value) return 'Loading...';
+  const siteName = import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
+  return `${seasonData.value.season.name} - WL - ${seasonData.value.competition.name} - ${seasonData.value.league.name} - ${siteName}`;
+});
+
+useTitle(pageTitle);
 
 /**
  * League logo URL
@@ -884,6 +817,7 @@ const teamChampionshipResults = computed<TeamChampionshipStanding[]>(() => {
 /**
  * Check if division has teams
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function hasTeamsInDivision(division: SeasonStandingDivision): boolean {
   return division.drivers.some((d) => d.team_name || d.team_logo);
 }
@@ -891,6 +825,7 @@ function hasTeamsInDivision(division: SeasonStandingDivision): boolean {
 /**
  * Check if flat standings have teams
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const hasTeamsInFlat = computed<boolean>(() => {
   return flatDriverStandings.value.some((d) => d.team_name || d.team_logo);
 });
@@ -1093,11 +1028,7 @@ function getMainTabs(): Array<{ key: string; label: string }> {
   const tabs = [{ key: 'round-results', label: 'Round Results' }];
 
   if (raceTimesRequired.value) {
-    tabs.push(
-      { key: 'qualifying-times', label: 'Qualifying Times' },
-      { key: 'race-times', label: 'Race Times' },
-      { key: 'fastest-laps', label: 'Fastest Laps' },
-    );
+    tabs.push({ key: 'all-times', label: 'All Times' });
   }
 
   return tabs;
@@ -1377,73 +1308,6 @@ function getPositionsGainedClass(value: number | null | undefined): string {
 }
 
 /**
- * Get enriched cross-division results
- */
-interface EnrichedCrossDivisionResult {
-  position: number;
-  driverName: string;
-  divisionId: number | null;
-  divisionName: string | null;
-  formattedTime: string;
-}
-
-function getEnrichedCrossDivisionResults(
-  roundId: number,
-  results: Array<{ position: number; race_result_id: number; time_ms: number }> | null,
-): EnrichedCrossDivisionResult[] {
-  if (!results || results.length === 0) {
-    return [];
-  }
-
-  const data = roundResults.value[roundId];
-  if (!data) return [];
-
-  // Build race results map
-  const raceResultsMap = new Map();
-  data.race_events.forEach((event) => {
-    event.results.forEach((result) => raceResultsMap.set(result.id, result));
-  });
-
-  // Build divisions map
-  const divisionsMap = new Map();
-  data.divisions.forEach((division) => divisionsMap.set(division.id, division.name));
-
-  const firstPlaceTimeMs = results[0]?.time_ms;
-  const canCalculateDifferences = firstPlaceTimeMs != null && firstPlaceTimeMs >= 0;
-
-  return results.map((result) => {
-    let driverName = 'Unknown Driver';
-    let divisionId: number | null = null;
-    let divisionName: string | null = null;
-
-    const raceResult = raceResultsMap.get(result.race_result_id);
-    if (raceResult) {
-      driverName = raceResult.driver?.name || 'Unknown Driver';
-      if (raceResult.division_id) {
-        divisionId = raceResult.division_id;
-        divisionName = divisionsMap.get(raceResult.division_id) || null;
-      }
-    }
-
-    let formattedTime: string;
-    if (result.position === 1 || !canCalculateDifferences) {
-      formattedTime = formatTime(result.time_ms);
-    } else {
-      const differenceMs = result.time_ms - firstPlaceTimeMs;
-      formattedTime = formatTimeDifference(differenceMs);
-    }
-
-    return {
-      position: result.position,
-      driverName,
-      divisionId,
-      divisionName,
-      formattedTime,
-    };
-  });
-}
-
-/**
  * Format time in MM:SS.mmm
  */
 function formatTime(timeMs: number): string {
@@ -1499,6 +1363,258 @@ function getDivisionBadgeClass(divisionId: number | null): string {
   const variants = ['badge-cyan', 'badge-green', 'badge-purple', 'badge-orange', 'badge-red'];
   const variantIndex = (divisionId - 1) % variants.length;
   return variants[variantIndex] ?? variants[0] ?? '';
+}
+
+/**
+ * Combined time entry for all times table
+ */
+interface CombinedTimeEntry {
+  driverName: string;
+  divisionId: number | null;
+  divisionName: string | null;
+  qualifyingTimeMs: number | null;
+  raceTimeMs: number | null;
+  fastestLapMs: number | null;
+  qualifyingFormatted: string;
+  raceFormatted: string;
+  fastestLapFormatted: string;
+}
+
+/**
+ * Get combined times data merging qualifying, race, and fastest lap results
+ */
+function getCombinedTimesData(roundId: number): CombinedTimeEntry[] {
+  const data = roundResults.value[roundId];
+  if (!data) return [];
+
+  const qualifyingResults = data.round?.qualifying_results ?? [];
+  const raceTimeResults = data.round?.race_time_results ?? [];
+  const fastestLapResults = data.round?.fastest_lap_results ?? [];
+
+  // Build race results map
+  const raceResultsMap = new Map();
+  data.race_events.forEach((event) => {
+    event.results.forEach((result) => raceResultsMap.set(result.id, result));
+  });
+
+  // Build divisions map
+  const divisionsMap = new Map();
+  data.divisions.forEach((division) => divisionsMap.set(division.id, division.name));
+
+  // Build driver map with all times
+  const driverMap = new Map<string, CombinedTimeEntry>();
+
+  // Process qualifying results
+  qualifyingResults.forEach((result) => {
+    const raceResult = raceResultsMap.get(result.race_result_id);
+    if (!raceResult) return;
+
+    const driverName = raceResult.driver?.name || 'Unknown Driver';
+    const divisionId = raceResult.division_id ?? null;
+    const divisionName = divisionId ? divisionsMap.get(divisionId) || null : null;
+
+    const key = `${driverName}-${divisionId || 'nodiv'}`;
+    driverMap.set(key, {
+      driverName,
+      divisionId,
+      divisionName,
+      qualifyingTimeMs: result.time_ms,
+      raceTimeMs: null,
+      fastestLapMs: null,
+      qualifyingFormatted: '', // Will be set later
+      raceFormatted: '-',
+      fastestLapFormatted: '-',
+    });
+  });
+
+  // Process race time results
+  raceTimeResults.forEach((result) => {
+    const raceResult = raceResultsMap.get(result.race_result_id);
+    if (!raceResult) return;
+
+    const driverName = raceResult.driver?.name || 'Unknown Driver';
+    const divisionId = raceResult.division_id ?? null;
+    const divisionName = divisionId ? divisionsMap.get(divisionId) || null : null;
+
+    const key = `${driverName}-${divisionId || 'nodiv'}`;
+    const existing = driverMap.get(key);
+
+    if (existing) {
+      existing.raceTimeMs = result.time_ms;
+    } else {
+      driverMap.set(key, {
+        driverName,
+        divisionId,
+        divisionName,
+        qualifyingTimeMs: null,
+        raceTimeMs: result.time_ms,
+        fastestLapMs: null,
+        qualifyingFormatted: '-',
+        raceFormatted: '', // Will be set later
+        fastestLapFormatted: '-',
+      });
+    }
+  });
+
+  // Process fastest lap results
+  fastestLapResults.forEach((result) => {
+    const raceResult = raceResultsMap.get(result.race_result_id);
+    if (!raceResult) return;
+
+    const driverName = raceResult.driver?.name || 'Unknown Driver';
+    const divisionId = raceResult.division_id ?? null;
+    const divisionName = divisionId ? divisionsMap.get(divisionId) || null : null;
+
+    const key = `${driverName}-${divisionId || 'nodiv'}`;
+    const existing = driverMap.get(key);
+
+    if (existing) {
+      existing.fastestLapMs = result.time_ms;
+    } else {
+      driverMap.set(key, {
+        driverName,
+        divisionId,
+        divisionName,
+        qualifyingTimeMs: null,
+        raceTimeMs: null,
+        fastestLapMs: result.time_ms,
+        qualifyingFormatted: '-',
+        raceFormatted: '-',
+        fastestLapFormatted: '', // Will be set later
+      });
+    }
+  });
+
+  const entries = Array.from(driverMap.values());
+
+  // Find the fastest time in each category (minimum time)
+  let fastestQualifyingMs: number | null = null;
+  let fastestRaceMs: number | null = null;
+  let fastestLapMs: number | null = null;
+
+  entries.forEach((entry) => {
+    if (
+      entry.qualifyingTimeMs !== null &&
+      (fastestQualifyingMs === null || entry.qualifyingTimeMs < fastestQualifyingMs)
+    ) {
+      fastestQualifyingMs = entry.qualifyingTimeMs;
+    }
+    if (entry.raceTimeMs !== null && (fastestRaceMs === null || entry.raceTimeMs < fastestRaceMs)) {
+      fastestRaceMs = entry.raceTimeMs;
+    }
+    if (
+      entry.fastestLapMs !== null &&
+      (fastestLapMs === null || entry.fastestLapMs < fastestLapMs)
+    ) {
+      fastestLapMs = entry.fastestLapMs;
+    }
+  });
+
+  // Format each entry's times (absolute for fastest, diff for others)
+  entries.forEach((entry) => {
+    // Qualifying
+    if (entry.qualifyingTimeMs !== null) {
+      if (entry.qualifyingTimeMs === fastestQualifyingMs) {
+        entry.qualifyingFormatted = formatTime(entry.qualifyingTimeMs);
+      } else if (fastestQualifyingMs !== null) {
+        const diff = entry.qualifyingTimeMs - fastestQualifyingMs;
+        entry.qualifyingFormatted = formatTimeDifference(diff);
+      } else {
+        entry.qualifyingFormatted = formatTime(entry.qualifyingTimeMs);
+      }
+    } else {
+      entry.qualifyingFormatted = '-';
+    }
+
+    // Race Time
+    if (entry.raceTimeMs !== null) {
+      if (entry.raceTimeMs === fastestRaceMs) {
+        entry.raceFormatted = formatTime(entry.raceTimeMs);
+      } else if (fastestRaceMs !== null) {
+        const diff = entry.raceTimeMs - fastestRaceMs;
+        entry.raceFormatted = formatTimeDifference(diff);
+      } else {
+        entry.raceFormatted = formatTime(entry.raceTimeMs);
+      }
+    } else {
+      entry.raceFormatted = '-';
+    }
+
+    // Fastest Lap
+    if (entry.fastestLapMs !== null) {
+      if (entry.fastestLapMs === fastestLapMs) {
+        entry.fastestLapFormatted = formatTime(entry.fastestLapMs);
+      } else if (fastestLapMs !== null) {
+        const diff = entry.fastestLapMs - fastestLapMs;
+        entry.fastestLapFormatted = formatTimeDifference(diff);
+      } else {
+        entry.fastestLapFormatted = formatTime(entry.fastestLapMs);
+      }
+    } else {
+      entry.fastestLapFormatted = '-';
+    }
+  });
+
+  return entries;
+}
+
+/**
+ * Get sorted combined times data
+ */
+function getSortedCombinedTimes(roundId: number): CombinedTimeEntry[] {
+  const data = getCombinedTimesData(roundId);
+  if (data.length === 0) return [];
+
+  // Initialize sort if not set
+  if (!allTimesSortColumn.value[roundId]) {
+    allTimesSortColumn.value = { ...allTimesSortColumn.value, [roundId]: 'qualifying' };
+    allTimesSortDirection.value = { ...allTimesSortDirection.value, [roundId]: 'asc' };
+  }
+
+  const sortColumn = allTimesSortColumn.value[roundId] ?? 'qualifying';
+
+  // Sort by the selected column (fastest times first)
+  const sorted = [...data].sort((a, b) => {
+    let aTime: number | null = null;
+    let bTime: number | null = null;
+
+    if (sortColumn === 'qualifying') {
+      aTime = a.qualifyingTimeMs;
+      bTime = b.qualifyingTimeMs;
+    } else if (sortColumn === 'race') {
+      aTime = a.raceTimeMs;
+      bTime = b.raceTimeMs;
+    } else if (sortColumn === 'fastest') {
+      aTime = a.fastestLapMs;
+      bTime = b.fastestLapMs;
+    }
+
+    // Null times go to the bottom
+    if (aTime === null && bTime === null) return 0;
+    if (aTime === null) return 1;
+    if (bTime === null) return -1;
+
+    // Ascending (fastest first)
+    return aTime - bTime;
+  });
+
+  return sorted;
+}
+
+/**
+ * Handle column sort click
+ */
+function handleAllTimesSort(roundId: number, column: 'qualifying' | 'race' | 'fastest'): void {
+  allTimesSortColumn.value = { ...allTimesSortColumn.value, [roundId]: column };
+  // We only support ascending (fastest first)
+  allTimesSortDirection.value = { ...allTimesSortDirection.value, [roundId]: 'asc' };
+}
+
+/**
+ * Check if column is currently sorted
+ */
+function isColumnSorted(roundId: number, column: 'qualifying' | 'race' | 'fastest'): boolean {
+  return allTimesSortColumn.value[roundId] === column;
 }
 
 /**
@@ -2460,6 +2576,32 @@ onMounted(() => {
 .th-division,
 .td-division {
   width: 180px;
+}
+
+/* All Times Table - Sortable Headers */
+.all-times-table .sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+  position: relative;
+  padding-right: 1.5rem;
+}
+
+.all-times-table .sortable:hover {
+  background: var(--wl-bg-secondary);
+}
+
+.all-times-table .sortable.is-sorted {
+  background: var(--wl-accent-primary);
+  color: white;
+}
+
+.all-times-table .sort-arrow {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
 }
 
 /* Division Badges */

@@ -66,7 +66,7 @@ describe('PublicContactModal', () => {
   };
 
   it('should render when visible is true', async () => {
-    const wrapper = createWrapper({ visible: true });
+    createWrapper({ visible: true });
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
@@ -74,7 +74,7 @@ describe('PublicContactModal', () => {
   });
 
   it('should have all required form fields', async () => {
-    const wrapper = createWrapper({ visible: true });
+    createWrapper({ visible: true });
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
@@ -85,7 +85,7 @@ describe('PublicContactModal', () => {
   });
 
   it('should render reason options', async () => {
-    const wrapper = createWrapper({ visible: true });
+    createWrapper({ visible: true });
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
@@ -94,7 +94,7 @@ describe('PublicContactModal', () => {
   });
 
   it('should show character count for message field', async () => {
-    const wrapper = createWrapper({ visible: true });
+    createWrapper({ visible: true });
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
@@ -103,7 +103,7 @@ describe('PublicContactModal', () => {
   });
 
   it('should disable submit button when form is invalid', async () => {
-    const wrapper = createWrapper({ visible: true });
+    createWrapper({ visible: true });
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
@@ -114,7 +114,7 @@ describe('PublicContactModal', () => {
   });
 
   it('should enable submit button when form is valid', async () => {
-    const wrapper = createWrapper({ visible: true });
+    createWrapper({ visible: true });
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
@@ -144,7 +144,7 @@ describe('PublicContactModal', () => {
     const mockSubmit = vi.mocked(contactService.submit);
     mockSubmit.mockResolvedValue({ id: 1, message: 'Success' });
 
-    const wrapper = createWrapper({ visible: true });
+    createWrapper({ visible: true });
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
@@ -316,7 +316,7 @@ describe('PublicContactModal', () => {
   });
 
   it('should show validation errors when submitting empty form', async () => {
-    const wrapper = createWrapper({ visible: true });
+    createWrapper({ visible: true });
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 
@@ -328,7 +328,7 @@ describe('PublicContactModal', () => {
   });
 
   it('should clear individual field errors on input', async () => {
-    const wrapper = createWrapper({ visible: true });
+    createWrapper({ visible: true });
     await nextTick();
     await nextTick(); // Extra tick for PrimeVue Dialog teleport
 

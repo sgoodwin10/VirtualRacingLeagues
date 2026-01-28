@@ -51,8 +51,6 @@ import type {
   PublicSeason,
 } from '@public/types/public';
 import SeasonChip from '@public/components/leagues/SeasonChip.vue';
-import VrlBadge from '@public/components/common/badges/VrlBadge.vue';
-import type { BadgeVariant } from '@public/types/components';
 
 interface Props {
   competition: PublicCompetitionDetail;
@@ -60,20 +58,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-
-/**
- * Determine competition status based on active seasons
- */
-const statusVariant = computed((): BadgeVariant => {
-  return props.competition.stats.active_seasons > 0 ? 'green' : 'default';
-});
-
-/**
- * Status label
- */
-const statusLabel = computed(() => {
-  return props.competition.stats.active_seasons > 0 ? 'Active' : 'Completed';
-});
 
 /**
  * Convert PublicSeasonSummary to PublicSeason format

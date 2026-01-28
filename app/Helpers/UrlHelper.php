@@ -10,7 +10,7 @@ class UrlHelper
      * Build a subdomain URL from the base app URL
      * Properly handles port numbers in development environments
      *
-     * @param string $subdomain The subdomain to prepend (empty string for root domain)
+     * @param  string  $subdomain  The subdomain to prepend (empty string for root domain)
      * @return string The fully constructed URL
      */
     public static function buildSubdomainUrl(string $subdomain): string

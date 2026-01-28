@@ -91,6 +91,19 @@ const isIconOnly = computed(() => {
 });
 
 /**
+ * Computed icon size based on button size
+ */
+const iconSize = computed(() => {
+  const sizeMap: Record<string, number> = {
+    sm: 16,
+    default: 18,
+    lg: 20,
+    xl: 24,
+  };
+  return sizeMap[props.size];
+});
+
+/**
  * Get the appropriate aria-label
  * Priority: ariaLabel prop > label prop > fallback for icon-only
  */
@@ -117,23 +130,34 @@ const handleClick = (event: MouseEvent) => {
     :disabled="disabled"
     :loading="loading"
     :type="type"
-    :icon-pos="iconPos"
     :aria-label="effectiveAriaLabel"
     :pt="pt"
     @click="handleClick"
   >
-    <!-- Icon slot (handles both left and right positions) -->
-    <template v-if="icon" #icon>
-      <component
-        :is="icon"
-        :size="size === 'sm' ? 16 : size === 'lg' ? 20 : size === 'xl' ? 24 : 18"
-      />
-    </template>
+    <!-- Icon on left -->
+    <component
+      :is="icon"
+      v-if="icon && iconPos === 'left'"
+      :size="iconSize"
+      weight="regular"
+      color="currentColor"
+      class="vrl-btn__icon"
+    />
 
-    <!-- Default slot for button text/content -->
-    <slot>
-      {{ label }}
-    </slot>
+    <!-- Label/slot content -->
+    <span v-if="label || $slots.default" class="vrl-btn__label">
+      <slot>{{ label }}</slot>
+    </span>
+
+    <!-- Icon on right -->
+    <component
+      :is="icon"
+      v-if="icon && iconPos === 'right'"
+      :size="iconSize"
+      weight="regular"
+      color="currentColor"
+      class="vrl-btn__icon"
+    />
   </PrimeButton>
 </template>
 

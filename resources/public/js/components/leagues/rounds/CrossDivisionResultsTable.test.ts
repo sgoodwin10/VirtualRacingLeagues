@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
 import CrossDivisionResultsTable from './CrossDivisionResultsTable.vue';
 import type { CrossDivisionResult, RaceEventResults } from '@public/types/public';

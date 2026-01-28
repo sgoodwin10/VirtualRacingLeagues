@@ -30,7 +30,7 @@ vi.mock('primevue/usetoast', () => ({
 }));
 
 // Create router with query params
-const createTestRouter = (queryParams = {}) => {
+const createTestRouter = (_queryParams = {}) => {
   return createRouter({
     history: createMemoryHistory(),
     routes: [

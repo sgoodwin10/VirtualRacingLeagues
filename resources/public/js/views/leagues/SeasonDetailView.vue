@@ -26,25 +26,39 @@
           <VrlBreadcrumbs :items="breadcrumbItems" class="mb-4" />
 
           <!-- Page Header -->
-          <div class="page-header mb-8 pt-2 flex items-center gap-4">
-            <!-- League Logo -->
-            <div class="league-logo-container">
-              <div v-if="leagueLogoUrl" class="logo-image-wrapper">
-                <img
-                  :src="leagueLogoUrl"
-                  :alt="`${seasonData.league.name} logo`"
-                  class="w-full h-full object-contain"
-                />
+          <div class="page-header mb-8 pt-2 flex items-center justify-between w-full">
+            <!-- Left: Logo + Name -->
+            <div class="flex items-center gap-4">
+              <!-- League Logo -->
+              <div class="league-logo-container">
+                <div v-if="leagueLogoUrl" class="logo-image-wrapper">
+                  <img
+                    :src="leagueLogoUrl"
+                    :alt="`${seasonData.league.name} logo`"
+                    class="w-full h-full object-contain"
+                  />
+                </div>
+                <span v-else class="league-logo-initials">{{ leagueInitials }}</span>
               </div>
-              <span v-else class="league-logo-initials">{{ leagueInitials }}</span>
+
+              <!-- League Name -->
+              <h1
+                class="league-name font-[var(--font-display)] text-3xl font-bold text-[var(--text-primary)]"
+              >
+                {{ seasonData.league.name }}
+              </h1>
             </div>
 
-            <!-- League Name -->
-            <h1
-              class="league-name font-[var(--font-display)] text-3xl font-bold text-[var(--text-primary)]"
-            >
-              {{ seasonData.league.name }}
-            </h1>
+            <!-- Right: Whitelabel View Button -->
+            <VrlButton
+              variant="secondary"
+              outline
+              label="ViewWhitelabel Table"
+              :icon="PhArrowSquareOut"
+              icon-pos="left"
+              aria-label="Open whitelabel view in new tab"
+              @click="openWhitelabelView"
+            />
           </div>
 
           <!-- Standings Section -->
@@ -103,7 +117,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useTitle } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
+import { PhArrowSquareOut } from '@phosphor-icons/vue';
 import { leagueService } from '@public/services/leagueService';
 import type { PublicSeasonDetailResponse } from '@public/types/public';
 import type { BreadcrumbItem } from '@public/types/navigation';
@@ -114,6 +130,7 @@ import RoundsSection from '@public/components/leagues/rounds/RoundsSection.vue';
 import VrlBreadcrumbs from '@public/components/common/navigation/VrlBreadcrumbs.vue';
 import VrlAlert from '@public/components/common/alerts/VrlAlert.vue';
 import VrlSkeleton from '@public/components/common/loading/VrlSkeleton.vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
 
 const route = useRoute();
 const toast = useToast();
@@ -126,6 +143,17 @@ const seasonSlug = route.params.seasonSlug as string;
 const seasonData = ref<PublicSeasonDetailResponse | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+
+/**
+ * Page title for browser tab
+ */
+const pageTitle = computed(() => {
+  if (!seasonData.value) return 'Loading...';
+  const siteName = import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
+  return `${seasonData.value.season.name} - ${seasonData.value.competition.name} - ${seasonData.value.league.name} - ${siteName}`;
+});
+
+useTitle(pageTitle);
 
 /**
  * Breadcrumb items (computed based on seasonData)
@@ -169,6 +197,22 @@ const leagueInitials = computed((): string => {
   }
   return (seasonData.value.league.name.substring(0, 2) || 'L').toUpperCase();
 });
+
+/**
+ * Whitelabel URL (current URL + ?whitelabel=true)
+ */
+const whitelabelUrl = computed((): string => {
+  const currentUrl = window.location.href;
+  const separator = currentUrl.includes('?') ? '&' : '?';
+  return `${currentUrl}${separator}whitelabel=true`;
+});
+
+/**
+ * Open whitelabel view in a new tab
+ */
+const openWhitelabelView = () => {
+  window.open(whitelabelUrl.value, '_blank');
+};
 
 /**
  * Fetch season detail (for header and breadcrumbs only)

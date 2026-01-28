@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import VrlDrawer from '../VrlDrawer.vue';
@@ -25,7 +25,7 @@ describe('VrlDrawer', () => {
     });
   };
 
-  beforeEach(() => {
+  afterEach(() => {
     if (wrapper) {
       wrapper.unmount();
     }
@@ -130,7 +130,6 @@ describe('VrlDrawer', () => {
         visible: true,
         closable: true,
       });
-      const sidebar = wrapper.findComponent(Sidebar);
       // Verify the component receives the closable prop
       expect(wrapper.props('closable')).toBe(true);
     });
@@ -140,7 +139,6 @@ describe('VrlDrawer', () => {
         visible: true,
         closable: false,
       });
-      const sidebar = wrapper.findComponent(Sidebar);
       // Verify the component receives the closable prop as false
       expect(wrapper.props('closable')).toBe(false);
     });

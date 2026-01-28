@@ -76,8 +76,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useTitle } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
 import { leagueService } from '@public/services/leagueService';
 import type { PublicLeagueDetailResponse } from '@public/types/public';
@@ -97,6 +98,17 @@ const leagueData = ref<PublicLeagueDetailResponse | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const showAboutModal = ref(false);
+
+/**
+ * Page title for browser tab
+ */
+const pageTitle = computed(() => {
+  if (!leagueData.value) return 'Loading...';
+  const siteName = import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
+  return `${leagueData.value.league.name} - ${siteName}`;
+});
+
+useTitle(pageTitle);
 
 /**
  * Fetch league detail
