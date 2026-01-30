@@ -76,10 +76,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTitle } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
+import * as Sentry from '@sentry/vue';
 import { leagueService } from '@public/services/leagueService';
 import type { PublicLeagueDetailResponse } from '@public/types/public';
 import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
@@ -98,6 +99,11 @@ const leagueData = ref<PublicLeagueDetailResponse | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const showAboutModal = ref(false);
+
+/**
+ * AbortController for request cancellation
+ */
+const abortController = ref<AbortController | null>(null);
 
 /**
  * Page title for browser tab
@@ -121,13 +127,27 @@ const fetchLeagueDetail = async () => {
     return;
   }
 
+  // Cancel previous request if exists
+  abortController.value?.abort();
+  abortController.value = new AbortController();
+
   loading.value = true;
   error.value = null;
 
   try {
-    leagueData.value = await leagueService.getLeagueDetail(leagueSlug);
+    leagueData.value = await leagueService.getLeagueDetail(
+      leagueSlug,
+      abortController.value.signal,
+    );
   } catch (err) {
-    console.error('Failed to fetch league detail:', err);
+    // Ignore abort errors (user navigated away or new request started)
+    if (err instanceof Error && err.name === 'AbortError') {
+      return;
+    }
+
+    Sentry.captureException(err, {
+      tags: { context: 'fetch_league_detail' },
+    });
     error.value = 'Failed to load league details. Please try again.';
     toast.add({
       severity: 'error',
@@ -145,5 +165,13 @@ const fetchLeagueDetail = async () => {
  */
 onMounted(() => {
   fetchLeagueDetail();
+});
+
+/**
+ * Cleanup on unmount
+ */
+onUnmounted(() => {
+  // Abort any pending requests
+  abortController.value?.abort();
 });
 </script>

@@ -53,7 +53,7 @@ const leagueId = computed(() => route.params.id as string);
 const leagueIdNumber = computed(() => {
   const parsed = parseInt(leagueId.value, 10);
   if (isNaN(parsed)) {
-    console.error('Invalid league ID:', leagueId.value);
+    // Invalid ID will be caught by router validation
     return 0;
   }
   return parsed;
@@ -130,8 +130,8 @@ async function loadCompetitions(): Promise<void> {
 
   try {
     await competitionStore.fetchCompetitions(leagueIdNumber.value);
-  } catch (err: unknown) {
-    console.error('Failed to load competitions:', err);
+  } catch {
+    // Error is captured by Sentry and displayed via toast in the store
   }
 }
 
@@ -140,22 +140,10 @@ async function loadSeasons(): Promise<void> {
     // Fetch seasons for all competitions in this league (in parallel)
     // Use allSettled to handle partial failures gracefully
     const competitionIds = competitions.value.map((c) => c.id);
-    const results = await Promise.allSettled(
-      competitionIds.map((id) => seasonStore.fetchSeasons(id)),
-    );
-
-    // Log any failures for debugging
-    const failures = results.filter((r) => r.status === 'rejected');
-    if (failures.length > 0) {
-      console.warn(`Failed to load seasons for ${failures.length} competition(s)`);
-      failures.forEach((failure) => {
-        if (failure.status === 'rejected') {
-          console.error('Season fetch error:', failure.reason);
-        }
-      });
-    }
-  } catch (err: unknown) {
-    console.error('Failed to load seasons:', err);
+    await Promise.allSettled(competitionIds.map((id) => seasonStore.fetchSeasons(id)));
+    // Partial failures are captured by Sentry via store error handlers
+  } catch {
+    // Error is captured by Sentry
   }
 }
 
@@ -209,7 +197,7 @@ function handleViewSeason(season: Season): void {
   router.push({
     name: 'season-detail',
     params: {
-      leagueId: season.competition.league?.id || leagueIdNumber.value,
+      leagueId: season.competition?.league?.id || leagueIdNumber.value,
       competitionId: season.competition_id,
       seasonId: season.id,
     },
@@ -228,8 +216,8 @@ function getSeasonIndicatorColor(season: Season): string {
       ) {
         return `rgb(${colorObj.r}, ${colorObj.g}, ${colorObj.b})`;
       }
-    } catch (error) {
-      console.warn('Failed to parse competition colour:', error);
+    } catch {
+      // Invalid JSON - fall through to default color
     }
   }
 

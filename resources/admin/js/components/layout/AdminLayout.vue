@@ -46,13 +46,6 @@ onMounted(() => {
   if (isMobile.value && !layoutStore.sidebarCollapsed) {
     layoutStore.setSidebarCollapsed(true);
   }
-
-  // Add demo notifications (remove in production)
-  layoutStore.addNotification({
-    title: 'Welcome!',
-    message: 'Welcome to the admin dashboard',
-    type: 'success',
-  });
 });
 </script>
 

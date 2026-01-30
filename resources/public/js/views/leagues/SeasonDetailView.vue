@@ -119,10 +119,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTitle } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
+import * as Sentry from '@sentry/vue';
 import { PhArrowSquareOut } from '@phosphor-icons/vue';
 import { leagueService } from '@public/services/leagueService';
 import type { PublicSeasonDetailResponse } from '@public/types/public';
@@ -147,6 +148,11 @@ const seasonSlug = route.params.seasonSlug as string;
 const seasonData = ref<PublicSeasonDetailResponse | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+
+/**
+ * AbortController for request cancellation
+ */
+const abortController = ref<AbortController | null>(null);
 
 /**
  * Page title for browser tab
@@ -194,7 +200,7 @@ const seasonLogoUrl = computed((): string | null => {
  * League initials (for fallback when no logo is available)
  */
 const leagueInitials = computed((): string => {
-  if (!seasonData.value) return 'L';
+  if (!seasonData.value?.league?.name) return 'L';
   const words = seasonData.value.league.name.split(' ');
   if (words.length >= 2) {
     return `${words[0]?.[0] ?? ''}${words[1]?.[0] ?? ''}`.toUpperCase();
@@ -228,13 +234,28 @@ const fetchSeasonDetail = async () => {
     return;
   }
 
+  // Cancel previous request if exists
+  abortController.value?.abort();
+  abortController.value = new AbortController();
+
   loading.value = true;
   error.value = null;
 
   try {
-    seasonData.value = await leagueService.getSeasonDetail(leagueSlug, seasonSlug);
+    seasonData.value = await leagueService.getSeasonDetail(
+      leagueSlug,
+      seasonSlug,
+      abortController.value.signal,
+    );
   } catch (err) {
-    console.error('Failed to fetch season detail:', err);
+    // Ignore abort errors (user navigated away or new request started)
+    if (err instanceof Error && err.name === 'AbortError') {
+      return;
+    }
+
+    Sentry.captureException(err, {
+      tags: { context: 'fetch_season_detail' },
+    });
     error.value = 'Failed to load season details. Please try again.';
     toast.add({
       severity: 'error',
@@ -252,6 +273,14 @@ const fetchSeasonDetail = async () => {
  */
 onMounted(() => {
   fetchSeasonDetail();
+});
+
+/**
+ * Cleanup on unmount
+ */
+onUnmounted(() => {
+  // Abort any pending requests
+  abortController.value?.abort();
 });
 </script>
 

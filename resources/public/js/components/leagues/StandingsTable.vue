@@ -446,6 +446,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
+import * as Sentry from '@sentry/vue';
 import { PhCheck, PhDownloadSimple } from '@phosphor-icons/vue';
 import VrlButton from '@public/components/common/buttons/VrlButton.vue';
 import { leagueService } from '@public/services/leagueService';
@@ -587,7 +588,9 @@ async function fetchStandings(): Promise<void> {
       activeTabId.value = 'drivers';
     }
   } catch (err) {
-    console.error('Failed to fetch season standings:', err);
+    Sentry.captureException(err, {
+      tags: { context: 'fetch_season_standings' },
+    });
     error.value = 'Failed to load season standings';
   } finally {
     isLoading.value = false;

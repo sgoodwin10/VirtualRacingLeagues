@@ -159,6 +159,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, inject, onMounted } from 'vue';
+import * as Sentry from '@sentry/vue';
 import type {
   PublicRound,
   RoundStandingDriver,
@@ -366,7 +367,9 @@ async function loadResults(): Promise<void> {
       activeDivisionKey.value = String(divisions.value[0].id);
     }
   } catch (error) {
-    console.error('Failed to load round results:', error);
+    Sentry.captureException(error, {
+      tags: { context: 'load_round_results' },
+    });
   } finally {
     isLoading.value = false;
   }

@@ -137,10 +137,40 @@ const getPublicDomain = (): string => {
     // Remove 'app.' prefix from hostname if present
     const hostname = url.hostname.replace(/^app\./, '');
     return `${url.protocol}//${hostname}${url.port ? ':' + url.port : ''}`;
-  } catch (error) {
-    console.error('Invalid VITE_APP_URL:', import.meta.env.VITE_APP_URL, error);
-    // Fallback to string replacement
+  } catch {
+    // Fallback to string replacement if URL parsing fails
     return import.meta.env.VITE_APP_URL.replace('//app.', '//');
+  }
+};
+
+/**
+ * Validate that a redirect URL is on an allowed domain
+ * Only allows redirects to the current domain or configured app domains
+ */
+const isValidRedirectUrl = (url: string): boolean => {
+  try {
+    const redirectUrl = new URL(url);
+    const currentHost = window.location.hostname;
+    const appUrl = new URL(import.meta.env.VITE_APP_URL);
+
+    // Extract base domain (e.g., "virtualracingleagues.localhost" from "app.virtualracingleagues.localhost")
+    const baseDomain = appUrl.hostname.replace(/^app\./, '');
+
+    // Allow redirects to:
+    // 1. Current hostname
+    // 2. App subdomain
+    // 3. Any subdomain of the base domain
+    const allowedHosts = [currentHost, appUrl.hostname, baseDomain];
+
+    // Check if the redirect hostname matches allowed hosts or is a subdomain of base domain
+    const isAllowed =
+      allowedHosts.includes(redirectUrl.hostname) ||
+      redirectUrl.hostname.endsWith(`.${baseDomain}`);
+
+    return isAllowed;
+  } catch {
+    // Invalid URL format - reject it
+    return false;
   }
 };
 
@@ -156,9 +186,15 @@ router.beforeEach(async (to, _from, next) => {
   const isAuthenticated = await userStore.checkAuth();
 
   if (!isAuthenticated) {
-    // Redirect to public site login with return URL
+    // Redirect to public site login with validated return URL
     const publicDomain = getPublicDomain();
-    const returnUrl = encodeURIComponent(window.location.href);
+    const currentUrl = window.location.href;
+
+    // Validate the return URL before encoding
+    const returnUrl = isValidRedirectUrl(currentUrl)
+      ? encodeURIComponent(currentUrl)
+      : encodeURIComponent(`${import.meta.env.VITE_APP_URL}/`);
+
     window.location.href = `${publicDomain}/login?redirect=${returnUrl}`;
     next(false); // Cancel navigation since we're doing a full page redirect
     return;

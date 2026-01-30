@@ -44,29 +44,33 @@ app.use(router);
 // Initialize Sentry for error tracking and performance monitoring
 initSentry(app, router);
 
-// Global error handlers
+// Global error handlers - errors are captured by Sentry
 app.config.errorHandler = (err, instance, info) => {
-  console.error('[Vue Error Handler]:', err);
-  console.error('Component:', instance);
-  console.error('Error Info:', info);
-  // You could send this to an error tracking service here
+  // Errors are automatically captured by Sentry
+  if (import.meta.env.DEV) {
+    // Only log to console in development
+
+    console.error('[Vue Error Handler]:', err, 'Component:', instance, 'Info:', info);
+  }
 };
 
 window.onerror = (message, source, lineno, colno, error) => {
-  console.error('[Global Error]:', {
-    message,
-    source,
-    lineno,
-    colno,
-    error,
-  });
-  // You could send this to an error tracking service here
+  // Errors are automatically captured by Sentry
+  if (import.meta.env.DEV) {
+    // Only log to console in development
+
+    console.error('[Global Error]:', { message, source, lineno, colno, error });
+  }
   return false; // Let default error handling continue
 };
 
 window.onunhandledrejection = (event) => {
-  console.error('[Unhandled Promise Rejection]:', event.reason);
-  // You could send this to an error tracking service here
+  // Errors are automatically captured by Sentry
+  if (import.meta.env.DEV) {
+    // Only log to console in development
+
+    console.error('[Unhandled Promise Rejection]:', event.reason);
+  }
 };
 
 // Initialize site configuration and router before mounting

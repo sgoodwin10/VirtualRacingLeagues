@@ -136,6 +136,7 @@ import { useRoute } from 'vue-router';
 import { useBreakpoints } from '@vueuse/core';
 import { useLayoutStore } from '@admin/stores/layoutStore';
 import { useAdminStore } from '@admin/stores/adminStore';
+import { EXTERNAL_LINKS } from '@admin/constants/externalLinks';
 
 const route = useRoute();
 const layoutStore = useLayoutStore();
@@ -260,7 +261,7 @@ const menuItems = computed<MenuItem[]>(() => {
         name: 'sentry',
         label: 'Sentry.io',
         icon: 'ph ph-bug',
-        href: 'https://simgridmanager.sentry.io',
+        href: EXTERNAL_LINKS.sentry,
         target: '_blank',
       });
     }
@@ -295,7 +296,6 @@ const menuItems = computed<MenuItem[]>(() => {
       });
     }
 
-    
     items.push({
       name: 'settings',
       label: 'Settings',

@@ -119,7 +119,6 @@ describe('CompetitionCard', () => {
       expect(seasonChips[1]?.props('isCurrent')).toBe(false);
     });
 
-
     it('should apply hover effect classes', () => {
       const wrapper = mount(CompetitionCard, {
         props: defaultProps,
@@ -156,7 +155,6 @@ describe('CompetitionCard', () => {
   });
 
   describe('Computed Properties', () => {
-
     it('should transform PublicSeasonSummary to PublicSeason format', () => {
       const wrapper = mount(CompetitionCard, {
         props: defaultProps,

@@ -76,9 +76,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
+import * as Sentry from '@sentry/vue';
 import { leagueService } from '@public/services/leagueService';
 import type { PublicLeague, Platform } from '@public/types/public';
 import type { BreadcrumbItem } from '@public/types/navigation';
@@ -122,20 +123,32 @@ const pagination = ref({
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
+ * AbortController for request cancellation
+ */
+const abortController = ref<AbortController | null>(null);
+
+/**
  * Fetch leagues with current filters and pagination
  */
 const fetchLeagues = async () => {
+  // Cancel previous request if exists
+  abortController.value?.abort();
+  abortController.value = new AbortController();
+
   loading.value = true;
   error.value = null;
 
   try {
-    const response = await leagueService.getLeagues({
-      search: searchQuery.value || undefined,
-      platform: platformFilter.value || undefined,
-      sort: sortBy.value,
-      page: pagination.value.current_page,
-      perPage: pagination.value.per_page,
-    });
+    const response = await leagueService.getLeagues(
+      {
+        search: searchQuery.value || undefined,
+        platform: platformFilter.value || undefined,
+        sort: sortBy.value,
+        page: pagination.value.current_page,
+        perPage: pagination.value.per_page,
+      },
+      abortController.value.signal,
+    );
 
     leagues.value = response.data;
     pagination.value = {
@@ -145,7 +158,14 @@ const fetchLeagues = async () => {
       per_page: response.meta.per_page,
     };
   } catch (err) {
-    console.error('Failed to fetch leagues:', err);
+    // Ignore abort errors (user navigated away or new request started)
+    if (err instanceof Error && err.name === 'AbortError') {
+      return;
+    }
+
+    Sentry.captureException(err, {
+      tags: { context: 'fetch_leagues' },
+    });
     error.value = 'Failed to load leagues. Please try again.';
     toast.add({
       severity: 'error',
@@ -165,7 +185,10 @@ const fetchPlatforms = async () => {
   try {
     platforms.value = await leagueService.getPlatforms();
   } catch (err) {
-    console.error('Failed to fetch platforms:', err);
+    Sentry.captureException(err, {
+      tags: { context: 'fetch_platforms' },
+      level: 'warning',
+    });
     // Non-critical error, don't show to user
   }
 };
@@ -227,5 +250,19 @@ onMounted(async () => {
 
   // Fetch data
   await Promise.all([fetchLeagues(), fetchPlatforms()]);
+});
+
+/**
+ * Cleanup on unmount
+ */
+onUnmounted(() => {
+  // Clear debounce timer
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = null;
+  }
+
+  // Abort any pending requests
+  abortController.value?.abort();
 });
 </script>

@@ -4,8 +4,24 @@
  * This allows stores to emit events that other stores can listen to without direct dependencies
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type EventHandler = (...args: any[]) => void;
+import type { CompetitionSeason } from '@app/types/competition';
+
+/**
+ * Type-safe event map for store events
+ * Maps event names to their argument types
+ */
+export interface StoreEventMap {
+  'season:created': [competitionId: number, season: CompetitionSeason];
+  'season:updated': [competitionId: number, season: CompetitionSeason];
+  'season:deleted': [competitionId: number, seasonId: number];
+  'season:archived': [competitionId: number, season: CompetitionSeason];
+  'season:unarchived': [competitionId: number, season: CompetitionSeason];
+  'season:activated': [competitionId: number, season: CompetitionSeason];
+  'season:completed': [competitionId: number, season: CompetitionSeason];
+  'season:restored': [competitionId: number, season: CompetitionSeason];
+}
+
+type EventHandler<T extends unknown[] = unknown[]> = (...args: T) => void;
 
 /**
  * Store Event Bus
@@ -20,7 +36,7 @@ class StoreEventBus {
    * @param handler - Handler function to be called when event is emitted
    * Note: Duplicate handler prevention - the same handler will not be registered twice
    */
-  on(event: string, handler: EventHandler): void {
+  on<K extends keyof StoreEventMap>(event: K, handler: EventHandler<StoreEventMap[K]>): void {
     if (!this.events.has(event)) {
       this.events.set(event, []);
     }
@@ -28,8 +44,8 @@ class StoreEventBus {
     const handlers = this.events.get(event)!;
 
     // Prevent duplicate handler registration
-    if (!handlers.includes(handler)) {
-      handlers.push(handler);
+    if (!handlers.includes(handler as EventHandler)) {
+      handlers.push(handler as EventHandler);
     }
   }
 
@@ -38,10 +54,10 @@ class StoreEventBus {
    * @param event - Event name
    * @param handler - Handler function to remove
    */
-  off(event: string, handler: EventHandler): void {
+  off<K extends keyof StoreEventMap>(event: K, handler: EventHandler<StoreEventMap[K]>): void {
     const handlers = this.events.get(event);
     if (handlers) {
-      const index = handlers.indexOf(handler);
+      const index = handlers.indexOf(handler as EventHandler);
       if (index > -1) {
         handlers.splice(index, 1);
       }
@@ -49,12 +65,11 @@ class StoreEventBus {
   }
 
   /**
-   * Emit an event with optional arguments
+   * Emit an event with typed arguments
    * @param event - Event name
    * @param args - Arguments to pass to event handlers
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  emit(event: string, ...args: any[]): void {
+  emit<K extends keyof StoreEventMap>(event: K, ...args: StoreEventMap[K]): void {
     const handlers = this.events.get(event);
     if (handlers) {
       // Iterate over a copy to prevent issues if handlers are modified during emit
@@ -66,7 +81,7 @@ class StoreEventBus {
    * Clear all event handlers for a specific event or all events
    * @param event - Optional event name to clear (clears all if not provided)
    */
-  clear(event?: string): void {
+  clear(event?: keyof StoreEventMap): void {
     if (event) {
       this.events.delete(event);
     } else {
@@ -87,7 +102,7 @@ class StoreEventBus {
    * @param event - Event name
    * @returns Number of handlers
    */
-  listenerCount(event: string): number {
+  listenerCount(event: keyof StoreEventMap): number {
     return this.events.get(event)?.length || 0;
   }
 }

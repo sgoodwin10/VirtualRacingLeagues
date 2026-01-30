@@ -49,10 +49,13 @@ export const leagueService = {
   /**
    * Get paginated list of public leagues with filters
    */
-  async getLeagues(params: LeagueListParams = {}): Promise<LeagueListResponse> {
+  async getLeagues(
+    params: LeagueListParams = {},
+    signal?: AbortSignal,
+  ): Promise<LeagueListResponse> {
     const response = await apiClient.get<ApiResponseWrapper<LeagueListResponse>>(
       API_ENDPOINTS.PUBLIC.LEAGUES,
-      { params },
+      { params, signal },
     );
     // Extract from ApiResponse wrapper
     return response.data.data;
@@ -61,9 +64,10 @@ export const leagueService = {
   /**
    * Get detailed information about a specific league by slug
    */
-  async getLeagueDetail(slug: string): Promise<PublicLeagueDetailResponse> {
+  async getLeagueDetail(slug: string, signal?: AbortSignal): Promise<PublicLeagueDetailResponse> {
     const response = await apiClient.get<ApiResponseWrapper<PublicLeagueDetailResponse>>(
       API_ENDPOINTS.PUBLIC.LEAGUE_DETAIL(slug),
+      { signal },
     );
     // Extract from ApiResponse wrapper
     return response.data.data;
@@ -75,9 +79,11 @@ export const leagueService = {
   async getSeasonDetail(
     leagueSlug: string,
     seasonSlug: string,
+    signal?: AbortSignal,
   ): Promise<PublicSeasonDetailResponse> {
     const response = await apiClient.get<ApiResponseWrapper<PublicSeasonDetailResponse>>(
       API_ENDPOINTS.PUBLIC.SEASON_DETAIL(leagueSlug, seasonSlug),
+      { signal },
     );
     // Extract from ApiResponse wrapper
     return response.data.data;

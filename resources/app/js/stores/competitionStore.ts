@@ -21,13 +21,12 @@ import {
   buildCompetitionFormData,
   buildUpdateCompetitionFormData,
 } from '@app/services/competitionService';
-import { useStoreEvents } from '@app/composables/useStoreEvents';
+import { useStoreEvents, type StoreEventMap } from '@app/composables/useStoreEvents';
 import { useCrudStore } from '@app/composables/useCrudStore';
 import { getErrorMessage } from '@app/types/errors';
 
-// Import EventHandler type from useStoreEvents for compatibility
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type EventHandler = (...args: any[]) => void;
+// Type for tracking registered event handlers
+type StoreEventHandler = (...args: unknown[]) => void;
 
 export const useCompetitionStore = defineStore('competition', () => {
   // Use CRUD composable for competition management
@@ -54,7 +53,7 @@ export const useCompetitionStore = defineStore('competition', () => {
   let listenersRegistered = false;
 
   // Track all registered handlers so we can clean them up properly
-  const registeredHandlers = new Map<string, EventHandler[]>();
+  const registeredHandlers = new Map<keyof StoreEventMap, StoreEventHandler[]>();
 
   /**
    * Register event listeners for season events

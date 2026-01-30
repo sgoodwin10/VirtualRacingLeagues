@@ -767,6 +767,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTitle } from '@vueuse/core';
+import * as Sentry from '@sentry/vue';
 import { leagueService } from '@public/services/leagueService';
 import Chart from 'primevue/chart';
 import type {
@@ -994,7 +995,9 @@ async function loadRoundResults(roundId: number): Promise<void> {
     const response = await leagueService.getRoundResults(roundId);
     roundResults.value = { ...roundResults.value, [roundId]: response };
   } catch (err) {
-    console.error('Failed to load round results:', err);
+    Sentry.captureException(err, {
+      tags: { context: 'load_round_results_whitelabel' },
+    });
   } finally {
     loadingRounds.value = loadingRounds.value.filter((id) => id !== roundId);
   }
@@ -1957,7 +1960,9 @@ const fetchSeasonDetail = async () => {
       activeStandingsTab.value = 'drivers';
     }
   } catch (err) {
-    console.error('Failed to fetch season detail:', err);
+    Sentry.captureException(err, {
+      tags: { context: 'fetch_season_detail_whitelabel' },
+    });
     error.value = 'Failed to load season details. Please try again.';
   } finally {
     loading.value = false;

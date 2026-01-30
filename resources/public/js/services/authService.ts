@@ -3,6 +3,7 @@
  * Handles all HTTP requests related to authentication
  */
 
+import * as Sentry from '@sentry/vue';
 import { apiClient, apiService } from './api';
 import type { User } from '@public/types/user';
 import type { LoginCredentials } from '@public/types/auth';
@@ -36,7 +37,9 @@ export async function logout(signal?: AbortSignal): Promise<void> {
     await apiClient.post(API_ENDPOINTS.auth.logout(), {}, { signal });
   } catch (error) {
     // Always clear local state even if API call fails
-    console.error('Logout API error:', error);
+    Sentry.captureException(error, {
+      tags: { context: 'logout_api' },
+    });
   }
 }
 

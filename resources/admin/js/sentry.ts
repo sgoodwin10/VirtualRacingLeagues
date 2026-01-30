@@ -65,7 +65,6 @@ export function initSentry(app: App, router: Router): void {
 
     beforeSend(event) {
       if (import.meta.env.DEV && !import.meta.env.VITE_SENTRY_DEBUG) {
-        console.log('[Sentry] Event captured (not sent in dev):', event);
         return null;
       }
 

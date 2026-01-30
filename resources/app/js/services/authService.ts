@@ -36,7 +36,10 @@ export async function logout(signal?: AbortSignal): Promise<void> {
     await apiClient.post(API_ENDPOINTS.auth.logout(), {}, { signal });
   } catch (error) {
     // Always clear local state even if API call fails
-    console.error('Logout API error:', error);
+    // Error is logged by Sentry via axios interceptor
+    if (import.meta.env.DEV) {
+      console.error('Logout API error:', error);
+    }
   }
 }
 

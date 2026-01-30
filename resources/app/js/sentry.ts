@@ -9,7 +9,9 @@ export function initSentry(app: App, router: Router): void {
   const dsn = import.meta.env.VITE_SENTRY_DSN_APP;
 
   if (!dsn) {
-    console.warn('[Sentry] DSN not configured for App Dashboard');
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] DSN not configured for App Dashboard');
+    }
     return;
   }
 

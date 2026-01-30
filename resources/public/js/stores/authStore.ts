@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import type { PiniaPluginContext } from 'pinia';
 import { ref, computed } from 'vue';
+import * as Sentry from '@sentry/vue';
 import type { User } from '@public/types/user';
 import type { LoginCredentials, RegisterData } from '@public/types/auth';
 import { authService } from '@public/services/authService';
@@ -52,7 +53,9 @@ export const useAuthStore = defineStore(
       try {
         await authService.logout();
       } catch (error) {
-        console.error('Logout error:', error);
+        Sentry.captureException(error, {
+          tags: { context: 'auth_logout' },
+        });
       } finally {
         clearAuth();
         // Redirect to main domain login page
@@ -78,7 +81,9 @@ export const useAuthStore = defineStore(
             return false;
           }
         } catch (error) {
-          console.error('Auth check failed:', error);
+          Sentry.captureException(error, {
+            tags: { context: 'auth_check' },
+          });
           clearAuth();
           return false;
         } finally {
