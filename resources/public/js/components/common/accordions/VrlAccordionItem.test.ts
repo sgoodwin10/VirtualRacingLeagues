@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { ref } from 'vue';
-import VrlAccordionItem from '../VrlAccordionItem.vue';
+import VrlAccordionItem from './VrlAccordionItem.vue';
 
 describe('VrlAccordionItem', () => {
   it('renders title prop', () => {

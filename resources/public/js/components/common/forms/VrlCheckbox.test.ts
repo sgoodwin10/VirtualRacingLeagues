@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlCheckbox from '../VrlCheckbox.vue';
+import VrlCheckbox from './VrlCheckbox.vue';
 
 describe('VrlCheckbox', () => {
   describe('Rendering', () => {

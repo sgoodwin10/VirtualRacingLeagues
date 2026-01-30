@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
-import VrlModalHeader from '../VrlModalHeader.vue';
+import VrlModalHeader from './VrlModalHeader.vue';
 import VrlCloseButton from '@public/components/common/buttons/VrlCloseButton.vue';
 
 describe('VrlModalHeader', () => {

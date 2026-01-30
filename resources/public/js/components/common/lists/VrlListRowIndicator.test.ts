@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlListRowIndicator from '../VrlListRowIndicator.vue';
+import VrlListRowIndicator from './VrlListRowIndicator.vue';
 
 describe('VrlListRowIndicator', () => {
   it('renders with active status (green)', () => {

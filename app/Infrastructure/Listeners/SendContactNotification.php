@@ -30,6 +30,7 @@ final class SendContactNotification implements ShouldQueue
      * The number of times the job may be attempted.
      */
     public int $tries = 3;
+
     public function handle(ContactSubmitted $event): void
     {
         $contact = $event->contact;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlFormError from '../VrlFormError.vue';
+import VrlFormError from './VrlFormError.vue';
 
 describe('VrlFormError', () => {
   it('does not render when no error is provided', () => {

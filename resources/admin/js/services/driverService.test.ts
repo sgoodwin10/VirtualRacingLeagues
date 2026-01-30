@@ -9,7 +9,7 @@ import type {
   DriverListParams,
 } from '@admin/types/driver';
 
-vi.mock('../api');
+vi.mock('./api');
 vi.mock('@admin/utils/errorHandler');
 
 describe('driverService', () => {

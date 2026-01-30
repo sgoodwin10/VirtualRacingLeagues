@@ -3,7 +3,7 @@ import { siteConfigService } from './siteConfigService';
 import { apiService } from './api';
 import { createMockSiteConfig } from '@admin/__tests__/helpers/mockFactories';
 
-vi.mock('../api');
+vi.mock('./api');
 
 describe('siteConfigService', () => {
   beforeEach(() => {

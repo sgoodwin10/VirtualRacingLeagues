@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlSpinner from '../VrlSpinner.vue';
+import VrlSpinner from './VrlSpinner.vue';
 
 describe('VrlSpinner', () => {
   describe('rendering', () => {

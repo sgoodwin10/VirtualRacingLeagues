@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlDriverCell from '../../cells/VrlDriverCell.vue';
+import VrlDriverCell from './../cells/VrlDriverCell.vue';
 
 describe('VrlDriverCell', () => {
   describe('Rendering', () => {

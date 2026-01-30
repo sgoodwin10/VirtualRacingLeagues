@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlIconButton from '../VrlIconButton.vue';
-import VrlButton from '../VrlButton.vue';
+import VrlIconButton from './VrlIconButton.vue';
+import VrlButton from './VrlButton.vue';
 
 // Mock icon component for testing
 const MockIcon = {

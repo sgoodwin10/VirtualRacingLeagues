@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
-import VrlModal from '../VrlModal.vue';
+import VrlModal from './VrlModal.vue';
 import PrimeVue from 'primevue/config';
 import Dialog from 'primevue/dialog';
 

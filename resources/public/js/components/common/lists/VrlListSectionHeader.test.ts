@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlListSectionHeader from '../VrlListSectionHeader.vue';
+import VrlListSectionHeader from './VrlListSectionHeader.vue';
 
 describe('VrlListSectionHeader', () => {
   it('renders title from prop', () => {

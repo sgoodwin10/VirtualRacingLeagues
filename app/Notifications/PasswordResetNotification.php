@@ -30,7 +30,6 @@ class PasswordResetNotification extends BaseResetPassword implements ShouldQueue
     /**
      * Create a notification instance.
      *
-     * @param  string  $token
      * @return void
      */
     public function __construct(string $token)
@@ -38,6 +37,7 @@ class PasswordResetNotification extends BaseResetPassword implements ShouldQueue
         parent::__construct($token);
         $this->onConnection('redis')->onQueue('mail');
     }
+
     /**
      * Determine the time at which the job should timeout and be retried.
      *

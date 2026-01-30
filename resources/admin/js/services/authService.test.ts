@@ -4,7 +4,7 @@ import { apiService } from './api';
 import type { LoginCredentials } from '@admin/types/admin';
 import { createMockAdmin } from '@admin/__tests__/helpers/mockFactories';
 
-vi.mock('../api');
+vi.mock('./api');
 
 describe('authService', () => {
   beforeEach(() => {

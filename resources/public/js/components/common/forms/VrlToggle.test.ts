@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlToggle from '../VrlToggle.vue';
+import VrlToggle from './VrlToggle.vue';
 
 describe('VrlToggle', () => {
   describe('Rendering', () => {

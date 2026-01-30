@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
-import VrlModalFooter from '../VrlModalFooter.vue';
+import VrlModalFooter from './VrlModalFooter.vue';
 
 describe('VrlModalFooter', () => {
   let wrapper: VueWrapper;

@@ -45,9 +45,9 @@ describe('ActivityFilters', () => {
           props: ['modelValue', 'placeholder', 'showIcon', 'showButtonBar', 'dateFormat'],
           emits: ['update:modelValue', 'date-select', 'clear-click'],
           methods: {
-            formatDate(date: Date | undefined): string {
+            formatDate(date: Date | undefined) {
               if (!date) return '';
-              return date.toISOString().split('T')[0];
+              return date.toISOString().split('T')[0] as string;
             },
             handleChange(event: Event) {
               const target = event.target as HTMLInputElement;
@@ -123,11 +123,15 @@ describe('ActivityFilters', () => {
     const selects = wrapper.findAll('[data-testid="select"]');
     const entityTypeSelect = selects[0];
 
+    if (!entityTypeSelect) {
+      throw new Error('Entity type select not found');
+    }
+
     await entityTypeSelect.setValue('driver');
     await flushPromises();
 
     expect(wrapper.emitted('filter')).toBeTruthy();
-    const emittedFilters = wrapper.emitted('filter')![0][0];
+    const emittedFilters = wrapper.emitted('filter')?.[0]?.[0];
     expect(emittedFilters).toHaveProperty('entity_type', 'driver');
   });
 
@@ -137,11 +141,15 @@ describe('ActivityFilters', () => {
     const selects = wrapper.findAll('[data-testid="select"]');
     const actionSelect = selects[1];
 
+    if (!actionSelect) {
+      throw new Error('Action select not found');
+    }
+
     await actionSelect.setValue('create');
     await flushPromises();
 
     expect(wrapper.emitted('filter')).toBeTruthy();
-    const emittedFilters = wrapper.emitted('filter')![0][0];
+    const emittedFilters = wrapper.emitted('filter')?.[0]?.[0];
     expect(emittedFilters).toHaveProperty('action', 'create');
   });
 
@@ -151,11 +159,15 @@ describe('ActivityFilters', () => {
     const datepickers = wrapper.findAll('[data-testid="datepicker"]');
     const fromDatePicker = datepickers[0];
 
+    if (!fromDatePicker) {
+      throw new Error('From date picker not found');
+    }
+
     await fromDatePicker.setValue('2024-01-15');
     await flushPromises();
 
     expect(wrapper.emitted('filter')).toBeTruthy();
-    const emittedFilters = wrapper.emitted('filter')![0][0];
+    const emittedFilters = wrapper.emitted('filter')?.[0]?.[0];
     expect(emittedFilters).toHaveProperty('from_date', '2024-01-15');
   });
 
@@ -165,11 +177,15 @@ describe('ActivityFilters', () => {
     const datepickers = wrapper.findAll('[data-testid="datepicker"]');
     const toDatePicker = datepickers[1];
 
+    if (!toDatePicker) {
+      throw new Error('To date picker not found');
+    }
+
     await toDatePicker.setValue('2024-01-31');
     await flushPromises();
 
     expect(wrapper.emitted('filter')).toBeTruthy();
-    const emittedFilters = wrapper.emitted('filter')![0][0];
+    const emittedFilters = wrapper.emitted('filter')?.[0]?.[0];
     expect(emittedFilters).toHaveProperty('to_date', '2024-01-31');
   });
 
@@ -185,6 +201,10 @@ describe('ActivityFilters', () => {
     const selects = wrapper.findAll('[data-testid="select"]');
     const entityTypeSelect = selects[0];
 
+    if (!entityTypeSelect) {
+      throw new Error('Entity type select not found');
+    }
+
     await entityTypeSelect.setValue('driver');
     await flushPromises();
     await nextTick();
@@ -197,7 +217,13 @@ describe('ActivityFilters', () => {
 
     // Set a filter first
     const selects = wrapper.findAll('[data-testid="select"]');
-    await selects[0].setValue('driver');
+    const firstSelect = selects[0];
+
+    if (!firstSelect) {
+      throw new Error('First select not found');
+    }
+
+    await firstSelect.setValue('driver');
     await flushPromises();
     await nextTick();
 
@@ -213,8 +239,15 @@ describe('ActivityFilters', () => {
 
     // Set multiple filters
     const selects = wrapper.findAll('[data-testid="select"]');
-    await selects[0].setValue('driver');
-    await selects[1].setValue('create');
+    const firstSelect = selects[0];
+    const secondSelect = selects[1];
+
+    if (!firstSelect || !secondSelect) {
+      throw new Error('Selects not found');
+    }
+
+    await firstSelect.setValue('driver');
+    await secondSelect.setValue('create');
     await flushPromises();
 
     // Click clear button
@@ -234,6 +267,10 @@ describe('ActivityFilters', () => {
 
     const selects = wrapper.findAll('[data-testid="select"]');
     const datepickers = wrapper.findAll('[data-testid="datepicker"]');
+
+    if (!selects[0] || !selects[1] || !datepickers[0] || !datepickers[1]) {
+      throw new Error('Required elements not found');
+    }
 
     // Set entity type
     await selects[0].setValue('driver');
@@ -267,10 +304,16 @@ describe('ActivityFilters', () => {
     const wrapper = mount(ActivityFilters, globalConfig);
 
     const datepickers = wrapper.findAll('[data-testid="datepicker"]');
-    await datepickers[0].setValue('2024-06-15');
+    const firstDatePicker = datepickers[0];
+
+    if (!firstDatePicker) {
+      throw new Error('Date picker not found');
+    }
+
+    await firstDatePicker.setValue('2024-06-15');
     await flushPromises();
 
-    const emittedFilters = wrapper.emitted('filter')![0][0];
+    const emittedFilters = wrapper.emitted('filter')?.[0]?.[0];
     expect(emittedFilters).toHaveProperty('from_date', '2024-06-15');
   });
 
@@ -279,10 +322,16 @@ describe('ActivityFilters', () => {
 
     // Only select entity type
     const selects = wrapper.findAll('[data-testid="select"]');
-    await selects[0].setValue('driver');
+    const firstSelect = selects[0];
+
+    if (!firstSelect) {
+      throw new Error('First select not found');
+    }
+
+    await firstSelect.setValue('driver');
     await flushPromises();
 
-    const emittedFilters = wrapper.emitted('filter')![0][0] as Record<string, unknown>;
+    const emittedFilters = wrapper.emitted('filter')?.[0]?.[0] as Record<string, unknown>;
 
     // Should have entity_type but not action, from_date, to_date
     expect(emittedFilters.entity_type).toBe('driver');

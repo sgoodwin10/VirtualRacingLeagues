@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createRouter, createMemoryHistory } from 'vue-router';
-import VrlNavLink from '../VrlNavLink.vue';
+import VrlNavLink from './VrlNavLink.vue';
 
 describe('VrlNavLink', () => {
   let router: ReturnType<typeof createRouter>;

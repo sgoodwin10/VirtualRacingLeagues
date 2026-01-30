@@ -275,7 +275,7 @@ final class RaceResultsCacheService
      */
     private function getCacheKey(int $raceId): string
     {
-        return self::CACHE_PREFIX.$raceId;
+        return self::CACHE_PREFIX . $raceId;
     }
 
     /**
@@ -286,7 +286,7 @@ final class RaceResultsCacheService
      */
     private function getLockKey(int $raceId): string
     {
-        return self::LOCK_PREFIX.$raceId;
+        return self::LOCK_PREFIX . $raceId;
     }
 
     /**

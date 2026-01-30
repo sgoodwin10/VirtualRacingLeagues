@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlButton from '../VrlButton.vue';
+import VrlButton from './VrlButton.vue';
 import PrimeButton from 'primevue/button';
 
 // Mock icon component for testing

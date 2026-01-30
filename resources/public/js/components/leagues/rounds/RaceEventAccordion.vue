@@ -1,6 +1,6 @@
 <template>
   <VrlAccordionItem :value="raceEvent.id.toString()" class="mt-2">
-    <template #header="{ active }">
+    <template #header>
       <div class="flex items-center justify-between w-full pr-2">
         <div class="flex items-center gap-3 flex-grow">
           <PhMedal

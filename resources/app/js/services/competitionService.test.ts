@@ -13,7 +13,7 @@ import {
 } from './competitionService';
 import type { Competition, CompetitionFilters, SlugCheckResponse } from '@app/types/competition';
 
-vi.mock('../api', () => ({
+vi.mock('./api', () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),
@@ -64,7 +64,7 @@ describe('competitionService', () => {
 
   describe('getLeagueCompetitions', () => {
     it('should fetch all competitions for a league', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: [mockCompetition],
         },
@@ -84,7 +84,7 @@ describe('competitionService', () => {
         search: 'GT3',
       };
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: [mockCompetition],
         },
@@ -99,7 +99,7 @@ describe('competitionService', () => {
 
   describe('getCompetition', () => {
     it('should fetch a specific competition', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: mockCompetition,
         },
@@ -119,7 +119,7 @@ describe('competitionService', () => {
       formData.append('platform_id', '1');
       formData.append('description', 'A competitive GT3 racing series');
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: mockCompetition,
         },
@@ -141,7 +141,7 @@ describe('competitionService', () => {
       const formData = new FormData();
       formData.append('name', 'Updated GT3 Championship');
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: { ...mockCompetition, name: 'Updated GT3 Championship' },
         },
@@ -165,7 +165,7 @@ describe('competitionService', () => {
       const formData = new FormData();
       formData.append('name', 'Updated GT3 Championship');
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: mockCompetition,
         },
@@ -174,7 +174,7 @@ describe('competitionService', () => {
       await updateCompetition(1, formData);
 
       // Verify _method was appended
-      const callArgs = vi.mocked(apiClient.post).mock.calls[0];
+      const callArgs = (apiClient.post as ReturnType<typeof vi.fn>).mock.calls[0];
       const sentFormData = callArgs?.[1] as FormData;
       expect(sentFormData.get('_method')).toBe('PUT');
     });
@@ -182,7 +182,7 @@ describe('competitionService', () => {
 
   describe('archiveCompetition', () => {
     it('should archive a competition', async () => {
-      vi.mocked(apiClient.post).mockResolvedValue({ data: {} });
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({ data: {} });
 
       await archiveCompetition(1);
 
@@ -192,7 +192,7 @@ describe('competitionService', () => {
 
   describe('deleteCompetition', () => {
     it('should delete a competition permanently', async () => {
-      vi.mocked(apiClient.delete).mockResolvedValue({ data: {} });
+      (apiClient.delete as ReturnType<typeof vi.fn>).mockResolvedValue({ data: {} });
 
       await deleteCompetition(1);
 
@@ -208,7 +208,7 @@ describe('competitionService', () => {
         suggestion: null,
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: mockResponse,
         },
@@ -234,7 +234,7 @@ describe('competitionService', () => {
         suggestion: 'gt3-championship-02',
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: mockResponse,
         },
@@ -327,7 +327,7 @@ describe('competitionService', () => {
 
   describe('Network Edge Cases', () => {
     it('should handle network timeout on getLeagueCompetitions', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -338,7 +338,7 @@ describe('competitionService', () => {
     });
 
     it('should handle network timeout on getCompetition', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -351,7 +351,7 @@ describe('competitionService', () => {
     it('should handle network timeout on createCompetition', async () => {
       const formData = new FormData();
 
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -362,7 +362,7 @@ describe('competitionService', () => {
     });
 
     it('should handle partial response on getCompetition', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: {
           status: 500,
           data: { message: 'Internal server error' },
@@ -382,7 +382,7 @@ describe('competitionService', () => {
         name: 'Test Competition',
       });
 
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ERR_NETWORK',
         message: 'Network Error',
       });
@@ -393,7 +393,7 @@ describe('competitionService', () => {
     });
 
     it('should handle 404 error on getCompetition', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: {
           status: 404,
           data: { message: 'Competition not found' },
@@ -408,7 +408,7 @@ describe('competitionService', () => {
     });
 
     it('should handle network timeout on archiveCompetition', async () => {
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -419,7 +419,7 @@ describe('competitionService', () => {
     });
 
     it('should handle network timeout on checkSlugAvailability', async () => {
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });

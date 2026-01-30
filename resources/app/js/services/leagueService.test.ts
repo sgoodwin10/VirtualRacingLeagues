@@ -20,7 +20,7 @@ import type {
   UpdateLeagueForm,
 } from '@app/types/league';
 
-vi.mock('../api', () => ({
+vi.mock('./api', () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),
@@ -38,7 +38,7 @@ describe('leagueService', () => {
     it('should fetch platforms successfully', async () => {
       const mockPlatforms: Platform[] = [{ id: 1, name: 'Gran Turismo 7', slug: 'gran-turismo-7' }];
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockPlatforms },
       });
 
@@ -53,7 +53,7 @@ describe('leagueService', () => {
     it('should fetch timezones successfully', async () => {
       const mockTimezones: Timezone[] = [{ value: 'UTC', label: 'UTC' }];
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockTimezones },
       });
 
@@ -71,7 +71,7 @@ describe('leagueService', () => {
         slug: 'test-league',
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockResponse },
       });
 
@@ -95,7 +95,7 @@ describe('leagueService', () => {
 
       const formData = new FormData();
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockLeague },
       });
 
@@ -117,7 +117,7 @@ describe('leagueService', () => {
         { id: 2, name: 'League 2' } as League,
       ];
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockLeagues },
       });
 
@@ -132,7 +132,7 @@ describe('leagueService', () => {
     it('should fetch a specific league', async () => {
       const mockLeague: League = { id: 1, name: 'League 1' } as League;
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockLeague },
       });
 
@@ -153,7 +153,7 @@ describe('leagueService', () => {
       const formData = new FormData();
       formData.append('name', 'Updated League');
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockLeague },
       });
 
@@ -171,7 +171,7 @@ describe('leagueService', () => {
 
   describe('deleteLeague', () => {
     it('should delete a league', async () => {
-      vi.mocked(apiClient.delete).mockResolvedValue({});
+      (apiClient.delete as ReturnType<typeof vi.fn>).mockResolvedValue({});
 
       await deleteLeague(1);
 
@@ -349,7 +349,7 @@ describe('leagueService', () => {
 
   describe('Network Edge Cases', () => {
     it('should handle network timeout on getPlatforms', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -360,7 +360,7 @@ describe('leagueService', () => {
     });
 
     it('should handle network timeout on getUserLeagues', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -373,7 +373,7 @@ describe('leagueService', () => {
     it('should handle network timeout on createLeague', async () => {
       const formData = new FormData();
 
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -384,7 +384,7 @@ describe('leagueService', () => {
     });
 
     it('should handle partial response on getLeague', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: {
           status: 500,
           data: { message: 'Internal server error' },
@@ -401,7 +401,7 @@ describe('leagueService', () => {
     it('should handle network connection error on updateLeague', async () => {
       const formData = new FormData();
 
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ERR_NETWORK',
         message: 'Network Error',
       });
@@ -412,7 +412,7 @@ describe('leagueService', () => {
     });
 
     it('should handle network timeout on checkSlugAvailability', async () => {
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -423,7 +423,7 @@ describe('leagueService', () => {
     });
 
     it('should handle 404 error on getLeague', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: {
           status: 404,
           data: { message: 'League not found' },

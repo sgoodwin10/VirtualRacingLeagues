@@ -34,7 +34,7 @@ describe('PublicFooter', () => {
       const copyrightText = wrapper.text();
 
       expect(copyrightText).toContain(`© ${currentYear}`);
-      expect(copyrightText).toContain('Virtual Racing Leagues. All rights reserved.');
+      expect(copyrightText).toContain('SimGridManager. All rights reserved.');
     });
 
     it('should render navigation links', () => {

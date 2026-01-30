@@ -28,6 +28,7 @@ final class SendRegistrationDiscordNotification implements ShouldQueue
      * The number of times the job may be attempted.
      */
     public int $tries = 3;
+
     public function handle(EmailVerificationRequested $event): void
     {
         // Send Discord notification about new registration

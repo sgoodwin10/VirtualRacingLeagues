@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlGapCell from '../../cells/VrlGapCell.vue';
+import VrlGapCell from './../cells/VrlGapCell.vue';
 
 describe('VrlGapCell', () => {
   describe('Rendering', () => {

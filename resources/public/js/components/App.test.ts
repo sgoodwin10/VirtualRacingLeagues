@@ -161,7 +161,7 @@ describe('App', () => {
 
   describe('Lifecycle', () => {
     it('should check authentication on mount', async () => {
-      const checkAuthSpy = vi.spyOn(authStore, 'checkAuth').mockResolvedValue();
+      const checkAuthSpy = vi.spyOn(authStore, 'checkAuth').mockResolvedValue(false);
 
       wrapper = await createWrapper();
       await flushPromises();
@@ -246,7 +246,7 @@ describe('App', () => {
 
   describe('Error Handling', () => {
     it('should render successfully when checkAuth resolves', async () => {
-      vi.spyOn(authStore, 'checkAuth').mockResolvedValue();
+      vi.spyOn(authStore, 'checkAuth').mockResolvedValue(false);
 
       wrapper = await createWrapper();
       await flushPromises();
@@ -324,7 +324,7 @@ describe('App', () => {
     });
 
     it('should initialize auth store on mount', async () => {
-      const checkAuthSpy = vi.spyOn(authStore, 'checkAuth').mockResolvedValue();
+      const checkAuthSpy = vi.spyOn(authStore, 'checkAuth').mockResolvedValue(false);
 
       wrapper = await createWrapper();
       await flushPromises();

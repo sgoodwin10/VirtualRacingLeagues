@@ -4,7 +4,7 @@ import { apiService } from './api';
 import { createMockUser } from '@admin/__tests__/helpers/mockFactories';
 import { faker } from '@faker-js/faker';
 
-vi.mock('../api');
+vi.mock('./api');
 
 describe('userService', () => {
   beforeEach(() => {

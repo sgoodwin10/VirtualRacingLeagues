@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlPointsCell from '../../cells/VrlPointsCell.vue';
+import VrlPointsCell from './../cells/VrlPointsCell.vue';
 
 describe('VrlPointsCell', () => {
   describe('Rendering', () => {

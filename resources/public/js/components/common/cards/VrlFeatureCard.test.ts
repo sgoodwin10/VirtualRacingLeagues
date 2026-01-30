@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlFeatureCard from '../VrlFeatureCard.vue';
+import VrlFeatureCard from './VrlFeatureCard.vue';
 
 // Mock icon component
 const MockIcon = {

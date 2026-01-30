@@ -15,7 +15,7 @@ final class SentryServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (!$this->app->bound('sentry')) {
+        if (! $this->app->bound('sentry')) {
             return;
         }
 

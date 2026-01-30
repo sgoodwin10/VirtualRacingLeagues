@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlSelect from '../VrlSelect.vue';
+import VrlSelect from './VrlSelect.vue';
 
 describe('VrlSelect', () => {
   const mockOptions = [

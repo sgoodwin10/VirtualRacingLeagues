@@ -70,6 +70,17 @@ vi.mock('primevue/checkbox', () => ({
   },
 }));
 
+// Mock InputText from PrimeVue to avoid $primevue issues
+vi.mock('primevue/inputtext', () => ({
+  default: {
+    name: 'InputText',
+    props: ['modelValue', 'placeholder', 'invalid'],
+    emits: ['update:modelValue'],
+    template:
+      '<input type="text" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" :placeholder="placeholder" :class="{ invalid }" />',
+  },
+}));
+
 // Mock ResultTimeInput component
 vi.mock('../ResultTimeInput.vue', () => ({
   default: {
@@ -77,7 +88,7 @@ vi.mock('../ResultTimeInput.vue', () => ({
     props: ['modelValue', 'placeholder'],
     emits: ['update:modelValue'],
     template:
-      '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+      '<input type="text" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" :placeholder="placeholder" />',
   },
 }));
 
@@ -109,6 +120,8 @@ vi.mock('@app/composables/useRaceTimeCalculation', () => ({
       const milliseconds = remaining - seconds * 1000;
       return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
     }),
+    normalizeTimeInput: vi.fn((time: string) => time),
+    isValidTimeFormat: vi.fn(() => true),
   }),
 }));
 

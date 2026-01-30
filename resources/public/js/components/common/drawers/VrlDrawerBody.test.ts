@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
-import VrlDrawerBody from '../VrlDrawerBody.vue';
+import VrlDrawerBody from './VrlDrawerBody.vue';
 
 describe('VrlDrawerBody', () => {
   let wrapper: VueWrapper;

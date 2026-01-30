@@ -36,6 +36,7 @@ class EmailVerificationNotification extends BaseVerifyEmail implements ShouldQue
     {
         $this->onConnection('redis')->onQueue('mail');
     }
+
     /**
      * Determine the time at which the job should timeout and be retried.
      *

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlFormGroup from '../VrlFormGroup.vue';
+import VrlFormGroup from './VrlFormGroup.vue';
 
 describe('VrlFormGroup', () => {
   it('renders with default classes', () => {

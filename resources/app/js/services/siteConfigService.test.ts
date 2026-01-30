@@ -8,7 +8,7 @@ import { apiClient } from './api';
 import type { SiteConfig } from '@app/types/siteConfig';
 
 // Mock the API client
-vi.mock('../api', () => ({
+vi.mock('./api', () => ({
   apiClient: {
     get: vi.fn(),
   },
@@ -36,7 +36,7 @@ describe('siteConfigService', () => {
         },
       };
 
-      vi.mocked(apiClient.get).mockResolvedValue(mockResponse);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const result = await getSiteConfig();
 
@@ -56,7 +56,7 @@ describe('siteConfigService', () => {
         },
       };
 
-      vi.mocked(apiClient.get).mockResolvedValue(mockResponse);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const result = await getSiteConfig();
 
@@ -82,7 +82,7 @@ describe('siteConfigService', () => {
         },
       };
 
-      vi.mocked(apiClient.get).mockResolvedValue(mockResponse);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const result = await getSiteConfig();
 
@@ -95,7 +95,7 @@ describe('siteConfigService', () => {
 
     it('should propagate API errors', async () => {
       const mockError = new Error('Network error');
-      vi.mocked(apiClient.get).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(getSiteConfig()).rejects.toThrow('Network error');
       expect(apiClient.get).toHaveBeenCalledWith('/site-config');
@@ -109,7 +109,7 @@ describe('siteConfigService', () => {
         },
       };
 
-      vi.mocked(apiClient.get).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(getSiteConfig()).rejects.toEqual(mockError);
     });
@@ -122,7 +122,7 @@ describe('siteConfigService', () => {
         },
       };
 
-      vi.mocked(apiClient.get).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(getSiteConfig()).rejects.toEqual(mockError);
     });
@@ -130,7 +130,7 @@ describe('siteConfigService', () => {
 
   describe('Network Edge Cases', () => {
     it('should handle network timeout', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -141,7 +141,7 @@ describe('siteConfigService', () => {
     });
 
     it('should handle network connection error', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ERR_NETWORK',
         message: 'Network Error',
       });
@@ -152,7 +152,7 @@ describe('siteConfigService', () => {
     });
 
     it('should handle partial response error', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: {
           status: 503,
           data: { message: 'Service temporarily unavailable' },

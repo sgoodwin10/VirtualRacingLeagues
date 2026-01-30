@@ -4,7 +4,7 @@ import { apiService } from './api';
 import type { PlatformCarImportResponse } from '@admin/types/platformCar';
 import { createMockPlatformCarImportSummary } from '@admin/__tests__/helpers/mockFactories';
 
-vi.mock('../api');
+vi.mock('./api');
 
 describe('platformCarService', () => {
   beforeEach(() => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { useLoadingState } from '../useLoadingState';
+import { useLoadingState } from './useLoadingState';
 
 describe('useLoadingState', () => {
   it('should initialize with loading state false', () => {

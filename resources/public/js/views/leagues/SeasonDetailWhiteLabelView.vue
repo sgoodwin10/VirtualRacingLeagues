@@ -886,7 +886,7 @@ const teamChampionshipResults = computed<TeamChampionshipStanding[]>(() => {
  * Check if division has teams
  * @note Reserved for future use
  */
-// @ts-ignore - Reserved for future use
+// @ts-expect-error - Reserved for future use
 function _hasTeamsInDivision(division: SeasonStandingDivision): boolean {
   return division.drivers.some((d) => d.team_name || d.team_logo);
 }
@@ -895,7 +895,7 @@ function _hasTeamsInDivision(division: SeasonStandingDivision): boolean {
  * Check if flat standings have teams
  * @note Reserved for future use
  */
-// @ts-ignore - Reserved for future use
+// @ts-expect-error - Reserved for future use
 const _hasTeamsInFlat = computed<boolean>(() => {
   return flatDriverStandings.value.some((d) => d.team_name || d.team_logo);
 });

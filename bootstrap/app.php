@@ -48,7 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Sentry integration for exception reporting
         $exceptions->reportable(function (Throwable $e) {
             if (app()->bound('sentry')) {
-                \Sentry\configureScope(function (\Sentry\State\Scope $scope) use ($e): void {
+                \Sentry\configureScope(function (\Sentry\State\Scope $scope): void {
                     // Add request context
                     if ($request = request()) {
                         $scope->setContext('request', [

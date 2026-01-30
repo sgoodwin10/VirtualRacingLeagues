@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlCardFooter from '../VrlCardFooter.vue';
+import VrlCardFooter from './VrlCardFooter.vue';
 
 describe('VrlCardFooter', () => {
   it('renders without props', () => {

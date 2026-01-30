@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlFormHelper from '../VrlFormHelper.vue';
+import VrlFormHelper from './VrlFormHelper.vue';
 
 describe('VrlFormHelper', () => {
   it('renders with default classes', () => {

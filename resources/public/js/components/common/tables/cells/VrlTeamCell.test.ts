@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlTeamCell from '../../cells/VrlTeamCell.vue';
+import VrlTeamCell from './../cells/VrlTeamCell.vue';
 import VrlTag from '@public/components/common/tags/VrlTag.vue';
 
 describe('VrlTeamCell', () => {

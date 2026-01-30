@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlSkeletonAvatar from '../VrlSkeletonAvatar.vue';
+import VrlSkeletonAvatar from './VrlSkeletonAvatar.vue';
 
 describe('VrlSkeletonAvatar', () => {
   describe('rendering', () => {

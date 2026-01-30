@@ -6,11 +6,16 @@ import { flushPromises } from '@vue/test-utils';
 import { getLeagueDriverSeasons } from '@app/services/driverSeasonService';
 
 // Mock DriverStatusBadge component
-vi.mock('../DriverStatusBadge.vue', () => ({
+vi.mock('./DriverStatusBadge.vue', () => ({
   default: {
     name: 'DriverStatusBadge',
+    props: {
+      status: {
+        type: String,
+        required: true,
+      },
+    },
     template: '<span class="status-badge">{{ status }}</span>',
-    props: ['status'],
   },
 }));
 

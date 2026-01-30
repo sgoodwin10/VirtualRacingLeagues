@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlListContainer from '../VrlListContainer.vue';
+import VrlListContainer from './VrlListContainer.vue';
 
 describe('VrlListContainer', () => {
   it('renders slot content', () => {

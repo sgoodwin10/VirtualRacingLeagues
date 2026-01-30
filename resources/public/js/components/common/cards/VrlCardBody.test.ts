@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlCardBody from '../VrlCardBody.vue';
+import VrlCardBody from './VrlCardBody.vue';
 
 describe('VrlCardBody', () => {
   it('renders without props', () => {

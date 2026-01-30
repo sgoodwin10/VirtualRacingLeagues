@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createRouter, createMemoryHistory } from 'vue-router';
-import VrlBreadcrumbs from '../VrlBreadcrumbs.vue';
+import VrlBreadcrumbs from './VrlBreadcrumbs.vue';
 import type { BreadcrumbItem } from '@public/types/navigation';
 
 describe('VrlBreadcrumbs', () => {

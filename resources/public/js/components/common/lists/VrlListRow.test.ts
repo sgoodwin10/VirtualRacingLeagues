@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlListRow from '../VrlListRow.vue';
-import VrlListRowIndicator from '../VrlListRowIndicator.vue';
+import VrlListRow from './VrlListRow.vue';
+import VrlListRowIndicator from './VrlListRowIndicator.vue';
 
 describe('VrlListRow', () => {
   it('renders content slot', () => {

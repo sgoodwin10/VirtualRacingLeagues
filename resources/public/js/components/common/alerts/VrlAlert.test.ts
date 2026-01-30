@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlAlert from '../VrlAlert.vue';
+import VrlAlert from './VrlAlert.vue';
 import { PhInfo, PhCheckCircle, PhWarning, PhXCircle } from '@phosphor-icons/vue';
 
 // Mock icon component

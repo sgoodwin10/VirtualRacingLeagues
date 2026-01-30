@@ -179,13 +179,13 @@ describe('RaceEventAccordion', () => {
       expect(wrapper.text()).toContain('2 finishers');
     });
 
-    it('should render chevron indicator', () => {
+    it('should render accordion item', () => {
       wrapper = mountComponent({
         raceEvent: mockRaceEvent,
         raceTimesRequired: false,
       });
 
-      expect(wrapper.find('.ph-caret-down').exists()).toBe(true);
+      expect(wrapper.findComponent({ name: 'VrlAccordionItem' }).exists()).toBe(true);
     });
   });
 

@@ -46,7 +46,7 @@ describe('LandingNav', () => {
 
       const logoLink = wrapper.find('a[href="/"]');
       expect(logoLink.exists()).toBe(true);
-      expect(logoLink.text()).toContain('Virtual Racing Leagues');
+      expect(logoLink.text()).toContain('SimGridManager');
     });
 
     it('should render navigation links', () => {

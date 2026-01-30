@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlListRowAction from '../VrlListRowAction.vue';
+import VrlListRowAction from './VrlListRowAction.vue';
 
 describe('VrlListRowAction', () => {
   it('renders slot content', () => {

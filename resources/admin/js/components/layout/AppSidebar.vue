@@ -232,6 +232,39 @@ const menuItems = computed<MenuItem[]>(() => {
       });
     }
 
+    // Telescope - only for Super Admins on localhost (not production)
+    if (adminStore.adminRole === 'super_admin' && window.location.hostname.includes('localhost')) {
+      systemItems.push({
+        name: 'telescope',
+        label: 'Telescope',
+        icon: 'ph ph-binoculars',
+        href: `${import.meta.env.VITE_APP_URL}/telescope`,
+        target: '_blank',
+      });
+    }
+
+    // Horizon - only for Super Admins
+    if (adminStore.adminRole === 'super_admin') {
+      systemItems.push({
+        name: 'horizon',
+        label: 'Queue Monitor',
+        icon: 'ph ph-queue',
+        href: '/admin/horizon',
+        target: '_blank',
+      });
+    }
+
+    // Sentry - only for Super Admins
+    if (adminStore.adminRole === 'super_admin') {
+      systemItems.push({
+        name: 'sentry',
+        label: 'Sentry.io',
+        icon: 'ph ph-bug',
+        href: 'https://simgridmanager.sentry.io',
+        target: '_blank',
+      });
+    }
+
     items.push({
       name: 'system',
       label: 'System',
@@ -262,28 +295,7 @@ const menuItems = computed<MenuItem[]>(() => {
       });
     }
 
-    // Telescope - only for Super Admins on localhost (not production)
-    if (adminStore.adminRole === 'super_admin' && window.location.hostname.includes('localhost')) {
-      settingsItems.push({
-        name: 'telescope',
-        label: 'Telescope',
-        icon: 'ph ph-binoculars',
-        href: `${import.meta.env.VITE_APP_URL}/telescope`,
-        target: '_blank',
-      });
-    }
-
-    // Horizon - only for Super Admins
-    if (adminStore.adminRole === 'super_admin') {
-      settingsItems.push({
-        name: 'horizon',
-        label: 'Queue Monitor',
-        icon: 'ph ph-queue',
-        href: '/admin/horizon',
-        target: '_blank',
-      });
-    }
-
+    
     items.push({
       name: 'settings',
       label: 'Settings',

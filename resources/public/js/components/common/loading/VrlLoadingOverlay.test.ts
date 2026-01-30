@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlLoadingOverlay from '../VrlLoadingOverlay.vue';
-import VrlSpinner from '../VrlSpinner.vue';
+import VrlLoadingOverlay from './VrlLoadingOverlay.vue';
+import VrlSpinner from './VrlSpinner.vue';
 
 describe('VrlLoadingOverlay', () => {
   describe('rendering', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlPanel from '../VrlPanel.vue';
+import VrlPanel from './VrlPanel.vue';
 
 describe('VrlPanel', () => {
   it('renders title prop', () => {

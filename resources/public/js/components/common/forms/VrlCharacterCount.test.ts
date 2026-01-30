@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlCharacterCount from '../VrlCharacterCount.vue';
+import VrlCharacterCount from './VrlCharacterCount.vue';
 
 describe('VrlCharacterCount', () => {
   describe('Rendering', () => {

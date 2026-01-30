@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlListRowStats from '../VrlListRowStats.vue';
+import VrlListRowStats from './VrlListRowStats.vue';
 
 describe('VrlListRowStats', () => {
   it('renders slot content', () => {

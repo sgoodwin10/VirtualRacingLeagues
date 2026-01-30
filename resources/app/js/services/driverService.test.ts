@@ -17,7 +17,7 @@ import type {
 } from '@app/types/driver';
 import { createMockLeagueDriver } from '@app/__tests__/helpers/driverTestHelpers';
 
-vi.mock('../api', () => ({
+vi.mock('./api', () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),
@@ -52,7 +52,7 @@ describe('driverService', () => {
         status: 'active',
       });
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: [mockLeagueDriver],
           meta: {
@@ -81,7 +81,7 @@ describe('driverService', () => {
         status: 'active',
       };
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: [],
           meta: {
@@ -107,7 +107,7 @@ describe('driverService', () => {
         deleted_status: 'deleted',
       };
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: [],
           meta: {
@@ -132,7 +132,7 @@ describe('driverService', () => {
         deleted_status: 'all',
       };
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: [],
           meta: {
@@ -183,7 +183,7 @@ describe('driverService', () => {
         status: 'active',
       });
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockDriver },
       });
 
@@ -220,7 +220,7 @@ describe('driverService', () => {
         status: 'active',
       });
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockDriver },
       });
 
@@ -255,7 +255,7 @@ describe('driverService', () => {
         league_notes: 'Top performer',
       });
 
-      vi.mocked(apiClient.get).mockResolvedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockDriver },
       });
 
@@ -282,7 +282,7 @@ describe('driverService', () => {
         league_notes: 'Updated notes',
       });
 
-      vi.mocked(apiClient.put).mockResolvedValue({
+      (apiClient.put as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockDriver },
       });
 
@@ -296,7 +296,7 @@ describe('driverService', () => {
 
   describe('removeDriverFromLeague', () => {
     it('should remove a driver from a league', async () => {
-      vi.mocked(apiClient.delete).mockResolvedValue({ data: null });
+      (apiClient.delete as ReturnType<typeof vi.fn>).mockResolvedValue({ data: null });
 
       await removeDriverFromLeague(1, 1);
 
@@ -306,7 +306,7 @@ describe('driverService', () => {
 
   describe('restoreDriver', () => {
     it('should restore a soft-deleted driver', async () => {
-      vi.mocked(apiClient.post).mockResolvedValue({ data: null });
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({ data: null });
 
       await restoreDriver(1, 1);
 
@@ -314,7 +314,7 @@ describe('driverService', () => {
     });
 
     it('should handle network error on restore', async () => {
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ERR_NETWORK',
         message: 'Network Error',
       });
@@ -325,7 +325,7 @@ describe('driverService', () => {
     });
 
     it('should handle 404 error when driver not found', async () => {
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: {
           status: 404,
           data: { message: 'Driver not found' },
@@ -349,7 +349,7 @@ describe('driverService', () => {
         errors: [], // Empty array for no errors
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockBackendResponse },
       });
 
@@ -373,7 +373,7 @@ describe('driverService', () => {
         ],
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockBackendResponse },
       });
 
@@ -395,7 +395,7 @@ describe('driverService', () => {
         errors: [{ row: 2, message: 'Row 2: At least one name field is required' }],
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockBackendResponse },
       });
 
@@ -417,7 +417,7 @@ describe('driverService', () => {
         errors: [{ row: 3, message: 'Row 3: Missing platform ID' }],
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockBackendResponse },
       });
 
@@ -434,7 +434,7 @@ describe('driverService', () => {
 
   describe('Network Edge Cases', () => {
     it('should handle network timeout on getLeagueDrivers', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -451,7 +451,7 @@ describe('driverService', () => {
         psn_id: 'JaneDoe_GT',
       };
 
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -462,7 +462,7 @@ describe('driverService', () => {
     });
 
     it('should handle partial response on getLeagueDriver', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: {
           status: 500,
           data: { message: 'Internal server error' },
@@ -482,7 +482,7 @@ describe('driverService', () => {
         status: 'inactive',
       };
 
-      vi.mocked(apiClient.put).mockRejectedValue({
+      (apiClient.put as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ERR_NETWORK',
         message: 'Network Error',
       });
@@ -495,7 +495,7 @@ describe('driverService', () => {
     it('should handle network timeout on importDriversFromCSV', async () => {
       const csvData = 'first_name,last_name,psn_id\nJohn,Smith,JSmith77';
 
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         code: 'ECONNABORTED',
         message: 'timeout of 30000ms exceeded',
       });
@@ -506,7 +506,7 @@ describe('driverService', () => {
     });
 
     it('should handle 404 error on getLeagueDriver', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue({
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: {
           status: 404,
           data: { message: 'Driver not found' },
@@ -527,7 +527,7 @@ describe('driverService', () => {
         psn_id: 'JaneDoe_GT',
       };
 
-      vi.mocked(apiClient.post).mockRejectedValue({
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: {
           status: 409,
           data: { message: 'Driver already exists in league' },

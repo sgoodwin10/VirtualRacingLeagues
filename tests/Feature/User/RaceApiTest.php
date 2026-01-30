@@ -399,4 +399,125 @@ final class RaceApiTest extends TestCase
                 'name' => 'Updated Qualifying',
             ]);
     }
+
+    public function test_can_create_race_with_decimal_points(): void
+    {
+        $data = [
+            'race_number' => 1,
+            'name' => 'Monaco Grand Prix',
+            'race_type' => 'feature',
+            'qualifying_format' => 'standard',
+            'qualifying_length' => 15,
+            'grid_source' => 'qualifying',
+            'length_type' => 'laps',
+            'length_value' => 50,
+            'points_system' => [
+                1 => 12.5,
+                2 => 10,
+                3 => 8,
+                4 => 6.5,
+                5 => 5.5,
+                6 => 5,
+                7 => 4.5,
+                8 => 4,
+                9 => 3.5,
+                10 => 3,
+                11 => 1.5,
+                12 => 2,
+                13 => 1.5,
+                14 => 1,
+                15 => 0.5,
+                16 => 0,
+            ],
+            'dnf_points' => 0.5,
+            'dns_points' => 0.25,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'id',
+                    'round_id',
+                    'race_number',
+                    'name',
+                    'race_type',
+                    'points_system',
+                    'dnf_points',
+                    'dns_points',
+                ],
+            ]);
+
+        $this->assertDatabaseHas('races', [
+            'round_id' => $this->round->id,
+            'race_number' => 1,
+            'name' => 'Monaco Grand Prix',
+        ]);
+    }
+
+    public function test_rejects_points_with_more_than_two_decimal_places(): void
+    {
+        $data = [
+            'race_number' => 1,
+            'name' => 'Test Race',
+            'race_type' => 'feature',
+            'points_system' => [
+                1 => 12.567, // Invalid: more than 2 decimal places
+            ],
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('points_system.1');
+    }
+
+    public function test_rejects_invalid_dnf_points_with_more_than_two_decimal_places(): void
+    {
+        $data = [
+            'race_number' => 1,
+            'name' => 'Test Race',
+            'race_type' => 'feature',
+            'dnf_points' => 0.999, // Invalid: more than 2 decimal places
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson("http://app.virtualracingleagues.localhost/api/rounds/{$this->round->id}/races", $data);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('dnf_points');
+    }
+
+    public function test_can_update_race_with_decimal_points(): void
+    {
+        $race = Race::factory()->create([
+            'round_id' => $this->round->id,
+            'name' => 'Original Name',
+            'race_type' => 'sprint',
+        ]);
+
+        $updateData = [
+            'name' => 'Updated Race',
+            'points_system' => [
+                1 => 10.5,
+                2 => 8.75,
+                3 => 6.25,
+            ],
+            'dnf_points' => 0.5,
+            'dns_points' => 0.25,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->putJson("http://app.virtualracingleagues.localhost/api/races/{$race->id}", $updateData);
+
+        $response->assertStatus(200)
+            ->assertJsonFragment([
+                'id' => $race->id,
+                'name' => 'Updated Race',
+            ]);
+    }
 }

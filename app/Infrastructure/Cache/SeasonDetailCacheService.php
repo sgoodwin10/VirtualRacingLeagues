@@ -111,6 +111,6 @@ final class SeasonDetailCacheService
      */
     private function getCacheKey(int $seasonId): string
     {
-        return self::CACHE_PREFIX.$seasonId;
+        return self::CACHE_PREFIX . $seasonId;
     }
 }

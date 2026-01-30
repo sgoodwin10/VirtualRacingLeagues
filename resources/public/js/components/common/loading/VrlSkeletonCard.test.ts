@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlSkeletonCard from '../VrlSkeletonCard.vue';
-import VrlSkeleton from '../VrlSkeleton.vue';
-import VrlSkeletonAvatar from '../VrlSkeletonAvatar.vue';
-import VrlSkeletonText from '../VrlSkeletonText.vue';
+import VrlSkeletonCard from './VrlSkeletonCard.vue';
+import VrlSkeleton from './VrlSkeleton.vue';
+import VrlSkeletonAvatar from './VrlSkeletonAvatar.vue';
+import VrlSkeletonText from './VrlSkeletonText.vue';
 
 describe('VrlSkeletonCard', () => {
   describe('rendering', () => {

@@ -11,6 +11,7 @@ enum ContactReason: string
     case Help = 'help';
     case Other = 'other';
     case Hello = 'hello';
+
     public function label(): string
     {
         return match ($this) {

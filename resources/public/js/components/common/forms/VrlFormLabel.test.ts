@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlFormLabel from '../VrlFormLabel.vue';
+import VrlFormLabel from './VrlFormLabel.vue';
 
 describe('VrlFormLabel', () => {
   it('renders with default classes', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlDataTable from '../VrlDataTable.vue';
+import VrlDataTable from './VrlDataTable.vue';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 

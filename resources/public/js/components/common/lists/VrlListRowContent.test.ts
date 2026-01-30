@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlListRowContent from '../VrlListRowContent.vue';
+import VrlListRowContent from './VrlListRowContent.vue';
 
 describe('VrlListRowContent', () => {
   it('renders title from prop', () => {

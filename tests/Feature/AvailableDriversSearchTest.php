@@ -29,7 +29,6 @@ class AvailableDriversSearchTest extends TestCase
 
     private SeasonEloquent $season;
 
-
     protected function setUp(): void
     {
         parent::setUp();

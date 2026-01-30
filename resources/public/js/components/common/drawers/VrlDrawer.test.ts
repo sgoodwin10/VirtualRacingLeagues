@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
-import VrlDrawer from '../VrlDrawer.vue';
+import VrlDrawer from './VrlDrawer.vue';
 import PrimeVue from 'primevue/config';
 import Sidebar from 'primevue/sidebar';
 

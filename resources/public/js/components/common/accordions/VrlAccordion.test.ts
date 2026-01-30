@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlAccordion from '../VrlAccordion.vue';
-import VrlAccordionItem from '../VrlAccordionItem.vue';
+import VrlAccordion from './VrlAccordion.vue';
+import VrlAccordionItem from './VrlAccordionItem.vue';
 
 describe('VrlAccordion', () => {
   it('renders accordion items', () => {

@@ -147,7 +147,8 @@ describe('HeaderBar', () => {
 
       const actionsSection = wrapper.find('.header-right');
       expect(actionsSection.exists()).toBe(true);
-      expect(actionsSection.text()).toBe('');
+      // header-right always contains the SimGridManager logo text
+      expect(actionsSection.text()).toContain('SimGridManager');
     });
   });
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlTextarea from '../VrlTextarea.vue';
-import VrlCharacterCount from '../VrlCharacterCount.vue';
+import VrlTextarea from './VrlTextarea.vue';
+import VrlCharacterCount from './VrlCharacterCount.vue';
 
 describe('VrlTextarea', () => {
   describe('Rendering', () => {

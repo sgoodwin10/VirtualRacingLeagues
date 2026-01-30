@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlInfoBox from '../VrlInfoBox.vue';
+import VrlInfoBox from './VrlInfoBox.vue';
 
 describe('VrlInfoBox', () => {
   it('renders with required props', () => {

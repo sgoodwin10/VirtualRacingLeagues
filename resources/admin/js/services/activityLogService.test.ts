@@ -4,7 +4,7 @@ import { apiService } from './api';
 import type { ActivityListResponse } from '@admin/types/activityLog';
 import { createMockActivity } from '@admin/__tests__/helpers/mockFactories';
 
-vi.mock('../api');
+vi.mock('./api');
 
 describe('activityLogService', () => {
   beforeEach(() => {

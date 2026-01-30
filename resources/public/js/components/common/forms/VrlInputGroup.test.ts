@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlInputGroup from '../VrlInputGroup.vue';
+import VrlInputGroup from './VrlInputGroup.vue';
 
 describe('VrlInputGroup', () => {
   describe('Rendering', () => {

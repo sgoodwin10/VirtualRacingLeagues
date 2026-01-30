@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlStatusIndicator from '../VrlStatusIndicator.vue';
+import VrlStatusIndicator from './VrlStatusIndicator.vue';
 
 describe('VrlStatusIndicator', () => {
   describe('Rendering', () => {

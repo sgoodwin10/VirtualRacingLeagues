@@ -413,7 +413,7 @@ final class SeasonDriverApplicationService
                         ->orWhere('iracing_id', 'like', "%{$search}%");
                 })
                 // Also search league_drivers.driver_number
-                ->orWhere('league_drivers.driver_number', 'like', "%{$search}%");
+                    ->orWhere('league_drivers.driver_number', 'like', "%{$search}%");
             });
         }
 

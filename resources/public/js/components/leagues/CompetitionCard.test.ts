@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import CompetitionCard from './CompetitionCard.vue';
 import SeasonChip from './SeasonChip.vue';
-import VrlBadge from '@public/components/common/badges/VrlBadge.vue';
 import type { PublicCompetitionDetail } from '@public/types/public';
 
 describe('CompetitionCard', () => {
@@ -120,41 +119,6 @@ describe('CompetitionCard', () => {
       expect(seasonChips[1]?.props('isCurrent')).toBe(false);
     });
 
-    it('should render status badge', () => {
-      const wrapper = mount(CompetitionCard, {
-        props: defaultProps,
-      });
-
-      const badge = wrapper.findComponent(VrlBadge);
-      expect(badge.exists()).toBe(true);
-    });
-
-    it('should show "Active" badge when competition has active seasons', () => {
-      const wrapper = mount(CompetitionCard, {
-        props: defaultProps,
-      });
-
-      const badge = wrapper.findComponent(VrlBadge);
-      expect(badge.text()).toBe('Active');
-      expect(badge.props('variant')).toBe('green');
-    });
-
-    it('should show "Completed" badge when competition has no active seasons', () => {
-      const completedCompetition = {
-        ...mockCompetition,
-        stats: { ...mockCompetition.stats, active_seasons: 0 },
-      };
-      const wrapper = mount(CompetitionCard, {
-        props: {
-          ...defaultProps,
-          competition: completedCompetition,
-        },
-      });
-
-      const badge = wrapper.findComponent(VrlBadge);
-      expect(badge.text()).toBe('Completed');
-      expect(badge.props('variant')).toBe('default');
-    });
 
     it('should apply hover effect classes', () => {
       const wrapper = mount(CompetitionCard, {
@@ -192,55 +156,6 @@ describe('CompetitionCard', () => {
   });
 
   describe('Computed Properties', () => {
-    it('should compute statusVariant as "green" when active seasons exist', () => {
-      const wrapper = mount(CompetitionCard, {
-        props: defaultProps,
-      });
-
-      const badge = wrapper.findComponent(VrlBadge);
-      expect(badge.props('variant')).toBe('green');
-    });
-
-    it('should compute statusVariant as "default" when no active seasons', () => {
-      const completedCompetition = {
-        ...mockCompetition,
-        stats: { ...mockCompetition.stats, active_seasons: 0 },
-      };
-      const wrapper = mount(CompetitionCard, {
-        props: {
-          ...defaultProps,
-          competition: completedCompetition,
-        },
-      });
-
-      const badge = wrapper.findComponent(VrlBadge);
-      expect(badge.props('variant')).toBe('default');
-    });
-
-    it('should compute statusLabel as "Active" when active seasons exist', () => {
-      const wrapper = mount(CompetitionCard, {
-        props: defaultProps,
-      });
-
-      const badge = wrapper.findComponent(VrlBadge);
-      expect(badge.text()).toBe('Active');
-    });
-
-    it('should compute statusLabel as "Completed" when no active seasons', () => {
-      const completedCompetition = {
-        ...mockCompetition,
-        stats: { ...mockCompetition.stats, active_seasons: 0 },
-      };
-      const wrapper = mount(CompetitionCard, {
-        props: {
-          ...defaultProps,
-          competition: completedCompetition,
-        },
-      });
-
-      const badge = wrapper.findComponent(VrlBadge);
-      expect(badge.text()).toBe('Completed');
-    });
 
     it('should transform PublicSeasonSummary to PublicSeason format', () => {
       const wrapper = mount(CompetitionCard, {

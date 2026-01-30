@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import LeagueHeader from '../LeagueHeader.vue';
+import LeagueHeader from './LeagueHeader.vue';
 import type { PublicLeagueInfo, LeagueStats, MediaObject } from '@public/types/public';
 
 // Mock league data for testing

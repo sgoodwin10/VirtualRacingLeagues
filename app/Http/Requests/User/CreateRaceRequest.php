@@ -76,9 +76,9 @@ final class CreateRaceRequest extends FormRequest
             'qualifying_pole_top_10' => ['nullable', 'boolean'],
             // Points
             'points_system' => ['nullable', 'array'],
-            'points_system.*' => ['integer', 'min:0'],
-            'dnf_points' => ['nullable', 'integer'],
-            'dns_points' => ['nullable', 'integer'],
+            'points_system.*' => ['numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'dnf_points' => ['nullable', 'numeric', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'dns_points' => ['nullable', 'numeric', 'regex:/^\d+(\.\d{1,2})?$/'],
             'race_points' => ['nullable', 'boolean'],
             // Notes
             'race_notes' => ['nullable', 'string'],
@@ -95,6 +95,12 @@ final class CreateRaceRequest extends FormRequest
         return [
             'length_value.integer' => 'The race length must be a whole number.',
             'length_value.min' => 'The race length must be at least 1.',
+            'points_system.*.numeric' => 'Points must be a number.',
+            'points_system.*.regex' => 'Points must be a number with up to 2 decimal places.',
+            'dnf_points.numeric' => 'DNF points must be a number.',
+            'dnf_points.regex' => 'DNF points must be a number with up to 2 decimal places.',
+            'dns_points.numeric' => 'DNS points must be a number.',
+            'dns_points.regex' => 'DNS points must be a number with up to 2 decimal places.',
         ];
     }
 }

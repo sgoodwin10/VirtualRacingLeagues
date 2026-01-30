@@ -5,7 +5,7 @@ import type { AdminUserListResponse } from '@admin/types/admin';
 import { createMockAdmin } from '@admin/__tests__/helpers/mockFactories';
 import { faker } from '@faker-js/faker';
 
-vi.mock('../api');
+vi.mock('./api');
 
 describe('adminUserService', () => {
   beforeEach(() => {

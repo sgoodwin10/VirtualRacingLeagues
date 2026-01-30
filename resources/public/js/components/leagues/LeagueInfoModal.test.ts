@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import LeagueInfoModal from '../LeagueInfoModal.vue';
+import LeagueInfoModal from './LeagueInfoModal.vue';
 import VrlModal from '@public/components/common/modals/VrlModal.vue';
 import PrimeVue from 'primevue/config';
 import type { PublicLeagueInfo } from '@public/types/public';

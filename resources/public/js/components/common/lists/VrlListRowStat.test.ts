@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlListRowStat from '../VrlListRowStat.vue';
+import VrlListRowStat from './VrlListRowStat.vue';
 
 describe('VrlListRowStat', () => {
   it('renders value and label from props', () => {

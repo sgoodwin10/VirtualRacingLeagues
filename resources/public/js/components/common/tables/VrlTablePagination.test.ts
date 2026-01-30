@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlTablePagination from '../VrlTablePagination.vue';
+import VrlTablePagination from './VrlTablePagination.vue';
 
 describe('VrlTablePagination', () => {
   const mountPagination = (props = {}) => {

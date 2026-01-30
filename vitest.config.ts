@@ -67,6 +67,9 @@ export default defineConfig({
       '@app': fileURLToPath(new URL('./resources/app/js', import.meta.url)),
       '@admin': fileURLToPath(new URL('./resources/admin/js', import.meta.url)),
       vue: 'vue/dist/vue.esm-bundler.js',
+      // Mock image imports
+      'images': fileURLToPath(new URL('./tests/mocks/images', import.meta.url)),
     },
+    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.vue'],
   },
 });

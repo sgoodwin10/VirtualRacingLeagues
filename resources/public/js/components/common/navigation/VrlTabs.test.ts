@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import VrlTabs from '../VrlTabs.vue';
+import VrlTabs from './VrlTabs.vue';
 import type { TabItem } from '@public/types/navigation';
 
 describe('VrlTabs', () => {

@@ -35,6 +35,7 @@ final class SendEmailVerification implements ShouldQueue
      * The number of times the job may be attempted.
      */
     public int $tries = 3;
+
     /**
      * Handle the event.
      */

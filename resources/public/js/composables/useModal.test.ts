@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useModal, useModalRegistry } from '../useModal';
+import { useModal, useModalRegistry } from './useModal';
 
 describe('useModal', () => {
   describe('Basic functionality', () => {

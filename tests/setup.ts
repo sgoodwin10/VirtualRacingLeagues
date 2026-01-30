@@ -57,6 +57,16 @@ config.global.stubs = {
   // 'p-dialog': true,
 };
 
+// Configure PrimeVue globally for all tests
+config.global.provide = {
+  $primevue: {
+    config: {
+      pt: {},
+      unstyled: false,
+    },
+  },
+};
+
 // Global mocks for common browser APIs
 Object.defineProperty(window, 'scrollTo', {
   writable: true,
