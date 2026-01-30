@@ -20,7 +20,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'App';
         </div>
 
         <!-- Navigation Links -->
-        <div class="flex items-center space-x-4">
+        <div class="hidden md:flex items-center space-x-4">
           <router-link
             to="/leagues"
             class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-2 text-sm font-medium transition-colors"

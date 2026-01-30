@@ -356,7 +356,10 @@ final class SeasonDriverApplicationService
      *         driver_id: int,
      *         driver_name: string,
      *         number: string|null,
-     *         team_name: string|null
+     *         team_name: string|null,
+     *         discord: string|null,
+     *         psn_id: string|null,
+     *         iracing_id: string|null
      *     }>,
      *     meta: array{
      *         current_page: int,
@@ -397,15 +400,20 @@ final class SeasonDriverApplicationService
                     ->where('season_id', $seasonId);
             });
 
-        // Apply search filter
+        // Apply search filter - search across driver fields and league driver number
         if ($search !== null && $search !== '') {
-            $query->whereHas('driver', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('nickname', 'like', "%{$search}%")
-                    ->orWhere('discord_id', 'like', "%{$search}%")
-                    ->orWhere('psn_id', 'like', "%{$search}%")
-                    ->orWhere('iracing_id', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                // Search driver fields
+                $q->whereHas('driver', function ($driverQuery) use ($search) {
+                    $driverQuery->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('nickname', 'like', "%{$search}%")
+                        ->orWhere('discord_id', 'like', "%{$search}%")
+                        ->orWhere('psn_id', 'like', "%{$search}%")
+                        ->orWhere('iracing_id', 'like', "%{$search}%");
+                })
+                // Also search league_drivers.driver_number
+                ->orWhere('league_drivers.driver_number', 'like', "%{$search}%");
             });
         }
 
@@ -421,7 +429,7 @@ final class SeasonDriverApplicationService
         // Paginate
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
-        // Map to response format
+        // Map to response format with additional fields
         $data = array_map(function ($leagueDriver) {
             return [
                 'id' => $leagueDriver->id,
@@ -429,6 +437,9 @@ final class SeasonDriverApplicationService
                 'driver_name' => $leagueDriver->driver->name ?? 'Unknown',
                 'number' => $leagueDriver->number !== null ? (string) $leagueDriver->number : null,
                 'team_name' => $leagueDriver->team_name,
+                'discord' => $leagueDriver->driver->discord_id ?? null,
+                'psn_id' => $leagueDriver->driver->psn_id ?? null,
+                'iracing_id' => $leagueDriver->driver->iracing_id ?? null,
             ];
         }, $paginator->items());
 

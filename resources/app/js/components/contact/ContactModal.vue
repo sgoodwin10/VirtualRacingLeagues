@@ -46,9 +46,10 @@ const userEmail = computed(() => userStore.user?.email ?? '');
 const userName = computed(() => userStore.userName);
 
 const reasonOptions = [
+  { label: 'I just want to say hello!', value: 'hello' },
   { label: 'I found an error', value: 'error' },
   { label: 'I have a question', value: 'question' },
-  { label: 'I need help', value: 'help' },
+  { label: 'Help Me!!', value: 'help' },
   { label: 'Other', value: 'other' },
 ];
 
@@ -129,7 +130,7 @@ watch(isVisible, (newValue) => {
           :options="reasonOptions"
           option-label="label"
           option-value="value"
-          placeholder="Select a reason"
+          placeholder="Please Select..."
           :class="{ 'p-invalid': errors.reason }"
           class="w-full"
           @change="clearError('reason')"

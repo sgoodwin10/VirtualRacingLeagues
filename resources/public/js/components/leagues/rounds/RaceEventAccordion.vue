@@ -1,8 +1,15 @@
 <template>
   <VrlAccordionItem :value="raceEvent.id.toString()" class="mt-2">
     <template #header="{ active }">
-      <div class="flex items-center justify-between w-full">
-        <div class="flex items-center gap-3">
+      <div class="flex items-center justify-between w-full pr-2">
+        <div class="flex items-center gap-3 flex-grow">
+          <PhMedal
+            v-if="raceEvent.is_qualifier"
+            class="text-[var(--purple)]"
+            :size="20"
+            weight="fill"
+          />
+          <PhFlagCheckered v-else class="text-[var(--cyan)]" :size="20" weight="fill" />
           <i
             :class="[
               'ph',
@@ -22,12 +29,14 @@
             </span>
           </div>
         </div>
-        <i
-          :class="[
-            'ph ph-caret-down text-xl text-[var(--text-secondary)] transition-transform',
-            active && 'rotate-180',
-          ]"
-        ></i>
+        <VrlButton
+          variant="secondary"
+          outline
+          size="sm"
+          label="Export Data"
+          :icon="PhDownloadSimple"
+          @click.stop="exportToCSV()"
+        />
       </div>
     </template>
 
@@ -210,10 +219,12 @@ import { computed } from 'vue';
 import Column from 'primevue/column';
 import type { RaceEventResults, RaceResultWithDriver } from '@public/types/public';
 import VrlAccordionItem from '@public/components/common/accordions/VrlAccordionItem.vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
 import VrlDataTable from '@public/components/common/tables/VrlDataTable.vue';
 import VrlPositionCell from '@public/components/common/tables/cells/VrlPositionCell.vue';
 import VrlPointsCell from '@public/components/common/tables/cells/VrlPointsCell.vue';
 import { useTimeFormat } from '@public/composables/useTimeFormat';
+import { PhMedal, PhFlagCheckered, PhDownloadSimple } from '@phosphor-icons/vue';
 
 interface RaceResultWithCalculatedDiff extends RaceResultWithDriver {
   calculated_time_diff?: string | null;
@@ -223,11 +234,15 @@ interface Props {
   raceEvent: RaceEventResults;
   divisionId?: number;
   raceTimesRequired?: boolean;
+  competitionName?: string;
+  seasonName?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   divisionId: undefined,
   raceTimesRequired: false,
+  competitionName: '',
+  seasonName: '',
 });
 
 const { formatRaceTime } = useTimeFormat();
@@ -396,5 +411,123 @@ function formatPositionsGained(value: number | null): string {
     return `+${value}`;
   }
   return value.toString();
+}
+
+function exportToCSV(): void {
+  const isQualifier = props.raceEvent.is_qualifier;
+  const hasRaceTimes = props.raceTimesRequired;
+
+  // Build CSV headers based on visible columns
+  const headers: string[] = ['Position', 'Driver Name'];
+
+  if (!isQualifier && hasRaceTimes) {
+    headers.push('Time', 'Gap');
+  }
+
+  if (hasRaceTimes) {
+    headers.push(isQualifier ? 'Lap Time' : 'Fastest Lap');
+  }
+
+  if (!isQualifier && hasRaceTimes) {
+    headers.push('Penalties');
+  }
+
+  if (!isQualifier) {
+    headers.push('Positions Gained');
+  }
+
+  if (props.raceEvent.race_points) {
+    headers.push('Points');
+  }
+
+  headers.push('DNF');
+
+  if (isQualifier) {
+    headers.push('Pole Position');
+  }
+
+  if (!isQualifier) {
+    headers.push('Fastest Lap');
+  }
+
+  // Build CSV rows from filtered results
+  const rows = filteredResults.value.map((result) => {
+    const row: (string | number)[] = [result.position ?? '', result.driver?.name || 'Unknown'];
+
+    if (!isQualifier && hasRaceTimes) {
+      row.push(result.dnf ? 'DNF' : formatRaceTime(result.final_race_time) || '');
+      row.push(
+        result.calculated_time_diff ? `+${formatRaceTime(result.calculated_time_diff)}` : '',
+      );
+    }
+
+    if (hasRaceTimes) {
+      row.push(formatRaceTime(result.fastest_lap) || '');
+    }
+
+    if (!isQualifier && hasRaceTimes) {
+      row.push(formatRaceTime(result.penalties) || '');
+    }
+
+    if (!isQualifier) {
+      row.push(formatPositionsGained(result.positions_gained));
+    }
+
+    if (props.raceEvent.race_points) {
+      row.push(result.race_points ?? 0);
+    }
+
+    row.push(result.dnf ? 'Yes' : 'No');
+
+    if (isQualifier) {
+      row.push(result.has_pole ? 'Yes' : 'No');
+    }
+
+    if (!isQualifier) {
+      row.push(result.has_fastest_lap ? 'Yes' : 'No');
+    }
+
+    return row;
+  });
+
+  // Convert to CSV format
+  const csvContent = [
+    headers.join(','),
+    ...rows.map((row) =>
+      row
+        .map((cell) => {
+          // Escape cells containing commas, quotes, or newlines
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        })
+        .join(','),
+    ),
+  ].join('\n');
+
+  // Create blob and trigger download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  // Generate filename based on competition, season, and race event title
+  const sanitize = (str: string) => str.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const parts = [
+    props.competitionName && sanitize(props.competitionName),
+    props.seasonName && sanitize(props.seasonName),
+    sanitize(raceEventTitle.value),
+    'results',
+  ].filter(Boolean);
+  const filename = `${parts.join('_')}.csv`;
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 </script>

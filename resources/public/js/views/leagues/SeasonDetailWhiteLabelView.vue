@@ -34,6 +34,11 @@
             {{ seasonData.competition.name }} - {{ seasonData.season.name }}
           </h2>
         </div>
+
+        <!-- Season Logo -->
+        <div v-if="seasonLogoUrl" class="season-logo">
+          <img :src="seasonLogoUrl" :alt="`${seasonData.season.name} logo`" />
+        </div>
       </div>
 
       <!-- Standings Section -->
@@ -50,10 +55,20 @@
           <button
             v-for="tab in standingsTabs"
             :key="tab.id"
-            :class="['tab', { active: activeStandingsTab === tab.id }]"
+            :class="['tab ', { active: activeStandingsTab === tab.id }]"
             @click="activeStandingsTab = tab.id"
           >
-            {{ tab.label }}
+            <span class="hidden md:block">
+              {{ tab.label }}
+            </span>
+            <span class="block md:hidden">
+              {{
+                tab.label
+                  .split(' ')
+                  .map((w) => w[0])
+                  .join('')
+              }}
+            </span>
           </button>
         </div>
 
@@ -137,6 +152,12 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Points Progression Chart -->
+          <div class="chart-container">
+            <h5 class="chart-title">Points Progression</h5>
+            <Chart type="line" :data="getDivisionChartData(division)" :options="chartOptions" />
+          </div>
         </div>
 
         <!-- Flat Drivers Table (no divisions) -->
@@ -212,6 +233,12 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Points Progression Chart -->
+          <div class="chart-container">
+            <h5 class="chart-title">Points Progression</h5>
+            <Chart type="line" :data="getFlatDriverChartData()" :options="chartOptions" />
+          </div>
         </div>
 
         <!-- Drivers Tab (when teams championship exists) -->
@@ -287,6 +314,12 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Points Progression Chart -->
+          <div class="chart-container">
+            <h5 class="chart-title">Points Progression</h5>
+            <Chart type="line" :data="getFlatDriverChartData()" :options="chartOptions" />
+          </div>
         </div>
 
         <!-- Teams Table -->
@@ -343,6 +376,12 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Points Progression Chart -->
+          <div class="chart-container w-full">
+            <h5 class="chart-title">Team Progression</h5>
+            <Chart type="line" :data="getTeamChartData()" :options="chartOptions" class="w-full" />
+          </div>
         </div>
       </section>
 
@@ -410,7 +449,17 @@
                       ]"
                       @click="setActiveDivisionTab(round.id, tab.key)"
                     >
-                      {{ tab.label }}
+                      <span class="hidden md:block">
+                        {{ tab.label }}
+                      </span>
+                      <span class="block md:hidden">
+                        {{
+                          tab.label
+                            .split(' ')
+                            .map((w) => w[0])
+                            .join('')
+                        }}
+                      </span>
                     </button>
                   </div>
 
@@ -451,7 +500,10 @@
                   </div>
 
                   <!-- Race Events -->
-                  <div v-if="getFilteredRaceEvents(round.id).length > 0" class="race-events">
+                  <div
+                    v-if="getFilteredRaceEvents(round.id).length > 0"
+                    class="race-events overflow-x-auto"
+                  >
                     <div
                       v-for="raceEvent in getFilteredRaceEvents(round.id)"
                       :key="raceEvent.id"
@@ -632,13 +684,17 @@
                         <tr>
                           <th class="th-pos">#</th>
                           <th class="th-driver">Driver</th>
-                          <th v-if="seasonData.has_divisions" class="th-division">Division</th>
+                          <th v-if="seasonData.has_divisions" class="th-division">
+                            <span class="hidden md:block">Division</span>
+                            <span class="block md:hidden">Div</span>
+                          </th>
                           <th
                             class="th-time sortable"
                             :class="{ 'is-sorted': isColumnSorted(round.id, 'qualifying') }"
                             @click="handleAllTimesSort(round.id, 'qualifying')"
                           >
-                            Qualifying Time
+                            <span class="hidden md:block">Qualifying Time</span>
+                            <span class="block md:hidden">Quali</span>
                             <span v-if="isColumnSorted(round.id, 'qualifying')" class="sort-arrow"
                               >▲</span
                             >
@@ -648,7 +704,8 @@
                             :class="{ 'is-sorted': isColumnSorted(round.id, 'race') }"
                             @click="handleAllTimesSort(round.id, 'race')"
                           >
-                            Race Time
+                            <span class="hidden md:block">Race Time</span>
+                            <span class="block md:hidden">Race</span>
                             <span v-if="isColumnSorted(round.id, 'race')" class="sort-arrow"
                               >▲</span
                             >
@@ -658,7 +715,8 @@
                             :class="{ 'is-sorted': isColumnSorted(round.id, 'fastest') }"
                             @click="handleAllTimesSort(round.id, 'fastest')"
                           >
-                            Fastest Lap
+                            <span class="hidden md:block">Fastest Lap</span>
+                            <span class="block md:hidden">FL</span>
                             <span v-if="isColumnSorted(round.id, 'fastest')" class="sort-arrow"
                               >▲</span
                             >
@@ -710,6 +768,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTitle } from '@vueuse/core';
 import { leagueService } from '@public/services/leagueService';
+import Chart from 'primevue/chart';
 import type {
   PublicSeasonDetailResponse,
   SeasonStandingDriver,
@@ -723,6 +782,7 @@ import type {
   RoundStandingDriver,
   RoundStandingDivision,
 } from '@public/types/public';
+import type { ChartData, ChartOptions } from 'chart.js';
 
 const route = useRoute();
 
@@ -760,6 +820,14 @@ useTitle(pageTitle);
 const leagueLogoUrl = computed((): string | null => {
   if (!seasonData.value) return null;
   return seasonData.value.league.logo?.original || seasonData.value.league.logo_url || null;
+});
+
+/**
+ * Season logo URL
+ */
+const seasonLogoUrl = computed((): string | null => {
+  if (!seasonData.value) return null;
+  return seasonData.value.season.logo?.original || seasonData.value.season.logo_url || null;
 });
 
 /**
@@ -816,17 +884,19 @@ const teamChampionshipResults = computed<TeamChampionshipStanding[]>(() => {
 
 /**
  * Check if division has teams
+ * @note Reserved for future use
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function hasTeamsInDivision(division: SeasonStandingDivision): boolean {
+// @ts-ignore - Reserved for future use
+function _hasTeamsInDivision(division: SeasonStandingDivision): boolean {
   return division.drivers.some((d) => d.team_name || d.team_logo);
 }
 
 /**
  * Check if flat standings have teams
+ * @note Reserved for future use
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const hasTeamsInFlat = computed<boolean>(() => {
+// @ts-ignore - Reserved for future use
+const _hasTeamsInFlat = computed<boolean>(() => {
   return flatDriverStandings.value.some((d) => d.team_name || d.team_logo);
 });
 
@@ -1618,6 +1688,251 @@ function isColumnSorted(roundId: number, column: 'qualifying' | 'race' | 'fastes
 }
 
 /**
+ * Generate distinct colors for chart lines
+ */
+function generateDistinctColors(count: number): string[] {
+  const colors = [
+    '#2563eb', // blue
+    '#dc2626', // red
+    '#16a34a', // green
+    '#ea580c', // orange
+    '#9333ea', // purple
+    '#0891b2', // cyan
+    '#ca8a04', // yellow
+    '#e11d48', // pink
+    '#7c3aed', // violet
+    '#059669', // emerald
+    '#0284c7', // sky
+    '#c026d3', // fuchsia
+    '#65a30d', // lime
+    '#d97706', // amber
+    '#db2777', // rose
+  ];
+
+  // If we need more colors than predefined, generate them
+  if (count > colors.length) {
+    for (let i = colors.length; i < count; i++) {
+      const hue = (i * 360) / count;
+      colors.push(`hsl(${hue}, 70%, 50%)`);
+    }
+  }
+
+  return colors.slice(0, count);
+}
+
+/**
+ * Calculate cumulative points for each driver over rounds
+ * Handles missing rounds by carrying forward the previous cumulative total
+ */
+function calculateCumulativePoints(
+  drivers: SeasonStandingDriver[],
+  allRoundNumbers: number[],
+): Map<string, number[]> {
+  const cumulativeMap = new Map<string, number[]>();
+
+  drivers.forEach((driver) => {
+    const cumulative: number[] = [];
+    let total = 0;
+
+    // Create a map of round number to points for this driver
+    const roundPointsMap = new Map<number, number>();
+    if (driver.rounds && driver.rounds.length > 0) {
+      driver.rounds.forEach((round) => {
+        roundPointsMap.set(round.round_number, round.points ?? 0);
+      });
+    }
+
+    // Iterate through all round numbers (not just the driver's rounds)
+    allRoundNumbers.forEach((roundNumber) => {
+      // If driver has data for this round, add the points
+      if (roundPointsMap.has(roundNumber)) {
+        total += roundPointsMap.get(roundNumber)!;
+      }
+      // Otherwise, carry forward the previous total (no change)
+      cumulative.push(total);
+    });
+
+    cumulativeMap.set(driver.driver_name, cumulative);
+  });
+
+  return cumulativeMap;
+}
+
+/**
+ * Calculate cumulative points for each team over rounds
+ * Handles missing rounds by carrying forward the previous cumulative total
+ */
+function calculateTeamCumulativePoints(
+  teams: TeamChampionshipStanding[],
+  allRoundNumbers: number[],
+): Map<string, number[]> {
+  const cumulativeMap = new Map<string, number[]>();
+
+  teams.forEach((team) => {
+    const cumulative: number[] = [];
+    let total = 0;
+
+    // Create a map of round number to points for this team
+    const roundPointsMap = new Map<number, number>();
+    if (team.rounds && team.rounds.length > 0) {
+      team.rounds.forEach((round) => {
+        roundPointsMap.set(round.round_number, round.points ?? 0);
+      });
+    }
+
+    // Iterate through all round numbers (not just the team's rounds)
+    allRoundNumbers.forEach((roundNumber) => {
+      // If team has data for this round, add the points
+      if (roundPointsMap.has(roundNumber)) {
+        total += roundPointsMap.get(roundNumber)!;
+      }
+      // Otherwise, carry forward the previous total (no change)
+      cumulative.push(total);
+    });
+
+    cumulativeMap.set(team.team_name, cumulative);
+  });
+
+  return cumulativeMap;
+}
+
+/**
+ * Get chart data for division drivers
+ */
+function getDivisionChartData(division: SeasonStandingDivision): ChartData {
+  const roundNumbers = getRoundNumbers(division.drivers);
+  const labels = roundNumbers.map((num) => `R${num}`);
+  const cumulativePoints = calculateCumulativePoints(division.drivers, roundNumbers);
+  const colors = generateDistinctColors(division.drivers.length);
+
+  const datasets = division.drivers.map((driver, index) => ({
+    label: driver.driver_name,
+    data: cumulativePoints.get(driver.driver_name) || [],
+    borderColor: colors[index] || '#000000',
+    backgroundColor: colors[index] || '#000000',
+    tension: 0.3,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+  }));
+
+  return { labels, datasets };
+}
+
+/**
+ * Get chart data for flat driver standings
+ */
+function getFlatDriverChartData(): ChartData {
+  const roundNumbers = getRoundNumbers(flatDriverStandings.value);
+  const labels = roundNumbers.map((num) => `R${num}`);
+  const cumulativePoints = calculateCumulativePoints(flatDriverStandings.value, roundNumbers);
+  const colors = generateDistinctColors(flatDriverStandings.value.length);
+
+  const datasets = flatDriverStandings.value.map((driver, index) => ({
+    label: driver.driver_name,
+    data: cumulativePoints.get(driver.driver_name) || [],
+    borderColor: colors[index] || '#000000',
+    backgroundColor: colors[index] || '#000000',
+    tension: 0.3,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+  }));
+
+  return { labels, datasets };
+}
+
+/**
+ * Get chart data for team championship
+ */
+function getTeamChartData(): ChartData {
+  const roundNumbers = getTeamRoundNumbers(teamChampionshipResults.value);
+  const labels = roundNumbers.map((num) => `R${num}`);
+  const cumulativePoints = calculateTeamCumulativePoints(
+    teamChampionshipResults.value,
+    roundNumbers,
+  );
+  const colors = generateDistinctColors(teamChampionshipResults.value.length);
+
+  const datasets = teamChampionshipResults.value.map((team, index) => ({
+    label: team.team_name,
+    data: cumulativePoints.get(team.team_name) || [],
+    borderColor: colors[index] || '#000000',
+    backgroundColor: colors[index] || '#000000',
+    tension: 0.3,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+  }));
+
+  return { labels, datasets };
+}
+
+/**
+ * Chart options for all charts
+ */
+const chartOptions = computed<ChartOptions>(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: true,
+      position: 'bottom',
+      labels: {
+        usePointStyle: true,
+        padding: 15,
+        font: {
+          size: 11,
+        },
+      },
+    },
+    tooltip: {
+      mode: 'index',
+      intersect: false,
+      callbacks: {
+        label: (context) => {
+          return `${context.dataset.label}: ${context.parsed.y} pts`;
+        },
+      },
+    },
+  },
+  scales: {
+    x: {
+      grid: {
+        display: false,
+      },
+      title: {
+        display: true,
+        text: 'Rounds',
+        font: {
+          size: 12,
+          weight: 'bold',
+        },
+      },
+    },
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: 'rgba(0, 0, 0, 0.05)',
+      },
+      title: {
+        display: true,
+        text: 'Cumulative Points',
+        font: {
+          size: 12,
+          weight: 'bold',
+        },
+      },
+      ticks: {
+        precision: 0,
+      },
+    },
+  },
+  interaction: {
+    mode: 'nearest',
+    axis: 'x',
+    intersect: false,
+  },
+}));
+
+/**
  * Fetch season detail
  */
 const fetchSeasonDetail = async () => {
@@ -1812,6 +2127,25 @@ onMounted(() => {
   line-height: 1.3;
 }
 
+.season-logo {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--wl-bg-secondary);
+  border: 1px solid var(--wl-border);
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+.season-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 /* ============================================
    Sections
    ============================================ */
@@ -1949,7 +2283,8 @@ onMounted(() => {
 
 .th-driver {
   text-align: left !important;
-  min-width: 150px;
+  min-width: 170px;
+  max-width: 250px;
 }
 
 .th-team {
@@ -2198,6 +2533,11 @@ onMounted(() => {
   padding: 1rem 1.25rem;
   border-top: 1px solid var(--wl-border);
   background: var(--wl-bg-primary);
+}
+@media (max-width: 768px) {
+  .round-content {
+    padding: 0.25rem 0.5rem;
+  }
 }
 
 .races-list {
@@ -2652,6 +2992,28 @@ onMounted(() => {
 }
 
 /* ============================================
+   Chart Container
+   ============================================ */
+
+.chart-container {
+  padding: 1.5rem;
+  background: var(--wl-bg-secondary);
+  border-top: 1px solid var(--wl-border);
+}
+
+.chart-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--wl-text-primary);
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.chart-container :deep(canvas) {
+  height: 400px !important;
+}
+
+/* ============================================
    Responsive Design
    ============================================ */
 
@@ -2676,6 +3038,13 @@ onMounted(() => {
 
   .season-name {
     font-size: 1.125rem;
+  }
+
+  .season-logo {
+    width: 60px;
+    height: 60px;
+    margin-left: 0;
+    align-self: flex-end;
   }
 
   .standings-table {
@@ -2707,6 +3076,10 @@ onMounted(() => {
 
   .round-circuit {
     font-size: 0.8rem;
+  }
+
+  .chart-container :deep(canvas) {
+    height: 300px !important;
   }
 }
 </style>

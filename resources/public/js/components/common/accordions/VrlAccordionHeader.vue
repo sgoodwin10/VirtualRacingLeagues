@@ -69,7 +69,7 @@ const toggleClasses = computed(() => [
     @keydown="handleKeyDown"
   >
     <div
-      class="font-display text-[0.85rem] font-semibold text-[var(--text-primary)] tracking-[0.3px]"
+      class="flex-1 font-display text-[0.85rem] font-semibold text-[var(--text-primary)] tracking-[0.3px]"
     >
       <slot name="title" />
     </div>

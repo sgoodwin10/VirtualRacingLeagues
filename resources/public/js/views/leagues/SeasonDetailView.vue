@@ -26,7 +26,9 @@
           <VrlBreadcrumbs :items="breadcrumbItems" class="mb-4" />
 
           <!-- Page Header -->
-          <div class="page-header mb-8 pt-2 flex items-center justify-between w-full">
+          <div
+            class="page-header mb-8 pt-2 flex flex-col md:flex-row items-center justify-between w-full"
+          >
             <!-- Left: Logo + Name -->
             <div class="flex items-center gap-4">
               <!-- League Logo -->
@@ -53,7 +55,7 @@
             <VrlButton
               variant="secondary"
               outline
-              label="ViewWhitelabel Table"
+              label="View Whitelabel Results"
               :icon="PhArrowSquareOut"
               icon-pos="left"
               aria-label="Open whitelabel view in new tab"
@@ -107,6 +109,8 @@
             :rounds="seasonData.rounds"
             :has-divisions="seasonData.has_divisions"
             :race-times-required="seasonData.season.race_times_required ?? false"
+            :competition-name="seasonData.competition.name"
+            :season-name="seasonData.season.name"
           />
         </template>
       </div>

@@ -57,6 +57,7 @@ const showViewModal = ref(false);
 const showCSVImport = ref(false);
 const formMode = ref<'create' | 'edit'>('create');
 const selectedDriver = ref<LeagueDriver | null>(null);
+const driverFormDialogRef = ref<InstanceType<typeof DriverFormDialog> | null>(null);
 
 // Search and filter
 const searchInput = ref('');
@@ -188,10 +189,17 @@ const handleSaveDriver = async (data: CreateDriverRequest): Promise<void> => {
     }
     showDriverForm.value = false;
   } catch (error) {
+    // Set the error in the form dialog for inline display
+    const errorMessage = error instanceof Error ? error.message : 'Failed to save driver';
+    if (driverFormDialogRef.value) {
+      driverFormDialogRef.value.setServerError(errorMessage);
+    }
+
+    // Also show a toast notification
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: error instanceof Error ? error.message : 'Failed to save driver',
+      detail: errorMessage,
       life: 5000,
     });
   }
@@ -352,6 +360,7 @@ onMounted(() => {
 
     <!-- Driver Form Dialog -->
     <DriverFormDialog
+      ref="driverFormDialogRef"
       v-model:visible="showDriverForm"
       :mode="formMode"
       :driver="selectedDriver"

@@ -49,9 +49,9 @@ const statusOptions = [
     <div class="mb-4">
       <h3 class="text-section-label mb-1">Basic Information</h3>
       <p class="text-[var(--text-secondary)] m-0">Driver identification and status</p>
-      <p class="text-[var(--text-secondary)] text-sm mt-2 mb-0">
-        <strong>Minimum requirement:</strong> Provide either a name field (Nickname, First Name, or
-        Last Name) <strong>OR</strong> a platform ID (Discord ID, PSN ID, iRacing ID, etc.)
+      <p class="text-[var(--text-secondary)] text-md mt-2 mb-0">
+        <strong>Minimum requirement:</strong><br />Provide either a name field (Nickname, First
+        Name, or Last Name) <strong>OR</strong> a platform ID (Discord ID, PSN ID, iRacing ID, etc.)
       </p>
     </div>
 

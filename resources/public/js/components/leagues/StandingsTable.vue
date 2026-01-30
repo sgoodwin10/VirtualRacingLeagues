@@ -26,33 +26,56 @@
       >
         <!-- Tab Navigation -->
         <div class="standings-tabs">
-          <button
-            v-for="division in divisionsWithStandings"
-            :key="`division-${division.division_id}`"
-            :class="[
-              'standings-tab',
-              { active: activeTabId === `division-${division.division_id}` },
-            ]"
-            @click="activeTabId = `division-${division.division_id}`"
-          >
-            {{ division.division_name }}
-          </button>
+          <div class="flex gap-2 md:gap-8">
+            <button
+              v-for="division in divisionsWithStandings"
+              :key="`division-${division.division_id}`"
+              :class="[
+                'standings-tab',
+                { active: activeTabId === `division-${division.division_id}` },
+              ]"
+              @click="activeTabId = `division-${division.division_id}`"
+            >
+              <span class="hidden md:block">
+                {{ division.division_name }}
+              </span>
+              <span class="block md:hidden">
+                {{
+                  division.division_name
+                    .split(' ')
+                    .map((w) => w[0])
+                    .join('')
+                }}
+              </span>
+            </button>
 
-          <button
-            v-if="!standingsData.has_divisions && showTeamsChampionship"
-            :class="['standings-tab', { active: activeTabId === 'drivers' }]"
-            @click="activeTabId = 'drivers'"
-          >
-            Drivers
-          </button>
+            <button
+              v-if="!standingsData.has_divisions && showTeamsChampionship"
+              :class="['standings-tab', { active: activeTabId === 'drivers' }]"
+              @click="activeTabId = 'drivers'"
+            >
+              Drivers
+            </button>
 
-          <button
-            v-if="showTeamsChampionship"
-            :class="['standings-tab', { active: activeTabId === 'teams' }]"
-            @click="activeTabId = 'teams'"
-          >
-            Team Championship
-          </button>
+            <button
+              v-if="showTeamsChampionship"
+              :class="['standings-tab', { active: activeTabId === 'teams' }]"
+              @click="activeTabId = 'teams'"
+            >
+              <span class="hidden md:block"> Team Championship </span>
+              <span class="block md:hidden"> Teams </span>
+            </button>
+          </div>
+
+          <VrlButton
+            variant="secondary"
+            outline
+            size="sm"
+            :label="exportButtonLabel"
+            :icon="PhDownloadSimple"
+            class="ml-auto"
+            @click="exportToCSV()"
+          />
         </div>
 
         <!-- Tab Content -->
@@ -313,90 +336,109 @@
       </div>
 
       <!-- No Divisions and No Teams: Single Table -->
-      <div v-else class="standings-section">
-        <table class="standings-table">
-          <thead>
-            <tr>
-              <th class="th-position" rowspan="2">#</th>
-              <th class="th-driver" rowspan="2">Driver</th>
-              <th class="th-podiums" rowspan="2">Podiums</th>
-              <th
-                v-for="roundNum in getRoundNumbers(flatDriverStandings)"
-                :key="`header-${roundNum}`"
-                :colspan="3"
-                class="th-round"
-              >
-                R{{ roundNum }}
-              </th>
-              <th class="th-total" rowspan="2">Total</th>
-              <th v-if="standingsData.drop_round_enabled" class="th-drop" rowspan="2">Drop</th>
-            </tr>
-            <tr class="sub-header">
-              <template
-                v-for="roundNum in getRoundNumbers(flatDriverStandings)"
-                :key="`sub-${roundNum}`"
-              >
-                <th class="th-sub">P</th>
-                <th class="th-sub">FL</th>
-                <th class="th-sub">Pts</th>
-              </template>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="driver in flatDriverStandings"
-              :key="driver.driver_id"
-              :class="getRowClass(driver.position)"
-            >
-              <td :class="['td-position', getPositionClass(driver.position)]">
-                {{ driver.position }}
-              </td>
-              <td class="td-driver">
-                <div class="driver-info">
-                  <span class="driver-name">{{ driver.driver_name }}</span>
-                  <span v-if="driver.team_logo" class="team-logo">
-                    <img :src="driver.team_logo" :alt="driver.team_name || 'Team'" />
-                  </span>
-                  <span v-else-if="driver.team_name" class="team-name">{{ driver.team_name }}</span>
-                </div>
-              </td>
-              <td class="td-podiums">{{ driver.podiums }}</td>
-              <template
-                v-for="roundNum in getRoundNumbers(flatDriverStandings)"
-                :key="`round-${driver.driver_id}-${roundNum}`"
-              >
-                <td class="td-round">
-                  <PhCheck
-                    v-if="getRoundData(driver, roundNum)?.has_pole"
-                    :size="14"
-                    weight="bold"
-                    class="icon-pole"
-                  />
-                </td>
-                <td class="td-round">
-                  <PhCheck
-                    v-if="getRoundData(driver, roundNum)?.has_fastest_lap"
-                    :size="14"
-                    weight="bold"
-                    class="icon-fl"
-                  />
-                </td>
-                <td
-                  :class="[
-                    'td-round',
-                    (getRoundData(driver, roundNum)?.total_penalties ?? 0) > 0 ? 'has-penalty' : '',
-                  ]"
+      <div v-else>
+        <!-- Export button for single table -->
+        <div class="standings-tabs">
+          <VrlButton
+            variant="secondary"
+            outline
+            size="sm"
+            :label="exportButtonLabel"
+            :icon="PhDownloadSimple"
+            class="ml-auto"
+            @click="exportToCSV()"
+          />
+        </div>
+
+        <div class="standings-section">
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th class="th-position" rowspan="2">#</th>
+                <th class="th-driver" rowspan="2">Driver</th>
+                <th class="th-podiums" rowspan="2">Podiums</th>
+                <th
+                  v-for="roundNum in getRoundNumbers(flatDriverStandings)"
+                  :key="`header-${roundNum}`"
+                  :colspan="3"
+                  class="th-round"
                 >
-                  {{ getRoundData(driver, roundNum)?.points ?? '' }}
+                  R{{ roundNum }}
+                </th>
+                <th class="th-total" rowspan="2">Total</th>
+                <th v-if="standingsData.drop_round_enabled" class="th-drop" rowspan="2">Drop</th>
+              </tr>
+              <tr class="sub-header">
+                <template
+                  v-for="roundNum in getRoundNumbers(flatDriverStandings)"
+                  :key="`sub-${roundNum}`"
+                >
+                  <th class="th-sub">P</th>
+                  <th class="th-sub">FL</th>
+                  <th class="th-sub">Pts</th>
+                </template>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="driver in flatDriverStandings"
+                :key="driver.driver_id"
+                :class="getRowClass(driver.position)"
+              >
+                <td :class="['td-position', getPositionClass(driver.position)]">
+                  {{ driver.position }}
                 </td>
-              </template>
-              <td class="td-total">{{ driver.total_points }}</td>
-              <td v-if="standingsData.drop_round_enabled" class="td-drop">
-                {{ driver.drop_total }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <td class="td-driver">
+                  <div class="driver-info">
+                    <span class="driver-name">{{ driver.driver_name }}</span>
+                    <span v-if="driver.team_logo" class="team-logo">
+                      <img :src="driver.team_logo" :alt="driver.team_name || 'Team'" />
+                    </span>
+                    <span v-else-if="driver.team_name" class="team-name">{{
+                      driver.team_name
+                    }}</span>
+                  </div>
+                </td>
+                <td class="td-podiums">{{ driver.podiums }}</td>
+                <template
+                  v-for="roundNum in getRoundNumbers(flatDriverStandings)"
+                  :key="`round-${driver.driver_id}-${roundNum}`"
+                >
+                  <td class="td-round">
+                    <PhCheck
+                      v-if="getRoundData(driver, roundNum)?.has_pole"
+                      :size="14"
+                      weight="bold"
+                      class="icon-pole"
+                    />
+                  </td>
+                  <td class="td-round">
+                    <PhCheck
+                      v-if="getRoundData(driver, roundNum)?.has_fastest_lap"
+                      :size="14"
+                      weight="bold"
+                      class="icon-fl"
+                    />
+                  </td>
+                  <td
+                    :class="[
+                      'td-round',
+                      (getRoundData(driver, roundNum)?.total_penalties ?? 0) > 0
+                        ? 'has-penalty'
+                        : '',
+                    ]"
+                  >
+                    {{ getRoundData(driver, roundNum)?.points ?? '' }}
+                  </td>
+                </template>
+                <td class="td-total">{{ driver.total_points }}</td>
+                <td v-if="standingsData.drop_round_enabled" class="td-drop">
+                  {{ driver.drop_total }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -404,7 +446,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { PhCheck } from '@phosphor-icons/vue';
+import { PhCheck, PhDownloadSimple } from '@phosphor-icons/vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
 import { leagueService } from '@public/services/leagueService';
 import type {
   PublicSeasonDetailResponse,
@@ -462,6 +505,23 @@ const teamChampionshipResults = computed<readonly TeamChampionshipStanding[]>(()
   if (!standingsData.value || !showTeamsChampionship.value) return [];
   const results = standingsData.value.team_championship_results ?? [];
   return [...results].sort((a, b) => a.position - b.position);
+});
+
+const exportButtonLabel = computed<string>(() => {
+  if (activeTabId.value === 'teams') {
+    return 'Export Team Championship Data';
+  }
+  if (activeTabId.value === 'drivers') {
+    return 'Export Drivers Data';
+  }
+  if (activeTabId.value.startsWith('division-')) {
+    const divisionId = parseInt(activeTabId.value.replace('division-', ''));
+    const division = divisionsWithStandings.value.find((d) => d.division_id === divisionId);
+    if (division) {
+      return `Export ${division.division_name} Data`;
+    }
+  }
+  return 'Export Standings Data';
 });
 
 function getRoundNumbers(drivers: readonly SeasonStandingDriver[]): number[] {
@@ -546,6 +606,184 @@ watch(
     }
   },
 );
+
+function exportToCSV(): void {
+  if (!standingsData.value) return;
+
+  let csvContent = '';
+  let filename = '';
+
+  const sanitize = (str: string) => str.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+  if (activeTabId.value === 'teams') {
+    // Export team championship data
+    csvContent = generateTeamChampionshipCSV();
+    filename = `${sanitize(props.leagueSlug)}_${sanitize(props.seasonSlug)}_team_championship_standings.csv`;
+  } else {
+    // Export driver standings (division or flat)
+    const isDriversTab = activeTabId.value === 'drivers';
+    const isDivisionTab = activeTabId.value.startsWith('division-');
+
+    if (isDivisionTab) {
+      const divisionId = parseInt(activeTabId.value.replace('division-', ''));
+      const division = divisionsWithStandings.value.find((d) => d.division_id === divisionId);
+      if (division) {
+        csvContent = generateDriverStandingsCSV(division.drivers);
+        filename = `${sanitize(props.leagueSlug)}_${sanitize(props.seasonSlug)}_${sanitize(division.division_name)}_standings.csv`;
+      }
+    } else {
+      csvContent = generateDriverStandingsCSV(flatDriverStandings.value);
+      const tabName = isDriversTab ? 'drivers' : 'standings';
+      filename = `${sanitize(props.leagueSlug)}_${sanitize(props.seasonSlug)}_${tabName}.csv`;
+    }
+  }
+
+  if (!csvContent) return;
+
+  // Create blob and trigger download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function generateDriverStandingsCSV(drivers: readonly SeasonStandingDriver[]): string {
+  if (!drivers || drivers.length === 0) return '';
+
+  const roundNumbers = getRoundNumbers(drivers);
+  const hasDropRounds = standingsData.value?.drop_round_enabled ?? false;
+
+  // Check if any driver has a team
+  const hasTeams = drivers.some((d) => d.team_name);
+
+  // Build headers
+  const headers: string[] = ['position', 'driver_name'];
+
+  if (hasTeams) {
+    headers.push('team');
+  }
+
+  headers.push('podiums');
+
+  // Add round columns
+  for (const roundNum of roundNumbers) {
+    headers.push(`r${roundNum}_pole`, `r${roundNum}_fl`, `r${roundNum}_pts`);
+  }
+
+  headers.push('total');
+
+  if (hasDropRounds) {
+    headers.push('drop');
+  }
+
+  // Build rows
+  const rows = drivers.map((driver) => {
+    const row: (string | number)[] = [driver.position, driver.driver_name];
+
+    if (hasTeams) {
+      row.push(driver.team_name || '');
+    }
+
+    row.push(driver.podiums);
+
+    // Add round data
+    for (const roundNum of roundNumbers) {
+      const roundData = getRoundData(driver, roundNum);
+      row.push(
+        roundData?.has_pole ? 'Yes' : 'No',
+        roundData?.has_fastest_lap ? 'Yes' : 'No',
+        roundData?.points ?? '',
+      );
+    }
+
+    row.push(driver.total_points);
+
+    if (hasDropRounds) {
+      row.push(driver.drop_total ?? 0);
+    }
+
+    return row;
+  });
+
+  // Convert to CSV format
+  return [
+    headers.join(','),
+    ...rows.map((row) =>
+      row
+        .map((cell) => {
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        })
+        .join(','),
+    ),
+  ].join('\n');
+}
+
+function generateTeamChampionshipCSV(): string {
+  if (!teamChampionshipResults.value || teamChampionshipResults.value.length === 0) return '';
+
+  const roundNumbers = getTeamRoundNumbers(teamChampionshipResults.value);
+  const hasDropRounds = teamsDropRoundEnabled.value;
+
+  // Build headers
+  const headers: string[] = ['position', 'team_name'];
+
+  // Add round columns
+  for (const roundNum of roundNumbers) {
+    headers.push(`r${roundNum}_pts`);
+  }
+
+  headers.push('total');
+
+  if (hasDropRounds) {
+    headers.push('drop');
+  }
+
+  // Build rows
+  const rows = teamChampionshipResults.value.map((team) => {
+    const row: (string | number)[] = [team.position, team.team_name];
+
+    // Add round data
+    for (const roundNum of roundNumbers) {
+      const roundData = getTeamRoundData(team, roundNum);
+      row.push(roundData?.points ?? 0);
+    }
+
+    row.push(team.total_points);
+
+    if (hasDropRounds) {
+      row.push(team.drop_total ?? 0);
+    }
+
+    return row;
+  });
+
+  // Convert to CSV format
+  return [
+    headers.join(','),
+    ...rows.map((row) =>
+      row
+        .map((cell) => {
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        })
+        .join(','),
+    ),
+  ].join('\n');
+}
 </script>
 
 <style scoped>
@@ -601,10 +839,11 @@ watch(
 /* Tabs */
 .standings-tabs {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 2rem;
   padding: 1rem 16px;
   border-bottom: 1px solid var(--border);
-  /* margin-left: 16px; */
 }
 
 .standings-tab {

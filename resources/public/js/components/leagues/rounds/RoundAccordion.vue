@@ -38,7 +38,7 @@
     </template>
 
     <!-- Accordion content with tabs -->
-    <div class="p-4 bg-[var(--bg-dark)]">
+    <div class="md:p-4 bg-[var(--bg-dark)]">
       <!-- Loading State -->
       <div v-if="isLoading" class="flex items-center justify-center py-12">
         <i class="ph ph-circle-notch ph-spin text-4xl text-[var(--text-muted)] mr-3"></i>
@@ -54,9 +54,28 @@
       <!-- Results Content -->
       <template v-else>
         <!-- Main Content Tabs (Round Results vs Cross-Division Results) -->
-        <VrlTabs v-model="activeMainTab" :tabs="mainTabs" class="mb-6">
+        <VrlTabs
+          v-model="activeMainTab"
+          :tabs="mainTabs"
+          class="mb-2 pl-1 md:pl-0 md:mb-6 md:ml-0 border-t md:border-t-0"
+        >
           <template #tab-label="{ tab }">
-            {{ tab.label }}
+            <span class="hidden md:block">
+              {{ tab.label }}
+            </span>
+            <span class="block md:hidden">
+              {{
+                tab.label === 'Round Results'
+                  ? 'R'
+                  : tab.label === 'Qualifying Times'
+                    ? 'Q'
+                    : tab.label === 'Race Times'
+                      ? 'R'
+                      : tab.label === 'Fastest Laps'
+                        ? 'FL'
+                        : ''
+              }}
+            </span>
           </template>
         </VrlTabs>
 
@@ -71,7 +90,17 @@
             class="mb-6"
           >
             <template #tab-label="{ tab }">
-              {{ tab.label }}
+              <span class="hidden md:block">
+                {{ tab.label }}
+              </span>
+              <span class="block md:hidden">
+                {{
+                  tab.label
+                    .split(' ')
+                    .map((w) => w[0])
+                    .join('')
+                }}
+              </span>
             </template>
           </VrlTabs>
 
@@ -91,6 +120,8 @@
               :race-event="raceEvent"
               :division-id="activeDivisionId"
               :race-times-required="raceTimesRequired"
+              :competition-name="props.competitionName"
+              :season-name="props.seasonName"
             />
           </VrlAccordion>
         </div>
@@ -152,6 +183,8 @@ interface Props {
   value: string;
   raceTimesRequired: boolean;
   initiallyExpanded?: boolean;
+  competitionName?: string;
+  seasonName?: string;
 }
 
 const props = defineProps<Props>();
@@ -177,7 +210,7 @@ const divisions = ref<RoundResultsResponse['divisions']>([]);
 const raceEvents = ref<RaceEventResults[]>([]);
 const activeMainTab = ref<string>('round-results');
 const activeDivisionKey = ref<string>('all');
-const openAccordions = ref<string[]>(['standings']);
+const openAccordions = ref<string[]>([]);
 
 const roundTitle = computed(() => {
   return props.round.name || `Round ${props.round.round_number}`;

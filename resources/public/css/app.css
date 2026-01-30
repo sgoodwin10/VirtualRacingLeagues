@@ -183,6 +183,22 @@ body {
   padding: 0;
 }
 
+/* White-label mode - prevent FOUC by applying light theme immediately */
+body.whitelabel-mode {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+body.whitelabel-mode #public-app {
+  background: #ffffff;
+}
+
+/* Hide header and footer in whitelabel mode to prevent flash */
+body.whitelabel-mode nav,
+body.whitelabel-mode footer {
+  display: none !important;
+}
+
 /* Heading Typography */
 h1,
 h2,

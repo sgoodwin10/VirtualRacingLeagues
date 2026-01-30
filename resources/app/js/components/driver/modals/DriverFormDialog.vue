@@ -44,6 +44,9 @@ const formData = ref<DriverFormData>({
 // Validation errors
 const errors = ref<Record<string, string>>({});
 
+// General/server error (not tied to a specific field)
+const generalError = ref<string>('');
+
 // Loading state
 const saving = ref(false);
 
@@ -177,6 +180,7 @@ const autoPopulateNickname = (): void => {
  */
 const validateForm = (): boolean => {
   errors.value = {};
+  generalError.value = '';
 
   // Check if driver has any name field (nickname, first_name, or last_name)
   const hasName = formData.value.nickname || formData.value.first_name || formData.value.last_name;
@@ -288,6 +292,7 @@ const resetForm = (): void => {
 
   formData.value = newFormData;
   errors.value = {};
+  generalError.value = '';
   userHasEnteredNickname.value = false; // Reset manual entry flag
 };
 
@@ -330,10 +335,19 @@ const handleNicknameUpdate = (value: string): void => {
   formData.value.nickname = value;
 };
 
+/**
+ * Set a server/general error message
+ * This is used by parent components to display API errors that don't map to specific fields
+ */
+const setServerError = (message: string): void => {
+  generalError.value = message;
+};
+
 // Expose methods and state for testing
 defineExpose({
   getFormData: () => formData.value,
   errors,
+  generalError,
   dialogTitle,
   validateForm,
   handleSubmit,
@@ -345,6 +359,7 @@ defineExpose({
   handleFirstNameUpdate,
   handlePlatformFieldUpdate,
   userHasEnteredNickname,
+  setServerError,
 });
 </script>
 
@@ -362,7 +377,11 @@ defineExpose({
     <!-- Split Layout -->
     <div class="grid grid-cols-[200px_1fr] min-h-[520px] max-h-[72vh]">
       <!-- Sidebar -->
-      <DriverEditSidebar :active-section="activeSection" @change-section="handleSectionChange" />
+      <DriverEditSidebar
+        :active-section="activeSection"
+        :general-error="generalError"
+        @change-section="handleSectionChange"
+      />
 
       <!-- Main Content -->
       <main class="overflow-y-auto bg-[var(--bg-dark)] p-6">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { PhUser, PhNotepad } from '@phosphor-icons/vue';
+import { PhUser, PhNotepad, PhWarning } from '@phosphor-icons/vue';
 
 export type SectionId = 'basic' | 'additional';
 
@@ -13,6 +13,7 @@ interface SectionConfig {
 
 interface Props {
   activeSection: SectionId;
+  generalError?: string;
 }
 
 defineProps<Props>();
@@ -65,5 +66,19 @@ function handleSectionClick(sectionId: SectionId): void {
         </li>
       </ul>
     </nav>
+
+    <!-- General Error Display -->
+    <div v-if="generalError" class="p-4 border-t border-[var(--border)]">
+      <div
+        class="flex items-start gap-3 p-3 rounded-lg bg-[var(--red-dim)] border border-[var(--red)]"
+      >
+        <PhWarning :size="20" weight="duotone" class="text-[var(--red)] flex-shrink-0 mt-0.5" />
+        <div class="flex-1 min-w-0">
+          <p class="text-sm text-[var(--red)] font-medium leading-relaxed break-words">
+            {{ generalError }}
+          </p>
+        </div>
+      </div>
+    </div>
   </aside>
 </template>

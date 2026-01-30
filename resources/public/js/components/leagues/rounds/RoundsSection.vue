@@ -12,14 +12,16 @@
     </div>
 
     <!-- Rounds List -->
-    <div v-if="rounds.length > 0" class="p-4">
+    <div v-if="rounds.length > 0" class="md:p-4">
       <VrlAccordion :model-value="expandedRound" gap="md">
         <RoundAccordion
-          v-for="round in rounds"
+          v-for="round in props.rounds"
           :key="round.id"
           :round="round"
-          :has-divisions="hasDivisions"
-          :race-times-required="raceTimesRequired"
+          :has-divisions="props.hasDivisions"
+          :race-times-required="props.raceTimesRequired"
+          :competition-name="props.competitionName"
+          :season-name="props.seasonName"
           :value="String(round.id)"
           :initially-expanded="expandedRound === String(round.id)"
         />
@@ -51,9 +53,15 @@ interface Props {
 
   /** Whether race times are required for this season */
   raceTimesRequired: boolean;
+
+  /** Competition name for CSV export */
+  competitionName?: string;
+
+  /** Season name for CSV export */
+  seasonName?: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 /**
  * All accordions start closed - user must click to expand

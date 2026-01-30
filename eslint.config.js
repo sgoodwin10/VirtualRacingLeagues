@@ -28,6 +28,7 @@ export default [
         FileReader: 'readonly',
         ProgressEvent: 'readonly',
         URL: 'readonly',
+        Blob: 'readonly',
         Event: 'readonly',
         DragEvent: 'readonly',
         MouseEvent: 'readonly',

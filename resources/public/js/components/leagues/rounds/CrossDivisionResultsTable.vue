@@ -36,7 +36,17 @@
               getDivisionBadgeClass(data.divisionId),
             ]"
           >
-            {{ data.divisionName }}
+            <span class="hidden md:block">
+              {{ data.divisionName }}
+            </span>
+            <span class="block md:hidden">
+              {{
+                data.divisionName
+                  .split(' ')
+                  .map((w) => w[0])
+                  .join('')
+              }}
+            </span>
           </div>
           <span v-else class="text-[var(--text-muted)]">-</span>
         </template>

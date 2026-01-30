@@ -736,4 +736,105 @@ describe('DriverFormDialog', () => {
       expect(component.getFormData().nickname).toBe('testuser#1234');
     });
   });
+
+  describe('Server Error Handling', () => {
+    it('should set server error via setServerError method', () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+      const errorMessage = "Driver with platform ID 'Nik_Makozi' is already in league 1";
+
+      component.setServerError(errorMessage);
+
+      expect(component.generalError).toBe(errorMessage);
+    });
+
+    it('should pass generalError to DriverEditSidebar component', async () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+      const errorMessage = 'This is a server error';
+
+      component.setServerError(errorMessage);
+      await wrapper.vm.$nextTick();
+
+      const sidebar = wrapper.findComponent({ name: 'DriverEditSidebar' });
+      expect(sidebar.props('generalError')).toBe(errorMessage);
+    });
+
+    it('should clear generalError when form is validated', () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Set a server error
+      component.setServerError('Some error');
+      expect(component.generalError).toBe('Some error');
+
+      // Validate form (should clear general error)
+      component.handleDiscordIdUpdate('testuser');
+      component.validateForm();
+
+      expect(component.generalError).toBe('');
+    });
+
+    it('should clear generalError when form is reset', () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Set a server error
+      component.setServerError('Some error');
+      expect(component.generalError).toBe('Some error');
+
+      // Reset form
+      component.resetForm();
+
+      expect(component.generalError).toBe('');
+    });
+
+    it('should expose generalError in defineExpose', () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'create',
+          leagueId: 1,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      expect(component.generalError).toBeDefined();
+      expect(typeof component.setServerError).toBe('function');
+    });
+  });
 });

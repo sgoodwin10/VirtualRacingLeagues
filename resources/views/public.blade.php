@@ -24,7 +24,7 @@
         @endif
         @vite(['resources/public/css/app.css', 'resources/public/js/app.ts'])
     </head>
-    <body>
+    <body class="@if(request()->query('whitelabel') === 'true') whitelabel-mode @endif">
         @if(config('services.google_tag_manager.id'))
         <!-- Google Tag Manager (noscript) -->
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ config('services.google_tag_manager.id') }}"

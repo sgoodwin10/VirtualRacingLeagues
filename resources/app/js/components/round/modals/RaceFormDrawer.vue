@@ -214,7 +214,7 @@ const form = reactive<RaceForm>({
   assists_restrictions: '',
   race_points: false,
   points_system: { ...F1_STANDARD_POINTS },
-  fastest_lap: 1,
+  fastest_lap: null,
   fastest_lap_top_10: false,
   qualifying_pole: 1,
   qualifying_pole_top_10: false,
@@ -534,7 +534,7 @@ function resetForm(): void {
   form.assists_restrictions = '';
   form.race_points = false;
   form.points_system = { ...F1_STANDARD_POINTS };
-  form.fastest_lap = 1;
+  form.fastest_lap = null;
   form.fastest_lap_top_10 = false;
   form.qualifying_pole = 1;
   form.qualifying_pole_top_10 = false;

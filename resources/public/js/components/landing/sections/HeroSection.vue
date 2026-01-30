@@ -46,7 +46,7 @@ const standings = [
           and share standings with your community.
         </p>
 
-        <div class="flex gap-4 mb-12">
+        <div class="flex flex-col md:flex-row gap-4 mb-12">
           <RouterLink to="/register">
             <VrlButton variant="primary" size="lg">Start Racing Free</VrlButton>
           </RouterLink>

@@ -85,7 +85,7 @@ const handleSmoothScroll = (event: MouseEvent, target: string) => {
       </ul>
 
       <!-- CTA Buttons -->
-      <div class="flex gap-4">
+      <div class="hidden md:flex gap-4">
         <RouterLink to="/login">
           <VrlButton variant="secondary" size="default">Login</VrlButton>
         </RouterLink>
