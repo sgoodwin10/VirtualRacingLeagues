@@ -5,6 +5,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import router from '@app/router';
 import App from '@app/components/App.vue';
 import { useSiteConfigStore } from '@app/stores/siteConfigStore';
+import { initSentry } from '@app/sentry';
 
 // PrimeVue
 import PrimeVue from 'primevue/config';
@@ -39,6 +40,9 @@ app.use(ToastService);
 app.use(ConfirmationService);
 app.directive('tooltip', Tooltip);
 app.use(router);
+
+// Initialize Sentry for error tracking and performance monitoring
+initSentry(app, router);
 
 // Global error handlers
 app.config.errorHandler = (err, instance, info) => {

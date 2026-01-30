@@ -40,8 +40,56 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
+
+        // Add Sentry transaction middleware to all requests
+        $middleware->append(\App\Http\Middleware\SentryTransactionMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Sentry integration for exception reporting
+        $exceptions->reportable(function (Throwable $e) {
+            if (app()->bound('sentry')) {
+                \Sentry\configureScope(function (\Sentry\State\Scope $scope) use ($e): void {
+                    // Add request context
+                    if ($request = request()) {
+                        $scope->setContext('request', [
+                            'url' => $request->fullUrl(),
+                            'method' => $request->method(),
+                            'ip' => $request->ip(),
+                            'user_agent' => $request->userAgent(),
+                        ]);
+                    }
+
+                    // Add authenticated user context (web guard)
+                    if (auth()->guard('web')->check()) {
+                        $user = auth()->guard('web')->user();
+                        $scope->setUser([
+                            'id' => (string) $user->id,
+                            'email' => $user->email ?? null,
+                            'username' => $user->name ?? null,
+                        ]);
+                        $scope->setTag('user_type', 'user');
+                    }
+
+                    // Add authenticated admin context (admin guard)
+                    if (auth()->guard('admin')->check()) {
+                        $admin = auth()->guard('admin')->user();
+                        $scope->setUser([
+                            'id' => (string) $admin->id,
+                            'email' => $admin->email ?? null,
+                            'username' => $admin->name ?? null,
+                        ]);
+                        $scope->setTag('user_type', 'admin');
+                    }
+
+                    // Add environment tags
+                    $scope->setTag('environment', config('app.env'));
+                    $scope->setTag('subdomain', request()->getHost());
+                });
+
+                \Sentry\captureException($e);
+            }
+        });
+
         // Handle all domain "not found" exceptions with 404 responses
         // All domain NotFoundException classes extend DomainNotFoundException for centralized handling
         $exceptions->render(function (\App\Domain\Shared\Exceptions\DomainNotFoundException $e) {

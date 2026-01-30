@@ -146,3 +146,11 @@ parameters:
         -
             message: '#Call to an undefined method .+Request::(all|route)\(\)#'
             path: app/Http/Requests/*
+        # Pulse migration match expression (vendor code)
+        -
+            message: '#Match expression does not handle remaining value: string#'
+            path: database/migrations/*_create_pulse_tables.php
+        # Sentry middleware Request methods (Laravel magic)
+        -
+            message: '#Call to an undefined method Illuminate\\Http\\Request::(fullUrl|method|route|path)\(\)#'
+            path: app/Http/Middleware/SentryTransactionMiddleware.php

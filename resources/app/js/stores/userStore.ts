@@ -4,6 +4,7 @@ import type { User } from '@app/types/user';
 import type { LoginCredentials } from '@app/types/auth';
 import { authService } from '@app/services/authService';
 import { logError } from '@app/utils/logger';
+import { setSentryUser, clearSentryUser } from '@app/sentry';
 
 export const useUserStore = defineStore(
   'user',
@@ -109,10 +110,18 @@ export const useUserStore = defineStore(
 
     function setUser(userData: User): void {
       user.value = userData;
+      // Set Sentry user context for error tracking
+      setSentryUser({
+        id: userData.id,
+        name: `${userData.first_name} ${userData.last_name}`.trim(),
+        email: userData.email,
+      });
     }
 
     function clearAuth(): void {
       user.value = null;
+      // Clear Sentry user context
+      clearSentryUser();
     }
 
     return {

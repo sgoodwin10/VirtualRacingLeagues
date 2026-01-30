@@ -8,13 +8,13 @@
   >
     <!-- Logo/Brand Section -->
     <div class="flex items-center h-16 px-4 border-b border-gray-200">
-      <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-500 text-white">
-        <i class="pi pi-shield text-2xl"></i>
+      <div class="flex items-center justify-center w-12 h-12 rounded-lg overflow-hidden">
+        <img src="/images/logo/64.png" alt="Logo" class="w-full h-full object-contain" />
       </div>
       <transition name="fade">
         <div v-if="!isCollapsed" class="ml-3 flex flex-col min-w-0">
           <span class="text-xs text-gray-500 truncate">
-            {{ siteConfigStore.siteName }}
+            {{ appName }}
           </span>
           <span class="text-lg font-semibold text-gray-900"> Admin Panel </span>
         </div>
@@ -45,8 +45,8 @@
                 <i
                   v-if="!isCollapsed"
                   :class="[
-                    'pi text-xs transition-transform',
-                    isMenuExpanded(item.name) ? 'pi-chevron-down' : 'pi-chevron-right',
+                    'ph text-xs transition-transform',
+                    isMenuExpanded(item.name) ? 'ph-caret-down' : 'ph-caret-right',
                   ]"
                 ></i>
               </transition>
@@ -70,7 +70,7 @@
                     </span>
                     <i
                       v-if="subItem.target === '_blank'"
-                      class="pi pi-external-link text-xs ml-auto opacity-50"
+                      class="ph ph-arrow-square-out text-xs ml-auto opacity-50"
                     ></i>
                   </a>
                   <!-- Internal router link -->
@@ -136,12 +136,13 @@ import { useRoute } from 'vue-router';
 import { useBreakpoints } from '@vueuse/core';
 import { useLayoutStore } from '@admin/stores/layoutStore';
 import { useAdminStore } from '@admin/stores/adminStore';
-import { useSiteConfigStore } from '@admin/stores/siteConfigStore';
 
 const route = useRoute();
 const layoutStore = useLayoutStore();
 const adminStore = useAdminStore();
-const siteConfigStore = useSiteConfigStore();
+
+// App name from environment
+const appName = import.meta.env.VITE_APP_NAME;
 
 // Responsive breakpoints
 const breakpoints = useBreakpoints({
@@ -177,28 +178,28 @@ const menuItems = computed<MenuItem[]>(() => {
     {
       name: 'dashboard',
       label: 'Dashboard',
-      icon: 'pi pi-home',
+      icon: 'ph ph-house',
       to: '/',
       badge: null,
     },
     {
       name: 'users',
       label: 'Users',
-      icon: 'pi pi-users',
+      icon: 'ph ph-users',
       to: '/users',
       badge: null,
     },
     {
       name: 'leagues',
       label: 'Leagues',
-      icon: 'pi pi-trophy',
+      icon: 'ph ph-trophy',
       to: '/leagues',
       badge: null,
     },
     {
       name: 'drivers',
       label: 'Drivers',
-      icon: 'pi pi-id-card',
+      icon: 'ph ph-identification-card',
       to: '/drivers',
       badge: null,
     },
@@ -210,13 +211,13 @@ const menuItems = computed<MenuItem[]>(() => {
       {
         name: 'notifications',
         label: 'Notifications',
-        icon: 'pi pi-bell',
+        icon: 'ph ph-bell',
         to: '/notifications',
       },
       {
         name: 'contacts',
         label: 'Contacts',
-        icon: 'pi pi-envelope',
+        icon: 'ph ph-envelope',
         to: '/contacts',
       },
     ];
@@ -226,7 +227,7 @@ const menuItems = computed<MenuItem[]>(() => {
       systemItems.push({
         name: 'activity-logs',
         label: 'Activity Logs',
-        icon: 'pi pi-clock',
+        icon: 'ph ph-clock-counter-clockwise',
         to: '/activity-logs',
       });
     }
@@ -234,7 +235,7 @@ const menuItems = computed<MenuItem[]>(() => {
     items.push({
       name: 'system',
       label: 'System',
-      icon: 'pi pi-server',
+      icon: 'ph ph-hard-drives',
       badge: null,
       items: systemItems,
     });
@@ -246,7 +247,7 @@ const menuItems = computed<MenuItem[]>(() => {
       {
         name: 'admin-users',
         label: 'Admin Users',
-        icon: 'pi pi-users',
+        icon: 'ph ph-users-three',
         to: '/admin-users',
       },
     ];
@@ -256,13 +257,13 @@ const menuItems = computed<MenuItem[]>(() => {
       settingsItems.push({
         name: 'site-config',
         label: 'Site Configuration',
-        icon: 'pi pi-sliders-h',
+        icon: 'ph ph-sliders-horizontal',
         to: '/site-config',
       });
     }
 
-    // Telescope - only for Super Admins
-    if (adminStore.adminRole === 'super_admin') {
+    // Telescope - only for Super Admins on localhost (not production)
+    if (adminStore.adminRole === 'super_admin' && window.location.hostname.includes('localhost')) {
       settingsItems.push({
         name: 'telescope',
         label: 'Telescope',
@@ -286,7 +287,7 @@ const menuItems = computed<MenuItem[]>(() => {
     items.push({
       name: 'settings',
       label: 'Settings',
-      icon: 'pi pi-cog',
+      icon: 'ph ph-gear',
       badge: null,
       items: settingsItems,
     });

@@ -4,6 +4,7 @@ import { authService } from '@admin/services/authService';
 import type { Admin, AdminRole, LoginCredentials } from '@admin/types/admin';
 import { useSiteConfigStore } from '@admin/stores/siteConfigStore';
 import { logger } from '@admin/utils/logger';
+import { setSentryAdmin, clearSentryUser } from '@admin/sentry';
 
 /**
  * Admin Store
@@ -132,6 +133,13 @@ export const useAdminStore = defineStore(
       admin.value = adminData;
       isAuthenticated.value = true;
 
+      // Set Sentry user context for error tracking
+      setSentryAdmin({
+        id: adminData.id,
+        name: adminData.name,
+        email: adminData.email,
+      });
+
       // Fetch site config when admin is authenticated
       const siteConfigStore = useSiteConfigStore();
       siteConfigStore.fetchSiteConfig();
@@ -143,6 +151,9 @@ export const useAdminStore = defineStore(
     function clearAuth(): void {
       admin.value = null;
       isAuthenticated.value = false;
+
+      // Clear Sentry user context
+      clearSentryUser();
 
       // Clear site config when admin logs out
       const siteConfigStore = useSiteConfigStore();

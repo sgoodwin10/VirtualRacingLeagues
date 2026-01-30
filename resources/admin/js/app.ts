@@ -7,6 +7,7 @@ import App from '@admin/components/App.vue';
 import { useSiteConfigStore } from '@admin/stores/siteConfigStore';
 import { useAdminStore } from '@admin/stores/adminStore';
 import { logger } from '@admin/utils/logger';
+import { initSentry } from '@admin/sentry';
 
 // PrimeVue
 import PrimeVue from 'primevue/config';
@@ -15,6 +16,9 @@ import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import Tooltip from 'primevue/tooltip';
 import 'primeicons/primeicons.css';
+
+// Phosphor Icons (webfont)
+import '@phosphor-icons/web/regular';
 
 // Create Vue app instance
 const app = createApp(App);
@@ -26,6 +30,10 @@ pinia.use(piniaPluginPersistedstate);
 // Register plugins
 app.use(pinia);
 app.use(router);
+
+// Initialize Sentry error tracking and performance monitoring
+initSentry(app, router);
+
 app.use(PrimeVue, {
   theme: {
     preset: Aura,

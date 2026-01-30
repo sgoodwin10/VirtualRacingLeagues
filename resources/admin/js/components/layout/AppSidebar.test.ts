@@ -116,6 +116,6 @@ describe('AppSidebar', () => {
 
   it('renders logo section', () => {
     wrapper = createWrapper();
-    expect(wrapper.find('.pi-shield').exists()).toBe(true);
+    expect(wrapper.find('.ph-shield').exists()).toBe(true);
   });
 });

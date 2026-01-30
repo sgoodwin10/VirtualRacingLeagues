@@ -4,6 +4,7 @@ import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import router from '@public/router';
 import App from '@public/components/App.vue';
+import { initSentry } from '@public/sentry';
 
 // PrimeVue
 import PrimeVue from 'primevue/config';
@@ -33,6 +34,9 @@ app.use(PrimeVue, {
   },
 });
 app.use(ToastService);
+
+// Initialize Sentry for error tracking and performance monitoring
+initSentry(app, router);
 
 // Add global properties
 app.config.globalProperties.$appName = import.meta.env.VITE_APP_NAME || 'App';

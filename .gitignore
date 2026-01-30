@@ -29,6 +29,9 @@ Thumbs.db
 .vitest
 *.lcov
 
+# Source maps (production builds)
+*.map
+
 # Playwright
 /playwright-report
 /playwright/.cache
