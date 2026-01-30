@@ -19,63 +19,76 @@
     </div>
 
     <!-- Main Content (after initial load) -->
-    <Card v-else>
-      <template #title>
-        <div class="flex items-center justify-between">
-          <span>Recent Activity</span>
-          <Button
-            icon="pi pi-refresh"
-            text
-            rounded
-            size="small"
-            severity="secondary"
-            :loading="loading"
-            @click="loadActivities"
-          />
-        </div>
-      </template>
-      <template #content>
-        <!-- Loading State -->
-        <div v-if="loading && !recentActivity.length" class="space-y-4">
-          <Skeleton v-for="i in 5" :key="i" height="80px" class="mb-3" />
-        </div>
+    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Queue Stats Widget (Super Admin Only) -->
+      <div v-if="isSuperAdmin" class="lg:col-span-1">
+        <QueueStatsWidget />
+      </div>
 
-        <!-- Empty State -->
-        <div v-else-if="!loading && !recentActivity.length" class="text-center py-8 text-gray-500">
-          <i class="pi pi-inbox text-4xl mb-3 block"></i>
-          <p>No recent activity to display</p>
-        </div>
+      <!-- Recent Activity Card -->
+      <div :class="isSuperAdmin ? 'lg:col-span-2' : 'lg:col-span-3'">
+        <Card class="h-full">
+          <template #title>
+            <div class="flex items-center justify-between">
+              <span>Recent Activity</span>
+              <Button
+                icon="pi pi-refresh"
+                text
+                rounded
+                size="small"
+                severity="secondary"
+                :loading="loading"
+                @click="loadActivities"
+              />
+            </div>
+          </template>
+          <template #content>
+            <!-- Loading State -->
+            <div v-if="loading && !recentActivity.length" class="space-y-4">
+              <Skeleton v-for="i in 5" :key="i" height="80px" class="mb-3" />
+            </div>
 
-        <!-- Activity List -->
-        <div v-else class="space-y-4">
-          <div
-            v-for="activity in recentActivity"
-            :key="activity.id"
-            class="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0"
-          >
+            <!-- Empty State -->
             <div
-              :class="[
-                'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
-                getActivityColor(activity),
-              ]"
+              v-else-if="!loading && !recentActivity.length"
+              class="text-center py-8 text-gray-500"
             >
-              <i :class="getActivityIcon(activity)"></i>
+              <i class="pi pi-inbox text-4xl mb-3 block"></i>
+              <p>No recent activity to display</p>
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm text-gray-900">
-                {{ getActivityTitle(activity) }}
-              </p>
-              <p class="text-xs text-gray-600 mt-1">
-                {{ activity.description }}
-              </p>
-              <p class="text-xs text-gray-500 mt-1">
-                {{ formatActivityTime(activity.created_at) }}
-              </p>
+
+            <!-- Activity List -->
+            <div v-else class="space-y-4">
+              <div
+                v-for="activity in recentActivity"
+                :key="activity.id"
+                class="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0"
+              >
+                <div
+                  :class="[
+                    'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
+                    getActivityColor(activity),
+                  ]"
+                >
+                  <i :class="getActivityIcon(activity)"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-900">
+                    {{ getActivityTitle(activity) }}
+                  </p>
+                  <p class="text-xs text-gray-600 mt-1">
+                    {{ activity.description }}
+                  </p>
+                  <p class="text-xs text-gray-500 mt-1">
+                    {{ formatActivityTime(activity.created_at) }}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </template>
-    </Card>
+          </template>
+        </Card>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -90,6 +103,7 @@ import type { Activity } from '@admin/types/activityLog';
 import { useDateFormatter } from '@admin/composables/useDateFormatter';
 import { useErrorToast } from '@admin/composables/useErrorToast';
 import { logger } from '@admin/utils/logger';
+import QueueStatsWidget from '@admin/components/dashboard/QueueStatsWidget.vue';
 
 const adminStore = useAdminStore();
 const { formatRelativeTime } = useDateFormatter();
@@ -102,6 +116,7 @@ const initialLoading = ref(true);
 
 // Computed properties
 const adminName = computed(() => adminStore.adminName);
+const isSuperAdmin = computed(() => adminStore.adminRole === 'super_admin');
 
 /**
  * Load recent activities from API

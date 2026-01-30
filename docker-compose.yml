@@ -129,6 +129,32 @@ services:
     networks:
       - app-network
 
+  # Laravel Horizon Service
+  horizon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: ${DOCKER_CONTAINER_NAME}-horizon
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan horizon
+    volumes:
+      - ./:/var/www:delegated
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+      - vendor:/var/www/vendor
+      - composer_cache:/home/laravel/.composer/cache
+    networks:
+      - app-network
+    depends_on:
+      - redis
+      - mariadb
+    healthcheck:
+      test: ["CMD", "php", "artisan", "horizon:status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 networks:
   app-network:
       driver: bridge

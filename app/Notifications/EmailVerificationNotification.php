@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use Illuminate\Auth\Notifications\VerifyEmail as BaseVerifyEmail;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
@@ -16,8 +18,34 @@ use Illuminate\Support\Facades\URL;
  * Note: The AppServiceProvider sets URL::forceRootUrl() globally to ensure
  * all generated URLs include the correct domain and port from APP_URL.
  */
-class EmailVerificationNotification extends BaseVerifyEmail
+class EmailVerificationNotification extends BaseVerifyEmail implements ShouldQueue
 {
+    use Queueable;
+
+    /**
+     * The number of times the job may be attempted.
+     */
+    public int $tries = 5;
+
+    /**
+     * The number of seconds the job can run before timing out.
+     */
+    public int $timeout = 120;
+
+    public function __construct()
+    {
+        $this->onConnection('redis')->onQueue('mail');
+    }
+    /**
+     * Determine the time at which the job should timeout and be retried.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [10, 60, 300]; // 10s, 1m, 5m
+    }
+
     /**
      * Build the mail representation of the notification.
      */

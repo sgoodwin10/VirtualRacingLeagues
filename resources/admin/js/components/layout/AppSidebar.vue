@@ -68,6 +68,10 @@
                     <span class="sidebar-label">
                       {{ subItem.label }}
                     </span>
+                    <i
+                      v-if="subItem.target === '_blank'"
+                      class="pi pi-external-link text-xs ml-auto opacity-50"
+                    ></i>
                   </a>
                   <!-- Internal router link -->
                   <router-link
@@ -264,6 +268,17 @@ const menuItems = computed<MenuItem[]>(() => {
         label: 'Telescope',
         icon: 'ph ph-binoculars',
         href: `${import.meta.env.VITE_APP_URL}/telescope`,
+        target: '_blank',
+      });
+    }
+
+    // Horizon - only for Super Admins
+    if (adminStore.adminRole === 'super_admin') {
+      settingsItems.push({
+        name: 'horizon',
+        label: 'Queue Monitor',
+        icon: 'ph ph-queue',
+        href: '/admin/horizon',
         target: '_blank',
       });
     }

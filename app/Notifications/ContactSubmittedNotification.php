@@ -8,16 +8,33 @@ use App\Domain\Contact\Entities\Contact;
 use App\Infrastructure\Notifications\Channels\DiscordChannel;
 use App\Infrastructure\Notifications\Messages\DiscordMessage;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-final class ContactSubmittedNotification extends Notification
+final class ContactSubmittedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    /**
+     * The number of times the job may be attempted.
+     */
+    public int $tries = 5;
+
+    /**
+     * The number of seconds the job can run before timing out.
+     */
+    public int $timeout = 120;
+
+    /**
+     * The maximum number of unhandled exceptions to allow before failing.
+     */
+    public int $maxExceptions = 3;
 
     public function __construct(
         private readonly Contact $contact
     ) {
+        $this->onConnection('redis');
     }
 
     /**
@@ -36,6 +53,29 @@ final class ContactSubmittedNotification extends Notification
         }
 
         return $channels;
+    }
+
+    /**
+     * Determine which queues should be used for each notification channel.
+     *
+     * @return array<string, string>
+     */
+    public function viaQueues(): array
+    {
+        return [
+            'mail' => 'mail',
+            DiscordChannel::class => 'discord',
+        ];
+    }
+
+    /**
+     * Determine the time at which the job should timeout and be retried.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [10, 60, 300]; // 10s, 1m, 5m
     }
 
     public function toMail(object $notifiable): MailMessage

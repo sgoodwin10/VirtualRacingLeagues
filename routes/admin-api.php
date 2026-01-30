@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\NotificationLogController;
+use App\Http\Controllers\Admin\QueueStatsController;
 use App\Http\Controllers\Admin\SiteConfigController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\AdminOrSuperAdminOnly;
@@ -149,4 +150,8 @@ Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(
         Route::get('/', [NotificationLogController::class, 'index'])->name('index');
         Route::get('/{id}', [NotificationLogController::class, 'show'])->name('show');
     });
+
+    // Queue Stats (Admin - for dashboard widget)
+    Route::get('/queue/stats', [QueueStatsController::class, 'index'])
+        ->name('queue.stats');
 });

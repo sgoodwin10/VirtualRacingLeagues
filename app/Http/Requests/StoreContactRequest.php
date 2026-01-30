@@ -21,7 +21,7 @@ final class StoreContactRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'reason' => ['required', 'string', 'in:error,question,help,other'],
+            'reason' => ['required', 'string', 'in:error,question,help,other,hello'],
             'message' => ['required', 'string', 'max:2000'],
             'cc_user' => ['boolean'],
             'source' => ['sometimes', 'string', 'in:app,public'],

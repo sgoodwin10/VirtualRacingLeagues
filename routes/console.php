@@ -23,3 +23,12 @@ Schedule::command('notifications:cleanup')
     ->at('02:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Horizon maintenance tasks
+Schedule::command('horizon:snapshot')->everyFiveMinutes();
+
+// Clean up old failed jobs (keep 7 days)
+Schedule::command('queue:prune-failed --hours=168')->daily();
+
+// Clean up old batches (keep 7 days)
+Schedule::command('queue:prune-batches --hours=168')->daily();
