@@ -42,10 +42,10 @@ final class League
         private ?string $instagramHandle,
         private ?string $youtubeUrl,
         private ?string $twitchUrl,
+        private ?string $facebookHandle,
         private LeagueVisibility $visibility,
         private string $status,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a new league.
@@ -69,6 +69,7 @@ final class League
         ?string $instagramHandle = null,
         ?string $youtubeUrl = null,
         ?string $twitchUrl = null,
+        ?string $facebookHandle = null,
         ?LeagueVisibility $visibility = null,
     ): self {
         $league = new self(
@@ -91,6 +92,7 @@ final class League
             instagramHandle: $instagramHandle,
             youtubeUrl: $youtubeUrl,
             twitchUrl: $twitchUrl,
+            facebookHandle: $facebookHandle,
             visibility: $visibility ?? LeagueVisibility::public(),
             status: 'active',
         );
@@ -137,6 +139,7 @@ final class League
         ?string $instagramHandle,
         ?string $youtubeUrl,
         ?string $twitchUrl,
+        ?string $facebookHandle,
         LeagueVisibility $visibility,
         string $status,
     ): self {
@@ -160,6 +163,7 @@ final class League
             instagramHandle: $instagramHandle,
             youtubeUrl: $youtubeUrl,
             twitchUrl: $twitchUrl,
+            facebookHandle: $facebookHandle,
             visibility: $visibility,
             status: $status,
         );
@@ -270,6 +274,11 @@ final class League
         return $this->twitchUrl;
     }
 
+    public function facebookHandle(): ?string
+    {
+        return $this->facebookHandle;
+    }
+
     public function visibility(): LeagueVisibility
     {
         return $this->visibility;
@@ -361,7 +370,8 @@ final class League
         ?string $twitterHandle,
         ?string $instagramHandle,
         ?string $youtubeUrl,
-        ?string $twitchUrl
+        ?string $twitchUrl,
+        ?string $facebookHandle
     ): void {
         $this->discordUrl = $discordUrl;
         $this->websiteUrl = $websiteUrl;
@@ -369,6 +379,7 @@ final class League
         $this->instagramHandle = $instagramHandle;
         $this->youtubeUrl = $youtubeUrl;
         $this->twitchUrl = $twitchUrl;
+        $this->facebookHandle = $facebookHandle;
         $this->recordEvent(new LeagueUpdated($this));
     }
 

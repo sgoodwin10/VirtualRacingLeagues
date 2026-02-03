@@ -25,7 +25,7 @@ describe('PointsSection', () => {
     it('renders section title and description', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: false,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -35,7 +35,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       expect(wrapper.text()).toContain('Points Configuration');
       expect(wrapper.text()).toContain('Configure round-level points and bonuses');
@@ -44,7 +44,7 @@ describe('PointsSection', () => {
     it('renders round points toggle', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: false,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -54,7 +54,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       const settingCard = wrapper.findComponent(SettingCard);
       expect(settingCard.exists()).toBe(true);
@@ -63,7 +63,7 @@ describe('PointsSection', () => {
     it('does not render points system editor when round points disabled', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: false,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -73,7 +73,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       const editor = wrapper.findComponent(PointsSystemEditor);
       expect(editor.exists()).toBe(false);
@@ -82,7 +82,7 @@ describe('PointsSection', () => {
     it('renders points system editor when round points enabled', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -92,7 +92,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       const editor = wrapper.findComponent(PointsSystemEditor);
       expect(editor.exists()).toBe(true);
@@ -101,7 +101,7 @@ describe('PointsSection', () => {
     it('renders fastest lap checkbox when points enabled', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: 1,
@@ -111,7 +111,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       // Check that fastest lap bonus section is rendered
       expect(wrapper.text()).toContain('Fastest Lap Bonus');
@@ -121,7 +121,7 @@ describe('PointsSection', () => {
     it('renders qualifying pole checkbox when points enabled', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -131,7 +131,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       // Check that qualifying pole bonus section is rendered
       expect(wrapper.text()).toContain('Qualifying Pole Bonus');
@@ -143,7 +143,7 @@ describe('PointsSection', () => {
     it('passes roundPoints to toggle', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -153,7 +153,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       const settingCard = wrapper.findComponent(SettingCard);
       expect(settingCard.props('modelValue')).toBe(true);
@@ -162,7 +162,7 @@ describe('PointsSection', () => {
     it('passes points system to editor', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -172,7 +172,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       const editor = wrapper.findComponent(PointsSystemEditor);
       expect(editor.props('modelValue')).toEqual(mockPointsSystem);
@@ -181,7 +181,7 @@ describe('PointsSection', () => {
     it('passes canCopyFromRoundOne to editor', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -191,7 +191,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: true,
           errors: {},
         },
-      });
+      } as any);
 
       const editor = wrapper.findComponent(PointsSystemEditor);
       expect(editor.props('showCopyButton')).toBe(true);
@@ -200,7 +200,7 @@ describe('PointsSection', () => {
     it('disables all inputs when disabled prop is true', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -211,7 +211,7 @@ describe('PointsSection', () => {
           errors: {},
           disabled: true,
         },
-      });
+      } as any);
 
       const editor = wrapper.findComponent(PointsSystemEditor);
       const checkboxes = wrapper.findAllComponents(BaseCheckbox);
@@ -225,7 +225,7 @@ describe('PointsSection', () => {
     it('shows validation errors', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: 1,
@@ -239,7 +239,7 @@ describe('PointsSection', () => {
             qualifying_pole: 'Qualifying pole error',
           },
         },
-      });
+      } as any);
 
       // Verify errors prop is passed correctly
       expect(wrapper.props('errors')).toEqual({
@@ -254,7 +254,7 @@ describe('PointsSection', () => {
     it('emits update:roundPoints when toggle changes', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: false,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -264,7 +264,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       const settingCard = wrapper.findComponent(SettingCard);
       await settingCard.vm.$emit('update:modelValue', true);
@@ -276,7 +276,7 @@ describe('PointsSection', () => {
     it('emits update:pointsSystem when editor changes', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -286,7 +286,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       const newPoints = { 1: 30, 2: 20, 3: 15 };
       const editor = wrapper.findComponent(PointsSystemEditor);
@@ -299,7 +299,7 @@ describe('PointsSection', () => {
     it('emits copy-from-round-one when copy button is clicked', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -309,7 +309,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: true,
           errors: {},
         },
-      });
+      } as any);
 
       const editor = wrapper.findComponent(PointsSystemEditor);
       await editor.vm.$emit('copy');
@@ -320,7 +320,7 @@ describe('PointsSection', () => {
     it('emits update:fastestLap when checkbox is toggled', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -330,7 +330,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       const settingCards = wrapper.findAllComponents(SettingCard);
       const fastestLapCard = settingCards.find(
@@ -345,7 +345,7 @@ describe('PointsSection', () => {
     it('emits update:qualifyingPole when checkbox is toggled', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -355,7 +355,7 @@ describe('PointsSection', () => {
           canCopyFromRoundOne: false,
           errors: {},
         },
-      });
+      } as any);
 
       const settingCards = wrapper.findAllComponents(SettingCard);
       const qualifyingCard = settingCards.find(

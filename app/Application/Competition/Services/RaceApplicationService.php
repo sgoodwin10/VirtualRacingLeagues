@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\Services;
 
+use App\Application\Activity\Services\LeagueActivityLogService;
 use App\Application\Competition\DTOs\CreateRaceData;
 use App\Application\Competition\DTOs\RaceData;
 use App\Application\Competition\DTOs\UpdateRaceData;
@@ -25,6 +26,8 @@ use App\Domain\Competition\ValueObjects\RaceType;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\Shared\Exceptions\UnauthorizedException;
 use App\Infrastructure\Cache\RaceResultsCacheService;
+use App\Infrastructure\Persistence\Eloquent\Models\Race as RaceModel;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Spatie\LaravelData\Optional;
@@ -39,9 +42,8 @@ final class RaceApplicationService
         private readonly CompetitionRepositoryInterface $competitionRepository,
         private readonly LeagueRepositoryInterface $leagueRepository,
         private readonly RaceResultsCacheService $raceResultsCache,
-        private readonly \App\Application\Activity\Services\LeagueActivityLogService $activityLogService,
-    ) {
-    }
+        private readonly LeagueActivityLogService $activityLogService,
+    ) {}
 
     public function createRace(CreateRaceData $data, int $roundId, int $userId): RaceData
     {
@@ -958,14 +960,14 @@ final class RaceApplicationService
     private function logRaceCreated(int $raceId, int $userId): void
     {
         try {
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
-            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            /** @var UserEloquent|null $user */
+            $user = UserEloquent::find($userId);
             if ($user === null) {
                 return;
             }
 
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $race */
-            $race = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($raceId);
+            /** @var RaceModel $race */
+            $race = RaceModel::findOrFail($raceId);
             $this->activityLogService->logRaceCreated($user, $race);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to log race creation activity', [
@@ -984,14 +986,14 @@ final class RaceApplicationService
     private function logRaceUpdated(int $raceId, int $userId, array $originalData, array $newData): void
     {
         try {
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
-            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            /** @var UserEloquent|null $user */
+            $user = UserEloquent::find($userId);
             if ($user === null) {
                 return;
             }
 
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $race */
-            $race = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($raceId);
+            /** @var RaceModel $race */
+            $race = RaceModel::findOrFail($raceId);
             $this->activityLogService->logRaceUpdated($user, $race, [
                 'old' => $originalData,
                 'new' => $newData,
@@ -1010,14 +1012,14 @@ final class RaceApplicationService
     private function logRaceDeleted(int $raceId, int $userId): void
     {
         try {
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
-            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            /** @var UserEloquent|null $user */
+            $user = UserEloquent::find($userId);
             if ($user === null) {
                 return;
             }
 
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $race */
-            $race = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($raceId);
+            /** @var RaceModel $race */
+            $race = RaceModel::findOrFail($raceId);
             $this->activityLogService->logRaceDeleted($user, $race);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to log race deletion activity', [

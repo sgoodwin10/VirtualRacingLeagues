@@ -29,11 +29,25 @@ describe('leagueService', () => {
           id: 1,
           name: 'Test League',
           slug: 'test-league',
+          tagline: 'Test tagline',
           description: 'A test league',
-          platform: { id: 1, name: 'PC', abbreviation: 'PC' },
           logo_url: 'https://example.com/logo.png',
-          featured_image_url: null,
-          is_active: true,
+          logo: null,
+          header_image_url: null,
+          header_image: null,
+          banner_url: null,
+          banner: null,
+          platforms: [{ id: 1, name: 'iRacing', slug: 'iracing' }],
+          visibility: 'public',
+          discord_url: null,
+          website_url: null,
+          twitter_handle: null,
+          facebook_handle: null,
+          instagram_handle: null,
+          youtube_url: null,
+          twitch_url: null,
+          competitions_count: 1,
+          drivers_count: 10,
         },
       ],
       meta: {
@@ -201,24 +215,38 @@ describe('leagueService', () => {
 
   describe('getLeagueDetail', () => {
     const mockLeagueDetail: PublicLeagueDetailResponse = {
-      id: 1,
-      name: 'Test League',
-      slug: 'test-league',
-      description: 'A test league',
-      platform: { id: 1, name: 'PC', abbreviation: 'PC' },
-      logo_url: 'https://example.com/logo.png',
-      featured_image_url: null,
-      is_active: true,
-      seasons: [
-        {
-          id: 1,
-          name: 'Season 1',
-          slug: 'season-1',
-          status: 'active',
-          start_date: '2024-01-01',
-          end_date: '2024-12-31',
-        },
-      ],
+      league: {
+        id: 1,
+        name: 'Test League',
+        slug: 'test-league',
+        tagline: 'Test tagline',
+        description: 'A test league',
+        logo_url: 'https://example.com/logo.png',
+        logo: null,
+        header_image_url: null,
+        header_image: null,
+        banner_url: null,
+        banner: null,
+        platforms: [{ id: 1, name: 'iRacing', slug: 'iracing' }],
+        visibility: 'public',
+        discord_url: null,
+        website_url: null,
+        twitter_handle: null,
+        facebook_handle: null,
+        instagram_handle: null,
+        youtube_url: null,
+        twitch_url: null,
+        created_at: '2024-01-01T00:00:00Z',
+      },
+      stats: {
+        competitions_count: 1,
+        active_seasons_count: 1,
+        drivers_count: 10,
+      },
+      competitions: [],
+      recent_activity: [],
+      upcoming_races: [],
+      championship_leaders: [],
     };
 
     it('should fetch league detail by slug', async () => {
@@ -270,19 +298,38 @@ describe('leagueService', () => {
 
   describe('getSeasonDetail', () => {
     const mockSeasonDetail: PublicSeasonDetailResponse = {
-      id: 1,
-      name: 'Season 1',
-      slug: 'season-1',
-      status: 'active',
-      start_date: '2024-01-01',
-      end_date: '2024-12-31',
       league: {
-        id: 1,
         name: 'Test League',
         slug: 'test-league',
       },
-      standings: [],
+      competition: {
+        name: 'Test Competition',
+        slug: 'test-competition',
+      },
+      season: {
+        id: 1,
+        name: 'Season 1',
+        slug: 'season-1',
+        car_class: 'GT3',
+        description: null,
+        logo_url: '',
+        banner_url: null,
+        status: 'active',
+        is_active: true,
+        is_completed: false,
+        race_divisions_enabled: false,
+        stats: {
+          total_drivers: 10,
+          active_drivers: 10,
+          total_rounds: 5,
+          completed_rounds: 2,
+          total_races: 10,
+          completed_races: 4,
+        },
+      },
       rounds: [],
+      standings: [],
+      has_divisions: false,
     };
 
     it('should fetch season detail by league and season slug', async () => {
@@ -324,9 +371,9 @@ describe('leagueService', () => {
 
   describe('getPlatforms', () => {
     const mockPlatforms: Platform[] = [
-      { id: 1, name: 'PC', abbreviation: 'PC' },
-      { id: 2, name: 'PlayStation', abbreviation: 'PS' },
-      { id: 3, name: 'Xbox', abbreviation: 'XB' },
+      { id: 1, name: 'iRacing', slug: 'iracing' },
+      { id: 2, name: 'Gran Turismo 7', slug: 'gt7' },
+      { id: 3, name: 'Assetto Corsa Competizione', slug: 'acc' },
     ];
 
     it('should fetch platforms list', async () => {
@@ -368,12 +415,16 @@ describe('leagueService', () => {
     const mockRoundResults: RoundResultsResponse = {
       round: {
         id: 1,
-        number: 1,
+        round_number: 1,
         name: 'Round 1',
-        date: '2024-01-15',
+        status: 'completed',
+        round_results: null,
+        qualifying_results: null,
+        race_time_results: null,
+        fastest_lap_results: null,
       },
-      races: [],
-      standings: [],
+      divisions: [],
+      race_events: [],
     };
 
     it('should fetch round results by round id', async () => {

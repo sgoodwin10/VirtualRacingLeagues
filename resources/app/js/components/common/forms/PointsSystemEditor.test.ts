@@ -24,10 +24,10 @@ describe('PointsSystemEditor', () => {
     it('renders all position inputs', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
         },
-      });
+      } as any);
 
       const inputs = wrapper.findAllComponents(StyledInputNumber);
       expect(inputs).toHaveLength(3);
@@ -36,24 +36,24 @@ describe('PointsSystemEditor', () => {
     it('renders positions in sorted order', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: { 3: 15, 1: 25, 2: 18 },
         },
-      });
+      } as any);
 
       const inputs = wrapper.findAllComponents(StyledInputNumber);
-      expect(inputs[0].props('modelValue')).toBe(25);
-      expect(inputs[1].props('modelValue')).toBe(18);
-      expect(inputs[2].props('modelValue')).toBe(15);
+      expect(inputs[0]!.props('modelValue')).toBe(25);
+      expect(inputs[1]!.props('modelValue')).toBe(18);
+      expect(inputs[2]!.props('modelValue')).toBe(15);
     });
 
     it('renders Add Position button', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const addButton = buttons.find((btn) => btn.text().includes('Add Position'));
@@ -63,10 +63,10 @@ describe('PointsSystemEditor', () => {
     it('renders Remove Last button', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const removeButton = buttons.find((btn) => btn.text().includes('Remove Last'));
@@ -76,10 +76,10 @@ describe('PointsSystemEditor', () => {
     it('does not render copy button by default', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const copyButton = buttons.find((btn) => btn.text().includes('Copy'));
@@ -89,11 +89,11 @@ describe('PointsSystemEditor', () => {
     it('renders copy button when showCopyButton is true', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
           showCopyButton: true,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const copyButton = buttons.find((btn) => btn.text().includes('Copy from Round 1'));
@@ -105,10 +105,10 @@ describe('PointsSystemEditor', () => {
     it('accepts modelValue prop', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
         },
-      });
+      } as any);
 
       expect(wrapper.props('modelValue')).toEqual(mockPointsSystem);
     });
@@ -116,11 +116,11 @@ describe('PointsSystemEditor', () => {
     it('accepts disabled prop', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
           disabled: true,
         },
-      });
+      } as any);
 
       const inputs = wrapper.findAllComponents(StyledInputNumber);
       inputs.forEach((input) => {
@@ -131,12 +131,12 @@ describe('PointsSystemEditor', () => {
     it('accepts custom copy button label', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
           showCopyButton: true,
           copyButtonLabel: 'Custom Copy Label',
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const copyButton = buttons.find((btn) => btn.text().includes('Custom Copy Label'));
@@ -148,13 +148,13 @@ describe('PointsSystemEditor', () => {
     it('emits update:modelValue when point value changes', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
         },
-      });
+      } as any);
 
       const inputs = wrapper.findAllComponents(StyledInputNumber);
-      await inputs[0].vm.$emit('update:modelValue', 30);
+      await inputs[0]!.vm.$emit('update:modelValue', 30);
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy();
       const emitted = wrapper.emitted('update:modelValue')?.[0] as PointsSystemMap[];
@@ -164,10 +164,10 @@ describe('PointsSystemEditor', () => {
     it('emits update:modelValue when adding position', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const addButton = buttons.find((btn) => btn.text().includes('Add Position'));
@@ -181,10 +181,10 @@ describe('PointsSystemEditor', () => {
     it('emits update:modelValue when removing position', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const removeButton = buttons.find((btn) => btn.text().includes('Remove Last'));
@@ -198,11 +198,11 @@ describe('PointsSystemEditor', () => {
     it('emits copy event when copy button is clicked', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
           showCopyButton: true,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const copyButton = buttons.find((btn) => btn.text().includes('Copy'));
@@ -216,10 +216,10 @@ describe('PointsSystemEditor', () => {
     it('disables remove button when only one position exists', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: { 1: 25 },
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const removeButton = buttons.find((btn) => btn.text().includes('Remove Last'));
@@ -229,10 +229,10 @@ describe('PointsSystemEditor', () => {
     it('enables remove button when multiple positions exist', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: mockPointsSystem,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const removeButton = buttons.find((btn) => btn.text().includes('Remove Last'));
@@ -242,10 +242,10 @@ describe('PointsSystemEditor', () => {
     it('adds new position with value 0', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-        props: {
+      props: {
           modelValue: { 1: 25 },
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAllComponents(Button);
       const addButton = buttons.find((btn) => btn.text().includes('Add Position'));

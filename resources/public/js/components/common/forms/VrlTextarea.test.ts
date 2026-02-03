@@ -288,7 +288,7 @@ describe('VrlTextarea', () => {
 
       await wrapper.find('textarea').trigger('blur');
       expect(wrapper.emitted('blur')).toBeTruthy();
-      expect(wrapper.emitted('blur')?.[0][0]).toBeInstanceOf(FocusEvent);
+      expect(wrapper.emitted('blur')?.[0]?.[0]).toBeInstanceOf(FocusEvent);
     });
 
     it('emits focus event', async () => {
@@ -300,7 +300,7 @@ describe('VrlTextarea', () => {
 
       await wrapper.find('textarea').trigger('focus');
       expect(wrapper.emitted('focus')).toBeTruthy();
-      expect(wrapper.emitted('focus')?.[0][0]).toBeInstanceOf(FocusEvent);
+      expect(wrapper.emitted('focus')?.[0]?.[0]).toBeInstanceOf(FocusEvent);
     });
 
     it('emits all events correctly', async () => {
@@ -414,7 +414,7 @@ describe('VrlTextarea', () => {
       });
 
       await wrapper.find('textarea').setValue('!@#$%^&*()\n<script>alert("test")</script>');
-      expect(wrapper.emitted('update:modelValue')?.[0][0]).toContain('!@#$%^&*()');
+      expect(wrapper.emitted('update:modelValue')?.[0]?.[0]).toContain('!@#$%^&*()');
     });
 
     it('handles unicode characters', async () => {
@@ -425,7 +425,7 @@ describe('VrlTextarea', () => {
       });
 
       await wrapper.find('textarea').setValue('你好世界\n🚀🎉');
-      expect(wrapper.emitted('update:modelValue')?.[0][0]).toContain('你好世界');
+      expect(wrapper.emitted('update:modelValue')?.[0]?.[0]).toContain('你好世界');
     });
 
     it('maintains disabled state', () => {

@@ -19,6 +19,7 @@ export interface StoreEventMap {
   'season:activated': [competitionId: number, season: CompetitionSeason];
   'season:completed': [competitionId: number, season: CompetitionSeason];
   'season:restored': [competitionId: number, season: CompetitionSeason];
+  'season:reactivated': [competitionId: number, season: CompetitionSeason];
 }
 
 type EventHandler<T extends unknown[] = unknown[]> = (...args: T) => void;

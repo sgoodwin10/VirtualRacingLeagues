@@ -127,7 +127,7 @@ describe('VrlDataTable', () => {
         pageCount: 2,
       };
 
-      await wrapper.vm.onPage(pageEvent);
+      await (wrapper.vm as any).onPage(pageEvent);
       expect(wrapper.emitted('page')).toBeTruthy();
       expect(wrapper.emitted('page')?.[0]).toEqual([pageEvent]);
     });
@@ -142,7 +142,7 @@ describe('VrlDataTable', () => {
         sortOrder: 1,
       };
 
-      await wrapper.vm.onSort(sortEvent);
+      await (wrapper.vm as any).onSort(sortEvent);
       expect(wrapper.emitted('sort')).toBeTruthy();
       expect(wrapper.emitted('sort')?.[0]).toEqual([sortEvent]);
     });
@@ -156,7 +156,7 @@ describe('VrlDataTable', () => {
         filters: {},
       };
 
-      await wrapper.vm.onFilter(filterEvent);
+      await (wrapper.vm as any).onFilter(filterEvent);
       expect(wrapper.emitted('filter')).toBeTruthy();
       expect(wrapper.emitted('filter')?.[0]).toEqual([filterEvent]);
     });

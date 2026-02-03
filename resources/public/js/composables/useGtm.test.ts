@@ -46,7 +46,7 @@ describe('useGtm', () => {
     });
 
     it('should initialize dataLayer if undefined', () => {
-      delete window.dataLayer!;
+      (window as any).dataLayer = undefined;
 
       const { trackEvent } = useGtm();
 

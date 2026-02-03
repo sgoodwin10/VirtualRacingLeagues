@@ -8,16 +8,19 @@ describe('DivisionTabs', () => {
     {
       division_id: 1,
       division_name: 'Division 1',
+      order: 1,
       drivers: [],
     },
     {
       division_id: 2,
       division_name: 'Division 2',
+      order: 2,
       drivers: [],
     },
     {
       division_id: 3,
       division_name: 'Division 3',
+      order: 3,
       drivers: [],
     },
   ];

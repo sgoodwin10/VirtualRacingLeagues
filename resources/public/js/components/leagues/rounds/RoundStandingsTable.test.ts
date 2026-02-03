@@ -34,6 +34,7 @@ describe('RoundStandingsTable', () => {
   const mockStandings: RoundStandingDriver[] = [
     {
       position: 1,
+      driver_id: 1,
       driver_name: 'Driver 1',
       race_points: 25,
       fastest_lap_points: 1,
@@ -43,6 +44,7 @@ describe('RoundStandingsTable', () => {
     },
     {
       position: 2,
+      driver_id: 2,
       driver_name: 'Driver 2',
       race_points: 18,
       fastest_lap_points: 0,
@@ -52,6 +54,7 @@ describe('RoundStandingsTable', () => {
     },
     {
       position: 3,
+      driver_id: 3,
       driver_name: 'Driver 3',
       race_points: 15,
       fastest_lap_points: 0,
@@ -269,9 +272,9 @@ describe('RoundStandingsTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
       const standings = dataTable.props('value') as RoundStandingDriver[];
 
-      expect(standings[0].position).toBe(1);
-      expect(standings[1].position).toBe(2);
-      expect(standings[2].position).toBe(3);
+      expect(standings[0]?.position).toBe(1);
+      expect(standings[1]?.position).toBe(2);
+      expect(standings[2]?.position).toBe(3);
     });
 
     it('should display driver names correctly', () => {
@@ -283,9 +286,9 @@ describe('RoundStandingsTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
       const standings = dataTable.props('value') as RoundStandingDriver[];
 
-      expect(standings[0].driver_name).toBe('Driver 1');
-      expect(standings[1].driver_name).toBe('Driver 2');
-      expect(standings[2].driver_name).toBe('Driver 3');
+      expect(standings[0]?.driver_name).toBe('Driver 1');
+      expect(standings[1]?.driver_name).toBe('Driver 2');
+      expect(standings[2]?.driver_name).toBe('Driver 3');
     });
 
     it('should display total points correctly', () => {
@@ -297,9 +300,9 @@ describe('RoundStandingsTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
       const standings = dataTable.props('value') as RoundStandingDriver[];
 
-      expect(standings[0].total_points).toBe(26);
-      expect(standings[1].total_points).toBe(19);
-      expect(standings[2].total_points).toBe(15);
+      expect(standings[0]?.total_points).toBe(26);
+      expect(standings[1]?.total_points).toBe(19);
+      expect(standings[2]?.total_points).toBe(15);
     });
 
     it('should display fastest lap points', () => {
@@ -311,8 +314,8 @@ describe('RoundStandingsTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
       const standings = dataTable.props('value') as RoundStandingDriver[];
 
-      expect(standings[0].fastest_lap_points).toBe(1);
-      expect(standings[1].fastest_lap_points).toBe(0);
+      expect(standings[0]?.fastest_lap_points).toBe(1);
+      expect(standings[1]?.fastest_lap_points).toBe(0);
     });
 
     it('should display pole position points', () => {
@@ -324,8 +327,8 @@ describe('RoundStandingsTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
       const standings = dataTable.props('value') as RoundStandingDriver[];
 
-      expect(standings[0].pole_position_points).toBe(0);
-      expect(standings[1].pole_position_points).toBe(1);
+      expect(standings[0]?.pole_position_points).toBe(0);
+      expect(standings[1]?.pole_position_points).toBe(1);
     });
   });
 
@@ -339,7 +342,7 @@ describe('RoundStandingsTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
       const standings = dataTable.props('value') as RoundStandingDriver[];
 
-      expect(standings[0].total_positions_gained).toBe(2);
+      expect(standings[0]?.total_positions_gained).toBe(2);
     });
 
     it('should format negative positions gained correctly', () => {
@@ -351,7 +354,7 @@ describe('RoundStandingsTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
       const standings = dataTable.props('value') as RoundStandingDriver[];
 
-      expect(standings[1].total_positions_gained).toBe(-1);
+      expect(standings[1]?.total_positions_gained).toBe(-1);
     });
 
     it('should format zero positions gained correctly', () => {
@@ -363,7 +366,7 @@ describe('RoundStandingsTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
       const standings = dataTable.props('value') as RoundStandingDriver[];
 
-      expect(standings[2].total_positions_gained).toBe(0);
+      expect(standings[2]?.total_positions_gained).toBe(0);
     });
   });
 

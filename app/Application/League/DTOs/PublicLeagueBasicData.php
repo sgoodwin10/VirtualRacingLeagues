@@ -69,7 +69,7 @@ final class PublicLeagueBasicData extends Data
         public readonly ?string $instagram_handle,
         public readonly ?string $youtube_url,
         public readonly ?string $twitch_url,
+        public readonly ?string $facebook_handle,
         public readonly string $created_at,
-    ) {
-    }
+    ) {}
 }

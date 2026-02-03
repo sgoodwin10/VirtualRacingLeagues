@@ -12,6 +12,8 @@ describe('CompetitionCard', () => {
     description: 'Elite GT3 racing',
     logo_url: 'https://example.com/logo.png',
     logo: null,
+    competition_colour: null,
+    platform: { id: 1, name: 'iRacing', slug: 'iracing' },
     stats: {
       total_seasons: 3,
       active_seasons: 1,

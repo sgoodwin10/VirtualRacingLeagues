@@ -32,6 +32,7 @@ final class LeagueDetailsData extends Data
         public readonly ?string $instagram_handle,
         public readonly ?string $youtube_url,
         public readonly ?string $twitch_url,
+        public readonly ?string $facebook_handle,
         public readonly string $visibility,
         public readonly ?string $timezone,
         public readonly ?string $contact_email,
@@ -52,8 +53,7 @@ final class LeagueDetailsData extends Data
         // Quick stats
         /** @var array{total_drivers: int, total_races: int, total_competitions: int} */
         public readonly array $stats,
-    ) {
-    }
+    ) {}
 
     /**
      * Create from domain entity with all related data.
@@ -95,6 +95,7 @@ final class LeagueDetailsData extends Data
             instagram_handle: $league->instagramHandle(),
             youtube_url: $league->youtubeUrl(),
             twitch_url: $league->twitchUrl(),
+            facebook_handle: $league->facebookHandle(),
             visibility: $league->visibility()->value,
             timezone: $league->timezone(),
             contact_email: $league->contactEmail()?->value(),

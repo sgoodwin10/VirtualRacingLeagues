@@ -45,7 +45,7 @@ export function useBreadcrumbs() {
     switch (route.name) {
       case 'home':
         // Home page - just show "Home" as current
-        items[0].to = undefined; // Make home non-clickable when on home
+        items[0]!.to = undefined; // Make home non-clickable when on home
         break;
 
       case 'league-detail': {

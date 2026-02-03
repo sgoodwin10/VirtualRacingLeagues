@@ -612,7 +612,7 @@ async function handleSave(): Promise<void> {
             ? form.grid_source_race_id || null
             : null,
           length_type: form.length_type,
-          length_value: form.length_value || null,
+          length_value: form.length_value || undefined,
           extra_lap_after_time: form.extra_lap_after_time,
           weather: form.weather.trim() || null,
           tire_restrictions: form.tire_restrictions.trim() || null,

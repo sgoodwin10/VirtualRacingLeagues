@@ -94,8 +94,8 @@ describe('raceSettingsStore', () => {
   describe('clearCache', () => {
     it('should clear all cached settings', () => {
       const store = useRaceSettingsStore();
-      store.settingsCache.set(1, mockSettings);
-      store.settingsCache.set(2, mockSettings);
+      store.settingsCache.set(1, mockSettings as any);
+      store.settingsCache.set(2, mockSettings as any);
 
       store.clearCache();
 
@@ -106,7 +106,7 @@ describe('raceSettingsStore', () => {
   describe('$reset', () => {
     it('should reset store to initial state', () => {
       const store = useRaceSettingsStore();
-      store.settingsCache.set(1, mockSettings);
+      store.settingsCache.set(1, mockSettings as any);
       store.loading = true;
       store.error = 'Test error';
 

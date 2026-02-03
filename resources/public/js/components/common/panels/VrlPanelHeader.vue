@@ -22,6 +22,7 @@ interface VrlPanelHeaderEmits {
 
 const props = withDefaults(defineProps<VrlPanelHeaderProps>(), {
   clickable: false,
+  class: undefined,
 });
 
 const emit = defineEmits<VrlPanelHeaderEmits>();

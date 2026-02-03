@@ -28,7 +28,7 @@ import {
   PhImage,
   PhWarning,
   PhArchive,
-  PhInbox,
+  PhTray as PhInbox,
 } from '@phosphor-icons/vue';
 
 interface Props {

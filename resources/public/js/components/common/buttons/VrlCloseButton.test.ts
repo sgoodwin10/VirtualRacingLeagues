@@ -112,7 +112,7 @@ describe('VrlCloseButton', () => {
       await wrapper.trigger('click');
       const emittedEvents = wrapper.emitted('click');
       expect(emittedEvents).toBeTruthy();
-      expect(emittedEvents?.[0][0]).toBeInstanceOf(MouseEvent);
+      expect(emittedEvents?.[0]?.[0]).toBeInstanceOf(MouseEvent);
     });
   });
 

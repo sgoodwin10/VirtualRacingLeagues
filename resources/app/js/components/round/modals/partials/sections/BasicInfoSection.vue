@@ -74,7 +74,7 @@ function handleTrackSelect(event: { value: Track }): void {
             :invalid="!!errors.name"
             :disabled="disabled"
             class="w-full"
-            @update:model-value="emit('update:roundName', $event)"
+            @update:model-value="(value) => emit('update:roundName', value as string)"
             @blur="emit('blur-name')"
           />
           <FormOptionalText text="Custom name for this round" />
@@ -100,7 +100,7 @@ function handleTrackSelect(event: { value: Track }): void {
             size="sm"
             fluid
             class="w-full"
-            @update:model-value="emit('update:scheduledAt', $event)"
+            @update:model-value="(value) => emit('update:scheduledAt', value as Date | null)"
             @blur="emit('blur-schedule')"
           />
           <FormOptionalText

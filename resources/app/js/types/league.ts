@@ -54,6 +54,7 @@ export interface League {
   website_url: string | null;
   twitter_handle: string | null;
   instagram_handle: string | null;
+  facebook_handle: string | null;
   youtube_url: string | null;
   twitch_url: string | null;
   visibility: LeagueVisibility;
@@ -97,6 +98,7 @@ export interface CreateLeagueForm {
   website_url: string;
   twitter_handle: string;
   instagram_handle: string;
+  facebook_handle: string;
   youtube_url: string;
   twitch_url: string;
 }
@@ -146,6 +148,7 @@ export interface UpdateLeagueForm {
   website_url?: string;
   twitter_handle?: string;
   instagram_handle?: string;
+  facebook_handle?: string;
   youtube_url?: string;
   twitch_url?: string;
 }
@@ -169,6 +172,7 @@ export interface FormErrors {
   website_url?: string;
   twitter_handle?: string;
   instagram_handle?: string;
+  facebook_handle?: string;
   youtube_url?: string;
   twitch_url?: string;
 }

@@ -15,7 +15,7 @@ describe('TechnicalAccordion', () => {
       props: {
         modelValue: 'panel-1',
       },
-    });
+    } as any);
 
     const accordion = wrapper.findComponent(Accordion);
     expect(accordion.props('value')).toBe('panel-1');
@@ -26,7 +26,7 @@ describe('TechnicalAccordion', () => {
       props: {
         modelValue: 'panel-1',
       },
-    });
+    } as any);
 
     const accordion = wrapper.findComponent(Accordion);
     await accordion.vm.$emit('update:value', 'panel-2');
@@ -41,7 +41,7 @@ describe('TechnicalAccordion', () => {
         multiple: true,
         modelValue: ['panel-1', 'panel-2'],
       },
-    });
+    } as any);
 
     const accordion = wrapper.findComponent(Accordion);
     expect(accordion.props('multiple')).toBe(true);
@@ -51,7 +51,7 @@ describe('TechnicalAccordion', () => {
     const wrapper = mount(TechnicalAccordion);
 
     const accordion = wrapper.findComponent(Accordion);
-    expect(accordion.props('pt')?.root?.style?.gap).toBe('8px');
+    expect((accordion.props('pt') as any)?.root?.style?.gap).toBe('8px');
   });
 
   it('applies small gap', () => {
@@ -59,10 +59,10 @@ describe('TechnicalAccordion', () => {
       props: {
         gap: 'sm',
       },
-    });
+    } as any);
 
     const accordion = wrapper.findComponent(Accordion);
-    expect(accordion.props('pt')?.root?.style?.gap).toBe('4px');
+    expect((accordion.props('pt') as any)?.root?.style?.gap).toBe('4px');
   });
 
   it('applies large gap', () => {
@@ -70,10 +70,10 @@ describe('TechnicalAccordion', () => {
       props: {
         gap: 'lg',
       },
-    });
+    } as any);
 
     const accordion = wrapper.findComponent(Accordion);
-    expect(accordion.props('pt')?.root?.style?.gap).toBe('12px');
+    expect((accordion.props('pt') as any)?.root?.style?.gap).toBe('12px');
   });
 
   it('applies no gap when gap is none', () => {
@@ -81,10 +81,10 @@ describe('TechnicalAccordion', () => {
       props: {
         gap: 'none',
       },
-    });
+    } as any);
 
     const accordion = wrapper.findComponent(Accordion);
-    expect(accordion.props('pt')?.root?.style?.gap).toBe('0');
+    expect((accordion.props('pt') as any)?.root?.style?.gap).toBe('0');
   });
 
   it('renders slot content', () => {
@@ -92,7 +92,7 @@ describe('TechnicalAccordion', () => {
       slots: {
         default: '<div class="test-content">Test Content</div>',
       },
-    });
+    } as any);
 
     expect(wrapper.html()).toContain('test-content');
   });

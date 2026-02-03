@@ -65,9 +65,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 interface Emits {
   (e: 'update:modelValue', value: number | null): void;
-  (e: 'input', event: Event): void;
-  (e: 'focus', event: FocusEvent): void;
-  (e: 'blur', event: FocusEvent): void;
+  (e: 'input', event: unknown): void;
+  (e: 'focus', event: Event): void;
+  (e: 'blur', event: unknown): void;
 }
 
 const emit = defineEmits<Emits>();
@@ -77,15 +77,15 @@ const localValue = computed({
   set: (value) => emit('update:modelValue', value),
 });
 
-function handleInput(event: Event): void {
+function handleInput(event: unknown): void {
   emit('input', event);
 }
 
-function handleFocus(event: FocusEvent): void {
+function handleFocus(event: Event): void {
   emit('focus', event);
 }
 
-function handleBlur(event: FocusEvent): void {
+function handleBlur(event: unknown): void {
   emit('blur', event);
 }
 </script>

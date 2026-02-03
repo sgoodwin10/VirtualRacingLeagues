@@ -285,7 +285,7 @@ function clearDescriptionError(): void {
           :max-file-size="2 * 1024 * 1024"
           :min-dimensions="{ width: 100, height: 100 }"
           :recommended-dimensions="{ width: 300, height: 300 }"
-          preview-size="sm"
+          preview-size="small"
           helper-text="A square logo. Recommended: 300x300px. Optional."
         />
         <FormError :error="errors.logo" />

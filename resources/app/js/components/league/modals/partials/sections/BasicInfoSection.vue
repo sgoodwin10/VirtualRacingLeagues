@@ -59,7 +59,7 @@ const timezoneOptions = computed(() => {
         placeholder="Enter your league name"
         :class="{ 'p-invalid': !!errors.name }"
         class="w-full"
-        @update:model-value="emit('update:name', $event)"
+        @update:model-value="(value) => emit('update:name', value as string)"
         @blur="emit('blur:name')"
       />
 
@@ -103,7 +103,7 @@ const timezoneOptions = computed(() => {
         maxlength="150"
         :class="{ 'p-invalid': !!errors.tagline }"
         class="w-full"
-        @update:model-value="emit('update:tagline', $event)"
+        @update:model-value="(value) => emit('update:tagline', value as string)"
       />
       <FormOptionalText text="A brief one-liner about your league (max 150 characters)" />
       <FormError :error="errors.tagline" />

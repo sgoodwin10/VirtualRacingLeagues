@@ -11,8 +11,8 @@ describe('useStoreEvents', () => {
     const events = useStoreEvents();
     const handler = vi.fn();
 
-    events.on('test:event', handler);
-    events.emit('test:event', 'arg1', 'arg2');
+    events.on('test:event' as any, handler);
+    events.emit('test:event' as any, 'arg1', 'arg2');
 
     expect(handler).toHaveBeenCalledWith('arg1', 'arg2');
     expect(handler).toHaveBeenCalledTimes(1);
@@ -23,9 +23,9 @@ describe('useStoreEvents', () => {
     const handler1 = vi.fn();
     const handler2 = vi.fn();
 
-    events.on('test:event', handler1);
-    events.on('test:event', handler2);
-    events.emit('test:event', 'data');
+    events.on('test:event' as any, handler1);
+    events.on('test:event' as any, handler2);
+    events.emit('test:event' as any, 'data');
 
     expect(handler1).toHaveBeenCalledWith('data');
     expect(handler2).toHaveBeenCalledWith('data');
@@ -35,9 +35,9 @@ describe('useStoreEvents', () => {
     const events = useStoreEvents();
     const handler = vi.fn();
 
-    events.on('test:event', handler);
-    events.off('test:event', handler);
-    events.emit('test:event');
+    events.on('test:event' as any, handler);
+    events.off('test:event' as any, handler);
+    events.emit('test:event' as any);
 
     expect(handler).not.toHaveBeenCalled();
   });
@@ -46,9 +46,9 @@ describe('useStoreEvents', () => {
     const events = useStoreEvents();
     const handler = vi.fn();
 
-    events.off('test:event', handler); // Remove without adding
+    events.off('test:event' as any, handler); // Remove without adding
 
-    expect(() => events.emit('test:event')).not.toThrow();
+    expect(() => events.emit('test:event' as any)).not.toThrow();
   });
 
   it('should clear all handlers for a specific event', () => {
@@ -56,10 +56,10 @@ describe('useStoreEvents', () => {
     const handler1 = vi.fn();
     const handler2 = vi.fn();
 
-    events.on('test:event', handler1);
-    events.on('test:event', handler2);
-    events.clear('test:event');
-    events.emit('test:event');
+    events.on('test:event' as any, handler1);
+    events.on('test:event' as any, handler2);
+    events.clear('test:event' as any);
+    events.emit('test:event' as any);
 
     expect(handler1).not.toHaveBeenCalled();
     expect(handler2).not.toHaveBeenCalled();
@@ -70,11 +70,11 @@ describe('useStoreEvents', () => {
     const handler1 = vi.fn();
     const handler2 = vi.fn();
 
-    events.on('event1', handler1);
-    events.on('event2', handler2);
+    events.on('event1' as any, handler1);
+    events.on('event2' as any, handler2);
     events.clear();
-    events.emit('event1');
-    events.emit('event2');
+    events.emit('event1' as any);
+    events.emit('event2' as any);
 
     expect(handler1).not.toHaveBeenCalled();
     expect(handler2).not.toHaveBeenCalled();
@@ -85,24 +85,24 @@ describe('useStoreEvents', () => {
     const handler1 = vi.fn();
     const handler2 = vi.fn();
 
-    expect(events.listenerCount('test:event')).toBe(0);
+    expect(events.listenerCount('test:event' as any)).toBe(0);
 
-    events.on('test:event', handler1);
-    expect(events.listenerCount('test:event')).toBe(1);
+    events.on('test:event' as any, handler1);
+    expect(events.listenerCount('test:event' as any)).toBe(1);
 
-    events.on('test:event', handler2);
-    expect(events.listenerCount('test:event')).toBe(2);
+    events.on('test:event' as any, handler2);
+    expect(events.listenerCount('test:event' as any)).toBe(2);
 
-    events.off('test:event', handler1);
-    expect(events.listenerCount('test:event')).toBe(1);
+    events.off('test:event' as any, handler1);
+    expect(events.listenerCount('test:event' as any)).toBe(1);
   });
 
   it('should handle events with no arguments', () => {
     const events = useStoreEvents();
     const handler = vi.fn();
 
-    events.on('test:event', handler);
-    events.emit('test:event');
+    events.on('test:event' as any, handler);
+    events.emit('test:event' as any);
 
     expect(handler).toHaveBeenCalledWith();
     expect(handler).toHaveBeenCalledTimes(1);
@@ -112,8 +112,8 @@ describe('useStoreEvents', () => {
     const events = useStoreEvents();
     const handler = vi.fn();
 
-    events.on('test:event', handler);
-    events.emit('test:event', 1, 'two', { three: 3 }, [4]);
+    events.on('test:event' as any, handler);
+    events.emit('test:event' as any, 1, 'two', { three: 3 }, [4]);
 
     expect(handler).toHaveBeenCalledWith(1, 'two', { three: 3 }, [4]);
   });
@@ -123,9 +123,9 @@ describe('useStoreEvents', () => {
     const handler1 = vi.fn();
     const handler2 = vi.fn();
 
-    events.on('event1', handler1);
-    events.on('event2', handler2);
-    events.emit('event1', 'data');
+    events.on('event1' as any, handler1);
+    events.on('event2' as any, handler2);
+    events.emit('event1' as any, 'data');
 
     expect(handler1).toHaveBeenCalledWith('data');
     expect(handler2).not.toHaveBeenCalled();
@@ -136,8 +136,8 @@ describe('useStoreEvents', () => {
     const events2 = useStoreEvents();
     const handler = vi.fn();
 
-    events1.on('test:event', handler);
-    events2.emit('test:event', 'data');
+    events1.on('test:event' as any, handler);
+    events2.emit('test:event' as any, 'data');
 
     expect(handler).toHaveBeenCalledWith('data');
   });
@@ -155,8 +155,8 @@ describe('useStoreEvents', () => {
       array: [1, 2, 3],
     };
 
-    events.on('test:event', handler);
-    events.emit('test:event', complexData);
+    events.on('test:event' as any, handler);
+    events.emit('test:event' as any, complexData);
 
     expect(handler).toHaveBeenCalledWith(complexData);
   });

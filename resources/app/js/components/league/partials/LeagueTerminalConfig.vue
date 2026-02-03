@@ -147,6 +147,19 @@ function isSafeUrl(url: string | null | undefined): boolean {
         </a>
       </div>
 
+      <!-- Facebook -->
+      <div v-if="league.facebook_handle" class="flex mb-2">
+        <span class="text-[var(--cyan)] min-w-[100px]">facebook:</span>
+        <a
+          :href="`https://facebook.com/${league.facebook_handle}`"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-[var(--green)] no-underline hover:underline"
+        >
+          @{{ league.facebook_handle }}
+        </a>
+      </div>
+
       <!-- YouTube -->
       <div v-if="league.youtube_url" class="flex mb-2">
         <span class="text-[var(--cyan)] min-w-[100px]">youtube:</span>

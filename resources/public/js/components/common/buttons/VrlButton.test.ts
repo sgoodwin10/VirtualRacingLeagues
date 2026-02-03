@@ -221,7 +221,7 @@ describe('VrlButton', () => {
       await wrapper.trigger('click');
       const emitted = wrapper.emitted('click');
       expect(emitted).toBeTruthy();
-      expect(emitted?.[0][0]).toBeInstanceOf(MouseEvent);
+      expect(emitted?.[0]?.[0]).toBeInstanceOf(MouseEvent);
     });
   });
 

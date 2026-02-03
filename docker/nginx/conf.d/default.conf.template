@@ -13,8 +13,21 @@ server {
     location = /favicon.ico { access_log off; log_not_found off; }
     location = /robots.txt  { access_log off; log_not_found off; }
 
-    # Allow CORS for build assets (Vite compiled assets)
+    # Static assets caching (images, fonts, etc.)
+    location ~* \.(ico|gif|jpe?g|png|svg|webp|woff2?|ttf|eot|otf)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # Vite compiled assets (hashed filenames - cache aggressively)
     location /build/ {
+        # Cache for 1 year (Vite uses content hashes in filenames)
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+
+        # CORS headers
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS' always;
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;

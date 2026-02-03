@@ -62,6 +62,7 @@ const props = withDefaults(defineProps<VrlButtonProps>(), {
   loading: false,
   type: 'button',
   ariaLabel: null,
+  pt: undefined,
 });
 
 const emit = defineEmits<VrlButtonEmits>();
@@ -122,6 +123,14 @@ const handleClick = (event: MouseEvent) => {
     emit('click', event);
   }
 };
+
+/**
+ * Expose computed properties for testing
+ */
+defineExpose({
+  effectiveAriaLabel,
+  isIconOnly,
+});
 </script>
 
 <template>

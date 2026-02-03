@@ -111,6 +111,24 @@
             <PhArrowSquareOut :size="18" class="opacity-0 group-hover:opacity-100" />
           </a>
 
+          <!-- Facebook -->
+          <a
+            v-if="league.facebook_handle"
+            :href="`https://facebook.com/${league.facebook_handle.replace(/^@/, '')}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-highlight)] hover:text-[var(--cyan)] transition-colors group"
+          >
+            <PhFacebookLogo :size="24" weight="fill" class="group-hover:text-[var(--cyan)]" />
+            <div class="flex-1">
+              <div class="font-medium text-[var(--text-primary)]">Facebook</div>
+              <div class="text-[0.85rem] text-[var(--text-muted)]">
+                {{ league.facebook_handle }}
+              </div>
+            </div>
+            <PhArrowSquareOut :size="18" class="opacity-0 group-hover:opacity-100" />
+          </a>
+
           <!-- YouTube -->
           <a
             v-if="league.youtube_url"
@@ -159,6 +177,7 @@ import {
   PhGlobe,
   PhXLogo,
   PhInstagramLogo,
+  PhFacebookLogo,
   PhYoutubeLogo,
   PhTwitchLogo,
   PhArrowSquareOut,
@@ -188,6 +207,7 @@ const hasSocialLinks = computed(() => {
     props.league.website_url ||
     props.league.twitter_handle ||
     props.league.instagram_handle ||
+    props.league.facebook_handle ||
     props.league.youtube_url ||
     props.league.twitch_url
   );

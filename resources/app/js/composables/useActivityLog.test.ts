@@ -129,7 +129,7 @@ describe('useActivityLog', () => {
 
       await fetchActivities();
 
-      const formatted = formattedActivities.value[0];
+      const formatted = formattedActivities.value[0]!;
 
       expect(formatted.id).toBe(1);
       expect(formatted.description).toBe('Created driver John Doe');
@@ -161,7 +161,7 @@ describe('useActivityLog', () => {
 
       await fetchActivities();
 
-      expect(formattedActivities.value[0].causer).toBe('System');
+      expect(formattedActivities.value[0]!.causer).toBe('System');
     });
 
     it('should map entity types to correct icons', async () => {
@@ -198,7 +198,7 @@ describe('useActivityLog', () => {
 
         await fetchActivities();
 
-        expect(formattedActivities.value[0].icon).toBe(entity.icon);
+        expect(formattedActivities.value[0]!.icon).toBe(entity.icon);
       }
     });
 
@@ -236,7 +236,7 @@ describe('useActivityLog', () => {
 
         await fetchActivities();
 
-        expect(formattedActivities.value[0].iconColor).toBe(action.color);
+        expect(formattedActivities.value[0]!.iconColor).toBe(action.color);
       }
     });
   });

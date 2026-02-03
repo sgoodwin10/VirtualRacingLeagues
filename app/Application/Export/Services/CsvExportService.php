@@ -18,6 +18,9 @@ use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
 use App\Domain\Division\Repositories\DivisionRepositoryInterface;
 use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\Team\Repositories\TeamRepositoryInterface;
+use App\Infrastructure\Persistence\Eloquent\Models\RaceResult;
+use App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * CSV Export Service.
@@ -35,8 +38,7 @@ final class CsvExportService
         private readonly DriverRepositoryInterface $driverRepository,
         private readonly DivisionRepositoryInterface $divisionRepository,
         private readonly TeamRepositoryInterface $teamRepository,
-    ) {
-    }
+    ) {}
 
     /**
      * Generate CSV data for race results.
@@ -262,7 +264,7 @@ final class CsvExportService
             $timeDifference = null;
             if ($position > 1 && $timeMs > 0 && $firstTimeMs > 0) {
                 $diffMs = $timeMs - $firstTimeMs;
-                $timeDifference = '+' . $this->formatMillisecondsToTime($diffMs);
+                $timeDifference = '+'.$this->formatMillisecondsToTime($diffMs);
             }
 
             $row = new CrossDivisionExportRow(
@@ -507,8 +509,8 @@ final class CsvExportService
             return [];
         }
 
-        /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent> $seasonDrivers */
-        $seasonDrivers = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::query()
+        /** @var Collection<int, SeasonDriverEloquent> $seasonDrivers */
+        $seasonDrivers = SeasonDriverEloquent::query()
             ->whereIn('id', $seasonDriverIds)
             ->get(['id', 'team_id'])
             ->keyBy('id');
@@ -590,7 +592,7 @@ final class CsvExportService
             return [];
         }
 
-        $results = \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::query()
+        $results = RaceResult::query()
             ->whereIn('id', $raceResultIds)
             ->get(['id', 'driver_id', 'division_id']);
 
@@ -611,13 +613,13 @@ final class CsvExportService
     private function getDriverNameBySeasonDriverId(int $seasonDriverId): string
     {
         try {
-            $seasonDriver = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::query()
+            $seasonDriver = SeasonDriverEloquent::query()
                 ->with(['leagueDriver.driver'])
                 ->find($seasonDriverId);
 
             $driver = $seasonDriver?->leagueDriver?->driver;
             if ($driver !== null) {
-                return trim($driver->first_name . ' ' . $driver->last_name);
+                return trim($driver->first_name.' '.$driver->last_name);
             }
 
             return 'Unknown Driver';
@@ -632,7 +634,7 @@ final class CsvExportService
     private function getTeamNameBySeasonDriverId(int $seasonDriverId): ?string
     {
         try {
-            $seasonDriver = \App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent::query()
+            $seasonDriver = SeasonDriverEloquent::query()
                 ->with('team')
                 ->find($seasonDriverId);
 

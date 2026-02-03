@@ -394,8 +394,8 @@ describe('StandingsTable', () => {
 
       const tabs = wrapper.findAll('.standings-tab');
       expect(tabs).toHaveLength(2);
-      expect(tabs[0].text()).toContain('Division 1');
-      expect(tabs[1].text()).toContain('Division 2');
+      expect(tabs[0]?.text()).toContain('Division 1');
+      expect(tabs[1]?.text()).toContain('Division 2');
     });
 
     it('switches between division tabs', async () => {
@@ -411,13 +411,13 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const tabs = wrapper.findAll('.standings-tab');
-      expect(tabs[0].classes()).toContain('active');
-      expect(tabs[1].classes()).not.toContain('active');
+      expect(tabs[0]?.classes()).toContain('active');
+      expect(tabs[1]?.classes()).not.toContain('active');
 
-      await tabs[1].trigger('click');
+      await tabs[1]?.trigger('click');
 
-      expect(tabs[0].classes()).not.toContain('active');
-      expect(tabs[1].classes()).toContain('active');
+      expect(tabs[0]?.classes()).not.toContain('active');
+      expect(tabs[1]?.classes()).toContain('active');
     });
   });
 
@@ -543,8 +543,8 @@ describe('StandingsTable', () => {
 
       const roundHeaders = wrapper.findAll('.th-round');
       expect(roundHeaders.length).toBeGreaterThan(0);
-      expect(roundHeaders[0].text()).toContain('R1');
-      expect(roundHeaders[1].text()).toContain('R2');
+      expect(roundHeaders[0]?.text()).toContain('R1');
+      expect(roundHeaders[1]?.text()).toContain('R2');
     });
 
     it('renders total points column', async () => {
@@ -642,9 +642,9 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const positionCells = wrapper.findAll('.td-position');
-      expect(positionCells[0].text()).toBe('1');
-      expect(positionCells[1].text()).toBe('2');
-      expect(positionCells[2].text()).toBe('3');
+      expect(positionCells[0]?.text()).toBe('1');
+      expect(positionCells[1]?.text()).toBe('2');
+      expect(positionCells[2]?.text()).toBe('3');
     });
 
     it('renders driver name', async () => {
@@ -658,9 +658,9 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const driverNames = wrapper.findAll('.driver-name');
-      expect(driverNames[0].text()).toBe('Driver 1');
-      expect(driverNames[1].text()).toBe('Driver 2');
-      expect(driverNames[2].text()).toBe('Driver 3');
+      expect(driverNames[0]?.text()).toBe('Driver 1');
+      expect(driverNames[1]?.text()).toBe('Driver 2');
+      expect(driverNames[2]?.text()).toBe('Driver 3');
     });
 
     it('renders team logo when available', async () => {
@@ -689,7 +689,7 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const teamNames = wrapper.findAll('.team-name');
-      expect(teamNames[0].text()).toBe('Team 2');
+      expect(teamNames[0]?.text()).toBe('Team 2');
     });
 
     it('renders podiums count', async () => {
@@ -703,9 +703,9 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const podiumCells = wrapper.findAll('.td-podiums');
-      expect(podiumCells[0].text()).toBe('2');
-      expect(podiumCells[1].text()).toBe('1');
-      expect(podiumCells[2].text()).toBe('0');
+      expect(podiumCells[0]?.text()).toBe('2');
+      expect(podiumCells[1]?.text()).toBe('1');
+      expect(podiumCells[2]?.text()).toBe('0');
     });
 
     it('renders total points', async () => {
@@ -719,9 +719,9 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const totalCells = wrapper.findAll('.td-total');
-      expect(totalCells[0].text()).toBe('50');
-      expect(totalCells[1].text()).toBe('36');
-      expect(totalCells[2].text()).toBe('30');
+      expect(totalCells[0]?.text()).toBe('50');
+      expect(totalCells[1]?.text()).toBe('36');
+      expect(totalCells[2]?.text()).toBe('30');
     });
 
     it('renders drop points when enabled', async () => {
@@ -742,7 +742,7 @@ describe('StandingsTable', () => {
 
       const dropCells = wrapper.findAll('.td-drop');
       expect(dropCells.length).toBe(3);
-      expect(dropCells[0].text()).toBe('0');
+      expect(dropCells[0]?.text()).toBe('0');
     });
   });
 
@@ -820,9 +820,9 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const positionCells = wrapper.findAll('.td-position');
-      expect(positionCells[0].classes()).toContain('pos-1');
-      expect(positionCells[1].classes()).toContain('pos-2');
-      expect(positionCells[2].classes()).toContain('pos-3');
+      expect(positionCells[0]?.classes()).toContain('pos-1');
+      expect(positionCells[1]?.classes()).toContain('pos-2');
+      expect(positionCells[2]?.classes()).toContain('pos-3');
     });
 
     it('applies row class to podium positions', async () => {
@@ -836,9 +836,9 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const rows = wrapper.findAll('tbody tr');
-      expect(rows[0].classes()).toContain('row-podium-1');
-      expect(rows[1].classes()).toContain('row-podium-2');
-      expect(rows[2].classes()).toContain('row-podium-3');
+      expect(rows[0]?.classes()).toContain('row-podium-1');
+      expect(rows[1]?.classes()).toContain('row-podium-2');
+      expect(rows[2]?.classes()).toContain('row-podium-3');
     });
   });
 
@@ -884,9 +884,9 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const positionCells = wrapper.findAll('.td-position');
-      expect(positionCells[0].classes()).toContain('pos-1');
-      expect(positionCells[1].classes()).toContain('pos-2');
-      expect(positionCells[2].classes()).toContain('pos-3');
+      expect(positionCells[0]?.classes()).toContain('pos-1');
+      expect(positionCells[1]?.classes()).toContain('pos-2');
+      expect(positionCells[2]?.classes()).toContain('pos-3');
     });
 
     it('getRowClass returns correct class for positions', async () => {
@@ -900,9 +900,9 @@ describe('StandingsTable', () => {
       await flushPromises();
 
       const rows = wrapper.findAll('tbody tr');
-      expect(rows[0].classes()).toContain('row-podium-1');
-      expect(rows[1].classes()).toContain('row-podium-2');
-      expect(rows[2].classes()).toContain('row-podium-3');
+      expect(rows[0]?.classes()).toContain('row-podium-1');
+      expect(rows[1]?.classes()).toContain('row-podium-2');
+      expect(rows[2]?.classes()).toContain('row-podium-3');
     });
   });
 

@@ -48,7 +48,7 @@ describe('VrlSkeletonText', () => {
       const skeletons = wrapper.findAllComponents(VrlSkeleton);
       const lastSkeleton = skeletons[skeletons.length - 1];
 
-      expect(lastSkeleton.props('width')).toBe('60%');
+      expect(lastSkeleton?.props('width')).toBe('60%');
     });
 
     it('should make all lines full width when shortLastLine is false', () => {
@@ -70,8 +70,8 @@ describe('VrlSkeletonText', () => {
 
       const skeletons = wrapper.findAllComponents(VrlSkeleton);
 
-      expect(skeletons[0].props('width')).toBe('100%');
-      expect(skeletons[1].props('width')).toBe('100%');
+      expect(skeletons[0]?.props('width')).toBe('100%');
+      expect(skeletons[1]?.props('width')).toBe('100%');
     });
   });
 

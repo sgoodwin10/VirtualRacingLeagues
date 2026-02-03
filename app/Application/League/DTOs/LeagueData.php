@@ -40,6 +40,7 @@ final class LeagueData extends Data
         public readonly ?string $instagram_handle,
         public readonly ?string $youtube_url,
         public readonly ?string $twitch_url,
+        public readonly ?string $facebook_handle,
         public readonly string $visibility,
         public readonly ?string $timezone,
         public readonly int $owner_user_id,
@@ -54,8 +55,7 @@ final class LeagueData extends Data
         public readonly int $drivers_count,
         public readonly int $active_seasons_count,
         public readonly int $total_races_count,
-    ) {
-    }
+    ) {}
 
     /**
      * Create from domain entity with platform data.
@@ -118,6 +118,7 @@ final class LeagueData extends Data
             instagram_handle: $league->instagramHandle(),
             youtube_url: $league->youtubeUrl(),
             twitch_url: $league->twitchUrl(),
+            facebook_handle: $league->facebookHandle(),
             visibility: $league->visibility()->value,
             timezone: $league->timezone(),
             owner_user_id: $league->ownerUserId(),

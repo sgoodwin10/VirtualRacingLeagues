@@ -14,7 +14,7 @@ describe('SplitModalTabBar', () => {
           SplitModalNavItem,
         },
       },
-    });
+    } as any);
 
     const navItems = wrapper.findAllComponents(SplitModalNavItem);
     expect(navItems).toHaveLength(4);
@@ -30,18 +30,18 @@ describe('SplitModalTabBar', () => {
           SplitModalNavItem,
         },
       },
-    });
+    } as any);
 
     const navItems = wrapper.findAllComponents(SplitModalNavItem);
 
     // Find the Driver tab (second tab, index 1)
     const driverTab = navItems[1];
-    expect(driverTab.props('active')).toBe(true);
+    expect(driverTab!.props('active')).toBe(true);
 
     // Other tabs should not be active
-    expect(navItems[0].props('active')).toBe(false);
-    expect(navItems[2].props('active')).toBe(false);
-    expect(navItems[3].props('active')).toBe(false);
+    expect(navItems[0]!.props('active')).toBe(false);
+    expect(navItems[2]!.props('active')).toBe(false);
+    expect(navItems[3]!.props('active')).toBe(false);
   });
 
   it('emits section-change on tab click', async () => {
@@ -54,12 +54,12 @@ describe('SplitModalTabBar', () => {
           SplitModalNavItem,
         },
       },
-    });
+    } as any);
 
     const navItems = wrapper.findAllComponents(SplitModalNavItem);
 
     // Click the Driver tab
-    await navItems[1].vm.$emit('click');
+    await navItems[1]!.vm.$emit('click');
 
     expect(wrapper.emitted('section-change')).toBeTruthy();
     expect(wrapper.emitted('section-change')?.[0]).toEqual(['driver']);
@@ -75,7 +75,7 @@ describe('SplitModalTabBar', () => {
           SplitModalNavItem,
         },
       },
-    });
+    } as any);
 
     const navItems = wrapper.findAllComponents(SplitModalNavItem);
 
@@ -94,14 +94,14 @@ describe('SplitModalTabBar', () => {
           SplitModalNavItem,
         },
       },
-    });
+    } as any);
 
     const navItems = wrapper.findAllComponents(SplitModalNavItem);
 
-    expect(navItems[0].props('label')).toBe('Basic');
-    expect(navItems[1].props('label')).toBe('Driver');
-    expect(navItems[2].props('label')).toBe('Team');
-    expect(navItems[3].props('label')).toBe('Brand');
+    expect(navItems[0]!.props('label')).toBe('Basic');
+    expect(navItems[1]!.props('label')).toBe('Driver');
+    expect(navItems[2]!.props('label')).toBe('Team');
+    expect(navItems[3]!.props('label')).toBe('Brand');
   });
 
   it('has scrollable container for overflow', () => {
@@ -114,7 +114,7 @@ describe('SplitModalTabBar', () => {
           SplitModalNavItem,
         },
       },
-    });
+    } as any);
 
     const tabBar = wrapper.find('.tab-bar');
     expect(tabBar.exists()).toBe(true);

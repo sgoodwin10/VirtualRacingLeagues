@@ -189,7 +189,7 @@ onMounted(async () => {
 
     <Column field="name" header="Name">
       <template #body="{ data }">
-        <DriverCell :name="getDriverName(data)" :nickname="getDriverNickname(data)" />
+        <DriverCell :name="getDriverName(data)" :nickname="getDriverNickname(data) ?? undefined" />
       </template>
     </Column>
 

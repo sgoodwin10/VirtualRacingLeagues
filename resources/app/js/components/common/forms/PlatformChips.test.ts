@@ -34,9 +34,9 @@ describe('PlatformChips', () => {
     });
 
     const buttons = wrapper.findAll('button');
-    expect(buttons[0].classes()).toContain('bg-[var(--cyan-dim)]');
-    expect(buttons[1].classes()).toContain('bg-[var(--cyan-dim)]');
-    expect(buttons[2].classes()).not.toContain('bg-[var(--cyan-dim)]');
+    expect(buttons[0]!.classes()).toContain('bg-[var(--cyan-dim)]');
+    expect(buttons[1]!.classes()).toContain('bg-[var(--cyan-dim)]');
+    expect(buttons[2]!.classes()).not.toContain('bg-[var(--cyan-dim)]');
   });
 
   it('emits update:modelValue when platform is clicked', async () => {
@@ -106,7 +106,7 @@ describe('PlatformChips', () => {
     });
 
     const buttons = wrapper.findAll('button');
-    await buttons[0].trigger('click');
+    await buttons[0]!.trigger('click');
 
     // After first click, modelValue should be [1]
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([[1]]);
@@ -115,7 +115,7 @@ describe('PlatformChips', () => {
     await wrapper.setProps({ modelValue: [1] });
 
     // Click the third button (platform id 3)
-    await buttons[2].trigger('click');
+    await buttons[2]!.trigger('click');
 
     // The second emission should now have [1, 3]
     expect(wrapper.emitted('update:modelValue')?.[1]).toEqual([[1, 3]]);

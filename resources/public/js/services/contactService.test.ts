@@ -61,7 +61,7 @@ describe('contactService', () => {
 
       await contactService.submit(formData);
 
-      const callArgs = vi.mocked(apiClient.post).mock.calls[0][1];
+      const callArgs = vi.mocked(apiClient.post).mock.calls[0]?.[1];
       expect(callArgs).toHaveProperty('name');
       expect(callArgs).toHaveProperty('email');
       expect(callArgs).toHaveProperty('reason');
@@ -76,8 +76,8 @@ describe('contactService', () => {
 
       await contactService.submit(formData);
 
-      const callArgs = vi.mocked(apiClient.post).mock.calls[0][1];
-      expect(callArgs.source).toBe('public');
+      const callArgs = vi.mocked(apiClient.post).mock.calls[0]?.[1] as ContactFormData;
+      expect(callArgs?.source).toBe('public');
     });
 
     it('should handle different reasons', async () => {
@@ -93,8 +93,8 @@ describe('contactService', () => {
 
         const callArgs = vi.mocked(apiClient.post).mock.calls[
           vi.mocked(apiClient.post).mock.calls.length - 1
-        ][1];
-        expect(callArgs.reason).toBe(reason);
+        ]?.[1] as ContactFormData;
+        expect(callArgs?.reason).toBe(reason);
       }
     });
 
@@ -180,8 +180,8 @@ describe('contactService', () => {
 
       await contactService.submit(data);
 
-      const callArgs = vi.mocked(apiClient.post).mock.calls[0][1];
-      expect(callArgs.message).toBe(longMessage);
+      const callArgs = vi.mocked(apiClient.post).mock.calls[0]?.[1] as ContactFormData;
+      expect(callArgs?.message).toBe(longMessage);
     });
 
     it('should handle special characters in message', async () => {
@@ -194,8 +194,8 @@ describe('contactService', () => {
 
       await contactService.submit(data);
 
-      const callArgs = vi.mocked(apiClient.post).mock.calls[0][1];
-      expect(callArgs.message).toBe(specialMessage);
+      const callArgs = vi.mocked(apiClient.post).mock.calls[0]?.[1] as ContactFormData;
+      expect(callArgs?.message).toBe(specialMessage);
     });
 
     it('should handle unicode characters', async () => {
@@ -213,9 +213,9 @@ describe('contactService', () => {
 
       await contactService.submit(unicodeData);
 
-      const callArgs = vi.mocked(apiClient.post).mock.calls[0][1];
-      expect(callArgs.name).toBe('José García');
-      expect(callArgs.message).toBe('你好世界 🌍 Olá');
+      const callArgs = vi.mocked(apiClient.post).mock.calls[0]?.[1] as ContactFormData;
+      expect(callArgs?.name).toBe('José García');
+      expect(callArgs?.message).toBe('你好世界 🌍 Olá');
     });
   });
 });

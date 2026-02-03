@@ -19,6 +19,7 @@ interface VrlAccordionHeaderEmits {
 
 const props = withDefaults(defineProps<VrlAccordionHeaderProps>(), {
   disabled: false,
+  class: undefined,
 });
 
 const emit = defineEmits<VrlAccordionHeaderEmits>();

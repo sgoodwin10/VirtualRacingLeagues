@@ -22,8 +22,10 @@ interface VrlAccordionEmits {
 }
 
 const props = withDefaults(defineProps<VrlAccordionProps>(), {
+  modelValue: undefined,
   multiple: false,
   gap: 'md',
+  class: undefined,
 });
 
 const emit = defineEmits<VrlAccordionEmits>();

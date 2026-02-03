@@ -41,8 +41,8 @@ describe('RaceEventAccordion', () => {
       {
         id: 1,
         position: 1,
-        driver: { name: 'Driver 1' },
-        race_points: null,
+        driver: { id: 1, name: 'Driver 1' },
+        race_points: 0,
         positions_gained: null,
         dnf: false,
         has_pole: true,
@@ -56,8 +56,8 @@ describe('RaceEventAccordion', () => {
       {
         id: 2,
         position: 2,
-        driver: { name: 'Driver 2' },
-        race_points: null,
+        driver: { id: 1, name: 'Driver 2' },
+        race_points: 0,
         positions_gained: null,
         dnf: false,
         has_pole: false,
@@ -81,7 +81,7 @@ describe('RaceEventAccordion', () => {
       {
         id: 3,
         position: 1,
-        driver: { name: 'Driver 1' },
+        driver: { id: 1, name: 'Driver 1' },
         race_points: 25,
         positions_gained: 2,
         dnf: false,
@@ -96,7 +96,7 @@ describe('RaceEventAccordion', () => {
       {
         id: 4,
         position: 2,
-        driver: { name: 'Driver 2' },
+        driver: { id: 1, name: 'Driver 2' },
         race_points: 18,
         positions_gained: -1,
         dnf: false,
@@ -343,7 +343,7 @@ describe('RaceEventAccordion', () => {
           {
             id: 5,
             position: 1,
-            driver: { name: 'Driver 3' },
+            driver: { id: 1, name: 'Driver 3' },
             race_points: 25,
             positions_gained: 0,
             dnf: false,
@@ -417,7 +417,7 @@ describe('RaceEventAccordion', () => {
           {
             id: 6,
             position: 1,
-            driver: { name: 'Driver 1' },
+            driver: { id: 1, name: 'Driver 1' },
             race_points: 0,
             positions_gained: null,
             dnf: true,

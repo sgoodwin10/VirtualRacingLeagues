@@ -142,7 +142,7 @@ describe('VrlIconButton', () => {
         },
       });
       // Find the VrlIconButton warning (not Vue warnings)
-      const vrlWarning = consoleWarnSpy.mock.calls.find((call) =>
+      const vrlWarning = consoleWarnSpy.mock.calls.find((call: unknown[]) =>
         String(call[0]).includes('[VrlIconButton]'),
       );
       expect(vrlWarning).toBeDefined();

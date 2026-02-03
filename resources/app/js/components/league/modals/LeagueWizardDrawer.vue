@@ -69,6 +69,7 @@ const form = reactive<CreateLeagueForm>({
   website_url: '',
   twitter_handle: '',
   instagram_handle: '',
+  facebook_handle: '',
   youtube_url: '',
   twitch_url: '',
 });
@@ -316,6 +317,7 @@ async function submitForm(): Promise<void> {
         website_url: form.website_url,
         twitter_handle: form.twitter_handle,
         instagram_handle: form.instagram_handle,
+        facebook_handle: form.facebook_handle,
         youtube_url: form.youtube_url,
         twitch_url: form.twitch_url,
       };
@@ -650,7 +652,7 @@ function resetForm(): void {
                       label="League Logo"
                       :required="false"
                       :error="errors.logo"
-                      preview-size="sm"
+                      preview-size="small"
                       helper-text="Square logo (400x400px recommended)"
                       @remove-existing="form.logo_url = undefined"
                     />
@@ -664,7 +666,7 @@ function resetForm(): void {
                       label="League Banner"
                       :required="false"
                       :error="errors.banner"
-                      preview-size="lg"
+                      preview-size="large"
                       helper-text="Banner image (200-800px wide, 32-100px tall)"
                       @remove-existing="form.banner_url = undefined"
                     />
@@ -679,7 +681,7 @@ function resetForm(): void {
                     label="League Background Image"
                     :required="false"
                     :error="errors.header_image"
-                    preview-size="lg"
+                    preview-size="large"
                     helper-text="Banner image (1200x400px recommended)"
                     @remove-existing="form.header_image_url = undefined"
                   />
@@ -697,6 +699,7 @@ function resetForm(): void {
                   :website-url="form.website_url"
                   :twitter-handle="form.twitter_handle"
                   :instagram-handle="form.instagram_handle"
+                  :facebook-handle="form.facebook_handle"
                   :youtube-url="form.youtube_url"
                   :twitch-url="form.twitch_url"
                   :errors="{
@@ -704,6 +707,7 @@ function resetForm(): void {
                     website_url: errors.website_url,
                     twitter_handle: errors.twitter_handle,
                     instagram_handle: errors.instagram_handle,
+                    facebook_handle: errors.facebook_handle,
                     youtube_url: errors.youtube_url,
                     twitch_url: errors.twitch_url,
                   }"
@@ -711,6 +715,7 @@ function resetForm(): void {
                   @update:website-url="form.website_url = $event"
                   @update:twitter-handle="form.twitter_handle = $event"
                   @update:instagram-handle="form.instagram_handle = $event"
+                  @update:facebook-handle="form.facebook_handle = $event"
                   @update:youtube-url="form.youtube_url = $event"
                   @update:twitch-url="form.twitch_url = $event"
                 />

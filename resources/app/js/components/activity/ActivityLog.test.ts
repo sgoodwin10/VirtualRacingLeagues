@@ -57,7 +57,7 @@ describe('ActivityLog', () => {
             },
           },
         ],
-      ],
+      ] as unknown as any[],
       stubs: {
         Skeleton: { template: '<div class="skeleton"></div>' },
         Button: {
@@ -79,12 +79,12 @@ describe('ActivityLog', () => {
       lastPage: ref(1),
       total: ref(0),
       filters: ref<ActivityFilterParams>({ limit: 25, page: 1 }),
-      fetchActivities: mockFetchActivities,
-      updateFilters: mockUpdateFilters,
-      goToPage: mockGoToPage,
-      refresh: mockRefresh,
+      fetchActivities: mockFetchActivities as any,
+      updateFilters: mockUpdateFilters as any,
+      goToPage: mockGoToPage as any,
+      refresh: mockRefresh as any,
       ...overrides,
-    };
+    } as ReturnType<typeof useActivityLog>;
   }
 
   beforeEach(() => {

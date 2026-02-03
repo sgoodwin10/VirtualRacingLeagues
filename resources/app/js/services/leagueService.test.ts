@@ -197,6 +197,7 @@ describe('leagueService', () => {
         website_url: 'https://test.com',
         twitter_handle: 'testleague',
         instagram_handle: 'testleague',
+        facebook_handle: 'testleague',
         youtube_url: 'https://youtube.com/@test',
         twitch_url: 'https://twitch.tv/test',
       };
@@ -229,6 +230,7 @@ describe('leagueService', () => {
         website_url: '',
         twitter_handle: '',
         instagram_handle: '',
+        facebook_handle: '',
         youtube_url: '',
         twitch_url: '',
       };
@@ -258,6 +260,7 @@ describe('leagueService', () => {
       website_url: 'https://original.com',
       twitter_handle: 'original',
       instagram_handle: 'original',
+      facebook_handle: 'original',
       youtube_url: 'https://youtube.com/@original',
       twitch_url: 'https://twitch.tv/original',
       visibility: 'public',

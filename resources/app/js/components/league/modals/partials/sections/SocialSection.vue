@@ -14,6 +14,7 @@ const emit = defineEmits<{
   'update:websiteUrl': [value: string];
   'update:twitterHandle': [value: string];
   'update:instagramHandle': [value: string];
+  'update:facebookHandle': [value: string];
   'update:youtubeUrl': [value: string];
   'update:twitchUrl': [value: string];
 }>();
@@ -31,6 +32,7 @@ const emit = defineEmits<{
       :website-url="form.website_url"
       :twitter-handle="form.twitter_handle"
       :instagram-handle="form.instagram_handle"
+      :facebook-handle="form.facebook_handle"
       :youtube-url="form.youtube_url"
       :twitch-url="form.twitch_url"
       :errors="{
@@ -38,6 +40,7 @@ const emit = defineEmits<{
         website_url: errors.website_url,
         twitter_handle: errors.twitter_handle,
         instagram_handle: errors.instagram_handle,
+        facebook_handle: errors.facebook_handle,
         youtube_url: errors.youtube_url,
         twitch_url: errors.twitch_url,
       }"
@@ -45,6 +48,7 @@ const emit = defineEmits<{
       @update:website-url="emit('update:websiteUrl', $event)"
       @update:twitter-handle="emit('update:twitterHandle', $event)"
       @update:instagram-handle="emit('update:instagramHandle', $event)"
+      @update:facebook-handle="emit('update:facebookHandle', $event)"
       @update:youtube-url="emit('update:youtubeUrl', $event)"
       @update:twitch-url="emit('update:twitchUrl', $event)"
     />

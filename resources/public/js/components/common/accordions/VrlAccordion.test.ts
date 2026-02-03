@@ -39,9 +39,9 @@ describe('VrlAccordion', () => {
 
     const items = wrapper.findAll('[data-test="vrl-accordion-item"]');
     // Check if first item has elevated background (active state)
-    expect(items[0].classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(true);
+    expect(items[0]?.classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(true);
     // Check if second item does not have elevated background
-    expect(items[1].classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(false);
+    expect(items[1]?.classes().some((c) => c.includes('bg-[var(--bg-elevated)]'))).toBe(false);
   });
 
   it('opens multiple items in multiple mode', async () => {
@@ -62,8 +62,8 @@ describe('VrlAccordion', () => {
     });
 
     const items = wrapper.findAll('[data-test="vrl-accordion-item"]');
-    expect(items[0].classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(true);
-    expect(items[1].classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(true);
+    expect(items[0]?.classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(true);
+    expect(items[1]?.classes().some((c) => c.includes('border-[var(--cyan)]'))).toBe(true);
   });
 
   it('emits update:modelValue when item is toggled', async () => {
@@ -170,7 +170,7 @@ describe('VrlAccordion', () => {
     });
 
     const headers = wrapper.findAll('[data-test="vrl-accordion-header"]');
-    await headers[0].trigger('click');
+    await headers[0]?.trigger('click');
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy();
     const lastEmit =
@@ -198,12 +198,12 @@ describe('VrlAccordion', () => {
     });
 
     const headers = wrapper.findAll('[data-test="vrl-accordion-header"]');
-    await headers[1].trigger('click');
+    await headers[1]?.trigger('click');
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy();
     const lastEmit =
-      wrapper.emitted('update:modelValue')![wrapper.emitted('update:modelValue')!.length - 1];
-    expect(lastEmit[0]).toEqual(['1', '2']);
+      wrapper.emitted('update:modelValue')?.[wrapper.emitted('update:modelValue')!.length - 1];
+    expect(lastEmit?.[0]).toEqual(['1', '2']);
   });
 
   it('applies custom CSS class', () => {

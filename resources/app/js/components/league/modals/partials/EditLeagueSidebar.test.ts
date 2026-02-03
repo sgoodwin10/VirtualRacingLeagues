@@ -30,7 +30,7 @@ describe('EditLeagueSidebar', () => {
     });
 
     const buttons = wrapper.findAll('button');
-    expect(buttons[0].classes()).toContain('bg-[var(--cyan-dim)]');
+    expect(buttons[0]!.classes()).toContain('bg-[var(--cyan-dim)]');
   });
 
   it('emits change-section event when section is clicked', async () => {
@@ -39,7 +39,7 @@ describe('EditLeagueSidebar', () => {
     });
 
     const buttons = wrapper.findAll('button');
-    await buttons[1].trigger('click');
+    await buttons[1]!.trigger('click');
 
     expect(wrapper.emitted('change-section')).toBeTruthy();
     expect(wrapper.emitted('change-section')?.[0]).toEqual(['contact']);
@@ -56,7 +56,7 @@ describe('EditLeagueSidebar', () => {
 
     const basicInfoButton = wrapper.findAll('button')[0];
     // PhWarning is rendered as a component, so we check for the badge span
-    expect(basicInfoButton.find('.bg-\\[var\\(--orange-dim\\)\\]').exists()).toBe(true);
+    expect(basicInfoButton!.find('.bg-\\[var\\(--orange-dim\\)\\]').exists()).toBe(true);
   });
 
   it('shows complete checkmark when basic info is valid', () => {
@@ -66,7 +66,7 @@ describe('EditLeagueSidebar', () => {
 
     const basicInfoButton = wrapper.findAll('button')[0];
     // PhCheckCircle is rendered as a component with green color
-    expect(basicInfoButton.find('.text-\\[var\\(--green\\)\\]').exists()).toBe(true);
+    expect(basicInfoButton!.find('.text-\\[var\\(--green\\)\\]').exists()).toBe(true);
   });
 
   it('renders progress component with correct props', () => {
@@ -105,7 +105,7 @@ describe('EditLeagueSidebar', () => {
     await wrapper.setProps({ activeSection: 'contact' });
 
     const buttons = wrapper.findAll('button');
-    expect(buttons[0].classes()).not.toContain('bg-[var(--cyan-dim)]');
-    expect(buttons[1].classes()).toContain('bg-[var(--cyan-dim)]');
+    expect(buttons[0]!.classes()).not.toContain('bg-[var(--cyan-dim)]');
+    expect(buttons[1]!.classes()).toContain('bg-[var(--cyan-dim)]');
   });
 });

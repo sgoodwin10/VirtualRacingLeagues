@@ -7,6 +7,7 @@ import {
   PhGlobe,
   PhTwitterLogo,
   PhInstagramLogo,
+  PhFacebookLogo,
   PhYoutubeLogo,
   PhTwitchLogo,
 } from '@phosphor-icons/vue';
@@ -19,6 +20,7 @@ interface Props {
   websiteUrl: string;
   twitterHandle: string;
   instagramHandle: string;
+  facebookHandle: string;
   youtubeUrl: string;
   twitchUrl: string;
   errors?: {
@@ -26,6 +28,7 @@ interface Props {
     website_url?: string;
     twitter_handle?: string;
     instagram_handle?: string;
+    facebook_handle?: string;
     youtube_url?: string;
     twitch_url?: string;
   };
@@ -40,6 +43,7 @@ const emit = defineEmits([
   'update:websiteUrl',
   'update:twitterHandle',
   'update:instagramHandle',
+  'update:facebookHandle',
   'update:youtubeUrl',
   'update:twitchUrl',
 ]);
@@ -126,6 +130,26 @@ const emit = defineEmits([
           />
         </InputGroup>
         <FormError :error="errors?.instagram_handle" />
+      </FormInputGroup>
+
+      <!-- Facebook -->
+      <FormInputGroup>
+        <FormLabel for="facebook-handle" text="Facebook" />
+        <InputGroup>
+          <InputGroupAddon class="p-0"
+            ><PhFacebookLogo size="20" class="text-[#1877F2]/70"
+          /></InputGroupAddon>
+          <InputText
+            id="facebook-handle"
+            :model-value="facebookHandle"
+            placeholder="yourleague"
+            size="small"
+            :class="{ 'p-invalid': !!errors?.facebook_handle }"
+            class="w-full"
+            @update:model-value="emit('update:facebookHandle', $event)"
+          />
+        </InputGroup>
+        <FormError :error="errors?.facebook_handle" />
       </FormInputGroup>
 
       <!-- YouTube -->

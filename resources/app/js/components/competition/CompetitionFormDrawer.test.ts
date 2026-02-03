@@ -37,18 +37,27 @@ describe('CompetitionFormDrawer - Delete Functionality', () => {
     description: 'A test competition',
     platform_id: 1,
     platform_name: 'PlayStation',
+    platform_slug: 'playstation',
     logo_url: null,
     has_own_logo: false,
     competition_colour: JSON.stringify({ r: 100, g: 150, b: 200 }),
     is_active: true,
     is_archived: false,
+    is_deleted: false,
     status: 'active',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
     archived_at: null,
+    deleted_at: null,
+    created_by_user_id: 1,
     seasons: [],
     stats: {
       total_seasons: 0,
+      active_seasons: 0,
+      total_rounds: 0,
+      total_drivers: 0,
+      total_races: 0,
+      next_race_date: null,
     },
   };
 
@@ -100,7 +109,7 @@ describe('CompetitionFormDrawer - Delete Functionality', () => {
         onAccept: vi.fn(),
       });
 
-      const callArgs = mockShowConfirmation.mock.calls[0][0];
+      const callArgs = mockShowConfirmation.mock.calls[0]![0];
       expect(callArgs.message).toContain(competitionName);
       expect(callArgs.message).toContain('permanently remove all associated seasons');
     });

@@ -12,7 +12,7 @@ describe('subdomain utilities', () => {
 
   afterEach(() => {
     // Restore original location
-    window.location = originalLocation;
+    (window as any).location = originalLocation;
   });
 
   describe('getAppSubdomainUrl', () => {

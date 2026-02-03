@@ -8,13 +8,29 @@ import Sidebar from 'primevue/sidebar';
 describe('VrlDrawer', () => {
   let wrapper: VueWrapper;
 
-  const createWrapper = (props = {}, slots = {}) => {
+  const createWrapper = (
+    props: Partial<{
+      visible: boolean;
+      title?: string;
+      position?: 'left' | 'right' | 'top' | 'bottom';
+      width?: string;
+      height?: string;
+      closable?: boolean;
+      closeOnBackdrop?: boolean;
+      closeOnEscape?: boolean;
+      blockScroll?: boolean;
+      class?: string;
+      ariaLabel?: string;
+      unstyled?: boolean;
+    }> = {},
+    slots: Record<string, unknown> = {},
+  ) => {
     return mount(VrlDrawer, {
       props: {
         visible: false,
         ...props,
       },
-      slots,
+      slots: slots as any,
       global: {
         plugins: [PrimeVue],
         stubs: {
@@ -122,7 +138,7 @@ describe('VrlDrawer', () => {
         class: 'custom-drawer-class',
       });
       // Verify the VrlDrawer component received the class prop
-      expect(wrapper.props('class')).toBe('custom-drawer-class');
+      expect((wrapper.props() as any).class).toBe('custom-drawer-class');
     });
 
     it('should set closable prop', () => {
@@ -131,7 +147,7 @@ describe('VrlDrawer', () => {
         closable: true,
       });
       // Verify the component receives the closable prop
-      expect(wrapper.props('closable')).toBe(true);
+      expect((wrapper.props() as any).closable).toBe(true);
     });
 
     it('should set closable to false', () => {
@@ -140,7 +156,7 @@ describe('VrlDrawer', () => {
         closable: false,
       });
       // Verify the component receives the closable prop as false
-      expect(wrapper.props('closable')).toBe(false);
+      expect((wrapper.props() as any).closable).toBe(false);
     });
 
     it('should set closeOnBackdrop prop', () => {
@@ -167,12 +183,12 @@ describe('VrlDrawer', () => {
         ariaLabel: 'Custom drawer label',
       });
       // Verify the ariaLabel prop is passed to the component
-      expect(wrapper.props('ariaLabel')).toBe('Custom drawer label');
+      expect((wrapper.props() as any).ariaLabel).toBe('Custom drawer label');
     });
 
     it('should set default width', () => {
       wrapper = createWrapper({ visible: true });
-      expect(wrapper.vm.$props.width).toBe('400px');
+      expect((wrapper.vm.$props as any).width).toBe('400px');
     });
 
     it('should set custom width', () => {
@@ -180,7 +196,7 @@ describe('VrlDrawer', () => {
         visible: true,
         width: '600px',
       });
-      expect(wrapper.vm.$props.width).toBe('600px');
+      expect((wrapper.vm.$props as any).width).toBe('600px');
     });
   });
 
@@ -235,7 +251,7 @@ describe('VrlDrawer', () => {
     it('should have closable default to true', () => {
       wrapper = createWrapper({ visible: true });
       // By default, closable should be true
-      expect(wrapper.props('closable')).toBe(true);
+      expect((wrapper.props() as any).closable).toBe(true);
     });
 
     it('should have closeOnBackdrop default to false', () => {

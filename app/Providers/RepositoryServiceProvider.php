@@ -8,6 +8,7 @@ use App\Domain\Admin\Repositories\AdminRepositoryInterface;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceRepositoryInterface;
 use App\Domain\Competition\Repositories\RaceResultRepositoryInterface;
+use App\Domain\Competition\Repositories\RoundRepositoryInterface;
 use App\Domain\Competition\Repositories\RoundTiebreakerRuleRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonDriverRepositoryInterface;
 use App\Domain\Competition\Repositories\SeasonRepositoryInterface;
@@ -34,6 +35,7 @@ use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationLog
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentPlatformRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRaceRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRaceResultRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoundRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoundTiebreakerRuleRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonDriverRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentSeasonRepository;
@@ -125,8 +127,8 @@ final class RepositoryServiceProvider extends ServiceProvider
 
         // Bind Round Repository
         $this->app->bind(
-            \App\Domain\Competition\Repositories\RoundRepositoryInterface::class,
-            \App\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoundRepository::class
+            RoundRepositoryInterface::class,
+            EloquentRoundRepository::class
         );
 
         // Bind Race Repository

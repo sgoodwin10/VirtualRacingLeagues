@@ -51,6 +51,7 @@ const { formatDate } = useDateFormatter();
       league.website_url ||
       league.twitter_handle ||
       league.instagram_handle ||
+      league.facebook_handle ||
       league.youtube_url ||
       league.twitch_url
     "
@@ -132,6 +133,27 @@ const { formatDate } = useDateFormatter();
           <div class="font-medium text-gray-900">Instagram</div>
           <div class="text-md text-gray-500 truncate">
             @{{ league.instagram_handle.replace('@', '') }}
+          </div>
+        </div>
+      </a>
+
+      <!-- Facebook -->
+      <a
+        v-if="league.facebook_handle"
+        :href="`https://facebook.com/${league.facebook_handle.replace('@', '')}`"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+      >
+        <div
+          class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors"
+        >
+          <i class="pi pi-facebook text-[#1877F2]"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-gray-900">Facebook</div>
+          <div class="text-md text-gray-500 truncate">
+            @{{ league.facebook_handle.replace('@', '') }}
           </div>
         </div>
       </a>

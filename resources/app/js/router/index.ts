@@ -13,13 +13,6 @@ declare module 'vue-router' {
   }
 }
 
-// GTM DataLayer type declaration
-declare global {
-  interface Window {
-    dataLayer?: Array<Record<string, unknown>>;
-  }
-}
-
 /**
  * Validates that route params are numeric
  * @param paramNames - Array of param names to validate

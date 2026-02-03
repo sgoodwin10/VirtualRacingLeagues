@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Listeners;
 
 use App\Domain\User\Events\UserImpersonated;
+use App\Models\User;
 
 /**
  * Listener for UserImpersonated event.
@@ -20,7 +21,7 @@ final class LogUserImpersonated
         // Log activity on the user's model
         activity()
             ->causedBy($event->adminId)
-            ->performedOn(\App\Models\User::find($event->userId))
+            ->performedOn(User::find($event->userId))
             ->withProperties([
                 'admin_id' => $event->adminId,
                 'admin_email' => $event->adminEmail,

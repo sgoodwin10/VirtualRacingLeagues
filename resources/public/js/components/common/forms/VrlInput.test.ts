@@ -249,7 +249,7 @@ describe('VrlInput', () => {
 
       await wrapper.find('input').trigger('blur');
       expect(wrapper.emitted('blur')).toBeTruthy();
-      expect(wrapper.emitted('blur')?.[0][0]).toBeInstanceOf(FocusEvent);
+      expect(wrapper.emitted('blur')?.[0]?.[0]).toBeInstanceOf(FocusEvent);
     });
 
     it('emits focus event', async () => {
@@ -261,7 +261,7 @@ describe('VrlInput', () => {
 
       await wrapper.find('input').trigger('focus');
       expect(wrapper.emitted('focus')).toBeTruthy();
-      expect(wrapper.emitted('focus')?.[0][0]).toBeInstanceOf(FocusEvent);
+      expect(wrapper.emitted('focus')?.[0]?.[0]).toBeInstanceOf(FocusEvent);
     });
 
     it('emits all events correctly', async () => {

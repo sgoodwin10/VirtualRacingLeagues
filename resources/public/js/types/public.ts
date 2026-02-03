@@ -37,6 +37,7 @@ export interface PublicLeague {
   website_url: string | null;
   twitter_handle: string | null;
   instagram_handle: string | null;
+  facebook_handle: string | null;
   youtube_url: string | null;
   twitch_url: string | null;
   visibility: 'public' | 'unlisted';
@@ -317,6 +318,7 @@ export interface PublicLeagueInfo {
   website_url: string | null;
   twitter_handle: string | null;
   instagram_handle: string | null;
+  facebook_handle: string | null;
   youtube_url: string | null;
   twitch_url: string | null;
   created_at: string;

@@ -121,6 +121,18 @@
         <span>Instagram</span>
       </a>
 
+      <!-- Facebook -->
+      <a
+        v-if="league.facebook_handle"
+        :href="`https://facebook.com/${league.facebook_handle.replace(/^@/, '')}`"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="social-link flex items-center gap-2 px-3 py-1.5 rounded-md bg-[var(--bg-elevated)] text-[#1877F2] text-[0.85rem] hover:bg-[#1877F2] hover:text-white transition-colors"
+      >
+        <PhFacebookLogo :size="18" weight="fill" />
+        <span>Facebook</span>
+      </a>
+
       <!-- YouTube -->
       <a
         v-if="league.youtube_url"
@@ -155,6 +167,7 @@ import {
   PhGlobe,
   PhXLogo,
   PhInstagramLogo,
+  PhFacebookLogo,
   PhYoutubeLogo,
   PhTwitchLogo,
   PhInfo,
@@ -257,6 +270,7 @@ const hasSocialLinks = computed(() => {
     props.league.website_url ||
     props.league.twitter_handle ||
     props.league.instagram_handle ||
+    props.league.facebook_handle ||
     props.league.youtube_url ||
     props.league.twitch_url
   );

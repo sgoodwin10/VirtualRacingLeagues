@@ -61,7 +61,7 @@ describe('SeasonStatusView', () => {
     });
   };
 
-  const mockSeason: Season = {
+  const mockSeason = {
     id: 1,
     name: 'Test Season',
     status: 'active',
@@ -71,7 +71,7 @@ describe('SeasonStatusView', () => {
     leagueId: 1,
     createdAt: '2024-01-01',
     updatedAt: '2024-01-01',
-  };
+  } as any;
 
   it('does not render SeasonSettings when season is not loaded', () => {
     const wrapper = mountComponent(null);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Competition\Services;
 
+use App\Application\Activity\Services\LeagueActivityLogService;
 use App\Application\Competition\DTOs\CreateQualifierData;
 use App\Application\Competition\DTOs\RaceData;
 use App\Application\Competition\DTOs\UpdateQualifierData;
@@ -18,6 +19,8 @@ use App\Domain\Competition\ValueObjects\QualifyingFormat;
 use App\Domain\Competition\ValueObjects\RaceName;
 use App\Domain\Competition\ValueObjects\RaceResultStatus;
 use App\Domain\Competition\ValueObjects\RaceStatus;
+use App\Infrastructure\Persistence\Eloquent\Models\Race as RaceModel;
+use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -30,9 +33,8 @@ final class QualifierApplicationService
         private readonly RaceResultRepositoryInterface $raceResultRepository,
         private readonly RoundRepositoryInterface $roundRepository,
         private readonly SeasonRepositoryInterface $seasonRepository,
-        private readonly \App\Application\Activity\Services\LeagueActivityLogService $activityLogService,
-    ) {
-    }
+        private readonly LeagueActivityLogService $activityLogService,
+    ) {}
 
     public function createQualifier(CreateQualifierData $data, int $roundId, int $userId): RaceData
     {
@@ -238,7 +240,7 @@ final class QualifierApplicationService
             Event::dispatch(new QualifierDeleted(
                 qualifierId: $qualifierId,
                 roundId: $roundId,
-                occurredAt: new DateTimeImmutable(),
+                occurredAt: new DateTimeImmutable,
             ));
         });
     }
@@ -487,14 +489,14 @@ final class QualifierApplicationService
     private function logQualifierCreated(int $qualifierId, int $userId): void
     {
         try {
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
-            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            /** @var UserEloquent|null $user */
+            $user = UserEloquent::find($userId);
             if ($user === null) {
                 return;
             }
 
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $qualifier */
-            $qualifier = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($qualifierId);
+            /** @var RaceModel $qualifier */
+            $qualifier = RaceModel::findOrFail($qualifierId);
             $this->activityLogService->logRaceCreated($user, $qualifier);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to log qualifier creation activity', [
@@ -513,14 +515,14 @@ final class QualifierApplicationService
     private function logQualifierUpdated(int $qualifierId, int $userId, array $originalData, array $newData): void
     {
         try {
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent|null $user */
-            $user = \App\Infrastructure\Persistence\Eloquent\Models\UserEloquent::find($userId);
+            /** @var UserEloquent|null $user */
+            $user = UserEloquent::find($userId);
             if ($user === null) {
                 return;
             }
 
-            /** @var \App\Infrastructure\Persistence\Eloquent\Models\Race $qualifier */
-            $qualifier = \App\Infrastructure\Persistence\Eloquent\Models\Race::findOrFail($qualifierId);
+            /** @var RaceModel $qualifier */
+            $qualifier = RaceModel::findOrFail($qualifierId);
             $this->activityLogService->logRaceUpdated($user, $qualifier, [
                 'old' => $originalData,
                 'new' => $newData,

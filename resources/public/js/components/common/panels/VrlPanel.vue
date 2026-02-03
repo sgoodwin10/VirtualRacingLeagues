@@ -35,8 +35,12 @@ interface VrlPanelEmits {
 }
 
 const props = withDefaults(defineProps<VrlPanelProps>(), {
+  title: undefined,
   defaultExpanded: true,
   collapsible: false,
+  class: undefined,
+  headerClass: undefined,
+  contentClass: undefined,
 });
 
 const emit = defineEmits<VrlPanelEmits>();

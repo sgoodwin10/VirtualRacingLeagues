@@ -43,7 +43,7 @@
               {{
                 data.divisionName
                   .split(' ')
-                  .map((w) => w[0])
+                  .map((w: string) => w[0])
                   .join('')
               }}
             </span>

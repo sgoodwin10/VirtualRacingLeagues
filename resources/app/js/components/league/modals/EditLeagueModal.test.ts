@@ -105,7 +105,7 @@ const createWrapper = (props = {}) => {
         Teleport: true,
       },
     },
-  });
+  } as any);
 };
 
 describe('EditLeagueModal', () => {
@@ -176,7 +176,7 @@ describe('EditLeagueModal', () => {
     await flushPromises();
 
     // Check that activeSection is set to 'basic' initially
-    expect(wrapper.vm.activeSection).toBe('basic');
+    expect((wrapper.vm as any).activeSection).toBe('basic');
 
     const basicSection = wrapper.findComponent({ name: 'BasicInfoSection' });
     const contactSection = wrapper.findComponent({ name: 'ContactSection' });
@@ -196,7 +196,7 @@ describe('EditLeagueModal', () => {
     await wrapper.vm.$nextTick();
 
     // Verify activeSection changed to 'contact'
-    expect(wrapper.vm.activeSection).toBe('contact');
+    expect((wrapper.vm as any).activeSection).toBe('contact');
 
     const basicSection = wrapper.findComponent({ name: 'BasicInfoSection' });
     const contactSection = wrapper.findComponent({ name: 'ContactSection' });

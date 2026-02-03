@@ -41,6 +41,7 @@ final class LeagueFactory extends Factory
             'instagram_handle' => null,
             'youtube_url' => null,
             'twitch_url' => null,
+            'facebook_handle' => null,
             'status' => 'active',
         ];
     }
@@ -75,6 +76,7 @@ final class LeagueFactory extends Factory
             'instagram_handle' => null,
             'youtube_url' => null,
             'twitch_url' => null,
+            'facebook_handle' => null,
         ]);
     }
 }

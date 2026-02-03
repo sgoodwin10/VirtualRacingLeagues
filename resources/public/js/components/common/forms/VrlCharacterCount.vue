@@ -25,6 +25,15 @@ const charCountClasses = computed(() => {
   const classes = `${baseClasses} ${colorClass}`;
   return props.class ? `${classes} ${props.class}` : classes;
 });
+
+/**
+ * Expose computed properties for testing
+ */
+defineExpose({
+  percentage,
+  isNearLimit,
+  isAtLimit,
+});
 </script>
 
 <template>

@@ -62,6 +62,7 @@ const form = reactive<CreateLeagueForm>({
   website_url: '',
   twitter_handle: '',
   instagram_handle: '',
+  facebook_handle: '',
   youtube_url: '',
   twitch_url: '',
 });
@@ -179,6 +180,7 @@ async function loadLeagueData(leagueId: number): Promise<void> {
     form.website_url = league.website_url || '';
     form.twitter_handle = league.twitter_handle || '';
     form.instagram_handle = league.instagram_handle || '';
+    form.facebook_handle = league.facebook_handle || '';
     form.youtube_url = league.youtube_url || '';
     form.twitch_url = league.twitch_url || '';
   } catch {
@@ -325,6 +327,7 @@ async function submitForm(): Promise<void> {
         website_url: form.website_url,
         twitter_handle: form.twitter_handle,
         instagram_handle: form.instagram_handle,
+        facebook_handle: form.facebook_handle,
         youtube_url: form.youtube_url,
         twitch_url: form.twitch_url,
       };
@@ -430,6 +433,7 @@ function resetForm(): void {
   form.website_url = '';
   form.twitter_handle = '';
   form.instagram_handle = '';
+  form.facebook_handle = '';
   form.youtube_url = '';
   form.twitch_url = '';
 
@@ -551,6 +555,7 @@ function handleSectionChange(sectionId: SectionId): void {
           @update:website-url="form.website_url = $event"
           @update:twitter-handle="form.twitter_handle = $event"
           @update:instagram-handle="form.instagram_handle = $event"
+          @update:facebook-handle="form.facebook_handle = $event"
           @update:youtube-url="form.youtube_url = $event"
           @update:twitch-url="form.twitch_url = $event"
         />

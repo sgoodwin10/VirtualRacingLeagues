@@ -11,10 +11,15 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// Extend Window interface for Google Tag Manager dataLayer
+// Extend Window interface for Google Tag Manager dataLayer and gtag
 declare global {
   interface Window {
     dataLayer?: Record<string, unknown>[];
+    gtag?: (
+      command: 'event' | 'config' | 'set',
+      eventNameOrConfigId: string,
+      params?: Record<string, unknown>,
+    ) => void;
   }
 }
 

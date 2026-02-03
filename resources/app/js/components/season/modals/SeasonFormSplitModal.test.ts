@@ -6,7 +6,6 @@ import Aura from '@primevue/themes/aura';
 import ToastService from 'primevue/toastservice';
 import SeasonFormSplitModal from './SeasonFormSplitModal.vue';
 import { useSeasonStore } from '@app/stores/seasonStore';
-import type { Season } from '@app/types/season';
 
 // Mock services
 vi.mock('@app/services/seasonService', () => ({
@@ -37,7 +36,7 @@ describe('SeasonFormSplitModal', () => {
   // Helper function to create properly configured wrapper
   const createWrapper = (props: Record<string, unknown>) => {
     return mount(SeasonFormSplitModal, {
-      props,
+      props: props as any,
       global: {
         plugins: [
           createPinia(),
@@ -123,7 +122,7 @@ describe('SeasonFormSplitModal', () => {
     });
   };
 
-  const mockSeason: Season = {
+  const mockSeason = {
     id: 1,
     competition_id: 1,
     name: 'Test Season',
@@ -131,9 +130,14 @@ describe('SeasonFormSplitModal', () => {
     car_class: 'GT3',
     description: 'Test description',
     technical_specs: 'Test specs',
-    logo_url: null,
+    logo_url: null as any,
     banner_url: null,
     has_own_logo: false,
+    has_own_banner: false,
+    status: 'active',
+    is_setup: true,
+    is_active: true,
+    is_archived: false,
     race_divisions_enabled: false,
     team_championship_enabled: false,
     race_times_required: true,
@@ -145,7 +149,7 @@ describe('SeasonFormSplitModal', () => {
     round_totals_tiebreaker_rules_enabled: false,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
-  };
+  } as any;
 
   describe('rendering', () => {
     it('renders modal when visible is true', () => {
@@ -206,7 +210,7 @@ describe('SeasonFormSplitModal', () => {
         competitionId: 1,
       });
 
-      expect(wrapper.vm.activeSection).toBe('basic');
+      expect((wrapper.vm as any).activeSection).toBe('basic');
     });
 
     it('navigates to different sections', async () => {
@@ -215,10 +219,10 @@ describe('SeasonFormSplitModal', () => {
         competitionId: 1,
       });
 
-      wrapper.vm.activeSection = 'driver';
+      (wrapper.vm as any).activeSection = 'driver';
       await wrapper.vm.$nextTick();
 
-      expect(wrapper.vm.activeSection).toBe('driver');
+      expect((wrapper.vm as any).activeSection).toBe('driver');
     });
   });
 
@@ -229,10 +233,10 @@ describe('SeasonFormSplitModal', () => {
         competitionId: 1,
       });
 
-      expect(wrapper.vm.form.race_divisions_enabled).toBe(false);
-      expect(wrapper.vm.form.team_championship_enabled).toBe(false);
-      expect(wrapper.vm.form.drop_round).toBe(false);
-      expect(wrapper.vm.form.round_totals_tiebreaker_rules_enabled).toBe(false);
+      expect((wrapper.vm as any).form.race_divisions_enabled).toBe(false);
+      expect((wrapper.vm as any).form.team_championship_enabled).toBe(false);
+      expect((wrapper.vm as any).form.drop_round).toBe(false);
+      expect((wrapper.vm as any).form.round_totals_tiebreaker_rules_enabled).toBe(false);
     });
 
     it('tracks enabled settings', async () => {
@@ -241,13 +245,13 @@ describe('SeasonFormSplitModal', () => {
         competitionId: 1,
       });
 
-      wrapper.vm.form.race_divisions_enabled = true;
-      wrapper.vm.form.team_championship_enabled = true;
+      (wrapper.vm as any).form.race_divisions_enabled = true;
+      (wrapper.vm as any).form.team_championship_enabled = true;
 
       await wrapper.vm.$nextTick();
 
-      expect(wrapper.vm.form.race_divisions_enabled).toBe(true);
-      expect(wrapper.vm.form.team_championship_enabled).toBe(true);
+      expect((wrapper.vm as any).form.race_divisions_enabled).toBe(true);
+      expect((wrapper.vm as any).form.team_championship_enabled).toBe(true);
     });
   });
 
@@ -258,11 +262,11 @@ describe('SeasonFormSplitModal', () => {
         competitionId: 1,
       });
 
-      expect(wrapper.vm.canSubmit).toBe(false);
+      expect((wrapper.vm as any).canSubmit).toBe(false);
 
-      wrapper.vm.form.name = 'Test Season';
+      (wrapper.vm as any).form.name = 'Test Season';
 
-      expect(wrapper.vm.form.name).toBe('Test Season');
+      expect((wrapper.vm as any).form.name).toBe('Test Season');
     });
 
     it('validates name minimum length', () => {
@@ -271,11 +275,11 @@ describe('SeasonFormSplitModal', () => {
         competitionId: 1,
       });
 
-      wrapper.vm.form.name = 'ab';
-      expect(wrapper.vm.canSubmit).toBe(false);
+      (wrapper.vm as any).form.name = 'ab';
+      expect((wrapper.vm as any).canSubmit).toBe(false);
 
-      wrapper.vm.form.name = 'abc';
-      expect(wrapper.vm.canSubmit).toBe(true);
+      (wrapper.vm as any).form.name = 'abc';
+      expect((wrapper.vm as any).canSubmit).toBe(true);
     });
   });
 
@@ -288,10 +292,10 @@ describe('SeasonFormSplitModal', () => {
         isEditMode: true,
       });
 
-      wrapper.vm.handleRemoveExistingLogo();
+      (wrapper.vm as any).handleRemoveExistingLogo();
 
-      expect(wrapper.vm.removeExistingLogo).toBe(true);
-      expect(wrapper.vm.form.logo_url).toBe(null);
+      expect((wrapper.vm as any).removeExistingLogo).toBe(true);
+      expect((wrapper.vm as any).form.logo_url).toBe(null);
     });
 
     it('allows removing existing banner', () => {
@@ -302,10 +306,10 @@ describe('SeasonFormSplitModal', () => {
         isEditMode: true,
       });
 
-      wrapper.vm.handleRemoveExistingBanner();
+      (wrapper.vm as any).handleRemoveExistingBanner();
 
-      expect(wrapper.vm.removeExistingBanner).toBe(true);
-      expect(wrapper.vm.form.banner_url).toBe(null);
+      expect((wrapper.vm as any).removeExistingBanner).toBe(true);
+      expect((wrapper.vm as any).form.banner_url).toBe(null);
     });
   });
 
@@ -325,13 +329,13 @@ describe('SeasonFormSplitModal', () => {
         competitionId: 1,
       });
 
-      wrapper.vm.form.name = 'New Season';
-      wrapper.vm.slugStatus = 'available';
+      (wrapper.vm as any).form.name = 'New Season';
+      (wrapper.vm as any).slugStatus = 'available';
       await wrapper.vm.$nextTick();
 
-      expect(wrapper.vm.canSubmit).toBe(true);
+      expect((wrapper.vm as any).canSubmit).toBe(true);
 
-      await wrapper.vm.handleSubmit();
+      await (wrapper.vm as any).handleSubmit();
       await flushPromises();
 
       expect(wrapper.emitted('season-saved')).toBeTruthy();
@@ -352,12 +356,12 @@ describe('SeasonFormSplitModal', () => {
         competitionId: 1,
       });
 
-      wrapper.vm.form.name = 'New Season';
-      wrapper.vm.form.teams_drivers_for_calculation = 'all';
-      wrapper.vm.slugStatus = 'available';
+      (wrapper.vm as any).form.name = 'New Season';
+      (wrapper.vm as any).form.teams_drivers_for_calculation = 'all';
+      (wrapper.vm as any).slugStatus = 'available';
       await wrapper.vm.$nextTick();
 
-      await wrapper.vm.handleSubmit();
+      await (wrapper.vm as any).handleSubmit();
       await flushPromises();
 
       expect(store.createNewSeason).toHaveBeenCalledWith(

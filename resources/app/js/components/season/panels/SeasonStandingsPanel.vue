@@ -862,7 +862,7 @@ const StandingsTable = defineComponent({
                                         color: 'var(--text-muted)',
                                       },
                                     },
-                                    driver.team_name,
+                                    driver.team_name ?? '',
                                   ),
                             ],
                           )

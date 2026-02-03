@@ -174,6 +174,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
       is_withdrawn: false,
       added_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
+      deleted_at: null,
     },
     {
       id: 2,
@@ -198,6 +199,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
       is_withdrawn: false,
       added_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
+      deleted_at: null,
     },
     {
       id: 3,
@@ -222,6 +224,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
       is_withdrawn: false,
       added_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
+      deleted_at: null,
     },
   ];
 
@@ -302,7 +305,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -379,7 +382,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -469,7 +472,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -596,7 +599,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       // Open the modal by setting visible to true
       await wrapper.setProps({ visible: true });
@@ -653,7 +656,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       // Wait for loadData to complete
       await wrapper.vm.$nextTick();
@@ -713,7 +716,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       // Wait for loadData to complete
       await wrapper.vm.$nextTick();
@@ -736,7 +739,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
         original_race_time: '00:01:30.500',
         fastest_lap: '00:01:25.123',
         has_fastest_lap: true,
-      });
+      } as any);
     });
   });
 
@@ -768,7 +771,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -841,7 +844,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -930,7 +933,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             },
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -993,7 +996,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -1040,7 +1043,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -1097,7 +1100,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -1140,7 +1143,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 
@@ -1191,7 +1194,7 @@ describe('RaceResultModal - CSV Import and Time Calculations', () => {
             ResultEntryTable: true,
           },
         },
-      });
+      } as any);
 
       await wrapper.vm.$nextTick();
 

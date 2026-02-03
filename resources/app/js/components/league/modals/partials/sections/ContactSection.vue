@@ -38,7 +38,7 @@ const emit = defineEmits<{
           placeholder="league@example.com"
           :class="{ 'p-invalid': !!errors.contact_email }"
           class="w-full"
-          @update:model-value="emit('update:contactEmail', $event)"
+          @update:model-value="(value) => emit('update:contactEmail', value as string)"
         />
         <FormOptionalText text="Visible to league members for inquiries" />
         <FormError :error="errors.contact_email" />
@@ -55,7 +55,7 @@ const emit = defineEmits<{
           size="small"
           :class="{ 'p-invalid': !!errors.organizer_name }"
           class="w-full"
-          @update:model-value="emit('update:organizerName', $event)"
+          @update:model-value="(value) => emit('update:organizerName', value as string)"
         />
         <FormOptionalText text="Displayed as the league organiser" />
         <FormError :error="errors.organizer_name" />

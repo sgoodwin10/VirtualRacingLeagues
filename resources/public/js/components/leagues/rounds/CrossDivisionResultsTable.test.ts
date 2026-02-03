@@ -22,8 +22,8 @@ describe('CrossDivisionResultsTable', () => {
         {
           id: 1,
           position: 1,
-          driver: { name: 'Driver 1' },
-          race_points: null,
+          driver: { id: 1, name: 'Driver 1' },
+          race_points: 0,
           positions_gained: null,
           dnf: false,
           has_pole: true,
@@ -37,8 +37,8 @@ describe('CrossDivisionResultsTable', () => {
         {
           id: 2,
           position: 2,
-          driver: { name: 'Driver 2' },
-          race_points: null,
+          driver: { id: 1, name: 'Driver 2' },
+          race_points: 0,
           positions_gained: null,
           dnf: false,
           has_pole: false,
@@ -455,16 +455,16 @@ describe('CrossDivisionResultsTable', () => {
           ...mockRaceEvents[0],
           results: [
             {
-              ...mockRaceEvents[0].results[0],
-              division_id: undefined as any,
-            },
+              ...mockRaceEvents[0]?.results[0],
+              division_id: null,
+            } as any,
           ],
         },
       ];
 
       wrapper = mount(CrossDivisionResultsTable, {
         props: {
-          results: [mockResults[0]],
+          results: [mockResults[0]!],
           raceEvents: raceEventsNoDivision,
           divisions: mockDivisions,
         },

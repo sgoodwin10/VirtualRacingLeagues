@@ -8,6 +8,7 @@ describe('SocialMediaFields', () => {
     websiteUrl: '',
     twitterHandle: '',
     instagramHandle: '',
+    facebookHandle: '',
     youtubeUrl: '',
     twitchUrl: '',
   };
@@ -22,6 +23,7 @@ describe('SocialMediaFields', () => {
     expect(wrapper.find('#website-url').exists()).toBe(true);
     expect(wrapper.find('#twitter-handle').exists()).toBe(true);
     expect(wrapper.find('#instagram-handle').exists()).toBe(true);
+    expect(wrapper.find('#facebook-handle').exists()).toBe(true);
     expect(wrapper.find('#youtube-url').exists()).toBe(true);
     expect(wrapper.find('#twitch-url').exists()).toBe(true);
   });
@@ -35,6 +37,7 @@ describe('SocialMediaFields', () => {
     expect(wrapper.text()).toContain('Website');
     expect(wrapper.text()).toContain('Twitter/X');
     expect(wrapper.text()).toContain('Instagram');
+    expect(wrapper.text()).toContain('Facebook');
     expect(wrapper.text()).toContain('YouTube');
     expect(wrapper.text()).toContain('Twitch');
   });
@@ -85,6 +88,18 @@ describe('SocialMediaFields', () => {
 
     expect(wrapper.emitted('update:instagramHandle')).toBeTruthy();
     expect(wrapper.emitted('update:instagramHandle')?.[0]).toEqual(['myleague']);
+  });
+
+  it('emits update:facebookHandle when Facebook input changes', async () => {
+    const wrapper = mountWithStubs(SocialMediaFields, {
+      props: defaultProps,
+    });
+
+    const facebookInput = wrapper.find('#facebook-handle');
+    await facebookInput.setValue('myleague');
+
+    expect(wrapper.emitted('update:facebookHandle')).toBeTruthy();
+    expect(wrapper.emitted('update:facebookHandle')?.[0]).toEqual(['myleague']);
   });
 
   it('emits update:youtubeUrl when YouTube input changes', async () => {
@@ -204,6 +219,23 @@ describe('SocialMediaFields', () => {
     expect(instagramInput.attributes('placeholder')).toBe('yourleague');
   });
 
+  it('displays error for Facebook handle', async () => {
+    const wrapper = mountWithStubs(SocialMediaFields, {
+      props: {
+        ...defaultProps,
+        errors: {
+          facebook_handle: 'Invalid Facebook handle',
+        },
+      },
+    });
+
+    expect(wrapper.text()).toContain('Invalid Facebook handle');
+
+    const facebookInput = wrapper.find('#facebook-handle');
+    const classes = facebookInput.attributes('class') || '';
+    expect(classes).toContain('p-invalid');
+  });
+
   it('handles all errors simultaneously', async () => {
     const wrapper = mountWithStubs(SocialMediaFields, {
       props: {
@@ -213,6 +245,7 @@ describe('SocialMediaFields', () => {
           website_url: 'Website error',
           twitter_handle: 'Twitter error',
           instagram_handle: 'Instagram error',
+          facebook_handle: 'Facebook error',
           youtube_url: 'YouTube error',
           twitch_url: 'Twitch error',
         },
@@ -223,6 +256,7 @@ describe('SocialMediaFields', () => {
     expect(wrapper.text()).toContain('Website error');
     expect(wrapper.text()).toContain('Twitter error');
     expect(wrapper.text()).toContain('Instagram error');
+    expect(wrapper.text()).toContain('Facebook error');
     expect(wrapper.text()).toContain('YouTube error');
     expect(wrapper.text()).toContain('Twitch error');
   });

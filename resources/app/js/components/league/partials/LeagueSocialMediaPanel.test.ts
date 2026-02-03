@@ -30,6 +30,7 @@ const mockLeagueWithDates: League = {
   website_url: 'https://example.com',
   twitter_handle: '@testleague',
   instagram_handle: '@testleague',
+  facebook_handle: '@testleague',
   youtube_url: 'https://youtube.com/test',
   twitch_url: 'https://twitch.tv/test',
 };
@@ -104,6 +105,29 @@ describe('LeagueSocialMediaPanel', () => {
     expect(wrapper.text()).toContain('Instagram');
   });
 
+  it('renders facebook link when provided', () => {
+    const wrapper = mount(LeagueSocialMediaPanel, {
+      props: { league: mockLeagueWithDates },
+    });
+
+    const facebookLink = wrapper.find('a[href="https://facebook.com/testleague"]');
+    expect(facebookLink.exists()).toBe(true);
+    expect(wrapper.text()).toContain('Facebook');
+  });
+
+  it('strips @ from facebook handle in URL', () => {
+    const leagueWithAt = {
+      ...mockLeagueWithDates,
+      facebook_handle: '@testleague',
+    };
+    const wrapper = mount(LeagueSocialMediaPanel, {
+      props: { league: leagueWithAt },
+    });
+
+    const facebookLink = wrapper.find('a[href="https://facebook.com/testleague"]');
+    expect(facebookLink.exists()).toBe(true);
+  });
+
   it('renders youtube link when provided', () => {
     const wrapper = mount(LeagueSocialMediaPanel, {
       props: { league: mockLeagueWithDates },
@@ -131,6 +155,7 @@ describe('LeagueSocialMediaPanel', () => {
       website_url: null,
       twitter_handle: null,
       instagram_handle: null,
+      facebook_handle: null,
       youtube_url: null,
       twitch_url: null,
     };

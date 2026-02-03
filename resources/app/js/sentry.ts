@@ -25,7 +25,6 @@ export function initSentry(app: App, router: Router): void {
     integrations: [
       Sentry.browserTracingIntegration({
         router,
-        tracePropagationTargets: ['localhost', /^https:\/\/app\.virtualracingleagues\.com/],
       }),
 
       Sentry.vueIntegration({

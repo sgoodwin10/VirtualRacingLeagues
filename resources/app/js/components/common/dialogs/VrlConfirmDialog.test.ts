@@ -159,7 +159,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const acceptButton = buttons[1]; // Second button is accept
 
-      await acceptButton.vm.$emit('click');
+      await acceptButton!.vm.$emit('click');
 
       expect(wrapper.emitted('accept')).toBeTruthy();
     });
@@ -174,7 +174,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const rejectButton = buttons[0]; // First button is reject
 
-      await rejectButton.vm.$emit('click');
+      await rejectButton!.vm.$emit('click');
 
       expect(wrapper.emitted('reject')).toBeTruthy();
     });
@@ -189,7 +189,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const rejectButton = buttons[0];
 
-      await rejectButton.vm.$emit('click');
+      await rejectButton!.vm.$emit('click');
 
       expect(wrapper.emitted('update:visible')).toBeTruthy();
       expect(wrapper.emitted('update:visible')?.[0]).toEqual([false]);
@@ -208,7 +208,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const acceptButton = buttons[1];
 
-      await acceptButton.vm.$emit('click');
+      await acceptButton!.vm.$emit('click');
 
       expect(wrapper.emitted('accept')).toBeFalsy();
     });
@@ -226,7 +226,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const rejectButton = buttons[0];
 
-      await rejectButton.vm.$emit('click');
+      await rejectButton!.vm.$emit('click');
 
       expect(wrapper.emitted('reject')).toBeFalsy();
     });
@@ -244,7 +244,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const acceptButton = buttons[1];
 
-      await acceptButton.vm.$emit('click');
+      await acceptButton!.vm.$emit('click');
 
       expect(wrapper.emitted('accept')).toBeFalsy();
     });
@@ -263,7 +263,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const acceptButton = buttons[1];
 
-      expect(acceptButton.props('loading')).toBe(true);
+      expect(acceptButton!.props('loading')).toBe(true);
     });
 
     it('disables both buttons when disabled prop is true', () => {
@@ -312,7 +312,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const acceptButton = buttons[1];
 
-      expect(acceptButton.props('variant')).toBe('success');
+      expect(acceptButton!.props('variant')).toBe('success');
     });
 
     it('applies custom reject button variant', () => {
@@ -327,7 +327,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const rejectButton = buttons[0];
 
-      expect(rejectButton.props('variant')).toBe('outline');
+      expect(rejectButton!.props('variant')).toBe('outline');
     });
 
     it('uses default danger variant for accept button', () => {
@@ -339,7 +339,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const acceptButton = buttons[1];
 
-      expect(acceptButton.props('variant')).toBe('danger');
+      expect(acceptButton!.props('variant')).toBe('danger');
     });
 
     it('uses default secondary variant for reject button', () => {
@@ -351,7 +351,7 @@ describe('VrlConfirmDialog', () => {
       const buttons = wrapper.findAllComponents(Button);
       const rejectButton = buttons[0];
 
-      expect(rejectButton.props('variant')).toBe('secondary');
+      expect(rejectButton!.props('variant')).toBe('secondary');
     });
   });
 

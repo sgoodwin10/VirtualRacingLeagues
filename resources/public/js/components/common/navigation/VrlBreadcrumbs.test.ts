@@ -143,9 +143,9 @@ describe('VrlBreadcrumbs', () => {
     const lastItem = itemWrappers[itemWrappers.length - 1];
 
     // Last item should be a span (non-clickable)
-    expect(lastItem.find('[data-test="breadcrumb-active"]').exists()).toBe(true);
-    expect(lastItem.find('[data-test="breadcrumb-link"]').exists()).toBe(false);
-    expect(lastItem.find('[data-test="breadcrumb-router-link"]').exists()).toBe(false);
+    expect(lastItem?.find('[data-test="breadcrumb-active"]').exists()).toBe(true);
+    expect(lastItem?.find('[data-test="breadcrumb-link"]').exists()).toBe(false);
+    expect(lastItem?.find('[data-test="breadcrumb-router-link"]').exists()).toBe(false);
   });
 
   it('supports both href and to navigation', async () => {
@@ -164,13 +164,13 @@ describe('VrlBreadcrumbs', () => {
 
     // First item should be an anchor with href
     const firstItem = wrapper.findAll('[data-test="breadcrumb-item-wrapper"]')[0];
-    const anchor = firstItem.find('[data-test="breadcrumb-link"]');
-    expect(anchor.exists()).toBe(true);
-    expect(anchor.attributes('href')).toBe('https://example.com');
+    const anchor = firstItem?.find('[data-test="breadcrumb-link"]');
+    expect(anchor?.exists()).toBe(true);
+    expect(anchor?.attributes('href')).toBe('https://example.com');
 
     // Second item should be a RouterLink
     const secondItem = wrapper.findAll('[data-test="breadcrumb-item-wrapper"]')[1];
-    expect(secondItem.find('[data-test="breadcrumb-router-link"]').exists()).toBe(true);
+    expect(secondItem?.find('[data-test="breadcrumb-router-link"]').exists()).toBe(true);
   });
 
   it('applies aria-current="page" to last item', () => {
@@ -189,9 +189,9 @@ describe('VrlBreadcrumbs', () => {
 
     const itemWrappers = wrapper.findAll('[data-test="breadcrumb-item-wrapper"]');
     const lastItem = itemWrappers[itemWrappers.length - 1];
-    const activeSpan = lastItem.find('[data-test="breadcrumb-active"]');
+    const activeSpan = lastItem?.find('[data-test="breadcrumb-active"]');
 
-    expect(activeSpan.attributes('aria-current')).toBe('page');
+    expect(activeSpan?.attributes('aria-current')).toBe('page');
   });
 
   it('renders separators between items', () => {
@@ -272,7 +272,7 @@ describe('VrlBreadcrumbs', () => {
     const lastItemWrapper = itemWrappers[itemWrappers.length - 1];
 
     // Last item wrapper should not contain a separator
-    expect(lastItemWrapper.find('[data-test="breadcrumb-separator"]').exists()).toBe(false);
+    expect(lastItemWrapper?.find('[data-test="breadcrumb-separator"]').exists()).toBe(false);
   });
 
   it('uses semantic HTML structure', () => {

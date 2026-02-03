@@ -24,6 +24,7 @@ const mockLeague: PublicLeagueInfo = {
   website_url: 'https://test.com',
   twitter_handle: 'testleague',
   instagram_handle: 'testleague_insta',
+  facebook_handle: 'testleague',
   youtube_url: 'https://youtube.com/test',
   twitch_url: 'https://twitch.tv/test',
   created_at: '2025-01-01T00:00:00.000000Z',
@@ -101,6 +102,7 @@ describe('LeagueInfoModal', () => {
       expect(league.website_url).toBe('https://test.com');
       expect(league.twitter_handle).toBe('testleague');
       expect(league.instagram_handle).toBe('testleague_insta');
+      expect(league.facebook_handle).toBe('testleague');
       expect(league.youtube_url).toBe('https://youtube.com/test');
       expect(league.twitch_url).toBe('https://twitch.tv/test');
     });
@@ -112,6 +114,7 @@ describe('LeagueInfoModal', () => {
         website_url: null,
         twitter_handle: null,
         instagram_handle: null,
+        facebook_handle: null,
         youtube_url: null,
         twitch_url: null,
       };
@@ -126,6 +129,7 @@ describe('LeagueInfoModal', () => {
       expect(league.website_url).toBeNull();
       expect(league.twitter_handle).toBeNull();
       expect(league.instagram_handle).toBeNull();
+      expect(league.facebook_handle).toBeNull();
     });
 
     it('handles league with partial social media links', () => {
@@ -135,6 +139,7 @@ describe('LeagueInfoModal', () => {
         website_url: null,
         twitter_handle: 'testleague',
         instagram_handle: null,
+        facebook_handle: null,
         youtube_url: null,
         twitch_url: null,
       };
@@ -149,6 +154,7 @@ describe('LeagueInfoModal', () => {
       expect(league.twitter_handle).toBe('testleague');
       expect(league.website_url).toBeNull();
       expect(league.instagram_handle).toBeNull();
+      expect(league.facebook_handle).toBeNull();
     });
   });
 

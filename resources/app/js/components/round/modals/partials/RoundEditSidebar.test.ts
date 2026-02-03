@@ -12,12 +12,12 @@ describe('RoundEditSidebar', () => {
           hasSchedule: false,
           hasPointsEnabled: false,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAll('button');
       expect(buttons).toHaveLength(2);
-      expect(buttons[0].text()).toContain('Basic Info');
-      expect(buttons[1].text()).toContain('Points System');
+      expect(buttons[0]!.text()).toContain('Basic Info');
+      expect(buttons[1]!.text()).toContain('Points System');
     });
 
     it('highlights active section', () => {
@@ -28,10 +28,10 @@ describe('RoundEditSidebar', () => {
           hasSchedule: false,
           hasPointsEnabled: false,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAll('button');
-      expect(buttons[0].classes()).toContain('bg-[var(--cyan-dim)]');
+      expect(buttons[0]!.classes()).toContain('bg-[var(--cyan-dim)]');
     });
 
     it('does not highlight inactive sections', () => {
@@ -42,10 +42,10 @@ describe('RoundEditSidebar', () => {
           hasSchedule: false,
           hasPointsEnabled: false,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAll('button');
-      expect(buttons[1].classes()).not.toContain('bg-[var(--cyan-dim)]');
+      expect(buttons[1]!.classes()).not.toContain('bg-[var(--cyan-dim)]');
     });
   });
 
@@ -58,10 +58,10 @@ describe('RoundEditSidebar', () => {
           hasSchedule: false,
           hasPointsEnabled: false,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAll('button');
-      await buttons[0].trigger('click');
+      await buttons[0]!.trigger('click');
 
       expect(wrapper.emitted('change-section')).toBeTruthy();
       expect(wrapper.emitted('change-section')?.[0]).toEqual(['basic']);
@@ -75,10 +75,10 @@ describe('RoundEditSidebar', () => {
           hasSchedule: false,
           hasPointsEnabled: false,
         },
-      });
+      } as any);
 
       const buttons = wrapper.findAll('button');
-      await buttons[1].trigger('click');
+      await buttons[1]!.trigger('click');
 
       expect(wrapper.emitted('change-section')).toBeTruthy();
       expect(wrapper.emitted('change-section')?.[0]).toEqual(['points']);
@@ -94,7 +94,7 @@ describe('RoundEditSidebar', () => {
           hasSchedule: false,
           hasPointsEnabled: false,
         },
-      });
+      } as any);
 
       expect(wrapper.props('activeSection')).toBe('points');
     });
@@ -107,7 +107,7 @@ describe('RoundEditSidebar', () => {
           hasSchedule: false,
           hasPointsEnabled: false,
         },
-      });
+      } as any);
 
       expect(wrapper.props('hasTrack')).toBe(true);
     });
@@ -120,7 +120,7 @@ describe('RoundEditSidebar', () => {
           hasSchedule: true,
           hasPointsEnabled: false,
         },
-      });
+      } as any);
 
       expect(wrapper.props('hasSchedule')).toBe(true);
     });
@@ -133,7 +133,7 @@ describe('RoundEditSidebar', () => {
           hasSchedule: false,
           hasPointsEnabled: true,
         },
-      });
+      } as any);
 
       expect(wrapper.props('hasPointsEnabled')).toBe(true);
     });

@@ -34,6 +34,7 @@ use Spatie\MediaLibrary\HasMedia;
  * @property string|null $instagram_handle
  * @property string|null $youtube_url
  * @property string|null $twitch_url
+ * @property string|null $facebook_handle
  * @property string $visibility
  * @property string|null $timezone
  * @property int $owner_user_id
@@ -109,6 +110,7 @@ class League extends Model implements HasMedia
         'instagram_handle',
         'youtube_url',
         'twitch_url',
+        'facebook_handle',
         'visibility',
         'timezone',
         'owner_user_id',

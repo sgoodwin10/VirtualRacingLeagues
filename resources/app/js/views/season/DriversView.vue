@@ -99,7 +99,7 @@ async function handleDriverUpdated(): Promise<void> {
               label="Manage Drivers"
               :icon="PhUserPlus"
               severity="secondary"
-              size="small"
+              size="sm"
               :disabled="season?.is_archived"
               @click="handleManageDrivers"
             />

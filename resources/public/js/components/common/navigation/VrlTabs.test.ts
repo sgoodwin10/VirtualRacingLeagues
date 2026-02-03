@@ -67,9 +67,9 @@ describe('VrlTabs', () => {
     });
 
     const tabs = wrapper.findAll('[data-test="tab"]');
-    expect(tabs[0].attributes('aria-selected')).toBe('false');
-    expect(tabs[1].attributes('aria-selected')).toBe('true');
-    expect(tabs[2].attributes('aria-selected')).toBe('false');
+    expect(tabs[0]?.attributes('aria-selected')).toBe('false');
+    expect(tabs[1]?.attributes('aria-selected')).toBe('true');
+    expect(tabs[2]?.attributes('aria-selected')).toBe('false');
   });
 
   it('applies active class to active tab', () => {
@@ -81,10 +81,10 @@ describe('VrlTabs', () => {
     });
 
     const tabs = wrapper.findAll('[data-test="tab"]');
-    expect(tabs[0].classes()).not.toContain('bg-[var(--cyan)]');
-    expect(tabs[1].classes()).not.toContain('bg-[var(--cyan)]');
-    expect(tabs[2].classes()).toContain('bg-[var(--cyan)]');
-    expect(tabs[3].classes()).not.toContain('bg-[var(--cyan)]');
+    expect(tabs[0]?.classes()).not.toContain('bg-[var(--cyan)]');
+    expect(tabs[1]?.classes()).not.toContain('bg-[var(--cyan)]');
+    expect(tabs[2]?.classes()).toContain('bg-[var(--cyan)]');
+    expect(tabs[3]?.classes()).not.toContain('bg-[var(--cyan)]');
   });
 
   it('emits update:modelValue on tab click', async () => {
@@ -96,7 +96,7 @@ describe('VrlTabs', () => {
     });
 
     const tabs = wrapper.findAll('[data-test="tab"]');
-    await tabs[1].trigger('click');
+    await tabs[1]?.trigger('click');
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy();
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['drivers']);
@@ -111,7 +111,7 @@ describe('VrlTabs', () => {
     });
 
     const tabs = wrapper.findAll('[data-test="tab"]');
-    await tabs[2].trigger('click');
+    await tabs[2]?.trigger('click');
 
     expect(wrapper.emitted('change')).toBeTruthy();
     expect(wrapper.emitted('change')?.[0]).toEqual(['teams']);
@@ -132,7 +132,7 @@ describe('VrlTabs', () => {
     });
 
     const tabElements = wrapper.findAll('[data-test="tab"]');
-    await tabElements[1].trigger('click');
+    await tabElements[1]?.trigger('click');
 
     // Should not emit events for disabled tab
     expect(wrapper.emitted('update:modelValue')).toBeFalsy();
@@ -154,10 +154,10 @@ describe('VrlTabs', () => {
     });
 
     const tabElements = wrapper.findAll('[data-test="tab"]');
-    expect(tabElements[1].classes()).toContain('opacity-50');
-    expect(tabElements[1].classes()).toContain('cursor-not-allowed');
-    expect(tabElements[1].attributes('disabled')).toBeDefined();
-    expect(tabElements[1].attributes('aria-disabled')).toBe('true');
+    expect(tabElements[1]?.classes()).toContain('opacity-50');
+    expect(tabElements[1]?.classes()).toContain('cursor-not-allowed');
+    expect(tabElements[1]?.attributes('disabled')).toBeDefined();
+    expect(tabElements[1]?.attributes('aria-disabled')).toBe('true');
   });
 
   it('supports keyboard navigation with arrow keys', async () => {
@@ -171,12 +171,12 @@ describe('VrlTabs', () => {
     const tabs = wrapper.findAll('[data-test="tab"]');
 
     // ArrowRight should move focus
-    await tabs[0].trigger('keydown', { key: 'ArrowRight' });
+    await tabs[0]?.trigger('keydown', { key: 'ArrowRight' });
     // Focus moves but modelValue should not change until Enter/Space
     expect(wrapper.emitted('update:modelValue')).toBeFalsy();
 
     // Enter key should activate focused tab
-    await tabs[1].trigger('keydown', { key: 'Enter' });
+    await tabs[1]?.trigger('keydown', { key: 'Enter' });
     expect(wrapper.emitted('update:modelValue')).toBeTruthy();
   });
 
@@ -191,7 +191,7 @@ describe('VrlTabs', () => {
     const tabs = wrapper.findAll('[data-test="tab"]');
 
     // Home key should focus first tab
-    await tabs[2].trigger('keydown', { key: 'Home' });
+    await tabs[2]?.trigger('keydown', { key: 'Home' });
     // Focus moves but modelValue should not change
     expect(wrapper.emitted('update:modelValue')).toBeFalsy();
   });
@@ -207,7 +207,7 @@ describe('VrlTabs', () => {
     const tabs = wrapper.findAll('[data-test="tab"]');
 
     // End key should focus last tab
-    await tabs[0].trigger('keydown', { key: 'End' });
+    await tabs[0]?.trigger('keydown', { key: 'End' });
     // Focus moves but modelValue should not change
     expect(wrapper.emitted('update:modelValue')).toBeFalsy();
   });
@@ -223,7 +223,7 @@ describe('VrlTabs', () => {
     const tabs = wrapper.findAll('[data-test="tab"]');
 
     // Space key should activate the tab
-    await tabs[2].trigger('keydown', { key: ' ' });
+    await tabs[2]?.trigger('keydown', { key: ' ' });
     expect(wrapper.emitted('update:modelValue')).toBeTruthy();
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['teams']);
   });
@@ -263,8 +263,8 @@ describe('VrlTabs', () => {
 
     const badges = wrapper.findAll('[data-test="tab-badge"]');
     expect(badges).toHaveLength(2);
-    expect(badges[0].text()).toBe('5');
-    expect(badges[1].text()).toBe('New');
+    expect(badges[0]?.text()).toBe('5');
+    expect(badges[1]?.text()).toBe('New');
   });
 
   it('renders custom tab-label slot', () => {
@@ -335,10 +335,10 @@ describe('VrlTabs', () => {
     });
 
     const tabs = wrapper.findAll('[data-test="tab"]');
-    expect(tabs[0].attributes('id')).toBe('tab-standings');
-    expect(tabs[1].attributes('id')).toBe('tab-drivers');
-    expect(tabs[2].attributes('id')).toBe('tab-teams');
-    expect(tabs[3].attributes('id')).toBe('tab-results');
+    expect(tabs[0]?.attributes('id')).toBe('tab-standings');
+    expect(tabs[1]?.attributes('id')).toBe('tab-drivers');
+    expect(tabs[2]?.attributes('id')).toBe('tab-teams');
+    expect(tabs[3]?.attributes('id')).toBe('tab-results');
   });
 
   it('uses roving tabindex pattern', () => {
@@ -351,10 +351,10 @@ describe('VrlTabs', () => {
 
     const tabs = wrapper.findAll('[data-test="tab"]');
     // First non-disabled tab should have tabindex="0"
-    expect(tabs[0].attributes('tabindex')).toBe('0');
+    expect(tabs[0]?.attributes('tabindex')).toBe('0');
     // Others should have tabindex="-1"
-    expect(tabs[1].attributes('tabindex')).toBe('-1');
-    expect(tabs[2].attributes('tabindex')).toBe('-1');
+    expect(tabs[1]?.attributes('tabindex')).toBe('-1');
+    expect(tabs[2]?.attributes('tabindex')).toBe('-1');
   });
 
   it('skips disabled tabs during keyboard navigation', async () => {
@@ -374,7 +374,7 @@ describe('VrlTabs', () => {
     const tabElements = wrapper.findAll('[data-test="tab"]');
 
     // ArrowRight from tab1 should skip disabled tab2 and go to tab3
-    await tabElements[0].trigger('keydown', { key: 'ArrowRight' });
+    await tabElements[0]?.trigger('keydown', { key: 'ArrowRight' });
     // The focus should have moved (implementation detail)
   });
 
@@ -388,9 +388,9 @@ describe('VrlTabs', () => {
 
     const tabs = wrapper.findAll('[data-test="tab"]');
     const event = new KeyboardEvent('keydown', { key: 'ArrowRight' });
-    const _preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+    vi.spyOn(event, 'preventDefault');
 
-    await tabs[0].trigger('keydown', event);
+    await tabs[0]?.trigger('keydown', event);
     // preventDefault should be called to prevent page scroll
   });
 });

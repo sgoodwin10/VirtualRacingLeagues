@@ -19,7 +19,9 @@ interface VrlAccordionItemProps {
 }
 
 const props = withDefaults(defineProps<VrlAccordionItemProps>(), {
+  title: undefined,
   disabled: false,
+  class: undefined,
 });
 
 // Inject accordion context

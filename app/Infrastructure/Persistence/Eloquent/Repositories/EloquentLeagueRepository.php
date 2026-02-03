@@ -204,7 +204,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
     {
         if ($league->id() === null) {
             // Create new
-            $eloquentLeague = new LeagueEloquent();
+            $eloquentLeague = new LeagueEloquent;
             $this->fillEloquentModel($eloquentLeague, $league);
 
             $eloquentLeague->save();
@@ -252,6 +252,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         $eloquentLeague->instagram_handle = $league->instagramHandle();
         $eloquentLeague->youtube_url = $league->youtubeUrl();
         $eloquentLeague->twitch_url = $league->twitchUrl();
+        $eloquentLeague->facebook_handle = $league->facebookHandle();
         $eloquentLeague->visibility = $league->visibility()->value;
         $eloquentLeague->status = $league->status();
         $eloquentLeague->contact_email = $league->contactEmail()?->value();
@@ -379,6 +380,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
             instagramHandle: $eloquentLeague->instagram_handle,
             youtubeUrl: $eloquentLeague->youtube_url,
             twitchUrl: $eloquentLeague->twitch_url,
+            facebookHandle: $eloquentLeague->facebook_handle,
             visibility: LeagueVisibility::from($eloquentLeague->visibility),
             status: $eloquentLeague->status,
         );
@@ -403,6 +405,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         $eloquentLeague->instagram_handle = $league->instagramHandle();
         $eloquentLeague->youtube_url = $league->youtubeUrl();
         $eloquentLeague->twitch_url = $league->twitchUrl();
+        $eloquentLeague->facebook_handle = $league->facebookHandle();
         $eloquentLeague->visibility = $league->visibility()->value;
         $eloquentLeague->timezone = $league->timezone();
         $eloquentLeague->owner_user_id = $league->ownerUserId();

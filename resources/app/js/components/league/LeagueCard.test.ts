@@ -51,6 +51,7 @@ describe('LeagueCard', () => {
       website_url: 'https://test.com',
       twitter_handle: 'testleague',
       instagram_handle: 'testleague',
+      facebook_handle: 'testleague',
       youtube_url: 'https://youtube.com/@test',
       twitch_url: 'https://twitch.tv/test',
       visibility: 'public',

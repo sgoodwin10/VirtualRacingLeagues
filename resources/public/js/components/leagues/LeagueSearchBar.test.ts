@@ -102,7 +102,7 @@ describe('LeagueSearchBar', () => {
       });
 
       const input = wrapper.find('input[type="text"]');
-      expect(input.element.value).toBe('test search');
+      expect((input.element as HTMLInputElement).value).toBe('test search');
     });
 
     it('should emit update:modelValue when input changes', async () => {

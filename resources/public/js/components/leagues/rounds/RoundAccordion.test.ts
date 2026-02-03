@@ -13,7 +13,7 @@ vi.mock('@public/services/leagueService', () => ({
 
 // Mock Phosphor icons
 vi.mock('@phosphor-icons/vue', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = (await importOriginal()) as any;
   return {
     ...actual,
     PhMapPin: {
@@ -38,12 +38,16 @@ describe('RoundAccordion', () => {
   const mockRound: PublicRound = {
     id: 1,
     round_number: 1,
+    slug: 'round-1-australia',
     name: 'Round 1 - Australia',
     circuit_name: 'Albert Park Circuit',
+    track_name: 'Albert Park',
     track_layout: 'Grand Prix',
     circuit_country: 'Australia',
     status: 'completed',
+    status_label: 'Completed',
     scheduled_at: '2024-03-20T00:00:00.000Z',
+    races: [],
   };
 
   const mockRoundResults: RoundResultsResponse = {
@@ -55,6 +59,7 @@ describe('RoundAccordion', () => {
         standings: [
           {
             position: 1,
+            driver_id: 1,
             driver_name: 'Driver 1',
             race_points: 25,
             fastest_lap_points: 1,
@@ -83,7 +88,7 @@ describe('RoundAccordion', () => {
           {
             id: 1,
             position: 1,
-            driver: { name: 'Driver 1' },
+            driver: { id: 1, name: 'Driver 1' },
             race_points: 25,
             positions_gained: 2,
             dnf: false,

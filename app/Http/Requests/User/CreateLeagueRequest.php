@@ -108,6 +108,12 @@ class CreateLeagueRequest extends FormRequest
                 'url',
                 'max:255',
             ],
+            'facebook_handle' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[a-zA-Z0-9.]+$/',
+            ],
 
             // Settings
             'visibility' => [
@@ -180,6 +186,8 @@ class CreateLeagueRequest extends FormRequest
             'instagram_handle.max' => 'Instagram handle cannot exceed 30 characters.',
             'youtube_url.url' => 'Please provide a valid YouTube URL.',
             'twitch_url.url' => 'Please provide a valid Twitch URL.',
+            'facebook_handle.regex' => 'Facebook handle can only contain letters, numbers, and dots.',
+            'facebook_handle.max' => 'Facebook handle cannot exceed 100 characters.',
 
             // Settings
             'visibility.required' => 'Please select a visibility setting.',
@@ -213,6 +221,7 @@ class CreateLeagueRequest extends FormRequest
             'instagram_handle' => 'Instagram handle',
             'youtube_url' => 'YouTube URL',
             'twitch_url' => 'Twitch URL',
+            'facebook_handle' => 'Facebook handle',
             'visibility' => 'visibility',
             'timezone' => 'timezone',
             'contact_email' => 'contact email',

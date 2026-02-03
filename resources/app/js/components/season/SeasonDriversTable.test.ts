@@ -167,6 +167,7 @@ describe('SeasonDriversTable', () => {
     notes: 'Test notes',
     added_at: '2024-01-01',
     updated_at: '2024-01-01',
+    deleted_at: null,
   };
 
   const mockDriverWithNicknameOnly: SeasonDriver = {
@@ -192,6 +193,7 @@ describe('SeasonDriversTable', () => {
     notes: null,
     added_at: '2024-01-02',
     updated_at: '2024-01-02',
+    deleted_at: null,
   };
 
   beforeEach(() => {
@@ -207,7 +209,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     expect(wrapper.exists()).toBe(true);
   });
@@ -221,7 +223,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
     const displayName = component.getDriverDisplayName(mockDriverWithFullName);
@@ -238,7 +240,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
     const displayName = component.getDriverDisplayName(mockDriverWithNicknameOnly);
@@ -255,7 +257,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
     expect(component.showPsnColumn).toBe(true);
@@ -272,7 +274,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
     expect(component.showPsnColumn).toBe(true);
@@ -289,7 +291,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
     expect(component.showPsnColumn).toBe(false);
@@ -315,7 +317,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [pinia],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
     await component.handleView(mockDriverWithFullName);
@@ -335,7 +337,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     // Component mounts successfully with the prop
     expect(wrapper.exists()).toBe(true);
@@ -352,7 +354,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     // Component mounts successfully with both props
     expect(wrapper.exists()).toBe(true);
@@ -367,7 +369,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const modal = wrapper.find('[data-testid="view-driver-modal"]');
     expect(modal.exists()).toBe(true);
@@ -414,7 +416,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [pinia],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
 
@@ -447,7 +449,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [pinia],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
 
@@ -467,7 +469,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
 
@@ -492,7 +494,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
 
@@ -520,7 +522,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
 
@@ -549,7 +551,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [pinia],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
 
@@ -598,7 +600,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const divisionFilter = wrapper.find('#division-filter');
     expect(divisionFilter.exists()).toBe(true);
@@ -634,7 +636,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const teamFilter = wrapper.find('#team-filter');
     expect(teamFilter.exists()).toBe(true);
@@ -651,7 +653,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const divisionFilter = wrapper.find('#division-filter');
     const teamFilter = wrapper.find('#team-filter');
@@ -669,7 +671,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const searchInput = wrapper.find('input');
     expect(searchInput.exists()).toBe(true);
@@ -686,7 +688,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const component = wrapper.vm as any;
     const searchInput = wrapper.find('input');
@@ -706,7 +708,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const searchInput = wrapper.find('input');
     expect(searchInput.attributes('disabled')).toBeDefined();
@@ -725,7 +727,7 @@ describe('SeasonDriversTable', () => {
         plugins: [pinia],
       },
       attachTo: document.body, // Attach to body to test focus
-    });
+    } as any);
 
     const searchInput = wrapper.find('input');
 
@@ -759,7 +761,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const buttons = wrapper.findAll('button');
     const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
@@ -777,7 +779,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const buttons = wrapper.findAll('button');
     const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
@@ -796,7 +798,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const buttons = wrapper.findAll('button');
     const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
@@ -814,7 +816,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const buttons = wrapper.findAll('button');
     const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
@@ -831,7 +833,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const buttons = wrapper.findAll('button');
     const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
@@ -853,7 +855,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const buttons = wrapper.findAll('button');
     const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));
@@ -872,7 +874,7 @@ describe('SeasonDriversTable', () => {
       global: {
         plugins: [createPinia()],
       },
-    });
+    } as any);
 
     const buttons = wrapper.findAll('button');
     const manageButton = buttons.find((btn) => btn.text().includes('Manage Drivers'));

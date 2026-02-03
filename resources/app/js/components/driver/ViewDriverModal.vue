@@ -57,7 +57,7 @@ const driverInitials = computed(() => {
   if (parts.length === 0) return '?';
 
   // Handle single name (return first 2 characters)
-  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  if (parts.length === 1) return parts[0]!.substring(0, 2).toUpperCase();
 
   // Handle multiple names (first and last initials)
   const first = parts[0]?.[0] ?? '';

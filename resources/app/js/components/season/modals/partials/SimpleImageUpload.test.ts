@@ -40,7 +40,7 @@ describe('SimpleImageUpload', () => {
               this as unknown as FileReader,
               {
                 target: this,
-              } as ProgressEvent<FileReader>,
+              } as unknown as ProgressEvent<FileReader>,
             );
           }
         }, 0);
@@ -56,7 +56,7 @@ describe('SimpleImageUpload', () => {
       writable: false,
     });
 
-    await input.trigger('change');
+    await input!.trigger('change');
     await new Promise((resolve) => setTimeout(resolve, 10));
     await wrapper.vm.$nextTick();
 
@@ -128,7 +128,7 @@ describe('SimpleImageUpload', () => {
       writable: false,
     });
 
-    await input.trigger('change');
+    await input!.trigger('change');
 
     expect(wrapper.text()).toContain('File size must be less than');
   });

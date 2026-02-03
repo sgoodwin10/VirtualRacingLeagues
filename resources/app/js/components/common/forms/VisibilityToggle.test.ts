@@ -24,8 +24,8 @@ describe('VisibilityToggle', () => {
     });
 
     const buttons = wrapper.findAll('button');
-    expect(buttons[0].classes()).toContain('bg-[var(--cyan)]');
-    expect(buttons[1].classes()).not.toContain('bg-[var(--cyan)]');
+    expect(buttons[0]!.classes()).toContain('bg-[var(--cyan)]');
+    expect(buttons[1]!.classes()).not.toContain('bg-[var(--cyan)]');
   });
 
   it('emits update:modelValue when visibility is changed', async () => {
@@ -36,7 +36,7 @@ describe('VisibilityToggle', () => {
     });
 
     const buttons = wrapper.findAll('button');
-    await buttons[1].trigger('click');
+    await buttons[1]!.trigger('click');
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy();
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['unlisted']);

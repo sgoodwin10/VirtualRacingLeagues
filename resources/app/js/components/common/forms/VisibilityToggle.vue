@@ -55,9 +55,7 @@ const visibilityOptions: VisibilityOption[] = [
 ];
 
 const currentOption = computed(() => {
-  return (
-    visibilityOptions.find((opt) => opt.value === selectedVisibility.value) || visibilityOptions[0]
-  );
+  return visibilityOptions.find((opt) => opt.value === selectedVisibility.value) || visibilityOptions[0]!;
 });
 
 function setVisibility(value: LeagueVisibility): void {

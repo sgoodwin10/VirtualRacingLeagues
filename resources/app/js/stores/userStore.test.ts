@@ -127,7 +127,7 @@ describe('useUserStore', () => {
   });
 
   it('should check auth and clear user if not authenticated', async () => {
-    vi.mocked(authService.checkAuth).mockResolvedValue(null);
+    vi.mocked(authService.checkAuth).mockResolvedValue(null as any);
 
     const userStore = useUserStore();
     const result = await userStore.checkAuth();

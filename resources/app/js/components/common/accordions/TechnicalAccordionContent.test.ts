@@ -20,7 +20,7 @@ describe('TechnicalAccordionContent', () => {
       global: {
         provide: mockAccordionContext,
       },
-    });
+    } as any);
 
     expect(wrapper.findComponent(AccordionContent).exists()).toBe(true);
   });
@@ -33,7 +33,7 @@ describe('TechnicalAccordionContent', () => {
       slots: {
         default: '<div class="test-content">Test Content</div>',
       },
-    });
+    } as any);
 
     expect(wrapper.html()).toContain('test-content');
     expect(wrapper.html()).toContain('Test Content');
@@ -47,7 +47,7 @@ describe('TechnicalAccordionContent', () => {
       slots: {
         default: '<div class="test-content">Test Content</div>',
       },
-    });
+    } as any);
 
     expect(wrapper.find('.content-wrapper').exists()).toBe(true);
     expect(wrapper.find('.content-elevated').exists()).toBe(false);
@@ -64,7 +64,7 @@ describe('TechnicalAccordionContent', () => {
       slots: {
         default: '<div class="test-content">Test Content</div>',
       },
-    });
+    } as any);
 
     expect(wrapper.find('.content-elevated').exists()).toBe(true);
     expect(wrapper.find('.content-wrapper').exists()).toBe(false);
@@ -75,7 +75,7 @@ describe('TechnicalAccordionContent', () => {
       global: {
         provide: mockAccordionContext,
       },
-    });
+    } as any);
 
     const contentWrapper = wrapper.find('.content-wrapper');
     expect(contentWrapper.attributes('style')).toContain('padding: 20px');
@@ -89,7 +89,7 @@ describe('TechnicalAccordionContent', () => {
       props: {
         padding: 'sm',
       },
-    });
+    } as any);
 
     const contentWrapper = wrapper.find('.content-wrapper');
     expect(contentWrapper.attributes('style')).toContain('padding: 12px');
@@ -103,7 +103,7 @@ describe('TechnicalAccordionContent', () => {
       props: {
         padding: 'lg',
       },
-    });
+    } as any);
 
     const contentWrapper = wrapper.find('.content-wrapper');
     expect(contentWrapper.attributes('style')).toContain('padding: 28px');
@@ -117,7 +117,7 @@ describe('TechnicalAccordionContent', () => {
       props: {
         padding: 'none',
       },
-    });
+    } as any);
 
     const contentWrapper = wrapper.find('.content-wrapper');
     expect(contentWrapper.attributes('style')).toContain('padding: 0');
@@ -132,7 +132,7 @@ describe('TechnicalAccordionContent', () => {
         elevated: true,
         padding: 'lg',
       },
-    });
+    } as any);
 
     const contentElevated = wrapper.find('.content-elevated');
     expect(contentElevated.attributes('style')).toContain('padding: 28px');
@@ -143,9 +143,9 @@ describe('TechnicalAccordionContent', () => {
       global: {
         provide: mockAccordionContext,
       },
-    });
+    } as any);
 
     const accordionContent = wrapper.findComponent(AccordionContent);
-    expect(accordionContent.props('pt')?.root?.class).toBe('technical-accordion-content');
+    expect((accordionContent.props('pt') as any)?.root?.class).toBe('technical-accordion-content');
   });
 });

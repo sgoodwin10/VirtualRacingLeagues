@@ -150,7 +150,7 @@ describe('VrlTablePagination', () => {
       const pageButtons = wrapper.findAll('[data-test^="pagination-page-"]');
 
       // Should show pages 1, 2, 3, 4, 5
-      expect(pageButtons[0].text()).toBe('1');
+      expect(pageButtons[0]?.text()).toBe('1');
       expect(pageButtons.length).toBe(5);
     });
 
@@ -159,7 +159,7 @@ describe('VrlTablePagination', () => {
       const pageButtons = wrapper.findAll('[data-test^="pagination-page-"]');
 
       // Should show pages 6, 7, 8, 9, 10
-      expect(pageButtons[pageButtons.length - 1].text()).toBe('10');
+      expect(pageButtons[pageButtons.length - 1]?.text()).toBe('10');
       expect(pageButtons.length).toBe(5);
     });
 

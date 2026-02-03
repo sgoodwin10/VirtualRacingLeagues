@@ -26,7 +26,7 @@ import { useCrudStore } from '@app/composables/useCrudStore';
 import { getErrorMessage } from '@app/types/errors';
 
 // Type for tracking registered event handlers
-type StoreEventHandler = (...args: unknown[]) => void;
+type StoreEventHandler = (...args: any[]) => void;
 
 export const useCompetitionStore = defineStore('competition', () => {
   // Use CRUD composable for competition management

@@ -101,6 +101,7 @@ describe('LeagueDetailView', () => {
       discord_url: 'https://discord.gg/test',
       website_url: 'https://test.com',
       twitter_handle: '@test',
+      facebook_handle: '@test',
       instagram_handle: '@test',
       youtube_url: 'https://youtube.com/test',
       twitch_url: 'https://twitch.tv/test',

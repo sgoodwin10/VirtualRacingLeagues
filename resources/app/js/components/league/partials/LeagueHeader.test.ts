@@ -30,6 +30,7 @@ const mockLeague: League = {
   website_url: null,
   twitter_handle: null,
   instagram_handle: null,
+  facebook_handle: null,
   youtube_url: null,
   twitch_url: null,
 };

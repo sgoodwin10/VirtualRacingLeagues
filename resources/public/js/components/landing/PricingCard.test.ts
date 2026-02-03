@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import PricingCard from './PricingCard.vue';
@@ -92,6 +92,92 @@ describe('PricingCard', () => {
         },
       });
 
+      const registerLink = wrapper.find('a[href="/register"]');
+      expect(registerLink.exists()).toBe(true);
+    });
+  });
+
+  describe('Google Analytics Tracking', () => {
+    beforeEach(() => {
+      // Mock window.dataLayer and window.gtag
+      global.window.dataLayer = [];
+      global.window.gtag = vi.fn();
+    });
+
+    it('should push event to dataLayer when Get Started button is clicked', async () => {
+      wrapper = mount(PricingCard, {
+        global: {
+          plugins: [router],
+        },
+      });
+
+      const button = wrapper.findComponent(VrlButton);
+      await button.trigger('click');
+
+      expect(global.window.dataLayer).toHaveLength(1);
+      expect(global.window.dataLayer?.[0]).toEqual({
+        event: 'register_go_to_page_click',
+        button_text: 'Get Started Free',
+      });
+    });
+
+    it('should call gtag with correct event parameters when Get Started button is clicked', async () => {
+      wrapper = mount(PricingCard, {
+        global: {
+          plugins: [router],
+        },
+      });
+
+      const button = wrapper.findComponent(VrlButton);
+      await button.trigger('click');
+
+      expect(global.window.gtag).toHaveBeenCalledWith('event', 'register_go_to_page_click', {
+        button_text: 'Get Started Free',
+      });
+    });
+
+    it('should not throw error if dataLayer is not available', async () => {
+      (global.window as any).dataLayer = undefined;
+
+      wrapper = mount(PricingCard, {
+        global: {
+          plugins: [router],
+        },
+      });
+
+      const button = wrapper.findComponent(VrlButton);
+      await expect(button.trigger('click')).resolves.not.toThrow();
+    });
+
+    it('should not throw error if gtag is not available', async () => {
+      delete global.window.gtag;
+
+      wrapper = mount(PricingCard, {
+        global: {
+          plugins: [router],
+        },
+      });
+
+      const button = wrapper.findComponent(VrlButton);
+      await expect(button.trigger('click')).resolves.not.toThrow();
+    });
+
+    it('should still navigate to register page after tracking event', async () => {
+      wrapper = mount(PricingCard, {
+        global: {
+          plugins: [router],
+        },
+      });
+
+      await router.isReady();
+
+      const button = wrapper.findComponent(VrlButton);
+      await button.trigger('click');
+
+      // Wait for navigation
+      await wrapper.vm.$nextTick();
+
+      // Verify the link still works (RouterLink should navigate)
       const registerLink = wrapper.find('a[href="/register"]');
       expect(registerLink.exists()).toBe(true);
     });

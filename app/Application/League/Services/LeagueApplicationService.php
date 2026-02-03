@@ -21,6 +21,7 @@ use App\Application\League\DTOs\PublicRaceResultsData;
 use App\Application\League\DTOs\PublicSeasonDetailData;
 use App\Application\League\DTOs\PublicSeasonSummaryData;
 use App\Application\League\DTOs\UpdateLeagueData;
+use App\Application\Platform\DTOs\PlatformData;
 use App\Application\Shared\Factories\MediaDataFactory;
 use App\Application\Shared\Services\MediaServiceInterface;
 use App\Domain\Competition\Repositories\CompetitionRepositoryInterface;
@@ -76,8 +77,7 @@ final class LeagueApplicationService
         private readonly MediaServiceInterface $mediaService,
         private readonly MediaDataFactory $mediaDataFactory,
         private readonly LeagueActivityLogService $activityLogService,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a new league.
@@ -146,6 +146,7 @@ final class LeagueApplicationService
                     instagramHandle: $data->instagram_handle,
                     youtubeUrl: $data->youtube_url,
                     twitchUrl: $data->twitch_url,
+                    facebookHandle: $data->facebook_handle,
                     visibility: LeagueVisibility::fromString($data->visibility),
                 );
 
@@ -418,7 +419,10 @@ final class LeagueApplicationService
                         : $league->youtubeUrl(),
                     array_key_exists('twitch_url', $validatedData)
                         ? $data->twitch_url
-                        : $league->twitchUrl()
+                        : $league->twitchUrl(),
+                    array_key_exists('facebook_handle', $validatedData)
+                        ? $data->facebook_handle
+                        : $league->facebookHandle()
                 );
             }
 
@@ -683,7 +687,7 @@ final class LeagueApplicationService
                 );
             }
 
-            $newSlug = $baseSlug->value() . '-' . str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
+            $newSlug = $baseSlug->value().'-'.str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
             $slug = LeagueSlug::from($newSlug);
             $counter++;
         }
@@ -741,7 +745,8 @@ final class LeagueApplicationService
             || array_key_exists('twitter_handle', $validatedData)
             || array_key_exists('instagram_handle', $validatedData)
             || array_key_exists('youtube_url', $validatedData)
-            || array_key_exists('twitch_url', $validatedData);
+            || array_key_exists('twitch_url', $validatedData)
+            || array_key_exists('facebook_handle', $validatedData);
     }
 
     /**
@@ -1256,6 +1261,7 @@ final class LeagueApplicationService
                 instagram_handle: $league->instagramHandle(),
                 youtube_url: $league->youtubeUrl(),
                 twitch_url: $league->twitchUrl(),
+                facebook_handle: $league->facebookHandle(),
                 created_at: $eloquentLeague->created_at?->format('Y-m-d H:i:s') ?? '',
             );
 
@@ -2370,7 +2376,7 @@ final class LeagueApplicationService
             // Use nickname, or fallback to first/last name for display
             $nickname = $driver->nickname;
             if (empty($nickname)) {
-                $nickname = trim(($driver->first_name ?? '') . ' ' . ($driver->last_name ?? ''));
+                $nickname = trim(($driver->first_name ?? '').' '.($driver->last_name ?? ''));
                 if (empty($nickname)) {
                     $nickname = 'Unknown Driver';
                 }
@@ -2529,7 +2535,7 @@ final class LeagueApplicationService
                 'description' => $competition->description,
                 'logo_url' => $logoUrl,
                 'competition_colour' => $competition->competition_colour,
-                'platform' => new \App\Application\Platform\DTOs\PlatformData(
+                'platform' => new PlatformData(
                     id: $competition->platform->id,
                     name: $competition->platform->name,
                     slug: $competition->platform->slug,

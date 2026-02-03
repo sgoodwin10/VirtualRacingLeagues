@@ -41,10 +41,10 @@ describe('VrlSelect', () => {
         },
       });
       const options = wrapper.findAll('option');
-      expect(options[0].text()).toBe('Option 1');
-      expect(options[0].element.value).toBe('1');
-      expect(options[1].text()).toBe('Option 2');
-      expect(options[1].element.value).toBe('2');
+      expect(options[0]?.text()).toBe('Option 1');
+      expect(options[0]?.element.value).toBe('1');
+      expect(options[1]?.text()).toBe('Option 2');
+      expect(options[1]?.element.value).toBe('2');
     });
 
     it('renders placeholder as first disabled option', () => {
@@ -56,9 +56,9 @@ describe('VrlSelect', () => {
         },
       });
       const options = wrapper.findAll('option');
-      expect(options[0].text()).toBe('Select an option');
-      expect(options[0].element.value).toBe('');
-      expect(options[0].element.disabled).toBe(true);
+      expect(options[0]?.text()).toBe('Select an option');
+      expect(options[0]?.element.value).toBe('');
+      expect(options[0]?.element.disabled).toBe(true);
       expect(options.length).toBe(4); // 3 options + 1 placeholder
     });
 
@@ -108,9 +108,9 @@ describe('VrlSelect', () => {
         },
       });
       const options = wrapper.findAll('option');
-      expect(options[1].element.disabled).toBe(true);
-      expect(options[0].element.disabled).toBe(false);
-      expect(options[2].element.disabled).toBe(false);
+      expect(options[1]?.element.disabled).toBe(true);
+      expect(options[0]?.element.disabled).toBe(false);
+      expect(options[2]?.element.disabled).toBe(false);
     });
 
     it('handles string values', () => {
@@ -125,8 +125,8 @@ describe('VrlSelect', () => {
         },
       });
       const options = wrapper.findAll('option');
-      expect(options[0].element.value).toBe('red');
-      expect(options[1].element.value).toBe('blue');
+      expect(options[0]?.element.value).toBe('red');
+      expect(options[1]?.element.value).toBe('blue');
     });
   });
 
@@ -277,7 +277,7 @@ describe('VrlSelect', () => {
 
       await wrapper.find('select').setValue('2');
       expect(wrapper.emitted('change')).toBeTruthy();
-      expect(wrapper.emitted('change')?.[0][0]).toBeInstanceOf(Event);
+      expect(wrapper.emitted('change')?.[0]?.[0]).toBeInstanceOf(Event);
     });
 
     it('emits blur event', async () => {
@@ -290,7 +290,7 @@ describe('VrlSelect', () => {
 
       await wrapper.find('select').trigger('blur');
       expect(wrapper.emitted('blur')).toBeTruthy();
-      expect(wrapper.emitted('blur')?.[0][0]).toBeInstanceOf(FocusEvent);
+      expect(wrapper.emitted('blur')?.[0]?.[0]).toBeInstanceOf(FocusEvent);
     });
 
     it('emits focus event', async () => {
@@ -303,7 +303,7 @@ describe('VrlSelect', () => {
 
       await wrapper.find('select').trigger('focus');
       expect(wrapper.emitted('focus')).toBeTruthy();
-      expect(wrapper.emitted('focus')?.[0][0]).toBeInstanceOf(FocusEvent);
+      expect(wrapper.emitted('focus')?.[0]?.[0]).toBeInstanceOf(FocusEvent);
     });
 
     it('emits all events correctly', async () => {
@@ -442,9 +442,9 @@ describe('VrlSelect', () => {
         },
       });
       const options = wrapper.findAll('option');
-      expect(options[0].text()).toBe('Option <1>');
-      expect(options[1].text()).toBe('Option & 2');
-      expect(options[2].text()).toBe('Option "3"');
+      expect(options[0]?.text()).toBe('Option <1>');
+      expect(options[1]?.text()).toBe('Option & 2');
+      expect(options[2]?.text()).toBe('Option "3"');
     });
 
     it('handles changing options array', async () => {
@@ -495,9 +495,9 @@ describe('VrlSelect', () => {
         },
       });
       const options = wrapper.findAll('option');
-      expect(options[0].text()).toBe('日本語');
-      expect(options[1].text()).toBe('中文');
-      expect(options[2].text()).toBe('🚀 Rocket');
+      expect(options[0]?.text()).toBe('日本語');
+      expect(options[1]?.text()).toBe('中文');
+      expect(options[2]?.text()).toBe('🚀 Rocket');
     });
 
     it('handles disabled state correctly', () => {

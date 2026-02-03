@@ -290,7 +290,7 @@ describe('ActivityFilters', () => {
 
     // Get the last filter event
     const filterEvents = wrapper.emitted('filter') as Array<[Record<string, unknown>]>;
-    const lastFilter = filterEvents[filterEvents.length - 1][0];
+    const lastFilter = filterEvents?.[filterEvents.length - 1]?.[0];
 
     expect(lastFilter).toEqual({
       entity_type: 'driver',

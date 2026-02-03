@@ -81,7 +81,7 @@ const emit = defineEmits<{
               show-buttons
               button-layout="horizontal"
               class="w-full"
-              @update:model-value="emit('update:totalDropRounds', $event)"
+              @update:model-value="(value) => emit('update:totalDropRounds', value as number)"
             />
           </FormInputGroup>
         </div>

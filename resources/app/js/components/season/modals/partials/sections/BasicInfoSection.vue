@@ -56,7 +56,7 @@ const emit = defineEmits<{
         :disabled="isSubmitting"
         maxlength="100"
         class="w-full"
-        @update:model-value="emit('update:name', $event)"
+        @update:model-value="(value) => emit('update:name', value as string)"
       />
 
       <!-- Slug Preview -->
@@ -82,7 +82,7 @@ const emit = defineEmits<{
         :disabled="isSubmitting"
         maxlength="150"
         class="w-full"
-        @update:model-value="emit('update:carClass', $event)"
+        @update:model-value="(value) => emit('update:carClass', value as string)"
       />
       <div class="text-[var(--text-muted)] mt-1.5">Specify the car class used in this season</div>
       <FormError :error="errors.car_class" />

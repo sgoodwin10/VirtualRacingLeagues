@@ -58,6 +58,7 @@ final class UpdateLeagueData extends Data
         public readonly ?string $youtube_url = null,
         #[Sometimes, Url, Max(255)]
         public readonly ?string $twitch_url = null,
-    ) {
-    }
+        #[Sometimes, Max(100)]
+        public readonly ?string $facebook_handle = null,
+    ) {}
 }

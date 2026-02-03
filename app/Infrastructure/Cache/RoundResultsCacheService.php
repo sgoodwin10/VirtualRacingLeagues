@@ -107,6 +107,6 @@ final class RoundResultsCacheService
      */
     private function getCacheKey(int $roundId): string
     {
-        return self::CACHE_PREFIX . $roundId;
+        return self::CACHE_PREFIX.$roundId;
     }
 }

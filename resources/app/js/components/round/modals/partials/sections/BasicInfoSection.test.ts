@@ -42,14 +42,14 @@ describe('BasicInfoSection', () => {
     it('renders section title and description', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       expect(wrapper.text()).toContain('Basic Information');
       expect(wrapper.text()).toContain('Round name, track, and scheduling');
@@ -58,14 +58,14 @@ describe('BasicInfoSection', () => {
     it('renders round name input', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const input = wrapper.findComponent(InputText);
       expect(input.exists()).toBe(true);
@@ -74,14 +74,14 @@ describe('BasicInfoSection', () => {
     it('renders track autocomplete', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const autocomplete = wrapper.findComponent(AutoComplete);
       expect(autocomplete.exists()).toBe(true);
@@ -90,14 +90,14 @@ describe('BasicInfoSection', () => {
     it('renders date picker', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const datePicker = wrapper.findComponent(DatePicker);
       expect(datePicker.exists()).toBe(true);
@@ -108,14 +108,14 @@ describe('BasicInfoSection', () => {
     it('displays round name value', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: 'Test Round',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const input = wrapper.findComponent(InputText);
       expect(input.props('modelValue')).toBe('Test Round');
@@ -124,14 +124,14 @@ describe('BasicInfoSection', () => {
     it('displays selected track', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: mockTrack,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const autocomplete = wrapper.findComponent(AutoComplete);
       expect(autocomplete.props('modelValue')).toEqual(mockTrack);
@@ -141,14 +141,14 @@ describe('BasicInfoSection', () => {
       const date = new Date('2024-01-15T10:00:00');
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: date,
           errors: {},
         },
-      });
+      } as any);
 
       const datePicker = wrapper.findComponent(DatePicker);
       expect(datePicker.props('modelValue')).toEqual(date);
@@ -157,7 +157,7 @@ describe('BasicInfoSection', () => {
     it('disables inputs when disabled prop is true', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -165,7 +165,7 @@ describe('BasicInfoSection', () => {
           errors: {},
           disabled: true,
         },
-      });
+      } as any);
 
       const input = wrapper.findComponent(InputText);
       const autocomplete = wrapper.findComponent(AutoComplete);
@@ -179,7 +179,7 @@ describe('BasicInfoSection', () => {
     it('shows validation errors', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -190,7 +190,7 @@ describe('BasicInfoSection', () => {
             scheduled_at: 'Date is required',
           },
         },
-      });
+      } as any);
 
       // Verify errors prop is passed correctly
       expect(wrapper.props('errors')).toEqual({
@@ -205,14 +205,14 @@ describe('BasicInfoSection', () => {
     it('emits update:roundName when input changes', async () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const input = wrapper.findComponent(InputText);
       await input.vm.$emit('update:modelValue', 'New Round');
@@ -224,14 +224,14 @@ describe('BasicInfoSection', () => {
     it('emits track-search when searching', async () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const autocomplete = wrapper.findComponent(AutoComplete);
       await autocomplete.vm.$emit('complete', { query: 'silver' });
@@ -243,14 +243,14 @@ describe('BasicInfoSection', () => {
     it('emits track-select when track is selected', async () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const autocomplete = wrapper.findComponent(AutoComplete);
       await autocomplete.vm.$emit('item-select', { value: mockTrack });
@@ -263,14 +263,14 @@ describe('BasicInfoSection', () => {
       const date = new Date('2024-01-15');
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const datePicker = wrapper.findComponent(DatePicker);
       await datePicker.vm.$emit('update:modelValue', date);
@@ -282,14 +282,14 @@ describe('BasicInfoSection', () => {
     it('emits blur events', async () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-        props: {
+      props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
           scheduledAt: null,
           errors: {},
         },
-      });
+      } as any);
 
       const input = wrapper.findComponent(InputText);
       await input.vm.$emit('blur');

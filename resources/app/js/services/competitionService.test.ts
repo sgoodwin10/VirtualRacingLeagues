@@ -343,7 +343,7 @@ describe('competitionService', () => {
         message: 'timeout of 30000ms exceeded',
       });
 
-      await expect(getCompetition(1, 1)).rejects.toMatchObject({
+      await expect(getCompetition(1)).rejects.toMatchObject({
         code: 'ECONNABORTED',
       });
     });
@@ -369,7 +369,7 @@ describe('competitionService', () => {
         },
       });
 
-      await expect(getCompetition(1, 1)).rejects.toMatchObject({
+      await expect(getCompetition(1)).rejects.toMatchObject({
         response: {
           status: 500,
         },
@@ -400,7 +400,7 @@ describe('competitionService', () => {
         },
       });
 
-      await expect(getCompetition(1, 999)).rejects.toMatchObject({
+      await expect(getCompetition(999)).rejects.toMatchObject({
         response: {
           status: 404,
         },
@@ -413,7 +413,7 @@ describe('competitionService', () => {
         message: 'timeout of 30000ms exceeded',
       });
 
-      await expect(archiveCompetition(1, 1)).rejects.toMatchObject({
+      await expect(archiveCompetition(1)).rejects.toMatchObject({
         code: 'ECONNABORTED',
       });
     });

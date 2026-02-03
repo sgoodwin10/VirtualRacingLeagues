@@ -19,6 +19,28 @@ const features = [
   'Custom point systems',
   'Team & division management',
 ];
+
+/**
+ * Track Google Analytics event when CTA button is clicked
+ */
+const handleGetStartedClick = () => {
+  const buttonText = 'Get Started Free';
+
+  // Track event via Google Tag Manager dataLayer
+  if (typeof window !== 'undefined' && window.dataLayer) {
+    window.dataLayer.push({
+      event: 'register_go_to_page_click',
+      button_text: buttonText,
+    });
+  }
+
+  // Also support direct gtag() if available
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'register_go_to_page_click', {
+      button_text: buttonText,
+    });
+  }
+};
 </script>
 
 <template>
@@ -58,7 +80,9 @@ const features = [
       </ul>
 
       <RouterLink to="/register" class="block">
-        <VrlButton variant="primary" size="lg" class="w-full">Get Started Free</VrlButton>
+        <VrlButton variant="primary" size="lg" class="w-full" @click="handleGetStartedClick">
+          Get Started Free
+        </VrlButton>
       </RouterLink>
     </div>
   </div>

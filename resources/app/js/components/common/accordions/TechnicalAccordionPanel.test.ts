@@ -21,7 +21,7 @@ describe('TechnicalAccordionPanel', () => {
       props: {
         value: 'panel-1',
       },
-    });
+    } as any);
 
     expect(wrapper.findComponent(AccordionPanel).exists()).toBe(true);
   });
@@ -34,7 +34,7 @@ describe('TechnicalAccordionPanel', () => {
       props: {
         value: 'panel-1',
       },
-    });
+    } as any);
 
     const panel = wrapper.findComponent(AccordionPanel);
     expect(panel.props('value')).toBe('panel-1');
@@ -48,7 +48,7 @@ describe('TechnicalAccordionPanel', () => {
       props: {
         value: 1,
       },
-    });
+    } as any);
 
     const panel = wrapper.findComponent(AccordionPanel);
     expect(panel.props('value')).toBe(1);
@@ -63,7 +63,7 @@ describe('TechnicalAccordionPanel', () => {
         value: 'panel-1',
         disabled: true,
       },
-    });
+    } as any);
 
     const panel = wrapper.findComponent(AccordionPanel);
     expect(panel.props('disabled')).toBe(true);
@@ -77,10 +77,10 @@ describe('TechnicalAccordionPanel', () => {
       props: {
         value: 'panel-1',
       },
-    });
+    } as any);
 
     const panel = wrapper.findComponent(AccordionPanel);
-    const classes = panel.props('pt')?.root?.class;
+    const classes = (panel.props('pt') as any)?.root?.class;
     expect(Array.isArray(classes)).toBe(true);
     expect(classes).toContainEqual('technical-accordion-panel');
   });
@@ -96,10 +96,10 @@ describe('TechnicalAccordionPanel', () => {
           'accordion-value': ref('panel-1'),
         },
       },
-    });
+    } as any);
 
     const panel = wrapper.findComponent(AccordionPanel);
-    const classes = panel.props('pt')?.root?.class;
+    const classes = (panel.props('pt') as any)?.root?.class;
     expect(Array.isArray(classes)).toBe(true);
     const classObj = classes.find((c: any) => typeof c === 'object');
     expect(classObj).toEqual({ 'is-active': true });
@@ -116,10 +116,10 @@ describe('TechnicalAccordionPanel', () => {
           'accordion-value': ref('panel-2'),
         },
       },
-    });
+    } as any);
 
     const panel = wrapper.findComponent(AccordionPanel);
-    const classes = panel.props('pt')?.root?.class;
+    const classes = (panel.props('pt') as any)?.root?.class;
     expect(Array.isArray(classes)).toBe(true);
     const classObj = classes.find((c: any) => typeof c === 'object');
     expect(classObj).toEqual({ 'is-active': false });
@@ -136,10 +136,10 @@ describe('TechnicalAccordionPanel', () => {
           'accordion-value': ref(['panel-1', 'panel-2']),
         },
       },
-    });
+    } as any);
 
     const panel = wrapper.findComponent(AccordionPanel);
-    const classes = panel.props('pt')?.root?.class;
+    const classes = (panel.props('pt') as any)?.root?.class;
     expect(Array.isArray(classes)).toBe(true);
     const classObj = classes.find((c: any) => typeof c === 'object');
     expect(classObj).toEqual({ 'is-active': true });
@@ -156,7 +156,7 @@ describe('TechnicalAccordionPanel', () => {
       slots: {
         default: '<div class="test-content">Test Content</div>',
       },
-    });
+    } as any);
 
     expect(wrapper.html()).toContain('test-content');
   });
