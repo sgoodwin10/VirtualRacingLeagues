@@ -187,6 +187,9 @@ export function buildLeagueFormData(form: CreateLeagueForm): FormData {
   if (form.instagram_handle) {
     formData.append('instagram_handle', form.instagram_handle);
   }
+  if (form.facebook_handle) {
+    formData.append('facebook_handle', form.facebook_handle);
+  }
   if (form.youtube_url) {
     formData.append('youtube_url', form.youtube_url);
   }
@@ -271,6 +274,7 @@ export function buildUpdateLeagueFormData(
     'website_url',
     'twitter_handle',
     'instagram_handle',
+    'facebook_handle',
     'youtube_url',
     'twitch_url',
   ];
