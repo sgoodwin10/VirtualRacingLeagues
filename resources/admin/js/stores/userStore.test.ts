@@ -86,7 +86,7 @@ describe('useUserStore', () => {
     expect(store.suspendedUsers).toEqual([suspendedUser]);
   });
 
-  it('should delete user', async () => {
+  it('should delete user (soft delete)', async () => {
     const store = useUserStore();
 
     vi.mocked(userService.deleteUser).mockResolvedValue();
@@ -95,6 +95,18 @@ describe('useUserStore', () => {
     await store.deleteUser(mockUser.id);
 
     expect(userService.deleteUser).toHaveBeenCalledWith(mockUser.id, undefined);
+    expect(userService.getUsers).toHaveBeenCalled();
+  });
+
+  it('should hard delete user (permanent deletion)', async () => {
+    const store = useUserStore();
+
+    vi.mocked(userService.hardDeleteUser).mockResolvedValue();
+    vi.mocked(userService.getUsers).mockResolvedValue(mockPaginatedResponse);
+
+    await store.hardDeleteUser(mockUser.id);
+
+    expect(userService.hardDeleteUser).toHaveBeenCalledWith(mockUser.id, undefined);
     expect(userService.getUsers).toHaveBeenCalled();
   });
 

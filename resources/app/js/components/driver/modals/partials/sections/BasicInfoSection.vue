@@ -15,7 +15,7 @@ interface Props {
   firstName: string;
   lastName: string;
   platformFormFields: PlatformFormField[];
-  formData: Record<string, string | number | undefined>;
+  formData: Record<string, string | number | null | undefined>;
   errors: {
     identifier?: string;
     status?: string;
@@ -49,7 +49,9 @@ const statusOptions = [
     <div class="mb-4">
       <h3 class="text-section-label mb-1">Basic Information</h3>
       <p class="text-[var(--text-secondary)] m-0">Driver identification and status</p>
-      <p class="text-[var(--text-secondary)] text-md mt-2 mb-0">
+      <p
+        class="text-[var(--text-secondary)] text-md mt-2 mb-0 border border-[var(--border)] py-2 px-2 rounded-md bg-[var(--bg-card)]"
+      >
         <strong>Minimum requirement:</strong><br />Provide either a name field (Nickname, First
         Name, or Last Name) <strong>OR</strong> a platform ID (Discord ID, PSN ID, iRacing ID, etc.)
       </p>

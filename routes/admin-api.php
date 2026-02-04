@@ -91,6 +91,10 @@ Route::middleware(['auth:admin', 'admin.authenticate', 'throttle:60,1'])->group(
     // User Management
     Route::apiResource('users', UserController::class);
 
+    /** @var \Illuminate\Routing\Route $hardDeleteRoute */
+    $hardDeleteRoute = Route::delete('users/{user}/hard-delete', [UserController::class, 'hardDelete']);
+    $hardDeleteRoute->name('users.hard-delete');
+
     /** @var \Illuminate\Routing\Route $restoreRoute */
     $restoreRoute = Route::post('users/{user}/restore', [UserController::class, 'restore']);
     $restoreRoute->name('users.restore');

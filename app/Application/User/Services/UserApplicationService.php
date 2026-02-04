@@ -30,6 +30,7 @@ final class UserApplicationService
 {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
+        private readonly \App\Application\League\Services\LeagueApplicationService $leagueService,
     ) {
     }
 
@@ -295,6 +296,7 @@ final class UserApplicationService
 
     /**
      * Delete a user (soft delete).
+     * Also permanently deletes all leagues owned by the user and their associated data.
      *
      * @throws UserNotFoundException
      */
@@ -303,6 +305,11 @@ final class UserApplicationService
         DB::transaction(function () use ($userId) {
             $user = $this->userRepository->findById($userId);
 
+            // First, hard delete all leagues owned by this user and their associated data
+            // This must happen BEFORE soft-deleting the user to maintain referential integrity
+            $this->leagueService->hardDeleteAllUserLeagues($userId);
+
+            // Then soft delete the user
             $user->delete();
 
             $this->userRepository->delete($user);
@@ -332,6 +339,32 @@ final class UserApplicationService
             $this->dispatchEvents($user);
 
             return UserData::fromEntity($user);
+        });
+    }
+
+    /**
+     * Permanently delete a user (hard delete).
+     * Also permanently deletes all leagues owned by the user and their associated data.
+     *
+     * @throws UserNotFoundException
+     */
+    public function hardDeleteUser(int $userId): void
+    {
+        DB::transaction(function () use ($userId) {
+            $user = $this->userRepository->findById($userId);
+
+            // First, hard delete all leagues owned by this user and their associated data
+            // This must happen BEFORE hard-deleting the user to maintain referential integrity
+            $this->leagueService->hardDeleteAllUserLeagues($userId);
+
+            // Nullify created_by_user_id references in other tables to avoid FK constraint violations
+            // These records may exist in leagues owned by other users
+            DB::table('rounds')->where('created_by_user_id', $userId)->update(['created_by_user_id' => null]);
+            DB::table('seasons')->where('created_by_user_id', $userId)->update(['created_by_user_id' => null]);
+            DB::table('competitions')->where('created_by_user_id', $userId)->update(['created_by_user_id' => null]);
+
+            // Then permanently delete the user record
+            $this->userRepository->forceDelete($user);
         });
     }
 

@@ -187,14 +187,14 @@ export const useLeagueStore = defineStore(
     }
 
     /**
-     * Delete a league (placeholder - not implemented)
+     * Delete a league permanently
+     * This will delete the league and all associated data
      * @param leagueId - League ID to delete
      * @param signal - Optional AbortSignal for request cancellation
      * @returns Promise that resolves to true on success, false on error
      */
     async function deleteLeague(leagueId: number, signal?: AbortSignal): Promise<boolean> {
       try {
-        // Placeholder - does nothing for now
         await leagueService.deleteLeague(leagueId, signal);
         // Refresh the list after deletion
         await fetchLeagues(signal);

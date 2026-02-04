@@ -25,9 +25,6 @@ import { useStoreEvents, type StoreEventMap } from '@app/composables/useStoreEve
 import { useCrudStore } from '@app/composables/useCrudStore';
 import { getErrorMessage } from '@app/types/errors';
 
-// Type for tracking registered event handlers
-type StoreEventHandler = (...args: any[]) => void;
-
 export const useCompetitionStore = defineStore('competition', () => {
   // Use CRUD composable for competition management
   const crud = useCrudStore<Competition>();
@@ -53,7 +50,9 @@ export const useCompetitionStore = defineStore('competition', () => {
   let listenersRegistered = false;
 
   // Track all registered handlers so we can clean them up properly
-  const registeredHandlers = new Map<keyof StoreEventMap, StoreEventHandler[]>();
+  // Using any here since we need to store handlers with different signatures
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const registeredHandlers = new Map<keyof StoreEventMap, Array<(...args: any[]) => void>>();
 
   /**
    * Register event listeners for season events

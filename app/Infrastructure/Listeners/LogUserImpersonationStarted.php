@@ -27,7 +27,7 @@ final class LogUserImpersonationStarted
                 'admin_email' => $event->adminEmail,
                 'user_id' => $event->userId,
                 'user_email' => $event->userEmail,
-                'token' => substr($event->token, 0, 8).'...', // Log only first 8 chars for security
+                'token' => substr($event->token, 0, 8) . '...', // Log only first 8 chars for security
             ])
             ->log('Admin generated impersonation token for user');
     }

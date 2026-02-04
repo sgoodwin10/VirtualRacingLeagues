@@ -204,7 +204,7 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
     {
         if ($league->id() === null) {
             // Create new
-            $eloquentLeague = new LeagueEloquent;
+            $eloquentLeague = new LeagueEloquent();
             $this->fillEloquentModel($eloquentLeague, $league);
 
             $eloquentLeague->save();
@@ -304,6 +304,68 @@ final class EloquentLeagueRepository implements LeagueRepositoryInterface
         }
 
         $eloquentLeague->forceDelete();
+    }
+
+    public function hardDeleteLeagueWithAssociations(int $leagueId): void
+    {
+        // Delete in correct order to respect foreign key constraints
+        // Order: race_results -> races -> qualifiers -> rounds -> divisions -> teams -> season_drivers -> seasons -> competitions -> league_drivers -> leagues
+
+        // Get all competition IDs for this league
+        $competitionIds = CompetitionModel::where('league_id', $leagueId)->pluck('id')->toArray();
+
+        if (! empty($competitionIds)) {
+            // Get all season IDs for these competitions
+            $seasonIds = SeasonEloquent::whereIn('competition_id', $competitionIds)->pluck('id')->toArray();
+
+            if (! empty($seasonIds)) {
+                // Get all round IDs for these seasons
+                $roundIds = Round::whereIn('season_id', $seasonIds)->pluck('id')->toArray();
+
+                if (! empty($roundIds)) {
+                    // Get all race IDs for these rounds
+                    $raceIds = Race::whereIn('round_id', $roundIds)->pluck('id')->toArray();
+
+                    if (! empty($raceIds)) {
+                        // 1. Delete race results first (depends on races)
+                        \App\Infrastructure\Persistence\Eloquent\Models\RaceResult::whereIn('race_id', $raceIds)->delete();
+                    }
+
+                    // 2. Delete races (depends on rounds) - includes qualifiers
+                    Race::whereIn('round_id', $roundIds)->delete();
+
+                    // 3. Delete rounds (depends on seasons)
+                    Round::whereIn('id', $roundIds)->delete();
+                }
+
+                // 4. Delete divisions (depends on seasons)
+                \App\Infrastructure\Persistence\Eloquent\Models\Division::whereIn('season_id', $seasonIds)->delete();
+
+                // 5. Delete teams (depends on seasons)
+                \App\Infrastructure\Persistence\Eloquent\Models\Team::whereIn('season_id', $seasonIds)->delete();
+
+                // 6. Delete season_drivers (depends on seasons and league_drivers)
+                SeasonDriverEloquent::whereIn('season_id', $seasonIds)->delete();
+
+                // 7. Delete season_round_tiebreaker_rules (depends on seasons)
+                \App\Infrastructure\Persistence\Eloquent\Models\SeasonRoundTiebreakerRuleEloquent::whereIn('season_id', $seasonIds)->delete();
+
+                // 8. Delete seasons (depends on competitions)
+                SeasonEloquent::whereIn('id', $seasonIds)->delete();
+            }
+
+            // 9. Delete competitions (depends on leagues)
+            CompetitionModel::whereIn('id', $competitionIds)->delete();
+        }
+
+        // 10. Delete league_drivers (depends on leagues)
+        \App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent::where('league_id', $leagueId)->delete();
+
+        // 11. Delete league_managers (depends on leagues) - using direct DB query since model doesn't exist
+        \Illuminate\Support\Facades\DB::table('league_managers')->where('league_id', $leagueId)->delete();
+
+        // 12. Finally, delete the league itself (with trashed)
+        LeagueEloquent::withTrashed()->where('id', $leagueId)->forceDelete();
     }
 
     /**

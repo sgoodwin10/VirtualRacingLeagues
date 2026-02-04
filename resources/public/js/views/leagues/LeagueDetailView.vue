@@ -82,6 +82,7 @@ import { useTitle } from '@vueuse/core';
 import { useToast } from 'primevue/usetoast';
 import * as Sentry from '@sentry/vue';
 import { leagueService } from '@public/services/leagueService';
+import { getSiteConfig } from '@public/types/site-config';
 import type { PublicLeagueDetailResponse } from '@public/types/public';
 import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
 import SpeedLines from '@public/components/landing/SpeedLines.vue';
@@ -110,7 +111,8 @@ const abortController = ref<AbortController | null>(null);
  */
 const pageTitle = computed(() => {
   if (!leagueData.value) return 'Loading...';
-  const siteName = import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
+  const siteConfig = getSiteConfig();
+  const siteName = siteConfig?.name || import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
   return `${leagueData.value.league.name} - ${siteName}`;
 });
 

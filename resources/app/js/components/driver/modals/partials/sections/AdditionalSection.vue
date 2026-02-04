@@ -12,7 +12,7 @@ import FormCharacterCount from '@app/components/common/forms/FormCharacterCount.
 interface Props {
   email: string;
   phone: string;
-  driverNumber?: number;
+  driverNumber?: number | null;
   leagueNotes: string;
   errors: {
     email?: string;
@@ -29,7 +29,7 @@ withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:email': [value: string];
   'update:phone': [value: string];
-  'update:driver-number': [value: number | undefined];
+  'update:driver-number': [value: number | null | undefined];
   'update:league-notes': [value: string];
 }>();
 </script>

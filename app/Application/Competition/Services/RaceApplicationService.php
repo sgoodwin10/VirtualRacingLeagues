@@ -43,7 +43,8 @@ final class RaceApplicationService
         private readonly LeagueRepositoryInterface $leagueRepository,
         private readonly RaceResultsCacheService $raceResultsCache,
         private readonly LeagueActivityLogService $activityLogService,
-    ) {}
+    ) {
+    }
 
     public function createRace(CreateRaceData $data, int $roundId, int $userId): RaceData
     {

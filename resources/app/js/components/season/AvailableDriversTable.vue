@@ -9,8 +9,15 @@ import Column from 'primevue/column';
 import { Button } from '@app/components/common/buttons';
 import { TechDataTable, DriverCell } from '@app/components/common/tables';
 import { createLogger } from '@app/utils/logger';
-import { DEFAULT_ROWS_PER_PAGE, ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
-import { PhEye, PhPlus } from '@phosphor-icons/vue';
+import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
+import {
+  PhEye,
+  PhPlus,
+  PhCaretDoubleLeft,
+  PhCaretLeft,
+  PhCaretRight,
+  PhCaretDoubleRight,
+} from '@phosphor-icons/vue';
 
 interface Props {
   seasonId: number;
@@ -92,7 +99,7 @@ onMounted(async () => {
       :loading="loading"
       lazy
       paginator
-      :rows="DEFAULT_ROWS_PER_PAGE"
+      :rows="25"
       :rows-per-page-options="ROWS_PER_PAGE_OPTIONS"
       :total-records="totalRecords"
       :first="first"
@@ -108,6 +115,62 @@ onMounted(async () => {
 
       <template #loading>
         <div class="text-center py-8 text-gray-500">Loading available drivers...</div>
+      </template>
+
+      <template #paginatorcontainer="{ page, pageCount, prevPageCallback, nextPageCallback }">
+        <div class="flex items-center justify-end w-full px-4 py-2">
+          <div class="flex items-center gap-1">
+            <Button
+              :icon="PhCaretDoubleLeft"
+              variant="outline"
+              size="sm"
+              :disabled="(page ?? 0) === 0"
+              aria-label="First page"
+              @click="
+                handlePageChange({
+                  page: 0,
+                  rows: 25,
+                  first: 0,
+                  pageCount: pageCount ?? 0,
+                } as DataTablePageEvent)
+              "
+            />
+            <Button
+              :icon="PhCaretLeft"
+              variant="outline"
+              size="sm"
+              :disabled="(page ?? 0) === 0"
+              aria-label="Previous page"
+              @click="prevPageCallback"
+            />
+            <span class="text-sm text-gray-600 mx-2">
+              Page {{ (page ?? 0) + 1 }} of {{ pageCount ?? 0 }}
+            </span>
+            <Button
+              :icon="PhCaretRight"
+              variant="outline"
+              size="sm"
+              :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
+              aria-label="Next page"
+              @click="nextPageCallback"
+            />
+            <Button
+              :icon="PhCaretDoubleRight"
+              variant="outline"
+              size="sm"
+              :disabled="(page ?? 0) === (pageCount ?? 1) - 1"
+              aria-label="Last page"
+              @click="
+                handlePageChange({
+                  page: (pageCount ?? 1) - 1,
+                  rows: 25,
+                  first: ((pageCount ?? 1) - 1) * 25,
+                  pageCount: pageCount ?? 0,
+                } as DataTablePageEvent)
+              "
+            />
+          </div>
+        </div>
       </template>
 
       <Column field="driver_name" header="Driver">

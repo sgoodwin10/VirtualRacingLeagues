@@ -7,15 +7,7 @@ import type { AdminRole } from '@admin/types/admin';
 import { logger } from '@admin/utils/logger';
 import { useRoleHelpers } from '@admin/composables/useRoleHelpers';
 import { UNAUTHORIZED_EVENT } from '@admin/services/api';
-
-/**
- * Extend Window interface for GTM dataLayer
- */
-declare global {
-  interface Window {
-    dataLayer?: Record<string, unknown>[];
-  }
-}
+import { getSiteConfig } from '@admin/types/site-config';
 
 /**
  * Extend route meta with authentication fields
@@ -183,9 +175,11 @@ const { hasRoleAccess } = useRoleHelpers();
 router.beforeEach(async (to, _from, next) => {
   const adminStore = useAdminStore();
 
-  // Set page title
+  // Set page title using site config from window.__SITE_CONFIG__
   const title = to.meta.title as string;
-  document.title = title ? `${title} - Admin Dashboard` : 'Admin Dashboard';
+  const siteConfig = getSiteConfig();
+  const siteName = siteConfig?.name || import.meta.env.VITE_APP_NAME || 'Admin';
+  document.title = title ? `Admin - ${title} - ${siteName}` : `Admin -${siteName}`;
 
   // Check if route is public
   const isPublicRoute = to.meta.isPublic === true;

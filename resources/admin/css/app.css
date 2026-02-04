@@ -182,6 +182,16 @@ h1, h2, h3, h4, h5, h6 {
   font-size: var(--font-size-2xl);
 }
 
+/* PrimeVue ConfirmDialog width constraint */
+.p-confirmdialog {
+  max-width: 36rem; /* max-w-xl equivalent - 576px */
+  width: 90vw; /* Responsive on smaller screens */
+}
+
+.p-confirmdialog .p-confirmdialog-message {
+  white-space: pre-line; /* Preserve line breaks in message */
+}
+
 /* Print styles */
 @media print {
   .admin-sidebar,

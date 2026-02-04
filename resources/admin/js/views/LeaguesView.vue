@@ -211,10 +211,27 @@ const handleArchive = (league: League) => {
 };
 
 const handleDelete = (league: League) => {
-  // Delete functionality is disabled - coming soon
-  // The button is disabled in the table component
-  // No action needed yet
-  void league;
+  confirm.require({
+    message: `Are you sure you want to PERMANENTLY DELETE "${league.name}"?\n\nThis will delete:\n• The league itself\n• All competitions\n• All drivers\n• All seasons\n• All rounds\n• All races\n\nThe league owner's user account will NOT be deleted.\n\nThis action CANNOT be undone!`,
+    header: 'Permanent League Deletion',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    acceptLabel: 'Delete Permanently',
+    rejectLabel: 'Cancel',
+    accept: async () => {
+      try {
+        await leagueStore.deleteLeague(league.id, getSignal());
+        showSuccessToast('League and all associated data deleted permanently');
+      } catch (error) {
+        // Silently ignore cancelled requests
+        if (isRequestCancelled(error)) {
+          return;
+        }
+
+        showErrorToast(error, 'Failed to delete league');
+      }
+    },
+  });
 };
 
 /**

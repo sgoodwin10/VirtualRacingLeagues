@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Http\Controllers\User;
 
+use App\Infrastructure\Persistence\Eloquent\Models\AdminEloquent;
+use App\Infrastructure\Persistence\Eloquent\Models\SiteConfigModel;
 use App\Infrastructure\Persistence\Eloquent\Models\UserEloquent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
@@ -26,6 +28,13 @@ class SiteConfigControllerTest extends UserControllerTestCase
     #[Test]
     public function it_returns_site_configuration(): void
     {
+        SiteConfigModel::factory()->create([
+            'user_registration_enabled' => true,
+            'discord_link' => 'https://discord.gg/example',
+            'maintenance_mode' => false,
+            'is_active' => true,
+        ]);
+
         $response = $this->actingAs($this->user, 'web')
             ->getJson('/api/site-config');
 
@@ -33,11 +42,10 @@ class SiteConfigControllerTest extends UserControllerTestCase
             ->assertJsonStructure([
                 'success',
                 'data' => [
-                    'site_name',
-                    'site_url',
-                    'timezone',
-                    'locale',
-                    'google_analytics_id',
+                    'user_registration_enabled',
+                    'discord_url',
+                    'maintenance_mode',
+                    'is_admin',
                 ],
             ]);
     }
@@ -45,6 +53,13 @@ class SiteConfigControllerTest extends UserControllerTestCase
     #[Test]
     public function it_returns_correct_config_values(): void
     {
+        SiteConfigModel::factory()->create([
+            'user_registration_enabled' => true,
+            'discord_link' => 'https://discord.gg/example',
+            'maintenance_mode' => false,
+            'is_active' => true,
+        ]);
+
         $response = $this->actingAs($this->user, 'web')
             ->getJson('/api/site-config');
 
@@ -52,36 +67,52 @@ class SiteConfigControllerTest extends UserControllerTestCase
             ->assertJson([
                 'success' => true,
                 'data' => [
-                    'site_name' => config('app.name'),
-                    'site_url' => config('app.url'),
-                    'timezone' => config('app.timezone'),
-                    'locale' => config('app.locale'),
+                    'user_registration_enabled' => true,
+                    'discord_url' => 'https://discord.gg/example',
+                    'maintenance_mode' => false,
+                    'is_admin' => false,
                 ],
             ]);
     }
 
     #[Test]
-    public function it_returns_google_analytics_id_when_configured(): void
+    public function it_returns_maintenance_mode_when_enabled(): void
     {
-        config(['services.google_analytics.tracking_id' => 'G-XXXXXXXXXX']);
+        SiteConfigModel::factory()->create([
+            'user_registration_enabled' => true,
+            'discord_link' => 'https://discord.gg/example',
+            'maintenance_mode' => true,
+            'is_active' => true,
+        ]);
 
         $response = $this->actingAs($this->user, 'web')
             ->getJson('/api/site-config');
 
         $response->assertOk()
-            ->assertJsonPath('data.google_analytics_id', 'G-XXXXXXXXXX');
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'maintenance_mode' => true,
+                    'is_admin' => false,
+                ],
+            ]);
     }
 
     #[Test]
-    public function it_returns_null_for_google_analytics_id_when_not_configured(): void
+    public function it_returns_is_admin_false_for_regular_users(): void
     {
-        config(['services.google_analytics.tracking_id' => null]);
+        SiteConfigModel::factory()->create([
+            'user_registration_enabled' => true,
+            'discord_link' => 'https://discord.gg/example',
+            'maintenance_mode' => true,
+            'is_active' => true,
+        ]);
 
         $response = $this->actingAs($this->user, 'web')
             ->getJson('/api/site-config');
 
         $response->assertOk()
-            ->assertJsonPath('data.google_analytics_id', null);
+            ->assertJsonPath('data.is_admin', false);
     }
 
     #[Test]

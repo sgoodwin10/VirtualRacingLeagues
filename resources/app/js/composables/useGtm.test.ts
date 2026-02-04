@@ -9,7 +9,6 @@ describe('useGtm', () => {
 
   describe('pushToDataLayer', () => {
     it('should initialize dataLayer if it does not exist', () => {
-      // @ts-expect-error - Testing undefined state
       delete window.dataLayer;
 
       const { pushToDataLayer } = useGtm();
@@ -24,7 +23,7 @@ describe('useGtm', () => {
       pushToDataLayer({ event: 'custom_event', custom_param: 'value' });
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'custom_event',
         custom_param: 'value',
       });
@@ -37,7 +36,7 @@ describe('useGtm', () => {
       trackEvent('league_created');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({ event: 'league_created' });
+      expect(window.dataLayer?.[0]).toEqual({ event: 'league_created' });
     });
 
     it('should track event with additional parameters', () => {
@@ -45,7 +44,7 @@ describe('useGtm', () => {
       trackEvent('season_started', { season_id: 123, league_id: 456 });
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'season_started',
         season_id: 123,
         league_id: 456,
@@ -59,7 +58,7 @@ describe('useGtm', () => {
       trackClick('Navigation', 'click');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'Navigation',
         event_action: 'click',
@@ -71,7 +70,7 @@ describe('useGtm', () => {
       trackClick('League', 'create', 'new_league_button');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'League',
         event_action: 'create',
@@ -84,7 +83,7 @@ describe('useGtm', () => {
       trackClick('Season', 'delete', 'season_123', 1);
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'Season',
         event_action: 'delete',
@@ -97,8 +96,8 @@ describe('useGtm', () => {
       const { trackClick } = useGtm();
       trackClick('Navigation', 'click', undefined, undefined);
 
-      expect(window.dataLayer[0]).not.toHaveProperty('event_label');
-      expect(window.dataLayer[0]).not.toHaveProperty('event_value');
+      expect(window.dataLayer?.[0]).not.toHaveProperty('event_label');
+      expect(window.dataLayer?.[0]).not.toHaveProperty('event_value');
     });
   });
 
@@ -108,7 +107,7 @@ describe('useGtm', () => {
       trackFormSubmit('create_league_form');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'form_submit',
         form_name: 'create_league_form',
         form_action: undefined,
@@ -120,7 +119,7 @@ describe('useGtm', () => {
       trackFormSubmit('driver_registration', 'submit');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'form_submit',
         form_name: 'driver_registration',
         form_action: 'submit',
@@ -132,7 +131,7 @@ describe('useGtm', () => {
       trackFormSubmit('driver_registration', 'submit', { league_id: 123 });
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'form_submit',
         form_name: 'driver_registration',
         form_action: 'submit',
@@ -148,14 +147,14 @@ describe('useGtm', () => {
 
       expect(window.dataLayer).toHaveLength(2);
       // First event is the click event
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'Outbound Link',
         event_action: 'click',
         event_label: 'https://example.com',
       });
       // Second event is the outbound_link event
-      expect(window.dataLayer[1]).toEqual({
+      expect(window.dataLayer?.[1]).toEqual({
         event: 'outbound_link',
         link_url: 'https://example.com',
         link_label: undefined,
@@ -167,13 +166,13 @@ describe('useGtm', () => {
       trackOutboundLink('https://discord.gg/invite', 'discord_server');
 
       expect(window.dataLayer).toHaveLength(2);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'click',
         event_category: 'Outbound Link',
         event_action: 'click',
         event_label: 'discord_server',
       });
-      expect(window.dataLayer[1]).toEqual({
+      expect(window.dataLayer?.[1]).toEqual({
         event: 'outbound_link',
         link_url: 'https://discord.gg/invite',
         link_label: 'discord_server',
@@ -187,7 +186,7 @@ describe('useGtm', () => {
       trackSocial('twitter', 'share');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'social_interaction',
         social_network: 'twitter',
         social_action: 'share',
@@ -200,7 +199,7 @@ describe('useGtm', () => {
       trackSocial('discord', 'join', 'league_server');
 
       expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toEqual({
+      expect(window.dataLayer?.[0]).toEqual({
         event: 'social_interaction',
         social_network: 'discord',
         social_action: 'join',

@@ -42,7 +42,7 @@ describe('BasicInfoSection', () => {
     it('renders section title and description', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -58,7 +58,7 @@ describe('BasicInfoSection', () => {
     it('renders round name input', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -74,7 +74,7 @@ describe('BasicInfoSection', () => {
     it('renders track autocomplete', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -90,7 +90,7 @@ describe('BasicInfoSection', () => {
     it('renders date picker', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -108,7 +108,7 @@ describe('BasicInfoSection', () => {
     it('displays round name value', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: 'Test Round',
           selectedTrack: null,
           trackSuggestions: [],
@@ -124,7 +124,7 @@ describe('BasicInfoSection', () => {
     it('displays selected track', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: mockTrack,
           trackSuggestions: [],
@@ -141,7 +141,7 @@ describe('BasicInfoSection', () => {
       const date = new Date('2024-01-15T10:00:00');
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -157,7 +157,7 @@ describe('BasicInfoSection', () => {
     it('disables inputs when disabled prop is true', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -179,7 +179,7 @@ describe('BasicInfoSection', () => {
     it('shows validation errors', () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -205,7 +205,7 @@ describe('BasicInfoSection', () => {
     it('emits update:roundName when input changes', async () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -224,7 +224,7 @@ describe('BasicInfoSection', () => {
     it('emits track-search when searching', async () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -243,7 +243,7 @@ describe('BasicInfoSection', () => {
     it('emits track-select when track is selected', async () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -263,7 +263,7 @@ describe('BasicInfoSection', () => {
       const date = new Date('2024-01-15');
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],
@@ -282,7 +282,7 @@ describe('BasicInfoSection', () => {
     it('emits blur events', async () => {
       const wrapper = mount(BasicInfoSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundName: '',
           selectedTrack: null,
           trackSuggestions: [],

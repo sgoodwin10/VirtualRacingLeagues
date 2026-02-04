@@ -15,13 +15,13 @@ parameters:
 		-
 			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:ip\(\)\.$#'
 			identifier: method.notFound
-			count: 1
+			count: 2
 			path: app/Application/Activity/Services/LeagueActivityLogService.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:userAgent\(\)\.$#'
 			identifier: method.notFound
-			count: 1
+			count: 2
 			path: app/Application/Activity/Services/LeagueActivityLogService.php
 
 		-
@@ -111,7 +111,7 @@ parameters:
 		-
 			message: '#^Strict comparison using \!\=\= between Illuminate\\Http\\Request and null will always evaluate to true\.$#'
 			identifier: notIdentical.alwaysTrue
-			count: 1
+			count: 2
 			path: app/Application/Activity/Services/LeagueActivityLogService.php
 
 		-
@@ -283,70 +283,16 @@ parameters:
 			path: app/Http/Requests/Admin/IndexUsersRequest.php
 
 		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\UpdateAdminUserRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/Admin/UpdateAdminUserRequest.php
-
-		-
 			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\UpdateSiteConfigRequest\:\:merge\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Http/Requests/Admin/UpdateSiteConfigRequest.php
 
 		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\Admin\\UpdateUserRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/Admin/UpdateUserRequest.php
-
-		-
 			message: '#^Call to an undefined method App\\Http\\Requests\\Auth\\UpdateProfileRequest\:\:user\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Http/Requests/Auth/UpdateProfileRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowPublicLeagueRequest\:\:all\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/Public/ShowPublicLeagueRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowPublicLeagueRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: app/Http/Requests/Public/ShowPublicLeagueRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowPublicSeasonRequest\:\:all\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/Public/ShowPublicSeasonRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowPublicSeasonRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 4
-			path: app/Http/Requests/Public/ShowPublicSeasonRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowRaceResultsRequest\:\:all\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/Public/ShowRaceResultsRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\Public\\ShowRaceResultsRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: app/Http/Requests/Public/ShowRaceResultsRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\BulkRaceResultsRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/BulkRaceResultsRequest.php
 
 		-
 			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
@@ -361,25 +307,7 @@ parameters:
 			path: app/Http/Requests/User/CompleteRoundRequest.php
 
 		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateQualifierRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/CreateQualifierRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateRaceRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/CreateRaceRequest.php
-
-		-
 			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateSeasonRequest\:\:merge\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/CreateSeasonRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateSeasonRequest\:\:route\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Http/Requests/User/CreateSeasonRequest.php
@@ -391,28 +319,10 @@ parameters:
 			path: app/Http/Requests/User/CreateTeamRequest.php
 
 		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\CreateTeamRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/CreateTeamRequest.php
-
-		-
 			message: '#^Call to an undefined method App\\Http\\Requests\\User\\ListActivityLogsRequest\:\:input\(\)\.$#'
 			identifier: method.notFound
 			count: 6
 			path: app/Http/Requests/User/ListActivityLogsRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\ListActivityLogsRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/ListActivityLogsRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateDivisionRequest\:\:all\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/UpdateDivisionRequest.php
 
 		-
 			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateDivisionRequest\:\:replace\(\)\.$#'
@@ -421,46 +331,16 @@ parameters:
 			path: app/Http/Requests/User/UpdateDivisionRequest.php
 
 		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateLeagueRequest\:\:all\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/UpdateLeagueRequest.php
-
-		-
 			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateLeagueRequest\:\:replace\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Http/Requests/User/UpdateLeagueRequest.php
 
 		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateQualifierRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/UpdateQualifierRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateRaceRequest\:\:route\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/UpdateRaceRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateRoundRequest\:\:all\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/UpdateRoundRequest.php
-
-		-
 			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateRoundRequest\:\:replace\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Http/Requests/User/UpdateRoundRequest.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateSeasonRequest\:\:all\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Requests/User/UpdateSeasonRequest.php
 
 		-
 			message: '#^Call to an undefined method App\\Http\\Requests\\User\\UpdateSeasonRequest\:\:replace\(\)\.$#'

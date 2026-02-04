@@ -46,7 +46,8 @@ final class PublicLeagueData extends Data
         public readonly int $drivers_count,
         public readonly int $active_seasons_count,
         public readonly int $total_races_count,
-    ) {}
+    ) {
+    }
 
     /**
      * Create from domain entity with platform data and counts.

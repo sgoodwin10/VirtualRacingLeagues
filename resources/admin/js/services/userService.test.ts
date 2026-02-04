@@ -102,12 +102,22 @@ describe('userService', () => {
     });
   });
 
-  it('should delete user', async () => {
+  it('should delete user (soft delete)', async () => {
     vi.mocked(apiService.delete).mockResolvedValue({ success: true });
 
     await userService.deleteUser(mockUser.id);
 
     expect(apiService.delete).toHaveBeenCalledWith(`/users/${mockUser.id}`, { signal: undefined });
+  });
+
+  it('should hard delete user (permanent deletion)', async () => {
+    vi.mocked(apiService.delete).mockResolvedValue({ success: true });
+
+    await userService.hardDeleteUser(mockUser.id);
+
+    expect(apiService.delete).toHaveBeenCalledWith(`/users/${mockUser.id}/hard-delete`, {
+      signal: undefined,
+    });
   });
 
   it('should restore user', async () => {

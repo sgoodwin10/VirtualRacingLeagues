@@ -1,7 +1,52 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { createTestRouter, mountWithStubs } from '@app/__tests__/setup';
 import App from '@app/components/App.vue';
 import LeagueList from '@app/views/LeagueList.vue';
+
+// Mock site config composable
+vi.mock('@app/composables/useSiteConfig', () => ({
+  useSiteConfig: () => ({
+    config: {
+      value: {
+        name: 'Test Site',
+        timezone: 'UTC',
+        discord: {
+          url: null,
+          inviteCode: null,
+        },
+        maintenance: {
+          enabled: false,
+          message: '',
+        },
+        registration: {
+          enabled: true,
+        },
+        google: {
+          analyticsId: null,
+          tagManagerId: null,
+          searchConsoleCode: null,
+        },
+        emails: {
+          support: null,
+          contact: null,
+          admin: null,
+        },
+      },
+    },
+    siteName: { value: 'Test Site' },
+    timezone: { value: 'UTC' },
+    discordUrl: { value: null },
+    discordInviteCode: { value: null },
+    hasDiscord: { value: false },
+    isMaintenanceMode: { value: false },
+    maintenanceMessage: { value: '' },
+    isRegistrationEnabled: { value: true },
+    googleAnalyticsId: { value: null },
+    googleTagManagerId: { value: null },
+    hasGoogleAnalytics: { value: false },
+    hasGoogleTagManager: { value: false },
+  }),
+}));
 
 describe('User Dashboard - App Component', () => {
   const createRouter = () => {

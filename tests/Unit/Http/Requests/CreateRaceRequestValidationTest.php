@@ -19,7 +19,7 @@ final class CreateRaceRequestValidationTest extends TestCase
 
     public function test_accepts_integer_points(): void
     {
-        $request = new CreateRaceRequest;
+        $request = new CreateRaceRequest();
         $validator = Validator::make(
             [
                 'points_system' => [
@@ -38,7 +38,7 @@ final class CreateRaceRequestValidationTest extends TestCase
 
     public function test_accepts_decimal_points_with_one_decimal_place(): void
     {
-        $request = new CreateRaceRequest;
+        $request = new CreateRaceRequest();
         $validator = Validator::make(
             [
                 'points_system' => [
@@ -57,7 +57,7 @@ final class CreateRaceRequestValidationTest extends TestCase
 
     public function test_accepts_decimal_points_with_two_decimal_places(): void
     {
-        $request = new CreateRaceRequest;
+        $request = new CreateRaceRequest();
         $validator = Validator::make(
             [
                 'points_system' => [
@@ -76,7 +76,7 @@ final class CreateRaceRequestValidationTest extends TestCase
 
     public function test_rejects_decimal_points_with_more_than_two_decimal_places(): void
     {
-        $request = new CreateRaceRequest;
+        $request = new CreateRaceRequest();
         $validator = Validator::make(
             [
                 'points_system' => [
@@ -92,7 +92,7 @@ final class CreateRaceRequestValidationTest extends TestCase
 
     public function test_rejects_dnf_points_with_more_than_two_decimal_places(): void
     {
-        $request = new CreateRaceRequest;
+        $request = new CreateRaceRequest();
         $validator = Validator::make(
             [
                 'dnf_points' => 0.999,
@@ -106,7 +106,7 @@ final class CreateRaceRequestValidationTest extends TestCase
 
     public function test_rejects_dns_points_with_more_than_two_decimal_places(): void
     {
-        $request = new CreateRaceRequest;
+        $request = new CreateRaceRequest();
         $validator = Validator::make(
             [
                 'dns_points' => 1.9999,
@@ -120,7 +120,7 @@ final class CreateRaceRequestValidationTest extends TestCase
 
     public function test_rejects_negative_points(): void
     {
-        $request = new CreateRaceRequest;
+        $request = new CreateRaceRequest();
         $validator = Validator::make(
             [
                 'points_system' => [
@@ -136,7 +136,7 @@ final class CreateRaceRequestValidationTest extends TestCase
 
     public function test_accepts_zero_points(): void
     {
-        $request = new CreateRaceRequest;
+        $request = new CreateRaceRequest();
         $validator = Validator::make(
             [
                 'points_system' => [
@@ -154,7 +154,7 @@ final class CreateRaceRequestValidationTest extends TestCase
 
     public function test_validates_exact_payload_from_error_report(): void
     {
-        $request = new CreateRaceRequest;
+        $request = new CreateRaceRequest();
         $validator = Validator::make(
             [
                 'points_system' => [

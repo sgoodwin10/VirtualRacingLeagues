@@ -97,14 +97,14 @@ class LeagueService {
   }
 
   /**
-   * Delete a league (placeholder - not implemented)
+   * Delete a league permanently
+   * This will delete the league and all associated data (competitions, drivers, seasons, rounds, races)
    * @param id - League ID
    * @param signal - Optional AbortSignal for request cancellation
    * @returns Promise<void>
    */
   async deleteLeague(id: number, signal?: AbortSignal): Promise<void> {
     try {
-      // Placeholder - does nothing for now
       await apiService.delete<ApiResponse<null>>(`/leagues/${id}`, { signal });
     } catch (error) {
       handleServiceError(error);

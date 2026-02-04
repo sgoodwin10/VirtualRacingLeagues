@@ -115,7 +115,7 @@ final class LeagueController extends Controller
     }
 
     /**
-     * Delete a league.
+     * Delete a league (soft delete).
      */
     public function destroy(int $id): JsonResponse
     {
@@ -125,6 +125,25 @@ final class LeagueController extends Controller
             $this->leagueService->deleteLeague($id, $user->id);
 
             return ApiResponse::success(null, 'League deleted successfully');
+        } catch (LeagueNotFoundException $e) {
+            return ApiResponse::notFound('League not found.');
+        } catch (UnauthorizedException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        }
+    }
+
+    /**
+     * Permanently delete a league and ALL associated data (hard delete).
+     * This is a destructive operation that cannot be undone.
+     */
+    public function hardDelete(int $id): JsonResponse
+    {
+        $user = $this->authenticatedUser();
+
+        try {
+            $this->leagueService->hardDeleteLeague($id, $user->id);
+
+            return ApiResponse::success(null, 'League and all associated data permanently deleted');
         } catch (LeagueNotFoundException $e) {
             return ApiResponse::notFound('League not found.');
         } catch (UnauthorizedException $e) {

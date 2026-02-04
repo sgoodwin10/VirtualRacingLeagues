@@ -450,6 +450,7 @@ import * as Sentry from '@sentry/vue';
 import { PhCheck, PhDownloadSimple } from '@phosphor-icons/vue';
 import VrlButton from '@public/components/common/buttons/VrlButton.vue';
 import { leagueService } from '@public/services/leagueService';
+import { useGtm } from '@public/composables/useGtm';
 import type {
   PublicSeasonDetailResponse,
   SeasonStandingDriver,
@@ -465,6 +466,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const { trackEvent } = useGtm();
 
 const isLoading = ref(false);
 const error = ref<string | null>(null);
@@ -655,6 +658,13 @@ function exportToCSV(): void {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+
+  // Track CSV download event
+  trackEvent('csv_download_click', {
+    csv_filename: filename,
+    league_name: props.leagueSlug,
+    season_name: props.seasonSlug,
+  });
 }
 
 function generateDriverStandingsCSV(drivers: readonly SeasonStandingDriver[]): string {

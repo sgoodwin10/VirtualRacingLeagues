@@ -15,6 +15,7 @@ use App\Http\Controllers\Public\PublicDriverController;
 use App\Http\Controllers\Public\PublicLeagueController;
 use App\Http\Controllers\Public\PublicPlatformController;
 use App\Http\Controllers\Public\PublicRoundController;
+use App\Http\Controllers\Public\SiteConfigController as PublicSiteConfigController;
 use App\Http\Controllers\User\CompetitionController;
 use App\Http\Controllers\User\DivisionController;
 use App\Http\Controllers\User\DriverController;
@@ -134,6 +135,9 @@ Route::domain($appDomain)->middleware('web')->group(function () {
                 ->name('leagues.store');
             Route::get('/leagues/{id}', [LeagueController::class, 'show'])->name('leagues.show');
             Route::put('/leagues/{id}', [LeagueController::class, 'update'])->name('leagues.update');
+            Route::delete('/leagues/{id}/hard-delete', [LeagueController::class, 'hardDelete'])
+                ->middleware('throttle:5,1')
+                ->name('leagues.hard-delete');
             Route::delete('/leagues/{id}', [LeagueController::class, 'destroy'])->name('leagues.destroy');
             Route::post('/leagues/check-slug', [LeagueController::class, 'checkSlug'])->name('leagues.check-slug');
             Route::get('/leagues/{id}/platforms', [LeagueController::class, 'platforms'])->name('leagues.platforms');
@@ -381,6 +385,11 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
         Route::post('/contact', [ContactController::class, 'store'])
             ->middleware('throttle:5,1')
             ->name('contact.store');
+
+        // Site configuration (public - no auth required)
+        Route::get('/site-config', [PublicSiteConfigController::class, 'show'])
+            ->middleware('throttle:60,1')
+            ->name('site-config');
 
         // Public data endpoints (no authentication required)
         Route::prefix('public')->name('public.')->middleware('throttle:60,1')->group(function () {

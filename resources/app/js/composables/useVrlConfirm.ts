@@ -3,8 +3,8 @@
  * Provides a declarative confirmation dialog pattern using VrlConfirmDialog component
  */
 
-import { ref } from 'vue';
-import type { Ref, Component } from 'vue';
+import { ref, shallowRef } from 'vue';
+import type { Ref, ShallowRef, Component } from 'vue';
 
 export interface VrlConfirmOptions {
   /** Dialog header text */
@@ -41,7 +41,7 @@ export interface UseVrlConfirmReturn {
   /** Whether the dialog is currently visible */
   isVisible: Ref<boolean>;
   /** Current dialog options */
-  options: Ref<VrlConfirmOptions | null>;
+  options: ShallowRef<VrlConfirmOptions | null>;
   /** Whether an action is being processed */
   isLoading: Ref<boolean>;
   /** Show the confirmation dialog with the given options */
@@ -87,7 +87,7 @@ export interface UseVrlConfirmReturn {
  */
 export function useVrlConfirm(): UseVrlConfirmReturn {
   const isVisible = ref(false);
-  const options = ref<VrlConfirmOptions | null>(null);
+  const options = shallowRef<VrlConfirmOptions | null>(null);
   const isLoading = ref(false);
 
   /**
@@ -117,6 +117,9 @@ export function useVrlConfirm(): UseVrlConfirmReturn {
    */
   async function handleAccept(): Promise<void> {
     if (!options.value) return;
+
+    // Prevent concurrent executions (double-click protection)
+    if (isLoading.value) return;
 
     isLoading.value = true;
 

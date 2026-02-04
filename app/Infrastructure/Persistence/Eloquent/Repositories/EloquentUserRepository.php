@@ -288,6 +288,7 @@ final class EloquentUserRepository implements UserRepositoryInterface
             alias: UserAlias::fromNullable($eloquentUser->alias),
             uuid: UserUuid::fromNullable($eloquentUser->uuid),
             status: UserStatus::from($eloquentUser->status),
+            isAdmin: $eloquentUser->is_admin,
             emailVerifiedAt: $eloquentUser->email_verified_at
                 ? DateTimeImmutable::createFromMutable($eloquentUser->email_verified_at)
                 : null,
@@ -311,6 +312,7 @@ final class EloquentUserRepository implements UserRepositoryInterface
         $eloquentUser->alias = $user->alias()?->value();
         $eloquentUser->uuid = $user->uuid()?->value();
         $eloquentUser->status = $user->status()->value;
+        $eloquentUser->is_admin = $user->isAdmin();
         $eloquentUser->email_verified_at = $user->emailVerifiedAt()
             ? \Carbon\Carbon::instance($user->emailVerifiedAt())
             : null;

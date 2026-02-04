@@ -55,6 +55,7 @@ describe('RoundAccordion', () => {
       id: 1,
       round_number: 1,
       name: 'Round 1 - Australia',
+      status: 'completed',
       round_results: {
         standings: [
           {
@@ -84,9 +85,12 @@ describe('RoundAccordion', () => {
         race_number: 1,
         is_qualifier: false,
         race_points: true,
+        status: 'completed',
         results: [
           {
             id: 1,
+            race_id: 1,
+            driver_id: 1,
             position: 1,
             driver: { id: 1, name: 'Driver 1' },
             race_points: 25,
@@ -97,8 +101,13 @@ describe('RoundAccordion', () => {
             division_id: 1,
             original_race_time: null,
             final_race_time: null,
+            original_race_time_difference: null,
+            final_race_time_difference: null,
             fastest_lap: null,
             penalties: null,
+            status: 'completed',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
           },
         ],
       },
@@ -301,6 +310,7 @@ describe('RoundAccordion', () => {
                 results: [
                   {
                     position: 1,
+                    driver_id: 1,
                     driver_name: 'Driver 1',
                     race_points: 25,
                     fastest_lap_points: 1,
@@ -316,6 +326,7 @@ describe('RoundAccordion', () => {
                 results: [
                   {
                     position: 1,
+                    driver_id: 2,
                     driver_name: 'Driver 2',
                     race_points: 25,
                     fastest_lap_points: 0,
@@ -383,7 +394,7 @@ describe('RoundAccordion', () => {
         ...mockRoundResults,
         round: {
           ...mockRoundResults.round,
-          qualifying_results: [{ id: 1, position: 1, driver_name: 'Driver 1', time: '01:25.456' }],
+          qualifying_results: [{ position: 1, race_result_id: 1, time_ms: 85456 }],
         },
       };
       leagueService.getRoundResults.mockResolvedValue(resultsWithQualifying);

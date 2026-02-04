@@ -34,7 +34,8 @@ final class QualifierApplicationService
         private readonly RoundRepositoryInterface $roundRepository,
         private readonly SeasonRepositoryInterface $seasonRepository,
         private readonly LeagueActivityLogService $activityLogService,
-    ) {}
+    ) {
+    }
 
     public function createQualifier(CreateQualifierData $data, int $roundId, int $userId): RaceData
     {
@@ -240,7 +241,7 @@ final class QualifierApplicationService
             Event::dispatch(new QualifierDeleted(
                 qualifierId: $qualifierId,
                 roundId: $roundId,
-                occurredAt: new DateTimeImmutable,
+                occurredAt: new DateTimeImmutable(),
             ));
         });
     }

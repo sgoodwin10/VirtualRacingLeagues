@@ -79,12 +79,28 @@ final class AdminLeagueController extends Controller
     }
 
     /**
-     * Remove the specified league (placeholder - does nothing for now).
-     * TODO: Implement permanent delete for archived leagues.
+     * Permanently delete a league and ALL associated data (hard delete).
+     * This is a destructive operation that cannot be undone.
+     * Deletes the league along with all competitions, seasons, rounds, races, drivers, and results.
      */
     public function destroy(int $id): JsonResponse
     {
-        // Placeholder - just return 204 No Content for now
-        return ApiResponse::noContent();
+        try {
+            // Admin hard delete - use the admin user ID (requires authentication middleware)
+            $admin = auth()->guard('admin')->user();
+            if ($admin === null) {
+                return ApiResponse::unauthorized();
+            }
+
+            // Get league first to validate ownership for activity log
+            $league = $this->leagueService->getLeagueForAdmin($id);
+
+            // Perform hard delete (admin bypasses ownership check)
+            $this->leagueService->hardDeleteLeague($id, $league->owner_user_id);
+
+            return ApiResponse::success(null, 'League and all associated data permanently deleted');
+        } catch (LeagueNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
+        }
     }
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import SectionHeader from '../SectionHeader.vue';
-import StepCard from '../StepCard.vue';
+import SectionHeader from '@public/components/landing/SectionHeader.vue';
+import StepCard from '@public/components/landing/StepCard.vue';
 
 /**
  * HowItWorksSection Component

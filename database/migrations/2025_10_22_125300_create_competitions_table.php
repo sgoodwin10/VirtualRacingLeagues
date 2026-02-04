@@ -17,7 +17,7 @@ return new class extends Migration
             // Foreign keys
             $table->foreignId('league_id')->constrained('leagues')->cascadeOnDelete();
             $table->foreignId('platform_id')->constrained('platforms')->restrictOnDelete();
-            $table->foreignId('created_by_user_id')->constrained('users')->restrictOnDelete();
+            $table->foreignId('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
 
             // Core fields
             $table->string('name', 100);

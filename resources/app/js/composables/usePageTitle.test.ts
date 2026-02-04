@@ -2,11 +2,24 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ref, computed } from 'vue';
 import { usePageTitle } from './usePageTitle';
 
+// Mock site config name for tests
+const mockSiteName = 'App Dashboard';
+
 describe('usePageTitle', () => {
   let originalTitle: string;
 
   beforeEach(() => {
     originalTitle = document.title;
+    // Mock window.__SITE_CONFIG__
+    window.__SITE_CONFIG__ = {
+      name: mockSiteName,
+      timezone: 'UTC',
+      discord: { url: null, inviteCode: null },
+      maintenance: { enabled: false, message: '' },
+      registration: { enabled: true },
+      google: { analyticsId: null, tagManagerId: null, searchConsoleCode: null },
+      emails: { support: null, contact: null, admin: null },
+    };
   });
 
   afterEach(() => {

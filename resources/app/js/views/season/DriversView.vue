@@ -6,9 +6,8 @@ import { useSeasonDriverStore } from '@app/stores/seasonDriverStore';
 import { useTeamStore } from '@app/stores/teamStore';
 import { useDivisionStore } from '@app/stores/divisionStore';
 import { useToastError } from '@app/composables/useToastError';
-import { PhUsers, PhUserPlus } from '@phosphor-icons/vue';
+import { PhUsers } from '@phosphor-icons/vue';
 import type { SeasonDriver } from '@app/types/seasonDriver';
-import { Button } from '@app/components/common/buttons';
 import SeasonDriversTable from '@app/components/season/SeasonDriversTable.vue';
 import SeasonDriverManagementDrawer from '@app/components/season/modals/SeasonDriverManagementDrawer.vue';
 import SeasonDriverFormDialog from '@app/components/season/modals/SeasonDriverFormDialog.vue';
@@ -94,7 +93,7 @@ async function handleDriverUpdated(): Promise<void> {
           :icon="PhUsers"
           icon-color="yellow-700"
         >
-          <template #actions>
+          <!-- <template #actions>
             <Button
               label="Manage Drivers"
               :icon="PhUserPlus"
@@ -103,7 +102,7 @@ async function handleDriverUpdated(): Promise<void> {
               :disabled="season?.is_archived"
               @click="handleManageDrivers"
             />
-          </template>
+          </template> -->
         </CardHeader>
       </template>
       <SeasonDriversTable

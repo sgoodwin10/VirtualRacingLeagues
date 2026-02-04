@@ -4,6 +4,9 @@ import router from './index';
 import { useAdminStore } from '@admin/stores/adminStore';
 import type { AdminRole } from '@admin/types/admin';
 
+// Mock site name for tests
+const mockSiteName = 'Test Site';
+
 vi.mock('@admin/composables/useRoleHelpers', () => ({
   useRoleHelpers: () => ({
     hasRoleAccess: (userRole: AdminRole, requiredRole: AdminRole): boolean => {
@@ -20,6 +23,16 @@ vi.mock('@admin/composables/useRoleHelpers', () => ({
 describe('Router', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+    // Mock window.__SITE_CONFIG__
+    window.__SITE_CONFIG__ = {
+      name: mockSiteName,
+      timezone: 'UTC',
+      discord: { url: null, inviteCode: null },
+      maintenance: { enabled: false, message: '' },
+      registration: { enabled: true },
+      google: { analyticsId: null, tagManagerId: null, searchConsoleCode: null },
+      emails: { support: null, contact: null, admin: null },
+    };
   });
 
   it('should have required routes', () => {
@@ -87,6 +100,6 @@ describe('Router', () => {
     await router.push('/');
     await router.isReady();
 
-    expect(document.title).toBe('Dashboard - Admin Dashboard');
+    expect(document.title).toBe(`Admin - Dashboard - ${mockSiteName}`);
   });
 });

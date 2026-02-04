@@ -231,6 +231,32 @@ describe('useVrlConfirm', () => {
       // Should not throw
       await handleAccept();
     });
+
+    it('prevents concurrent executions (double-click protection)', async () => {
+      let callCount = 0;
+      const onAccept = vi.fn(async () => {
+        callCount++;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+
+      const { showConfirmation, handleAccept } = useVrlConfirm();
+
+      showConfirmation({
+        header: 'Test',
+        message: 'Test message',
+        onAccept,
+      });
+
+      // Simulate rapid double-click
+      const promise1 = handleAccept();
+      const promise2 = handleAccept();
+
+      await Promise.all([promise1, promise2]);
+
+      // onAccept should only be called once, not twice
+      expect(callCount).toBe(1);
+      expect(onAccept).toHaveBeenCalledOnce();
+    });
   });
 
   describe('handleReject', () => {

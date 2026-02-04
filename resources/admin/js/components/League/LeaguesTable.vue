@@ -140,13 +140,12 @@
           />
           <Button
             v-if="data.status === 'archived'"
-            v-tooltip.top="'Delete functionality coming soon'"
+            v-tooltip.top="'Delete'"
             icon="pi pi-trash"
             text
             rounded
             severity="danger"
             size="small"
-            :disabled="true"
             @click="handleDelete(data)"
           />
         </div>

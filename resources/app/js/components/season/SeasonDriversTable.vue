@@ -33,6 +33,7 @@ import {
   PhMagnifyingGlass,
   PhSpinner,
   PhWarning,
+  PhXCircle,
 } from '@phosphor-icons/vue';
 
 import { ROWS_PER_PAGE_OPTIONS } from '@app/constants/pagination';
@@ -132,6 +133,29 @@ const { isSearching } = useDebouncedSearch(searchQuery, async (query) => {
 const isInputDisabled = computed(
   () => props.loading && !isSearchActive.value && !isSearching.value,
 );
+
+/**
+ * Clear the search query and refresh the drivers list
+ */
+async function clearSearch(): Promise<void> {
+  searchQuery.value = '';
+  seasonDriverStore.setSearchQuery('');
+
+  try {
+    await seasonDriverStore.fetchSeasonDrivers(props.seasonId, {
+      page: 1,
+      search: '',
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to clear search';
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000,
+    });
+  }
+}
 
 const drivers = computed(() => seasonDriverStore.seasonDrivers);
 const totalRecords = computed(() => seasonDriverStore.totalDrivers);
@@ -594,7 +618,7 @@ async function handleRefresh(): Promise<void> {
       class="flex flex-row gap-4 mb-6 border border-[var(--border)] bg-[var(--bg-elevated)] p-2 rounded-md"
     >
       <div class="flex items-end gap-3 flex-wrap">
-        <div class="flex-1 max-w-md">
+        <div class="flex-1 max-w-md relative">
           <IconField>
             <InputIcon>
               <PhSpinner
@@ -608,9 +632,19 @@ async function handleRefresh(): Promise<void> {
               v-model="searchQuery"
               placeholder="Search drivers..."
               class="w-full !pl-8"
+              :class="{ '!pr-8': searchQuery }"
               :disabled="isInputDisabled"
             />
           </IconField>
+          <button
+            v-if="searchQuery"
+            type="button"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            aria-label="Clear search"
+            @click="clearSearch"
+          >
+            <PhXCircle size="18" weight="fill" />
+          </button>
         </div>
 
         <div v-if="raceDivisionsEnabled" class="flex flex-col gap-2">

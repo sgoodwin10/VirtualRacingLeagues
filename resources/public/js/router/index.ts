@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@public/stores/authStore';
 import { getAppSubdomainUrl } from '@public/utils/subdomain';
+import { getSiteConfig } from '@public/types/site-config';
 import HomeView from '@public/views/HomeView.vue';
 import LoginView from '@public/views/auth/LoginView.vue';
 import RegisterView from '@public/views/auth/RegisterView.vue';
@@ -109,10 +110,11 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
 
-  // Set page title
+  // Set page title using site config from window.__SITE_CONFIG__
   const title = to.meta.title as string;
-  const appName = import.meta.env.VITE_APP_NAME || 'Your App';
-  document.title = title ? `${title} - ${appName}` : appName;
+  const siteConfig = getSiteConfig();
+  const siteName = siteConfig?.name || import.meta.env.VITE_APP_NAME || 'Your App';
+  document.title = title ? `${title} - ${siteName}` : siteName;
 
   // Check if this is a logout redirect from user dashboard
   if (to.query.logout === '1') {

@@ -65,9 +65,10 @@ return new class extends Migration
 
             // Metadata
             $table->foreignId('created_by_user_id')
+                ->nullable()
                 ->constrained('users')
-                ->onDelete('restrict')
-                ->comment('User who created this round');
+                ->nullOnDelete()
+                ->comment('User who created this round (nullable for user deletion)');
 
             $table->timestamps();
             $table->softDeletes();

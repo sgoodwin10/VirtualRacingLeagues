@@ -25,6 +25,7 @@ describe('Header', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
 
     const wrapper = mountWithStubs(Header, {
@@ -48,6 +49,7 @@ describe('Header', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
 
     const wrapper = mountWithStubs(Header, {
@@ -74,6 +76,7 @@ describe('Header', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
 
     const wrapper = mountWithStubs(Header, {
@@ -99,6 +102,7 @@ describe('Header', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
 
     const wrapper = mountWithStubs(Header, {

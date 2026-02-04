@@ -25,7 +25,7 @@ describe('PointsSection', () => {
     it('renders section title and description', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: false,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -44,7 +44,7 @@ describe('PointsSection', () => {
     it('renders round points toggle', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: false,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -63,7 +63,7 @@ describe('PointsSection', () => {
     it('does not render points system editor when round points disabled', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: false,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -82,7 +82,7 @@ describe('PointsSection', () => {
     it('renders points system editor when round points enabled', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -101,7 +101,7 @@ describe('PointsSection', () => {
     it('renders fastest lap checkbox when points enabled', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: 1,
@@ -121,7 +121,7 @@ describe('PointsSection', () => {
     it('renders qualifying pole checkbox when points enabled', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -143,7 +143,7 @@ describe('PointsSection', () => {
     it('passes roundPoints to toggle', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -162,7 +162,7 @@ describe('PointsSection', () => {
     it('passes points system to editor', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -181,7 +181,7 @@ describe('PointsSection', () => {
     it('passes canCopyFromRoundOne to editor', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -200,7 +200,7 @@ describe('PointsSection', () => {
     it('disables all inputs when disabled prop is true', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -225,7 +225,7 @@ describe('PointsSection', () => {
     it('shows validation errors', () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: 1,
@@ -254,7 +254,7 @@ describe('PointsSection', () => {
     it('emits update:roundPoints when toggle changes', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: false,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -276,7 +276,7 @@ describe('PointsSection', () => {
     it('emits update:pointsSystem when editor changes', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -299,7 +299,7 @@ describe('PointsSection', () => {
     it('emits copy-from-round-one when copy button is clicked', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -320,7 +320,7 @@ describe('PointsSection', () => {
     it('emits update:fastestLap when checkbox is toggled', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,
@@ -345,7 +345,7 @@ describe('PointsSection', () => {
     it('emits update:qualifyingPole when checkbox is toggled', async () => {
       const wrapper = mount(PointsSection, {
         ...globalConfig,
-      props: {
+        props: {
           roundPoints: true,
           pointsSystem: mockPointsSystem,
           fastestLap: null,

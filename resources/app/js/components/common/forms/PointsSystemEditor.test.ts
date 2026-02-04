@@ -24,7 +24,7 @@ describe('PointsSystemEditor', () => {
     it('renders all position inputs', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
         },
       } as any);
@@ -36,7 +36,7 @@ describe('PointsSystemEditor', () => {
     it('renders positions in sorted order', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: { 3: 15, 1: 25, 2: 18 },
         },
       } as any);
@@ -50,7 +50,7 @@ describe('PointsSystemEditor', () => {
     it('renders Add Position button', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
         },
       } as any);
@@ -63,7 +63,7 @@ describe('PointsSystemEditor', () => {
     it('renders Remove Last button', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
         },
       } as any);
@@ -76,7 +76,7 @@ describe('PointsSystemEditor', () => {
     it('does not render copy button by default', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
         },
       } as any);
@@ -89,7 +89,7 @@ describe('PointsSystemEditor', () => {
     it('renders copy button when showCopyButton is true', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
           showCopyButton: true,
         },
@@ -105,7 +105,7 @@ describe('PointsSystemEditor', () => {
     it('accepts modelValue prop', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
         },
       } as any);
@@ -116,7 +116,7 @@ describe('PointsSystemEditor', () => {
     it('accepts disabled prop', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
           disabled: true,
         },
@@ -131,7 +131,7 @@ describe('PointsSystemEditor', () => {
     it('accepts custom copy button label', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
           showCopyButton: true,
           copyButtonLabel: 'Custom Copy Label',
@@ -148,7 +148,7 @@ describe('PointsSystemEditor', () => {
     it('emits update:modelValue when point value changes', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
         },
       } as any);
@@ -164,7 +164,7 @@ describe('PointsSystemEditor', () => {
     it('emits update:modelValue when adding position', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
         },
       } as any);
@@ -181,7 +181,7 @@ describe('PointsSystemEditor', () => {
     it('emits update:modelValue when removing position', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
         },
       } as any);
@@ -198,7 +198,7 @@ describe('PointsSystemEditor', () => {
     it('emits copy event when copy button is clicked', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
           showCopyButton: true,
         },
@@ -216,7 +216,7 @@ describe('PointsSystemEditor', () => {
     it('disables remove button when only one position exists', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: { 1: 25 },
         },
       } as any);
@@ -229,7 +229,7 @@ describe('PointsSystemEditor', () => {
     it('enables remove button when multiple positions exist', () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: mockPointsSystem,
         },
       } as any);
@@ -242,7 +242,7 @@ describe('PointsSystemEditor', () => {
     it('adds new position with value 0', async () => {
       const wrapper = mount(PointsSystemEditor, {
         ...globalConfig,
-      props: {
+        props: {
           modelValue: { 1: 25 },
         },
       } as any);

@@ -77,7 +77,8 @@ final class LeagueApplicationService
         private readonly MediaServiceInterface $mediaService,
         private readonly MediaDataFactory $mediaDataFactory,
         private readonly LeagueActivityLogService $activityLogService,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a new league.
@@ -635,6 +636,71 @@ final class LeagueApplicationService
     }
 
     /**
+     * Permanently delete a league and ALL associated data (hard delete).
+     * This deletes:
+     * - The league itself
+     * - All competitions under the league
+     * - All drivers under the league
+     * - All seasons under the league
+     * - All rounds under seasons
+     * - All races under rounds
+     * - All race results
+     * - All divisions, teams, qualifiers, etc.
+     *
+     * @throws LeagueNotFoundException
+     * @throws UnauthorizedException
+     */
+    public function hardDeleteLeague(int $leagueId, int $userId): void
+    {
+        // Authorization check BEFORE transaction (fail fast)
+        $league = $this->leagueRepository->findById($leagueId);
+        $this->authorizeLeagueAccess($league, $userId);
+
+        // Record event before deletion (we need the league data)
+        $deletionEvent = \App\Domain\League\Events\LeagueDeleted::fromLeague($league);
+
+        DB::transaction(function () use ($leagueId, $deletionEvent) {
+            // Perform hard delete with cascade
+            $this->leagueRepository->hardDeleteLeagueWithAssociations($leagueId);
+
+            // Dispatch event after successful deletion
+            Event::dispatch($deletionEvent);
+        });
+
+        // Log activity after transaction
+        $this->activityLogService->logLeagueDeleted($leagueId);
+    }
+
+    /**
+     * Hard delete all leagues owned by a user and their associated data.
+     * This is used when a user account is being deleted.
+     *
+     * @param  int  $userId  The user ID whose leagues should be deleted
+     */
+    public function hardDeleteAllUserLeagues(int $userId): void
+    {
+        DB::transaction(function () use ($userId) {
+            // Get all league IDs for this user
+            $leagues = $this->leagueRepository->findByUserId($userId);
+
+            foreach ($leagues as $league) {
+                if ($league->id() === null) {
+                    continue;
+                }
+
+                // Record event before deletion
+                $deletionEvent = \App\Domain\League\Events\LeagueDeleted::fromLeague($league);
+
+                // Perform hard delete
+                $this->leagueRepository->hardDeleteLeagueWithAssociations($league->id());
+
+                // Dispatch event
+                Event::dispatch($deletionEvent);
+            }
+        });
+    }
+
+    /**
      * Get platforms associated with a league.
      *
      * @return array<int, LeaguePlatformData>
@@ -687,7 +753,7 @@ final class LeagueApplicationService
                 );
             }
 
-            $newSlug = $baseSlug->value().'-'.str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
+            $newSlug = $baseSlug->value() . '-' . str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
             $slug = LeagueSlug::from($newSlug);
             $counter++;
         }
@@ -2376,7 +2442,7 @@ final class LeagueApplicationService
             // Use nickname, or fallback to first/last name for display
             $nickname = $driver->nickname;
             if (empty($nickname)) {
-                $nickname = trim(($driver->first_name ?? '').' '.($driver->last_name ?? ''));
+                $nickname = trim(($driver->first_name ?? '') . ' ' . ($driver->last_name ?? ''));
                 if (empty($nickname)) {
                     $nickname = 'Unknown Driver';
                 }

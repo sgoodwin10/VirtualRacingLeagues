@@ -136,4 +136,19 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Google Services
+    |--------------------------------------------------------------------------
+    |
+    | Default Google service IDs. These serve as the final fallback values
+    | when not configured in .env or config/site.php.
+    |
+    */
+
+    'google' => [
+        'analytics_id' => null,
+        'tag_manager_id' => null,
+    ],
+
 ];

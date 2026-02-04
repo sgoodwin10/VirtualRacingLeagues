@@ -50,7 +50,10 @@ describe('ResetPasswordView', () => {
   let router: ReturnType<typeof createTestRouter>;
 
   const createWrapper = async (
-    queryParams: { email?: string; token?: string } = { email: 'test@example.com', token: 'test-token' },
+    queryParams: { email?: string; token?: string } = {
+      email: 'test@example.com',
+      token: 'test-token',
+    },
   ) => {
     router = createTestRouter();
     await router.push({ path: '/reset-password', query: queryParams });

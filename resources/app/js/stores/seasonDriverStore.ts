@@ -43,7 +43,7 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
 
   // Pagination for season drivers
   const currentPage = ref(1);
-  const perPage = ref(10);
+  const perPage = ref(25);
   const totalDrivers = ref(0);
   const lastPage = ref(1);
 
@@ -264,7 +264,6 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
    * Remove driver from season
    */
   async function removeDriver(seasonId: number, leagueDriverId: number): Promise<void> {
-    loading.value = true;
     error.value = null;
 
     try {
@@ -286,8 +285,6 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
         err instanceof Error ? err.message : 'Failed to remove driver from season';
       error.value = errorMessage;
       throw err;
-    } finally {
-      loading.value = false;
     }
   }
 
@@ -410,7 +407,7 @@ export const useSeasonDriverStore = defineStore('seasonDriver', () => {
       unassigned_to_team: 0,
     };
     currentPage.value = 1;
-    perPage.value = 10;
+    perPage.value = 25;
     totalDrivers.value = 0;
     lastPage.value = 1;
     availablePage.value = 1;

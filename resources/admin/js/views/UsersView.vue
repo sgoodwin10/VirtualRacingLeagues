@@ -62,7 +62,8 @@
             :loading="loading"
             @view="handleView"
             @edit="handleEdit"
-            @deactivate="handleDeactivate"
+            @archive="handleArchive"
+            @delete="handleDelete"
             @reactivate="handleReactivate"
           />
         </template>
@@ -181,23 +182,65 @@ const handleCreate = () => {
   createModalVisible.value = true;
 };
 
-const handleDeactivate = (user: User) => {
+const handleArchive = (user: User) => {
   const userName = user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim();
   confirm.require({
-    message: `Are you sure you want to deactivate ${userName}?`,
-    header: 'Confirm Deactivation',
+    message: `Are you sure you want to archive ${userName}?\n\nThis will:\n• Delete the user's league(s) and all associated data permanently\n• Archive (soft delete) the user account\n• User can be reactivated later`,
+    header: 'Archive User',
     icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-warning',
+    acceptLabel: 'Archive',
+    rejectLabel: 'Cancel',
     accept: async () => {
       try {
-        await userStore.deleteUser(user.id, getSignal());
-        showSuccessToast('User deactivated successfully');
+        const success = await userStore.deleteUser(user.id, getSignal());
+        if (success) {
+          showSuccessToast('User archived successfully');
+        } else {
+          showErrorToast(
+            new Error(userStore.errorMessage || 'Unknown error'),
+            'Failed to archive user',
+          );
+        }
       } catch (error) {
         // Silently ignore cancelled requests
         if (isRequestCancelled(error)) {
           return;
         }
 
-        showErrorToast(error, 'Failed to deactivate user');
+        showErrorToast(error, 'Failed to archive user');
+      }
+    },
+  });
+};
+
+const handleDelete = (user: User) => {
+  const userName = user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  confirm.require({
+    message: `⚠️ PERMANENT DELETION WARNING ⚠️\n\nAre you absolutely sure you want to permanently delete ${userName}?\n\nThis will:\n• Delete the user's league(s) and all associated data permanently\n• Permanently delete the user account\n• This action CANNOT be undone`,
+    header: 'Permanently Delete User',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    acceptLabel: 'Permanently Delete',
+    rejectLabel: 'Cancel',
+    accept: async () => {
+      try {
+        const success = await userStore.hardDeleteUser(user.id, getSignal());
+        if (success) {
+          showSuccessToast('User permanently deleted');
+        } else {
+          showErrorToast(
+            new Error(userStore.errorMessage || 'Unknown error'),
+            'Failed to delete user',
+          );
+        }
+      } catch (error) {
+        // Silently ignore cancelled requests
+        if (isRequestCancelled(error)) {
+          return;
+        }
+
+        showErrorToast(error, 'Failed to delete user');
       }
     },
   });

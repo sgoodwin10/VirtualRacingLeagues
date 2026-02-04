@@ -38,7 +38,8 @@ final class CsvExportService
         private readonly DriverRepositoryInterface $driverRepository,
         private readonly DivisionRepositoryInterface $divisionRepository,
         private readonly TeamRepositoryInterface $teamRepository,
-    ) {}
+    ) {
+    }
 
     /**
      * Generate CSV data for race results.
@@ -264,7 +265,7 @@ final class CsvExportService
             $timeDifference = null;
             if ($position > 1 && $timeMs > 0 && $firstTimeMs > 0) {
                 $diffMs = $timeMs - $firstTimeMs;
-                $timeDifference = '+'.$this->formatMillisecondsToTime($diffMs);
+                $timeDifference = '+' . $this->formatMillisecondsToTime($diffMs);
             }
 
             $row = new CrossDivisionExportRow(
@@ -619,7 +620,7 @@ final class CsvExportService
 
             $driver = $seasonDriver?->leagueDriver?->driver;
             if ($driver !== null) {
-                return trim($driver->first_name.' '.$driver->last_name);
+                return trim($driver->first_name . ' ' . $driver->last_name);
             }
 
             return 'Unknown Driver';

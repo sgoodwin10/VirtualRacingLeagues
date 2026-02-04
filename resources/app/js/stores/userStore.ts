@@ -18,6 +18,7 @@ export const useUserStore = defineStore(
 
     // Getters
     const isAuthenticated = computed((): boolean => user.value !== null);
+    const isAdmin = computed((): boolean => user.value?.is_admin ?? false);
     const userName = computed((): string => {
       if (!user.value) return 'Guest';
       return `${user.value.first_name} ${user.value.last_name}`.trim() || 'Guest';
@@ -131,6 +132,7 @@ export const useUserStore = defineStore(
       isLoading,
 
       // Getters
+      isAdmin,
       userName,
       userFirstName,
       userLastName,

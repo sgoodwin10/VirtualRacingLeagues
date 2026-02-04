@@ -837,4 +837,87 @@ describe('DriverFormDialog', () => {
       expect(typeof component.setServerError).toBe('function');
     });
   });
+
+  describe('Form Submission - Clearing Fields', () => {
+    it('should send null when discord_id is cleared', () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'edit',
+          leagueId: 1,
+          driver: mockDriver,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Set discord_id first
+      component.formData.discord_id = 'testuser#1234';
+      expect(component.getFormData().discord_id).toBe('testuser#1234');
+
+      // Clear discord_id (simulate user clearing the field)
+      component.handleDiscordIdUpdate('');
+
+      // Trigger form submission to see cleaned data
+      component.formData.first_name = 'John'; // Ensure validation passes
+
+      component.handleSubmit();
+
+      // Get the emitted save event
+      const saveEvents = wrapper.emitted('save');
+      expect(saveEvents).toBeTruthy();
+      expect(saveEvents?.length).toBe(1);
+
+      // Check that discord_id is null, not undefined or empty string
+      const emittedData = saveEvents?.[0]?.[0] as any;
+      expect(emittedData.discord_id).toBe(null);
+    });
+
+    it('should send null for all cleared optional fields', () => {
+      const wrapper = mountWithStubs(DriverFormDialog, {
+        props: {
+          visible: true,
+          mode: 'edit',
+          leagueId: 1,
+          driver: mockDriver,
+        },
+        ...getStubOptions(),
+      });
+
+      const component = wrapper.vm as any;
+
+      // Set fields first
+      component.formData.discord_id = 'testuser#1234';
+      component.formData.email = 'test@example.com';
+      component.formData.phone = '1234567890';
+      component.formData.first_name = 'John';
+      component.formData.last_name = 'Doe';
+
+      // Clear all optional fields
+      component.handleDiscordIdUpdate('');
+      component.formData.email = '';
+      component.formData.phone = '';
+      component.formData.last_name = '';
+      component.formData.league_notes = '';
+
+      component.handleSubmit();
+
+      // Get the emitted save event
+      const saveEvents = wrapper.emitted('save');
+      expect(saveEvents).toBeTruthy();
+
+      const emittedData = saveEvents?.[0]?.[0] as any;
+
+      // All cleared fields should be null
+      expect(emittedData.discord_id).toBe(null);
+      expect(emittedData.email).toBe(null);
+      expect(emittedData.phone).toBe(null);
+      expect(emittedData.last_name).toBe(null);
+      expect(emittedData.league_notes).toBe(null);
+
+      // first_name should still have a value
+      expect(emittedData.first_name).toBe('John');
+    });
+  });
 });

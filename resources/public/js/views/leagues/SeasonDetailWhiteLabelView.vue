@@ -769,6 +769,7 @@ import { useRoute } from 'vue-router';
 import { useTitle } from '@vueuse/core';
 import * as Sentry from '@sentry/vue';
 import { leagueService } from '@public/services/leagueService';
+import { getSiteConfig } from '@public/types/site-config';
 import Chart from 'primevue/chart';
 import type {
   PublicSeasonDetailResponse,
@@ -809,7 +810,8 @@ const allTimesSortDirection = ref<Record<number, 'asc'>>({});
  */
 const pageTitle = computed(() => {
   if (!seasonData.value) return 'Loading...';
-  const siteName = import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
+  const siteConfig = getSiteConfig();
+  const siteName = siteConfig?.name || import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
   return `${seasonData.value.season.name} - WL - ${seasonData.value.competition.name} - ${seasonData.value.league.name} - ${siteName}`;
 });
 

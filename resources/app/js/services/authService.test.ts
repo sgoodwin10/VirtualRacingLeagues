@@ -18,6 +18,7 @@ describe('AuthService', () => {
         last_name: 'Doe',
         email: 'john@example.com',
         email_verified_at: null,
+        is_admin: false,
       };
 
       vi.mocked(apiService.fetchCSRFToken).mockResolvedValue();
@@ -69,6 +70,7 @@ describe('AuthService', () => {
         last_name: 'Doe',
         email: 'john@example.com',
         email_verified_at: null,
+        is_admin: false,
       };
 
       vi.mocked(apiClient.get).mockResolvedValue({
@@ -106,6 +108,7 @@ describe('AuthService', () => {
         last_name: 'Doe',
         email: 'jane@example.com',
         email_verified_at: null,
+        is_admin: false,
       };
 
       vi.mocked(apiClient.put).mockResolvedValue({

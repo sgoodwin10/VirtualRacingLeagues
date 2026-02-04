@@ -41,6 +41,7 @@ final class User
         private ?UserAlias $alias,
         private ?UserUuid $uuid,
         private UserStatus $status,
+        private bool $isAdmin,
         private ?DateTimeImmutable $emailVerifiedAt,
         private ?DateTimeImmutable $createdAt,
         private ?DateTimeImmutable $updatedAt,
@@ -58,6 +59,7 @@ final class User
         ?UserAlias $alias = null,
         ?UserUuid $uuid = null,
         ?UserStatus $status = null,
+        bool $isAdmin = false,
     ): self {
         $user = new self(
             id: null,
@@ -67,6 +69,7 @@ final class User
             alias: $alias,
             uuid: $uuid ?? UserUuid::generate(),
             status: $status ?? UserStatus::ACTIVE,
+            isAdmin: $isAdmin,
             emailVerifiedAt: null,
             createdAt: new DateTimeImmutable(),
             updatedAt: new DateTimeImmutable(),
@@ -110,6 +113,7 @@ final class User
         ?UserAlias $alias,
         ?UserUuid $uuid,
         UserStatus $status,
+        bool $isAdmin,
         ?DateTimeImmutable $emailVerifiedAt,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
@@ -123,6 +127,7 @@ final class User
             alias: $alias,
             uuid: $uuid,
             status: $status,
+            isAdmin: $isAdmin,
             emailVerifiedAt: $emailVerifiedAt,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
@@ -190,6 +195,11 @@ final class User
     public function deletedAt(): ?DateTimeImmutable
     {
         return $this->deletedAt;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->isAdmin;
     }
 
     // Business logic methods

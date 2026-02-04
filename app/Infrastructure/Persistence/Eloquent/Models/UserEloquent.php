@@ -31,6 +31,7 @@ use Spatie\Activitylog\Models\Activity;
  * @property string|null $alias
  * @property string|null $uuid
  * @property string $status
+ * @property bool $is_admin
  * @property string $email
  * @property Carbon|null $email_verified_at
  * @property string $password
@@ -92,6 +93,7 @@ class UserEloquent extends Authenticatable implements MustVerifyEmail
         'alias',
         'uuid',
         'status',
+        'is_admin',
         'email_verified_at',
     ];
 
@@ -115,6 +117,7 @@ class UserEloquent extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
     }
 

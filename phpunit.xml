@@ -39,6 +39,7 @@
   <php>
     <!-- Application Environment -->
     <env name="APP_ENV" value="testing"/>
+    <env name="APP_ROOT_DOMAIN" value="virtualracingleagues.localhost"/>
     <env name="APP_URL" value="http://virtualracingleagues.localhost"/>
     <env name="APP_MAINTENANCE_DRIVER" value="file"/>
     <!-- Performance Optimizations -->

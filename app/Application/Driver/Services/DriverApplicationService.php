@@ -250,15 +250,28 @@ final class DriverApplicationService
             }
 
             // Update platform IDs if provided
-            $hasPlatformUpdate = $data->psn_id !== null
-                || $data->iracing_id !== null || $data->iracing_customer_id !== null
-                || $data->discord_id !== null;
+            // Note: We check if the request CONTAINS the field (even if null/empty) to allow clearing
+            /** @phpstan-ignore-next-line */
+            $requestData = request()->all();
+            $hasPlatformUpdate = array_key_exists('psn_id', $requestData)
+                || array_key_exists('iracing_id', $requestData)
+                || array_key_exists('iracing_customer_id', $requestData)
+                || array_key_exists('discord_id', $requestData);
             if ($hasPlatformUpdate) {
                 // Build the new platform IDs (combining existing with updates)
-                $newPsnId = $data->psn_id ?? $driver->platformIds()->psnId();
-                $newIracingId = $data->iracing_id ?? $driver->platformIds()->iracingId();
-                $newIracingCustomerId = $data->iracing_customer_id ?? $driver->platformIds()->iracingCustomerId();
-                $newDiscordId = $data->discord_id ?? $driver->platformIds()->discordId();
+                // Use array_key_exists() to distinguish between "not provided" vs "explicitly cleared"
+                $newPsnId = array_key_exists('psn_id', $requestData)
+                    ? ($data->psn_id !== null && $data->psn_id !== '' ? $data->psn_id : null)
+                    : $driver->platformIds()->psnId();
+                $newIracingId = array_key_exists('iracing_id', $requestData)
+                    ? ($data->iracing_id !== null && $data->iracing_id !== '' ? $data->iracing_id : null)
+                    : $driver->platformIds()->iracingId();
+                $newIracingCustomerId = array_key_exists('iracing_customer_id', $requestData)
+                    ? $data->iracing_customer_id
+                    : $driver->platformIds()->iracingCustomerId();
+                $newDiscordId = array_key_exists('discord_id', $requestData)
+                    ? ($data->discord_id !== null && $data->discord_id !== '' ? $data->discord_id : null)
+                    : $driver->platformIds()->discordId();
 
                 // Ensure driver has been persisted with an ID
                 $driverId = $driver->id();
@@ -294,12 +307,13 @@ final class DriverApplicationService
             }
 
             // Update contact information if provided
-            if ($data->email !== null) {
-                $driver->updateEmail($data->email);
+            // Use array_key_exists() to distinguish between "not provided" vs "explicitly cleared"
+            if (array_key_exists('email', $requestData)) {
+                $driver->updateEmail($data->email !== null && $data->email !== '' ? $data->email : null);
                 $driverUpdated = true;
             }
-            if ($data->phone !== null) {
-                $driver->updatePhone($data->phone);
+            if (array_key_exists('phone', $requestData)) {
+                $driver->updatePhone($data->phone !== null && $data->phone !== '' ? $data->phone : null);
                 $driverUpdated = true;
             }
 
@@ -310,10 +324,17 @@ final class DriverApplicationService
 
             // Update league-specific settings (only if explicitly provided)
             // Use existing values if not provided in the request
+            // Use array_key_exists() to allow clearing league_notes
             $leagueDriver->updateLeagueSettings(
-                driverNumber: $data->driver_number ?? $leagueDriver->driverNumber(),
-                status: $data->status !== null ? DriverStatus::from($data->status) : $leagueDriver->status(),
-                leagueNotes: $data->league_notes ?? $leagueDriver->leagueNotes()
+                driverNumber: array_key_exists('driver_number', $requestData)
+                    ? $data->driver_number
+                    : $leagueDriver->driverNumber(),
+                status: array_key_exists('status', $requestData) && $data->status !== null
+                    ? DriverStatus::from($data->status)
+                    : $leagueDriver->status(),
+                leagueNotes: array_key_exists('league_notes', $requestData)
+                    ? ($data->league_notes !== null && $data->league_notes !== '' ? $data->league_notes : null)
+                    : $leagueDriver->leagueNotes()
             );
 
             $this->driverRepository->updateLeagueDriver($leagueDriver);
@@ -1084,16 +1105,28 @@ final class DriverApplicationService
             }
 
             // Update platform IDs if provided
-            $hasPlatformUpdate = $data->psn_id !== null
-                || $data->iracing_id !== null
-                || $data->iracing_customer_id !== null
-                || $data->discord_id !== null;
+            // Note: We check if the request CONTAINS the field (even if null/empty) to allow clearing
+            /** @phpstan-ignore-next-line */
+            $adminRequestData = request()->all();
+            $hasPlatformUpdate = array_key_exists('psn_id', $adminRequestData)
+                || array_key_exists('iracing_id', $adminRequestData)
+                || array_key_exists('iracing_customer_id', $adminRequestData)
+                || array_key_exists('discord_id', $adminRequestData);
             if ($hasPlatformUpdate) {
                 // Build the new platform IDs (combining existing with updates)
-                $newPsnId = $data->psn_id ?? $driver->platformIds()->psnId();
-                $newIracingId = $data->iracing_id ?? $driver->platformIds()->iracingId();
-                $newIracingCustomerId = $data->iracing_customer_id ?? $driver->platformIds()->iracingCustomerId();
-                $newDiscordId = $data->discord_id ?? $driver->platformIds()->discordId();
+                // Use array_key_exists() to distinguish between "not provided" vs "explicitly cleared"
+                $newPsnId = array_key_exists('psn_id', $adminRequestData)
+                    ? ($data->psn_id !== null && $data->psn_id !== '' ? $data->psn_id : null)
+                    : $driver->platformIds()->psnId();
+                $newIracingId = array_key_exists('iracing_id', $adminRequestData)
+                    ? ($data->iracing_id !== null && $data->iracing_id !== '' ? $data->iracing_id : null)
+                    : $driver->platformIds()->iracingId();
+                $newIracingCustomerId = array_key_exists('iracing_customer_id', $adminRequestData)
+                    ? $data->iracing_customer_id
+                    : $driver->platformIds()->iracingCustomerId();
+                $newDiscordId = array_key_exists('discord_id', $adminRequestData)
+                    ? ($data->discord_id !== null && $data->discord_id !== '' ? $data->discord_id : null)
+                    : $driver->platformIds()->discordId();
 
                 // Ensure driver has been persisted with an ID
                 $driverId = $driver->id();
@@ -1120,12 +1153,13 @@ final class DriverApplicationService
             }
 
             // Update contact information if provided
-            if ($data->email !== null) {
-                $driver->updateEmail($data->email);
+            // Use array_key_exists() to distinguish between "not provided" vs "explicitly cleared"
+            if (array_key_exists('email', $adminRequestData)) {
+                $driver->updateEmail($data->email !== null && $data->email !== '' ? $data->email : null);
                 $driverUpdated = true;
             }
-            if ($data->phone !== null) {
-                $driver->updatePhone($data->phone);
+            if (array_key_exists('phone', $adminRequestData)) {
+                $driver->updatePhone($data->phone !== null && $data->phone !== '' ? $data->phone : null);
                 $driverUpdated = true;
             }
 

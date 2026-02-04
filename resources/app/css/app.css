@@ -679,6 +679,16 @@ textarea {
   background-color: rgba(0, 0, 0, 0.75) !important;
 }
 
+/* PrimeVue ConfirmDialog width constraint */
+.p-confirmdialog {
+  max-width: 36rem; /* max-w-xl equivalent - 576px */
+  width: 90vw; /* Responsive on smaller screens */
+}
+
+.p-confirmdialog .p-confirmdialog-message {
+  white-space: pre-line; /* Preserve line breaks in message */
+}
+
 /* PrimeVue input Styling */
 .p-inputtext,
 .p-inputnumber-input,

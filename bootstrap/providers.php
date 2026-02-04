@@ -9,4 +9,5 @@ return [
     App\Providers\SentryServiceProvider::class,
     App\Providers\SiteConfigServiceProvider::class,
     App\Providers\TelescopeServiceProvider::class,
+    App\Providers\ViewServiceProvider::class,
 ];

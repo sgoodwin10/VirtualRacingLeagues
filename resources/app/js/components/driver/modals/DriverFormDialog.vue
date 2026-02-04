@@ -229,17 +229,17 @@ const handleSubmit = (): void => {
     return;
   }
 
-  // Clean up empty string values
+  // Clean up empty string values - convert to null for proper backend handling
   const cleanedData: DriverFormData = {
-    first_name: formData.value.first_name || undefined,
-    last_name: formData.value.last_name || undefined,
-    nickname: formData.value.nickname || undefined,
-    discord_id: formData.value.discord_id || undefined,
-    email: formData.value.email || undefined,
-    phone: formData.value.phone || undefined,
+    first_name: formData.value.first_name || null,
+    last_name: formData.value.last_name || null,
+    nickname: formData.value.nickname || null,
+    discord_id: formData.value.discord_id || null,
+    email: formData.value.email || null,
+    phone: formData.value.phone || null,
     driver_number: formData.value.driver_number,
     status: formData.value.status,
-    league_notes: formData.value.league_notes || undefined,
+    league_notes: formData.value.league_notes || null,
   };
 
   // Add dynamic platform fields

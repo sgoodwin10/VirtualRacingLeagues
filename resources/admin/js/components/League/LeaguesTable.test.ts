@@ -156,6 +156,16 @@ describe('LeaguesTable', () => {
       expect(wrapper.emitted('archive')).toBeTruthy();
       expect(wrapper.emitted('archive')?.[0]).toEqual([league]);
     });
+
+    it('emits delete event when handleDelete is called', () => {
+      const league = createMockLeague({ status: 'archived' });
+      const wrapper = mountLeaguesTable({ leagues: [league] });
+
+      (wrapper.vm as any).handleDelete(league);
+
+      expect(wrapper.emitted('delete')).toBeTruthy();
+      expect(wrapper.emitted('delete')?.[0]).toEqual([league]);
+    });
   });
 
   describe('Multiple Leagues', () => {

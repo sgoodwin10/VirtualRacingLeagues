@@ -18,9 +18,12 @@ describe('CrossDivisionResultsTable', () => {
       race_number: 1,
       is_qualifier: true,
       race_points: false,
+      status: 'completed',
       results: [
         {
           id: 1,
+          race_id: 1,
+          driver_id: 1,
           position: 1,
           driver: { id: 1, name: 'Driver 1' },
           race_points: 0,
@@ -31,13 +34,20 @@ describe('CrossDivisionResultsTable', () => {
           division_id: 1,
           original_race_time: null,
           final_race_time: null,
+          original_race_time_difference: null,
+          final_race_time_difference: null,
           fastest_lap: null,
           penalties: null,
+          status: 'completed',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
         },
         {
           id: 2,
+          race_id: 1,
+          driver_id: 2,
           position: 2,
-          driver: { id: 1, name: 'Driver 2' },
+          driver: { id: 2, name: 'Driver 2' },
           race_points: 0,
           positions_gained: null,
           dnf: false,
@@ -46,8 +56,13 @@ describe('CrossDivisionResultsTable', () => {
           division_id: 2,
           original_race_time: null,
           final_race_time: null,
+          original_race_time_difference: null,
+          final_race_time_difference: null,
           fastest_lap: null,
           penalties: null,
+          status: 'completed',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
         },
       ],
     },
@@ -450,16 +465,18 @@ describe('CrossDivisionResultsTable', () => {
 
   describe('Division Information', () => {
     it('should handle drivers without division', () => {
+      const firstEvent = mockRaceEvents[0]!;
+      const firstResult = firstEvent.results[0]!;
       const raceEventsNoDivision: RaceEventResults[] = [
         {
-          ...mockRaceEvents[0],
+          ...firstEvent,
           results: [
             {
-              ...mockRaceEvents[0]?.results[0],
+              ...firstResult,
               division_id: null,
-            } as any,
+            },
           ],
-        },
+        } as RaceEventResults,
       ];
 
       wrapper = mount(CrossDivisionResultsTable, {

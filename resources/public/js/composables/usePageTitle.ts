@@ -1,5 +1,6 @@
 import { watch } from 'vue';
 import type { Ref } from 'vue';
+import { getSiteConfig } from '@public/types/site-config';
 
 /**
  * Composable for managing dynamic page titles
@@ -23,7 +24,9 @@ import type { Ref } from 'vue';
  * setTitle(['Season 2024', 'Formula Racing League']);
  */
 export function usePageTitle(title?: Ref<string | string[] | null | undefined>) {
-  const appName = import.meta.env.VITE_APP_NAME || 'Your App';
+  // Get site name from site config with fallbacks
+  const siteConfig = getSiteConfig();
+  const appName = siteConfig?.name || import.meta.env.VITE_APP_NAME || 'Your App';
 
   /**
    * Formats the title parts into a complete page title

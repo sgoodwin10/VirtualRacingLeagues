@@ -137,14 +137,24 @@ describe('UsersTable', () => {
       expect(wrapper.emitted('edit')?.[0]).toEqual([user]);
     });
 
-    it('emits deactivate event when handleDeactivate is called', () => {
+    it('emits archive event when handleArchive is called', () => {
       const user = createMockUser({ deleted_at: null });
       const wrapper = mountUsersTable({ users: [user] });
 
-      (wrapper.vm as any).handleDeactivate(user);
+      (wrapper.vm as any).handleArchive(user);
 
-      expect(wrapper.emitted('deactivate')).toBeTruthy();
-      expect(wrapper.emitted('deactivate')?.[0]).toEqual([user]);
+      expect(wrapper.emitted('archive')).toBeTruthy();
+      expect(wrapper.emitted('archive')?.[0]).toEqual([user]);
+    });
+
+    it('emits delete event when handleDelete is called', () => {
+      const user = createMockUser({ deleted_at: null });
+      const wrapper = mountUsersTable({ users: [user] });
+
+      (wrapper.vm as any).handleDelete(user);
+
+      expect(wrapper.emitted('delete')).toBeTruthy();
+      expect(wrapper.emitted('delete')?.[0]).toEqual([user]);
     });
 
     it('emits reactivate event when handleReactivate is called', () => {

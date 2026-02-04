@@ -45,7 +45,8 @@ final class League
         private ?string $facebookHandle,
         private LeagueVisibility $visibility,
         private string $status,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a new league.

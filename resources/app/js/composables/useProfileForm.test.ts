@@ -58,6 +58,7 @@ describe('useProfileForm', () => {
         last_name: 'Doe',
         email: 'john@example.com',
         email_verified_at: null,
+        is_admin: false,
         created_at: '2024-01-01',
         updated_at: '2024-01-01',
       };
@@ -80,6 +81,7 @@ describe('useProfileForm', () => {
         last_name: 'Doe',
         email: 'john@example.com',
         email_verified_at: null,
+        is_admin: false,
       };
       userStore.user = mockUser;
 
@@ -105,6 +107,7 @@ describe('useProfileForm', () => {
         last_name: 'Doe',
         email: 'john@example.com',
         email_verified_at: null,
+        is_admin: false,
       };
       userStore.user = mockUser;
 
@@ -763,6 +766,7 @@ describe('useProfileForm', () => {
         last_name: 'Doe',
         email: 'john@example.com',
         email_verified_at: null,
+        is_admin: false,
       };
       userStore.user = mockUser;
 

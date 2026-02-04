@@ -107,6 +107,14 @@ interface LeagueRepositoryInterface
     public function forceDelete(League $league): void;
 
     /**
+     * Permanently delete a league and ALL associated data (competitions, drivers, seasons, rounds, races).
+     * This performs a hard delete with proper cascade deletion respecting foreign key constraints.
+     *
+     * @param  int  $leagueId  The league ID to delete
+     */
+    public function hardDeleteLeagueWithAssociations(int $leagueId): void;
+
+    /**
      * Get platforms associated with a league.
      *
      * @return array<int, array{id: int, name: string, slug: string, description: ?string, logo_url: ?string}>

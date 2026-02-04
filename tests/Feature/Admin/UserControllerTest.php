@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Admin;
 
+use App\Infrastructure\Persistence\Eloquent\Models\League;
 use App\Models\Admin;
 use App\Models\User;
 use App\Notifications\EmailVerificationNotification;
@@ -652,5 +653,83 @@ class UserControllerTest extends TestCase
         $response = $this->postJson("/api/admin/users/{$user->id}/resend-verification");
 
         $response->assertStatus(401);
+    }
+
+    public function test_can_hard_delete_user(): void
+    {
+        $user = User::factory()->create(['status' => 'active']);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->deleteJson("/api/admin/users/{$user->id}/hard-delete");
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['message' => 'User permanently deleted successfully']);
+
+        // Verify user is permanently deleted (not in database)
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    }
+
+    public function test_hard_delete_user_returns_404_for_nonexistent_user(): void
+    {
+        $response = $this->actingAs($this->admin, 'admin')
+            ->deleteJson('/api/admin/users/99999/hard-delete');
+
+        $response->assertStatus(404);
+    }
+
+    public function test_hard_delete_requires_authentication(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->deleteJson("/api/admin/users/{$user->id}/hard-delete");
+
+        $response->assertStatus(401);
+    }
+
+    public function test_hard_delete_user_deletes_associated_leagues(): void
+    {
+        $user = User::factory()->create();
+
+        // Create leagues for this user
+        $league1 = League::factory()->create(['owner_user_id' => $user->id]);
+        $league2 = League::factory()->create(['owner_user_id' => $user->id]);
+
+        // Create a league for another user (should NOT be deleted)
+        $otherUser = User::factory()->create();
+        $otherLeague = League::factory()->create(['owner_user_id' => $otherUser->id]);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->deleteJson("/api/admin/users/{$user->id}/hard-delete");
+
+        $response->assertStatus(200);
+
+        // Verify user is permanently deleted
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+
+        // Verify user's leagues are permanently deleted
+        $this->assertDatabaseMissing('leagues', ['id' => $league1->id]);
+        $this->assertDatabaseMissing('leagues', ['id' => $league2->id]);
+
+        // Verify other user's league still exists
+        $this->assertDatabaseHas('leagues', ['id' => $otherLeague->id]);
+    }
+
+    public function test_soft_delete_still_works_separately_from_hard_delete(): void
+    {
+        $user = User::factory()->create(['status' => 'active']);
+
+        // Test soft delete
+        $response = $this->actingAs($this->admin, 'admin')
+            ->deleteJson("/api/admin/users/{$user->id}");
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['message' => 'User deactivated successfully']);
+
+        // Verify user is soft deleted
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
+
+        // Verify status was changed to inactive
+        $user->refresh();
+        $this->assertEquals('inactive', $user->status);
     }
 }

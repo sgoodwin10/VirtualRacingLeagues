@@ -156,7 +156,7 @@ function isSafeUrl(url: string | null | undefined): boolean {
           rel="noopener noreferrer"
           class="text-[var(--green)] no-underline hover:underline"
         >
-        https://facebook.com/{{ league.facebook_handle }}
+          https://facebook.com/{{ league.facebook_handle }}
         </a>
       </div>
 

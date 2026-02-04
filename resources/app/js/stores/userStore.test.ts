@@ -33,6 +33,7 @@ describe('useUserStore', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
 
     vi.mocked(authService.login).mockResolvedValue(mockUser);
@@ -69,6 +70,7 @@ describe('useUserStore', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
 
     vi.mocked(authService.logout).mockResolvedValue();
@@ -97,6 +99,7 @@ describe('useUserStore', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
 
     vi.mocked(authService.logout).mockRejectedValue(new Error('API error'));
@@ -114,6 +117,7 @@ describe('useUserStore', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: '2024-01-01T00:00:00.000Z',
+      is_admin: false,
     };
 
     vi.mocked(authService.checkAuth).mockResolvedValue(mockUser);
@@ -147,6 +151,7 @@ describe('useUserStore', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
     expect(userStore.isEmailVerified).toBe(false);
 
@@ -157,6 +162,7 @@ describe('useUserStore', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: '2024-01-01T00:00:00.000Z',
+      is_admin: false,
     };
     expect(userStore.isEmailVerified).toBe(true);
   });
@@ -170,6 +176,7 @@ describe('useUserStore', () => {
       last_name: 'Doe',
       email: 'john@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
 
     const updatedUser: User = {
@@ -178,6 +185,7 @@ describe('useUserStore', () => {
       last_name: 'Smith',
       email: 'jane@example.com',
       email_verified_at: null,
+      is_admin: false,
     };
 
     userStore.user = initialUser;
@@ -202,5 +210,35 @@ describe('useUserStore', () => {
     await userStore.resendVerificationEmail();
 
     expect(authService.resendVerificationEmail).toHaveBeenCalled();
+  });
+
+  it('should return admin status correctly', () => {
+    const userStore = useUserStore();
+
+    // Non-admin user
+    userStore.user = {
+      id: 1,
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      email_verified_at: null,
+      is_admin: false,
+    };
+    expect(userStore.isAdmin).toBe(false);
+
+    // Admin user
+    userStore.user = {
+      id: 2,
+      first_name: 'Admin',
+      last_name: 'User',
+      email: 'admin@example.com',
+      email_verified_at: null,
+      is_admin: true,
+    };
+    expect(userStore.isAdmin).toBe(true);
+
+    // No user
+    userStore.user = null;
+    expect(userStore.isAdmin).toBe(false);
   });
 });

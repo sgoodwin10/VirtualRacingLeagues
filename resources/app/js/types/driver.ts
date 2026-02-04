@@ -53,24 +53,24 @@ export interface LeagueDriver {
  */
 export interface CreateDriverRequest {
   // Names (at least one of nickname or discord_id required)
-  first_name?: string;
-  last_name?: string;
-  nickname?: string;
-  discord_id?: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  nickname?: string | null;
+  discord_id?: string | null;
 
   // Contact info (optional)
-  email?: string;
-  phone?: string;
+  email?: string | null;
+  phone?: string | null;
 
   // Platform IDs (at least one required)
-  psn_id?: string;
-  iracing_id?: string;
-  iracing_customer_id?: number;
+  psn_id?: string | null;
+  iracing_id?: string | null;
+  iracing_customer_id?: number | null;
 
   // League-specific data
-  driver_number?: number;
+  driver_number?: number | null;
   status?: DriverStatus;
-  league_notes?: string;
+  league_notes?: string | null;
 }
 
 /**
@@ -87,15 +87,15 @@ export interface UpdateLeagueDriverRequest {
  */
 export interface UpdateDriverRequest {
   // Global driver fields (optional - only update if provided)
-  first_name?: string;
-  last_name?: string;
-  nickname?: string;
-  discord_id?: string;
-  email?: string;
-  phone?: string;
-  psn_id?: string;
-  iracing_id?: string;
-  iracing_customer_id?: number;
+  first_name?: string | null;
+  last_name?: string | null;
+  nickname?: string | null;
+  discord_id?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  psn_id?: string | null;
+  iracing_id?: string | null;
+  iracing_customer_id?: number | null;
   // League-specific fields
   driver_number?: number | null;
   status?: DriverStatus;
@@ -181,7 +181,7 @@ export interface DriverStats {
  * Combines CreateDriverRequest with platform-specific fields
  */
 export type DriverFormData = CreateDriverRequest & {
-  [key: string]: string | number | undefined;
+  [key: string]: string | number | null | undefined;
 };
 
 /**

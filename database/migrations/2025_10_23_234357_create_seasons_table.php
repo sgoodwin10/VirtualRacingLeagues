@@ -34,9 +34,10 @@ return new class extends Migration
                 ->default('setup')
                 ->comment('Season lifecycle status');
             $table->foreignId('created_by_user_id')
+                ->nullable()
                 ->constrained('users')
-                ->onDelete('restrict')
-                ->comment('User who created the season');
+                ->nullOnDelete()
+                ->comment('User who created the season (nullable for user deletion)');
             $table->timestamps();
             $table->softDeletes()->comment('Soft delete timestamp');
 

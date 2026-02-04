@@ -74,7 +74,7 @@
     </Column>
 
     <!-- Actions Column -->
-    <Column header="Actions" :exportable="false" style="min-width: 200px">
+    <Column header="Actions" :exportable="false" style="min-width: 250px">
       <template #body="{ data }">
         <div class="flex gap-2">
           <Button
@@ -111,14 +111,25 @@
           />
           <Button
             v-if="!data.deleted_at"
-            v-tooltip.top="'Deactivate'"
+            v-tooltip.top="'Archive'"
+            icon="pi pi-box"
+            text
+            rounded
+            severity="warn"
+            size="small"
+            aria-label="Archive user"
+            @click="handleArchive(data)"
+          />
+          <Button
+            v-if="!data.deleted_at"
+            v-tooltip.top="'Delete'"
             icon="pi pi-trash"
             text
             rounded
             severity="danger"
             size="small"
-            aria-label="Deactivate user"
-            @click="handleDeactivate(data)"
+            aria-label="Delete user permanently"
+            @click="handleDelete(data)"
           />
           <Button
             v-else
@@ -184,9 +195,14 @@ export interface UsersTableEmits {
   (event: 'edit', user: User): void;
 
   /**
-   * Emitted when user clicks deactivate
+   * Emitted when user clicks archive (soft delete)
    */
-  (event: 'deactivate', user: User): void;
+  (event: 'archive', user: User): void;
+
+  /**
+   * Emitted when user clicks delete (hard delete)
+   */
+  (event: 'delete', user: User): void;
 
   /**
    * Emitted when user clicks reactivate
@@ -233,10 +249,17 @@ const handleEdit = (user: User): void => {
 };
 
 /**
- * Handle deactivate click
+ * Handle archive click
  */
-const handleDeactivate = (user: User): void => {
-  emit('deactivate', user);
+const handleArchive = (user: User): void => {
+  emit('archive', user);
+};
+
+/**
+ * Handle delete click
+ */
+const handleDelete = (user: User): void => {
+  emit('delete', user);
 };
 
 /**

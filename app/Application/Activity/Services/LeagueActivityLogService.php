@@ -115,6 +115,45 @@ class LeagueActivityLogService
         );
     }
 
+    /**
+     * Log league permanently deleted (hard delete).
+     * Note: This is called after the league has been deleted, so we only have the ID.
+     */
+    public function logLeagueDeleted(int $leagueId): void
+    {
+        try {
+            // Use the authenticated user (either user or admin)
+            $user = auth()->guard('web')->user() ?? auth()->guard('admin')->user();
+
+            if ($user === null) {
+                // If no authenticated user, just log to system log
+                Log::info("League hard deleted (ID: {$leagueId}) - no authenticated user");
+                return;
+            }
+
+            $request = request();
+            $properties = [
+                'league_id' => $leagueId,
+                'action' => 'hard_delete',
+                'entity_type' => 'league',
+                'entity_id' => $leagueId,
+            ];
+
+            if ($request !== null) {
+                $properties['ip_address'] = $request->ip();
+                $properties['user_agent'] = $request->userAgent();
+            }
+
+            activity('league')
+                ->causedBy($user)
+                ->withProperties($properties)
+                ->log("Permanently deleted league (ID: {$leagueId}) and all associated data");
+        } catch (\Throwable $e) {
+            // Don't fail the deletion if activity logging fails
+            Log::error("Failed to log league deletion activity: {$e->getMessage()}");
+        }
+    }
+
     // =============================================================================
     // DRIVER ACTIVITIES (League Drivers)
     // =============================================================================

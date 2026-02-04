@@ -13,7 +13,18 @@ describe('usePageTitle', () => {
       configurable: true,
     });
 
-    // Mock import.meta.env
+    // Mock window.__SITE_CONFIG__ (checked first by getSiteConfig)
+    window.__SITE_CONFIG__ = {
+      name: mockAppName,
+      timezone: 'UTC',
+      discord: { url: null, inviteCode: null },
+      maintenance: { enabled: false, message: '' },
+      registration: { enabled: true },
+      google: { analyticsId: null, tagManagerId: null, searchConsoleCode: null },
+      emails: { support: null, contact: null, admin: null },
+    };
+
+    // Mock import.meta.env as fallback
     vi.stubEnv('VITE_APP_NAME', mockAppName);
   });
 

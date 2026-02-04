@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@public/stores/authStore';
 import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/types/errors';
 import { usePasswordValidation } from '@public/composables/usePasswordValidation';
+import { configService } from '@public/services/configService';
+import type { SiteConfig } from '@public/types/config';
 import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
 import LandingNav from '@public/components/landing/LandingNav.vue';
 import VrlButton from '@public/components/common/buttons/VrlButton.vue';
@@ -13,9 +15,15 @@ import VrlAlert from '@public/components/common/alerts/VrlAlert.vue';
 import VrlFormGroup from '@public/components/common/forms/VrlFormGroup.vue';
 import VrlFormLabel from '@public/components/common/forms/VrlFormLabel.vue';
 import VrlFormError from '@public/components/common/forms/VrlFormError.vue';
+import VrlSpinner from '@public/components/common/loading/VrlSpinner.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+
+// Site config state
+const siteConfig = ref<SiteConfig | null>(null);
+const isLoadingConfig = ref(true);
+const configError = ref(false);
 
 // Form data
 const firstName = ref('');
@@ -157,6 +165,32 @@ const handleSubmit = async (): Promise<void> => {
     isSubmitting.value = false;
   }
 };
+
+const fetchSiteConfig = async (): Promise<void> => {
+  try {
+    siteConfig.value = await configService.getSiteConfig();
+    configError.value = false;
+  } catch {
+    // If config fetch fails, default to showing the form (fail-safe)
+    configError.value = true;
+    siteConfig.value = {
+      user_registration_enabled: true,
+      discord_url: null,
+    };
+  } finally {
+    isLoadingConfig.value = false;
+  }
+};
+
+const openDiscord = (): void => {
+  if (siteConfig.value?.discord_url) {
+    window.open(siteConfig.value.discord_url, '_blank');
+  }
+};
+
+onMounted(() => {
+  fetchSiteConfig();
+});
 </script>
 
 <template>
@@ -178,9 +212,47 @@ const handleSubmit = async (): Promise<void> => {
           <h1 class="text-display-h2 text-center mb-2">Create Account</h1>
           <p class="text-body-secondary text-center mb-8">Join Virtual Racing Leagues today</p>
 
+          <!-- Loading State -->
+          <div v-if="isLoadingConfig" class="flex items-center justify-center py-12">
+            <VrlSpinner size="lg" label="Loading registration form" centered />
+          </div>
+
+          <!-- Registration Disabled Message -->
+          <div v-else-if="!siteConfig?.user_registration_enabled" class="space-y-6">
+            <VrlAlert
+              type="warning"
+              title="Registration Currently Disabled"
+              message="New user registration is temporarily disabled. Please join our Discord community for updates and support."
+              class="mb-6"
+            />
+
+            <div class="text-center space-y-4">
+              <p class="text-body-secondary">
+                Stay connected with our community and get notified when registration reopens.
+              </p>
+
+              <VrlButton
+                v-if="siteConfig?.discord_url"
+                variant="primary"
+                size="lg"
+                class="w-full"
+                @click="openDiscord"
+              >
+                Join Our Discord
+              </VrlButton>
+
+              <p class="text-center text-body-secondary mt-6">
+                Already have an account?
+                <router-link to="/login" class="text-[var(--cyan)] hover:underline font-medium">
+                  Sign in
+                </router-link>
+              </p>
+            </div>
+          </div>
+
           <!-- Error Message -->
           <VrlAlert
-            v-if="errorMessage"
+            v-else-if="errorMessage"
             type="error"
             title="Error"
             :message="errorMessage"
@@ -188,7 +260,7 @@ const handleSubmit = async (): Promise<void> => {
           />
 
           <!-- Registration Form -->
-          <form class="space-y-6" @submit.prevent="handleSubmit">
+          <form v-else class="space-y-6" @submit.prevent="handleSubmit">
             <!-- Name Fields (Side by Side on Desktop) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <VrlFormGroup>
@@ -308,15 +380,15 @@ const handleSubmit = async (): Promise<void> => {
             >
               {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
             </VrlButton>
-          </form>
 
-          <!-- Login Link -->
-          <p class="text-center text-body-secondary mt-6">
-            Already have an account?
-            <router-link to="/login" class="text-[var(--cyan)] hover:underline font-medium">
-              Sign in
-            </router-link>
-          </p>
+            <!-- Login Link -->
+            <p class="text-center text-body-secondary mt-6">
+              Already have an account?
+              <router-link to="/login" class="text-[var(--cyan)] hover:underline font-medium">
+                Sign in
+              </router-link>
+            </p>
+          </form>
         </div>
       </div>
     </main>

@@ -129,6 +129,22 @@ final class UserController extends Controller
     }
 
     /**
+     * Permanently delete the specified user (hard delete).
+     * This deletes all the user's leagues and associated data first,
+     * then permanently deletes the user record.
+     */
+    public function hardDelete(int $user): JsonResponse
+    {
+        try {
+            $this->userService->hardDeleteUser($user);
+
+            return ApiResponse::success(null, 'User permanently deleted successfully');
+        } catch (UserNotFoundException $e) {
+            return ApiResponse::error($e->getMessage(), null, 404);
+        }
+    }
+
+    /**
      * Restore a soft-deleted user.
      */
     public function restore(int $id): JsonResponse

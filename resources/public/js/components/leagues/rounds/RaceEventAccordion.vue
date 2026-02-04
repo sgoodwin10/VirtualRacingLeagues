@@ -224,6 +224,7 @@ import VrlDataTable from '@public/components/common/tables/VrlDataTable.vue';
 import VrlPositionCell from '@public/components/common/tables/cells/VrlPositionCell.vue';
 import VrlPointsCell from '@public/components/common/tables/cells/VrlPointsCell.vue';
 import { useTimeFormat } from '@public/composables/useTimeFormat';
+import { useGtm } from '@public/composables/useGtm';
 import { PhMedal, PhFlagCheckered, PhDownloadSimple } from '@phosphor-icons/vue';
 
 interface RaceResultWithCalculatedDiff extends RaceResultWithDriver {
@@ -246,6 +247,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const { formatRaceTime } = useTimeFormat();
+const { trackEvent } = useGtm();
 
 const raceEventTitle = computed(() => {
   if (props.raceEvent.is_qualifier) {
@@ -529,5 +531,12 @@ function exportToCSV(): void {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+
+  // Track CSV download event
+  trackEvent('csv_download_click', {
+    csv_filename: filename,
+    league_name: props.competitionName,
+    season_name: props.seasonName,
+  });
 }
 </script>

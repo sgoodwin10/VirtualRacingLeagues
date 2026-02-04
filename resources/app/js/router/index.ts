@@ -3,6 +3,7 @@ import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import { useUserStore } from '@app/stores/userStore';
 import { useNavigationStore } from '@app/stores/navigationStore';
 import { useToast } from 'primevue/usetoast';
+import { getSiteConfig } from '@app/types/site-config';
 
 // Type-safe route meta fields
 declare module 'vue-router' {
@@ -171,9 +172,11 @@ const isValidRedirectUrl = (url: string): boolean => {
 router.beforeEach(async (to, _from, next) => {
   const userStore = useUserStore();
 
-  // Set page title
+  // Set page title using site config from window.__SITE_CONFIG__
   const title = to.meta.title as string;
-  document.title = title ? `${title} - App Dashboard` : 'App Dashboard';
+  const siteConfig = getSiteConfig();
+  const siteName = siteConfig?.name || import.meta.env.VITE_APP_NAME || 'Your App';
+  document.title = title ? `App - ${title} - ${siteName}` : `App - ${siteName}`;
 
   // All routes require authentication - check auth status
   const isAuthenticated = await userStore.checkAuth();

@@ -154,6 +154,25 @@ export const useUserStore = defineStore(
     }
 
     /**
+     * Permanently delete a user (hard delete)
+     * @param userId - User ID to permanently delete
+     * @param signal - Optional AbortSignal for request cancellation
+     * @returns Promise that resolves to true on success, false on error
+     */
+    async function hardDeleteUser(userId: string, signal?: AbortSignal): Promise<boolean> {
+      try {
+        await userService.hardDeleteUser(userId, signal);
+        // Refresh the list after deletion
+        await fetchUsers(signal);
+        return true;
+      } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to permanently delete user';
+        logger.error('Failed to permanently delete user:', err);
+        return false;
+      }
+    }
+
+    /**
      * Restore a soft-deleted user
      * @param userId - User ID to restore
      * @param signal - Optional AbortSignal for request cancellation
@@ -291,6 +310,7 @@ export const useUserStore = defineStore(
       // Actions
       fetchUsers,
       deleteUser,
+      hardDeleteUser,
       reactivateUser,
       updateUser,
       setSearchQuery,

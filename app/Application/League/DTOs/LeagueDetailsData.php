@@ -53,7 +53,8 @@ final class LeagueDetailsData extends Data
         // Quick stats
         /** @var array{total_drivers: int, total_races: int, total_competitions: int} */
         public readonly array $stats,
-    ) {}
+    ) {
+    }
 
     /**
      * Create from domain entity with all related data.

@@ -126,6 +126,7 @@ import { useToast } from 'primevue/usetoast';
 import * as Sentry from '@sentry/vue';
 import { PhArrowSquareOut } from '@phosphor-icons/vue';
 import { leagueService } from '@public/services/leagueService';
+import { getSiteConfig } from '@public/types/site-config';
 import type { PublicSeasonDetailResponse } from '@public/types/public';
 import type { BreadcrumbItem } from '@public/types/navigation';
 import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
@@ -159,7 +160,8 @@ const abortController = ref<AbortController | null>(null);
  */
 const pageTitle = computed(() => {
   if (!seasonData.value) return 'Loading...';
-  const siteName = import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
+  const siteConfig = getSiteConfig();
+  const siteName = siteConfig?.name || import.meta.env.VITE_APP_NAME || 'Virtual Racing Leagues';
   return `${seasonData.value.season.name} - ${seasonData.value.competition.name} - ${seasonData.value.league.name} - ${siteName}`;
 });
 

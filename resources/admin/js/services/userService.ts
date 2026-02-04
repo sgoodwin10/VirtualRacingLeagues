@@ -125,7 +125,7 @@ class UserService {
   }
 
   /**
-   * Delete (deactivate) a user
+   * Delete (deactivate) a user (soft delete)
    * @param id - User ID
    * @param signal - Optional AbortSignal for request cancellation
    * @returns Promise<void>
@@ -133,6 +133,20 @@ class UserService {
   async deleteUser(id: string, signal?: AbortSignal): Promise<void> {
     try {
       await apiService.delete<ApiResponse<null>>(`/users/${id}`, { signal });
+    } catch (error) {
+      handleServiceError(error);
+    }
+  }
+
+  /**
+   * Permanently delete a user (hard delete)
+   * @param id - User ID
+   * @param signal - Optional AbortSignal for request cancellation
+   * @returns Promise<void>
+   */
+  async hardDeleteUser(id: string, signal?: AbortSignal): Promise<void> {
+    try {
+      await apiService.delete<ApiResponse<null>>(`/users/${id}/hard-delete`, { signal });
     } catch (error) {
       handleServiceError(error);
     }
