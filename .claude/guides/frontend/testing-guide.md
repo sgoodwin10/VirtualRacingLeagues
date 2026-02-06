@@ -130,28 +130,24 @@ npm run test:e2e:admin
 
 ### Directory Structure
 
-Tests are **colocated** with source files in `__tests__` directories:
+Tests are **colocated** with source files (test files alongside the code they test):
 
 ```
 resources/[app|public|admin]/js/
 ├── components/
 │   └── common/
-│       └── Button.vue
-│       └── __tests__/
-│           └── Button.test.ts      # Test file
+│       ├── Button.vue
+│       └── Button.test.ts          # Test file next to component
 ├── composables/
-│   └── useToast.ts
-│   └── __tests__/
-│       └── useToast.test.ts
+│   ├── useToast.ts
+│   └── useToast.test.ts
 ├── stores/
-│   └── userStore.ts
-│   └── __tests__/
-│       └── userStore.test.ts
+│   ├── userStore.ts
+│   └── userStore.test.ts
 ├── services/
-│   └── authService.ts
-│   └── __tests__/
-│       └── authService.test.ts
-└── __tests__/                      # Dashboard-level test utilities
+│   ├── authService.ts
+│   └── authService.test.ts
+└── __tests__/                      # Dashboard-level test utilities (app/admin only)
     └── setup/
         ├── index.ts                # Central export
         ├── testUtils.ts            # Helper functions
@@ -160,10 +156,9 @@ resources/[app|public|admin]/js/
 
 ### File Naming Conventions
 
-- **`.test.ts`** - Primary convention (used in app/public dashboards)
-- **`.spec.ts`** - Alternative convention (predominant in admin dashboard)
+- **`.test.ts`** - Standard convention (used across all dashboards)
 
-Both patterns are automatically discovered by Vitest.
+Tests are colocated alongside source files (not in `__tests__/` subdirectories).
 
 ---
 
@@ -653,18 +648,39 @@ MSW intercepts HTTP requests at the network level. Handlers are defined in `test
 // tests/mocks/handlers.ts
 import { http, HttpResponse } from 'msw';
 
+// API base URLs for different subdomains
+const API_BASE = 'http://virtualracingleagues.localhost/api';
+const USER_API_BASE = 'http://app.virtualracingleagues.localhost/api';
+const ADMIN_API_BASE = 'http://admin.virtualracingleagues.localhost/admin/api';
+
 export const handlers = [
-  // Public API
-  http.post('http://virtualracingleagues.localhost/api/login', async ({ request }) => {
-    const body = await request.json();
+  // Public API (authentication)
+  http.post(`${API_BASE}/login`, async ({ request }) => {
+    const body = await request.json() as { email: string; password: string };
+
+    if (body.email === 'user@example.com' && body.password === 'password') {
+      return HttpResponse.json({
+        success: true,
+        data: { user: { id: 1, email: body.email } },
+      });
+    }
+
+    return HttpResponse.json(
+      { success: false, message: 'Invalid credentials' },
+      { status: 401 },
+    );
+  }),
+
+  // User Dashboard API
+  http.get(`${USER_API_BASE}/user`, () => {
     return HttpResponse.json({
       success: true,
-      data: { user: { id: 1, email: body.email } },
+      data: { id: 1, name: 'Test User', email: 'user@example.com' },
     });
   }),
 
   // Admin API
-  http.get('http://admin.virtualracingleagues.localhost/admin/api/users', () => {
+  http.get(`${ADMIN_API_BASE}/users`, () => {
     return HttpResponse.json({
       success: true,
       data: [{ id: 1, name: 'Admin User' }],
@@ -800,17 +816,30 @@ vi.spyOn(window, 'matchMedia').mockImplementation(query => ({
 
 ### Common Utilities (`testUtils.ts`)
 
+Located in `resources/[app|admin]/js/__tests__/setup/testUtils.ts`:
+
 ```typescript
-// Mount with all stubs configured
-export function mountWithStubs(component, options = {}) {
+// Mount with all stubs configured (includes PrimeVue plugins automatically)
+export function mountWithStubs<T extends ComponentPublicInstance>(
+  component: Component,
+  options: MountingOptions<any> = {},
+): VueWrapper<T> {
+  // Automatically includes:
+  // - PrimeVue stubs
+  // - PrimeVue, ToastService, ConfirmationService plugins
+  // - Pinia (if not provided)
+  // - Router (if not provided)
+  // - Teleport stub
+  // - Directive stubs (tooltip)
   return mount(component, {
     global: {
-      plugins: [createTestPinia(), createTestRouter()],
+      plugins: [createTestPinia(), createTestRouter(), PrimeVue, ToastService],
       stubs: { ...primevueStubs, Teleport: true },
+      directives: { tooltip: { mounted: () => {}, updated: () => {}, unmounted: () => {} } },
       ...options.global,
     },
     ...options,
-  });
+  }) as VueWrapper<T>;
 }
 
 // Create isolated Pinia instance
@@ -818,56 +847,102 @@ export function createTestPinia() {
   return createPinia();
 }
 
-// Create memory-based router
-export function createTestRouter(routes = []) {
+// Create memory-based router with default routes
+export function createTestRouter(routes: RouteRecordRaw[] = []) {
   return createRouter({
     history: createMemoryHistory(),
-    routes: routes.length ? routes : [{ path: '/', component: { template: '<div />' } }],
+    routes: routes.length ? routes : [
+      { path: '/', name: 'home', component: { template: '<div />' } },
+      // Dashboard-specific default routes included
+    ],
   });
 }
 
 // Wait for Vue updates and promises
-export async function flushPromises() {
-  await new Promise(resolve => setTimeout(resolve, 0));
+export async function flushPromises(): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, 0));
 }
 
-// Wait for condition with timeout
+// Wait for condition with timeout (default 1000ms)
 export async function waitFor(
   condition: () => boolean,
-  timeout = 5000,
-  interval = 50
+  timeout = 1000,
+  interval = 50,
 ): Promise<void> {
-  const start = Date.now();
+  const startTime = Date.now();
   while (!condition()) {
-    if (Date.now() - start > timeout) {
-      throw new Error('waitFor timeout');
+    if (Date.now() - startTime > timeout) {
+      throw new Error('waitFor timeout exceeded');
     }
-    await new Promise(r => setTimeout(r, interval));
+    await new Promise(resolve => setTimeout(resolve, interval));
   }
 }
 
 // Create mock API response
-export function createMockApiResponse(data: any, status = 200) {
+export function createMockApiResponse<T>(data: T, status = 200) {
   return {
-    data: { success: true, data },
+    data,
     status,
-    statusText: 'OK',
+    statusText: status === 200 ? 'OK' : 'Error',
+    headers: {},
+    config: {},
   };
 }
 
 // Create mock API error
-export function createMockApiError(message: string, status = 400) {
-  return {
-    response: {
-      data: { success: false, message },
-      status,
-    },
+export function createMockApiError(message: string, status = 500) {
+  const error = new Error(message) as any;
+  error.response = {
+    data: { message },
+    status,
+    statusText: 'Error',
+    headers: {},
+    config: {},
   };
+  return error;
 }
 
 // Find component by name in wrapper
-export function findComponentByName(wrapper, name: string) {
-  return wrapper.findComponent({ name });
+export function findComponentByName<T extends ComponentPublicInstance>(
+  wrapper: VueWrapper<any>,
+  name: string,
+): VueWrapper<T> | undefined {
+  return wrapper.findComponent({ name }) as VueWrapper<T> | undefined;
+}
+
+// Find all components by name
+export function findAllComponentsByName<T extends ComponentPublicInstance>(
+  wrapper: VueWrapper<any>,
+  name: string,
+): VueWrapper<T>[] {
+  return wrapper.findAllComponents({ name }) as VueWrapper<T>[];
+}
+
+// Trigger native DOM event
+export async function triggerNativeEvent(
+  element: Element,
+  eventType: string,
+  eventData: any = {},
+): Promise<void> {
+  const event = new Event(eventType, { bubbles: true, cancelable: true });
+  Object.assign(event, eventData);
+  element.dispatchEvent(event);
+  await flushPromises();
+}
+
+// Mock console methods for tests
+export function mockConsole() {
+  return {
+    log: vi.spyOn(console, 'log').mockImplementation(() => {}),
+    error: vi.spyOn(console, 'error').mockImplementation(() => {}),
+    warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
+    info: vi.spyOn(console, 'info').mockImplementation(() => {}),
+  };
+}
+
+// Restore console methods after tests
+export function restoreConsole(mocks: ReturnType<typeof mockConsole>) {
+  Object.values(mocks).forEach(mock => mock.mockRestore());
 }
 ```
 
@@ -875,48 +950,84 @@ export function findComponentByName(wrapper, name: string) {
 
 ## Mock Data Factories
 
-Located in `__tests__/helpers/mockFactories.ts`:
+Located in `resources/admin/js/__tests__/helpers/mockFactories.ts`:
 
 ```typescript
 import { faker } from '@faker-js/faker';
 
-export function createMockUser(overrides = {}) {
+// Available factories (admin dashboard):
+export function createMockUser(overrides?: Partial<User>): User;
+export function createMockAdmin(overrides?: Partial<Admin>): Admin;
+export function createMockSiteConfig(overrides?: Partial<SiteConfig>): SiteConfig;
+export function createMockActivity(overrides?: Partial<Activity>): Activity;
+export function createMockMedia(overrides?: Partial<MediaObject>): MediaObject;
+export function createMockLeague(overrides?: Partial<League>): League;
+export function createMockDriver(overrides?: Partial<Driver>): Driver;
+export function createMockCompetition(overrides?: Partial<CompetitionSummary>): CompetitionSummary;
+export function createMockSeason(overrides?: Partial<Season>): Season;
+export function createMockPlatformCarImportSummary(overrides?: Partial<PlatformCarImportSummary>): PlatformCarImportSummary;
+
+// Example usage:
+export function createMockUser(overrides?: Partial<User>): User {
+  const firstName = faker.person.firstName();
+  const lastName = faker.person.lastName();
+
   return {
     id: faker.string.uuid(),
-    name: faker.person.fullName(),
+    first_name: firstName,
+    last_name: lastName,
+    name: `${firstName} ${lastName}`,
     email: faker.internet.email(),
+    email_verified_at: faker.date.past().toISOString(),
+    alias: faker.internet.username(),
+    uuid: faker.string.uuid(),
     status: 'active',
+    created_at: faker.date.past().toISOString(),
+    updated_at: faker.date.recent().toISOString(),
+    deleted_at: null,
+    ...overrides,
+  };
+}
+
+export function createMockAdmin(overrides?: Partial<Admin>): Admin {
+  return {
+    id: faker.number.int({ min: 1, max: 1000 }),
+    name: faker.person.fullName(),
+    first_name: faker.person.firstName(),
+    last_name: faker.person.lastName(),
+    email: faker.internet.email(),
+    role: 'admin',
+    status: 'active',
+    last_login_at: faker.date.recent().toISOString(),
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
     ...overrides,
   };
 }
 
-export function createMockAdmin(overrides = {}) {
-  return {
-    id: faker.number.int({ min: 1, max: 1000 }),
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-    is_super_admin: false,
-    last_login_at: faker.date.recent().toISOString(),
-    ...overrides,
-  };
-}
+export function createMockMedia(overrides?: Partial<MediaObject>): MediaObject {
+  const id = faker.number.int({ min: 1, max: 10000 });
+  const baseUrl = '/storage/media/' + id;
 
-export function createMockLeague(overrides = {}) {
   return {
-    id: faker.number.int({ min: 1, max: 1000 }),
-    name: faker.company.name() + ' Racing League',
-    slug: faker.helpers.slugify(faker.company.name()),
-    description: faker.lorem.paragraph(),
-    platforms: [{ id: 1, name: 'iRacing' }],
+    id,
+    original: `${baseUrl}/image.png`,
+    conversions: {
+      thumb: `${baseUrl}/conversions/image-thumb.webp`,
+      small: `${baseUrl}/conversions/image-small.webp`,
+      medium: `${baseUrl}/conversions/image-medium.webp`,
+      large: `${baseUrl}/conversions/image-large.webp`,
+      og: `${baseUrl}/conversions/image-og.webp`,
+    },
+    srcset: `${baseUrl}/conversions/image-thumb.webp 150w, ...`,
     ...overrides,
   };
 }
 
 // Usage in tests:
 const user = createMockUser({ status: 'pending' });
-const admin = createMockAdmin({ is_super_admin: true });
+const admin = createMockAdmin({ role: 'super_admin' });
+const league = createMockLeague({ visibility: 'public' });
 ```
 
 ---
@@ -928,24 +1039,36 @@ const admin = createMockAdmin({ is_super_admin: true });
 **Test location:** `resources/app/js/`
 
 **Key characteristics:**
-- Uses `.test.ts` naming convention
+- Uses `.test.ts` naming convention (colocated with source files)
 - Has comprehensive test utilities in `__tests__/setup/`
 - Complete PrimeVue stubs available
-- Mock factories for complex data structures
+- Full test utilities similar to admin dashboard
 
 **Example test file locations:**
 ```
 resources/app/js/
-├── stores/__tests__/userStore.test.ts
-├── composables/__tests__/useImageUrl.test.ts
-├── components/common/__tests__/HTag.test.ts
-├── components/common/forms/__tests__/ImageUpload.test.ts
-├── services/__tests__/authService.test.ts
+├── __tests__/
+│   └── setup/
+│       ├── index.ts           # Central export
+│       ├── testUtils.ts       # Helper functions
+│       └── primevueStubs.ts   # Component stubs
+├── stores/leagueStore.test.ts
+├── composables/useImageUrl.test.ts
+├── components/common/HTag.test.ts
+├── components/common/forms/ImageUpload.test.ts
+├── services/driverService.test.ts
 ```
 
 **Import test utilities:**
 ```typescript
-import { mountWithStubs, primevueStubs, createTestPinia } from '@app/__tests__/setup';
+import {
+  mountWithStubs,
+  primevueStubs,
+  createTestPinia,
+  createTestRouter,
+  flushPromises,
+  waitFor,
+} from '@app/__tests__/setup';
 ```
 
 ### Public Dashboard (`dev-fe-public` agent)
@@ -953,47 +1076,65 @@ import { mountWithStubs, primevueStubs, createTestPinia } from '@app/__tests__/s
 **Test location:** `resources/public/js/`
 
 **Key characteristics:**
-- Uses both `.test.ts` and `.spec.ts` conventions
+- Uses `.test.ts` naming convention (colocated with source files)
 - Tests components, composables, services, and views
-- Uses `withSetup` helper for composables needing Vue context
+- **No dedicated `__tests__/setup/` directory** - uses inline test setup
+- Uses `withSetup` helper for composables needing Vue context (define inline in test files)
 
 **Example test file locations:**
 ```
 resources/public/js/
-├── components/common/buttons/__tests__/VrlButton.test.ts
-├── components/common/forms/__tests__/VrlInput.test.ts
-├── composables/__tests__/useToast.test.ts
-├── services/__tests__/authService.spec.ts
-├── views/__tests__/HomeView.test.ts
-├── views/auth/__tests__/LoginView.spec.ts
+├── components/common/forms/VrlPasswordInput.test.ts
+├── components/landing/HeroStandingsCard.test.ts
+├── composables/useToast.test.ts
+├── services/authService.test.ts
+├── stores/authStore.test.ts
+├── views/HomeView.test.ts
+├── views/auth/LoginView.test.ts
 ```
+
+**Note:** Public dashboard tests should define their own mount helpers inline or copy patterns from app/admin dashboards.
 
 ### Admin Dashboard (`dev-fe-admin` agent)
 
 **Test location:** `resources/admin/js/`
 
 **Key characteristics:**
-- Uses `.spec.ts` naming convention predominantly
-- Most comprehensive test setup with 55+ test files
-- Complete mock factories using Faker.js
+- Uses `.test.ts` naming convention (colocated with source files)
+- Most comprehensive test setup with 60+ test files
+- Complete mock factories using Faker.js (10+ factory functions)
 - Extensive PrimeVue stubs
+- Full test utilities in `__tests__/setup/`
 
 **Example test file locations:**
 ```
 resources/admin/js/
-├── stores/__tests__/adminStore.spec.ts
-├── composables/__tests__/useDateFormatter.spec.ts
-├── composables/__tests__/useAsyncAction.spec.ts
-├── components/common/__tests__/Badge.spec.ts
-├── components/AdminUser/modals/__tests__/CreateAdminUserModal.spec.ts
-├── services/__tests__/authService.spec.ts
-├── views/__tests__/AdminLoginView.spec.ts
+├── __tests__/
+│   ├── setup/
+│   │   ├── index.ts           # Central export
+│   │   ├── testUtils.ts       # Helper functions
+│   │   └── primevueStubs.ts   # Component stubs
+│   └── helpers/
+│       └── mockFactories.ts   # Typed mock data generators
+├── stores/adminStore.test.ts
+├── composables/useDateFormatter.test.ts
+├── composables/useAsyncAction.test.ts
+├── components/common/Badge.test.ts
+├── components/AdminUser/modals/CreateAdminUserModal.test.ts
+├── services/authService.test.ts
+├── views/AdminLoginView.test.ts
 ```
 
 **Import test utilities:**
 ```typescript
-import { mountWithStubs, primevueStubs } from '@admin/__tests__/setup';
-import { createMockAdmin, createMockUser } from '@admin/__tests__/helpers/mockFactories';
+import { mountWithStubs, primevueStubs, createTestPinia, createTestRouter } from '@admin/__tests__/setup';
+import {
+  createMockAdmin,
+  createMockUser,
+  createMockLeague,
+  createMockMedia,
+  createMockActivity,
+} from '@admin/__tests__/helpers/mockFactories';
 ```
 
 ---

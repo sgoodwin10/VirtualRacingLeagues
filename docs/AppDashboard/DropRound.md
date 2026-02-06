@@ -1,7 +1,0 @@
-- add a new field to the `seasons` table called `drop_round` (boolean) and `total_drop_rounds` int. 
-- this field will be set at the season level.
-- a drop round is when you remove the lowest scoring round (or rounds - penind `total_drop_rounds`) for a season.
-    - example: if a drivers season rounds are 12,4,8,9,10,11,23, then `4` would be dropped as its the lowest score
-    - example 2: if a driver did not compete in a round, that that can be considered as a drop round.
-- if enabled, when showing season standings, it will have another column after the total that will be called `drop` and will show that total as well.
-- use @agent-dev-be and @agent-dev-fe-app

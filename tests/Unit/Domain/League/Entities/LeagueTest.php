@@ -334,6 +334,7 @@ class LeagueTest extends TestCase
             instagramHandle: '@f1league',
             youtubeUrl: 'https://youtube.com/@f1league',
             twitchUrl: 'https://twitch.tv/f1league',
+            facebookHandle: null,
             visibility: LeagueVisibility::PRIVATE,
             status: 'active'
         );

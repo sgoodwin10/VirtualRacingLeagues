@@ -128,7 +128,8 @@ class LeagueUpdateTest extends TestCase
             twitterHandle: 'updated',
             instagramHandle: 'updated',
             youtubeUrl: 'https://youtube.com/updated',
-            twitchUrl: 'https://twitch.tv/updated'
+            twitchUrl: 'https://twitch.tv/updated',
+            facebookHandle: 'facebook-updated'
         );
 
         $this->assertEquals('https://discord.gg/updated', $this->league->discordUrl());
@@ -137,6 +138,7 @@ class LeagueUpdateTest extends TestCase
         $this->assertEquals('updated', $this->league->instagramHandle());
         $this->assertEquals('https://youtube.com/updated', $this->league->youtubeUrl());
         $this->assertEquals('https://twitch.tv/updated', $this->league->twitchUrl());
+        $this->assertEquals('facebook-updated', $this->league->facebookHandle());
     }
 
     public function test_update_social_media_can_set_null_values(): void
@@ -147,7 +149,8 @@ class LeagueUpdateTest extends TestCase
             twitterHandle: null,
             instagramHandle: null,
             youtubeUrl: null,
-            twitchUrl: null
+            twitchUrl: null,
+            facebookHandle: null
         );
 
         $this->assertNull($this->league->discordUrl());
@@ -156,6 +159,7 @@ class LeagueUpdateTest extends TestCase
         $this->assertNull($this->league->instagramHandle());
         $this->assertNull($this->league->youtubeUrl());
         $this->assertNull($this->league->twitchUrl());
+        $this->assertNull($this->league->facebookHandle());
     }
 
     public function test_update_social_media_records_league_updated_event(): void
@@ -166,7 +170,8 @@ class LeagueUpdateTest extends TestCase
             twitterHandle: null,
             instagramHandle: null,
             youtubeUrl: null,
-            twitchUrl: null
+            twitchUrl: null,
+            facebookHandle: null
         );
 
         $events = $this->league->releaseEvents();

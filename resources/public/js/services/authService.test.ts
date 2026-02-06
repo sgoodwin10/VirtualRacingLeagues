@@ -134,23 +134,18 @@ describe('authService', () => {
     });
 
     it('should not throw on API errors', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const error = new Error('API Error');
       vi.mocked(apiClient.post).mockRejectedValue(error);
 
+      // The logout function should not throw even on API errors
       await expect(authService.logout()).resolves.toBeUndefined();
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Logout API error:', error);
-
-      consoleErrorSpy.mockRestore();
     });
 
     it('should not throw on network errors', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(apiClient.post).mockRejectedValue(new Error('Network Error'));
 
+      // The logout function should not throw even on network errors
       await expect(authService.logout()).resolves.toBeUndefined();
-
-      consoleErrorSpy.mockRestore();
     });
   });
 

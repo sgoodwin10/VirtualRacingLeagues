@@ -1,7 +1,7 @@
 # DDD Backend Architecture Overview
 
-**Version**: 4.0
-**Last Updated**: January 2025
+**Version**: 4.1
+**Last Updated**: February 2026
 **Purpose**: Core DDD architecture principles and patterns for this Laravel backend
 
 ---
@@ -78,7 +78,7 @@
 
 ## Bounded Contexts
 
-This application has **10 bounded contexts**, each with complete DDD structure:
+This application has **12 bounded contexts**, each with complete DDD structure:
 
 ### Core Contexts
 
@@ -92,6 +92,8 @@ This application has **10 bounded contexts**, each with complete DDD structure:
 | **Driver** | `app/Domain/Driver/` | Driver management and platform ID mappings |
 | **Team** | `app/Domain/Team/` | Team management |
 | **Platform** | `app/Domain/Platform/` | Racing platforms (iRacing, ACC, etc.) and cars |
+| **Contact** | `app/Domain/Contact/` | Contact form submissions and inquiries |
+| **Notification** | `app/Domain/Notification/` | User and system notifications |
 | **SiteConfig** | `app/Domain/SiteConfig/` | System-wide configuration settings |
 | **Shared** | `app/Domain/Shared/` | Cross-context value objects and exceptions |
 
@@ -622,10 +624,10 @@ final class LogAdminActivity
 - **spatie/laravel-activitylog** (^4.10) - Activity tracking via domain events
 
 **Testing & Quality:**
-- **phpunit/phpunit** - Unit and feature testing
-- **phpstan/phpstan** - Static analysis (Level 8)
-- **squizlabs/php_codesniffer** - PSR-12 code style
-- **laravel/pint** - Laravel code formatter
+- **phpunit/phpunit** (^12.0) - Unit and feature testing
+- **phpstan/phpstan** (^2.1) - Static analysis (Level 8)
+- **squizlabs/php_codesniffer** (^4.0) - PSR-12 code style
+- **laravel/pint** (^1.24) - Laravel code formatter
 
 ### ApiResponse Helper
 
@@ -900,4 +902,4 @@ Feature Test          → tests/Feature/{Context}/
 
 ---
 
-**End of DDD Backend Architecture Overview v4.0**
+**End of DDD Backend Architecture Overview v4.1**

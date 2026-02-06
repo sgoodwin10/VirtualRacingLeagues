@@ -294,7 +294,6 @@ describe('useAuthStore', () => {
     });
 
     it('should clear auth even if API call fails', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const error = new Error('Logout failed');
       vi.mocked(authService.logout).mockRejectedValue(error);
       const store = useAuthStore();
@@ -306,20 +305,15 @@ describe('useAuthStore', () => {
       expect(store.user).toBeNull();
       expect(store.isAuthenticated).toBe(false);
       expect(window.location.href).toBe('/login');
-
-      consoleErrorSpy.mockRestore();
     });
 
     it('should still redirect on API error', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(authService.logout).mockRejectedValue(new Error('API Error'));
       const store = useAuthStore();
 
       await store.logout();
 
       expect(window.location.href).toBe('/login');
-
-      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -361,7 +355,6 @@ describe('useAuthStore', () => {
     });
 
     it('should clear auth if not authenticated', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(authService.checkAuth).mockRejectedValue({ response: { status: 401 } });
       const store = useAuthStore();
       store.user = mockUser;
@@ -371,20 +364,15 @@ describe('useAuthStore', () => {
 
       expect(store.user).toBeNull();
       expect(store.isAuthenticated).toBe(false);
-
-      consoleErrorSpy.mockRestore();
     });
 
     it('should return false if not authenticated', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(authService.checkAuth).mockRejectedValue({ response: { status: 401 } });
       const store = useAuthStore();
 
       const result = await store.checkAuth();
 
       expect(result).toBe(false);
-
-      consoleErrorSpy.mockRestore();
     });
 
     it('should prevent concurrent auth checks', async () => {
@@ -417,7 +405,6 @@ describe('useAuthStore', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const error = new Error('Network error');
       vi.mocked(authService.checkAuth).mockRejectedValue(error);
       const store = useAuthStore();
@@ -425,9 +412,7 @@ describe('useAuthStore', () => {
       const result = await store.checkAuth();
 
       expect(result).toBe(false);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Auth check failed:', error);
-
-      consoleErrorSpy.mockRestore();
+      // Error is now handled with Sentry, no console.error expected
     });
   });
 
@@ -528,7 +513,6 @@ describe('useAuthStore', () => {
     });
 
     it('should clear state when checkAuth fails', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(authService.checkAuth).mockRejectedValue({ response: { status: 401 } });
       const store = useAuthStore();
 
@@ -541,8 +525,6 @@ describe('useAuthStore', () => {
       expect(result).toBe(false);
       expect(store.user).toBeNull();
       expect(store.isAuthenticated).toBe(false);
-
-      consoleErrorSpy.mockRestore();
     });
 
     it('should not mutate user data unexpectedly', async () => {

@@ -398,7 +398,7 @@ describe('LeagueDetailView', () => {
       await flushPromises();
 
       expect(leagueService.getLeagueDetail).toHaveBeenCalledTimes(1);
-      expect(leagueService.getLeagueDetail).toHaveBeenCalledWith('test-league');
+      expect(leagueService.getLeagueDetail).toHaveBeenCalledWith('test-league', expect.any(AbortSignal));
     });
 
     it('uses leagueSlug from route params', async () => {
@@ -407,21 +407,18 @@ describe('LeagueDetailView', () => {
       wrapper = mount(LeagueDetailView);
       await flushPromises();
 
-      expect(leagueService.getLeagueDetail).toHaveBeenCalledWith('custom-league');
+      expect(leagueService.getLeagueDetail).toHaveBeenCalledWith('custom-league', expect.any(AbortSignal));
     });
 
     it('handles fetch errors gracefully', async () => {
       leagueService.getLeagueDetail.mockRejectedValue(new Error('Network error'));
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       wrapper = mount(LeagueDetailView);
       await flushPromises();
 
       // Should still render view
       expect(wrapper.find('.league-detail-view').exists()).toBe(true);
-      expect(consoleErrorSpy).toHaveBeenCalled();
-
-      consoleErrorSpy.mockRestore();
+      // Error is now handled with Sentry, no console.error expected
     });
   });
 });

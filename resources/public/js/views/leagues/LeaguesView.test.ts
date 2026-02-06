@@ -428,6 +428,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           page: 2,
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -491,6 +492,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           search: 'test',
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -512,6 +514,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           page: 1,
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -531,6 +534,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           search: 'racing',
         }),
+        expect.any(AbortSignal),
       );
     });
   });
@@ -550,6 +554,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           platform: 1,
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -567,6 +572,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           sort: 'recent',
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -584,6 +590,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           page: 1,
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -601,6 +608,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           page: 1,
         }),
+        expect.any(AbortSignal),
       );
     });
   });
@@ -638,6 +646,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           page: 2,
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -651,6 +660,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           search: 'racing',
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -664,6 +674,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           platform: 1,
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -677,6 +688,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           sort: 'recent',
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -690,6 +702,7 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           page: 1, // Should use default
         }),
+        expect.any(AbortSignal),
       );
     });
 
@@ -703,23 +716,19 @@ describe('LeaguesView', () => {
         expect.objectContaining({
           sort: 'popular', // Should use default
         }),
+        expect.any(AbortSignal),
       );
     });
 
     it('handles platform fetch error gracefully', async () => {
       leagueService.getPlatforms.mockRejectedValue(new Error('Network error'));
 
-      // Console.error will be called but should not throw
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
       wrapper = mount(LeaguesView);
       await flushPromises();
 
       // Should still render successfully
       expect(wrapper.find('.leagues-view').exists()).toBe(true);
-      expect(consoleErrorSpy).toHaveBeenCalled();
-
-      consoleErrorSpy.mockRestore();
+      // Error is now handled with Sentry, no console.error expected
     });
   });
 });

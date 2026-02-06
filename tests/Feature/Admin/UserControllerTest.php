@@ -571,6 +571,9 @@ class UserControllerTest extends TestCase
     {
         \Notification::fake();
 
+        // Force redis queue connection to use sync driver for this test
+        $this->app['config']->set('queue.connections.redis.driver', 'sync');
+
         $user = User::factory()->create([
             'email_verified_at' => null,
         ]);
@@ -591,6 +594,9 @@ class UserControllerTest extends TestCase
     public function test_can_resend_verification_email_even_if_already_verified(): void
     {
         \Notification::fake();
+
+        // Force redis queue connection to use sync driver for this test
+        $this->app['config']->set('queue.connections.redis.driver', 'sync');
 
         $user = User::factory()->create([
             'email_verified_at' => now(),

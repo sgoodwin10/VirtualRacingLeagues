@@ -22,11 +22,14 @@ vi.mock('@public/components/maintenance/MaintenanceModePage.vue', () => ({
 }));
 
 // Mock useSiteConfig - default to maintenance mode OFF for most tests
-vi.mock('@public/composables/useSiteConfig', () => ({
-  useSiteConfig: vi.fn(() => ({
-    isMaintenanceMode: { value: false },
-  })),
-}));
+vi.mock('@public/composables/useSiteConfig', async () => {
+  const { ref } = await vi.importActual<typeof import('vue')>('vue');
+  return {
+    useSiteConfig: vi.fn(() => ({
+      isMaintenanceMode: ref(false),
+    })),
+  };
+});
 
 // Create router
 const createTestRouter = () => {

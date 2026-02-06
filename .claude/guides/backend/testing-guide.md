@@ -4,29 +4,30 @@ This guide explains the PHPUnit testing configuration optimized for Domain-Drive
 
 ## Test Suite Architecture
 
-The test suite is organized by DDD layers with 113+ test files:
+The test suite is organized by DDD layers with 128+ test files:
 
 ```
 tests/
 ├── TestCase.php                     # Custom base test class
 ├── Fixtures/                        # Test fixtures
 │   └── TestMediaModel.php           # Media library test fixture
-├── Unit/                            # 75+ tests (no HTTP stack)
+├── Unit/                            # 57+ tests (no HTTP stack)
 │   ├── Domain/                      # Domain Layer (pure business logic)
+│   │   ├── Competition/
+│   │   │   ├── Entities/            # Competition, Season, Round, Race entities
+│   │   │   └── ValueObjects/        # CompetitionSlug, SeasonStatus, etc.
+│   │   ├── Contact/                 # Contact form domain tests
+│   │   ├── Division/
+│   │   │   └── ValueObjects/        # DivisionName, etc.
 │   │   ├── Driver/
 │   │   │   ├── Entities/            # Driver entity tests
 │   │   │   ├── Services/            # Domain service tests
 │   │   │   └── ValueObjects/        # DriverName, PlatformIdentifiers, etc.
-│   │   ├── Division/
-│   │   │   └── ValueObjects/        # DivisionName, etc.
 │   │   ├── League/
 │   │   │   ├── Entities/            # League entity tests
 │   │   │   └── ValueObjects/        # LeagueSlug, LeagueVisibility, Tagline, etc.
-│   │   ├── Competition/
-│   │   │   ├── Entities/            # Competition, Season, Round, Race entities
-│   │   │   └── ValueObjects/        # CompetitionSlug, SeasonStatus, etc.
-│   │   ├── SiteConfig/              # Site configuration domain
 │   │   ├── Shared/                  # Shared value objects (EmailAddress, FullName)
+│   │   ├── SiteConfig/              # Site configuration domain
 │   │   └── User/                    # User domain tests
 │   ├── Application/                 # Application Layer tests
 │   │   ├── Driver/DTOs/             # DTO validation tests
@@ -38,11 +39,11 @@ tests/
 │   │   └── Eloquent/Models/         # Eloquent model tests
 │   ├── Policies/                    # Authorization policies
 │   └── Rules/                       # Custom validation rules
-├── Integration/                     # 3+ tests (with database)
+├── Integration/                     # 3 tests (with database)
 │   └── Persistence/
 │       └── Eloquent/
 │           └── Repositories/        # Repository integration tests
-├── Feature/                         # 59+ tests (full HTTP stack)
+├── Feature/                         # 66+ tests (full HTTP stack)
 │   ├── Auth/                        # Authentication tests
 │   ├── Admin/                       # Admin feature tests
 │   ├── User/                        # User feature tests
@@ -56,9 +57,10 @@ tests/
 │   ├── Infrastructure/Media/        # Media library tests
 │   └── Notifications/               # Notification tests
 └── Browser/                         # E2E tests (Playwright)
-    ├── admin/auth/
+    ├── admin/
     ├── app/
-    └── public/auth/
+    ├── public/
+    └── utils/
 ```
 
 ## Running Tests
@@ -522,18 +524,22 @@ class UserFactory extends Factory
 ```
 
 **Available Factories:**
-- `UserFactory`
 - `AdminFactory`
+- `CompetitionFactory`
+- `DivisionFactory`
 - `DriverFactory`
 - `LeagueFactory`
 - `LeagueDriverFactory`
-- `CompetitionFactory`
+- `PlatformFactory`
+- `PlatformTrackFactory`
+- `PlatformTrackLocationFactory`
+- `RaceFactory`
+- `RoundFactory`
 - `SeasonFactory`
 - `SeasonDriverFactory`
-- `RoundFactory`
-- `RaceFactory`
-- `DivisionFactory`
-- `PlatformFactory`
+- `SiteConfigFactory`
+- `TeamFactory`
+- `UserFactory`
 
 **Usage:**
 ```php

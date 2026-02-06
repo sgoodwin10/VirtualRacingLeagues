@@ -6,12 +6,13 @@ Quick reference for the Laravel Docker environment. All commands run from `/var/
 
 | Service | Container | Internal | External | Image |
 |---------|-----------|----------|----------|-------|
-| PHP-FPM + Node.js | `${DOCKER_CONTAINER_NAME}-app` | 9000 | 5173 (Vite) | Custom (PHP 8.4-fpm Debian) |
-| Nginx | `${DOCKER_CONTAINER_NAME}-nginx` | 80 | 80 | nginx:alpine |
-| MariaDB | `${DOCKER_CONTAINER_NAME}-mariadb` | 3306 | 3307 | mariadb:10.11 |
+| PHP-FPM + Node.js | `${DOCKER_CONTAINER_NAME}-app` | 9000 | 5174 (Vite) | Custom (PHP 8.4-fpm Debian) |
+| Nginx | `${DOCKER_CONTAINER_NAME}-nginx` | 80 | 8000 | nginx:alpine |
+| MariaDB | `${DOCKER_CONTAINER_NAME}-mariadb` | 3306 | 3308 | mariadb:10.11 |
 | Redis | `${DOCKER_CONTAINER_NAME}-redis` | 6379 | 6379 | redis:7-alpine |
-| Elasticsearch | `${DOCKER_CONTAINER_NAME}-elasticsearch` | 9200/9300 | 9200/9300 | elasticsearch:8.11.0 |
-| Mailpit | `${DOCKER_CONTAINER_NAME}-mailpit` | 1025/8025 | 1025/8025 | axllent/mailpit |
+| Elasticsearch | `${DOCKER_CONTAINER_NAME}-elasticsearch` | 9200/9300 | 9200/9300 | elasticsearch:8.11.0 (optional profile) |
+| Mailpit | `${DOCKER_CONTAINER_NAME}-mailpit` | 1025/8025 | 1026/8026 | axllent/mailpit |
+| Horizon | `${DOCKER_CONTAINER_NAME}-horizon` | - | - | Custom (same as app) |
 
 ## Container Management
 
@@ -32,14 +33,14 @@ The Dockerfile uses multi-stage builds:
 
 ### Base Stage (Production)
 - PHP 8.4 FPM on Debian
-- PHP extensions: GD, ImageMagick, Redis, PDO MySQL, ZIP
+- PHP extensions: GD, ImageMagick, Redis, PDO MySQL, ZIP, PCOV
 - Composer installed
 - User `laravel` (uid 1000) with Zsh/Oh-My-Zsh
 
 ### Development Stage (extends base)
 - Node.js 24.x from NodeSource
-- Playwright browsers (Chromium, Firefox, WebKit) v1.56.0
-- Playwright system dependencies
+- Playwright Chromium only v1.56.0
+- Playwright system dependencies for Chromium
 - npm global packages: Claude Code, CCStatusline, Context7 MCP
 - Playwright MCP configured
 - Entrypoint script handles initialization
@@ -48,7 +49,7 @@ The Dockerfile uses multi-stage builds:
 - `init: true` - Prevents zombie browser processes
 - `ipc: host` - Prevents Chromium memory exhaustion crashes
 - `cap_add: SYS_ADMIN` - Required for Chromium sandboxing in development
-- Browser cache persisted to `playwright_browsers` volume
+- Chromium browser cache persisted to `playwright_browsers` volume
 
 ## Entrypoint Script (`docker/app/docker-entrypoint.sh`)
 
@@ -76,7 +77,7 @@ Runs on container start (as root, then drops to `laravel` user):
 - `composer_cache` - Composer cache
 - `npm_cache` - npm cache
 - `npm_global` - npm global packages
-- `playwright_browsers` - Playwright browser binaries (Chromium, Firefox, WebKit)
+- `playwright_browsers` - Playwright Chromium browser binary
 - `mariadb_data` - Database
 - `redis_data` - Redis persistence
 - `elasticsearch_data` - Search indices
@@ -86,13 +87,13 @@ Runs on container start (as root, then drops to `laravel` user):
 ### MariaDB
 ```bash
 # From host
-mysql -h 127.0.0.1 -P 3307 -u laravel -psecret ${DB_DATABASE}
+mysql -h 127.0.0.1 -P 3308 -u laravel -psecret ${DB_DATABASE}
 
 # From container
 mysql -h mariadb -u laravel -psecret ${DB_DATABASE}
 ```
 
-**Credentials:** laravel/secret on port 3307 (host) or mariadb:3306 (container)
+**Credentials:** laravel/secret on port 3308 (host) or mariadb:3306 (container)
 
 ### Redis
 ```bash
@@ -105,12 +106,19 @@ redis-cli
 
 **No password configured.**
 
-## Nginx Configuration (`docker/nginx/conf.d/default.conf`)
+## Nginx Configuration (`docker/nginx/conf.d/default.conf.template`)
 
-- Listens on port 80 for `*.virtualracingleagues.localhost`
+- Listens on port 80 (mapped to 8000 on host)
 - Passes PHP requests to `app:9000`
 - CORS headers for `/build/` (Vite assets)
 - SPA fallback: `try_files $uri $uri/ /index.php`
+
+## Horizon (Queue Worker)
+
+- Runs `php artisan horizon` continuously
+- Uses same base image as app container
+- Depends on Redis and MariaDB
+- Restart policy: unless-stopped
 
 ## PHP Configuration (`docker/php/local.ini`)
 
@@ -121,24 +129,20 @@ memory_limit=512M
 max_execution_time=300
 ```
 
-## Extra Hosts (E2E Testing)
+## E2E Testing Host Resolution
 
-`docker-compose.yml` adds host-gateway entries:
-- `${APP_ROOT_DOMAIN}:host-gateway`
-- `app.${APP_ROOT_DOMAIN}:host-gateway`
-- `admin.${APP_ROOT_DOMAIN}:host-gateway`
-
-Entrypoint adds nginx IP to `/etc/hosts` for Playwright tests inside container.
+Entrypoint script adds nginx container IP to `/etc/hosts` for Playwright tests inside container.
 
 ## Health Checks
 
 - **app**: `php-fpm-healthcheck` every 30s
-- **mariadb**: `healthcheck.sh --connect --innodb_initialized` every 10s
+- **mariadb**: `healthcheck.sh --connect --innodb_initialized` every 5s
+- **horizon**: `php artisan horizon:status` every 30s
 
 ## Mailpit (Email Testing)
 
-- **Web UI:** http://localhost:8025
-- **SMTP:** mailpit:1025 (no auth)
+- **Web UI:** http://localhost:8026
+- **SMTP:** mailpit:1025 (internal) or localhost:1026 (host)
 
 All Laravel emails are caught and displayed in the UI.
 
@@ -175,12 +179,13 @@ composer install
 npm install
 
 # Development
-npm run dev                # Vite dev server (port 5173)
+npm run dev                # Vite dev server (port 5174 on host)
 composer dev               # Runs all services (Laravel + queue + Vite)
 ```
 
-## Elasticsearch
+## Elasticsearch (Optional)
 
+- **Profile:** `elasticsearch` (start with `docker-compose --profile elasticsearch up -d`)
 - **Host:** elasticsearch:9200 (container) or localhost:9200 (host)
 - **Mode:** Single-node
 - **Security:** Disabled (`xpack.security.enabled=false`)
@@ -214,7 +219,7 @@ environment:
 ```
 
 **Browser Binaries:**
-- Chromium, Firefox, and WebKit installed during image build
+- Chromium only installed during image build
 - Cached in `playwright_browsers` named volume for performance
 - Version synchronized with `@playwright/test` npm package
 
@@ -242,9 +247,8 @@ E2E tests work with all three subdomains:
 - `admin.virtualracingleagues.localhost` (admin dashboard)
 
 **How it works:**
-1. `extra_hosts` in docker-compose.yml maps domains to host-gateway
-2. Entrypoint script (`docker/app/docker-entrypoint.sh`) dynamically adds nginx container IP to `/etc/hosts`
-3. Playwright resolves subdomains to nginx container internally
+1. Entrypoint script (`docker/app/docker-entrypoint.sh`) dynamically adds nginx container IP to `/etc/hosts`
+2. Playwright resolves subdomains to nginx container internally
 
 **Entrypoint snippet (lines 93-114):**
 ```bash
@@ -380,9 +384,9 @@ Key variables from `.env`:
 
 ## URLs
 
-- Public Site: http://${APP_ROOT_DOMAIN}
-- User Dashboard: http://app.${APP_ROOT_DOMAIN}
-- Admin Dashboard: http://admin.${APP_ROOT_DOMAIN}/admin
-- Mailpit: http://localhost:8025
+- Public Site: http://${APP_ROOT_DOMAIN}:8000
+- User Dashboard: http://app.${APP_ROOT_DOMAIN}:8000
+- Admin Dashboard: http://admin.${APP_ROOT_DOMAIN}:8000/admin
+- Mailpit: http://localhost:8026
 - Elasticsearch: http://localhost:9200
-- Vite HMR: http://localhost:5173
+- Vite HMR: http://localhost:5174

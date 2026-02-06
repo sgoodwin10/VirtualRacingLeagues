@@ -560,7 +560,7 @@ describe('SeasonDetailView', () => {
       await flushPromises();
 
       expect(leagueService.getSeasonDetail).toHaveBeenCalledTimes(1);
-      expect(leagueService.getSeasonDetail).toHaveBeenCalledWith('test-league', 'season-1');
+      expect(leagueService.getSeasonDetail).toHaveBeenCalledWith('test-league', 'season-1', expect.any(AbortSignal));
     });
 
     it('uses leagueSlug from route params', async () => {
@@ -570,7 +570,7 @@ describe('SeasonDetailView', () => {
       wrapper = mount(SeasonDetailView);
       await flushPromises();
 
-      expect(leagueService.getSeasonDetail).toHaveBeenCalledWith('custom-league', 'custom-season');
+      expect(leagueService.getSeasonDetail).toHaveBeenCalledWith('custom-league', 'custom-season', expect.any(AbortSignal));
     });
 
     it('uses seasonSlug from route params', async () => {
@@ -580,21 +580,18 @@ describe('SeasonDetailView', () => {
       wrapper = mount(SeasonDetailView);
       await flushPromises();
 
-      expect(leagueService.getSeasonDetail).toHaveBeenCalledWith('test-league', 'season-2');
+      expect(leagueService.getSeasonDetail).toHaveBeenCalledWith('test-league', 'season-2', expect.any(AbortSignal));
     });
 
     it('handles fetch errors gracefully', async () => {
       leagueService.getSeasonDetail.mockRejectedValue(new Error('Network error'));
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       wrapper = mount(SeasonDetailView);
       await flushPromises();
 
       // Should still render view
       expect(wrapper.find('.season-detail-view').exists()).toBe(true);
-      expect(consoleErrorSpy).toHaveBeenCalled();
-
-      consoleErrorSpy.mockRestore();
+      // Error is now handled with Sentry, no console.error expected
     });
   });
 });

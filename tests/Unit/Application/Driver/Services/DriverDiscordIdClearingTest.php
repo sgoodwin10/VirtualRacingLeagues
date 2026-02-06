@@ -12,9 +12,11 @@ use App\Domain\Driver\Repositories\DriverRepositoryInterface;
 use App\Domain\Driver\ValueObjects\DriverName;
 use App\Domain\Driver\ValueObjects\DriverStatus;
 use App\Domain\Driver\ValueObjects\PlatformIdentifiers;
+use App\Domain\Driver\ValueObjects\Slug;
 use App\Domain\League\Repositories\LeagueRepositoryInterface;
 use App\Domain\League\Entities\League as LeagueEntity;
-use App\Domain\Shared\ValueObjects\Slug;
+use App\Domain\League\ValueObjects\LeagueName;
+use App\Domain\League\ValueObjects\LeagueSlug;
 use App\Application\Activity\Services\LeagueActivityLogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -23,12 +25,12 @@ use Mockery;
 
 final class DriverDiscordIdClearingTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_can_clear_discord_id_when_empty_string_is_sent(): void
     {
         // Create mock request with discord_id as empty string
-        $mockRequest = Mockery::mock(Request::class);
+        $mockRequest = Mockery::mock(Request::class)->shouldIgnoreMissing();
+        $mockRequest->shouldReceive('all')->andReturn(['discord_id' => '']);
         $mockRequest->shouldReceive('has')
             ->with('psn_id')
             ->andReturn(false);
@@ -76,14 +78,14 @@ final class DriverDiscordIdClearingTest extends TestCase
             league_notes: null
         );
 
-        // Create driver entity with existing discord_id
+        // Create driver entity with existing discord_id and psn_id
         $driver = DriverEntity::reconstitute(
             id: 1,
             name: DriverName::from('John', 'Doe', null),
-            platformIds: PlatformIdentifiers::from(null, null, null, 'john#1234'), // Has discord ID
+            platformIds: PlatformIdentifiers::from('john_psn', null, null, 'john#1234'), // Has PSN and Discord ID
             email: null,
             phone: null,
-            slug: new Slug('john-doe'),
+            slug: Slug::from('john-doe'),
             createdAt: new \DateTimeImmutable(),
             updatedAt: new \DateTimeImmutable(),
             deletedAt: null
@@ -101,10 +103,15 @@ final class DriverDiscordIdClearingTest extends TestCase
             updatedAt: new \DateTimeImmutable()
         );
 
-        // Create mock league entity
-        $league = Mockery::mock(LeagueEntity::class);
-        $league->shouldReceive('ownerUserId')->andReturn(1);
-        $league->shouldReceive('platformIds')->andReturn([1]); // Discord platform
+        // Create league entity
+        $league = LeagueEntity::create(
+            name: LeagueName::from('Test League'),
+            slug: LeagueSlug::from('test-league'),
+            logoPath: 'test-logo.png',
+            ownerUserId: 1,
+            platformIds: [1, 2] // Discord and PSN platforms
+        );
+        $league->setId(1);
 
         // Create mock repositories
         $driverRepo = Mockery::mock(DriverRepositoryInterface::class);
@@ -150,7 +157,8 @@ final class DriverDiscordIdClearingTest extends TestCase
     public function test_preserves_discord_id_when_not_in_request(): void
     {
         // Create mock request WITHOUT discord_id field
-        $mockRequest = Mockery::mock(Request::class);
+        $mockRequest = Mockery::mock(Request::class)->shouldIgnoreMissing();
+        $mockRequest->shouldReceive('all')->andReturn([]);
         $mockRequest->shouldReceive('has')->andReturn(false); // All fields return false
 
         // Bind the mock request to the container
@@ -179,7 +187,7 @@ final class DriverDiscordIdClearingTest extends TestCase
             platformIds: PlatformIdentifiers::from(null, null, null, 'john#1234'), // Has discord ID
             email: null,
             phone: null,
-            slug: new Slug('john-doe'),
+            slug: Slug::from('john-doe'),
             createdAt: new \DateTimeImmutable(),
             updatedAt: new \DateTimeImmutable(),
             deletedAt: null
@@ -197,9 +205,15 @@ final class DriverDiscordIdClearingTest extends TestCase
             updatedAt: new \DateTimeImmutable()
         );
 
-        // Create mock league entity
-        $league = Mockery::mock(LeagueEntity::class);
-        $league->shouldReceive('ownerUserId')->andReturn(1);
+        // Create league entity
+        $league = LeagueEntity::create(
+            name: LeagueName::from('Test League'),
+            slug: LeagueSlug::from('test-league'),
+            logoPath: 'test-logo.png',
+            ownerUserId: 1,
+            platformIds: [1, 2] // Discord and PSN platforms
+        );
+        $league->setId(1);
 
         // Create mock repositories
         $driverRepo = Mockery::mock(DriverRepositoryInterface::class);

@@ -256,7 +256,10 @@ describe('leagueService', () => {
 
       const result = await leagueService.getLeagueDetail('test-league');
 
-      expect(apiClient.get).toHaveBeenCalledWith(API_ENDPOINTS.PUBLIC.LEAGUE_DETAIL('test-league'));
+      expect(apiClient.get).toHaveBeenCalledWith(
+        API_ENDPOINTS.PUBLIC.LEAGUE_DETAIL('test-league'),
+        { signal: undefined },
+      );
       expect(result).toEqual(mockLeagueDetail);
     });
 
@@ -341,6 +344,7 @@ describe('leagueService', () => {
 
       expect(apiClient.get).toHaveBeenCalledWith(
         API_ENDPOINTS.PUBLIC.SEASON_DETAIL('test-league', 'season-1'),
+        { signal: undefined },
       );
       expect(result).toEqual(mockSeasonDetail);
     });

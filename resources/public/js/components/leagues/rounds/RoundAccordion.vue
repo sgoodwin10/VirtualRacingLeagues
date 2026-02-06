@@ -60,21 +60,9 @@
           class="mb-2 pl-1 md:pl-0 md:mb-6 md:ml-0 border-t md:border-t-0"
         >
           <template #tab-label="{ tab }">
-            <span class="hidden md:block">
-              {{ tab.label }}
-            </span>
+            <span class="hidden md:block">{{ tab.label }}</span>
             <span class="block md:hidden">
-              {{
-                tab.label === 'Round Results'
-                  ? 'R'
-                  : tab.label === 'Qualifying Times'
-                    ? 'Q'
-                    : tab.label === 'Race Times'
-                      ? 'R'
-                      : tab.label === 'Fastest Laps'
-                        ? 'FL'
-                        : ''
-              }}
+              {{ tab.label === 'Round Results' ? 'Results' : 'Times' }}
             </span>
           </template>
         </VrlTabs>
@@ -126,28 +114,12 @@
           </VrlAccordion>
         </div>
 
-        <!-- Qualifying Times Tab Content -->
-        <div v-if="activeMainTab === 'qualifying-times' && roundData">
-          <CrossDivisionResultsTable
-            :results="roundData.qualifying_results"
-            :race-events="raceEvents"
-            :divisions="divisions"
-          />
-        </div>
-
-        <!-- Race Times Tab Content -->
-        <div v-if="activeMainTab === 'race-times' && roundData">
-          <CrossDivisionResultsTable
-            :results="roundData.race_time_results"
-            :race-events="raceEvents"
-            :divisions="divisions"
-          />
-        </div>
-
-        <!-- Fastest Laps Tab Content -->
-        <div v-if="activeMainTab === 'fastest-laps' && roundData">
-          <CrossDivisionResultsTable
-            :results="roundData.fastest_lap_results"
+        <!-- Cross Division Times Tab Content -->
+        <div v-if="activeMainTab === 'cross-division-times' && roundData">
+          <CrossDivisionAllTimesTable
+            :qualifying-results="roundData.qualifying_results"
+            :race-time-results="roundData.race_time_results"
+            :fastest-lap-results="roundData.fastest_lap_results"
             :race-events="raceEvents"
             :divisions="divisions"
           />
@@ -174,7 +146,7 @@ import VrlAccordion from '@public/components/common/accordions/VrlAccordion.vue'
 import VrlTabs from '@public/components/common/navigation/VrlTabs.vue';
 import RoundStandingsTable from '@public/components/leagues/rounds/RoundStandingsTable.vue';
 import RaceEventAccordion from '@public/components/leagues/rounds/RaceEventAccordion.vue';
-import CrossDivisionResultsTable from '@public/components/leagues/rounds/CrossDivisionResultsTable.vue';
+import CrossDivisionAllTimesTable from '@public/components/leagues/rounds/CrossDivisionAllTimesTable.vue';
 import { leagueService } from '@public/services/leagueService';
 import { PhMapPin } from '@phosphor-icons/vue';
 
@@ -266,20 +238,10 @@ const mainTabs = computed((): TabItem[] => {
   ];
 
   if (props.raceTimesRequired) {
-    tabs.push(
-      {
-        key: 'qualifying-times',
-        label: 'Qualifying Times',
-      },
-      {
-        key: 'race-times',
-        label: 'Race Times',
-      },
-      {
-        key: 'fastest-laps',
-        label: 'Fastest Laps',
-      },
-    );
+    tabs.push({
+      key: 'cross-division-times',
+      label: 'Cross Division Times',
+    });
   }
 
   return tabs;

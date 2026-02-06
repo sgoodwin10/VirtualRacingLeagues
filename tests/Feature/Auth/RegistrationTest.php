@@ -211,6 +211,9 @@ class RegistrationTest extends TestCase
     {
         Notification::fake();
 
+        // Force redis queue connection to use sync driver for this test
+        $this->app['config']->set('queue.connections.redis.driver', 'sync');
+
         $response = $this->postJson('/api/register', [
             'first_name' => 'John',
             'last_name' => 'Doe',

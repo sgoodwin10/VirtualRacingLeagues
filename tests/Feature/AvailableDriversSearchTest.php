@@ -78,6 +78,11 @@ class AvailableDriversSearchTest extends TestCase
         ]);
     }
 
+    protected function getAppUrl(string $path): string
+    {
+        return "http://app.virtualracingleagues.localhost{$path}";
+    }
+
     public function test_response_includes_all_required_fields(): void
     {
         $driver = Driver::create([
@@ -99,7 +104,7 @@ class AvailableDriversSearchTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->onAppDomain()->getJson("/api/seasons/{$this->season->id}/available-drivers");
+        $response = $this->getJson($this->getAppUrl("/api/seasons/{$this->season->id}/available-drivers"));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -158,9 +163,9 @@ class AvailableDriversSearchTest extends TestCase
         $this->actingAs($this->user, 'web');
 
         // Search by number "44"
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=44"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -190,9 +195,9 @@ class AvailableDriversSearchTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=sainz#5555"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -222,9 +227,9 @@ class AvailableDriversSearchTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=leclerc_charles"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -254,9 +259,9 @@ class AvailableDriversSearchTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=lando_norris"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -286,9 +291,9 @@ class AvailableDriversSearchTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=Sebastian"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -317,9 +322,9 @@ class AvailableDriversSearchTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=Alonso"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -348,9 +353,9 @@ class AvailableDriversSearchTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=GR63"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -379,10 +384,10 @@ class AvailableDriversSearchTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        // Search with partial string "al" should match "Daniel"
-        $response = $this->onAppDomain()->getJson(
-            "/api/seasons/{$this->season->id}/available-drivers?search=al"
-        );
+        // Search with partial string "dan" should match "Daniel"
+        $response = $this->getJson($this->getAppUrl(
+            "/api/seasons/{$this->season->id}/available-drivers?search=dan"
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -412,9 +417,9 @@ class AvailableDriversSearchTest extends TestCase
         $this->actingAs($this->user, 'web');
 
         // Test lowercase
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=oscar"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -422,9 +427,9 @@ class AvailableDriversSearchTest extends TestCase
         $this->assertEquals($driver->id, $data[0]['driver_id']);
 
         // Test uppercase
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=OSCAR"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -453,7 +458,7 @@ class AvailableDriversSearchTest extends TestCase
 
         $this->actingAs($this->user, 'web');
 
-        $response = $this->onAppDomain()->getJson("/api/seasons/{$this->season->id}/available-drivers");
+        $response = $this->getJson($this->getAppUrl("/api/seasons/{$this->season->id}/available-drivers"));
 
         $response->assertOk();
         $data = $response->json('data');
@@ -502,9 +507,9 @@ class AvailableDriversSearchTest extends TestCase
         $this->actingAs($this->user, 'web');
 
         // Search "al" should find both drivers
-        $response = $this->onAppDomain()->getJson(
+        $response = $this->getJson($this->getAppUrl(
             "/api/seasons/{$this->season->id}/available-drivers?search=al"
-        );
+        ));
 
         $response->assertOk();
         $data = $response->json('data');

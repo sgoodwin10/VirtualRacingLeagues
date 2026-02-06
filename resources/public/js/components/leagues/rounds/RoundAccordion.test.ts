@@ -140,7 +140,7 @@ describe('RoundAccordion', () => {
           VrlAccordion: createStub('VrlAccordion'),
           RoundStandingsTable: createStub('RoundStandingsTable'),
           RaceEventAccordion: createStub('RaceEventAccordion'),
-          CrossDivisionResultsTable: createStub('CrossDivisionResultsTable'),
+          CrossDivisionAllTimesTable: createStub('CrossDivisionAllTimesTable'),
         },
       },
     });
@@ -363,16 +363,15 @@ describe('RoundAccordion', () => {
 
   describe('API Error Handling', () => {
     it('should handle API errors gracefully', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       leagueService.getRoundResults.mockRejectedValue(new Error('Network error'));
 
       wrapper = mountComponent({ initiallyExpanded: true }, ['round-1']);
 
       await flushPromises();
 
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to load round results:', expect.any(Error));
-
-      consoleSpy.mockRestore();
+      // Error is now handled with Sentry, no console.error expected
+      // The component should still render without crashing
+      expect(wrapper.exists()).toBe(true);
     });
   });
 
@@ -386,25 +385,24 @@ describe('RoundAccordion', () => {
     });
   });
 
-  describe('CrossDivisionResultsTable', () => {
-    it('should have qualifying results data available when raceTimesRequired is true', async () => {
-      // When raceTimesRequired is true, the component loads qualifying_results data
-      // which would be passed to CrossDivisionResultsTable when the qualifying tab is selected
-      const resultsWithQualifying: RoundResultsResponse = {
+  describe('CrossDivisionAllTimesTable', () => {
+    it('should have cross-division times tab when raceTimesRequired is true', async () => {
+      const resultsWithTimes: RoundResultsResponse = {
         ...mockRoundResults,
         round: {
           ...mockRoundResults.round,
           qualifying_results: [{ position: 1, race_result_id: 1, time_ms: 85456 }],
+          race_time_results: [{ position: 1, race_result_id: 1, time_ms: 90000 }],
+          fastest_lap_results: [{ position: 1, race_result_id: 1, time_ms: 84000 }],
         },
       };
-      leagueService.getRoundResults.mockResolvedValue(resultsWithQualifying);
+      leagueService.getRoundResults.mockResolvedValue(resultsWithTimes);
 
       wrapper = mountComponent({ initiallyExpanded: true, raceTimesRequired: true }, ['round-1']);
 
       await flushPromises();
 
-      // When raceTimesRequired is true, the main tabs should include qualifying/race/fastest tabs
-      // The component structure is set up to render CrossDivisionResultsTable for those tabs
+      // When raceTimesRequired is true, a single "Cross Division Times" tab should exist
       const tabs = wrapper.findComponent({ name: 'VrlTabs' });
       expect(tabs.exists()).toBe(true);
     });

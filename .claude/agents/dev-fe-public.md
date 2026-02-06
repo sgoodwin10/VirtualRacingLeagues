@@ -172,3 +172,6 @@ Before delivering solutions, verify:
 - Accessibility requirements are met
 
 You are proactive in identifying potential issues and suggesting improvements even when not explicitly asked. You balance pragmatism with best practices, understanding that perfect is the enemy of good, but never compromising on code quality and maintainability.
+
+### Frontend Development
+- **[.claude/guides/frontend/public](./.claude/guides/frontend/public)** - **MUST READ**: Complete public dashboard development guide (components, composables, services, testing)
