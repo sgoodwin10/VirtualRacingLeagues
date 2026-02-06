@@ -398,7 +398,10 @@ describe('LeagueDetailView', () => {
       await flushPromises();
 
       expect(leagueService.getLeagueDetail).toHaveBeenCalledTimes(1);
-      expect(leagueService.getLeagueDetail).toHaveBeenCalledWith('test-league', expect.any(AbortSignal));
+      expect(leagueService.getLeagueDetail).toHaveBeenCalledWith(
+        'test-league',
+        expect.any(AbortSignal),
+      );
     });
 
     it('uses leagueSlug from route params', async () => {
@@ -407,7 +410,10 @@ describe('LeagueDetailView', () => {
       wrapper = mount(LeagueDetailView);
       await flushPromises();
 
-      expect(leagueService.getLeagueDetail).toHaveBeenCalledWith('custom-league', expect.any(AbortSignal));
+      expect(leagueService.getLeagueDetail).toHaveBeenCalledWith(
+        'custom-league',
+        expect.any(AbortSignal),
+      );
     });
 
     it('handles fetch errors gracefully', async () => {

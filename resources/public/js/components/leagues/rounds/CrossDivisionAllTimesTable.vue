@@ -1,5 +1,22 @@
 <template>
   <div class="cross-division-results">
+    <!-- Header with export button -->
+    <div class="flex items-center justify-between mb-3">
+      <h4
+        class="font-[family-name:var(--font-display)] text-base font-semibold text-[var(--text-primary)]"
+      >
+        All Times
+      </h4>
+      <VrlButton
+        variant="secondary"
+        outline
+        size="sm"
+        label="Export Data"
+        :icon="PhDownloadSimple"
+        @click="exportToCSV()"
+      />
+    </div>
+
     <VrlDataTable
       :value="sortedData"
       :podium-highlight="true"
@@ -66,11 +83,19 @@
           </div>
         </template>
         <template #body="{ data }">
-          <span
-            class="font-[family-name:var(--font-mono)] font-bold text-[var(--text-primary)] pr-3 text-lg"
-          >
-            {{ data.qualifyingFormatted }}
-          </span>
+          <div class="text-right pr-3">
+            <span
+              class="font-[family-name:var(--font-mono)] font-bold text-[var(--text-primary)] text-lg"
+            >
+              {{ data.qualifyingTimeAbsolute }}
+            </span>
+            <div
+              v-if="data.qualifyingGap"
+              class="font-[family-name:var(--font-mono)] text-[var(--text-secondary)] text-sm"
+            >
+              ({{ data.qualifyingGap }})
+            </div>
+          </div>
         </template>
       </Column>
 
@@ -88,11 +113,19 @@
           </div>
         </template>
         <template #body="{ data }">
-          <span
-            class="font-[family-name:var(--font-mono)] font-bold text-[var(--text-primary)] pr-3 text-lg"
-          >
-            {{ data.raceFormatted }}
-          </span>
+          <div class="text-right pr-3">
+            <span
+              class="font-[family-name:var(--font-mono)] font-bold text-[var(--text-primary)] text-lg"
+            >
+              {{ data.raceTimeAbsolute }}
+            </span>
+            <div
+              v-if="data.raceGap"
+              class="font-[family-name:var(--font-mono)] text-[var(--text-secondary)] text-sm"
+            >
+              ({{ data.raceGap }})
+            </div>
+          </div>
         </template>
       </Column>
 
@@ -110,11 +143,19 @@
           </div>
         </template>
         <template #body="{ data }">
-          <span
-            class="font-[family-name:var(--font-mono)] font-bold text-[var(--text-primary)] pr-3 text-lg"
-          >
-            {{ data.fastestLapFormatted }}
-          </span>
+          <div class="text-right pr-3">
+            <span
+              class="font-[family-name:var(--font-mono)] font-bold text-[var(--text-primary)] text-lg"
+            >
+              {{ data.fastestLapAbsolute }}
+            </span>
+            <div
+              v-if="data.fastestLapGap"
+              class="font-[family-name:var(--font-mono)] text-[var(--text-secondary)] text-sm"
+            >
+              ({{ data.fastestLapGap }})
+            </div>
+          </div>
         </template>
       </Column>
     </VrlDataTable>
@@ -127,6 +168,9 @@ import Column from 'primevue/column';
 import type { CrossDivisionResult, RaceEventResults } from '@public/types/public';
 import VrlDataTable from '@public/components/common/tables/VrlDataTable.vue';
 import VrlPositionCell from '@public/components/common/tables/cells/VrlPositionCell.vue';
+import VrlButton from '@public/components/common/buttons/VrlButton.vue';
+import { useGtm } from '@public/composables/useGtm';
+import { PhDownloadSimple } from '@phosphor-icons/vue';
 
 const MS_PER_SECOND = 1000;
 const SECONDS_PER_MINUTE = 60;
@@ -137,6 +181,9 @@ interface Props {
   fastestLapResults: CrossDivisionResult[] | null;
   raceEvents: RaceEventResults[];
   divisions: Array<{ id: number; name: string }>;
+  competitionName?: string;
+  seasonName?: string;
+  roundName?: string;
 }
 
 interface CombinedTimeEntry {
@@ -150,13 +197,26 @@ interface CombinedTimeEntry {
   qualifyingFormatted: string;
   raceFormatted: string;
   fastestLapFormatted: string;
+  // Separate absolute time and gap fields for display
+  qualifyingTimeAbsolute: string;
+  qualifyingGap: string | null;
+  raceTimeAbsolute: string;
+  raceGap: string | null;
+  fastestLapAbsolute: string;
+  fastestLapGap: string | null;
 }
 
 type SortColumn = 'qualifying' | 'race' | 'fastest';
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  competitionName: '',
+  seasonName: '',
+  roundName: '',
+});
 
 const sortColumn = ref<SortColumn>('qualifying');
+
+const { trackEvent } = useGtm();
 
 function setSortColumn(column: SortColumn): void {
   sortColumn.value = column;
@@ -200,6 +260,12 @@ const combinedData = computed<CombinedTimeEntry[]>(() => {
         qualifyingFormatted: '-',
         raceFormatted: '-',
         fastestLapFormatted: '-',
+        qualifyingTimeAbsolute: '-',
+        qualifyingGap: null,
+        raceTimeAbsolute: '-',
+        raceGap: null,
+        fastestLapAbsolute: '-',
+        fastestLapGap: null,
       });
     }
 
@@ -248,11 +314,34 @@ const combinedData = computed<CombinedTimeEntry[]>(() => {
     ...entries.filter((e) => e.fastestLapMs != null).map((e) => e.fastestLapMs!),
   );
 
-  // Format times: absolute for fastest, +diff for others, - for null
+  // Format times: absolute for all, gap for non-leaders
   for (const entry of entries) {
+    // Legacy formatted fields (keep for backwards compatibility)
     entry.qualifyingFormatted = formatColumnTime(entry.qualifyingTimeMs, fastestQualifying);
     entry.raceFormatted = formatColumnTime(entry.raceTimeMs, fastestRace);
     entry.fastestLapFormatted = formatColumnTime(entry.fastestLapMs, fastestLap);
+
+    // Absolute times (always show the actual time)
+    entry.qualifyingTimeAbsolute =
+      entry.qualifyingTimeMs != null ? formatTime(entry.qualifyingTimeMs) : '-';
+    entry.raceTimeAbsolute = entry.raceTimeMs != null ? formatTime(entry.raceTimeMs) : '-';
+    entry.fastestLapAbsolute = entry.fastestLapMs != null ? formatTime(entry.fastestLapMs) : '-';
+
+    // Gaps (null for leader, formatted difference for others)
+    entry.qualifyingGap =
+      entry.qualifyingTimeMs != null &&
+      entry.qualifyingTimeMs !== fastestQualifying &&
+      isFinite(fastestQualifying)
+        ? formatTimeDifference(entry.qualifyingTimeMs - fastestQualifying)
+        : null;
+    entry.raceGap =
+      entry.raceTimeMs != null && entry.raceTimeMs !== fastestRace && isFinite(fastestRace)
+        ? formatTimeDifference(entry.raceTimeMs - fastestRace)
+        : null;
+    entry.fastestLapGap =
+      entry.fastestLapMs != null && entry.fastestLapMs !== fastestLap && isFinite(fastestLap)
+        ? formatTimeDifference(entry.fastestLapMs - fastestLap)
+        : null;
   }
 
   return entries;
@@ -345,6 +434,85 @@ function getDivisionBadgeClass(divisionId: number | null): string {
 
   const variantIndex = (divisionId - 1) % variants.length;
   return variants[variantIndex] ?? variants[0] ?? '';
+}
+
+function exportToCSV(): void {
+  // Build headers based on visible columns
+  const headers: string[] = ['Position', 'Driver Name'];
+
+  if (hasDivisions.value) {
+    headers.push('Division');
+  }
+
+  // Add time columns with both absolute and gap
+  headers.push('Qualifying Time', 'Qualifying Gap');
+  headers.push('Race Time', 'Race Gap');
+  headers.push('Fastest Lap', 'Fastest Lap Gap');
+
+  // Build rows from sortedData
+  const rows = sortedData.value.map((entry) => {
+    const row: (string | number)[] = [entry.position, entry.driverName];
+
+    if (hasDivisions.value) {
+      row.push(entry.divisionName || '-');
+    }
+
+    row.push(entry.qualifyingTimeAbsolute);
+    row.push(entry.qualifyingGap || '-');
+    row.push(entry.raceTimeAbsolute);
+    row.push(entry.raceGap || '-');
+    row.push(entry.fastestLapAbsolute);
+    row.push(entry.fastestLapGap || '-');
+
+    return row;
+  });
+
+  // Convert to CSV format with proper escaping
+  const csvContent = [
+    headers.join(','),
+    ...rows.map((row) =>
+      row
+        .map((cell) => {
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        })
+        .join(','),
+    ),
+  ].join('\n');
+
+  // Create blob and trigger download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  // Generate filename
+  const sanitize = (str: string) => str.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const parts = [
+    props.competitionName && sanitize(props.competitionName),
+    props.seasonName && sanitize(props.seasonName),
+    props.roundName && sanitize(props.roundName),
+    'all_times',
+  ].filter(Boolean);
+  const filename = `${parts.join('_')}.csv`;
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  // Track CSV download event
+  trackEvent('csv_download_click', {
+    csv_filename: filename,
+    league_name: props.competitionName,
+    season_name: props.seasonName,
+    table_type: 'cross_division_all_times',
+  });
 }
 </script>
 

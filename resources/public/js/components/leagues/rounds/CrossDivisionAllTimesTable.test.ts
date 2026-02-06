@@ -1,10 +1,70 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
 import CrossDivisionAllTimesTable from './CrossDivisionAllTimesTable.vue';
 import type { CrossDivisionResult, RaceEventResults } from '@public/types/public';
 
+// Create a mock function that we can access in tests
+const mockTrackEvent = vi.fn();
+
+// Mock useGtm composable
+vi.mock('@public/composables/useGtm', () => ({
+  useGtm: () => ({
+    trackEvent: mockTrackEvent,
+  }),
+}));
+
 describe('CrossDivisionAllTimesTable', () => {
   let wrapper: VueWrapper;
+
+  // Store original methods for DOM manipulation
+  let originalCreateElement: typeof document.createElement;
+
+  // Track created elements for cleanup
+  let createdElements: HTMLElement[] = [];
+  let createdUrls: string[] = [];
+
+  beforeEach(() => {
+    // Store original methods
+    originalCreateElement = document.createElement.bind(document);
+
+    // Reset tracking arrays
+    createdElements = [];
+    createdUrls = [];
+
+    // Mock document.createElement to track created links
+    vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+      const element = originalCreateElement(tagName);
+      if (tagName === 'a') {
+        createdElements.push(element);
+      }
+      return element;
+    });
+
+    // Mock URL.createObjectURL
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((_blob: Blob | MediaSource) => {
+      const url = `blob:mock-url-${createdUrls.length}`;
+      createdUrls.push(url);
+      return url;
+    });
+
+    // Mock URL.revokeObjectURL
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation((_url: string) => {
+      // Mock implementation - do nothing
+    });
+
+    // Mock appendChild and removeChild
+    vi.spyOn(document.body, 'appendChild').mockImplementation((node: Node) => {
+      return node;
+    });
+    vi.spyOn(document.body, 'removeChild').mockImplementation((node: Node) => {
+      return node;
+    });
+
+    // Mock click
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {
+      // Do nothing
+    });
+  });
 
   const mockDivisions = [
     { id: 1, name: 'Division 1' },
@@ -85,6 +145,7 @@ describe('CrossDivisionAllTimesTable', () => {
 
   afterEach(() => {
     wrapper?.unmount();
+    vi.restoreAllMocks();
   });
 
   describe('Rendering', () => {
@@ -338,7 +399,7 @@ describe('CrossDivisionAllTimesTable', () => {
   });
 
   describe('Time Formatting', () => {
-    it('should show absolute time for fastest in each column', () => {
+    it('should show absolute time for all drivers', () => {
       wrapper = mount(CrossDivisionAllTimesTable, {
         props: {
           qualifyingResults: mockQualifyingResults,
@@ -355,15 +416,39 @@ describe('CrossDivisionAllTimesTable', () => {
       const driver1 = data.find((d: any) => d.driverName === 'Driver 1');
       const driver2 = data.find((d: any) => d.driverName === 'Driver 2');
 
-      // Driver 1 has fastest qualifying (85456) and fastest lap (84000)
-      expect(driver1.qualifyingFormatted).toBe('01:25.456');
-      expect(driver1.fastestLapFormatted).toBe('01:24.000');
-
-      // Driver 2 has fastest race time (90000)
-      expect(driver2.raceFormatted).toBe('01:30.000');
+      // Both drivers should have absolute times
+      expect(driver1.qualifyingTimeAbsolute).toBe('01:25.456');
+      expect(driver1.fastestLapAbsolute).toBe('01:24.000');
+      expect(driver2.qualifyingTimeAbsolute).toBe('01:25.789');
+      expect(driver2.raceTimeAbsolute).toBe('01:30.000');
     });
 
-    it('should show +diff for non-fastest times', () => {
+    it('should show null gap for leader (fastest time)', () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+        },
+      });
+
+      const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
+      const data = dataTable.props('value') as any[];
+
+      const driver1 = data.find((d: any) => d.driverName === 'Driver 1');
+      const driver2 = data.find((d: any) => d.driverName === 'Driver 2');
+
+      // Driver 1 has fastest qualifying (85456ms) and fastest lap (84000ms) - should have null gap
+      expect(driver1.qualifyingGap).toBeNull();
+      expect(driver1.fastestLapGap).toBeNull();
+
+      // Driver 2 has fastest race time (90000ms) - should have null gap
+      expect(driver2.raceGap).toBeNull();
+    });
+
+    it('should show gap for non-leaders', () => {
       wrapper = mount(CrossDivisionAllTimesTable, {
         props: {
           qualifyingResults: mockQualifyingResults,
@@ -381,12 +466,48 @@ describe('CrossDivisionAllTimesTable', () => {
       const driver1 = data.find((d: any) => d.driverName === 'Driver 1');
 
       // Driver 2 qualifying diff: 85789 - 85456 = 333ms
-      expect(driver2.qualifyingFormatted).toMatch(/^\+/);
-      expect(driver2.qualifyingFormatted).toBe('+00.333');
+      expect(driver2.qualifyingGap).toBe('+00.333');
 
       // Driver 1 race diff: 90500 - 90000 = 500ms
-      expect(driver1.raceFormatted).toMatch(/^\+/);
-      expect(driver1.raceFormatted).toBe('+00.500');
+      expect(driver1.raceGap).toBe('+00.500');
+
+      // Driver 2 fastest lap diff: 84333 - 84000 = 333ms
+      expect(driver2.fastestLapGap).toBe('+00.333');
+    });
+
+    it('should render gap in parentheses beneath absolute time', () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+        },
+      });
+
+      // Check that the template renders gap in parentheses
+      const html = wrapper.html();
+      expect(html).toContain('(+00.333)');
+    });
+
+    it('should not render gap row for leader', () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+        },
+      });
+
+      const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
+      const data = dataTable.props('value') as any[];
+
+      // Driver 1 is qualifying leader - should not have qualifying gap
+      const driver1 = data.find((d: any) => d.driverName === 'Driver 1');
+      expect(driver1.qualifyingGap).toBeNull();
     });
 
     it('should show dash for null times', () => {
@@ -404,8 +525,32 @@ describe('CrossDivisionAllTimesTable', () => {
       const data = dataTable.props('value') as any[];
 
       // Only qualifying results provided, so race and fastest lap should be -
-      expect(data[0].raceFormatted).toBe('-');
-      expect(data[0].fastestLapFormatted).toBe('-');
+      expect(data[0].raceTimeAbsolute).toBe('-');
+      expect(data[0].fastestLapAbsolute).toBe('-');
+      expect(data[0].raceGap).toBeNull();
+      expect(data[0].fastestLapGap).toBeNull();
+    });
+
+    it('should keep legacy formatted fields for backwards compatibility', () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+        },
+      });
+
+      const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
+      const data = dataTable.props('value') as any[];
+
+      const driver1 = data.find((d: any) => d.driverName === 'Driver 1');
+      const driver2 = data.find((d: any) => d.driverName === 'Driver 2');
+
+      // Legacy formatted fields should still work
+      expect(driver1.qualifyingFormatted).toBe('01:25.456');
+      expect(driver2.qualifyingFormatted).toBe('+00.333');
     });
   });
 
@@ -678,6 +823,339 @@ describe('CrossDivisionAllTimesTable', () => {
 
       const dataTable = wrapper.findComponent({ name: 'VrlDataTable' });
       expect(dataTable.props('striped')).toBe(false);
+    });
+  });
+
+  describe('CSV Export', () => {
+    it('should render export button', () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      expect(exportButton.exists()).toBe(true);
+      expect(exportButton.props('label')).toBe('Export Data');
+    });
+
+    it('should render "All Times" heading', () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+        },
+      });
+
+      expect(wrapper.text()).toContain('All Times');
+    });
+
+    it('should include division column in CSV headers when divisions exist', async () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+          competitionName: 'Test League',
+          seasonName: 'Season 1',
+          roundName: 'Round 1',
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      await exportButton.trigger('click');
+
+      // Check that createObjectURL was called with a Blob
+      expect(URL.createObjectURL).toHaveBeenCalled();
+      const createCall = vi.mocked(URL.createObjectURL).mock.calls[0];
+      expect(createCall).toBeDefined();
+
+      const blob = createCall?.[0] as Blob;
+      expect(blob).toBeInstanceOf(Blob);
+
+      // Read blob content
+      const text = await blob.text();
+      const lines = text.split('\n');
+      const headers = lines[0]?.split(',');
+
+      expect(headers).toContain('Position');
+      expect(headers).toContain('Driver Name');
+      expect(headers).toContain('Division');
+      expect(headers).toContain('Qualifying Time');
+      expect(headers).toContain('Qualifying Gap');
+      expect(headers).toContain('Race Time');
+      expect(headers).toContain('Race Gap');
+      expect(headers).toContain('Fastest Lap');
+      expect(headers).toContain('Fastest Lap Gap');
+    });
+
+    it('should exclude division column in CSV headers when no divisions', async () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: [],
+          competitionName: 'Test League',
+          seasonName: 'Season 1',
+          roundName: 'Round 1',
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      await exportButton.trigger('click');
+
+      const createCall = vi.mocked(URL.createObjectURL).mock.calls[0];
+      const blob = createCall?.[0] as Blob;
+      const text = await blob.text();
+      const lines = text.split('\n');
+      const headers = lines[0]?.split(',');
+
+      expect(headers).not.toContain('Division');
+      expect(headers).toContain('Position');
+      expect(headers).toContain('Driver Name');
+    });
+
+    it('should generate correct CSV row data matching sortedData', async () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+          competitionName: 'Test League',
+          seasonName: 'Season 1',
+          roundName: 'Round 1',
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      await exportButton.trigger('click');
+
+      const createCall = vi.mocked(URL.createObjectURL).mock.calls[0];
+      const blob = createCall?.[0] as Blob;
+      const text = await blob.text();
+      const lines = text.split('\n');
+
+      // Skip header line
+      const dataLines = lines.slice(1).filter((line) => line.trim() !== '');
+
+      // Should have 2 data rows (Driver 1 and Driver 2)
+      expect(dataLines.length).toBe(2);
+
+      // First row should be Driver 1 (default sort by qualifying)
+      const firstRow = dataLines[0]?.split(',');
+      expect(firstRow?.[0]).toBe('1'); // Position
+      expect(firstRow?.[1]).toBe('Driver 1'); // Driver name
+      expect(firstRow?.[2]).toBe('Division 1'); // Division
+      expect(firstRow?.[3]).toBe('01:25.456'); // Qualifying time
+      expect(firstRow?.[4]).toBe('-'); // Qualifying gap (leader)
+      expect(firstRow?.[5]).toBe('01:30.500'); // Race time
+      expect(firstRow?.[6]).toBe('+00.500'); // Race gap
+      expect(firstRow?.[7]).toBe('01:24.000'); // Fastest lap
+      expect(firstRow?.[8]).toBe('-'); // Fastest lap gap (leader)
+    });
+
+    it('should properly escape CSV special characters', async () => {
+      const specialRaceEvents: RaceEventResults[] = [
+        {
+          id: 1,
+          name: 'Qualifying',
+          race_number: 1,
+          is_qualifier: true,
+          race_points: false,
+          status: 'completed',
+          results: [
+            {
+              id: 1,
+              race_id: 1,
+              driver_id: 1,
+              position: 1,
+              driver: { id: 1, name: 'Driver, Name "Special"' },
+              race_points: 0,
+              positions_gained: null,
+              dnf: false,
+              has_pole: true,
+              has_fastest_lap: false,
+              division_id: 1,
+              original_race_time: null,
+              final_race_time: null,
+              original_race_time_difference: null,
+              final_race_time_difference: null,
+              fastest_lap: null,
+              penalties: null,
+              status: 'completed',
+              created_at: '2024-01-01T00:00:00Z',
+              updated_at: '2024-01-01T00:00:00Z',
+            },
+          ],
+        },
+      ];
+
+      const specialQualifying: CrossDivisionResult[] = [
+        { position: 1, race_result_id: 1, time_ms: 85456 },
+      ];
+
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: specialQualifying,
+          raceTimeResults: null,
+          fastestLapResults: null,
+          raceEvents: specialRaceEvents,
+          divisions: mockDivisions,
+          competitionName: 'Test League',
+          seasonName: 'Season 1',
+          roundName: 'Round 1',
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      await exportButton.trigger('click');
+
+      const createCall = vi.mocked(URL.createObjectURL).mock.calls[0];
+      const blob = createCall?.[0] as Blob;
+      const text = await blob.text();
+      const lines = text.split('\n');
+
+      // The driver name should be properly escaped with quotes
+      expect(lines[1]).toContain('"Driver, Name ""Special"""');
+    });
+
+    it('should generate correct filename from props', async () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+          competitionName: 'Test League',
+          seasonName: 'Season 1',
+          roundName: 'Round 1',
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      await exportButton.trigger('click');
+
+      // Check that the link was created with the correct download attribute
+      expect(document.createElement).toHaveBeenCalledWith('a');
+      expect(createdElements.length).toBeGreaterThan(0);
+
+      const link = createdElements[0] as HTMLAnchorElement;
+      expect(link.getAttribute('download')).toBe('test_league_season_1_round_1_all_times.csv');
+    });
+
+    it('should generate filename without optional props when not provided', async () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      await exportButton.trigger('click');
+
+      const link = createdElements[0] as HTMLAnchorElement;
+      expect(link.getAttribute('download')).toBe('all_times.csv');
+    });
+
+    it('should track GTM event with correct parameters', async () => {
+      // Clear previous calls
+      mockTrackEvent.mockClear();
+
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+          competitionName: 'Test League',
+          seasonName: 'Season 1',
+          roundName: 'Round 1',
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      await exportButton.trigger('click');
+
+      expect(mockTrackEvent).toHaveBeenCalledWith('csv_download_click', {
+        csv_filename: 'test_league_season_1_round_1_all_times.csv',
+        league_name: 'Test League',
+        season_name: 'Season 1',
+        table_type: 'cross_division_all_times',
+      });
+    });
+
+    it('should create and clean up DOM elements properly', async () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: mockRaceTimeResults,
+          fastestLapResults: mockFastestLapResults,
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+          competitionName: 'Test League',
+          seasonName: 'Season 1',
+          roundName: 'Round 1',
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      await exportButton.trigger('click');
+
+      // Check that DOM operations were called in correct order
+      expect(URL.createObjectURL).toHaveBeenCalled();
+      expect(document.body.appendChild).toHaveBeenCalled();
+      expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
+      expect(document.body.removeChild).toHaveBeenCalled();
+      expect(URL.revokeObjectURL).toHaveBeenCalled();
+    });
+
+    it('should handle missing times with dashes', async () => {
+      wrapper = mount(CrossDivisionAllTimesTable, {
+        props: {
+          qualifyingResults: mockQualifyingResults,
+          raceTimeResults: null, // No race times
+          fastestLapResults: null, // No fastest lap times
+          raceEvents: mockRaceEvents,
+          divisions: mockDivisions,
+          competitionName: 'Test League',
+          seasonName: 'Season 1',
+          roundName: 'Round 1',
+        },
+      });
+
+      const exportButton = wrapper.findComponent({ name: 'VrlButton' });
+      await exportButton.trigger('click');
+
+      const createCall = vi.mocked(URL.createObjectURL).mock.calls[0];
+      const blob = createCall?.[0] as Blob;
+      const text = await blob.text();
+      const lines = text.split('\n');
+
+      // Check first data row
+      const firstRow = lines[1]?.split(',');
+      expect(firstRow?.[5]).toBe('-'); // Race time should be dash
+      expect(firstRow?.[6]).toBe('-'); // Race gap should be dash
+      expect(firstRow?.[7]).toBe('-'); // Fastest lap should be dash
+      expect(firstRow?.[8]).toBe('-'); // Fastest lap gap should be dash
     });
   });
 });

@@ -122,6 +122,9 @@
             :fastest-lap-results="roundData.fastest_lap_results"
             :race-events="raceEvents"
             :divisions="divisions"
+            :competition-name="props.competitionName"
+            :season-name="props.seasonName"
+            :round-name="roundTitle"
           />
         </div>
       </template>

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
  * TeamsBackupSeeder
  *
  * This seeder restores the teams table data from a backup.
- * Generated: 2026-01-07
+ * Generated: 2026-02-06
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
  * Dependencies: SeasonsBackupSeeder must run first
@@ -27,7 +27,6 @@ class TeamsBackupSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('TeamsBackupSeeder cannot run in production environment!');
-
             return;
         }
 

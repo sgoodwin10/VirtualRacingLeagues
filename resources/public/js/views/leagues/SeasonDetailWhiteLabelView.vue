@@ -740,11 +740,29 @@
                             >
                               {{ entry.divisionName }}
                             </span>
-                            <span v-else>-</span>
+                            <span v-else>&nbsp;</span>
                           </td>
-                          <td class="td-time">{{ entry.qualifyingFormatted }}</td>
-                          <td class="td-time">{{ entry.raceFormatted }}</td>
-                          <td class="td-time">{{ entry.fastestLapFormatted }}</td>
+                          <td class="td-time">
+                            <div>{{ entry.qualifyingFormatted }}</div>
+                            <div v-if="entry.qualifyingGap" class="text-secondary text-[10px]">
+                              ({{ entry.qualifyingGap }})
+                            </div>
+                            <div v-else class="text-secondary text-[10px]">&nbsp;</div>
+                          </td>
+                          <td class="td-time">
+                            <div>{{ entry.raceFormatted }}</div>
+                            <div v-if="entry.raceGap" class="text-secondary text-[10px]">
+                              ({{ entry.raceGap }})
+                            </div>
+                            <div v-else class="text-secondary text-[10px]">&nbsp;</div>
+                          </td>
+                          <td class="td-time">
+                            <div>{{ entry.fastestLapFormatted }}</div>
+                            <div v-if="entry.fastestLapGap" class="text-secondary text-[10px]">
+                              ({{ entry.fastestLapGap }})
+                            </div>
+                            <div v-else class="text-secondary text-[10px]">&nbsp;</div>
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -1451,8 +1469,11 @@ interface CombinedTimeEntry {
   raceTimeMs: number | null;
   fastestLapMs: number | null;
   qualifyingFormatted: string;
+  qualifyingGap: string | null;
   raceFormatted: string;
+  raceGap: string | null;
   fastestLapFormatted: string;
+  fastestLapGap: string | null;
 }
 
 /**
@@ -1497,8 +1518,11 @@ function getCombinedTimesData(roundId: number): CombinedTimeEntry[] {
       raceTimeMs: null,
       fastestLapMs: null,
       qualifyingFormatted: '', // Will be set later
+      qualifyingGap: null,
       raceFormatted: '-',
+      raceGap: null,
       fastestLapFormatted: '-',
+      fastestLapGap: null,
     });
   });
 
@@ -1525,8 +1549,11 @@ function getCombinedTimesData(roundId: number): CombinedTimeEntry[] {
         raceTimeMs: result.time_ms,
         fastestLapMs: null,
         qualifyingFormatted: '-',
+        qualifyingGap: null,
         raceFormatted: '', // Will be set later
+        raceGap: null,
         fastestLapFormatted: '-',
+        fastestLapGap: null,
       });
     }
   });
@@ -1554,8 +1581,11 @@ function getCombinedTimesData(roundId: number): CombinedTimeEntry[] {
         raceTimeMs: null,
         fastestLapMs: result.time_ms,
         qualifyingFormatted: '-',
+        qualifyingGap: null,
         raceFormatted: '-',
+        raceGap: null,
         fastestLapFormatted: '', // Will be set later
+        fastestLapGap: null,
       });
     }
   });
@@ -1589,13 +1619,10 @@ function getCombinedTimesData(roundId: number): CombinedTimeEntry[] {
   entries.forEach((entry) => {
     // Qualifying
     if (entry.qualifyingTimeMs !== null) {
-      if (entry.qualifyingTimeMs === fastestQualifyingMs) {
-        entry.qualifyingFormatted = formatTime(entry.qualifyingTimeMs);
-      } else if (fastestQualifyingMs !== null) {
+      entry.qualifyingFormatted = formatTime(entry.qualifyingTimeMs);
+      if (entry.qualifyingTimeMs !== fastestQualifyingMs && fastestQualifyingMs !== null) {
         const diff = entry.qualifyingTimeMs - fastestQualifyingMs;
-        entry.qualifyingFormatted = formatTimeDifference(diff);
-      } else {
-        entry.qualifyingFormatted = formatTime(entry.qualifyingTimeMs);
+        entry.qualifyingGap = formatTimeDifference(diff);
       }
     } else {
       entry.qualifyingFormatted = '-';
@@ -1603,13 +1630,10 @@ function getCombinedTimesData(roundId: number): CombinedTimeEntry[] {
 
     // Race Time
     if (entry.raceTimeMs !== null) {
-      if (entry.raceTimeMs === fastestRaceMs) {
-        entry.raceFormatted = formatTime(entry.raceTimeMs);
-      } else if (fastestRaceMs !== null) {
+      entry.raceFormatted = formatTime(entry.raceTimeMs);
+      if (entry.raceTimeMs !== fastestRaceMs && fastestRaceMs !== null) {
         const diff = entry.raceTimeMs - fastestRaceMs;
-        entry.raceFormatted = formatTimeDifference(diff);
-      } else {
-        entry.raceFormatted = formatTime(entry.raceTimeMs);
+        entry.raceGap = formatTimeDifference(diff);
       }
     } else {
       entry.raceFormatted = '-';
@@ -1617,13 +1641,10 @@ function getCombinedTimesData(roundId: number): CombinedTimeEntry[] {
 
     // Fastest Lap
     if (entry.fastestLapMs !== null) {
-      if (entry.fastestLapMs === fastestLapMs) {
-        entry.fastestLapFormatted = formatTime(entry.fastestLapMs);
-      } else if (fastestLapMs !== null) {
+      entry.fastestLapFormatted = formatTime(entry.fastestLapMs);
+      if (entry.fastestLapMs !== fastestLapMs && fastestLapMs !== null) {
         const diff = entry.fastestLapMs - fastestLapMs;
-        entry.fastestLapFormatted = formatTimeDifference(diff);
-      } else {
-        entry.fastestLapFormatted = formatTime(entry.fastestLapMs);
+        entry.fastestLapGap = formatTimeDifference(diff);
       }
     } else {
       entry.fastestLapFormatted = '-';
@@ -2907,9 +2928,15 @@ onMounted(() => {
 }
 
 .cross-division-table td.td-time {
-  font-family: monospace;
+  font-family: inherit;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.825rem;
+}
+
+.time-gap {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin-top: 0.125rem;
 }
 
 .cross-division-table tbody tr:last-child td {

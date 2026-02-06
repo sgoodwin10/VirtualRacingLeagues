@@ -47,7 +47,11 @@
       "Bash(docker-compose up:*)",
       "Bash(docker-compose logs:*)",
       "Bash(curl:*)",
-      "Bash(npx playwright:*)"
+      "Bash(npx playwright:*)",
+      "Bash(ls:*)",
+      "Bash(for f in /var/www/database/seeders/Backup/*.php)",
+      "Bash(do php -l \"$f\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

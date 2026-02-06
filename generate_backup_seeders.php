@@ -13,6 +13,45 @@ $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
 use Illuminate\Support\Facades\DB;
 
+// Define user IDs to export
+$userIds = [1, 3];
+
+// Get league IDs owned by these users
+$leagueIds = DB::table('leagues')
+    ->whereIn('owner_user_id', $userIds)
+    ->pluck('id')
+    ->toArray();
+
+// Get driver IDs linked to these leagues
+$driverIds = DB::table('league_drivers')
+    ->whereIn('league_id', $leagueIds)
+    ->pluck('driver_id')
+    ->toArray();
+
+// Get competition IDs for these leagues
+$competitionIds = DB::table('competitions')
+    ->whereIn('league_id', $leagueIds)
+    ->pluck('id')
+    ->toArray();
+
+// Get season IDs for these competitions
+$seasonIds = DB::table('seasons')
+    ->whereIn('competition_id', $competitionIds)
+    ->pluck('id')
+    ->toArray();
+
+// Get round IDs for these seasons
+$roundIds = DB::table('rounds')
+    ->whereIn('season_id', $seasonIds)
+    ->pluck('id')
+    ->toArray();
+
+// Get race IDs for these rounds
+$raceIds = DB::table('races')
+    ->whereIn('round_id', $roundIds)
+    ->pluck('id')
+    ->toArray();
+
 function formatValue($value, $key = null): string
 {
     if ($value === null) {
@@ -24,7 +63,7 @@ function formatValue($value, $key = null): string
         'race_times_required', 'drop_round', 'fastest_lap_top_10', 'qualifying_pole_top_10',
         'round_points', 'is_qualifier', 'extra_lap_after_time', 'track_limits_enforced',
         'false_start_detection', 'collision_penalties', 'mandatory_pit_stop', 'race_points',
-        'has_fastest_lap', 'has_pole', 'dnf',
+        'has_fastest_lap', 'has_pole', 'dnf', 'round_totals_tiebreaker_rules_enabled', 'is_admin',
     ]))) {
         return $value ? 'true' : 'false';
     }
@@ -33,8 +72,17 @@ function formatValue($value, $key = null): string
         return (string) $value;
     }
 
-    // For JSON fields, use json_encode()
-    if (in_array($key, ['points_system', 'round_results', 'qualifying_results', 'race_time_results', 'fastest_lap_results'])) {
+    // For fields with array casts in models, output the actual array
+    if (in_array($key, ['platform_ids'])) {
+        if ($value) {
+            return var_export(json_decode($value, true), true);
+        }
+
+        return '[]';
+    }
+
+    // For JSON fields stored as strings in the database, use json_encode()
+    if (in_array($key, ['points_system', 'round_results', 'qualifying_results', 'race_time_results', 'fastest_lap_results', 'team_championship_results', 'round_totals_tiebreaker_rules_information'])) {
         if ($value) {
             return 'json_encode('.var_export(json_decode($value, true), true).')';
         }
@@ -48,11 +96,15 @@ function formatValue($value, $key = null): string
     return "'".$escaped."'";
 }
 
-function generateSeeder(string $tableName, string $modelClass, array $columns, string $outputFile, string $dependencies = ''): void
+function generateSeeder(string $tableName, string $modelClass, array $columns, string $outputFile, string $dependencies = '', ?array $filter = null): void
 {
     echo "Generating {$tableName} seeder...\n";
 
-    $records = DB::table($tableName)->get()->map(function ($record) {
+    $query = DB::table($tableName);
+    if ($filter !== null) {
+        $query->whereIn($filter['column'], $filter['values']);
+    }
+    $records = $query->get()->map(function ($record) {
         return (array) $record;
     })->toArray();
 
@@ -144,17 +196,83 @@ echo str_repeat('=', 80)."\n\n";
 
 // Generate each seeder
 generateSeeder(
+    'users',
+    'App\Infrastructure\Persistence\Eloquent\Models\UserEloquent',
+    [
+        'id', 'first_name', 'last_name', 'alias', 'uuid', 'status', 'is_admin',
+        'email', 'email_verified_at', 'password', 'remember_token',
+        'created_at', 'updated_at', 'deleted_at',
+    ],
+    __DIR__.'/database/seeders/Backup/UsersBackupSeeder.php',
+    '',
+    ['column' => 'id', 'values' => $userIds]
+);
+
+generateSeeder(
+    'leagues',
+    'App\Infrastructure\Persistence\Eloquent\Models\League',
+    [
+        'id', 'name', 'slug', 'tagline', 'description', 'logo_path', 'header_image_path',
+        'banner_path', 'platform_ids', 'discord_url', 'website_url', 'twitter_handle',
+        'instagram_handle', 'youtube_url', 'twitch_url', 'facebook_handle', 'visibility',
+        'timezone', 'owner_user_id', 'contact_email', 'organizer_name', 'status',
+        'created_at', 'updated_at', 'deleted_at',
+    ],
+    __DIR__.'/database/seeders/Backup/LeaguesBackupSeeder.php',
+    "\n * Dependencies: UsersBackupSeeder must run first",
+    ['column' => 'owner_user_id', 'values' => $userIds]
+);
+
+generateSeeder(
+    'drivers',
+    'App\Infrastructure\Persistence\Eloquent\Models\Driver',
+    [
+        'id', 'first_name', 'last_name', 'nickname', 'slug', 'email', 'phone',
+        'psn_id', 'iracing_id', 'iracing_customer_id', 'discord_id',
+        'created_at', 'updated_at', 'deleted_at',
+    ],
+    __DIR__.'/database/seeders/Backup/DriversBackupSeeder.php',
+    '',
+    ['column' => 'id', 'values' => $driverIds]
+);
+
+generateSeeder(
+    'league_drivers',
+    'App\Infrastructure\Persistence\Eloquent\Models\LeagueDriverEloquent',
+    [
+        'id', 'league_id', 'driver_id', 'driver_number', 'status',
+        'league_notes', 'added_to_league_at', 'updated_at',
+    ],
+    __DIR__.'/database/seeders/Backup/LeagueDriversBackupSeeder.php',
+    "\n * Dependencies: LeaguesBackupSeeder, DriversBackupSeeder must run first",
+    ['column' => 'league_id', 'values' => $leagueIds]
+);
+
+generateSeeder(
+    'competitions',
+    'App\Infrastructure\Persistence\Eloquent\Models\Competition',
+    [
+        'id', 'league_id', 'platform_id', 'created_by_user_id', 'name', 'slug', 'description',
+        'logo_path', 'competition_colour', 'status', 'archived_at', 'created_at', 'updated_at',
+    ],
+    __DIR__.'/database/seeders/Backup/CompetitionsBackupSeeder.php',
+    "\n * Dependencies: LeaguesBackupSeeder, PlatformSeeder must run first",
+    ['column' => 'league_id', 'values' => $leagueIds]
+);
+
+generateSeeder(
     'seasons',
     'App\Infrastructure\Persistence\Eloquent\Models\SeasonEloquent',
     [
         'id', 'competition_id', 'name', 'slug', 'car_class', 'description', 'technical_specs',
         'logo_path', 'banner_path', 'team_championship_enabled', 'teams_drivers_for_calculation',
         'teams_drop_rounds', 'teams_total_drop_rounds', 'race_divisions_enabled',
-        'race_times_required', 'drop_round', 'total_drop_rounds', 'status',
-        'created_by_user_id', 'created_at', 'updated_at', 'deleted_at',
+        'race_times_required', 'drop_round', 'total_drop_rounds', 'round_totals_tiebreaker_rules_enabled',
+        'status', 'created_by_user_id', 'created_at', 'updated_at', 'deleted_at',
     ],
     __DIR__.'/database/seeders/Backup/SeasonsBackupSeeder.php',
-    "\n * Dependencies: competitions, users tables must have required records"
+    "\n * Dependencies: CompetitionsBackupSeeder must run first",
+    ['column' => 'competition_id', 'values' => $competitionIds]
 );
 
 generateSeeder(
@@ -162,7 +280,8 @@ generateSeeder(
     'App\Infrastructure\Persistence\Eloquent\Models\Team',
     ['id', 'season_id', 'name', 'logo_url', 'created_at', 'updated_at'],
     __DIR__.'/database/seeders/Backup/TeamsBackupSeeder.php',
-    "\n * Dependencies: SeasonsBackupSeeder must run first"
+    "\n * Dependencies: SeasonsBackupSeeder must run first",
+    ['column' => 'season_id', 'values' => $seasonIds]
 );
 
 generateSeeder(
@@ -170,7 +289,8 @@ generateSeeder(
     'App\Infrastructure\Persistence\Eloquent\Models\Division',
     ['id', 'season_id', 'order', 'name', 'description', 'logo_url', 'created_at', 'updated_at'],
     __DIR__.'/database/seeders/Backup/DivisionsBackupSeeder.php',
-    "\n * Dependencies: SeasonsBackupSeeder must run first"
+    "\n * Dependencies: SeasonsBackupSeeder must run first",
+    ['column' => 'season_id', 'values' => $seasonIds]
 );
 
 generateSeeder(
@@ -178,7 +298,8 @@ generateSeeder(
     'App\Infrastructure\Persistence\Eloquent\Models\SeasonDriverEloquent',
     ['id', 'season_id', 'league_driver_id', 'team_id', 'division_id', 'status', 'notes', 'added_at', 'updated_at'],
     __DIR__.'/database/seeders/Backup/SeasonDriversBackupSeeder.php',
-    "\n * Dependencies: SeasonsBackupSeeder, TeamsBackupSeeder, DivisionsBackupSeeder must run first"
+    "\n * Dependencies: SeasonsBackupSeeder, LeagueDriversBackupSeeder, TeamsBackupSeeder, DivisionsBackupSeeder must run first",
+    ['column' => 'season_id', 'values' => $seasonIds]
 );
 
 generateSeeder(
@@ -190,10 +311,12 @@ generateSeeder(
         'stream_url', 'internal_notes', 'fastest_lap', 'fastest_lap_top_10',
         'qualifying_pole', 'qualifying_pole_top_10', 'points_system', 'round_points',
         'status', 'round_results', 'qualifying_results', 'race_time_results',
-        'fastest_lap_results', 'created_by_user_id', 'created_at', 'updated_at', 'deleted_at',
+        'fastest_lap_results', 'team_championship_results', 'round_totals_tiebreaker_rules_information',
+        'created_by_user_id', 'created_at', 'updated_at',
     ],
     __DIR__.'/database/seeders/Backup/RoundsBackupSeeder.php',
-    "\n * Dependencies: SeasonsBackupSeeder must run first\n *\n * Note: JSON result fields (round_results, qualifying_results, race_time_results, fastest_lap_results)\n * are not included in this backup as they are dynamically generated from race_results table."
+    "\n * Dependencies: SeasonsBackupSeeder must run first\n *\n * Note: JSON result fields (round_results, qualifying_results, race_time_results, fastest_lap_results)\n * are not included in this backup as they are dynamically generated from race_results table.",
+    ['column' => 'season_id', 'values' => $seasonIds]
 );
 
 generateSeeder(
@@ -211,7 +334,8 @@ generateSeeder(
         'status', 'created_at', 'updated_at',
     ],
     __DIR__.'/database/seeders/Backup/RacesBackupSeeder.php',
-    "\n * Dependencies: RoundsBackupSeeder must run first"
+    "\n * Dependencies: RoundsBackupSeeder must run first",
+    ['column' => 'round_id', 'values' => $roundIds]
 );
 
 generateSeeder(
@@ -224,7 +348,8 @@ generateSeeder(
         'positions_gained', 'created_at', 'updated_at',
     ],
     __DIR__.'/database/seeders/Backup/RaceResultsBackupSeeder.php',
-    "\n * Dependencies: RacesBackupSeeder, SeasonDriversBackupSeeder, DivisionsBackupSeeder must run first"
+    "\n * Dependencies: RacesBackupSeeder, SeasonDriversBackupSeeder, DivisionsBackupSeeder must run first",
+    ['column' => 'race_id', 'values' => $raceIds]
 );
 
 echo "\n".str_repeat('=', 80)."\n";
@@ -233,13 +358,18 @@ echo "\nNow updating README.md...\n";
 
 // Count records
 $counts = [
-    'seasons' => DB::table('seasons')->count(),
-    'teams' => DB::table('teams')->count(),
-    'divisions' => DB::table('divisions')->count(),
-    'season_drivers' => DB::table('season_drivers')->count(),
-    'rounds' => DB::table('rounds')->count(),
-    'races' => DB::table('races')->count(),
-    'race_results' => DB::table('race_results')->count(),
+    'users' => DB::table('users')->whereIn('id', $userIds)->count(),
+    'leagues' => DB::table('leagues')->whereIn('owner_user_id', $userIds)->count(),
+    'drivers' => DB::table('drivers')->whereIn('id', $driverIds)->count(),
+    'league_drivers' => DB::table('league_drivers')->whereIn('league_id', $leagueIds)->count(),
+    'competitions' => DB::table('competitions')->whereIn('league_id', $leagueIds)->count(),
+    'seasons' => DB::table('seasons')->whereIn('competition_id', $competitionIds)->count(),
+    'teams' => DB::table('teams')->whereIn('season_id', $seasonIds)->count(),
+    'divisions' => DB::table('divisions')->whereIn('season_id', $seasonIds)->count(),
+    'season_drivers' => DB::table('season_drivers')->whereIn('season_id', $seasonIds)->count(),
+    'rounds' => DB::table('rounds')->whereIn('season_id', $seasonIds)->count(),
+    'races' => DB::table('races')->whereIn('round_id', $roundIds)->count(),
+    'race_results' => DB::table('race_results')->whereIn('race_id', $raceIds)->count(),
 ];
 
 $total = array_sum($counts);
@@ -254,7 +384,12 @@ This directory contains Laravel seeders that serve as a backup mechanism for cri
 
 ## Overview
 
-These seeders were created to backup and restore data from the following tables:
+These seeders were created to backup and restore data from the following tables (filtered for users 1 and 3):
+- `users` ({$counts['users']} records)
+- `leagues` ({$counts['leagues']} records)
+- `drivers` ({$counts['drivers']} records)
+- `league_drivers` ({$counts['league_drivers']} records)
+- `competitions` ({$counts['competitions']} records)
 - `seasons` ({$counts['seasons']} records)
 - `teams` ({$counts['teams']} records)
 - `divisions` ({$counts['divisions']} records)
@@ -280,6 +415,21 @@ php artisan db:seed --class="Database\Seeders\Backup\DatabaseBackupSeeder"
 You can also restore individual tables if needed:
 
 ```bash
+# Restore users only
+php artisan db:seed --class="Database\Seeders\Backup\UsersBackupSeeder"
+
+# Restore leagues only
+php artisan db:seed --class="Database\Seeders\Backup\LeaguesBackupSeeder"
+
+# Restore drivers only
+php artisan db:seed --class="Database\Seeders\Backup\DriversBackupSeeder"
+
+# Restore league drivers only
+php artisan db:seed --class="Database\Seeders\Backup\LeagueDriversBackupSeeder"
+
+# Restore competitions only
+php artisan db:seed --class="Database\Seeders\Backup\CompetitionsBackupSeeder"
+
 # Restore seasons only
 php artisan db:seed --class="Database\Seeders\Backup\SeasonsBackupSeeder"
 
@@ -308,13 +458,18 @@ php artisan db:seed --class="Database\Seeders\Backup\RaceResultsBackupSeeder"
 
 The seeders must be run in this order due to foreign key constraints:
 
-1. **SeasonsBackupSeeder** - Depends on: `competitions`, `users` (must exist)
-2. **TeamsBackupSeeder** - Depends on: `seasons`
-3. **DivisionsBackupSeeder** - Depends on: `seasons`
-4. **SeasonDriversBackupSeeder** - Depends on: `seasons`, `league_drivers`, `teams`, `divisions`
-5. **RoundsBackupSeeder** - Depends on: `seasons`, `platform_tracks`, `users`
-6. **RacesBackupSeeder** - Depends on: `rounds`, `races` (self-reference for grid_source_race_id)
-7. **RaceResultsBackupSeeder** - Depends on: `races`, `season_drivers`, `divisions`
+1. **UsersBackupSeeder** - No dependencies (must run first)
+2. **LeaguesBackupSeeder** - Depends on: `users`
+3. **DriversBackupSeeder** - No dependencies
+4. **LeagueDriversBackupSeeder** - Depends on: `leagues`, `drivers`
+5. **CompetitionsBackupSeeder** - Depends on: `leagues`, `platforms` (PlatformSeeder must exist)
+6. **SeasonsBackupSeeder** - Depends on: `competitions`, `users`
+7. **TeamsBackupSeeder** - Depends on: `seasons`
+8. **DivisionsBackupSeeder** - Depends on: `seasons`
+9. **SeasonDriversBackupSeeder** - Depends on: `seasons`, `league_drivers`, `teams`, `divisions`
+10. **RoundsBackupSeeder** - Depends on: `seasons`, `platform_tracks`, `users`
+11. **RacesBackupSeeder** - Depends on: `rounds`, `races` (self-reference for grid_source_race_id)
+12. **RaceResultsBackupSeeder** - Depends on: `races`, `season_drivers`, `divisions`
 
 ## Safety Features
 
@@ -348,10 +503,10 @@ The seeders preserve:
 
 Before running the backup seeders, ensure the following tables have the required data:
 
-- `competitions` - Competition with ID 1 must exist
-- `users` - Users with IDs 1 and 4 must exist
-- `league_drivers` - All league drivers referenced in season_drivers must exist
+- `platforms` - Platform records must exist (run PlatformSeeder first)
 - `platform_tracks` - All platform tracks referenced in rounds must exist
+
+**Note:** This backup is filtered to include only data for users 1 and 3 and their associated leagues, competitions, and racing data.
 
 ## Regenerating Backup Seeders
 
@@ -372,6 +527,11 @@ This will:
 database/seeders/Backup/
 ├── README.md                        # This file
 ├── DatabaseBackupSeeder.php         # Master seeder (runs all in order)
+├── UsersBackupSeeder.php            # Users table backup
+├── LeaguesBackupSeeder.php          # Leagues table backup
+├── DriversBackupSeeder.php          # Drivers table backup
+├── LeagueDriversBackupSeeder.php    # League drivers table backup
+├── CompetitionsBackupSeeder.php     # Competitions table backup
 ├── SeasonsBackupSeeder.php          # Seasons table backup
 ├── TeamsBackupSeeder.php            # Teams table backup
 ├── DivisionsBackupSeeder.php        # Divisions table backup

@@ -46,7 +46,7 @@ final class RoundData extends Data
         public readonly ?array $race_time_results,
         public readonly ?array $fastest_lap_results,
         public readonly ?array $tiebreaker_information,
-        public readonly int $created_by_user_id,
+        public readonly ?int $created_by_user_id,
         public readonly string $created_at,
         public readonly string $updated_at,
     ) {

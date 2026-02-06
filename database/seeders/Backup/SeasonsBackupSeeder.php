@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\DB;
  * SeasonsBackupSeeder
  *
  * This seeder restores the seasons table data from a backup.
- * Generated: 2026-01-07
+ * Generated: 2026-02-06
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
- * Dependencies: competitions, users tables must have required records
+ * Dependencies: CompetitionsBackupSeeder must run first
  */
 class SeasonsBackupSeeder extends Seeder
 {
@@ -27,7 +27,6 @@ class SeasonsBackupSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('SeasonsBackupSeeder cannot run in production environment!');
-
             return;
         }
 
@@ -55,6 +54,7 @@ class SeasonsBackupSeeder extends Seeder
                 'race_times_required' => true,
                 'drop_round' => true,
                 'total_drop_rounds' => 1,
+                'round_totals_tiebreaker_rules_enabled' => false,
                 'status' => 'active',
                 'created_by_user_id' => 1,
                 'created_at' => '2025-11-27 11:32:10',

@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\DB;
  * SeasonDriversBackupSeeder
  *
  * This seeder restores the season_drivers table data from a backup.
- * Generated: 2026-01-07
+ * Generated: 2026-02-06
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
- * Dependencies: SeasonsBackupSeeder, TeamsBackupSeeder, DivisionsBackupSeeder must run first
+ * Dependencies: SeasonsBackupSeeder, LeagueDriversBackupSeeder, TeamsBackupSeeder, DivisionsBackupSeeder must run first
  */
 class SeasonDriversBackupSeeder extends Seeder
 {
@@ -27,7 +27,6 @@ class SeasonDriversBackupSeeder extends Seeder
         // Environment safety check - NEVER run in production
         if (app()->environment('production')) {
             $this->command->error('SeasonDriversBackupSeeder cannot run in production environment!');
-
             return;
         }
 

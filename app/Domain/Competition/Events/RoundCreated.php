@@ -17,7 +17,7 @@ final readonly class RoundCreated
         public string $slug,
         public ?string $scheduledAt,
         public ?int $platformTrackId,
-        public int $createdByUserId,
+        public ?int $createdByUserId,
         public string $occurredAt,
     ) {
     }

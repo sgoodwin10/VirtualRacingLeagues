@@ -61,7 +61,7 @@ final class Round
         private ?array $fastestLapResults,
         private ?array $teamChampionshipResults,
         private ?TiebreakerInformation $tiebreakerInformation,
-        private int $createdByUserId,
+        private ?int $createdByUserId,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
     ) {
@@ -160,7 +160,7 @@ final class Round
         ?array $fastestLapResults,
         ?array $teamChampionshipResults,
         ?TiebreakerInformation $tiebreakerInformation,
-        int $createdByUserId,
+        ?int $createdByUserId,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
     ): self {
@@ -561,7 +561,7 @@ final class Round
         return $this->teamChampionshipResults;
     }
 
-    public function createdByUserId(): int
+    public function createdByUserId(): ?int
     {
         return $this->createdByUserId;
     }
