@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@public/stores/authStore';
+import { useRecaptcha } from '@public/composables/useRecaptcha';
 import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/types/errors';
 import BackgroundGrid from '@public/components/landing/BackgroundGrid.vue';
 import LandingNav from '@public/components/landing/LandingNav.vue';
@@ -14,6 +15,7 @@ import VrlFormLabel from '@public/components/common/forms/VrlFormLabel.vue';
 import VrlFormError from '@public/components/common/forms/VrlFormError.vue';
 
 const authStore = useAuthStore();
+const { executeRecaptcha, loadScript } = useRecaptcha();
 
 // Form data
 const email = ref('');
@@ -25,6 +27,7 @@ const isSubmitting = ref(false);
 const errorMessage = ref('');
 const emailError = ref('');
 const passwordError = ref('');
+const recaptchaError = ref('');
 
 const isFormValid = computed(() => {
   return email.value.trim() !== '' && password.value.trim() !== '';
@@ -57,6 +60,7 @@ const handleSubmit = async (): Promise<void> => {
   errorMessage.value = '';
   emailError.value = '';
   passwordError.value = '';
+  recaptchaError.value = '';
 
   const isEmailValid = validateEmail();
   const isPasswordValid = validatePassword();
@@ -68,10 +72,14 @@ const handleSubmit = async (): Promise<void> => {
   isSubmitting.value = true;
 
   try {
+    // Execute reCAPTCHA before login
+    const recaptchaToken = await executeRecaptcha('login');
+
     await authStore.login({
       email: email.value.trim(),
       password: password.value,
       remember: remember.value,
+      recaptcha_token: recaptchaToken,
     });
 
     // Note: authStore.login() will redirect to app subdomain automatically
@@ -79,7 +87,12 @@ const handleSubmit = async (): Promise<void> => {
   } catch (error: unknown) {
     if (isAxiosError(error)) {
       if (hasValidationErrors(error)) {
-        errorMessage.value = 'Invalid email or password. Please try again.';
+        const validationErrors = error.response?.data?.errors;
+        if (validationErrors?.recaptcha_token) {
+          recaptchaError.value = 'Security verification failed. Please try again.';
+        } else {
+          errorMessage.value = 'Invalid email or password. Please try again.';
+        }
       } else if (error.response?.status === 401) {
         errorMessage.value = 'Invalid email or password. Please try again.';
       } else if (error.response?.status === 429) {
@@ -96,6 +109,10 @@ const handleSubmit = async (): Promise<void> => {
     isSubmitting.value = false;
   }
 };
+
+onMounted(() => {
+  loadScript();
+});
 </script>
 
 <template>
@@ -123,6 +140,15 @@ const handleSubmit = async (): Promise<void> => {
             type="error"
             title="Error"
             :message="errorMessage"
+            class="mb-6"
+          />
+
+          <!-- reCAPTCHA Error -->
+          <VrlAlert
+            v-if="recaptchaError"
+            type="error"
+            title="Security Check Failed"
+            :message="recaptchaError"
             class="mb-6"
           />
 

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@public/stores/authStore';
+import { useRecaptcha } from '@public/composables/useRecaptcha';
 import { isAxiosError, hasValidationErrors, getErrorMessage } from '@public/types/errors';
 import { usePasswordValidation } from '@public/composables/usePasswordValidation';
 import { configService } from '@public/services/configService';
@@ -19,6 +20,7 @@ import VrlSpinner from '@public/components/common/loading/VrlSpinner.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { executeRecaptcha, loadScript } = useRecaptcha();
 
 // Site config state
 const siteConfig = ref<SiteConfig | null>(null);
@@ -42,6 +44,7 @@ const firstNameError = ref('');
 const lastNameError = ref('');
 const emailError = ref('');
 const passwordError = ref('');
+const recaptchaError = ref('');
 
 const isFormValid = computed(() => {
   return (
@@ -109,6 +112,7 @@ const handleSubmit = async (): Promise<void> => {
   lastNameError.value = '';
   emailError.value = '';
   passwordError.value = '';
+  recaptchaError.value = '';
 
   const isFirstNameValid = validateFirstName();
   const isLastNameValid = validateLastName();
@@ -122,12 +126,16 @@ const handleSubmit = async (): Promise<void> => {
   isSubmitting.value = true;
 
   try {
+    // Execute reCAPTCHA before registration
+    const recaptchaToken = await executeRecaptcha('register');
+
     const userEmail = await authStore.register({
       first_name: firstName.value.trim(),
       last_name: lastName.value.trim(),
       email: email.value.trim(),
       password: password.value,
       password_confirmation: passwordConfirmation.value,
+      recaptcha_token: recaptchaToken,
     });
 
     // Redirect to success page with email as query parameter
@@ -140,6 +148,9 @@ const handleSubmit = async (): Promise<void> => {
       if (hasValidationErrors(error)) {
         const validationErrors = error.response?.data?.errors;
         if (validationErrors) {
+          if (validationErrors.recaptcha_token) {
+            recaptchaError.value = 'Security verification failed. Please try again.';
+          }
           if (validationErrors.email && Array.isArray(validationErrors.email)) {
             emailError.value = validationErrors.email[0] ?? '';
           }
@@ -190,6 +201,7 @@ const openDiscord = (): void => {
 
 onMounted(() => {
   fetchSiteConfig();
+  loadScript();
 });
 </script>
 
@@ -256,6 +268,15 @@ onMounted(() => {
             type="error"
             title="Error"
             :message="errorMessage"
+            class="mb-6"
+          />
+
+          <!-- reCAPTCHA Error -->
+          <VrlAlert
+            v-else-if="recaptchaError"
+            type="error"
+            title="Security Check Failed"
+            :message="recaptchaError"
             class="mb-6"
           />
 

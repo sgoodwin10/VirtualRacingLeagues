@@ -12,6 +12,17 @@ vi.mock('vue-router', () => ({
   useRouter: vi.fn(),
 }));
 
+// Mock useRecaptcha composable
+vi.mock('@admin/composables/useRecaptcha', () => ({
+  useRecaptcha: vi.fn(() => ({
+    executeRecaptcha: vi.fn(() => Promise.resolve('test-recaptcha-token')),
+    loadScript: vi.fn(() => Promise.resolve()),
+    error: { value: null },
+    isLoaded: { value: false },
+    isLoading: { value: false },
+  })),
+}));
+
 describe('AdminLoginView', () => {
   let mockRouter: any;
   let pinia: any;
@@ -249,6 +260,7 @@ describe('AdminLoginView', () => {
         email: 'admin@example.com',
         password: 'password123',
         remember: false,
+        recaptcha_token: 'test-recaptcha-token',
       });
     });
 
@@ -275,6 +287,7 @@ describe('AdminLoginView', () => {
         email: 'admin@example.com',
         password: 'password123',
         remember: true,
+        recaptcha_token: 'test-recaptcha-token',
       });
     });
 
@@ -317,6 +330,7 @@ describe('AdminLoginView', () => {
         email: 'admin@example.com',
         password: 'password123',
         remember: false,
+        recaptcha_token: 'test-recaptcha-token',
       });
     });
 
@@ -555,6 +569,38 @@ describe('AdminLoginView', () => {
       await flushPromises();
 
       expect(wrapper.text()).toContain('Network error');
+    });
+
+    it('shows error for reCAPTCHA validation failure', async () => {
+      const wrapper = mountLoginView();
+
+      const adminStore = useAdminStore();
+      const error = {
+        isAxiosError: true,
+        response: {
+          status: 422,
+          data: {
+            message: 'Validation failed',
+            errors: {
+              recaptcha_token: ['The recaptcha token is invalid'],
+            },
+          },
+        },
+      };
+      vi.spyOn(adminStore, 'login').mockRejectedValue(error);
+      vi.spyOn(axios, 'isAxiosError').mockReturnValue(true);
+
+      const emailInput = wrapper.find('#email');
+      await emailInput.setValue('admin@example.com');
+
+      const passwordInput = wrapper.find('#password input');
+      await passwordInput.setValue('password123');
+
+      const form = wrapper.find('form');
+      await form.trigger('submit.prevent');
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('Security verification failed. Please try again.');
     });
   });
 

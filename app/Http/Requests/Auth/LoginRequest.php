@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Auth;
 
+use App\Rules\RecaptchaV3Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -26,11 +27,18 @@ class LoginRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
             'remember' => ['boolean'],
         ];
+
+        // Add reCAPTCHA validation if enabled
+        if (config('recaptchav3.enabled', true)) {
+            $rules['recaptcha_token'] = ['required', 'string', new RecaptchaV3Rule('login')];
+        }
+
+        return $rules;
     }
 
     /**

@@ -2,25 +2,25 @@
 
 This directory contains Laravel seeders that serve as a backup mechanism for critical racing data tables.
 
-**Generated:** 2026-02-06
+**Generated:** 2026-02-07
 
 ## Overview
 
 These seeders were created to backup and restore data from the following tables (filtered for users 1 and 3):
 - `users` (2 records)
-- `leagues` (1 records)
-- `drivers` (80 records)
-- `league_drivers` (80 records)
-- `competitions` (1 records)
-- `seasons` (1 records)
-- `teams` (3 records)
-- `divisions` (4 records)
-- `season_drivers` (62 records)
-- `rounds` (7 records)
-- `races` (17 records)
-- `race_results` (697 records)
+- `leagues` (2 records)
+- `drivers` (109 records)
+- `league_drivers` (110 records)
+- `competitions` (2 records)
+- `seasons` (3 records)
+- `teams` (7 records)
+- `divisions` (9 records)
+- `season_drivers` (150 records)
+- `rounds` (16 records)
+- `races` (32 records)
+- `race_results` (709 records)
 
-**Total Records:** 955
+**Total Records:** 1151
 
 ## Usage
 

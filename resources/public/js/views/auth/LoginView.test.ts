@@ -5,6 +5,17 @@ import { createPinia, setActivePinia } from 'pinia';
 import LoginView from './LoginView.vue';
 import { useAuthStore } from '@public/stores/authStore';
 
+// Mock useRecaptcha composable
+vi.mock('@public/composables/useRecaptcha', () => ({
+  useRecaptcha: () => ({
+    executeRecaptcha: vi.fn().mockResolvedValue('mock-recaptcha-token'),
+    loadScript: vi.fn().mockResolvedValue(undefined),
+    error: { value: null },
+    isLoaded: { value: false },
+    isLoading: { value: false },
+  }),
+}));
+
 // Mock child components
 vi.mock('@public/components/landing/BackgroundGrid.vue', () => ({
   default: { name: 'BackgroundGrid', template: '<div class="background-grid"></div>' },
@@ -221,6 +232,7 @@ describe('LoginView', () => {
         email: 'test@example.com',
         password: 'password123',
         remember: false,
+        recaptcha_token: 'mock-recaptcha-token',
       });
     });
 
@@ -403,6 +415,7 @@ describe('LoginView', () => {
         email: 'test@example.com',
         password: 'password123',
         remember: false,
+        recaptcha_token: 'mock-recaptcha-token',
       });
     });
 
@@ -423,6 +436,7 @@ describe('LoginView', () => {
         email: 'test@example.com',
         password: '  password123  ',
         remember: false,
+        recaptcha_token: 'mock-recaptcha-token',
       });
     });
   });

@@ -11,6 +11,7 @@ use App\Domain\Admin\Exceptions\InvalidCredentialsException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Rules\RecaptchaV3Rule;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,11 +30,18 @@ class AdminAuthController extends Controller
      */
     public function login(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
             'remember' => ['boolean'],
-        ]);
+        ];
+
+        // Add reCAPTCHA validation if enabled
+        if (config('recaptchav3.enabled', true)) {
+            $rules['recaptcha_token'] = ['required', 'string', new RecaptchaV3Rule('admin_login')];
+        }
+
+        $validated = $request->validate($rules);
 
         $remember = $validated['remember'] ?? false;
 

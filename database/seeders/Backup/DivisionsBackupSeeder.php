@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
  * DivisionsBackupSeeder
  *
  * This seeder restores the divisions table data from a backup.
- * Generated: 2026-02-06
+ * Generated: 2026-02-07
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
  * Dependencies: SeasonsBackupSeeder must run first
@@ -75,6 +75,56 @@ class DivisionsBackupSeeder extends Seeder
                 'logo_url' => null,
                 'created_at' => '2025-12-21 11:35:37',
                 'updated_at' => '2025-12-21 11:35:37',
+            ],
+            [
+                'id' => 5,
+                'season_id' => 6,
+                'order' => 1,
+                'name' => 'Division 1',
+                'description' => null,
+                'logo_url' => null,
+                'created_at' => '2026-01-30 04:43:14',
+                'updated_at' => '2026-01-30 04:43:14',
+            ],
+            [
+                'id' => 6,
+                'season_id' => 6,
+                'order' => 2,
+                'name' => 'Division 2',
+                'description' => null,
+                'logo_url' => null,
+                'created_at' => '2026-01-30 04:43:20',
+                'updated_at' => '2026-01-30 04:43:20',
+            ],
+            [
+                'id' => 7,
+                'season_id' => 6,
+                'order' => 3,
+                'name' => 'Division 3',
+                'description' => null,
+                'logo_url' => null,
+                'created_at' => '2026-01-30 04:43:26',
+                'updated_at' => '2026-01-30 04:43:26',
+            ],
+            [
+                'id' => 8,
+                'season_id' => 6,
+                'order' => 4,
+                'name' => 'Division 4',
+                'description' => null,
+                'logo_url' => null,
+                'created_at' => '2026-01-30 04:43:33',
+                'updated_at' => '2026-01-30 04:43:33',
+            ],
+            [
+                'id' => 9,
+                'season_id' => 6,
+                'order' => 5,
+                'name' => 'Division 5',
+                'description' => null,
+                'logo_url' => null,
+                'created_at' => '2026-01-30 04:43:40',
+                'updated_at' => '2026-01-30 04:43:40',
             ],
         ];
 

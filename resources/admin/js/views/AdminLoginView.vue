@@ -105,9 +105,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAdminStore } from '@admin/stores/adminStore';
+import { useRecaptcha } from '@admin/composables/useRecaptcha';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
@@ -117,6 +118,7 @@ import { isAxiosError, hasValidationErrors, getErrorMessage } from '@admin/types
 
 const router = useRouter();
 const adminStore = useAdminStore();
+const { executeRecaptcha, loadScript } = useRecaptcha();
 
 // Form state
 const email = ref('');
@@ -189,10 +191,14 @@ const handleSubmit = async (): Promise<void> => {
   isSubmitting.value = true;
 
   try {
+    // Execute reCAPTCHA before login
+    const recaptchaToken = await executeRecaptcha('admin_login');
+
     await adminStore.login({
       email: email.value.trim(),
       password: password.value,
       remember: remember.value,
+      recaptcha_token: recaptchaToken,
     });
 
     // Redirect to dashboard on success
@@ -202,9 +208,14 @@ const handleSubmit = async (): Promise<void> => {
     // Handle different types of errors with user-friendly messages
     if (isAxiosError(error)) {
       if (hasValidationErrors(error)) {
-        // Handle validation errors (422) - show server message or generic message
+        // Handle validation errors (422)
+        const validationErrors = error.response?.data?.errors;
         const serverMessage = error.response?.data?.message;
-        if (serverMessage && serverMessage.includes('credentials')) {
+
+        // Check for reCAPTCHA validation error
+        if (validationErrors?.recaptcha_token) {
+          errorMessage.value = 'Security verification failed. Please try again.';
+        } else if (serverMessage && serverMessage.includes('credentials')) {
           errorMessage.value = 'Login unsuccessful. Please check your credentials and try again.';
         } else {
           errorMessage.value =
@@ -244,6 +255,13 @@ const clearPasswordError = (): void => {
   passwordError.value = '';
   errorMessage.value = '';
 };
+
+/**
+ * Preload reCAPTCHA script on component mount
+ */
+onMounted(() => {
+  loadScript();
+});
 </script>
 
 <style scoped>

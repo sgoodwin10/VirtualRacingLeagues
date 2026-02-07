@@ -7,6 +7,17 @@ import { useAuthStore } from '@public/stores/authStore';
 import * as configService from '@public/services/configService';
 import type { SiteConfig } from '@public/types/config';
 
+// Mock useRecaptcha composable
+vi.mock('@public/composables/useRecaptcha', () => ({
+  useRecaptcha: () => ({
+    executeRecaptcha: vi.fn().mockResolvedValue('mock-recaptcha-token'),
+    loadScript: vi.fn().mockResolvedValue(undefined),
+    error: { value: null },
+    isLoaded: { value: false },
+    isLoading: { value: false },
+  }),
+}));
+
 // Mock child components
 vi.mock('@public/components/landing/BackgroundGrid.vue', () => ({
   default: { name: 'BackgroundGrid', template: '<div class="background-grid"></div>' },
@@ -468,6 +479,7 @@ describe('RegisterView', () => {
         email: 'test@example.com',
         password: 'StrongPassword123!',
         password_confirmation: 'StrongPassword123!',
+        recaptcha_token: 'mock-recaptcha-token',
       });
     });
 
@@ -687,6 +699,7 @@ describe('RegisterView', () => {
         email: 'test@example.com',
         password: 'StrongPassword123!',
         password_confirmation: 'StrongPassword123!',
+        recaptcha_token: 'mock-recaptcha-token',
       });
     });
   });

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
  * TeamsBackupSeeder
  *
  * This seeder restores the teams table data from a backup.
- * Generated: 2026-02-06
+ * Generated: 2026-02-07
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
  * Dependencies: SeasonsBackupSeeder must run first
@@ -59,6 +59,38 @@ class TeamsBackupSeeder extends Seeder
                 'logo_url' => 'teams/logos/LlWmmgn6LOO0uzCOATWWhU9JdtWULkt7a1qdkfR7.png',
                 'created_at' => '2025-12-22 04:36:36',
                 'updated_at' => '2025-12-22 04:36:36',
+            ],
+            [
+                'id' => 4,
+                'season_id' => 6,
+                'name' => 'The Gamesmen',
+                'logo_url' => 'teams/logos/3tvvHKW1fJudAsR4GCkrTNdZeXXgrxRtBCtGC5Rq.jpg',
+                'created_at' => '2026-02-03 12:28:57',
+                'updated_at' => '2026-02-04 04:21:28',
+            ],
+            [
+                'id' => 5,
+                'season_id' => 6,
+                'name' => 'BHR',
+                'logo_url' => 'teams/logos/sI0pM64PrbIoyYD6HwpOsKSQQG3OVnl61rYtK4hN.png',
+                'created_at' => '2026-02-03 12:29:12',
+                'updated_at' => '2026-02-04 04:20:59',
+            ],
+            [
+                'id' => 6,
+                'season_id' => 6,
+                'name' => 'Selby',
+                'logo_url' => 'teams/logos/kiyrM533vNEPiDqETBeOPnl4izDHhwy7YgJFZonb.jpg',
+                'created_at' => '2026-02-03 12:29:22',
+                'updated_at' => '2026-02-04 04:21:19',
+            ],
+            [
+                'id' => 7,
+                'season_id' => 6,
+                'name' => 'Get Set Financial Services',
+                'logo_url' => 'teams/logos/rumlDm1I2q54xRU0uz0ZhFUApwgCsfTBXMemBGJJ.png',
+                'created_at' => '2026-02-03 12:29:35',
+                'updated_at' => '2026-02-04 04:21:06',
             ],
         ];
 

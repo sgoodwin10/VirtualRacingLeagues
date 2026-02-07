@@ -375,6 +375,10 @@ Route::domain($baseDomain)->middleware('web')->group(function () {
             return response()->json(['message' => 'CSRF cookie set']);
         })->name('csrf-cookie');
 
+        // reCAPTCHA config (public)
+        Route::get('/recaptcha-config', [\App\Http\Controllers\RecaptchaConfigController::class, 'show'])
+            ->name('recaptcha-config');
+
         // Public routes (no authentication required)
         Route::post('/register', [RegisterController::class, 'register'])->name('register');
         Route::post('/login', [LoginController::class, 'login'])->name('login');

@@ -32,6 +32,10 @@ Route::get('/csrf-cookie', function () {
     return response()->json(['message' => 'CSRF cookie set']);
 });
 
+// reCAPTCHA config (public)
+Route::get('/recaptcha-config', [\App\Http\Controllers\RecaptchaConfigController::class, 'show'])
+    ->name('recaptcha-config');
+
 // Public routes (no authentication required)
 // Relax rate limiting in local environment for testing (60/min vs 5/min)
 $loginThrottle = app()->environment('local') ? 'throttle:60,1' : 'throttle:5,1';

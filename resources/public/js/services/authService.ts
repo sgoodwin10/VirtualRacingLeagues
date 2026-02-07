@@ -116,6 +116,7 @@ export async function register(
     email: string;
     password: string;
     password_confirmation: string;
+    recaptcha_token?: string | null;
   },
   signal?: AbortSignal,
 ): Promise<User> {

@@ -43,7 +43,14 @@
 
       <!-- Standings Section -->
       <section class="standings-section container mx-auto max-w-7xl">
-        <h3 class="section-title">Championship Standings</h3>
+        <div class="standings-header">
+          <h3 class="section-title">Championship Standings</h3>
+          <button class="export-button" @click="exportStandingsToCSV">
+            <PhDownloadSimple :size="16" />
+            <span class="hidden md:inline">Export Standings</span>
+            <span class="inline md:hidden">Export</span>
+          </button>
+        </div>
 
         <!-- Tabs (if divisions or teams) -->
         <div
@@ -509,14 +516,23 @@
                       :key="raceEvent.id"
                       class="race-event"
                     >
-                      <h4 class="race-event-title">
-                        <span v-if="raceEvent.is_qualifier" class="race-type-badge qualifier"
-                          >Qualifying</span
+                      <div class="race-event-header">
+                        <h4 class="race-event-title">
+                          <span v-if="raceEvent.is_qualifier" class="race-type-badge qualifier"
+                            >Qualifying</span
+                          >
+                          <span v-else class="race-type-badge race">{{
+                            raceEvent.name || `Race ${raceEvent.race_number}`
+                          }}</span>
+                        </h4>
+                        <button
+                          class="export-button-sm"
+                          @click="exportRaceEventToCSV(raceEvent, round.id)"
                         >
-                        <span v-else class="race-type-badge race">{{
-                          raceEvent.name || `Race ${raceEvent.race_number}`
-                        }}</span>
-                      </h4>
+                          <PhDownloadSimple :size="14" />
+                          Export
+                        </button>
+                      </div>
 
                       <table
                         v-if="
@@ -547,15 +563,13 @@
                             <!-- Basic time display (no times required) -->
                             <template v-else>
                               <th class="th-time">Time</th>
+                              <!-- Fastest Lap time column for races (not qualifiers) -->
+                              <th v-if="!raceEvent.is_qualifier" class="th-fl-time">Fastest Lap</th>
                             </template>
                             <!-- Positions gained (races only) -->
                             <th v-if="!raceEvent.is_qualifier" class="th-plusminus">+/-</th>
                             <!-- Points (if enabled) -->
                             <th v-if="raceEvent.race_points" class="th-pts">Pts</th>
-                            <!-- Fastest lap badge (only if not showing FL time column) -->
-                            <th v-if="!raceTimesRequired && !raceEvent.is_qualifier" class="th-fl">
-                              FL
-                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -635,6 +649,14 @@
                                     : result.final_race_time_difference || '-'
                                 }}
                               </td>
+                              <!-- Fastest Lap time for races (not qualifiers) -->
+                              <td
+                                v-if="!raceEvent.is_qualifier"
+                                class="td-fl-time"
+                                :class="{ 'has-fastest': result.has_fastest_lap }"
+                              >
+                                {{ formatRaceTime(result.fastest_lap) || '-' }}
+                              </td>
                             </template>
                             <!-- Positions gained -->
                             <td v-if="!raceEvent.is_qualifier" class="td-plusminus">
@@ -645,10 +667,6 @@
                             <!-- Points -->
                             <td v-if="raceEvent.race_points" class="td-pts">
                               {{ result.race_points }}
-                            </td>
-                            <!-- Fastest lap badge (basic mode only) -->
-                            <td v-if="!raceTimesRequired && !raceEvent.is_qualifier" class="td-fl">
-                              <span v-if="result.has_fastest_lap" class="badge badge-fl">FL</span>
                             </td>
                           </tr>
                         </tbody>
@@ -786,7 +804,9 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTitle } from '@vueuse/core';
 import * as Sentry from '@sentry/vue';
+import { PhDownloadSimple } from '@phosphor-icons/vue';
 import { leagueService } from '@public/services/leagueService';
+import { useGtm } from '@public/composables/useGtm';
 import { getSiteConfig } from '@public/types/site-config';
 import Chart from 'primevue/chart';
 import type {
@@ -805,6 +825,7 @@ import type {
 import type { ChartData, ChartOptions } from 'chart.js';
 
 const route = useRoute();
+const { trackEvent } = useGtm();
 
 // Route params
 const leagueSlug = route.params.leagueSlug as string;
@@ -1958,6 +1979,337 @@ const chartOptions = computed<ChartOptions>(() => ({
   },
 }));
 
+// ============================================
+// CSV Export Functions
+// ============================================
+
+/**
+ * Sanitize string for filename
+ */
+function sanitizeFilename(str: string): string {
+  return str.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+}
+
+/**
+ * Download CSV content as a file
+ */
+function downloadCSV(csvContent: string, filename: string): void {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  // Track CSV download event
+  trackEvent('csv_download_click', {
+    csv_filename: filename,
+    league_name: leagueSlug,
+    season_name: seasonSlug,
+  });
+}
+
+/**
+ * Generate CSV for driver standings
+ */
+function generateDriverStandingsCSV(drivers: SeasonStandingDriver[]): string {
+  if (!drivers || drivers.length === 0) return '';
+
+  const roundNumbers = getRoundNumbers(drivers);
+  const hasDropRounds = seasonData.value?.drop_round_enabled ?? false;
+
+  // Check if any driver has a team
+  const hasTeams = drivers.some((d) => d.team_name);
+
+  // Build headers
+  const headers: string[] = ['position', 'driver_name'];
+
+  if (hasTeams) {
+    headers.push('team');
+  }
+
+  headers.push('podiums');
+
+  // Add round columns
+  for (const roundNum of roundNumbers) {
+    headers.push(`r${roundNum}_pole`, `r${roundNum}_fl`, `r${roundNum}_pts`);
+  }
+
+  headers.push('total');
+
+  if (hasDropRounds) {
+    headers.push('drop');
+  }
+
+  // Build rows
+  const rows = drivers.map((driver) => {
+    const row: (string | number)[] = [driver.position, driver.driver_name];
+
+    if (hasTeams) {
+      row.push(driver.team_name || '');
+    }
+
+    row.push(driver.podiums);
+
+    // Add round data
+    for (const roundNum of roundNumbers) {
+      const roundData = getRoundData(driver, roundNum);
+      row.push(
+        roundData?.has_pole ? 'Yes' : 'No',
+        roundData?.has_fastest_lap ? 'Yes' : 'No',
+        roundData?.points ?? '',
+      );
+    }
+
+    row.push(driver.total_points);
+
+    if (hasDropRounds) {
+      row.push(driver.drop_total ?? 0);
+    }
+
+    return row;
+  });
+
+  // Convert to CSV format
+  return [
+    headers.join(','),
+    ...rows.map((row) =>
+      row
+        .map((cell) => {
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        })
+        .join(','),
+    ),
+  ].join('\n');
+}
+
+/**
+ * Generate CSV for team championship
+ */
+function generateTeamChampionshipCSV(): string {
+  if (!teamChampionshipResults.value || teamChampionshipResults.value.length === 0) return '';
+
+  const roundNumbers = getTeamRoundNumbers(teamChampionshipResults.value);
+  const hasDropRounds = teamsDropRoundEnabled.value;
+
+  // Build headers
+  const headers: string[] = ['position', 'team_name'];
+
+  // Add round columns
+  for (const roundNum of roundNumbers) {
+    headers.push(`r${roundNum}_pts`);
+  }
+
+  headers.push('total');
+
+  if (hasDropRounds) {
+    headers.push('drop');
+  }
+
+  // Build rows
+  const rows = teamChampionshipResults.value.map((team) => {
+    const row: (string | number)[] = [team.position, team.team_name];
+
+    // Add round data
+    for (const roundNum of roundNumbers) {
+      const roundData = getTeamRoundData(team, roundNum);
+      row.push(roundData?.points ?? 0);
+    }
+
+    row.push(team.total_points);
+
+    if (hasDropRounds) {
+      row.push(team.drop_total ?? 0);
+    }
+
+    return row;
+  });
+
+  // Convert to CSV format
+  return [
+    headers.join(','),
+    ...rows.map((row) =>
+      row
+        .map((cell) => {
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        })
+        .join(','),
+    ),
+  ].join('\n');
+}
+
+/**
+ * Export standings to CSV based on active tab
+ */
+function exportStandingsToCSV(): void {
+  if (!seasonData.value) return;
+
+  let csvContent = '';
+  let filename = '';
+
+  if (activeStandingsTab.value === 'teams') {
+    // Export team championship data
+    csvContent = generateTeamChampionshipCSV();
+    filename = `${sanitizeFilename(leagueSlug)}_${sanitizeFilename(seasonSlug)}_team_championship_standings.csv`;
+  } else if (activeStandingsTab.value.startsWith('division-')) {
+    // Export division standings
+    const divisionId = parseInt(activeStandingsTab.value.replace('division-', ''));
+    const division = divisionsWithStandings.value.find((d) => d.division_id === divisionId);
+    if (division) {
+      csvContent = generateDriverStandingsCSV(division.drivers);
+      filename = `${sanitizeFilename(leagueSlug)}_${sanitizeFilename(seasonSlug)}_${sanitizeFilename(division.division_name)}_standings.csv`;
+    }
+  } else {
+    // Export flat driver standings
+    csvContent = generateDriverStandingsCSV(flatDriverStandings.value);
+    const tabName = activeStandingsTab.value === 'drivers' ? 'drivers' : 'standings';
+    filename = `${sanitizeFilename(leagueSlug)}_${sanitizeFilename(seasonSlug)}_${tabName}.csv`;
+  }
+
+  if (!csvContent) return;
+
+  downloadCSV(csvContent, filename);
+}
+
+/**
+ * Export race event results to CSV
+ */
+function exportRaceEventToCSV(raceEvent: RaceEventResults, roundId: number): void {
+  if (!seasonData.value) return;
+
+  const isQualifier = raceEvent.is_qualifier;
+  const hasRaceTimes = raceTimesRequired.value;
+
+  // Get filtered results based on active division
+  const divisionId =
+    seasonData.value.has_divisions && getActiveDivisionTab(roundId)
+      ? parseInt(getActiveDivisionTab(roundId), 10)
+      : undefined;
+  const results = getProcessedRaceResults(raceEvent, divisionId);
+
+  if (results.length === 0) return;
+
+  // Build CSV headers based on visible columns
+  const headers: string[] = ['Position', 'Driver Name'];
+
+  if (!isQualifier && hasRaceTimes) {
+    headers.push('Time', 'Gap');
+  }
+
+  if (hasRaceTimes) {
+    headers.push(isQualifier ? 'Lap Time' : 'Fastest Lap');
+  } else if (!isQualifier) {
+    // Add Fastest Lap column even when race times not required
+    headers.push('Fastest Lap');
+  }
+
+  if (!isQualifier && hasRaceTimes) {
+    headers.push('Penalties');
+  }
+
+  if (!isQualifier) {
+    headers.push('Positions Gained');
+  }
+
+  if (raceEvent.race_points) {
+    headers.push('Points');
+  }
+
+  headers.push('DNF');
+
+  if (isQualifier) {
+    headers.push('Pole Position');
+  }
+
+  if (!isQualifier) {
+    headers.push('Has Fastest Lap');
+  }
+
+  // Build CSV rows from filtered results
+  const rows = results.map((result) => {
+    const row: (string | number)[] = [result.position ?? '', result.driver?.name || 'Unknown'];
+
+    if (!isQualifier && hasRaceTimes) {
+      row.push(result.dnf ? 'DNF' : formatRaceTime(result.final_race_time) || '');
+      row.push(
+        result.calculated_time_diff ? `+${formatRaceTime(result.calculated_time_diff)}` : '',
+      );
+    }
+
+    if (hasRaceTimes) {
+      row.push(formatRaceTime(result.fastest_lap) || '');
+    } else if (!isQualifier) {
+      // Add Fastest Lap time even when race times not required
+      row.push(formatRaceTime(result.fastest_lap) || '');
+    }
+
+    if (!isQualifier && hasRaceTimes) {
+      row.push(formatRaceTime(result.penalties) || '');
+    }
+
+    if (!isQualifier) {
+      row.push(formatPositionsGained(result.positions_gained));
+    }
+
+    if (raceEvent.race_points) {
+      row.push(result.race_points ?? 0);
+    }
+
+    row.push(result.dnf ? 'Yes' : 'No');
+
+    if (isQualifier) {
+      row.push(result.has_pole ? 'Yes' : 'No');
+    }
+
+    if (!isQualifier) {
+      row.push(result.has_fastest_lap ? 'Yes' : 'No');
+    }
+
+    return row;
+  });
+
+  // Convert to CSV format
+  const csvContent = [
+    headers.join(','),
+    ...rows.map((row) =>
+      row
+        .map((cell) => {
+          // Escape cells containing commas, quotes, or newlines
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        })
+        .join(','),
+    ),
+  ].join('\n');
+
+  // Get round info for filename
+  const round = seasonData.value.rounds.find((r) => r.id === roundId);
+  const roundNumber = round?.round_number ?? 0;
+  const raceName = raceEvent.is_qualifier
+    ? 'qualifying'
+    : raceEvent.name || `race_${raceEvent.race_number}`;
+
+  const filename = `${sanitizeFilename(leagueSlug)}_${sanitizeFilename(seasonSlug)}_r${roundNumber}_${sanitizeFilename(raceName)}_results.csv`;
+
+  downloadCSV(csvContent, filename);
+}
+
 /**
  * Fetch season detail
  */
@@ -2157,14 +2509,11 @@ onMounted(() => {
 
 .season-logo {
   flex-shrink: 0;
-  width: 80px;
+  width: 140px;
   height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--wl-bg-secondary);
-  border: 1px solid var(--wl-border);
-  border-radius: 4px;
   margin-left: auto;
 }
 
@@ -2187,9 +2536,79 @@ onMounted(() => {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--wl-text-primary);
-  margin: 0 0 1.5rem 0;
+  margin: 0;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid var(--wl-border);
+}
+
+/* Standings Header with Export */
+.standings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.standings-header .section-title {
+  margin: 0;
+  flex: 1;
+}
+
+/* Export Buttons */
+.export-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--wl-text-secondary);
+  background-color: var(--wl-bg-secondary);
+  border: 1px solid var(--wl-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.export-button:hover {
+  color: var(--wl-accent-primary);
+  border-color: var(--wl-accent-primary);
+  background-color: var(--wl-bg-primary);
+}
+
+.export-button-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--wl-text-secondary);
+  background-color: var(--wl-bg-primary);
+  border: 1px solid var(--wl-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.export-button-sm:hover {
+  color: var(--wl-accent-primary);
+  border-color: var(--wl-accent-primary);
+}
+
+/* Race Event Header */
+.race-event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.race-event-header .race-event-title {
+  margin: 0;
 }
 
 /* ============================================
@@ -2679,7 +3098,7 @@ onMounted(() => {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--wl-text-primary);
-  margin: 0 0 1rem 0;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -2769,7 +3188,7 @@ onMounted(() => {
 
 .th-time,
 .td-time {
-  width: 120px;
+  width: 150px;
   font-family: monospace;
 }
 

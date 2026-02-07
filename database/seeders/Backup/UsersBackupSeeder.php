@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
  * UsersBackupSeeder
  *
  * This seeder restores the users table data from a backup.
- * Generated: 2026-02-06
+ * Generated: 2026-02-07
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
  */

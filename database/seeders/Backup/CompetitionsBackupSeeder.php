@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
  * CompetitionsBackupSeeder
  *
  * This seeder restores the competitions table data from a backup.
- * Generated: 2026-02-06
+ * Generated: 2026-02-07
  *
  * IMPORTANT: This seeder should ONLY run in local/development/staging environments.
  * Dependencies: LeaguesBackupSeeder, PlatformSeeder must run first
@@ -50,6 +50,21 @@ class CompetitionsBackupSeeder extends Seeder
                 'archived_at' => null,
                 'created_at' => '2025-11-27 11:25:50',
                 'updated_at' => '2025-11-27 11:25:50',
+            ],
+            [
+                'id' => 2,
+                'league_id' => 2,
+                'platform_id' => 1,
+                'created_by_user_id' => 3,
+                'name' => 'Trash Tuesday GT4',
+                'slug' => 'trash-tuesday-gt4',
+                'description' => null,
+                'logo_path' => null,
+                'competition_colour' => '{"r":146,"g":129,"b":117}',
+                'status' => 'active',
+                'archived_at' => null,
+                'created_at' => '2026-01-22 10:27:01',
+                'updated_at' => '2026-01-22 10:27:01',
             ],
         ];
 

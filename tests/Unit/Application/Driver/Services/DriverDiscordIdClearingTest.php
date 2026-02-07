@@ -25,7 +25,6 @@ use Mockery;
 
 final class DriverDiscordIdClearingTest extends TestCase
 {
-
     public function test_can_clear_discord_id_when_empty_string_is_sent(): void
     {
         // Create mock request with discord_id as empty string
