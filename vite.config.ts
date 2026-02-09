@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type PluginOption } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
@@ -42,30 +42,30 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
 
       // Sentry Vite plugin for source map uploads (production only)
-      shouldUploadSourceMaps &&
-        sentryVitePlugin({
-          org: env.VITE_SENTRY_ORG,
-          project: env.VITE_SENTRY_PROJECT,
-          authToken: env.VITE_SENTRY_AUTH_TOKEN,
+      shouldUploadSourceMaps
+        ? sentryVitePlugin({
+            org: env.VITE_SENTRY_ORG,
+            project: env.VITE_SENTRY_PROJECT,
+            authToken: env.VITE_SENTRY_AUTH_TOKEN,
 
-          sourcemaps: {
-            assets: ['./public/build/assets/**'],
-            ignore: ['node_modules'],
-            filesToDeleteAfterUpload: ['./public/build/assets/**/*.map'],
-          },
-
-          release: {
-            name: env.VITE_APP_VERSION || '1.0.0',
-            cleanArtifacts: true,
-            setCommits: {
-              auto: true,
+            sourcemaps: {
+              assets: ['./public/build/assets/**'],
+              ignore: ['node_modules'],
+              filesToDeleteAfterUpload: ['./public/build/assets/**/*.map'],
             },
-          },
 
-          telemetry: false,
-          debug: false,
-        }),
-    ].filter(Boolean),
+            release: {
+              name: env.VITE_APP_VERSION || '1.0.0',
+              setCommits: {
+                auto: true,
+              },
+            },
+
+            telemetry: false,
+            debug: false,
+          })
+        : null,
+    ].filter(Boolean) as PluginOption[],
     base: '/build/',
     resolve: {
       alias: {

@@ -17,6 +17,42 @@
         </div>
       </div>
 
+      <!-- Google Sheets Import Section -->
+      <div class="mb-4">
+        <div class="flex items-center gap-2 mb-3">
+          <PhGoogleLogo :size="20" class="text-gray-600" />
+          <div class="font-medium font-mono">Import from Google Sheets</div>
+        </div>
+
+        <div class="flex gap-2">
+          <InputText
+            v-model="googleSheetsUrl"
+            placeholder="https://docs.google.com/spreadsheets/d/..."
+            class="flex-1"
+            :invalid="!!sheetFetchError"
+          />
+          <Button
+            label="Fetch from Sheet"
+            :icon="PhDownload"
+            size="sm"
+            variant="primary"
+            :loading="isFetchingSheet"
+            :disabled="!googleSheetsUrl.trim() || isFetchingSheet"
+            @click="handleFetchGoogleSheet"
+          />
+        </div>
+
+        <div v-if="sheetFetchError" class="mt-2 text-sm text-red-600">
+          {{ sheetFetchError }}
+        </div>
+
+        <p class="mt-2 text-xs text-gray-500">
+          The sheet must be publicly accessible (Share → Anyone with the link can view)
+        </p>
+      </div>
+
+      <div class="border-t border-[var(--color-border-muted)] my-4" />
+
       <div class="flex items-center gap-2 mb-3">
         <PhFileCsv :size="20" class="text-gray-600" />
         <div class="font-medium font-mono">Import from CSV</div>
@@ -66,10 +102,12 @@
 import { ref, computed } from 'vue';
 import Papa from 'papaparse';
 import Textarea from 'primevue/textarea';
+import InputText from 'primevue/inputtext';
 import { Button } from '@app/components/common/buttons';
-import { PhFileCsv, PhUpload, PhCheck } from '@phosphor-icons/vue';
+import { PhFileCsv, PhUpload, PhCheck, PhGoogleLogo, PhDownload } from '@phosphor-icons/vue';
 import type { CsvResultRow } from '@app/types/raceResult';
 import { useRaceTimeCalculation } from '@app/composables/useRaceTimeCalculation';
+import { fetchGoogleSheetAsCsv } from '@app/services/raceResultService';
 
 interface Props {
   isQualifying: boolean;
@@ -86,6 +124,9 @@ const emit = defineEmits<Emits>();
 const csvText = ref('');
 const parseError = ref<string | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
+const googleSheetsUrl = ref('');
+const isFetchingSheet = ref(false);
+const sheetFetchError = ref<string | null>(null);
 
 const { parseTimeToMs, formatMsToTime, normalizeTimeInput } = useRaceTimeCalculation();
 
@@ -420,6 +461,31 @@ function addHeaders(): void {
     csvText.value = headers + '\n' + csvText.value;
   } else {
     csvText.value = headers;
+  }
+}
+
+/**
+ * Fetch CSV data from a public Google Sheet
+ */
+async function handleFetchGoogleSheet(): Promise<void> {
+  if (!googleSheetsUrl.value.trim()) return;
+
+  isFetchingSheet.value = true;
+  sheetFetchError.value = null;
+  parseError.value = null;
+
+  try {
+    const csv = await fetchGoogleSheetAsCsv(googleSheetsUrl.value.trim());
+    csvText.value = csv;
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      sheetFetchError.value = axiosError.response?.data?.message || 'Failed to fetch Google Sheet';
+    } else {
+      sheetFetchError.value = 'Failed to fetch Google Sheet. Please check the URL and try again.';
+    }
+  } finally {
+    isFetchingSheet.value = false;
   }
 }
 </script>

@@ -86,22 +86,50 @@
           :key="`division-${division.division_id}`"
           class="standings-table-wrapper"
         >
-          <h4 class="division-title">{{ division.division_name }}</h4>
+        <div class="flex items-center gap-2 border-b border-gray-300">
+          <div>
+            <img src="/images/platforms/gran-turismo-7-logo.svg" alt="Gran Turismo 7" class="platform-logo" />
+          </div>
+          <div class="flex-1 text-center flex items-center justify-center text-3xl font-bold text-[var(--wl-text-primary)]">
+            
+              {{ seasonData.season.name }} - 
+              {{ division.division_name }}
+          </div>
+          <div class="w-48">
+            <div v-if="seasonLogoUrl" class="season-logo">
+          <img :src="seasonLogoUrl" :alt="`${seasonData.season.name} logo`" />
+        </div>
+          </div>
+        </div>
+          
           <table class="standings-table">
             <thead>
               <tr>
-                <th class="th-position">#</th>
-                <th class="th-driver">Driver</th>
+                <th rowspan="2" class="th-position">#</th>
+                <th v-if="showTeamsColumn" rowspan="2" class="th-team">Team</th>
+                <th rowspan="2" class="th-driver">Driver</th>
+                <th rowspan="2" class="th-podiums">Podiums</th>
 
                 <th
                   v-for="roundNum in getRoundNumbers(division.drivers)"
                   :key="`header-${roundNum}`"
-                  class="th-round"
+                  colspan="3"
+                  class="th-round-group"
                 >
                   R{{ roundNum }}
                 </th>
-                <th class="th-total">Total</th>
-                <th v-if="seasonData.drop_round_enabled" class="th-drop">Drop</th>
+                <th rowspan="2" class="th-total">Total</th>
+                <th v-if="seasonData.drop_round_enabled" rowspan="2" class="th-drop">Drop</th>
+              </tr>
+              <tr class="sub-header-row">
+                <template
+                  v-for="roundNum in getRoundNumbers(division.drivers)"
+                  :key="`subheader-${roundNum}`"
+                >
+                  <th class="th-sub th-fl">FL</th>
+                  <th class="th-sub th-pole">P</th>
+                  <th class="th-sub th-pts">Pts</th>
+                </template>
               </tr>
             </thead>
             <tbody>
@@ -113,45 +141,44 @@
                 <td :class="['td-position', getPodiumClass(driver.position)]">
                   {{ driver.position }}
                 </td>
-                <td class="td-driver">
-                  <div class="flex flex-row items-center gap-2">
-                    <div class="w-full">{{ driver.driver_name }}</div>
-                    <div>
-                      <img
-                        v-if="driver.team_logo"
-                        :src="driver.team_logo"
-                        :alt="driver.team_name || 'Team'"
-                        class="team-logo-img right-0"
-                      />
-                      <span v-else-if="driver.team_name">{{ driver.team_name }}</span>
-                    </div>
-                  </div>
+                <td v-if="showTeamsColumn" class="td-team">
+                  <img
+                    v-if="driver.team_logo"
+                    :src="driver.team_logo"
+                    :alt="driver.team_name || 'Team'"
+                    class="team-logo-standalone"
+                  />
                 </td>
-                <td
+                <td class="td-driver">
+                  {{ driver.driver_name }}
+                </td>
+                <td class="td-podiums">{{ driver.podiums }}</td>
+                <template
                   v-for="roundNum in getRoundNumbers(division.drivers)"
                   :key="`round-${driver.driver_id}-${roundNum}`"
-                  class="td-round"
                 >
-                  <div class="round-cell">
-                    <div class="round-badges">
-                      <span
-                        v-if="getRoundData(driver, roundNum)?.has_pole"
-                        class="badge badge-pole"
-                        title="Pole Position"
-                        >P</span
-                      >
-                      <span
-                        v-if="getRoundData(driver, roundNum)?.has_fastest_lap"
-                        class="badge badge-fl"
-                        title="Fastest Lap"
-                        >FL</span
-                      >
-                    </div>
-                    <span class="round-points">{{
-                      getRoundData(driver, roundNum)?.points ?? '-'
-                    }}</span>
-                  </div>
-                </td>
+                  <td class="td-fl">
+                    <span
+                      v-if="getRoundData(driver, roundNum)?.has_fastest_lap"
+                      class="badge badge-fl"
+                      title="Fastest Lap"
+                      >✓</span
+                    >
+                    <span v-else>-</span>
+                  </td>
+                  <td class="td-pole">
+                    <span
+                      v-if="getRoundData(driver, roundNum)?.has_pole"
+                      class="badge badge-pole"
+                      title="Pole Position"
+                      >✓</span
+                    >
+                    <span v-else>-</span>
+                  </td>
+                  <td class="td-pts">
+                    {{ getRoundData(driver, roundNum)?.points ?? '-' }}
+                  </td>
+                </template>
                 <td class="td-total">{{ driver.total_points }}</td>
                 <td v-if="seasonData.drop_round_enabled" class="td-drop">
                   {{ driver.drop_total }}
@@ -172,21 +199,38 @@
           v-if="!seasonData.has_divisions && !showTeamsChampionship"
           class="standings-table-wrapper"
         >
+          <h4 class="division-title">
+            <img src="/images/platforms/gran-turismo-7-logo.svg" alt="Gran Turismo 7" class="platform-logo" />
+            Championship Standings
+          </h4>
           <table class="standings-table">
             <thead>
               <tr>
-                <th class="th-position">#</th>
-                <th class="th-driver">Driver</th>
+                <th rowspan="2" class="th-position">#</th>
+                <th v-if="showTeamsColumn" rowspan="2" class="th-team">Team</th>
+                <th rowspan="2" class="th-driver">Driver</th>
+                <th rowspan="2" class="th-podiums">Podiums</th>
 
                 <th
                   v-for="roundNum in getRoundNumbers(flatDriverStandings)"
                   :key="`header-${roundNum}`"
-                  class="th-round"
+                  colspan="3"
+                  class="th-round-group"
                 >
                   R{{ roundNum }}
                 </th>
-                <th class="th-total">Total</th>
-                <th v-if="seasonData.drop_round_enabled" class="th-drop">Drop</th>
+                <th rowspan="2" class="th-total">Total</th>
+                <th v-if="seasonData.drop_round_enabled" rowspan="2" class="th-drop">Drop</th>
+              </tr>
+              <tr class="sub-header-row">
+                <template
+                  v-for="roundNum in getRoundNumbers(flatDriverStandings)"
+                  :key="`subheader-${roundNum}`"
+                >
+                  <th class="th-sub th-fl">FL</th>
+                  <th class="th-sub th-pole">P</th>
+                  <th class="th-sub th-pts">Pts</th>
+                </template>
               </tr>
             </thead>
             <tbody>
@@ -198,41 +242,44 @@
                 <td :class="['td-position', getPodiumClass(driver.position)]">
                   {{ driver.position }}
                 </td>
-                <td class="td-driver">
-                  {{ driver.driver_name }}
+                <td v-if="showTeamsColumn" class="td-team">
                   <img
                     v-if="driver.team_logo"
                     :src="driver.team_logo"
                     :alt="driver.team_name || 'Team'"
-                    class="team-logo-img"
+                    class="team-logo-standalone"
                   />
-                  <span v-else-if="driver.team_name">{{ driver.team_name }}</span>
                 </td>
-                <td
+                <td class="td-driver">
+                  {{ driver.driver_name }}
+                </td>
+                <td class="td-podiums">{{ driver.podiums }}</td>
+                <template
                   v-for="roundNum in getRoundNumbers(flatDriverStandings)"
                   :key="`round-${driver.driver_id}-${roundNum}`"
-                  class="td-round"
                 >
-                  <div class="round-cell">
-                    <span class="round-points">{{
-                      getRoundData(driver, roundNum)?.points ?? '-'
-                    }}</span>
-                    <div class="round-badges">
-                      <span
-                        v-if="getRoundData(driver, roundNum)?.has_pole"
-                        class="badge badge-pole"
-                        title="Pole Position"
-                        >P</span
-                      >
-                      <span
-                        v-if="getRoundData(driver, roundNum)?.has_fastest_lap"
-                        class="badge badge-fl"
-                        title="Fastest Lap"
-                        >FL</span
-                      >
-                    </div>
-                  </div>
-                </td>
+                  <td class="td-fl">
+                    <span
+                      v-if="getRoundData(driver, roundNum)?.has_fastest_lap"
+                      class="badge badge-fl"
+                      title="Fastest Lap"
+                      >✓</span
+                    >
+                    <span v-else>-</span>
+                  </td>
+                  <td class="td-pole">
+                    <span
+                      v-if="getRoundData(driver, roundNum)?.has_pole"
+                      class="badge badge-pole"
+                      title="Pole Position"
+                      >✓</span
+                    >
+                    <span v-else>-</span>
+                  </td>
+                  <td class="td-pts">
+                    {{ getRoundData(driver, roundNum)?.points ?? '-' }}
+                  </td>
+                </template>
                 <td class="td-total">{{ driver.total_points }}</td>
                 <td v-if="seasonData.drop_round_enabled" class="td-drop">
                   {{ driver.drop_total }}
@@ -254,20 +301,37 @@
           v-show="activeStandingsTab === 'drivers'"
           class="standings-table-wrapper"
         >
+          <h4 class="division-title">
+            <img src="/images/platforms/gran-turismo-7-logo.svg" alt="Gran Turismo 7" class="platform-logo" />
+            Drivers Championship
+          </h4>
           <table class="standings-table">
             <thead>
               <tr>
-                <th class="th-position">#</th>
-                <th class="th-driver">Driver</th>
+                <th rowspan="2" class="th-position">#</th>
+                <th v-if="showTeamsColumn" rowspan="2" class="th-team">Team</th>
+                <th rowspan="2" class="th-driver">Driver</th>
+                <th rowspan="2" class="th-podiums">Podiums</th>
                 <th
                   v-for="roundNum in getRoundNumbers(flatDriverStandings)"
                   :key="`header-${roundNum}`"
-                  class="th-round"
+                  colspan="3"
+                  class="th-round-group"
                 >
                   R{{ roundNum }}
                 </th>
-                <th class="th-total">Total</th>
-                <th v-if="seasonData.drop_round_enabled" class="th-drop">Drop</th>
+                <th rowspan="2" class="th-total">Total</th>
+                <th v-if="seasonData.drop_round_enabled" rowspan="2" class="th-drop">Drop</th>
+              </tr>
+              <tr class="sub-header-row">
+                <template
+                  v-for="roundNum in getRoundNumbers(flatDriverStandings)"
+                  :key="`subheader-${roundNum}`"
+                >
+                  <th class="th-sub th-fl">FL</th>
+                  <th class="th-sub th-pole">P</th>
+                  <th class="th-sub th-pts">Pts</th>
+                </template>
               </tr>
             </thead>
             <tbody>
@@ -279,41 +343,44 @@
                 <td :class="['td-position', getPodiumClass(driver.position)]">
                   {{ driver.position }}
                 </td>
-                <td class="td-driver">
-                  {{ driver.driver_name }}
+                <td v-if="showTeamsColumn" class="td-team">
                   <img
                     v-if="driver.team_logo"
                     :src="driver.team_logo"
                     :alt="driver.team_name || 'Team'"
-                    class="team-logo-img"
+                    class="team-logo-standalone"
                   />
-                  <span v-else-if="driver.team_name">{{ driver.team_name }}</span>
                 </td>
-                <td
+                <td class="td-driver">
+                  {{ driver.driver_name }}
+                </td>
+                <td class="td-podiums">{{ driver.podiums }}</td>
+                <template
                   v-for="roundNum in getRoundNumbers(flatDriverStandings)"
                   :key="`round-${driver.driver_id}-${roundNum}`"
-                  class="td-round"
                 >
-                  <div class="round-cell">
-                    <span class="round-points">{{
-                      getRoundData(driver, roundNum)?.points ?? '-'
-                    }}</span>
-                    <div class="round-badges">
-                      <span
-                        v-if="getRoundData(driver, roundNum)?.has_pole"
-                        class="badge badge-pole"
-                        title="Pole Position"
-                        >P</span
-                      >
-                      <span
-                        v-if="getRoundData(driver, roundNum)?.has_fastest_lap"
-                        class="badge badge-fl"
-                        title="Fastest Lap"
-                        >FL</span
-                      >
-                    </div>
-                  </div>
-                </td>
+                  <td class="td-fl">
+                    <span
+                      v-if="getRoundData(driver, roundNum)?.has_fastest_lap"
+                      class="badge badge-fl"
+                      title="Fastest Lap"
+                      >✓</span
+                    >
+                    <span v-else>-</span>
+                  </td>
+                  <td class="td-pole">
+                    <span
+                      v-if="getRoundData(driver, roundNum)?.has_pole"
+                      class="badge badge-pole"
+                      title="Pole Position"
+                      >✓</span
+                    >
+                    <span v-else>-</span>
+                  </td>
+                  <td class="td-pts">
+                    {{ getRoundData(driver, roundNum)?.points ?? '-' }}
+                  </td>
+                </template>
                 <td class="td-total">{{ driver.total_points }}</td>
                 <td v-if="seasonData.drop_round_enabled" class="td-drop">
                   {{ driver.drop_total }}
@@ -335,6 +402,10 @@
           v-show="activeStandingsTab === 'teams'"
           class="standings-table-wrapper"
         >
+          <h4 class="division-title">
+            <img src="/images/platforms/gran-turismo-7-logo.svg" alt="Gran Turismo 7" class="platform-logo" />
+            Team Championship
+          </h4>
           <table class="standings-table teams-table">
             <thead>
               <tr>
@@ -700,14 +771,15 @@
                     <table class="cross-division-table all-times-table">
                       <thead>
                         <tr>
-                          <th class="th-pos">#</th>
-                          <th class="th-driver">Driver</th>
-                          <th v-if="seasonData.has_divisions" class="th-division">
+                          <th rowspan="2" class="th-pos">#</th>
+                          <th rowspan="2" class="th-driver">Driver</th>
+                          <th v-if="seasonData.has_divisions" rowspan="2" class="th-division">
                             <span class="hidden md:block">Division</span>
                             <span class="block md:hidden">Div</span>
                           </th>
                           <th
-                            class="th-time sortable"
+                            colspan="2"
+                            class="th-time-group sortable"
                             :class="{ 'is-sorted': isColumnSorted(round.id, 'qualifying') }"
                             @click="handleAllTimesSort(round.id, 'qualifying')"
                           >
@@ -718,7 +790,8 @@
                             >
                           </th>
                           <th
-                            class="th-time sortable"
+                            colspan="2"
+                            class="th-time-group sortable"
                             :class="{ 'is-sorted': isColumnSorted(round.id, 'race') }"
                             @click="handleAllTimesSort(round.id, 'race')"
                           >
@@ -729,7 +802,8 @@
                             >
                           </th>
                           <th
-                            class="th-time sortable"
+                            colspan="2"
+                            class="th-time-group sortable"
                             :class="{ 'is-sorted': isColumnSorted(round.id, 'fastest') }"
                             @click="handleAllTimesSort(round.id, 'fastest')"
                           >
@@ -739,6 +813,14 @@
                               >▲</span
                             >
                           </th>
+                        </tr>
+                        <tr class="sub-header-row">
+                          <th class="th-sub th-time">Time</th>
+                          <th class="th-sub th-gap">Gap</th>
+                          <th class="th-sub th-time">Time</th>
+                          <th class="th-sub th-gap">Gap</th>
+                          <th class="th-sub th-time">Time</th>
+                          <th class="th-sub th-gap">Gap</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -760,26 +842,56 @@
                             </span>
                             <span v-else>&nbsp;</span>
                           </td>
-                          <td class="td-time">
-                            <div>{{ entry.qualifyingFormatted }}</div>
-                            <div v-if="entry.qualifyingGap" class="text-secondary text-[10px]">
-                              ({{ entry.qualifyingGap }})
-                            </div>
-                            <div v-else class="text-secondary text-[10px]">&nbsp;</div>
+                          <!-- Qualifying Time & Gap -->
+                          <td
+                            :class="[
+                              'td-time',
+                              { 'column-sorted': isColumnSorted(round.id, 'qualifying') },
+                            ]"
+                          >
+                            {{ entry.qualifyingFormatted }}
                           </td>
-                          <td class="td-time">
-                            <div>{{ entry.raceFormatted }}</div>
-                            <div v-if="entry.raceGap" class="text-secondary text-[10px]">
-                              ({{ entry.raceGap }})
-                            </div>
-                            <div v-else class="text-secondary text-[10px]">&nbsp;</div>
+                          <td
+                            :class="[
+                              'td-gap',
+                              { 'column-sorted': isColumnSorted(round.id, 'qualifying') },
+                            ]"
+                          >
+                            {{ entry.qualifyingGap || '-' }}
                           </td>
-                          <td class="td-time">
-                            <div>{{ entry.fastestLapFormatted }}</div>
-                            <div v-if="entry.fastestLapGap" class="text-secondary text-[10px]">
-                              ({{ entry.fastestLapGap }})
-                            </div>
-                            <div v-else class="text-secondary text-[10px]">&nbsp;</div>
+                          <!-- Race Time & Gap -->
+                          <td
+                            :class="[
+                              'td-time',
+                              { 'column-sorted': isColumnSorted(round.id, 'race') },
+                            ]"
+                          >
+                            {{ entry.raceFormatted }}
+                          </td>
+                          <td
+                            :class="[
+                              'td-gap',
+                              { 'column-sorted': isColumnSorted(round.id, 'race') },
+                            ]"
+                          >
+                            {{ entry.raceGap || '-' }}
+                          </td>
+                          <!-- Fastest Lap Time & Gap -->
+                          <td
+                            :class="[
+                              'td-time',
+                              { 'column-sorted': isColumnSorted(round.id, 'fastest') },
+                            ]"
+                          >
+                            {{ entry.fastestLapFormatted }}
+                          </td>
+                          <td
+                            :class="[
+                              'td-gap',
+                              { 'column-sorted': isColumnSorted(round.id, 'fastest') },
+                            ]"
+                          >
+                            {{ entry.fastestLapGap || '-' }}
                           </td>
                         </tr>
                       </tbody>
@@ -907,6 +1019,11 @@ const flatDriverStandings = computed<SeasonStandingDriver[]>(() => {
 const showTeamsChampionship = computed<boolean>(() => {
   return seasonData.value?.team_championship_enabled === true;
 });
+
+/**
+ * Show teams column in driver standings
+ */
+const showTeamsColumn = showTeamsChampionship;
 
 /**
  * Teams drop round enabled
@@ -2692,8 +2809,19 @@ onMounted(() => {
   font-weight: 700;
   color: var(--wl-text-primary);
   padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   /* font-family: var(--font-body); */
   /* text-transform: uppercase; */
+}
+
+.platform-logo {
+  height: 70px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin: 10px;
 }
 
 .standings-table {
@@ -2806,6 +2934,29 @@ onMounted(() => {
   width: auto;
   max-width: 60px;
   object-fit: contain;
+}
+
+.th-team,
+.td-team {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  text-align: center !important;
+  padding: 0 !important;
+}
+
+.team-logo-standalone {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.th-podiums,
+.td-podiums {
+  text-align: center;
+  white-space: nowrap;
+  width: 50px;
 }
 
 .td-round {
@@ -3371,8 +3522,13 @@ onMounted(() => {
   width: 180px;
 }
 
-/* All Times Table - Sortable Headers */
-.all-times-table .sortable {
+/* All Times Table - Group Headers */
+.all-times-table .th-time-group {
+  text-align: center;
+  border-bottom: 1px solid var(--wl-border);
+}
+
+.all-times-table .th-time-group.sortable {
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease;
@@ -3380,11 +3536,11 @@ onMounted(() => {
   padding-right: 1.5rem;
 }
 
-.all-times-table .sortable:hover {
+.all-times-table .th-time-group.sortable:hover {
   background: var(--wl-bg-secondary);
 }
 
-.all-times-table .sortable.is-sorted {
+.all-times-table .th-time-group.sortable.is-sorted {
   background: var(--wl-accent-primary);
   color: white;
 }
@@ -3395,6 +3551,44 @@ onMounted(() => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.65rem;
+}
+
+/* Sub-headers */
+.all-times-table .sub-header-row .th-sub {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.25rem 0.5rem;
+  background: var(--wl-bg-secondary);
+  color: var(--wl-text-secondary);
+  width: 4.5rem;
+}
+
+/* Equal width for all time/gap columns */
+.all-times-table .td-time,
+.all-times-table .td-gap {
+  width: 5rem;
+  min-width: 4.5rem;
+  text-align: center;
+}
+
+.all-times-table .th-sub.th-time {
+  border-right: 1px solid var(--wl-border);
+}
+
+/* Gap column styling */
+.all-times-table .td-gap {
+  font-size: 0.75rem;
+  color: var(--wl-text-secondary);
+  text-align: center;
+  padding: 0.5rem 0.25rem;
+}
+
+/* Keep existing column-sorted highlight for both time and gap columns */
+.all-times-table .td-time.column-sorted,
+.all-times-table .td-gap.column-sorted {
+  background: rgba(37, 99, 235, 0.08);
 }
 
 /* Division Badges */
@@ -3534,5 +3728,47 @@ onMounted(() => {
   .chart-container :deep(canvas) {
     height: 300px !important;
   }
+}
+
+/* ============================================
+   Round Sub-Columns (FL, P, Pts)
+   ============================================ */
+
+.th-round-group {
+  text-align: center;
+  border-bottom: 1px solid var(--wl-border);
+  padding: 0.25rem !important;
+}
+
+.sub-header-row th {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--wl-text-secondary);
+  padding: 0.25rem;
+}
+
+.th-sub {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-align: center;
+  padding: 0.15rem 0.25rem;
+}
+
+.th-fl,
+.th-pole,
+.th-pts,
+.td-fl,
+.td-pole,
+.td-pts {
+  text-align: center;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  padding: 0.25rem;
+}
+
+.td-fl .badge-fl,
+.td-pole .badge-pole {
+  font-size: 0.65rem;
 }
 </style>

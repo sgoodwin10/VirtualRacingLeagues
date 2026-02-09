@@ -376,8 +376,12 @@ describe('SeasonDetailWhiteLabelView', () => {
       expect(badges.some((b) => b.classes().includes('badge-fl'))).toBe(true);
     });
 
-    it('displays team logos when present', async () => {
-      vi.mocked(leagueService.getSeasonDetail).mockResolvedValue(mockSeasonData);
+    it('displays team logos when teams championship is enabled', async () => {
+      const teamEnabledData: PublicSeasonDetailResponse = {
+        ...mockSeasonData,
+        team_championship_enabled: true,
+      };
+      vi.mocked(leagueService.getSeasonDetail).mockResolvedValue(teamEnabledData);
 
       await router.push('/leagues/test-league/test-competition/2024-season');
       const wrapper = mount(SeasonDetailWhiteLabelView, {
@@ -388,7 +392,7 @@ describe('SeasonDetailWhiteLabelView', () => {
 
       await flushPromises();
 
-      const teamLogos = wrapper.findAll('.team-logo-img');
+      const teamLogos = wrapper.findAll('.team-logo-standalone');
       expect(teamLogos.length).toBeGreaterThan(0);
       expect(teamLogos[0]?.attributes('src')).toBe('https://example.com/team-logo.png');
     });

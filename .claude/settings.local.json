@@ -51,7 +51,10 @@
       "Bash(ls:*)",
       "Bash(for f in /var/www/database/seeders/Backup/*.php)",
       "Bash(do php -l \"$f\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(npm run lint:fix:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(npx prettier:*)"
     ],
     "deny": [],
     "ask": []

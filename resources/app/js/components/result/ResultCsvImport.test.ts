@@ -3,6 +3,11 @@ import { mount } from '@vue/test-utils';
 import ResultCsvImport from './ResultCsvImport.vue';
 import type { CsvResultRow } from '@app/types/raceResult';
 
+// Mock the race result service
+vi.mock('@app/services/raceResultService', () => ({
+  fetchGoogleSheetAsCsv: vi.fn(),
+}));
+
 // Mock the useRaceTimeCalculation composable
 vi.mock('@app/composables/useRaceTimeCalculation', () => ({
   useRaceTimeCalculation: () => ({
@@ -87,6 +92,16 @@ vi.mock('primevue/textarea', () => ({
   },
 }));
 
+vi.mock('primevue/inputtext', () => ({
+  default: {
+    name: 'InputText',
+    props: ['modelValue', 'placeholder', 'invalid'],
+    emits: ['update:modelValue'],
+    template:
+      '<input type="text" :placeholder="placeholder" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+  },
+}));
+
 vi.mock('primevue/button', () => ({
   default: {
     name: 'PrimeButton',
@@ -145,6 +160,16 @@ vi.mock('@phosphor-icons/vue', () => ({
   },
   PhCheck: {
     name: 'PhCheck',
+    props: ['size'],
+    template: '<svg></svg>',
+  },
+  PhGoogleLogo: {
+    name: 'PhGoogleLogo',
+    props: ['size'],
+    template: '<svg></svg>',
+  },
+  PhDownload: {
+    name: 'PhDownload',
     props: ['size'],
     template: '<svg></svg>',
   },

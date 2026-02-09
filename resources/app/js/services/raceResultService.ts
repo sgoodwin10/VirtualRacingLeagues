@@ -41,6 +41,23 @@ export async function deleteResults(raceId: number): Promise<void> {
   await apiClient.delete(API_ENDPOINTS.races.results(raceId));
 }
 
+interface GoogleSheetsCsvResponse {
+  data: {
+    csv: string;
+  };
+}
+
+/**
+ * Fetch a public Google Sheet as CSV data
+ * @param url - The public Google Sheets URL
+ */
+export async function fetchGoogleSheetAsCsv(url: string): Promise<string> {
+  const response = await apiClient.post<GoogleSheetsCsvResponse>('/google-sheets/fetch-csv', {
+    url,
+  });
+  return response.data.data.csv;
+}
+
 /**
  * Grouped export for convenient importing
  */
@@ -48,6 +65,7 @@ const raceResultService = {
   getResults,
   saveResults,
   deleteResults,
+  fetchGoogleSheetAsCsv,
 };
 
 export default raceResultService;

@@ -46,8 +46,8 @@ class LeaguesBackupSeeder extends Seeder
                 'header_image_path' => 'leagues/headers/4Db0IdQ0ZlZaunMqyjaBzLcSTkZw92dkWLZm13Gf.png',
                 'banner_path' => null,
                 'platform_ids' => array (
-  0 => 1,
-),
+        0 => 1,
+                ),
                 'discord_url' => 'https://discord.gg/2GgDPcGB',
                 'website_url' => 'https://raceonoz.com',
                 'twitter_handle' => 'raceonoz',
@@ -75,8 +75,8 @@ class LeaguesBackupSeeder extends Seeder
                 'header_image_path' => null,
                 'banner_path' => null,
                 'platform_ids' => array (
-  0 => 1,
-),
+            0 => 1,
+                ),
                 'discord_url' => null,
                 'website_url' => null,
                 'twitter_handle' => null,

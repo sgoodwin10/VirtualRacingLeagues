@@ -66,11 +66,10 @@
         <!-- Empty State (no results yet, edit mode) -->
         <div
           v-if="!isReadOnly && formResults.length === 0 && allDrivers.length > 0"
-          class="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-surface-300 rounded-lg bg-surface-50"
+          class="flex flex-col items-center justify-center py-4 px-4 border-2 border-dashed border-surface-300 rounded-lg bg-surface-50"
         >
-          <PhTrophy :size="48" class="text-surface-400 mb-4" />
           <h3 class="text-lg font-semibold text-surface-700 mb-2">No Results Entered Yet</h3>
-          <p class="text-surface-600 text-center mb-6 max-w-md">
+          <p class="text-gray-200 text-center mb-6 max-w-md">
             Get started by importing results from a CSV file above, or manually add drivers to enter
             their results one by one.
           </p>

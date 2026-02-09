@@ -91,6 +91,7 @@
                 <thead>
                   <tr>
                     <th class="th-position" rowspan="2">#</th>
+                    <th v-if="showTeamsChampionship" class="th-team" rowspan="2">Team</th>
                     <th class="th-driver" rowspan="2">Driver</th>
                     <th class="th-podiums" rowspan="2">Podiums</th>
                     <th
@@ -126,15 +127,25 @@
                     <td :class="['td-position', getPositionClass(driver.position)]">
                       {{ driver.position }}
                     </td>
+                    <td v-if="showTeamsChampionship" class="td-team">
+                      <img
+                        v-if="driver.team_logo"
+                        :src="driver.team_logo"
+                        :alt="driver.team_name || 'Team'"
+                        class="team-column-logo"
+                      />
+                    </td>
                     <td class="td-driver">
                       <div class="driver-info">
                         <span class="driver-name">{{ driver.driver_name }}</span>
-                        <span v-if="driver.team_logo" class="team-logo">
-                          <img :src="driver.team_logo" :alt="driver.team_name || 'Team'" />
-                        </span>
-                        <span v-else-if="driver.team_name" class="team-name">{{
-                          driver.team_name
-                        }}</span>
+                        <template v-if="!showTeamsChampionship">
+                          <span v-if="driver.team_logo" class="team-logo">
+                            <img :src="driver.team_logo" :alt="driver.team_name || 'Team'" />
+                          </span>
+                          <span v-else-if="driver.team_name" class="team-name">{{
+                            driver.team_name
+                          }}</span>
+                        </template>
                       </div>
                     </td>
                     <td class="td-podiums">{{ driver.podiums }}</td>
@@ -189,6 +200,7 @@
                 <thead>
                   <tr>
                     <th class="th-position" rowspan="2">#</th>
+                    <th v-if="showTeamsChampionship" class="th-team" rowspan="2">Team</th>
                     <th class="th-driver" rowspan="2">Driver</th>
                     <th class="th-podiums" rowspan="2">Podiums</th>
                     <th
@@ -224,15 +236,25 @@
                     <td :class="['td-position', getPositionClass(driver.position)]">
                       {{ driver.position }}
                     </td>
+                    <td v-if="showTeamsChampionship" class="td-team">
+                      <img
+                        v-if="driver.team_logo"
+                        :src="driver.team_logo"
+                        :alt="driver.team_name || 'Team'"
+                        class="team-column-logo"
+                      />
+                    </td>
                     <td class="td-driver">
                       <div class="driver-info">
                         <span class="driver-name">{{ driver.driver_name }}</span>
-                        <span v-if="driver.team_logo" class="team-logo">
-                          <img :src="driver.team_logo" :alt="driver.team_name || 'Team'" />
-                        </span>
-                        <span v-else-if="driver.team_name" class="team-name">{{
-                          driver.team_name
-                        }}</span>
+                        <template v-if="!showTeamsChampionship">
+                          <span v-if="driver.team_logo" class="team-logo">
+                            <img :src="driver.team_logo" :alt="driver.team_name || 'Team'" />
+                          </span>
+                          <span v-else-if="driver.team_name" class="team-name">{{
+                            driver.team_name
+                          }}</span>
+                        </template>
                       </div>
                     </td>
                     <td class="td-podiums">{{ driver.podiums }}</td>
@@ -923,6 +945,16 @@ function generateTeamChampionshipCSV(): string {
   text-align: center;
 }
 
+/* Team Column Header */
+.standings-table th.th-team {
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
 /* Driver Column Header */
 .standings-table th.th-driver {
   text-align: left !important;
@@ -1043,6 +1075,26 @@ function generateTeamChampionshipCSV(): string {
   color: #f0883e;
 }
 
+/* Team Cell */
+.td-team {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  text-align: center;
+  padding: 4px;
+  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.team-column-logo {
+  height: 24px;
+  width: auto;
+  max-width: 48px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
 /* Driver Cell */
 .td-driver {
   min-width: 160px;
@@ -1058,6 +1110,7 @@ function generateTeamChampionshipCSV(): string {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding-left: 8px;
 }
 
 .driver-name {

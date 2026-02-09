@@ -19,6 +19,7 @@ use App\Http\Controllers\Public\SiteConfigController as PublicSiteConfigControll
 use App\Http\Controllers\User\CompetitionController;
 use App\Http\Controllers\User\DivisionController;
 use App\Http\Controllers\User\DriverController;
+use App\Http\Controllers\User\GoogleSheetsController;
 use App\Http\Controllers\User\LeagueActivityLogController;
 use App\Http\Controllers\User\LeagueController;
 use App\Http\Controllers\User\PlatformController;
@@ -314,6 +315,9 @@ Route::domain($appDomain)->middleware('web')->group(function () {
             Route::get('/races/{raceId}/results', [RaceResultController::class, 'index'])->name('races.results.index');
             Route::post('/races/{raceId}/results', [RaceResultController::class, 'store'])->name('races.results.store');
             Route::delete('/races/{raceId}/results', [RaceResultController::class, 'destroy'])->name('races.results.destroy');
+
+            // Google Sheets Import
+            Route::post('/google-sheets/fetch-csv', [GoogleSheetsController::class, 'fetchAsCsv'])->name('google-sheets.fetch-csv');
 
             // CSV Export
             Route::prefix('export')->name('export.')->group(function () {

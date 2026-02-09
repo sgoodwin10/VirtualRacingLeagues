@@ -17,157 +17,120 @@
       />
     </div>
 
-    <VrlDataTable
-      :value="sortedData"
-      :podium-highlight="true"
-      position-field="position"
-      :paginated="false"
-      :hoverable="true"
-      :striped="false"
-      empty-message="No times available"
-      table-class="[&_th]:!p-3 [&_td]:!p-3"
-    >
-      <!-- Position Column -->
-      <Column field="position" header="#" style="width: 60px">
-        <template #body="{ data }">
-          <VrlPositionCell :position="data.position" />
-        </template>
-      </Column>
-
-      <!-- Driver Name Column -->
-      <Column field="driverName" header="Driver" class="min-w-[200px]">
-        <template #body="{ data }">
-          <span class="font-body font-medium text-[var(--text-primary)] text-lg">
-            {{ data.driverName }}
-          </span>
-        </template>
-      </Column>
-
-      <!-- Division Column (if divisions exist) -->
-      <Column v-if="hasDivisions" field="divisionName" header="Division" style="width: 180px">
-        <template #body="{ data }">
-          <div
-            v-if="data.divisionName"
-            :class="[
-              'inline-block px-2 py-1 text-xs font-[family-name:var(--font-mono)] font-semibold rounded-[var(--radius-sm)]',
-              getDivisionBadgeClass(data.divisionId),
-            ]"
+    <div class="all-times-table-wrapper">
+      <table v-if="sortedData.length > 0" class="all-times-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="th-pos">#</th>
+            <th rowspan="2" class="th-driver">Driver</th>
+            <th v-if="hasDivisions" rowspan="2" class="th-division">
+              <span class="hidden md:block">Division</span>
+              <span class="block md:hidden">Div</span>
+            </th>
+            <th
+              colspan="2"
+              class="th-time-group sortable"
+              :class="{ 'is-sorted': sortColumn === 'qualifying' }"
+              @click="setSortColumn('qualifying')"
+            >
+              <span class="hidden md:block">Qualifying Time</span>
+              <span class="block md:hidden">Quali</span>
+              <span v-if="sortColumn === 'qualifying'" class="sort-arrow">▲</span>
+            </th>
+            <th
+              colspan="2"
+              class="th-time-group sortable"
+              :class="{ 'is-sorted': sortColumn === 'race' }"
+              @click="setSortColumn('race')"
+            >
+              <span class="hidden md:block">Race Time</span>
+              <span class="block md:hidden">Race</span>
+              <span v-if="sortColumn === 'race'" class="sort-arrow">▲</span>
+            </th>
+            <th
+              colspan="2"
+              class="th-time-group sortable"
+              :class="{ 'is-sorted': sortColumn === 'fastest' }"
+              @click="setSortColumn('fastest')"
+            >
+              <span class="hidden md:block">Fastest Lap</span>
+              <span class="block md:hidden">FL</span>
+              <span v-if="sortColumn === 'fastest'" class="sort-arrow">▲</span>
+            </th>
+          </tr>
+          <tr class="sub-header-row">
+            <th class="th-sub th-time">Time</th>
+            <th class="th-sub th-gap">Gap</th>
+            <th class="th-sub th-time">Time</th>
+            <th class="th-sub th-gap">Gap</th>
+            <th class="th-sub th-time">Time</th>
+            <th class="th-sub th-gap">Gap</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="entry in sortedData"
+            :key="`${entry.driverName}-${entry.divisionId}`"
+            :class="getPodiumClass(entry.position)"
           >
-            <span class="hidden md:block">
-              {{ data.divisionName }}
-            </span>
-            <span class="block md:hidden">
-              {{
-                data.divisionName
-                  .split(' ')
-                  .map((w: string) => w[0])
-                  .join('')
-              }}
-            </span>
-          </div>
-          <span v-else class="text-[var(--text-muted)]">-</span>
-        </template>
-      </Column>
-
-      <!-- Qualifying Time Column (sortable header) -->
-      <Column field="qualifyingFormatted" style="width: 140px; text-align: right">
-        <template #header>
-          <div
-            class="sortable-header"
-            :class="{ 'is-sorted': sortColumn === 'qualifying' }"
-            @click="setSortColumn('qualifying')"
-          >
-            <span class="hidden md:block">Qualifying</span>
-            <span class="block md:hidden">Quali</span>
-            <span v-if="sortColumn === 'qualifying'" class="sort-arrow">&#9650;</span>
-          </div>
-        </template>
-        <template #body="{ data }">
-          <div class="text-right pr-3">
-            <span
-              class="font-[family-name:var(--font-mono)] font-bold text-[var(--text-primary)] text-lg"
-            >
-              {{ data.qualifyingTimeAbsolute }}
-            </span>
-            <div
-              v-if="data.qualifyingGap"
-              class="font-[family-name:var(--font-mono)] text-[var(--text-secondary)] text-sm"
-            >
-              ({{ data.qualifyingGap }})
-            </div>
-          </div>
-        </template>
-      </Column>
-
-      <!-- Race Time Column (sortable header) -->
-      <Column field="raceFormatted" style="width: 140px; text-align: right">
-        <template #header>
-          <div
-            class="sortable-header"
-            :class="{ 'is-sorted': sortColumn === 'race' }"
-            @click="setSortColumn('race')"
-          >
-            <span class="hidden md:block">Race Time</span>
-            <span class="block md:hidden">Race</span>
-            <span v-if="sortColumn === 'race'" class="sort-arrow">&#9650;</span>
-          </div>
-        </template>
-        <template #body="{ data }">
-          <div class="text-right pr-3">
-            <span
-              class="font-[family-name:var(--font-mono)] font-bold text-[var(--text-primary)] text-lg"
-            >
-              {{ data.raceTimeAbsolute }}
-            </span>
-            <div
-              v-if="data.raceGap"
-              class="font-[family-name:var(--font-mono)] text-[var(--text-secondary)] text-sm"
-            >
-              ({{ data.raceGap }})
-            </div>
-          </div>
-        </template>
-      </Column>
-
-      <!-- Fastest Lap Column (sortable header) -->
-      <Column field="fastestLapFormatted" style="width: 140px; text-align: right">
-        <template #header>
-          <div
-            class="sortable-header"
-            :class="{ 'is-sorted': sortColumn === 'fastest' }"
-            @click="setSortColumn('fastest')"
-          >
-            <span class="hidden md:block">Fastest Lap</span>
-            <span class="block md:hidden">FL</span>
-            <span v-if="sortColumn === 'fastest'" class="sort-arrow">&#9650;</span>
-          </div>
-        </template>
-        <template #body="{ data }">
-          <div class="text-right pr-3">
-            <span
-              class="font-[family-name:var(--font-mono)] font-bold text-[var(--text-primary)] text-lg"
-            >
-              {{ data.fastestLapAbsolute }}
-            </span>
-            <div
-              v-if="data.fastestLapGap"
-              class="font-[family-name:var(--font-mono)] text-[var(--text-secondary)] text-sm"
-            >
-              ({{ data.fastestLapGap }})
-            </div>
-          </div>
-        </template>
-      </Column>
-    </VrlDataTable>
+            <td :class="['td-pos', getPodiumClass(entry.position)]">
+              {{ entry.position }}
+            </td>
+            <td class="td-driver">{{ entry.driverName }}</td>
+            <td v-if="hasDivisions" class="td-division">
+              <div
+                v-if="entry.divisionName"
+                :class="[
+                  'inline-block px-2 py-1 text-xs font-[family-name:var(--font-mono)] font-semibold rounded-[var(--radius-sm)]',
+                  getDivisionBadgeClass(entry.divisionId),
+                ]"
+              >
+                <span class="hidden md:block">
+                  {{ entry.divisionName }}
+                </span>
+                <span class="block md:hidden">
+                  {{
+                    entry.divisionName
+                      .split(' ')
+                      .map((w: string) => w[0])
+                      .join('')
+                  }}
+                </span>
+              </div>
+              <span v-else class="text-[var(--text-muted)]">-</span>
+            </td>
+            <!-- Qualifying Time & Gap -->
+            <td :class="['td-time', { 'column-sorted': sortColumn === 'qualifying' }]">
+              {{ entry.qualifyingTimeAbsolute }}
+            </td>
+            <td :class="['td-gap', { 'column-sorted': sortColumn === 'qualifying' }]">
+              {{ entry.qualifyingGap || '-' }}
+            </td>
+            <!-- Race Time & Gap -->
+            <td :class="['td-time', { 'column-sorted': sortColumn === 'race' }]">
+              {{ entry.raceTimeAbsolute }}
+            </td>
+            <td :class="['td-gap', { 'column-sorted': sortColumn === 'race' }]">
+              {{ entry.raceGap || '-' }}
+            </td>
+            <!-- Fastest Lap Time & Gap -->
+            <td :class="['td-time', { 'column-sorted': sortColumn === 'fastest' }]">
+              {{ entry.fastestLapAbsolute }}
+            </td>
+            <td :class="['td-gap', { 'column-sorted': sortColumn === 'fastest' }]">
+              {{ entry.fastestLapGap || '-' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-state">No times available</div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import Column from 'primevue/column';
 import type { CrossDivisionResult, RaceEventResults } from '@public/types/public';
-import VrlDataTable from '@public/components/common/tables/VrlDataTable.vue';
-import VrlPositionCell from '@public/components/common/tables/cells/VrlPositionCell.vue';
 import VrlButton from '@public/components/common/buttons/VrlButton.vue';
 import { useGtm } from '@public/composables/useGtm';
 import { PhDownloadSimple } from '@phosphor-icons/vue';
@@ -436,6 +399,13 @@ function getDivisionBadgeClass(divisionId: number | null): string {
   return variants[variantIndex] ?? variants[0] ?? '';
 }
 
+function getPodiumClass(position: number): string {
+  if (position === 1) return 'podium-1';
+  if (position === 2) return 'podium-2';
+  if (position === 3) return 'podium-3';
+  return '';
+}
+
 function exportToCSV(): void {
   // Build headers based on visible columns
   const headers: string[] = ['Position', 'Driver Name'];
@@ -521,28 +491,207 @@ function exportToCSV(): void {
   border-radius: var(--radius);
 }
 
-.cross-division-results :deep(.p-datatable-tbody > tr) {
-  background: transparent;
+/* Table Wrapper */
+.all-times-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
 }
 
-.sortable-header {
+/* Table */
+.all-times-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+}
+
+/* Table Header */
+.all-times-table thead th {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.all-times-table .th-pos {
+  width: 60px;
+  text-align: center;
+}
+
+.all-times-table .th-driver {
+  min-width: 200px;
+  text-align: left;
+}
+
+.all-times-table .th-division {
+  width: 180px;
+  text-align: center;
+}
+
+/* Group Headers (Qualifying Time, Race Time, Fastest Lap) */
+.all-times-table .th-time-group {
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.all-times-table .th-time-group.sortable {
   cursor: pointer;
   user-select: none;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  transition: color 0.15s ease;
+  transition: background-color 0.15s ease;
+  position: relative;
+  padding-right: 1.5rem;
 }
 
-.sortable-header:hover {
+.all-times-table .th-time-group.sortable:hover {
+  background: var(--bg-hover);
+}
+
+.all-times-table .th-time-group.sortable.is-sorted {
+  background: var(--cyan);
+  color: white;
+}
+
+.all-times-table .sort-arrow {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+}
+
+/* Sub-headers (Time | Gap) */
+.all-times-table .sub-header-row .th-sub {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  width: 6.5rem;
+}
+
+.all-times-table .th-sub.th-time {
+  width: 6.5rem;
+  border-right: 1px solid var(--border);
+}
+
+.all-times-table .th-sub.th-gap {
+  width: 6.5rem;
+}
+
+/* Table Body */
+.all-times-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s ease;
+}
+
+.all-times-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.all-times-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.all-times-table tbody td {
+  padding: 0.75rem;
+  font-size: 0.875rem;
   color: var(--text-primary);
 }
 
-.sortable-header.is-sorted {
-  color: var(--cyan);
+/* Position Cell */
+.all-times-table .td-pos {
+  width: 60px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
-.sort-arrow {
-  font-size: 0.6rem;
+/* Driver Cell */
+.all-times-table .td-driver {
+  min-width: 200px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+/* Division Cell */
+.all-times-table .td-division {
+  width: 180px;
+  text-align: center;
+}
+
+/* Time and Gap Columns - equal width */
+.all-times-table .td-time,
+.all-times-table .td-gap {
+  width: 6.5rem;
+  min-width: 6.5rem;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.all-times-table .td-time {
+  font-weight: 700;
+  font-size: 1rem;
+  border-right: 1px solid var(--border);
+}
+
+.all-times-table .td-gap {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Column Sorted Highlight */
+.all-times-table .td-time.column-sorted,
+.all-times-table .td-gap.column-sorted {
+  background: rgba(6, 182, 212, 0.08);
+}
+
+/* Podium Rows */
+.all-times-table tbody tr.podium-1 {
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.all-times-table tbody tr.podium-2 {
+  background: rgba(192, 192, 192, 0.1);
+}
+
+.all-times-table tbody tr.podium-3 {
+  background: rgba(205, 127, 50, 0.1);
+}
+
+.all-times-table tbody tr.podium-1:hover,
+.all-times-table tbody tr.podium-2:hover,
+.all-times-table tbody tr.podium-3:hover {
+  background: var(--bg-hover);
+}
+
+/* Podium Position Cells */
+.all-times-table .td-pos.podium-1 {
+  color: #ffd700;
+}
+
+.all-times-table .td-pos.podium-2 {
+  color: #c0c0c0;
+}
+
+.all-times-table .td-pos.podium-3 {
+  color: #cd7f32;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  background: var(--bg-elevated);
 }
 </style>
